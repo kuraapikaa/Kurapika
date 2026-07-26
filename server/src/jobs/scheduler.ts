@@ -192,3 +192,14 @@ export async function registerNextDayBonusJob(): Promise<void> {
     }
   });
 }
+
+/** Ard arda giriş yapmayan sadakat oyuncuları için 2. gün SMS, 3. gün puan silme kontrolü (her 6 saatte bir). */
+export async function registerLoyaltyRetentionJob(): Promise<void> {
+  const { runLoyaltyRetentionSweep } = await import('./loyaltyRetentionJob.js');
+  scheduler.register('loyalty-retention', 6 * 60 * 60 * 1000, async () => {
+    const result = await runLoyaltyRetentionSweep('default');
+    if (result.reminded > 0 || result.reset > 0 || result.errors > 0) {
+      console.log(`[loyalty-retention] SMS: ${result.reminded}, Puan silme: ${result.reset}, Hata: ${result.errors}`);
+    }
+  });
+}

@@ -42,7 +42,7 @@ export function AuditLogPage() {
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-xl font-black text-white flex items-center gap-2">
-            <FileText size={24} className="text-violet-500" />
+            <FileText size={24} className="text-blue-500" />
             Audit kaydı
           </h1>
           <p className="text-xs text-slate-500 mt-1">Giriş, lead ve temsilci işlemleri</p>

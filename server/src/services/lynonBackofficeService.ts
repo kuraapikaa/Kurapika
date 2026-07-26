@@ -280,6 +280,19 @@ function normalizeStatusName(value: unknown): string {
     failed: 'Başarısız',
     rejected: 'Reddedildi',
     processed: 'İşlendi',
+    // Bahis/round sonuç durumları (spor: sportOperation, casino: state)
+    won: 'Kazandı',
+    win: 'Kazandı',
+    lost: 'Kaybetti',
+    lose: 'Kaybetti',
+    void: 'İptal',
+    cancelled: 'İptal Edildi',
+    canceled: 'İptal Edildi',
+    cashedout: 'Nakit Çıkış',
+    cashout: 'Nakit Çıkış',
+    open: 'Açık',
+    refunded: 'İade Edildi',
+    refund: 'İade Edildi',
   };
   return map[status.toLowerCase().replace(/[^a-z]/g, '')] ?? status;
 }
@@ -295,6 +308,22 @@ function nullableNumber(value: unknown): number | null {
   if (value === null || value === undefined || value === '') return null;
   const parsed = numberFrom(value, NaN);
   return Number.isFinite(parsed) ? parsed : null;
+}
+
+/**
+ * Gerçek Lynon BackofficeAccounts yanıtı oyuncu başına 5 hesap döner:
+ * playerAccount (ana nakit), playerBonusMoneyAccount, playerBonusWinAccount,
+ * playerFrozenAccount ve playerUnusedBalance. Ana bakiye YALNIZCA 'playerAccount'
+ * hesabıdır; geniş bir regex ile arandığında dizi sırası nedeniyle önce
+ * playerFrozenAccount eşleşip yanlış bakiye gösterilir.
+ */
+function pickMainAccount(accounts: AnyRecord[]): AnyRecord | undefined {
+  const currency = String(config.lynon.currency).toUpperCase();
+  const isMain = (account: AnyRecord) => String(account.accountType ?? '').toLowerCase() === 'playeraccount';
+  return (
+    accounts.find((account) => isMain(account) && String(account.currency ?? '').toUpperCase() === currency) ??
+    accounts.find(isMain)
+  );
 }
 
 function mapPlayer(row: AnyRecord): AnyRecord {
@@ -327,6 +356,10 @@ function mapPlayer(row: AnyRecord): AnyRecord {
     Status: row.status ?? null,
     ExternalId: String(userId ?? ''),
     Language: row.language ?? null,
+    IsPhoneVerified: row.isMobileNumberVerified === true,
+    IsEmailVerified: row.isEmailVerified === true,
+    IsIdentityVerified: row.isIdentityDocNumberVerified === true,
+    VerificationStatus: row.verificationStatus ?? null,
     IsVerified: row.verificationStatus === 'verified' || row.isEmailVerified === true || row.isMobileNumberVerified === true,
     LastLoginIp: row.lastLoginIp ?? null,
     CategoryId: row.categoryId ?? category.id ?? null,
@@ -387,40 +420,6 @@ function mapTransaction(row: AnyRecord): AnyRecord {
     ExternalId: row.platformTransactionId ?? null,
     PaymentSystemId: row.paymentId ?? null,
     IntegrationName: row.integration ?? null,
-  };
-}
-
-function mapCorrectionTransaction(row: AnyRecord): AnyRecord {
-  const direction = String(row.updateBalanceType ?? '').trim().toLowerCase();
-  const isCredit = direction === 'crediting';
-  const accountName = firstNonEmpty(row.accountName, 'PlayerAccount');
-  const id = row.id ?? `${row.playerId ?? 'player'}-${row.createdAt ?? 'correction'}`;
-  return {
-    ...row,
-    Id: `correction-${id}`,
-    DocumentId: `correction-${id}`,
-    ReferenceNo: `COR-${id}`,
-    DocumentTypeName: isCredit ? 'Bakiye Düzeltmesi - Alacak' : 'Bakiye Düzeltmesi - Borç',
-    DocumentState: 'success',
-    DocumentStateName: 'Başarılı',
-    StateName: 'Başarılı',
-    Operation: isCredit ? 2 : 1,
-    Balance: null,
-    ClientId: Number.isFinite(numberFrom(row.playerId, NaN)) ? numberFrom(row.playerId) : row.playerId,
-    ClientLogin: firstNonEmpty(row.playerUserName, row.playerId),
-    Amount: numberFrom(row.amount),
-    AmountEUR: numberFrom(row.amount),
-    CurrencyId: firstNonEmpty(row.currency, config.lynon.currency),
-    ExchangedAmount: numberFrom(row.amount),
-    TransactionDate: row.createdAt ?? null,
-    CreatedLocal: row.createdAt ?? null,
-    ModifiedLocal: row.createdAt ?? null,
-    TypeName: isCredit ? 'Crediting' : 'Debiting',
-    TypeCode: `correction.${isCredit ? 'crediting' : 'debiting'}`,
-    State: 'success',
-    UserName: firstNonEmpty(row.userName, 'Lynon Backoffice'),
-    Note: firstNonEmpty(row.note, accountName),
-    AccountName: accountName,
   };
 }
 
@@ -489,7 +488,7 @@ function mapCasinoBet(row: AnyRecord): AnyRecord {
     ClientId: numberFrom(round.playerExternalId, NaN),
     ClientLogin: firstNonEmpty(row.userName, row.username, round.playerExternalId),
     ClientName: '',
-    TypeName: type || 'casino',
+    TypeName: financialMovementTypeNameCaseInsensitive(type) || 'Casino',
     Amount: type.toLowerCase() === 'win' ? 0 : amount,
     WinningAmount: type.toLowerCase() === 'win' ? amount : 0,
     CurrencyId: firstNonEmpty(round.currency, row.currency, config.lynon.currency),
@@ -503,9 +502,15 @@ function mapCasinoBet(row: AnyRecord): AnyRecord {
 }
 
 function mapSportBet(row: AnyRecord): AnyRecord {
+  // Gerçek Lynon yanıtı: bet amount 'amount', kazanç 'wonAmount', durum 'sportOperation'
+  // (status/state DEĞİL) alanlarında gelir; maç/pazar/seçim bilgisi ise satırda değil,
+  // 'details[]' dizisindeki her bahis bacağının kendi objesinde bulunur.
   const amount = Math.abs(numberFrom(row.amount ?? row.stake ?? row.betAmount ?? row.realBetAmount));
-  const win = Math.abs(numberFrom(row.winAmount ?? row.winningAmount ?? row.payout ?? row.realWinAmount));
-  const id = row.id ?? row.betId ?? row.platformTransactionId ?? row.eventId;
+  const win = Math.abs(numberFrom(row.wonAmount ?? row.winAmount ?? row.winningAmount ?? row.payout ?? row.realWinAmount));
+  const id = row.operationId ?? row.id ?? row.betId ?? row.platformTransactionId ?? row.eventId;
+  const details = arrayOf(row.details);
+  const firstLeg = recordOf(details[0]);
+  const status = firstNonEmpty(row.sportOperation, row.status, row.state);
   return {
     ...row,
     Id: Number.isFinite(numberFrom(id, NaN)) ? numberFrom(id) : id,
@@ -518,15 +523,37 @@ function mapSportBet(row: AnyRecord): AnyRecord {
     WinningAmount: win,
     CurrencyId: firstNonEmpty(row.currency, config.lynon.currency),
     Price: numberFrom(row.price ?? row.odds, 0),
-    StateName: normalizeStatusName(row.status ?? row.state),
-    SportName: firstNonEmpty(row.sportName, row.sport, row.categoryName, 'Sportbook'),
-    CompetitionName: firstNonEmpty(row.competitionName, row.tournamentName, row.leagueName),
-    MatchName: firstNonEmpty(row.matchName, row.eventName, row.fixtureName),
-    MarketName: firstNonEmpty(row.marketName),
-    SelectionName: firstNonEmpty(row.selectionName),
+    StateName: normalizeStatusName(status),
+    SportName: firstNonEmpty(firstLeg.sport, row.sportName, row.sport, 'Sportbook'),
+    CompetitionName: firstNonEmpty(firstLeg.competition, row.competitionName, row.tournamentName, row.leagueName),
+    MatchName: firstNonEmpty(firstLeg.match, row.matchName, row.eventName, row.fixtureName),
+    MarketName: firstNonEmpty(firstLeg.marketType, row.marketName),
+    SelectionName: firstNonEmpty(firstLeg.selection, row.selectionName),
+    SelectionCount: details.length || undefined,
+    BetType: row.betType ?? null,
+    IsBonusBet: row.balanceType === 'bonus' || row.isFreeBet === true,
     Source: 'sport',
     IsLive: row.isLive ?? null,
   };
+}
+
+/**
+ * Lynon uçlarının bir kısmı tarih query/gövde parametrelerini sessizce yok sayıp tüm
+ * kayıtları döndürüyor (ödeme yolunda bu yüzden zaten sunucu tarafı filtre vardı).
+ * Casino/spor/finansal hareket yollarında bu doğrulama yoktu; seçilen tarih aralığı
+ * arayüzde hiçbir etki yaratmıyordu. Eşlenmiş satırları CreatedLocal üzerinden süzer.
+ */
+function filterMappedRowsByRange(rows: AnyRecord[], from?: string | null, to?: string | null): AnyRecord[] {
+  const fromMs = from ? Date.parse(from) : null;
+  const toMs = to ? Date.parse(to) : null;
+  if (fromMs == null && toMs == null) return rows;
+  return rows.filter((row) => {
+    const createdMs = Date.parse(String(row.CreatedLocal ?? row.TransactionDate ?? ''));
+    if (!Number.isFinite(createdMs)) return false;
+    if (fromMs != null && createdMs < fromMs) return false;
+    if (toMs != null && createdMs > toMs) return false;
+    return true;
+  });
 }
 
 function betReportResponse(rows: AnyRecord[]): AnyRecord {
@@ -1165,7 +1192,7 @@ export async function lynonPlayerKpi(userId: string | number): Promise<AnyRecord
   ]);
   const detail = detailResult.status === 'fulfilled' ? recordOf(detailResult.value) : {};
   const accounts = accountsResult.status === 'fulfilled' ? arrayOf(accountsResult.value) : [];
-  const mainAccount = accounts.find((account) => !/bonus/i.test(String(account.accountType)) && /player|main|real|cash/i.test(String(account.accountType))) ?? accounts[0];
+  const mainAccount = pickMainAccount(accounts);
   const bonusBalance = accounts
     .filter((account) => /bonus/i.test(String(account.accountType)))
     .reduce((sum, account) => sum + numberFrom(account.balance), 0);
@@ -1227,12 +1254,19 @@ export async function lynonPaymentTransactions(
     corrected: typeof body.corrected === 'boolean' ? body.corrected : null,
   };
 
-  // Bazı Lynon kurulumları filtre alanlarını sessizce yok sayıp tüm kayıtları döndürüyor.
-  // Bu yüzden aynı filtreleri sunucuda da zorunlu uygula; yatırım/çekim ve tarih asla karışmasın.
-  const rows = arrayOf(await lynonRequest('/api/payment-operations/api/v1.0/BackOfficeTransactions', {
-    method: 'POST',
-    body: { request: payload },
-  }));
+  // Belirli bir oyuncu için istek yapılıyorsa, site geneli arama (POST + sayfalama)
+  // yerine oyuncuya özel GET endpoint'i kullan. Site geneli endpoint yalnızca istenen
+  // sayfadaki (varsayılan ilk 100-500) kayıtları döndürüyor; yoğun bir sitede belirli bir
+  // oyuncunun yatırımları o pencerede hiç yer almayabilir ve sonuç sessizce boş dönerdi.
+  const explicitClientId = nullableNumber(body.ClientId ?? body.clientId ?? body.playerId);
+  const rows = explicitClientId != null && explicitClientId > 0
+    ? arrayOf(await lynonRequest(`/api/payment-operations/api/v1.0/backofficeTransactions/users/${explicitClientId}/sites/${config.lynon.siteId}`))
+    // Bazı Lynon kurulumları filtre alanlarını sessizce yok sayıp tüm kayıtları döndürüyor.
+    // Bu yüzden aynı filtreleri sunucuda da zorunlu uygula; yatırım/çekim ve tarih asla karışmasın.
+    : arrayOf(await lynonRequest('/api/payment-operations/api/v1.0/BackOfficeTransactions', {
+        method: 'POST',
+        body: { request: payload },
+      }));
   const fromMs = range.from ? Date.parse(range.from) : null;
   const toMs = range.to ? Date.parse(range.to) : null;
   const statusSet = requestedStatuses?.length
@@ -1299,21 +1333,40 @@ export async function lynonWithdrawalRequests(body: AnyRecord = {}): Promise<Any
 }
 
 export async function lynonClientTransactions(body: AnyRecord = {}): Promise<AnyRecord> {
+  // ClientId opsiyoneldir: boşsa (ör. /islemler sayfasında oyuncu filtresi seçilmemişse)
+  // site geneli işlem listesi döner — önceden burada erken boş dönüş vardı ve sayfa
+  // hiçbir oyuncu filtrelenmeden açıldığında her zaman boş görünüyordu.
   const clientId = firstNonEmpty(body.ClientId, body.clientId, body.userId, body.Id);
-  if (!clientId) return { HasError: false, Data: { Provider: 'lynon', Count: 0, Objects: [] } };
 
   const requestedTypeCodes = Array.isArray(body.DocumentTypeIds)
     ? body.DocumentTypeIds.map((value: unknown) => String(value)).filter((value: string) => value.includes('.'))
     : [];
-  const fetchBody = { ...body, ClientId: clientId, MaxRows: 500, SkeepRows: 0 };
-  const [rawRows, correctionsResponse] = await Promise.all([
+  const fetchBody = { ...body, ClientId: clientId || undefined, MaxRows: 500, SkeepRows: 0 };
+  const range = dateRangeFromBody(body);
+  // İşlemler sekmesi TÜM finansal hareket türlerini gösterir (Bahis, Kazanç, Bonus*,
+  // Turnuva, Jackpot, İade, ChargeBack, BalanceCorrection …). operationTypes boş
+  // bırakılınca Lynon hepsini döner; yalnızca BalanceCorrection istendiğinde diğer
+  // 19 tür hiç çekilmiyordu ve profilde görünmüyordu.
+  const [rawRows, movementRows] = await Promise.all([
     lynonPaymentTransactions(fetchBody),
-    lynonCorrectionHistory({ ...fetchBody, playerId: clientId }),
+    lynonFinancialMovements({
+      playerId: clientId || undefined,
+      operationTypes: [],
+      startDate: range.from ?? null,
+      endDate: range.to ?? null,
+      countPerPage: 500,
+    }).catch(() => [] as AnyRecord[]),
   ]);
   const payments = rawRows
-    .filter((row) => String(row.userId ?? '') === String(clientId))
+    .filter((row) => !clientId || String(row.userId ?? '') === String(clientId))
     .map(mapTransaction);
-  const corrections = arrayOf(correctionsResponse.Data?.Objects).map(mapCorrectionTransaction);
+  const corrections = filterMappedRowsByRange(
+    movementRows
+      .filter((row) => !clientId || String(row.playerId ?? '') === String(clientId))
+      .map(mapFinancialMovement),
+    range.from,
+    range.to
+  );
   let combined = [...payments, ...corrections]
     .sort((a, b) => Date.parse(String(b.CreatedLocal ?? '')) - Date.parse(String(a.CreatedLocal ?? '')));
   if (requestedTypeCodes.length > 0) {
@@ -1331,6 +1384,9 @@ export async function lynonClientTransactions(body: AnyRecord = {}): Promise<Any
       Documents: { Count: combined.length, Objects: rows },
       Count: combined.length,
       Objects: rows,
+      // İstemcinin tür filtresini doldurabilmesi için kanonik liste; yalnızca bu
+      // oyuncuda görülen türlerden türetilirse tam liste asla oluşmuyor.
+      TransactionTypes: lynonTransactionTypeOptions(),
       TotalAmount: combined.reduce((sum, row) => sum + numberFrom(row.Amount), 0),
     },
   };
@@ -1433,28 +1489,153 @@ export async function lynonKycDocuments(): Promise<AnyRecord> {
   return wrapObjects(rows);
 }
 
+/**
+ * Lynon'un birleşik finansal hareket defteri (Deposit/Withdrawal/RejectWithdrawal/
+ * BalanceCorrection vb. operationType'larla tek uçtan). Gerçek istek gövdesi ve yanıt
+ * şekli doğrulanmıştır: POST body düz (sarmalanmamış) JSON, satırlar { id, date,
+ * operationType, accountFrom, accountTo, balance, amount (işaretli), currency, playerId }.
+ */
+export async function lynonFinancialMovements(input: {
+  playerId?: number | string;
+  operationTypes?: string[];
+  startDate?: string | null;
+  endDate?: string | null;
+  page?: number;
+  countPerPage?: number;
+}): Promise<AnyRecord[]> {
+  const result = await lynonRequest('/api/platform/api/v1.0/BackofficeTransaction/financial-movement', {
+    method: 'POST',
+    body: {
+      accountFromTypes: [],
+      accountToTypes: [],
+      countPerPage: input.countPerPage ?? 300,
+      currencies: [],
+      endDate: input.endDate ?? null,
+      operationTypes: input.operationTypes ?? [],
+      page: input.page ?? 1,
+      playerId: input.playerId != null ? Number(input.playerId) : undefined,
+      startDate: input.startDate ?? null,
+    },
+  });
+  return arrayOf(result);
+}
+
+/** Lynon financial-movement operationType değerleri (backoffice dropdown'undan doğrulanmıştır). */
+const FINANCIAL_MOVEMENT_TYPE_NAMES: Record<string, string> = {
+  Bet: 'Bahis',
+  BonusBet: 'Bonus Bahis',
+  InGameBonusBet: 'Oyun İçi Bonus Bahis',
+  Deposit: 'Yatırım',
+  BonusMoneyBet: 'Bonus Bakiye Bahis',
+  Win: 'Kazanç',
+  BonusWin: 'Bonus Kazanç',
+  InGameBonusWin: 'Oyun İçi Bonus Kazanç',
+  Withdrawal: 'Çekim',
+  RejectWithdrawal: 'Çekim Reddi',
+  TournamentBet: 'Turnuva Bahis',
+  BonusMoneyBonusBet: 'Bonus Bakiye Bonus Bahis',
+  TournamentWin: 'Turnuva Kazanç',
+  CashbackBonus: 'Kayıp Bonusu',
+  JackpotWin: 'Jackpot Kazancı',
+  RealMoneyBonus: 'Gerçek Bakiye Bonusu',
+  BonusMoneyWin: 'Bonus Bakiye Kazanç',
+  BonusMoneyBonusWin: 'Bonus Bakiye Bonus Kazanç',
+  Refund: 'İade',
+  ChargeBack: 'Ters İbraz',
+  AwardBonus: 'Bonus Verildi',
+  CompleteBonus: 'Bonus Tamamlandı',
+  BalanceCorrection: 'Bakiye Düzeltmesi',
+};
+
+function financialMovementTypeName(operationType: string): string {
+  return FINANCIAL_MOVEMENT_TYPE_NAMES[operationType] ?? operationType;
+}
+
+/**
+ * Oyuncu profili "İşlemler" sekmesindeki tür filtresinin tam listesi. TypeCode'lar
+ * mapFinancialMovement/mapTransaction ile birebir aynı biçimde üretilir ki istemci
+ * seçtiği kodu DocumentTypeIds olarak geri gönderdiğinde filtre tutsun.
+ */
+export function lynonTransactionTypeOptions(): Array<{ id: string; name: string }> {
+  return [
+    { id: 'payment.deposit', name: 'Yatırım' },
+    { id: 'payment.withdrawal', name: 'Çekim' },
+    ...Object.entries(FINANCIAL_MOVEMENT_TYPE_NAMES).map(([code, name]) => ({
+      id: `financial.${code}`,
+      name,
+    })),
+  ];
+}
+
+const FINANCIAL_MOVEMENT_TYPE_NAMES_LOWER: Record<string, string> = Object.fromEntries(
+  Object.entries(FINANCIAL_MOVEMENT_TYPE_NAMES).map(([key, value]) => [key.toLowerCase(), value])
+);
+
+/** Casino/spor işlem uçlarındaki 'type' alanı küçük harfle gelir (ör. "win"); aynı Türkçe
+ * sözlüğü büyük/küçük harf duyarsız eşleştirir, tanımadığı değeri olduğu gibi bırakır. */
+function financialMovementTypeNameCaseInsensitive(type: string): string {
+  if (!type) return '';
+  return FINANCIAL_MOVEMENT_TYPE_NAMES_LOWER[type.toLowerCase()] ?? type;
+}
+
+function mapFinancialMovement(row: AnyRecord): AnyRecord {
+  const operationType = String(row.operationType ?? '');
+  const typeName = financialMovementTypeName(operationType);
+  const signedAmount = numberFrom(row.amount);
+  const isCredit = signedAmount >= 0;
+  const id = row.id ?? `${row.playerId ?? 'player'}-${row.date ?? 'movement'}`;
+  return {
+    ...row,
+    Id: `correction-${id}`,
+    DocumentId: `correction-${id}`,
+    ReferenceNo: `FIN-${id}`,
+    DocumentTypeName: typeName || (isCredit ? 'Bakiye Düzeltmesi - Alacak' : 'Bakiye Düzeltmesi - Borç'),
+    DocumentState: 'success',
+    DocumentStateName: 'Başarılı',
+    StateName: 'Başarılı',
+    Operation: isCredit ? 2 : 1,
+    Balance: nullableNumber(row.balance),
+    ClientId: Number.isFinite(numberFrom(row.playerId, NaN)) ? numberFrom(row.playerId) : row.playerId,
+    ClientLogin: firstNonEmpty(row.playerUserName, row.playerId),
+    Amount: Math.abs(signedAmount),
+    AmountEUR: Math.abs(signedAmount),
+    CurrencyId: firstNonEmpty(row.currency, config.lynon.currency),
+    ExchangedAmount: Math.abs(signedAmount),
+    TransactionDate: row.date ?? null,
+    CreatedLocal: row.date ?? null,
+    ModifiedLocal: row.date ?? null,
+    TypeName: typeName,
+    TypeCode: operationType ? `financial.${operationType}` : `correction.${isCredit ? 'crediting' : 'debiting'}`,
+    OperationType: operationType,
+    State: 'success',
+    UserName: firstNonEmpty(row.userName, 'Lynon Backoffice'),
+    Note: firstNonEmpty(row.note, row.accountFrom && row.accountTo ? `${row.accountFrom} → ${row.accountTo}` : null),
+    AccountName: firstNonEmpty(row.accountName, row.accountFrom),
+  };
+}
+
 export async function lynonCorrectionHistory(body: AnyRecord = {}): Promise<AnyRecord> {
   const { page, countPerPage } = pageFromBody(body);
   const playerId = firstNonEmpty(body.playerId, body.PlayerId, body.ClientId, body.clientId);
   const range = dateRangeFromBody(body);
-  const rows = arrayOf(await lynonRequest(`/api/platform/api/v1.0/CorrectionHistory/sites/${config.lynon.siteId}`, {
-    query: {
-      page,
-      countPerPage,
-      playerId: playerId || undefined,
-      query: body.query ?? undefined,
-    },
-  }));
+  const rows = await lynonFinancialMovements({
+    playerId: playerId || undefined,
+    operationTypes: ['BalanceCorrection'],
+    startDate: range.from ?? null,
+    endDate: range.to ?? null,
+    page,
+    countPerPage,
+  });
   const fromMs = range.from ? Date.parse(range.from) : null;
   const toMs = range.to ? Date.parse(range.to) : null;
   const filtered = rows.filter((row) => {
     if (playerId && String(row.playerId ?? '') !== String(playerId)) return false;
-    const createdMs = Date.parse(String(row.createdAt ?? ''));
+    const createdMs = Date.parse(String(row.date ?? ''));
     if (fromMs != null && (!Number.isFinite(createdMs) || createdMs < fromMs)) return false;
     if (toMs != null && (!Number.isFinite(createdMs) || createdMs > toMs)) return false;
     return true;
   });
-  return wrapObjects(filtered);
+  return wrapObjects(filtered.map(mapFinancialMovement));
 }
 
 export async function lynonPaymentCounts(): Promise<AnyRecord> {
@@ -1632,7 +1813,12 @@ export async function lynonCasinoOperations(params: {
   const countPerPage = params.countPerPage ?? 100;
   if (params.userId != null) {
     return arrayOf(await lynonRequest(`/api/operation/api/v1.0/backOffices/players/${params.userId}/site/${config.lynon.siteId}`, {
-      query: { page, countPerPage },
+      query: {
+        page,
+        countPerPage,
+        startCreateDate: params.startDate ?? `${yearAgoYmd()}T00:00:00.000Z`,
+        endCreateDate: params.endDate ?? `${todayYmd()}T23:59:59.999Z`,
+      },
     }));
   }
   return arrayOf(await lynonRequest('/api/operation/api/v1.0/backoffices', {
@@ -1657,7 +1843,12 @@ export async function lynonSportBets(params: {
   const countPerPage = params.countPerPage ?? 100;
   if (params.userId != null) {
     return arrayOf(await lynonRequest(`/api/sportOperation/api/v1.0/sportBetEvent/players/${params.userId}/site/${config.lynon.siteId}`, {
-      query: { page, countPerPage },
+      query: {
+        page,
+        countPerPage,
+        startCreateDate: params.startDate,
+        endCreateDate: params.endDate,
+      },
     }));
   }
   return arrayOf(await lynonRequest('/api/sportOperation/api/v1.0/sportBetEvent', {
@@ -1685,14 +1876,16 @@ export async function lynonClientBetHistory(body: AnyRecord = {}): Promise<AnyRe
     MaxRows: recordOf(body.filterBet).MaxRows ?? body.MaxRows,
     SkeepRows: recordOf(body.filterBet).SkeepRows ?? body.SkeepRows,
   });
+  const fromIso = toIsoDateTime(start);
+  const toIso = toIsoDateTime(end, true);
   const rows = (await lynonSportBets({
     page,
     countPerPage,
     userId: clientId || undefined,
-    startDate: toIsoDateTime(start) ?? undefined,
-    endDate: toIsoDateTime(end, true) ?? undefined,
+    startDate: fromIso ?? undefined,
+    endDate: toIso ?? undefined,
   })).map(mapSportBet);
-  return betReportResponse(rows);
+  return betReportResponse(filterMappedRowsByRange(rows, fromIso, toIso));
 }
 
 export async function lynonSiteBetHistory(body: AnyRecord = {}): Promise<AnyRecord> {
@@ -1704,21 +1897,52 @@ export async function lynonClientCasinoHistory(body: AnyRecord = {}): Promise<An
   const start = firstNonEmpty(body.StartDateLocal, body.startDate);
   const end = firstNonEmpty(body.EndDateLocal, body.endDate);
   const { page, countPerPage } = pageFromBody(body);
+  const fromIso = toIsoDateTime(start);
+  const toIso = toIsoDateTime(end, true);
   const rows = (await lynonCasinoOperations({
     page,
     countPerPage,
     userId: clientId || undefined,
-    startDate: toIsoDateTime(start) ?? undefined,
-    endDate: toIsoDateTime(end, true) ?? undefined,
+    startDate: fromIso ?? undefined,
+    endDate: toIso ?? undefined,
   })).map(mapCasinoBet);
-  return betReportResponse(rows);
+  return betReportResponse(filterMappedRowsByRange(rows, fromIso, toIso));
 }
 
-export async function lynonBetSelections(_body: AnyRecord = {}): Promise<AnyRecord> {
-  return {
-    HasError: false,
-    Data: [],
-  };
+export async function lynonBetSelections(body: AnyRecord = {}): Promise<AnyRecord> {
+  const betId = firstNonEmpty(body.BetId, body.betId);
+  const clientId = firstNonEmpty(body.ClientId, body.clientId, body.playerId);
+  if (!betId || !clientId) return { HasError: false, Data: [] };
+
+  const rows = await lynonSportBets({ userId: clientId, countPerPage: 500 });
+  const rawMatch = rows.find((row) => String(row.operationId ?? row.id ?? '') === String(betId));
+  if (!rawMatch) return { HasError: false, Data: [] };
+
+  const bet = mapSportBet(rawMatch);
+  const details = arrayOf(rawMatch.details);
+  const legs = details.length > 0 ? details : [{}];
+  const selections = legs.map((leg, index) => {
+    const legRecord = recordOf(leg);
+    return {
+      BetId: bet.Id,
+      SelectionId: Number.isFinite(numberFrom(legRecord.id, NaN)) ? numberFrom(legRecord.id) : index,
+      Price: numberFrom(bet.Price),
+      State: bet.StateName,
+      StateName: bet.StateName,
+      StartTimeLocal: legRecord.startDate ?? bet.CreatedLocal ?? null,
+      SportName: firstNonEmpty(legRecord.sport, bet.SportName),
+      RegionName: legRecord.region ?? null,
+      CompetitionName: firstNonEmpty(legRecord.competition, bet.CompetitionName),
+      MatchName: firstNonEmpty(legRecord.match, bet.MatchName),
+      MarketName: firstNonEmpty(legRecord.marketType, bet.MarketName),
+      SelectionName: firstNonEmpty(legRecord.selection, bet.SelectionName),
+      DisplayMarketName: firstNonEmpty(legRecord.marketType, bet.MarketName),
+      DisplaySelectionName: firstNonEmpty(legRecord.selection, bet.SelectionName),
+      MatchInfo: legRecord.region ?? null,
+    };
+  });
+
+  return { HasError: false, Data: selections };
 }
 
 export async function lynonProviderReport(body: AnyRecord = {}): Promise<AnyRecord> {
@@ -1911,6 +2135,12 @@ export async function lynonClientDetailedReport(body: AnyRecord = {}): Promise<A
   const sportWin = sportRows.length > 0 ? sportWinFromRows : numberFrom(kpi.TotalSportWinnings);
   const casinoStake = casinoRows.length > 0 ? casinoStakeFromRows : numberFrom(kpi.TotalCasinoStakes);
   const casinoWin = casinoRows.length > 0 ? casinoWinFromRows : numberFrom(kpi.TotalCasinoWinnings);
+  const sportBonusStake = numberFrom(kpi.TotalSportBonusStakes);
+  const sportBonusWin = numberFrom(kpi.TotalSportBonusWinings);
+  const casinoBonusStake = numberFrom(kpi.TotalCasinoBonusStakes);
+  const casinoBonusWin = numberFrom(kpi.TotalCasinoBonusWinings);
+  const sportRealWin = sportWin - sportBonusWin;
+  const casinoRealWin = casinoWin - casinoBonusWin;
   const bonusBalance = numberFrom(kpi.BonusBalance);
   const currentBalance = numberFrom(kpi.Balance);
 
@@ -1932,21 +2162,21 @@ export async function lynonClientDetailedReport(body: AnyRecord = {}): Promise<A
       NetProfitLessBonus: numberFrom(kpi.DepositAmount) - numberFrom(kpi.WithdrawalAmount) - bonusBalance,
       SportTotalBetAmount: sportStake,
       SportBetCount: sportRows.length,
-      SportBonusBetAmount: 0,
-      SportRealMoneyWonAmount: sportWin,
-      SportBonusWinAmount: 0,
+      SportBonusBetAmount: sportBonusStake,
+      SportRealMoneyWonAmount: sportRealWin,
+      SportBonusWinAmount: sportBonusWin,
       SportNetProfit: sportWin - sportStake,
-      SportNetProfitLessBonus: sportWin - sportStake,
+      SportNetProfitLessBonus: sportRealWin - (sportStake - sportBonusStake),
       CasinoTotalBetAmount: casinoStake,
       CasinoBetCount: casinoRows.length,
-      CasinoBonusBetAmount: 0,
-      CasinoRealMoneyWonAmount: casinoWin,
-      CasinoBonusWinAmount: 0,
+      CasinoBonusBetAmount: casinoBonusStake,
+      CasinoRealMoneyWonAmount: casinoRealWin,
+      CasinoBonusWinAmount: casinoBonusWin,
       CasinoNetProfit: casinoWin - casinoStake,
-      CasinoNetProfitLessBonus: casinoWin - casinoStake,
-      RealMoneyWonAmount: sportWin + casinoWin,
-      BonusWonAmount: 0,
-      ConvertedBonusAmount: 0,
+      CasinoNetProfitLessBonus: casinoRealWin - (casinoStake - casinoBonusStake),
+      RealMoneyWonAmount: sportRealWin + casinoRealWin,
+      BonusWonAmount: sportBonusWin + casinoBonusWin,
+      ConvertedBonusAmount: numberFrom(kpi.BonusPayout),
       IsVerified: Boolean(kpi.IsVerified ?? detail.IsVerified),
       CurrencyId: firstNonEmpty(kpi.CurrencyId, detail.CurrencyId, config.lynon.currency),
       Accounts: accounts,
@@ -2018,6 +2248,28 @@ export async function lynonClientBonuses(body: AnyRecord = {}): Promise<AnyRecor
     DataCompleteness: { assignments: true, sessions: true },
   };
 }
+/**
+ * Bir çekim talebini onaylar veya reddeder. Lynon ödeme geçidindeki tek işlem çözümleme
+ * ucu — 'rejected' değeri doğrulanmıştır (gerçek backoffice isteğinden alınmıştır).
+ */
+export async function lynonResolveWithdrawal(input: {
+  transactionId: number | string;
+  status: 'rejected' | 'approved';
+  amount: number;
+  actualAmount: number;
+}): Promise<AnyRecord> {
+  const result = await lynonRequest(`/api/payment-gateway/api/v1.0/operation/resolve/${input.transactionId}`, {
+    method: 'POST',
+    body: {
+      transactionId: Number(input.transactionId),
+      status: input.status,
+      amount: input.amount,
+      actualAmount: input.actualAmount,
+    },
+  });
+  return { HasError: false, Data: result };
+}
+
 export async function lynonClientNotes(body: AnyRecord = {}): Promise<AnyRecord> {
   const clientId = firstNonEmpty(body.ClientId, body.clientId, body.userId);
   if (!clientId) return { HasError: false, AlertType: 'success', AlertMessage: '', ModelErrors: [], Data: [] };
@@ -2066,7 +2318,7 @@ export async function lynonPlayerActivity(login: string, from: Date, to: Date): 
   const toIso = to.toISOString();
   const [deposits, casinoRows, sportRows] = await Promise.all([
     lynonPaymentTransactions({
-      ClientLogin: login,
+      ClientId: userId,
       FromCreatedDateLocal: fromIso,
       ToCreatedDateLocal: toIso,
       MaxRows: 200,
@@ -2123,7 +2375,8 @@ export async function lynonBuildBonusEligibilitySnapshot(input: { login?: string
   const playerId = player.Id;
   const now = new Date();
   const from = new Date(Date.UTC(Math.max(2020, now.getUTCFullYear() - 6), 0, 1));
-  const [kpiResponse, payments, correctionsResponse, bonusesResponse, casinoRows, sportRows] = await Promise.all([
+  const loginIP: string | null = player.LastLoginIp ?? null;
+  const [kpiResponse, payments, correctionsResponse, bonusesResponse, casinoRows, sportRows, sameIPPlayers] = await Promise.all([
     lynonPlayerKpi(playerId),
     lynonPaymentTransactions({
       ClientId: playerId,
@@ -2142,6 +2395,7 @@ export async function lynonBuildBonusEligibilitySnapshot(input: { login?: string
     lynonClientBonuses({ ClientId: playerId }),
     lynonCasinoOperations({ userId: playerId, countPerPage: 500 }),
     lynonSportBets({ userId: playerId, countPerPage: 500 }),
+    loginIP ? lynonClientsByIp({ LoginIP: loginIP }).catch(() => wrapObjects([])) : Promise.resolve(wrapObjects([])),
   ]);
   const kpi = recordOf(kpiResponse.Data);
   const playerPayments = payments
@@ -2182,8 +2436,7 @@ export async function lynonBuildBonusEligibilitySnapshot(input: { login?: string
     };
   });
   const financialMovements = arrayOf(correctionsResponse.Data?.Objects)
-    .filter((row) => String(row.playerId ?? '') === String(playerId))
-    .map(mapCorrectionTransaction);
+    .filter((row) => String(row.playerId ?? '') === String(playerId));
   const profileTransactions: AnyRecord[] = [...paymentTransactions, ...financialMovements]
     .sort((a, b) => Date.parse(String(b.CreatedLocal ?? '')) - Date.parse(String(a.CreatedLocal ?? '')));
   const profileTransactionsByType: Record<string, { count: number; totalAmount: number }> = {};
@@ -2205,8 +2458,12 @@ export async function lynonBuildBonusEligibilitySnapshot(input: { login?: string
     const created = Date.parse(String(row.createdAt ?? row.createDate ?? row.date ?? ''));
     return !lastDepositTime || created >= lastDepositTime;
   });
-  const totalBetAmountSinceLastDeposit = casinoBets.reduce((sum, row) => sum + Math.abs(numberFrom(row.amount)), 0) +
-    sportBetsAfterDeposit.reduce((sum, row) => sum + Math.abs(numberFrom(row.amount ?? row.stake ?? row.betAmount)), 0);
+  const casinoBetAmountSinceLastDeposit = casinoBets.reduce((sum, row) => sum + Math.abs(numberFrom(row.amount)), 0);
+  const sportBetAmountSinceLastDeposit = sportBetsAfterDeposit.reduce((sum, row) => sum + Math.abs(numberFrom(row.amount ?? row.stake ?? row.betAmount)), 0);
+  const totalBetAmountSinceLastDeposit = casinoBetAmountSinceLastDeposit + sportBetAmountSinceLastDeposit;
+  const sportOddsSinceLastDeposit = sportBetsAfterDeposit
+    .map((row) => numberFrom(row.price ?? row.odds, 0))
+    .filter((odds) => odds > 0);
   const bonusRows = Array.isArray(bonusesResponse.Data) ? bonusesResponse.Data : [];
   const bonuses = bonusRows.map((bonus: AnyRecord) => ({
     ...bonus,
@@ -2221,12 +2478,23 @@ export async function lynonBuildBonusEligibilitySnapshot(input: { login?: string
     openStatusPattern.test(String(row.status ?? row.state ?? row.resultStatus ?? ''))
   ).length;
   const registrationMs = Date.parse(String(player.CreatedLocalDate ?? player.registrationDate ?? ''));
+  const sameIPOtherLogins = new Set(
+    arrayOf(sameIPPlayers.Data?.Objects)
+      .map((row) => String(row.Login ?? '').trim().toLocaleLowerCase('tr-TR'))
+      .filter((rowLogin) => rowLogin && rowLogin !== String(player.Login ?? '').trim().toLocaleLowerCase('tr-TR'))
+  );
 
   return {
     id: playerId,
     ClientId: playerId,
     username: player.Login,
     ClientLogin: player.Login,
+    isPhoneVerified: Boolean(player.IsPhoneVerified),
+    isEmailVerified: Boolean(player.IsEmailVerified),
+    isIdentityVerified: Boolean(player.IsIdentityVerified),
+    verificationStatus: player.VerificationStatus ?? null,
+    loginIP,
+    sameIPClientsCount: sameIPOtherLogins.size,
     registrationDate: player.CreatedLocalDate ?? player.registrationDate ?? null,
     accountAgeDays: Number.isFinite(registrationMs) ? Math.max(0, Math.floor((Date.now() - registrationMs) / 86_400_000)) : undefined,
     totalDeposits: numberFrom(kpi.DepositAmount, successfulDeposits.reduce((sum, row) => sum + numberFrom(row.amount), 0)),
@@ -2243,6 +2511,9 @@ export async function lynonBuildBonusEligibilitySnapshot(input: { login?: string
     openBetCount,
     isFirstWithdrawal: withdrawals.length === 0,
     totalBetAmountSinceLastDeposit,
+    casinoBetAmountSinceLastDeposit,
+    sportBetAmountSinceLastDeposit,
+    sportOddsSinceLastDeposit,
     wageringRemaining: bonuses.reduce((sum: number, bonus: AnyRecord) => sum + numberFrom(bonus.ToWagerAmount), 0),
     bonuses,
     profileTransactions,
@@ -2251,6 +2522,7 @@ export async function lynonBuildBonusEligibilitySnapshot(input: { login?: string
     financialMovementCount: financialMovements.length,
     paymentTransactionCount: paymentTransactions.length,
     recentGames: casinoBets.map((row) => firstNonEmpty(row.gameName, row.game?.name)).filter(Boolean),
+    recentGameProviders: casinoBets.map((row) => firstNonEmpty(recordOf(row.round).providerName, row.providerName, row.game?.providerName)).filter(Boolean),
     totalKpi: numberFrom(kpi.GamingProfitAndLose),
     netLoss: numberFrom(kpi.GamingProfitAndLose),
     rawKpi: kpi,

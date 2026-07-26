@@ -200,7 +200,7 @@ export function ClientBonusReport() {
                                 setSearchTerm(e.target.value);
                                 setCurrentPage(1);
                             }}
-                            className="h-10 w-full sm:w-64 rounded-xl border border-white/10 bg-slate-900/50 pl-10 pr-4 text-sm text-white placeholder:text-slate-500 focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
+                            className="h-10 w-full sm:w-64 rounded-xl border border-white/10 bg-slate-900/50 pl-10 pr-4 text-sm text-white placeholder:text-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                         />
                     </div>
                 </div>
@@ -299,7 +299,7 @@ export function ClientBonusReport() {
                                 setRowsPerPage(Number(e.target.value));
                                 setCurrentPage(1);
                             }}
-                            className="rounded-lg border border-white/10 bg-slate-900/50 px-2 py-1 text-white focus:border-violet-500 focus:outline-none"
+                            className="rounded-lg border border-white/10 bg-slate-900/50 px-2 py-1 text-white focus:border-blue-500 focus:outline-none"
                         >
                             {[20, 50, 100, 250, 500].map((pageSize) => (
                                 <option key={pageSize} value={pageSize}>

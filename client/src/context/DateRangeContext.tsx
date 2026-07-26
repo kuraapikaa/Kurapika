@@ -9,17 +9,8 @@ function todayYMD(): string {
   return `${y}-${m}-${day}`;
 }
 
-function daysAgoYMD(days: number): string {
-  const d = new Date();
-  d.setDate(d.getDate() - days);
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-}
-
 const defaultRange: DateRange = {
-  startDate: daysAgoYMD(29),
+  startDate: todayYMD(),
   endDate: todayYMD(),
 };
 
@@ -33,7 +24,7 @@ const DateRangeContext = createContext<DateRangeContextValue | null>(null);
 
 export function DateRangeProvider({ children }: { children: ReactNode }) {
   const [dateRange, setDateRangeState] = useState<DateRange>(defaultRange);
-  const [activePresetId, setActivePresetId] = useState<string | null>('last30days');
+  const [activePresetId, setActivePresetId] = useState<string | null>('today');
 
   const setDateRange = useCallback((range: DateRange, presetId?: string) => {
     setDateRangeState(range);

@@ -296,7 +296,7 @@ export function AutoBonusPanel({ variant = 'admin', prefilledLogin }: AutoBonusP
                                 <div className="bg-zinc-900/50 border border-white/5 rounded-2xl p-6 backdrop-blur-xl">
                                     <div className="flex items-center justify-between mb-6">
                                         <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-purple-500 to-purple-500 flex items-center justify-center text-white font-bold text-xl shadow-lg">
+                                            <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-blue-500 to-blue-500 flex items-center justify-center text-white font-bold text-xl shadow-lg">
                                                 {account?.ClientLogin?.[0]?.toUpperCase() || <User />}
                                             </div>
                                             <div>
@@ -315,7 +315,7 @@ export function AutoBonusPanel({ variant = 'admin', prefilledLogin }: AutoBonusP
                                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                                         <div className="p-3 rounded-xl bg-black/30 border border-white/5">
                                             <p className="text-zinc-500 text-[10px] uppercase font-bold mb-1 flex items-center gap-1.5">
-                                                <Wallet size={12} className="text-purple-400" /> Son Yatırım
+                                                <Wallet size={12} className="text-blue-400" /> Son Yatırım
                                             </p>
                                             <p className="text-white font-bold text-sm">
                                                 {account?.lastDeposit?.amount?.toLocaleString('tr-TR')} TL
@@ -375,7 +375,7 @@ export function AutoBonusPanel({ variant = 'admin', prefilledLogin }: AutoBonusP
                                     {/* Bonus Kontrolleri */}
                                     <div className="bg-zinc-900/50 border border-white/5 rounded-2xl p-5 backdrop-blur-xl">
                                         <h4 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
-                                            <CheckCircle2 className="text-purple-400" size={16} />
+                                            <CheckCircle2 className="text-blue-400" size={16} />
                                             Bonus & Çekim Koşulları
                                         </h4>
                                         <div className="space-y-3">
@@ -478,7 +478,7 @@ export function AutoBonusPanel({ variant = 'admin', prefilledLogin }: AutoBonusP
                                                         <p className="text-[10px] text-zinc-500 mt-1 flex items-center gap-2">
                                                             {bonus.isFreebet && <span className="text-amber-400 font-semibold">Freebet</span>}
                                                             {bonus.platformBonusDefinitionId != null && (
-                                                                <span className="text-purple-300/80 font-bold">
+                                                                <span className="text-blue-300/80 font-bold">
                                                                     Platform ID: {bonus.platformBonusDefinitionId}
                                                                 </span>
                                                             )}
@@ -509,9 +509,9 @@ export function AutoBonusPanel({ variant = 'admin', prefilledLogin }: AutoBonusP
                                         <motion.div
                                             initial={{ opacity: 0, height: 0 }}
                                             animate={{ opacity: 1, height: 'auto' }}
-                                            className="p-4 rounded-xl bg-purple-500/5 border border-purple-500/10 space-y-3"
+                                            className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/10 space-y-3"
                                         >
-                                            <h4 className="text-xs font-bold text-purple-400 uppercase tracking-widest flex items-center justify-between">
+                                            <h4 className="text-xs font-bold text-blue-400 uppercase tracking-widest flex items-center justify-between">
                                                 <span>Bonus Spesifik Kuralları</span>
                                                 {specificBonusCheck.overallOk ? (
                                                     <span className="bg-emerald-500/10 text-emerald-500 px-2 py-0.5 rounded text-[9px]">TÜM ŞARTLAR UYGUN</span>

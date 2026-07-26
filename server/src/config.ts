@@ -90,6 +90,12 @@ export const config = {
     senderId: process.env.SEMPICO_SENDER_ID || 'SMS',
     apiUrl: 'https://api.sempico.solutions/send',
   },
+  /** Telegram Bonusu: kanal/grup üyeliğini gerçek zamanlı doğrulamak için Bot API. */
+  telegram: {
+    botToken: (process.env.TELEGRAM_BOT_TOKEN || '').trim(),
+    botUsername: (process.env.TELEGRAM_BOT_USERNAME || '').trim(),
+    webhookSecret: (process.env.TELEGRAM_WEBHOOK_SECRET || '').trim(),
+  },
   /** Bonus listesi: POST rgs-webadminapi.betconstruct.com/api/Bonus/GetBonusDefinitions */
   bonusApi: {
     baseUrl: process.env.BONUS_API_BASE || 'https://rgs-webadminapi.betconstruct.com',

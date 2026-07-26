@@ -156,9 +156,9 @@ const tabStyle = (isActive: boolean) =>
 const ActiveTabIndicator = () => (
   <motion.div
     layoutId="activeTab"
-    className="absolute inset-0 rounded-lg border border-indigo-400/20 bg-indigo-400/[0.11]"
+    className="absolute inset-0 rounded-lg border border-blue-400/20 bg-blue-400/[0.11]"
   >
-    <div className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-r-full bg-indigo-300" />
+    <div className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-r-full bg-blue-300" />
   </motion.div>
 );
 
@@ -340,7 +340,7 @@ export default function App() {
   const location = useLocation();
   const pathname = location.pathname || '/';
   const activeTab = pathToTab(pathname);
-  const hasDateFilters = activeTab === 'dashboard' || activeTab === 'withdrawals' || activeTab === 'deposits' || activeTab === 'autoWithdraw' || activeTab === 'registrationStats' || activeTab === 'providerReport' || activeTab === 'bonusReport';
+  const hasDateFilters = activeTab === 'dashboard' || activeTab === 'withdrawals' || activeTab === 'deposits' || activeTab === 'autoWithdraw' || activeTab === 'registrationStats' || activeTab === 'providerReport' || activeTab === 'bonusReport' || activeTab === 'transactions';
   const narcosPublicPaths = ['/bonus-talep', '/lobi', '/milyonerler', '/cark', '/kazi-kazan', '/skor-tahmin', '/gorevler', '/beni-ara', '/ortaklik', '/sadakat', '/vip'];
 
   useEffect(() => {
@@ -375,7 +375,7 @@ export default function App() {
         if (data.themeColor) {
            document.documentElement.style.setProperty('--primary-color', data.themeColor);
            // Fallback CSS vars for Tailwind
-           document.documentElement.style.setProperty('--color-violet-500', data.themeColor); // Quick hack to overwrite default violet
+           document.documentElement.style.setProperty('--color-blue-500', data.themeColor); // Quick hack to overwrite default violet
         }
       }
     }).catch(console.error);
@@ -608,11 +608,11 @@ export default function App() {
           <HaftalikTurnuva />
         </Suspense>
       ) : pathname === '/turnuva/aylik' ? (
-        <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-[#070b14]"><div className="w-10 h-10 border-2 border-purple-400/30 border-t-purple-400 rounded-full animate-spin" /></div>}>
+        <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-[#070b14]"><div className="w-10 h-10 border-2 border-blue-400/30 border-t-blue-400 rounded-full animate-spin" /></div>}>
           <AylikTurnuva />
         </Suspense>
       ) : pathname === '/ortaklik' ? (
-        <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-[#070b14]"><div className="w-10 h-10 border-2 border-purple-400/30 border-t-purple-400 rounded-full animate-spin" /></div>}>
+        <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-[#070b14]"><div className="w-10 h-10 border-2 border-blue-400/30 border-t-blue-400 rounded-full animate-spin" /></div>}>
           <OrtaklikSayfasi />
         </Suspense>
       ) : pathname === '/yazi-tura' ? (
@@ -620,7 +620,7 @@ export default function App() {
           <YaziTuraSayfasi />
         </Suspense>
       ) : pathname === '/tas-kagit-makas' ? (
-        <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-[#070b14]"><div className="w-10 h-10 border-2 border-indigo-400/30 border-t-indigo-400 rounded-full animate-spin" /></div>}>
+        <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-[#070b14]"><div className="w-10 h-10 border-2 border-blue-400/30 border-t-blue-400 rounded-full animate-spin" /></div>}>
           <TasKagitMakasSayfasi />
         </Suspense>
       ) : pathname === '/sadakat' ? (
@@ -628,13 +628,13 @@ export default function App() {
           <LoyaltyHub />
         </Suspense>
       ) : pathname === '/vip' ? (
-        <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-[#070b14]"><div className="w-10 h-10 border-2 border-purple-400/30 border-t-purple-400 rounded-full animate-spin" /></div>}>
+        <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-[#070b14]"><div className="w-10 h-10 border-2 border-blue-400/30 border-t-blue-400 rounded-full animate-spin" /></div>}>
           <VipSayfasi />
         </Suspense>
       ) : pathname.startsWith('/master') ? (
-        <Suspense fallback={<div className="flex h-screen items-center justify-center bg-[#050505]"><div className="w-8 h-8 rounded-full border-2 border-purple-500/30 border-t-purple-500 animate-spin" /></div>}>
+        <Suspense fallback={<div className="flex h-screen items-center justify-center bg-[#050505]"><div className="w-8 h-8 rounded-full border-2 border-blue-500/30 border-t-blue-500 animate-spin" /></div>}>
            {isMasterAuth === null ? (
-              <div className="flex h-screen items-center justify-center bg-[#050505]"><div className="w-8 h-8 rounded-full border-2 border-purple-500/30 border-t-purple-500 animate-spin" /></div>
+              <div className="flex h-screen items-center justify-center bg-[#050505]"><div className="w-8 h-8 rounded-full border-2 border-blue-500/30 border-t-blue-500 animate-spin" /></div>
            ) : isMasterAuth === false ? (
               <MasterLogin onLoginSuccess={() => setIsMasterAuth(true)} />
            ) : (
@@ -676,9 +676,9 @@ export default function App() {
           >
             <div className="sidebar-brand flex h-16 shrink-0 items-center justify-between gap-3 border-b border-white/[0.06] px-3">
               <div className="flex min-w-0 flex-1 items-center gap-2.5">
-                <span className="grid h-8 w-8 shrink-0 grid-cols-2 gap-1 rounded-lg border border-indigo-300/20 bg-indigo-300/[0.09] p-2">
-                  <i className="rounded-[2px] bg-indigo-300" /><i className="rounded-[2px] bg-indigo-300" />
-                  <i className="rounded-[2px] bg-indigo-300" /><i className="rounded-[2px] bg-indigo-300" />
+                <span className="grid h-8 w-8 shrink-0 grid-cols-2 gap-1 rounded-lg border border-blue-300/20 bg-blue-300/[0.09] p-2">
+                  <i className="rounded-[2px] bg-blue-300" /><i className="rounded-[2px] bg-blue-300" />
+                  <i className="rounded-[2px] bg-blue-300" /><i className="rounded-[2px] bg-blue-300" />
                 </span>
                 <span className="min-w-0 leading-tight">
                   <strong className="block truncate text-[13px] font-bold tracking-[-0.02em] text-white">Bugs Software</strong>
@@ -716,7 +716,7 @@ export default function App() {
                                   <Icon size={14} strokeWidth={1.9} />
                                 </span>
                                 <span className="relative z-10 min-w-0 flex-1 truncate">{item.label}</span>
-                                {isActive && <span className="relative z-10 h-1.5 w-1.5 rounded-full bg-indigo-300" />}
+                                {isActive && <span className="relative z-10 h-1.5 w-1.5 rounded-full bg-blue-300" />}
                               </>
                             )}
                           </NavLink>
@@ -777,14 +777,14 @@ export default function App() {
                   <button
                     type="button"
                     onClick={handleRefreshDashboard}
-                    className={cn("hidden items-center gap-2 rounded-lg bg-indigo-400 px-3 py-2 text-xs font-bold text-white transition hover:bg-indigo-300 lg:flex", hasDateFilters && "xl:hidden")}
+                    className={cn("hidden items-center gap-2 rounded-lg bg-blue-400 px-3 py-2 text-xs font-bold text-white transition hover:bg-blue-300 lg:flex", hasDateFilters && "xl:hidden")}
                   >
                     <RefreshCw size={16} />
                     Verileri yenile
                   </button>
                   <NotificationCenter />
                   <div className="hidden h-9 items-center gap-2 rounded-lg border border-white/[0.07] bg-white/[0.025] px-2 lg:flex">
-                    <div className="flex h-6 w-6 items-center justify-center rounded-md bg-indigo-400 text-[9px] font-black text-white">BS</div>
+                    <div className="flex h-6 w-6 items-center justify-center rounded-md bg-blue-400 text-[9px] font-black text-white">BS</div>
                     <div className="leading-tight">
                       <p className="text-[11px] font-bold tracking-[-0.01em] text-white">Bugs Software</p>
                       <p className="text-[8px] font-medium uppercase tracking-[0.12em] text-slate-600">TR · Partner</p>
@@ -845,7 +845,7 @@ export default function App() {
                               {dashboardSubTab === id && (
                                 <motion.div
                                   layoutId="dashboardSubTab"
-                                  className="absolute inset-0 rounded-md border border-indigo-400/20 bg-indigo-400/[0.12]"
+                                  className="absolute inset-0 rounded-md border border-blue-400/20 bg-blue-400/[0.12]"
                                 />
                               )}
                               <span className="relative z-10">{label}</span>

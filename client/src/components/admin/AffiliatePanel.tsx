@@ -166,7 +166,7 @@ export function AffiliatePanel() {
   const cards = [
     { label: 'Toplam affiliate', value: formatNumber(bTagStats.length), icon: Users, color: 'text-cyan-300' },
     { label: 'Toplam oyuncu', value: formatNumber(totalPlayers), icon: Target, color: 'text-emerald-300' },
-    { label: 'Net gelir (GGR)', value: `${formatNumber(totalGgr)} ₺`, icon: TrendingUp, color: 'text-violet-300' },
+    { label: 'Net gelir (GGR)', value: `${formatNumber(totalGgr)} ₺`, icon: TrendingUp, color: 'text-blue-300' },
     { label: 'Aktif oyuncu', value: formatNumber(activePlayers), icon: UserCheck, color: 'text-amber-300' },
   ];
 

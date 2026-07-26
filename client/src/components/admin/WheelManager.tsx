@@ -87,8 +87,8 @@ const DEFAULT_APPEARANCE: WheelAppearance = {
   rimColor: '#111827',
   centerColor: '#0f172a',
   pointerColor: '#f8fafc',
-  glowColor: '#d4af37',
-  pageAccentColor: '#d4af37',
+  glowColor: '#3b82f6',
+  pageAccentColor: '#3b82f6',
   borderWidth: 10,
   centerSize: 64,
   labelSize: 14,
@@ -101,7 +101,7 @@ const SLICE_COLORS = [
   '#14b8a6',
   '#f43f5e',
   '#f59e0b',
-  '#9a701a',
+  '#1d4ed8',
   '#22c55e',
   '#3b82f6',
   '#c95c1b',
@@ -195,7 +195,7 @@ function ColorField({
       <span className={cn('mb-1 block font-black uppercase tracking-widest text-slate-500', compact ? 'text-[9px]' : 'text-[10px]')}>
         {label}
       </span>
-      <span className="flex h-10 items-center gap-2 rounded-lg border border-white/10 bg-[#070b11] px-2 transition focus-within:border-[#d4af37]/50">
+      <span className="flex h-10 items-center gap-2 rounded-lg border border-white/10 bg-[#070b11] px-2 transition focus-within:border-[#3b82f6]/50">
         <input
           type="color"
           value={safe}
@@ -235,17 +235,17 @@ function RangeField({
     <label className="block">
       <span className="mb-2 flex items-center justify-between gap-3 text-[10px] font-black uppercase tracking-widest text-slate-500">
         <span>{label}</span>
-        <span className="text-[#f4d36f]">{value}{suffix}</span>
+        <span className="text-[#5eead4]">{value}{suffix}</span>
       </span>
       <span className="relative block h-2 rounded-full bg-black/50">
-        <span className="absolute left-0 top-0 h-full rounded-full bg-[#d4af37]/60" style={{ width: `${pct}%` }} />
+        <span className="absolute left-0 top-0 h-full rounded-full bg-[#3b82f6]/60" style={{ width: `${pct}%` }} />
         <input
           type="range"
           min={min}
           max={max}
           value={value}
           onChange={event => onChange(Number(event.target.value))}
-          className="absolute inset-0 h-full w-full cursor-pointer appearance-none bg-transparent accent-[#d4af37]"
+          className="absolute inset-0 h-full w-full cursor-pointer appearance-none bg-transparent accent-[#3b82f6]"
         />
       </span>
     </label>
@@ -273,7 +273,7 @@ export function WheelSvg({
   const centerRadius = clampNumber((Number(appearance.centerSize) || 64) / 2, 22, 54);
   const count = Math.max(wheel.length, 1);
   const angle = (Math.PI * 2) / count;
-  const glowColor = validHex(appearance.glowColor, '#d4af37');
+  const glowColor = validHex(appearance.glowColor, '#3b82f6');
   const rimColor = validHex(appearance.rimColor, '#111827');
   const centerColor = validHex(appearance.centerColor, '#0f172a');
   const pointerColor = validHex(appearance.pointerColor, '#f8fafc');
@@ -289,7 +289,7 @@ export function WheelSvg({
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="block h-auto w-full overflow-visible" role="img" aria-label="Şans çarkı">
       <defs>
         <linearGradient id={`${idPrefix}-gold`} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#6f4308" /><stop offset="22%" stopColor="#f8e29a" /><stop offset="48%" stopColor={glowColor} /><stop offset="72%" stopColor="#7c4d08" /><stop offset="100%" stopColor="#f4d36f" />
+          <stop offset="0%" stopColor="#6f4308" /><stop offset="22%" stopColor="#f8e29a" /><stop offset="48%" stopColor={glowColor} /><stop offset="72%" stopColor="#7c4d08" /><stop offset="100%" stopColor="#5eead4" />
         </linearGradient>
         <radialGradient id={`${idPrefix}-rim`} cx="35%" cy="25%" r="78%">
           <stop offset="0%" stopColor="#475569" /><stop offset="55%" stopColor={rimColor} /><stop offset="100%" stopColor="#020408" />
@@ -358,12 +358,12 @@ function DeviceSimulationPanel({
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="flex items-center gap-2 text-base font-black text-white">
-            <Monitor size={17} className="text-[#d4af37]" />
+            <Monitor size={17} className="text-[#3b82f6]" />
             Cihaz Simülasyonu
           </h2>
           <p className="mt-1 text-xs font-medium text-slate-500">Oyuncu ekranının web ve mobil yerleşimini aynı çark verisiyle kontrol edin.</p>
         </div>
-        <span className="inline-flex h-9 items-center gap-2 rounded-lg border border-[#d4af37]/20 bg-[#d4af37]/10 px-3 text-[10px] font-black uppercase tracking-widest text-[#f4d36f]">
+        <span className="inline-flex h-9 items-center gap-2 rounded-lg border border-[#3b82f6]/20 bg-[#3b82f6]/10 px-3 text-[10px] font-black uppercase tracking-widest text-[#5eead4]">
           <Smartphone size={14} />
           Web + Mobil
         </span>
@@ -381,20 +381,20 @@ function DeviceSimulationPanel({
           </div>
           <div
             className="grid min-h-[360px] grid-cols-1 items-center gap-5 p-5 lg:grid-cols-[minmax(0,1fr)_280px]"
-            style={appearance.glowStrength > 0 ? { boxShadow: `inset 0 0 70px ${validHex(appearance.glowColor, '#d4af37')}14` } : undefined}
+            style={appearance.glowStrength > 0 ? { boxShadow: `inset 0 0 70px ${validHex(appearance.glowColor, '#3b82f6')}14` } : undefined}
           >
             <div className="flex justify-center">
               <WheelSvg wheel={wheel} appearance={appearance} size={330} />
             </div>
             <div className="rounded-xl border border-white/[0.08] bg-[#080d13]/95 p-4">
               <div className="mb-4">
-                <div className="text-[10px] font-black uppercase tracking-widest text-[#d4af37]">Şans Çarkı</div>
+                <div className="text-[10px] font-black uppercase tracking-widest text-[#3b82f6]">Şans Çarkı</div>
                 <div className="mt-1 text-xl font-black text-white">Çark hakkını kullan</div>
               </div>
               <div className="space-y-3">
                 <div className="h-11 rounded-lg border border-white/10 bg-black/30 px-3 py-3 text-xs font-bold text-slate-400">Kullanıcı adı</div>
                 <div className="h-11 rounded-lg border border-white/10 bg-black/30 px-3 py-3 text-xs font-bold text-slate-400">Çark kodu</div>
-                <div className="flex h-11 items-center justify-center rounded-lg bg-[#d4af37] text-xs font-black uppercase tracking-widest text-zinc-950">Çevir</div>
+                <div className="flex h-11 items-center justify-center rounded-lg bg-[#3b82f6] text-xs font-black uppercase tracking-widest text-zinc-950">Çevir</div>
               </div>
             </div>
           </div>
@@ -408,7 +408,7 @@ function DeviceSimulationPanel({
               </div>
               <div className="px-3 py-4">
                 <div className="mb-3 flex items-center justify-between">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-[#d4af37]">Mobil</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-[#3b82f6]">Mobil</span>
                   <span className="rounded-full bg-emerald-400/10 px-2 py-1 text-[9px] font-black uppercase tracking-widest text-emerald-300">Aktif</span>
                 </div>
                 <div className="flex justify-center">
@@ -417,7 +417,7 @@ function DeviceSimulationPanel({
                 <div className="mt-4 space-y-2">
                   <div className="h-10 rounded-lg border border-white/10 bg-black/30 px-3 py-2.5 text-[11px] font-bold text-slate-500">Kullanıcı adı</div>
                   <div className="h-10 rounded-lg border border-white/10 bg-black/30 px-3 py-2.5 text-[11px] font-bold text-slate-500">Çark kodu</div>
-                  <div className="flex h-10 items-center justify-center rounded-lg bg-[#d4af37] text-[11px] font-black uppercase tracking-widest text-zinc-950">Çevir</div>
+                  <div className="flex h-10 items-center justify-center rounded-lg bg-[#3b82f6] text-[11px] font-black uppercase tracking-widest text-zinc-950">Çevir</div>
                 </div>
               </div>
             </div>
@@ -563,7 +563,7 @@ export function WheelManager({
                     className={cn(
                       'inline-flex h-10 items-center gap-2 rounded-lg px-4 text-xs font-black uppercase tracking-widest transition',
                       active
-                        ? 'bg-[#d4af37] text-zinc-950'
+                        ? 'bg-[#3b82f6] text-zinc-950'
                         : 'bg-white/[0.04] text-slate-500 hover:bg-white/[0.07] hover:text-slate-200'
                     )}
                   >
@@ -582,7 +582,7 @@ export function WheelManager({
                     type="number"
                     value={minInvestment}
                     onChange={event => onMinInvestmentChange(Number(event.target.value))}
-                    className="h-10 w-32 rounded-lg border border-white/10 bg-[#060a10] px-3 pr-8 text-sm font-black text-[#f4d36f] outline-none transition focus:border-[#d4af37]/50"
+                    className="h-10 w-32 rounded-lg border border-white/10 bg-[#060a10] px-3 pr-8 text-sm font-black text-[#5eead4] outline-none transition focus:border-[#3b82f6]/50"
                   />
                   <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-600">TL</span>
                 </span>
@@ -608,7 +608,7 @@ export function WheelManager({
               return (
                 <div key={card.label} className="rounded-lg border border-white/[0.08] bg-white/[0.025] p-3">
                   <div className="flex items-center gap-3">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-black/35 text-[#d4af37]">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-black/35 text-[#3b82f6]">
                       <Icon size={16} />
                     </span>
                     <span className="min-w-0">
@@ -631,7 +631,7 @@ export function WheelManager({
                 <button
                   type="button"
                   onClick={handleAddSlice}
-                  className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#d4af37] px-4 text-xs font-black uppercase tracking-widest text-zinc-950 transition hover:bg-[#f4d36f]"
+                  className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#3b82f6] px-4 text-xs font-black uppercase tracking-widest text-zinc-950 transition hover:bg-[#5eead4]"
                 >
                   <Plus size={15} />
                   Dilim Ekle
@@ -683,14 +683,14 @@ export function WheelManager({
                           list="wheel-bonus-options"
                           value={slice.bonusId ? String(slice.bonusId) : slice.label}
                           onChange={event => handleBonusChange(slice, event.target.value)}
-                          className="h-10 rounded-lg border border-white/10 bg-[#060a10] px-3 text-sm font-bold text-white outline-none transition focus:border-[#d4af37]/50"
+                          className="h-10 rounded-lg border border-white/10 bg-[#060a10] px-3 text-sm font-bold text-white outline-none transition focus:border-[#3b82f6]/50"
                           placeholder="Bonus ID veya etiket"
                         />
 
                         <select
                           value={slice.type}
                           onChange={event => changeRewardType(slice, event.target.value as WheelSlice['type'])}
-                          className="h-10 rounded-lg border border-white/10 bg-[#060a10] px-3 text-xs font-bold text-slate-200 outline-none transition focus:border-[#d4af37]/50"
+                          className="h-10 rounded-lg border border-white/10 bg-[#060a10] px-3 text-xs font-bold text-slate-200 outline-none transition focus:border-[#3b82f6]/50"
                         >
                           <option value="bonus">Lynon bonusu</option>
                           <option value="cash">Nakit / PlayerAccount</option>
@@ -702,14 +702,14 @@ export function WheelManager({
                           type="number"
                           value={slice.amount ?? 0}
                           onChange={event => handleUpdateSlice(slice.id, { amount: Number(event.target.value) })}
-                          className="h-10 rounded-lg border border-white/10 bg-[#060a10] px-3 text-sm font-black text-slate-100 outline-none transition focus:border-[#d4af37]/50"
+                          className="h-10 rounded-lg border border-white/10 bg-[#060a10] px-3 text-sm font-black text-slate-100 outline-none transition focus:border-[#3b82f6]/50"
                         />
 
                         <input
                           type="number"
                           value={slice.probability ?? 0}
                           onChange={event => handleUpdateSlice(slice.id, { probability: Number(event.target.value) })}
-                          className="h-10 rounded-lg border border-white/10 bg-[#060a10] px-3 text-sm font-black text-slate-100 outline-none transition focus:border-[#d4af37]/50"
+                          className="h-10 rounded-lg border border-white/10 bg-[#060a10] px-3 text-sm font-black text-slate-100 outline-none transition focus:border-[#3b82f6]/50"
                         />
 
                         <button
@@ -759,7 +759,7 @@ export function WheelManager({
                       type="text"
                       value={slice.detail || ''}
                       onChange={event => handleUpdateSlice(slice.id, { detail: event.target.value })}
-                      className="h-9 w-full rounded-lg border border-white/10 bg-black/25 px-3 text-xs text-slate-300 outline-none focus:border-[#d4af37]/50"
+                      className="h-9 w-full rounded-lg border border-white/10 bg-black/25 px-3 text-xs text-slate-300 outline-none focus:border-[#3b82f6]/50"
                       placeholder="Oyuncuya gösterilecek koşul"
                     />
                   </label>
@@ -772,13 +772,13 @@ export function WheelManager({
                         min={0}
                         value={slice.stock ?? 0}
                         onChange={event => handleUpdateSlice(slice.id, { stock: Math.max(0, Number(event.target.value)) })}
-                        className="h-9 w-full rounded-lg border border-white/10 bg-black/25 px-3 text-xs font-bold text-white outline-none focus:border-[#d4af37]/50"
+                        className="h-9 w-full rounded-lg border border-white/10 bg-black/25 px-3 text-xs font-bold text-white outline-none focus:border-[#3b82f6]/50"
                       />
                     </label>
                   )}
 
                   {slice.type === 'cash' && (
-                    <p className="rounded-lg border border-indigo-300/10 bg-indigo-300/[0.05] px-3 py-2 text-[11px] leading-relaxed text-slate-400">
+                    <p className="rounded-lg border border-blue-300/10 bg-blue-300/[0.05] px-3 py-2 text-[11px] leading-relaxed text-slate-400">
                       Nakit ödül, Lynon Player Main hesabına <strong className="text-slate-200">crediting</strong> düzeltmesi olarak işlenir.
                     </p>
                   )}
@@ -962,7 +962,7 @@ export function WheelManager({
                 <button
                   type="button"
                   onClick={addManualCode}
-                  className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-violet-400 px-4 text-xs font-black uppercase tracking-widest text-zinc-950 transition hover:bg-violet-300"
+                  className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-blue-400 px-4 text-xs font-black uppercase tracking-widest text-zinc-950 transition hover:bg-blue-300"
                 >
                   <BadgePlus size={15} />
                   Kod Üret

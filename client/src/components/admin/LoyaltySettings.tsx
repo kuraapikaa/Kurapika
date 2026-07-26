@@ -75,7 +75,7 @@ export function LoyaltySettings() {
         setMarket(market.filter(item => item.id !== id));
     };
 
-    if (marketLoading) return <div className="p-20 text-center"><RefreshCw className="animate-spin mx-auto text-purple-500" /></div>;
+    if (marketLoading) return <div className="p-20 text-center"><RefreshCw className="animate-spin mx-auto text-blue-500" /></div>;
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
@@ -132,11 +132,11 @@ export function LoyaltySettings() {
             <div className="space-y-6">
                 <div className="flex items-center justify-between px-2">
                     <h2 className="text-sm font-black text-white uppercase tracking-[0.2em] flex items-center gap-3">
-                        <Store size={18} className="text-purple-500" /> ÖDÜL MARKETİ ÜRÜNLERİ
+                        <Store size={18} className="text-blue-500" /> ÖDÜL MARKETİ ÜRÜNLERİ
                     </h2>
                     <button 
                         onClick={addMarketItem}
-                        className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-black text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-purple-900/20"
+                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-black text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-blue-900/20"
                     >
                         <Plus size={14} /> ÜRÜN EKLE
                     </button>

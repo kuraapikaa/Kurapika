@@ -36,7 +36,7 @@ export function DateRangePresets() {
               {isActive && (
                 <motion.div
                   layoutId="dateRangeIndicator"
-                  className="absolute inset-0 z-0 rounded-md bg-indigo-400"
+                  className="absolute inset-0 z-0 rounded-md bg-blue-400"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ type: 'spring', stiffness: 400, damping: 30 }}

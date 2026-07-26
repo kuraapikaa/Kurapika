@@ -37,7 +37,7 @@ export function SportbookOverview({ data, isLoading, error }: SportbookOverviewP
 
       {isLoading && (
         <div className="flex h-32 flex-col items-center justify-center gap-3 rounded-xl border border-white/10 bg-slate-900/40">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-violet-500 border-t-transparent" />
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
           <div className="text-xs font-medium text-slate-500">Spor kitabı verileri işleniyor…</div>
         </div>
       )}

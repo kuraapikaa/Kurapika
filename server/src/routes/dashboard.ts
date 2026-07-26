@@ -55,6 +55,7 @@ import {
   lynonTopCasinoGames,
   lynonTopSports,
   lynonWithdrawalRequests,
+  lynonResolveWithdrawal,
   lynonBetSelections,
   lynonCampaigns,
   lynonCampaign,
@@ -542,7 +543,7 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
               return {
                 id: campaignId,
                 promoTitle: resolvePromoTitle({ promoTitle: inferredTitle, title, Name: title, systemName: campaign.systemName }, 'Bonus'),
-                image: override?.image?.trim() || '',
+                image: override?.image?.trim() || definition?.image || '',
                 detailHtml: override?.detailHtml?.trim() || definition?.detailHtml || '',
                 rules: {
                   ...(definition?.rules ?? {}),
@@ -799,6 +800,38 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
         }
       }
       return proxyWithdrawalPost(request, reply, config.withdrawalApi, getBackofficeToken());
+    }
+  );
+
+  fastify.post<{ Params: { transactionId: string }; Body: { status: 'rejected' | 'approved'; amount: number; actualAmount?: number } }>(
+    '/admin/withdrawals/:transactionId/resolve',
+    async (request, reply) => {
+      const session = request.session as any;
+      const user = session?.user;
+      if (!user) return reply.status(401).send({ HasError: true, AlertMessage: 'Yetkisiz' });
+      if (!shouldUseLynon(request)) {
+        return reply.status(501).send({ HasError: true, AlertMessage: 'Bu işlem yalnızca Lynon modunda desteklenir.' });
+      }
+
+      const { transactionId } = request.params;
+      const { status, amount, actualAmount } = request.body ?? ({} as any);
+      if (!transactionId || !['rejected', 'approved'].includes(status) || !Number.isFinite(Number(amount))) {
+        return reply.status(400).send({ HasError: true, AlertMessage: 'Geçerli transactionId, status ve amount gerekli.' });
+      }
+
+      try {
+        const result = await lynonResolveWithdrawal({
+          transactionId,
+          status,
+          amount: Number(amount),
+          actualAmount: Number(actualAmount ?? (status === 'rejected' ? 0 : amount)),
+        });
+        const { audit } = await import('../lib/auditLog.js');
+        audit(user.username ?? 'system', user.role ?? 'admin', 'withdrawal_resolve', String(transactionId), `status=${status} amount=${amount}`);
+        return reply.send({ HasError: false, AlertMessage: status === 'rejected' ? 'Çekim talebi reddedildi.' : 'Çekim talebi onaylandı.', Data: result });
+      } catch (err) {
+        return sendLynonError(reply, err);
+      }
     }
   );
 
@@ -2159,13 +2192,23 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
             .map((bonus: any) => Number(bonus.PartnerBonusId))
             .filter((id: number) => Number.isInteger(id) && id > 0)
         );
+        const existingRules = await getRules(tenantKey);
+        const existingSpecs: Record<string, any> = {
+          ...(existingRules?.PROMO_SPECS ?? {}),
+          ...(existingRules?.PROMO_TITLE_SPECS ?? {}),
+        };
         const invalidRules = [
           ...Object.entries(request.body?.PROMO_SPECS ?? {}),
           ...Object.entries(request.body?.PROMO_TITLE_SPECS ?? {}),
-        ].filter(([, spec]) => {
+        ].filter(([key, spec]) => {
           const ruleType = String(spec.type ?? 'partner').toLocaleLowerCase('tr-TR');
           if (spec.enabled === false || ['cash', 'nakit', 'wheel'].includes(ruleType)) return false;
-          return !validPartnerBonusIds.has(Number(spec.partnerBonusId));
+          if (validPartnerBonusIds.has(Number(spec.partnerBonusId))) return false;
+          // Rule already existed with this exact (now-stale) partner ID and isn't being changed here —
+          // don't block unrelated edits (e.g. deleting a different rule) because of it.
+          const existing = existingSpecs[key];
+          if (existing && Number(existing.partnerBonusId) === Number(spec.partnerBonusId)) return false;
+          return true;
         }).map(([key, spec]) => `${key} → ${spec.partnerBonusId ?? 'eksik'}`);
         if (invalidRules.length > 0) {
           return reply.status(422).send({

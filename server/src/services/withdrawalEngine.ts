@@ -178,10 +178,22 @@ export function evaluateWagerSummary(account: AccountSnapshot, specs: RulesConfi
 
   const activeBonuses = (account.bonuses ?? []) as BCBonus[];
   let principalMult = 1;
+  let casinoMult: number | null = null;
+  let sportMult: number | null = null;
+  let minSportOdds: number | null = null;
   for (const b of activeBonuses) {
     const spec = _getSpecForBonus(specs, Number(b.Id), String(b.Name));
     if (spec?.principalWagerMult != null) {
       principalMult = Math.max(principalMult, spec.principalWagerMult);
+    }
+    if (spec?.casinoWagering != null) {
+      casinoMult = Math.max(casinoMult ?? 0, spec.casinoWagering);
+    }
+    if (spec?.sportWagering != null) {
+      sportMult = Math.max(sportMult ?? 0, spec.sportWagering);
+    }
+    if (spec?.minSportOdds != null) {
+      minSportOdds = minSportOdds == null ? spec.minSportOdds : Math.max(minSportOdds, spec.minSportOdds);
     }
   }
 
@@ -201,6 +213,54 @@ export function evaluateWagerSummary(account: AccountSnapshot, specs: RulesConfi
       reason: principalWagerOk
         ? `Tamamlandı (Oynanan: ${principalWagerPlayed.toFixed(2)} TRY)`
         : `Eksik (Oynanan: ${principalWagerPlayed.toFixed(2)} TRY, Gereken: ${principalWagerRequired} TRY)`,
+    });
+  }
+
+  // Ürün bazlı çevrim: bonus kuralında casino/spor için ayrı çarpan tanımlıysa,
+  // toplam anapara çevriminin yanı sıra her ürün kendi çarpanına göre ayrıca kontrol edilir.
+  // Bu ayrım yalnızca ürün bazlı oynama verisi olan kaynaklarda (Lynon) mevcuttur;
+  // yoksa mevcut toplam anapara çevrimi kontrolü değişmeden geçerliliğini korur.
+  const casinoPlayed = (account as any).casinoBetAmountSinceLastDeposit as number | undefined;
+  const sportPlayed = (account as any).sportBetAmountSinceLastDeposit as number | undefined;
+  if (casinoMult != null && casinoPlayed != null) {
+    const required = (lastDeposit?.amount ?? 0) * casinoMult;
+    const ok = casinoPlayed >= required;
+    items.push({
+      id: 'product-wagering-casino',
+      label: `Ürün Çevrimi — Casino (Min: ${required.toFixed(2)} TRY)`,
+      ok,
+      reason: ok
+        ? `Tamamlandı (Oynanan: ${casinoPlayed.toFixed(2)} TRY)`
+        : `Eksik (Oynanan: ${casinoPlayed.toFixed(2)} TRY, Gereken: ${required.toFixed(2)} TRY)`,
+    });
+  }
+  if (sportMult != null && sportPlayed != null) {
+    const required = (lastDeposit?.amount ?? 0) * sportMult;
+    const ok = sportPlayed >= required;
+    items.push({
+      id: 'product-wagering-sport',
+      label: `Ürün Çevrimi — Spor (Min: ${required.toFixed(2)} TRY)`,
+      ok,
+      reason: ok
+        ? `Tamamlandı (Oynanan: ${sportPlayed.toFixed(2)} TRY)`
+        : `Eksik (Oynanan: ${sportPlayed.toFixed(2)} TRY, Gereken: ${required.toFixed(2)} TRY)`,
+    });
+  }
+
+  // Spor kuponu şartı: son yatırımdan sonraki spor bahislerinden en az biri, tanımlı minimum orana eşit/üstü olmalı.
+  const sportOdds = (account as any).sportOddsSinceLastDeposit as number[] | undefined;
+  if (minSportOdds != null && sportOdds != null) {
+    const requiredOdds = minSportOdds;
+    const ok = sportOdds.some((odds) => odds >= requiredOdds);
+    items.push({
+      id: 'sport-coupon-min-odds',
+      label: `Spor Kuponu Şartı (Min Oran: ${requiredOdds})`,
+      ok,
+      reason: ok
+        ? 'UYGUN: Şartı sağlayan bir kupon bulundu'
+        : sportOdds.length > 0
+          ? `RED: En yüksek oran ${Math.max(...sportOdds)}, gereken ${requiredOdds}`
+          : 'RED: Son yatırımdan sonra spor kuponu bulunamadı',
     });
   }
 

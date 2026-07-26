@@ -126,4 +126,68 @@ describe('evaluateForAccount', () => {
     expect(result.overallOk).toBe(false);
     expect(result.items).toContainEqual(expect.objectContaining({ id: 'previous-day-deposit', ok: false }));
   });
+
+  describe('yüzdeli yatırım baremi aralığı (tieredPercentage)', () => {
+    const evaluate = (deposit: number, ranges: any[]) =>
+      evaluateForAccount(
+        {
+          id: 9, balance: 0,
+          lastDeposit: { amount: deposit, dateLocal: '2026-07-26T08:00:00.000Z' },
+          totalBetAmountSinceLastDeposit: deposit, wageringRemaining: 0,
+          bonuses: [], profileTransactions: [], profileTransactionsByType: {},
+          dataCompleteness: { kpi: true, payments: true, financialMovements: true, bonuses: true, casino: true, sport: true },
+        } as any,
+        { id: 1900, title: 'Yüzdeli Barem Test' } as any,
+        {
+          PROMO_SPECS: {
+            '1900': {
+              enabled: true, type: 'partner', partnerBonusId: '1900',
+              amountType: 'tieredPercentage', tieredPercentageRanges: ranges, principalWagerMult: 0,
+            },
+          },
+          PROMO_TITLE_SPECS: {},
+        } as any,
+        'default'
+      );
+
+    const RANGES = [
+      { min: 100, max: 999, percent: 10 },
+      { min: 1000, max: 4999, percent: 25, maxBonus: 1000 },
+      { min: 5000, max: 100000, percent: 50, maxBonus: 5000 },
+    ];
+
+    it('yatırımın düştüğü aralığın yüzdesini uygular', async () => {
+      const result = await evaluate(500, RANGES);
+      expect(result.calculatedAmount).toBe(50); // 500 × %10
+    });
+
+    it('üst aralıkta farklı yüzde uygular', async () => {
+      const result = await evaluate(2000, RANGES);
+      expect(result.calculatedAmount).toBe(500); // 2000 × %25
+    });
+
+    it('hesaplanan tutarı maxBonus tavanıyla sınırlar', async () => {
+      const result = await evaluate(4500, RANGES); // 4500 × %25 = 1125 > 1000 tavan
+      expect(result.calculatedAmount).toBe(1000);
+      const calc = result.items.find((i) => i.id === 'bonus-calculation');
+      expect(calc?.reason).toContain('tavanına sınırlandı');
+    });
+
+    it('tavana tam eşit tutarda sınırlama mesajı göstermez', async () => {
+      const result = await evaluate(4000, RANGES); // 4000 × %25 = tam 1000
+      expect(result.calculatedAmount).toBe(1000);
+      expect(result.items.find((i) => i.id === 'bonus-calculation')?.reason)
+        .not.toContain('tavanına sınırlandı');
+    });
+
+    it('hiçbir aralığa girmeyen yatırımda tutar hesaplamaz', async () => {
+      const result = await evaluate(50, RANGES);
+      expect(result.calculatedAmount).toBeUndefined();
+      expect(result.items).toContainEqual(
+        expect.objectContaining({ id: 'bonus-calculation', ok: false })
+      );
+      expect(result.items.find((i) => i.id === 'bonus-calculation')?.reason)
+        .toContain('hiçbirine girmiyor');
+    });
+  });
 });

@@ -77,7 +77,7 @@ export function ProviderReport() {
         return (
             <div className="flex h-[400px] items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
-                    <Loader2 className="h-10 w-10 animate-spin text-violet-500" />
+                    <Loader2 className="h-10 w-10 animate-spin text-blue-500" />
                     <p className="text-sm font-bold uppercase tracking-widest text-slate-500">Rapor Hazırlanıyor...</p>
                 </div>
             </div>
@@ -124,18 +124,18 @@ export function ProviderReport() {
                 />
 
                 {/* Faturalandırma Kartı */}
-                <div className="rounded-2xl border border-violet-500/30 bg-violet-950/40 p-5 shadow-lg relative overflow-hidden group">
+                <div className="rounded-2xl border border-blue-500/30 bg-blue-950/40 p-5 shadow-lg relative overflow-hidden group">
                     <div className="absolute top-0 right-0 p-3 opacity-20 group-hover:opacity-40 transition-opacity">
-                        <Calculator size={24} className="text-violet-400" />
+                        <Calculator size={24} className="text-blue-400" />
                     </div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-violet-400 mb-1">Tahmini Fatura</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-1">Tahmini Fatura</p>
                     <p className="text-xl font-black text-white tabular-nums">
                         {formatNumber(estimatedInvoice)} <span className="text-xs font-normal text-slate-500">TRY</span>
                     </p>
                     <div className="mt-3 flex items-center gap-2">
                         <span className="text-[10px] font-bold text-slate-500 uppercase">Royalty:</span>
                         <select
-                            className="bg-slate-800 text-[10px] font-black text-violet-300 border border-white/5 rounded px-1 py-0.5 focus:ring-0 cursor-pointer"
+                            className="bg-slate-800 text-[10px] font-black text-blue-300 border border-white/5 rounded px-1 py-0.5 focus:ring-0 cursor-pointer"
                             value={royaltyRate}
                             onChange={(e) => setRoyaltyRate(Number(e.target.value))}
                         >
@@ -151,7 +151,7 @@ export function ProviderReport() {
                 <StatCard
                     label="Toplam Spin"
                     value={reportData?.TotalRound ?? 0}
-                    icon={<Info className="text-violet-400" />}
+                    icon={<Info className="text-blue-400" />}
                     trend="neutral"
                 />
             </div>
@@ -160,7 +160,7 @@ export function ProviderReport() {
             <div className="rounded-2xl border border-white/5 bg-slate-900/40 shadow-xl overflow-hidden">
                 <div className="border-b border-white/5 bg-white/5 px-6 py-4 flex items-center justify-between">
                     <h3 className="text-sm font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
-                        <BarChart3 size={18} className="text-violet-400" />
+                        <BarChart3 size={18} className="text-blue-400" />
                         Sağlayıcı Performansı (%{royaltyRate} Tahmini Maliyet)
                     </h3>
                     <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
@@ -190,7 +190,7 @@ export function ProviderReport() {
                                     <tr key={idx} className="group hover:bg-white/[0.02] transition-colors">
                                         <td className="px-6 py-4">
                                             <div className="flex flex-col">
-                                                <span className="font-bold text-slate-200 group-hover:text-violet-400 transition-colors">
+                                                <span className="font-bold text-slate-200 group-hover:text-blue-400 transition-colors">
                                                     {item.ProviderName}
                                                 </span>
                                                 <span className="text-[10px] text-slate-500 font-mono">{item.ProviderPrefix}</span>
@@ -215,7 +215,7 @@ export function ProviderReport() {
                                                 </span>
                                                 <div className="h-1 w-16 bg-slate-800 rounded-full mt-1 overflow-hidden">
                                                     <div
-                                                        className={`h-full rounded-full ${rtp > 97 ? 'bg-amber-500' : 'bg-violet-500'}`}
+                                                        className={`h-full rounded-full ${rtp > 97 ? 'bg-amber-500' : 'bg-blue-500'}`}
                                                         style={{ width: `${Math.min(rtp, 100)}%` }}
                                                     />
                                                 </div>

@@ -39,20 +39,37 @@ export type PromoSpec = {
     onlyNewUsersNoDepositNoWithdraw?: boolean;
     principalWagerMult?: number;
     bonusWagerMult?: number;
+    /** Otomatik çekim onayında ürün bazlı çevrim kontrolü: casino bahisleri için ayrı çarpan. */
+    casinoWagering?: number;
+    /** Otomatik çekim onayında ürün bazlı çevrim kontrolü: spor bahisleri için ayrı çarpan. */
+    sportWagering?: number;
+    /** Spor kuponu şartı: son yatırımdan sonraki spor bahislerinden en az biri bu orana eşit/üstü olmalı. */
+    minSportOdds?: number;
     maxPayoutMult?: number;
     maxPayoutFixed?: number;
 
     // New Fields
     type?: 'partner' | 'cash';
     partnerBonusId?: string;
-    amountType?: 'fixed' | 'percentage' | 'full' | 'tiered';
+    amountType?: 'fixed' | 'percentage' | 'full' | 'tiered' | 'tieredRange' | 'tieredPercentage';
     fixedAmount?: number;
     percentageAmount?: number;
     tieredAmounts?: Array<{ min: number; bonus: number }>;
+    tieredRanges?: Array<{ min: number; max: number; bonus: number }>;
+    /**
+     * Yüzdeli barem aralığı: yatırım tutarı [min, max] aralığına düşerse bonus,
+     * sabit tutar yerine o aralığın yüzdesi olarak hesaplanır. maxBonus verilirse
+     * hesaplanan tutar o tavanla sınırlanır.
+     */
+    tieredPercentageRanges?: Array<{ min: number; max: number; percent: number; maxBonus?: number }>;
     checkPendingWithdrawal?: boolean;
     checkLastTransactionIsDeposit?: boolean;
     checkSingleInvestmentUsage?: boolean;
     checkSameDayUsage?: boolean;
+    requiresPhoneVerified?: boolean;
+    requiresEmailVerified?: boolean;
+    checkIPDuplicate?: boolean;
+    allowedProviders?: string[];
     minBalanceToClaim?: number;
     maxBalanceToClaim?: number;
     maxKpiLimit?: number;

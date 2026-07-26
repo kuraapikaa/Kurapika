@@ -87,6 +87,10 @@ export function friendlyBonusEligibilityMessage(item: BonusEligibilityItem): Fri
       return reason.includes('bulunamad')
         ? { title: 'Yatırım koşulu', message: 'Bu bonus için tamamlanmış bir yatırımınız bulunması gerekiyor.' }
         : { title: 'Talep süresi', message: 'Bu bonusun talep süresi dolmuş. Yeni bir uygun yatırımın ardından tekrar deneyebilirsiniz.' };
+    case 'requires-phone-verified':
+      return { title: 'Telefon onayı gerekiyor', message: 'Bu bonustan yararlanmak için hesabınızdaki telefon numaranızı onaylamanız gerekiyor.' };
+    case 'requires-email-verified':
+      return { title: 'E-posta onayı gerekiyor', message: 'Bu bonustan yararlanmak için hesabınızdaki e-posta adresinizi onaylamanız gerekiyor.' };
     case 'no-open-bets':
       return { title: 'Açık bahisler', message: 'Bonus talebinden önce açık bahislerinizin sonuçlanması gerekiyor.' };
     case 'active-days-check':

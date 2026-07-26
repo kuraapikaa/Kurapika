@@ -114,7 +114,7 @@ export function LiveRadar() {
                                             <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-0.5">Oyuncu</p>
                                             <p className="text-sm font-bold text-white flex items-center gap-2">
                                                 {bet.ClientFirstName ?? '-'} {bet.ClientLastName?.slice(0, 1) ?? ''}.
-                                                <a href={`/#/oyuncu/${bet.ClientId}/${bet.ClientLogin || bet.ClientFirstName || 'Oyuncu'}`} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-violet-400 transition-colors font-mono text-xs">
+                                                <a href={`/#/oyuncu/${bet.ClientId}/${bet.ClientLogin || bet.ClientFirstName || 'Oyuncu'}`} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-blue-400 transition-colors font-mono text-xs">
                                                     #{bet.ClientId}
                                                 </a>
                                             </p>
@@ -133,7 +133,7 @@ export function LiveRadar() {
                                         </div>
                                         <div className="text-right">
                                             <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Total Oran</p>
-                                            <p className="font-bold text-violet-300">@{Number(bet.Price ?? 0).toFixed(2)}</p>
+                                            <p className="font-bold text-blue-300">@{Number(bet.Price ?? 0).toFixed(2)}</p>
                                         </div>
                                     </div>
 

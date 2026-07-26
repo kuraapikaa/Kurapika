@@ -32,7 +32,7 @@ export function PartnerProfit({ data, isLoading, error }: PartnerProfitProps) {
     { label: 'Casino Cirosu', value: d.CasinoTurnover, icon: <Cpu size={16} />, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
     { label: 'Casino Kazancı', value: d.CasinoWinning, icon: <Gamepad2 size={16} />, color: 'text-rose-400', bg: 'bg-rose-500/10' },
     { label: 'Turnuva Maliyeti', value: d.TournamentCost, icon: <Trophy size={16} />, color: 'text-amber-400', bg: 'bg-amber-500/10' },
-    { label: 'Bonus', value: d.Bonus, icon: <Coins size={16} />, color: 'text-purple-400', bg: 'bg-purple-500/10' },
+    { label: 'Bonus', value: d.Bonus, icon: <Coins size={16} />, color: 'text-blue-400', bg: 'bg-blue-500/10' },
   ];
 
   return (

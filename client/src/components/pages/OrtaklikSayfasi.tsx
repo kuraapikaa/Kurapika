@@ -66,11 +66,11 @@ export function OrtaklikSayfasi() {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           className="my-2 w-full overflow-hidden rounded-[1.8rem] border border-white/10 bg-[#0e1420] shadow-2xl sm:my-8"
         >
-          <div className="border-b border-white/5 bg-gradient-to-b from-purple-500/10 to-transparent p-5 text-center sm:p-8">
-            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl border border-purple-500/30 bg-purple-500/10 sm:mb-4 sm:h-16 sm:w-16 sm:rounded-full">
-              <Handshake size={28} className="text-purple-400" />
+          <div className="border-b border-white/5 bg-gradient-to-b from-blue-500/10 to-transparent p-5 text-center sm:p-8">
+            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl border border-blue-500/30 bg-blue-500/10 sm:mb-4 sm:h-16 sm:w-16 sm:rounded-full">
+              <Handshake size={28} className="text-blue-400" />
             </div>
-            <p className="mb-2 text-[10px] font-black uppercase tracking-[0.18em] text-purple-300/80">{pageContent.eyebrow}</p>
+            <p className="mb-2 text-[10px] font-black uppercase tracking-[0.18em] text-blue-300/80">{pageContent.eyebrow}</p>
             <h1 className="text-2xl font-black text-white">{settings.partnershipTitle || pageContent.title || 'Ortaklık Başvurusu'}</h1>
             <p className="mt-2 text-sm font-medium leading-6 text-zinc-400">{settings.partnershipDescription || pageContent.subtitle || 'Telegram grubu sahipleri, yayıncılar ve partnerler için ortaklık formu.'}</p>
           </div>
@@ -103,7 +103,7 @@ export function OrtaklikSayfasi() {
                       <label htmlFor="ortaklik-type" className="flex items-center gap-2 text-xs font-black text-zinc-500 uppercase tracking-widest mb-2">
                         {pageContent.usernameLabel}
                       </label>
-                      <select id="ortaklik-type" value={type} onChange={e=>setType(e.target.value)} className="h-[52px] w-full rounded-xl border border-white/5 bg-[#0a0f18] px-4 font-bold text-white outline-none transition-all focus:ring-2 focus:ring-purple-500/30">
+                      <select id="ortaklik-type" value={type} onChange={e=>setType(e.target.value)} className="h-[52px] w-full rounded-xl border border-white/5 bg-[#0a0f18] px-4 font-bold text-white outline-none transition-all focus:ring-2 focus:ring-blue-500/30">
                          {settings.partnershipTypes.map((t: string, idx: number) => (
                            <option key={idx} value={t}>{t}</option>
                          ))}
@@ -113,30 +113,30 @@ export function OrtaklikSayfasi() {
                       <label htmlFor="ortaklik-channel" className="flex items-center gap-2 text-xs font-black text-zinc-500 uppercase tracking-widest mb-2">
                         <LinkIcon size={14} aria-hidden="true" /> {lobbyExtraText(pageContent, 'channelLabel', 'KANAL/SAYFA LİNKİ')}
                       </label>
-                      <input id="ortaklik-channel" type="url" value={channelUrl} onChange={e=>setChannelUrl(e.target.value)} required placeholder={lobbyExtraText(pageContent, 'channelPlaceholder', 'https://...')} className="h-[52px] w-full rounded-xl border border-white/5 bg-[#0a0f18] px-4 font-bold text-white outline-none transition-all focus:ring-2 focus:ring-purple-500/30" />
+                      <input id="ortaklik-channel" type="url" value={channelUrl} onChange={e=>setChannelUrl(e.target.value)} required placeholder={lobbyExtraText(pageContent, 'channelPlaceholder', 'https://...')} className="h-[52px] w-full rounded-xl border border-white/5 bg-[#0a0f18] px-4 font-bold text-white outline-none transition-all focus:ring-2 focus:ring-blue-500/30" />
                    </div>
                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                      <div>
                         <label htmlFor="ortaklik-audience" className="flex items-center gap-2 text-xs font-black text-zinc-500 uppercase tracking-widest mb-2">
                           <Users size={14} aria-hidden="true" /> {lobbyExtraText(pageContent, 'audienceLabel', 'KİTLE SAYISI')}
                         </label>
-                        <input id="ortaklik-audience" type="text" value={audienceSize} onChange={e=>setAudienceSize(e.target.value)} placeholder={lobbyExtraText(pageContent, 'audiencePlaceholder', 'Örn: 50K')} className="h-[52px] w-full rounded-xl border border-white/5 bg-[#0a0f18] px-4 font-bold text-white outline-none transition-all focus:ring-2 focus:ring-purple-500/30" />
+                        <input id="ortaklik-audience" type="text" value={audienceSize} onChange={e=>setAudienceSize(e.target.value)} placeholder={lobbyExtraText(pageContent, 'audiencePlaceholder', 'Örn: 50K')} className="h-[52px] w-full rounded-xl border border-white/5 bg-[#0a0f18] px-4 font-bold text-white outline-none transition-all focus:ring-2 focus:ring-blue-500/30" />
                      </div>
                      <div>
                         <label htmlFor="ortaklik-contact" className="flex items-center gap-2 text-xs font-black text-zinc-500 uppercase tracking-widest mb-2">
                           <User size={14} aria-hidden="true" /> {lobbyExtraText(pageContent, 'contactLabel', 'İLETİŞİM')}
                         </label>
-                        <input id="ortaklik-contact" type="text" value={contact} onChange={e=>setContact(e.target.value)} required placeholder={lobbyExtraText(pageContent, 'contactPlaceholder', '@KullaniciAdi')} className="h-[52px] w-full rounded-xl border border-white/5 bg-[#0a0f18] px-4 font-bold text-white outline-none transition-all focus:ring-2 focus:ring-purple-500/30" />
+                        <input id="ortaklik-contact" type="text" value={contact} onChange={e=>setContact(e.target.value)} required placeholder={lobbyExtraText(pageContent, 'contactPlaceholder', '@KullaniciAdi')} className="h-[52px] w-full rounded-xl border border-white/5 bg-[#0a0f18] px-4 font-bold text-white outline-none transition-all focus:ring-2 focus:ring-blue-500/30" />
                      </div>
                    </div>
                    <div>
                       <label htmlFor="ortaklik-message" className="flex items-center gap-2 text-xs font-black text-zinc-500 uppercase tracking-widest mb-2">
                         <MessageSquare size={14} aria-hidden="true" /> {lobbyExtraText(pageContent, 'messageLabel', 'EK MESAJ')}
                       </label>
-                      <textarea id="ortaklik-message" value={message} onChange={e=>setMessage(e.target.value)} rows={3} placeholder={lobbyExtraText(pageContent, 'messagePlaceholder', 'Belirtmek istediğiniz detaylar...')} className="w-full resize-none rounded-xl border border-white/5 bg-[#0a0f18] px-4 py-4 font-bold text-white outline-none transition-all focus:ring-2 focus:ring-purple-500/30" />
+                      <textarea id="ortaklik-message" value={message} onChange={e=>setMessage(e.target.value)} rows={3} placeholder={lobbyExtraText(pageContent, 'messagePlaceholder', 'Belirtmek istediğiniz detaylar...')} className="w-full resize-none rounded-xl border border-white/5 bg-[#0a0f18] px-4 py-4 font-bold text-white outline-none transition-all focus:ring-2 focus:ring-blue-500/30" />
                    </div>
                    {status === 'error' && <div className="text-rose-400 text-sm font-bold">{msg}</div>}
-                   <button disabled={status==='loading'} className="flex h-[54px] w-full items-center justify-center gap-2 rounded-xl bg-purple-500 font-black text-white transition-all hover:bg-purple-400 disabled:opacity-60">
+                   <button disabled={status==='loading'} className="flex h-[54px] w-full items-center justify-center gap-2 rounded-xl bg-blue-500 font-black text-white transition-all hover:bg-blue-400 disabled:opacity-60">
                       {status === 'loading' ? <Loader2 className="animate-spin" /> : (settings.partnershipButtonText || pageContent.primaryButton || 'Başvuru Gönder')}
                    </button>
                 </motion.form>

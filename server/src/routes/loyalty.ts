@@ -11,6 +11,8 @@ export async function loyaltyRoutes(fastify: FastifyInstance) {
     const service = getLoyaltyService(tenantKey);
     const authToken = request.session?.bonusPanelUser?.token || request.session?.user?.authToken;
 
+    await service.recordLogin(username);
+
     if (authToken) {
       return service.syncPointsFromWager(username, authToken);
     }

@@ -56,7 +56,7 @@ import { formsRoutes } from './routes/forms.js';
 import { masterRoutes } from './routes/master.js';
 import { loyaltyRoutes } from './routes/loyalty.js';
 import { lynonRoutes } from './routes/lynon.js';
-import { scheduler, registerAutoWithdrawJob, registerNextDayBonusJob } from './jobs/scheduler.js';
+import { scheduler, registerAutoWithdrawJob, registerNextDayBonusJob, registerLoyaltyRetentionJob } from './jobs/scheduler.js';
 import { enforceEnvironment } from './lib/envValidator.js';
 import { watchConfigFile, getWatcherStatus } from './lib/configWatcher.js';
 import { closeDatabase, getDatabaseStatus, initializeDatabase } from './lib/database.js';
@@ -227,6 +227,7 @@ try {
   // ─── Background Jobs ──────────────────────────────────────────────────────
   await registerAutoWithdrawJob();
   await registerNextDayBonusJob();
+  await registerLoyaltyRetentionJob();
   scheduler.start(10000);
 
   // ─── Config Hot-Reload ─────────────────────────────────────────────────────

@@ -21,6 +21,7 @@ interface ScratchReward {
 interface ScratchManagerProps {
   config: {
     baseWinProbability: number;
+    minInvestment?: number;
     rewards: ScratchReward[];
   };
   bonusOptions: any[];
@@ -78,7 +79,7 @@ export function ScratchManager({ config, bonusOptions, onUpdate }: ScratchManage
   const statCards = [
     { label: 'Kazanma Orani', value: `%${stats.winProb}`, icon: Sparkles, tone: 'text-amber-400' },
     { label: 'Odul Cesidi', value: stats.rewardCount, icon: Layers, tone: 'text-blue-400' },
-    { label: 'Toplam Agirlik', value: stats.totalWeight, icon: BarChart3, tone: 'text-violet-400' },
+    { label: 'Toplam Agirlik', value: stats.totalWeight, icon: BarChart3, tone: 'text-blue-400' },
     { label: 'Ort. Odul', value: `${stats.avgReward} TL`, icon: Gift, tone: 'text-emerald-400' }
   ];
 
@@ -122,6 +123,26 @@ export function ScratchManager({ config, bonusOptions, onUpdate }: ScratchManage
                   className="h-10 w-28 rounded-md border border-white/10 bg-black/30 px-3 pr-8 text-sm font-black text-amber-300 outline-none transition focus:border-amber-500/60"
                 />
                 <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-black text-zinc-600">%</span>
+              </div>
+            </label>
+          </div>
+
+          <div className="flex flex-col gap-3 rounded-lg border border-white/10 bg-zinc-950/70 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <div className="text-sm font-black text-white">Yatırım Şartı</div>
+              <p className="mt-0.5 text-xs font-medium text-zinc-500">Oyuncunun kazı kazan oynayabilmesi için gereken minimum son yatırım tutarı. 0 = şartsız.</p>
+            </div>
+            <label className="flex items-center gap-3">
+              <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Min. Yatırım</span>
+              <div className="relative">
+                <input
+                  type="number"
+                  min={0}
+                  value={config.minInvestment ?? 0}
+                  onChange={e => onUpdate({ ...config, minInvestment: Number(e.target.value) })}
+                  className="h-10 w-32 rounded-md border border-white/10 bg-black/30 px-3 pr-8 text-sm font-black text-amber-300 outline-none transition focus:border-amber-500/60"
+                />
+                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-zinc-600">TL</span>
               </div>
             </label>
           </div>

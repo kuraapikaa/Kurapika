@@ -188,7 +188,7 @@ export const SMSPanel: React.FC = () => {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-black italic tracking-tighter text-white uppercase">
-                        SMS <span className="text-violet-500">MERKEZİ</span>
+                        SMS <span className="text-blue-500">MERKEZİ</span>
                     </h1>
                     <p className="text-slate-400 text-sm mt-1">Gelişmiş SMS yönetim paneli</p>
                 </div>
@@ -198,7 +198,7 @@ export const SMSPanel: React.FC = () => {
                         onClick={() => setActiveTab('send')}
                         className={cn(
                             "px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2",
-                            activeTab === 'send' ? "bg-violet-600 text-white shadow-lg" : "text-slate-400 hover:text-white"
+                            activeTab === 'send' ? "bg-blue-600 text-white shadow-lg" : "text-slate-400 hover:text-white"
                         )}
                     >
                         <Send className="w-4 h-4" /> Gönder
@@ -207,7 +207,7 @@ export const SMSPanel: React.FC = () => {
                         onClick={() => setActiveTab('templates')}
                         className={cn(
                             "px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2",
-                            activeTab === 'templates' ? "bg-violet-600 text-white shadow-lg" : "text-slate-400 hover:text-white"
+                            activeTab === 'templates' ? "bg-blue-600 text-white shadow-lg" : "text-slate-400 hover:text-white"
                         )}
                     >
                         <Layout className="w-4 h-4" /> Şablonlar
@@ -216,7 +216,7 @@ export const SMSPanel: React.FC = () => {
                         onClick={() => setActiveTab('history')}
                         className={cn(
                             "px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2",
-                            activeTab === 'history' ? "bg-violet-600 text-white shadow-lg" : "text-slate-400 hover:text-white"
+                            activeTab === 'history' ? "bg-blue-600 text-white shadow-lg" : "text-slate-400 hover:text-white"
                         )}
                     >
                         <History className="w-4 h-4" /> Geçmiş
@@ -239,11 +239,11 @@ export const SMSPanel: React.FC = () => {
                                 <CardHeader>
                                     <div className="flex items-center justify-between">
                                         <CardTitle className="flex items-center gap-2">
-                                            <Users className="w-4 h-4 text-violet-500" /> ALICILAR
+                                            <Users className="w-4 h-4 text-blue-500" /> ALICILAR
                                         </CardTitle>
                                         <button
                                             onClick={handleCleanNumbers}
-                                            className="flex items-center gap-1.5 px-3 py-1 bg-violet-600/10 hover:bg-violet-600/20 text-violet-400 rounded-lg text-[10px] font-black uppercase tracking-widest border border-violet-500/20 transition-all"
+                                            className="flex items-center gap-1.5 px-3 py-1 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 rounded-lg text-[10px] font-black uppercase tracking-widest border border-blue-500/20 transition-all"
                                             title="Numaraları temizle, kopyaları sil ve 90 formatına getir"
                                         >
                                             <Wand2 className="w-3.5 h-3.5" /> TEMİZLE
@@ -256,10 +256,10 @@ export const SMSPanel: React.FC = () => {
                                             value={phoneList}
                                             onChange={(e) => setPhoneList(e.target.value)}
                                             placeholder="Telefon numaralarını girin (Her satıra bir numara veya virgülle ayırın...)"
-                                            className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-slate-200 placeholder:text-slate-600 focus:ring-2 focus:ring-violet-500/50 outline-none min-h-[150px] transition-all"
+                                            className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-slate-200 placeholder:text-slate-600 focus:ring-2 focus:ring-blue-500/50 outline-none min-h-[150px] transition-all"
                                         />
                                         <div className="absolute top-3 right-3">
-                                            <div className="bg-violet-600/20 text-violet-400 px-3 py-1 rounded-full text-xs font-bold border border-violet-500/30">
+                                            <div className="bg-blue-600/20 text-blue-400 px-3 py-1 rounded-full text-xs font-bold border border-blue-500/30">
                                                 {stats.phones.length} Kişi
                                             </div>
                                         </div>
@@ -270,7 +270,7 @@ export const SMSPanel: React.FC = () => {
                             <Card>
                                 <CardHeader>
                                     <CardTitle className="flex items-center gap-2 text-white">
-                                        <MessageSquare className="w-4 h-4 text-violet-500" /> MESAJ İÇERİĞİ
+                                        <MessageSquare className="w-4 h-4 text-blue-500" /> MESAJ İÇERİĞİ
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
@@ -279,11 +279,11 @@ export const SMSPanel: React.FC = () => {
                                             value={message}
                                             onChange={(e) => setMessage(e.target.value)}
                                             placeholder="Mesajınızı buraya yazın..."
-                                            className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-slate-200 placeholder:text-slate-600 focus:ring-2 focus:ring-violet-500/50 outline-none min-h-[150px] transition-all"
+                                            className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-slate-200 placeholder:text-slate-600 focus:ring-2 focus:ring-blue-500/50 outline-none min-h-[150px] transition-all"
                                         />
                                         <div className="absolute bottom-3 right-3 flex items-center gap-4 text-[10px] font-bold uppercase tracking-widest text-slate-500">
                                             <span>{stats.charCount} Karakter</span>
-                                            <span className="text-violet-500">{stats.smsCount} SMS</span>
+                                            <span className="text-blue-500">{stats.smsCount} SMS</span>
                                         </div>
                                     </div>
 
@@ -303,7 +303,7 @@ export const SMSPanel: React.FC = () => {
                                         <Button
                                             onClick={handleSend}
                                             disabled={isSending || stats.phones.length === 0}
-                                            className="w-full md:w-auto min-w-[200px] h-14 rounded-2xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 shadow-xl shadow-violet-500/20 group"
+                                            className="w-full md:w-auto min-w-[200px] h-14 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-500 hover:to-blue-500 shadow-xl shadow-blue-500/20 group"
                                         >
                                             {isSending ? (
                                                 <>
@@ -322,10 +322,10 @@ export const SMSPanel: React.FC = () => {
 
                         {/* Sağ: Bilgi & Önizleme */}
                         <div className="space-y-6">
-                            <Card className="bg-gradient-to-br from-violet-600/10 to-transparent border-violet-500/20">
+                            <Card className="bg-gradient-to-br from-blue-600/10 to-transparent border-blue-500/20">
                                 <CardHeader>
                                     <CardTitle className="flex items-center gap-2">
-                                        <Info className="w-4 h-4 text-violet-500" /> ÖZET BİLGİ
+                                        <Info className="w-4 h-4 text-blue-500" /> ÖZET BİLGİ
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
@@ -337,8 +337,8 @@ export const SMSPanel: React.FC = () => {
                                         <span className="text-sm text-slate-400">SMS / Kişi</span>
                                         <span className="text-lg font-bold text-white">{stats.smsCount}</span>
                                     </div>
-                                    <div className="flex justify-between items-center p-4 bg-violet-600/20 rounded-xl border border-violet-500/30">
-                                        <span className="text-sm text-violet-300 font-bold uppercase tracking-wider">Toplam Tahmini SMS</span>
+                                    <div className="flex justify-between items-center p-4 bg-blue-600/20 rounded-xl border border-blue-500/30">
+                                        <span className="text-sm text-blue-300 font-bold uppercase tracking-wider">Toplam Tahmini SMS</span>
                                         <span className="text-2xl font-black text-white">{stats.totalSms}</span>
                                     </div>
 
@@ -352,11 +352,11 @@ export const SMSPanel: React.FC = () => {
                             </Card>
 
                             <div className="relative group">
-                                <div className="absolute inset-0 bg-violet-500/10 blur-3xl rounded-full transition-opacity group-hover:opacity-100 opacity-50" />
+                                <div className="absolute inset-0 bg-blue-500/10 blur-3xl rounded-full transition-opacity group-hover:opacity-100 opacity-50" />
                                 <div className="relative bg-[#0F0F12] border-8 border-slate-900 rounded-[3rem] p-4 shadow-2xl min-h-[400px]">
                                     <div className="w-20 h-1.5 bg-slate-800 rounded-full mx-auto mb-6" />
                                     <div className="flex items-center gap-3 mb-6">
-                                        <div className="w-10 h-10 rounded-full bg-violet-600 flex items-center justify-center font-bold text-white">S</div>
+                                        <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold text-white">S</div>
                                         <div>
                                             <div className="text-[10px] font-bold text-slate-500 uppercase">GÖNDEREN</div>
                                             <div className="text-xs font-bold text-white tracking-widest uppercase">GÖNDERİCİ</div>
@@ -381,10 +381,10 @@ export const SMSPanel: React.FC = () => {
                         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
                     >
                         {TEMPLATES.map((tmpl) => (
-                            <Card key={tmpl.id} className="group hover:border-violet-500/50 transition-all cursor-pointer overflow-hidden" onClick={() => applyTemplate(tmpl.content)}>
+                            <Card key={tmpl.id} className="group hover:border-blue-500/50 transition-all cursor-pointer overflow-hidden" onClick={() => applyTemplate(tmpl.content)}>
                                 <CardHeader className="bg-white/5 border-b border-white/5">
                                     <div className="flex justify-between items-start">
-                                        <div className="p-2 bg-violet-600/20 rounded-lg text-violet-400">
+                                        <div className="p-2 bg-blue-600/20 rounded-lg text-blue-400">
                                             <FileText className="w-5 h-5" />
                                         </div>
                                         <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">

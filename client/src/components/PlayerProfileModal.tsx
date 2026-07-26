@@ -57,7 +57,7 @@ export function PlayerProfileModal({ clientId, username, onClose }: PlayerProfil
                 {/* Header - Fixed */}
                 <div className="flex shrink-0 items-center justify-between p-6 pb-4 sm:p-8 sm:pb-6 border-b border-white/5">
                     <div className="flex items-center gap-4">
-                        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-xl shadow-blue-500/20">
+                        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-xl shadow-blue-500/20">
                             <User size={32} />
                         </div>
                         <div>
@@ -129,7 +129,7 @@ export function PlayerProfileModal({ clientId, username, onClose }: PlayerProfil
                                     <div className="space-y-4">
                                         <div className="glass-card flex items-center justify-between rounded-2xl bg-slate-950/40 p-4 border border-white/5">
                                             <div className="flex items-center gap-3">
-                                                <div className="rounded-xl bg-purple-500/10 p-2 text-purple-400"><TrendingUp size={18} /></div>
+                                                <div className="rounded-xl bg-blue-500/10 p-2 text-blue-400"><TrendingUp size={18} /></div>
                                                 <span className="text-xs font-bold text-slate-300">Toplam Bahis</span>
                                             </div>
                                             <span className="text-sm font-black text-white">{formatNumber(kpi.TotalSportStakes)} <span className="text-[10px] text-slate-500">TRY</span></span>
@@ -158,7 +158,7 @@ export function PlayerProfileModal({ clientId, username, onClose }: PlayerProfil
                                     <div className="space-y-4">
                                         <div className="glass-card flex items-center justify-between rounded-2xl bg-slate-950/40 p-4 border border-white/5">
                                             <div className="flex items-center gap-3">
-                                                <div className="rounded-xl bg-purple-500/10 p-2 text-purple-400"><Dices size={18} /></div>
+                                                <div className="rounded-xl bg-blue-500/10 p-2 text-blue-400"><Dices size={18} /></div>
                                                 <span className="text-xs font-bold text-slate-300">Casino Ciro</span>
                                             </div>
                                             <span className="text-sm font-black text-white">{formatNumber(kpi.TotalCasinoStakes)} <span className="text-[10px] text-slate-500">TRY</span></span>

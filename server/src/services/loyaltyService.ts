@@ -23,6 +23,12 @@ interface PlayerLoyalty {
     totalWagerSynced: number; // Last synced total turnover
     inventory: string[];
     lastUpdate: string;
+    /** Sadakat sayfasının son ziyaret edildiği (oyuncunun "giriş" saydığımız) tarih. */
+    lastLoginDate: string;
+    /** Ard arda giriş yapılmayan 2. günde gönderilen SMS bildiriminin zamanı; yeni girişte sıfırlanır. */
+    smsReminderSentAt?: string | null;
+    /** Ard arda giriş yapılmayan 3. günde puanların silindiği zaman; yeni girişte sıfırlanır. */
+    pointsResetAt?: string | null;
 }
 
 const LEGACY_LOYALTY_JSON_PATH = join(process.cwd(), 'src', 'data', 'player-loyalty.json');
@@ -93,11 +99,47 @@ export class LoyaltyService {
                 balance: 0,
                 totalWagerSynced: 0,
                 inventory: [],
-                lastUpdate: new Date().toISOString()
+                lastUpdate: new Date().toISOString(),
+                lastLoginDate: new Date().toISOString(),
+                smsReminderSentAt: null,
+                pointsResetAt: null,
             };
             await this.save();
         }
         return this.data.players[username];
+    }
+
+    /** Oyuncu sadakat sayfasını her ziyaret ettiğinde çağrılır; ard arda giriş takibini sıfırlar. */
+    public async recordLogin(username: string): Promise<PlayerLoyalty> {
+        const player = await this.getPlayerStatus(username);
+        player.lastLoginDate = new Date().toISOString();
+        player.smsReminderSentAt = null;
+        player.pointsResetAt = null;
+        await this.save();
+        return player;
+    }
+
+    /** Ard arda giriş takibi (retention) job'unun kullandığı, tüm oyuncuların ham listesi. */
+    public async listPlayers(): Promise<Array<[string, PlayerLoyalty]>> {
+        await this.ensureLoaded();
+        return Object.entries(this.data.players);
+    }
+
+    public async sendLoyaltyReminderMark(username: string): Promise<void> {
+        await this.ensureLoaded();
+        const player = this.data.players[username];
+        if (!player) return;
+        player.smsReminderSentAt = new Date().toISOString();
+        await this.save();
+    }
+
+    public async resetLoyaltyPoints(username: string): Promise<void> {
+        await this.ensureLoaded();
+        const player = this.data.players[username];
+        if (!player) return;
+        player.points = 0;
+        player.pointsResetAt = new Date().toISOString();
+        await this.save();
     }
 
     public calculateLevel(xp: number): number {

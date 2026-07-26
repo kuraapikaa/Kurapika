@@ -8,6 +8,7 @@ import { getBackofficeToken } from '../lib/authStore.js';
 import { resolveTenantKeyForRequest, safeTenantKey } from '../lib/tenant.js';
 import { readStoredDocument, writeStoredDocument } from '../lib/documentStore.js';
 import { isLynonConfigured, lynonAssignCampaignToPlayer, lynonBuildBonusEligibilitySnapshot, lynonCreditPlayerMainAccount, lynonFindPlayerByLogin, lynonPlayerActivity } from '../services/lynonBackofficeService.js';
+import { getChatMemberStatus, isActiveMemberStatus, isTelegramConfigured, sendTelegramMessage } from '../services/telegramService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,11 +20,45 @@ const TENANT_WHEEL_CLAIMS_DIR = path.join(__dirname, '..', 'data', 'wheel-claims
 const TENANT_PREDICTIONS_DIR = path.join(__dirname, '..', 'data', 'prediction-entries');
 const TENANT_PREDICTION_SETTLEMENTS_DIR = path.join(__dirname, '..', 'data', 'prediction-settlements');
 const TENANT_ENGAGEMENT_DIR = path.join(__dirname, '..', 'data', 'engagement');
+const TENANT_TELEGRAM_LINKS_DIR = path.join(__dirname, '..', 'data', 'telegram-links');
+const TENANT_TELEGRAM_CLAIMS_DIR = path.join(__dirname, '..', 'data', 'telegram-claims');
 const TURKEY_UTC_OFFSET_MS = 3 * 60 * 60 * 1000;
 const PLAYER_ACTIVITY_CACHE_TTL_MS = 2 * 60 * 1000;
 const playerActivityCache = new Map<string, { expiresAt: number; value: Promise<any> }>();
 const predictionSettlementLocks = new Set<string>();
 const wheelClaimLocks = new Set<string>();
+const teamLogoCache = new Map<string, { expiresAt: number; imageUrl: string | null }>();
+const TEAM_LOGO_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+
+/** Takım adına göre Wikipedia'nın (tr, sonra en) sayfa görselini arar; bulamazsa null döner. */
+async function fetchWikipediaTeamLogo(teamName: string): Promise<string | null> {
+  const cacheKey = teamName.trim().toLocaleLowerCase('tr-TR');
+  const cached = teamLogoCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) return cached.imageUrl;
+
+  const lookup = async (lang: 'tr' | 'en'): Promise<string | null> => {
+    const url = `https://${lang}.wikipedia.org/w/api.php?` + new URLSearchParams({
+      action: 'query',
+      format: 'json',
+      generator: 'search',
+      gsrsearch: teamName,
+      gsrlimit: '1',
+      prop: 'pageimages',
+      piprop: 'original',
+      origin: '*',
+    }).toString();
+    const res = await fetch(url, { headers: { Accept: 'application/json' } });
+    if (!res.ok) return null;
+    const body: any = await res.json();
+    const pages = body?.query?.pages ?? {};
+    const page = Object.values(pages)[0] as any;
+    return page?.original?.source ?? null;
+  };
+
+  const imageUrl = (await lookup('tr')) ?? (await lookup('en'));
+  teamLogoCache.set(cacheKey, { expiresAt: Date.now() + TEAM_LOGO_CACHE_TTL_MS, imageUrl });
+  return imageUrl;
+}
 
 // Ensure data directory exists
 if (!fs.existsSync(path.dirname(GAMES_DATA_FILE))) {
@@ -32,14 +67,14 @@ if (!fs.existsSync(path.dirname(GAMES_DATA_FILE))) {
 
 const DEFAULT_GAME_SETTINGS = {
   lobby: {
-    themePreset: 'gold',
-    primaryColor: '#d4af37',
-    secondaryColor: '#9a701a',
-    accentColor: '#f4d36f',
-    backgroundColor: '#100b04',
-    surfaceColor: '#1a1005',
-    textColor: '#ffffff',
-    mutedTextColor: '#c6ae76',
+    themePreset: 'ocean',
+    primaryColor: '#3b82f6',
+    secondaryColor: '#1d4ed8',
+    accentColor: '#5eead4',
+    backgroundColor: '#060911',
+    surfaceColor: '#0d1119',
+    textColor: '#f1f5f9',
+    mutedTextColor: '#7dd3fc',
     backgroundImageUrl: '',
     backgroundOverlay: 72,
     banner: {
@@ -423,8 +458,18 @@ const DEFAULT_GAME_SETTINGS = {
     { id: 'wheel-watch', label: 'Apple Watch Ultra 3', detail: 'Fiziksel ödül · sınırlı stok', bgColor: '#334155', textColor: '#ffffff', probability: 0, type: 'physical', rewardKind: 'physical', bonusId: null, amount: 0, stock: 0, requiresConfiguration: true, isLoss: false },
     { id: 'wheel-iphone', label: 'iPhone 17 Pro Max 1TB', detail: 'Fiziksel ödül · sınırlı stok', bgColor: '#1e293b', textColor: '#ffffff', probability: 0, type: 'physical', rewardKind: 'physical', bonusId: null, amount: 0, stock: 0, requiresConfiguration: true, isLoss: false }
   ],
+  telegramBonus: {
+    enabled: false,
+    channelUsername: '',
+    chatId: '',
+    bonusId: null,
+    bonusLabel: 'Telegram Bonusu',
+    amount: 0,
+    assignmentValues: {}
+  },
   scratchcard: {
     baseWinProbability: 10, // out of 100
+    minInvestment: 0,
     rewards: [
        { id: 1, label: '25 TL Freebet', probability: 60, type: 'bonus', bonusId: 1875, amount: 25 },
        { id: 2, label: '50 TL Bonus', probability: 35, type: 'bonus', bonusId: 1876, amount: 50 },
@@ -622,6 +667,63 @@ function ensureTenantDirs() {
   fs.mkdirSync(TENANT_PREDICTIONS_DIR, { recursive: true });
   fs.mkdirSync(TENANT_PREDICTION_SETTLEMENTS_DIR, { recursive: true });
   fs.mkdirSync(TENANT_ENGAGEMENT_DIR, { recursive: true });
+  fs.mkdirSync(TENANT_TELEGRAM_LINKS_DIR, { recursive: true });
+  fs.mkdirSync(TENANT_TELEGRAM_CLAIMS_DIR, { recursive: true });
+}
+
+function telegramLinksPath(tenantKey: string) {
+  return path.join(TENANT_TELEGRAM_LINKS_DIR, `${tenantKey}.json`);
+}
+
+async function readTelegramLinks(tenantKey: string): Promise<any[]> {
+  const data = await readStoredDocument<any[]>({
+    tenantKey: safeTenantKey(tenantKey),
+    namespace: 'telegram-links',
+    filePath: telegramLinksPath(tenantKey),
+    fallback: () => [],
+  });
+  return Array.isArray(data) ? data : [];
+}
+
+async function writeTelegramLinks(links: any[], tenantKey: string): Promise<void> {
+  await writeStoredDocument(
+    { tenantKey: safeTenantKey(tenantKey), namespace: 'telegram-links', filePath: telegramLinksPath(tenantKey) },
+    links,
+  );
+}
+
+async function linkTelegramAccount(tenantKey: string, login: string, telegramUserId: number, telegramUsername?: string | null): Promise<void> {
+  const links = await readTelegramLinks(tenantKey);
+  const filtered = links.filter((l: any) => String(l.login).toLocaleLowerCase('tr-TR') !== login.toLocaleLowerCase('tr-TR'));
+  filtered.push({ login, telegramUserId, telegramUsername: telegramUsername ?? null, linkedAt: new Date().toISOString() });
+  await writeTelegramLinks(filtered, tenantKey);
+}
+
+async function getLinkedTelegramUserId(tenantKey: string, login: string): Promise<number | null> {
+  const links = await readTelegramLinks(tenantKey);
+  const found = links.find((l: any) => String(l.login).toLocaleLowerCase('tr-TR') === login.toLocaleLowerCase('tr-TR'));
+  return found?.telegramUserId ?? null;
+}
+
+function telegramClaimsPath(tenantKey: string) {
+  return path.join(TENANT_TELEGRAM_CLAIMS_DIR, `${tenantKey}.json`);
+}
+
+async function readTelegramClaims(tenantKey: string): Promise<any[]> {
+  const data = await readStoredDocument<any[]>({
+    tenantKey: safeTenantKey(tenantKey),
+    namespace: 'telegram-claims',
+    filePath: telegramClaimsPath(tenantKey),
+    fallback: () => [],
+  });
+  return Array.isArray(data) ? data : [];
+}
+
+async function writeTelegramClaims(claims: any[], tenantKey: string): Promise<void> {
+  await writeStoredDocument(
+    { tenantKey: safeTenantKey(tenantKey), namespace: 'telegram-claims', filePath: telegramClaimsPath(tenantKey) },
+    claims,
+  );
 }
 
 function mergeGameSettings(settings: any) {
@@ -663,6 +765,10 @@ function mergeGameSettings(settings: any) {
         ...DEFAULT_GAME_SETTINGS.lobby.banner,
         ...(settings?.lobby?.banner || {})
       }
+    },
+    telegramBonus: {
+      ...DEFAULT_GAME_SETTINGS.telegramBonus,
+      ...(settings?.telegramBonus || {})
     },
     scratchcard: {
       ...DEFAULT_GAME_SETTINGS.scratchcard,
@@ -1663,7 +1769,24 @@ const selectedSlice = selected.slice;
     const tenantKey = await resolveTenantKeyForRequest(request);
     const settings = await readGameSettings(tenantKey);
     const scratch = settings.scratchcard;
-    
+
+    const minInvestment = Number(scratch.minInvestment || 0);
+    if (minInvestment > 0) {
+      if (!isLynonConfigured()) {
+        return reply.status(503).send({ ok: false, message: 'Yatırım doğrulaması için Lynon bağlantısı gerekli.' });
+      }
+      const snapshot = await lynonBuildBonusEligibilitySnapshot({ login: bonusPanelUser.login });
+      const lastDepositAmount = Number(snapshot.lastDeposit?.amount || 0);
+      if (!snapshot.dataCompleteness?.payments || lastDepositAmount < minInvestment) {
+        return reply.status(422).send({
+          ok: false,
+          message: `Kazı kazan için son başarılı yatırım en az ${minInvestment} TL olmalıdır.`,
+          lastDeposit: lastDepositAmount,
+          required: minInvestment,
+        });
+      }
+    }
+
     const isWin = (Math.random() * 100) < (scratch.baseWinProbability || 0);
 
     let selectedReward = null;
@@ -1688,6 +1811,128 @@ const selectedSlice = selected.slice;
     }
 
     return reply.send({ ok: !selectedReward || chargeStatus?.ok === true, won: isWin, reward: selectedReward, chargeStatus, message: chargeStatus?.ok === false ? chargeStatus.message : undefined });
+  });
+
+  app.get('/games/telegram-bonus/status', async (request: any, reply) => {
+    const bonusPanelUser = request.session?.bonusPanelUser;
+    if (!bonusPanelUser?.login) {
+      return reply.status(401).send({ ok: false, message: 'Önce kullanıcı adı doğrulaması yapmalısınız.' });
+    }
+    const tenantKey = await resolveTenantKeyForRequest(request);
+    const settings = await readGameSettings(tenantKey);
+    const telegramBonus = settings.telegramBonus;
+    if (!telegramBonus.enabled) {
+      return reply.send({ ok: true, data: { enabled: false } });
+    }
+
+    const login = String(bonusPanelUser.login).trim();
+    const [linkedId, claims] = await Promise.all([
+      getLinkedTelegramUserId(tenantKey, login),
+      readTelegramClaims(tenantKey),
+    ]);
+    const claimed = claims.some((c: any) => c.username === login && c.ok === true);
+
+    return reply.send({
+      ok: true,
+      data: {
+        enabled: true,
+        isLinked: Boolean(linkedId),
+        claimed,
+        channelUsername: telegramBonus.channelUsername || null,
+        linkUrl: config.telegram.botUsername
+          ? `https://t.me/${config.telegram.botUsername}?start=${encodeURIComponent(login)}`
+          : null,
+      },
+    });
+  });
+
+  app.post('/games/telegram-bonus/verify', async (request: any, reply) => {
+    const bonusPanelUser = request.session?.bonusPanelUser;
+    if (!bonusPanelUser?.login) {
+      return reply.status(401).send({ ok: false, message: 'Önce kullanıcı adı doğrulaması yapmalısınız.' });
+    }
+    const login = String(bonusPanelUser.login).trim();
+    const tenantKey = await resolveTenantKeyForRequest(request);
+    const settings = await readGameSettings(tenantKey);
+    const telegramBonus = settings.telegramBonus;
+    if (!telegramBonus.enabled) {
+      return reply.status(409).send({ ok: false, message: 'Telegram bonusu şu anda aktif değil.' });
+    }
+    if (!isTelegramConfigured()) {
+      return reply.status(503).send({ ok: false, message: 'Telegram entegrasyonu yapılandırılmamış.' });
+    }
+    if (!telegramBonus.chatId) {
+      return reply.status(503).send({ ok: false, message: 'Telegram kanal/grup kimliği yapılandırılmamış.' });
+    }
+
+    const claims = await readTelegramClaims(tenantKey);
+    if (claims.some((c: any) => c.username === login && c.ok === true)) {
+      return reply.status(409).send({ ok: false, message: 'Telegram bonusunu zaten aldınız.' });
+    }
+
+    const telegramUserId = await getLinkedTelegramUserId(tenantKey, login);
+    if (!telegramUserId) {
+      return reply.status(422).send({ ok: false, message: 'Önce Telegram hesabınızı bağlayın.', linkRequired: true });
+    }
+
+    const status = await getChatMemberStatus(telegramBonus.chatId, telegramUserId);
+    if (!isActiveMemberStatus(status)) {
+      return reply.status(422).send({
+        ok: false,
+        message: `${telegramBonus.channelUsername || 'Telegram kanalına'} katılmanız gerekiyor.`,
+        isMember: false,
+      });
+    }
+
+    const grant = await chargeBonusToPlayer(
+      login,
+      telegramBonus.bonusId ? Number(telegramBonus.bonusId) : null,
+      telegramBonus.bonusLabel,
+      telegramBonus.amount,
+      telegramBonus.assignmentValues || {},
+    );
+    claims.push({
+      username: login,
+      telegramUserId,
+      ok: grant?.ok === true,
+      message: grant?.message,
+      createdAt: new Date().toISOString(),
+    });
+    await writeTelegramClaims(claims, tenantKey);
+
+    return reply.status(grant?.ok === true ? 200 : 422).send({
+      ok: grant?.ok === true,
+      message: grant?.message,
+      chargeStatus: grant,
+    });
+  });
+
+  // Telegram Bot API'nin update'leri gönderdiği webhook. `/start <login>` mesajıyla
+  // oyuncunun bonus panel giriş adını Telegram kullanıcı kimliğine bağlar.
+  app.post('/telegram/webhook', async (request: any, reply) => {
+    if (config.telegram.webhookSecret) {
+      const provided = request.headers['x-telegram-bot-api-secret-token'];
+      if (provided !== config.telegram.webhookSecret) {
+        return reply.status(401).send({ ok: false });
+      }
+    }
+    const message = request.body?.message;
+    const text = String(message?.text || '').trim();
+    const fromId = message?.from?.id;
+    const chatId = message?.chat?.id;
+    if (text.toLowerCase().startsWith('/start') && fromId && chatId) {
+      const login = text.slice(6).trim();
+      if (login) {
+        const tenantKey = await resolveTenantKeyForRequest(request);
+        await linkTelegramAccount(tenantKey, login, fromId, message?.from?.username || null);
+        try {
+          await sendTelegramMessage(chatId, `Hesabınız "${login}" kullanıcı adıyla bağlandı. Şimdi panelden Telegram bonusunuzu doğrulayabilirsiniz.`);
+        } catch {
+          // Mesaj gönderilemese de bağlama işlemi tamamlandı sayılır.
+        }
+      }
+    }
+    return reply.send({ ok: true });
   });
 
   app.get('/games/prediction-league', async (request: any, reply) => {
@@ -1782,6 +2027,22 @@ const selectedSlice = selected.slice;
       predictionSettlementLocks.delete(lockKey);
     }
   });
+
+  app.get('/admin/games/team-logo', async (request: any, reply) => {
+    const user = request.session?.user;
+    if (!user) return reply.status(401).send({ ok: false, message: 'Yetkisiz' });
+    const teamName = String(request.query?.name || '').trim();
+    if (!teamName) return reply.status(400).send({ ok: false, message: 'Takım adı gerekli' });
+    try {
+      const imageUrl = await fetchWikipediaTeamLogo(teamName);
+      if (!imageUrl) return reply.status(404).send({ ok: false, message: 'Wikipedia üzerinde logo bulunamadı' });
+      return reply.send({ ok: true, imageUrl });
+    } catch (err) {
+      request.log.error({ err }, 'team-logo fetch error');
+      return reply.status(502).send({ ok: false, message: 'Wikipedia sorgusu başarısız oldu' });
+    }
+  });
+
   app.post('/games/prediction-league/predict', async (request: any, reply) => {
     const bonusPanelUser = request.session?.bonusPanelUser;
     if (!bonusPanelUser?.login) {

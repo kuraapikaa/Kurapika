@@ -5,15 +5,17 @@
 @layer base {
   :root {
     color-scheme: dark;
-    --app-bg: #070a11;
-    --app-surface: #0d1119;
-    --app-surface-strong: #121722;
-    --app-border: #222936;
-    --app-border-hover: rgba(101, 116, 255, 0.45);
+    --app-bg: #05080e;
+    --app-surface: rgba(15, 23, 36, 0.62);
+    --app-surface-strong: rgba(20, 30, 46, 0.78);
+    --app-border: rgba(148, 180, 255, 0.1);
+    --app-border-hover: rgba(56, 189, 248, 0.4);
     --app-muted: #8993a8;
-    --app-accent: #6574ff;
-    --app-accent-soft: rgba(101, 116, 255, 0.12);
-    --app-shadow: none;
+    --app-accent: #3b82f6;
+    --app-accent-teal: #2dd4bf;
+    --app-accent-soft: rgba(59, 130, 246, 0.14);
+    --app-shadow: 0 20px 60px rgba(2, 6, 15, 0.45);
+    --app-blur: blur(24px) saturate(160%);
   }
 
   * {
@@ -291,19 +293,26 @@
   .glass-card,
   .premium-glass,
   .premium-card {
-    @apply relative overflow-hidden rounded-[20px] border border-white/[0.07] bg-[#0b111b]/75 backdrop-blur-xl;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025), var(--app-shadow);
+    position: relative;
+    overflow: hidden;
+    border-radius: 14px;
+    border: 1px solid var(--app-border);
+    background: var(--app-surface);
+    backdrop-filter: var(--app-blur);
+    -webkit-backdrop-filter: var(--app-blur);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), var(--app-shadow);
+    transition: border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
   }
 
   .premium-card {
     @apply transition duration-300;
   }
 
-  .premium-card:hover {
-    transform: translateY(-2px);
+  .premium-card:hover,
+  .glass-card:hover {
     border-color: var(--app-border-hover);
-    background: rgba(13, 21, 33, 0.88);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 24px 70px rgba(0, 0, 0, 0.38);
+    background: var(--app-surface-strong);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 24px 70px rgba(2, 6, 15, 0.5);
   }
 
   .neon-glow-indigo,
@@ -931,192 +940,27 @@
   }
 }
 
-/* Narcosbahis public lobby palette: warm black, antique gold and champagne. */
-html.narcos-theme,
-html.narcos-theme body {
-  background: #100b04;
-  color: #f4ead2;
-}
-
-html.narcos-theme [class*="bg-[#070b14]"],
-html.narcos-theme [class*="bg-[#0a0f1a]"],
-html.narcos-theme [class*="bg-[#080d16]"],
-html.narcos-theme [class*="bg-[#0e1420]"],
-html.narcos-theme [class*="bg-[#151e2f]"] {
-  background-color: #100b04 !important;
-}
-
-html.narcos-theme [class*="text-cyan-"],
-html.narcos-theme [class*="text-teal-"],
-html.narcos-theme [class*="text-sky-"] {
-  color: #edc65f !important;
-}
-
-html.narcos-theme [class*="border-cyan-"],
-html.narcos-theme [class*="border-teal-"],
-html.narcos-theme [class*="border-sky-"] {
-  border-color: rgb(212 175 55 / 0.38) !important;
-}
-
-html.narcos-theme [class*="bg-cyan-"],
-html.narcos-theme [class*="bg-teal-"] {
-  background-color: rgb(212 175 55 / 0.14) !important;
-}
-
-/* Backoffice flat indigo theme — reference UI */
-.app-shell {
-  background: #070a11;
-  color: #d7dce7;
-}
-
-.app-shell .app-backdrop {
-  background: #070a11;
-}
-
-.app-shell .premium-sidebar {
-  border-color: #202631;
-  background: #0a0e16;
-  box-shadow: none;
-  backdrop-filter: none;
-}
-
-.app-shell .premium-sidebar::after {
-  display: none;
-}
-
-.app-shell .app-header {
-  min-height: 70px;
-  border-color: #202631;
-  background: rgba(7, 10, 17, 0.97);
-  box-shadow: none;
-  backdrop-filter: blur(14px);
-}
-
-.app-shell .app-content {
-  max-width: none;
-  padding-top: 20px;
-}
-
-.app-shell .sidebar-section-label {
-  color: #596479;
-  letter-spacing: 0.18em;
-}
-
-.app-shell .sidebar-nav-group a {
-  border: 1px solid transparent;
-  border-radius: 9px;
-  min-height: 38px;
-}
-
-.app-shell .sidebar-nav-group a[aria-current='page'] {
-  border-color: rgba(101, 116, 255, 0.22);
-  background: rgba(101, 116, 255, 0.13) !important;
-  color: #eef0ff !important;
-}
-
-.app-shell .sidebar-nav-group a[aria-current='page'] .sidebar-link-icon {
-  color: #8d96ff;
-}
-
-.app-shell .tab-intro {
-  margin-bottom: 18px;
-}
-
-.app-shell .tab-intro-status,
-.app-shell .tab-intro-chip {
-  border-color: rgba(52, 211, 153, 0.2);
-  border-radius: 8px;
-  background: rgba(52, 211, 153, 0.07);
-  color: #86efc2;
-}
-
-.app-shell .tab-filter-dock,
-.app-shell .tab-workspace section > header,
-.app-shell .premium-card,
-.app-shell .glass-card,
-.app-shell .premium-glass {
-  border-color: #222936 !important;
-  border-radius: 12px !important;
-  background: #0d1119 !important;
-  box-shadow: none !important;
-  backdrop-filter: none;
-}
-
-.app-shell .premium-card:hover,
-.app-shell .glass-card:hover {
-  transform: none;
-  border-color: #30394a !important;
-  background: #0f141e !important;
-  box-shadow: none !important;
-}
-
-.app-shell input:not([type='checkbox']):not([type='radio']),
-.app-shell select,
-.app-shell textarea {
-  border-color: #252d3a !important;
-  border-radius: 8px !important;
-  background: #090d14 !important;
-}
-
-.app-shell input:focus,
-.app-shell select:focus,
-.app-shell textarea:focus {
-  border-color: rgba(101, 116, 255, 0.65) !important;
-  box-shadow: 0 0 0 3px rgba(101, 116, 255, 0.1) !important;
-}
-
-.app-shell table thead {
-  background: #090d14 !important;
-}
-
-.app-shell table th {
-  color: #788399 !important;
-  font-weight: 650 !important;
-}
-
-.app-shell table td {
-  border-bottom-color: #202631 !important;
-}
-
-.app-shell table tbody tr:hover {
-  background: rgba(101, 116, 255, 0.045) !important;
-}
-
-.app-shell [class*='neon-glow'],
-.app-shell [class*='shadow-[0_0'],
-.app-shell [class*='blur-[60px]'] {
-  filter: none !important;
-  box-shadow: none !important;
-}
-
-.app-shell [class*='text-cyan-'] {
-  color: #8d96ff !important;
-}
-
-.app-shell [class*='bg-cyan-300'] {
-  background-color: #6574ff !important;
-  color: #ffffff !important;
-}
-
-.app-shell [class*='border-cyan-'] {
-  border-color: rgba(101, 116, 255, 0.28) !important;
-}
+/* Narcosbahis public lobby: mavi/teal aksanlar korunur — özel renk override'ı yok, bileşenler zaten cyan/blue/teal kullanıyor. */
 
 .app-shell button,
 .app-shell a {
   transition-duration: 150ms !important;
-}/* Compact operations UI v2 */
+}
+
+/* ─── Kompakt panel: mavi + teal, macOS vibrancy camı ─────────────────────── */
 :root {
-  --panel-bg: #07090e;
-  --panel-sidebar: #090c12;
-  --panel-surface: #0d1118;
-  --panel-surface-2: #111620;
-  --panel-border: #202630;
-  --panel-border-strong: #2b3441;
-  --panel-text: #e7eaf0;
-  --panel-muted: #7b8597;
-  --panel-accent: #6977f8;
-  --panel-accent-soft: rgba(105, 119, 248, 0.11);
+  --panel-bg: #060910;
+  --panel-sidebar: rgba(9, 13, 22, 0.72);
+  --panel-surface: rgba(16, 24, 38, 0.6);
+  --panel-surface-2: rgba(22, 33, 51, 0.72);
+  --panel-border: rgba(148, 180, 255, 0.1);
+  --panel-border-strong: rgba(56, 189, 248, 0.32);
+  --panel-text: #e7eefb;
+  --panel-muted: #7c8aa3;
+  --panel-accent: #3b82f6;
+  --panel-accent-teal: #2dd4bf;
+  --panel-accent-soft: rgba(59, 130, 246, 0.14);
+  --panel-blur: blur(28px) saturate(165%);
 }
 
 .app-shell {
@@ -1127,24 +971,28 @@ html.narcos-theme [class*="bg-teal-"] {
 }
 
 .app-shell .app-backdrop {
-  background: var(--panel-bg) !important;
+  background:
+    radial-gradient(circle at 85% -8%, rgba(45, 212, 191, 0.08), transparent 32%),
+    radial-gradient(circle at 4% 92%, rgba(59, 130, 246, 0.1), transparent 36%),
+    var(--panel-bg) !important;
 }
 
 .app-shell .premium-sidebar {
   border-right: 1px solid var(--panel-border) !important;
   background: var(--panel-sidebar) !important;
-  box-shadow: none !important;
-  backdrop-filter: none !important;
+  backdrop-filter: var(--panel-blur) !important;
+  -webkit-backdrop-filter: var(--panel-blur) !important;
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.03) !important;
 }
 
 .app-shell .sidebar-brand {
-  background: #090c12;
+  background: transparent;
 }
 
 .app-shell .sidebar-section-label {
   margin-bottom: 4px !important;
   padding: 0 10px !important;
-  color: #4f596b !important;
+  color: #56617a !important;
   font-size: 8px !important;
   font-weight: 700 !important;
   letter-spacing: 0.16em !important;
@@ -1153,33 +1001,35 @@ html.narcos-theme [class*="bg-teal-"] {
 .app-shell .sidebar-link-icon {
   width: 25px !important;
   height: 25px !important;
-  border-radius: 7px !important;
+  border-radius: 8px !important;
 }
 
 .app-shell .sidebar-nav-group a {
   min-height: 34px !important;
-  border-radius: 8px !important;
+  border-radius: 9px !important;
   border: 1px solid transparent !important;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease !important;
 }
 
 .app-shell .sidebar-nav-group a[aria-current='page'] {
-  border-color: rgba(105, 119, 248, 0.2) !important;
-  background: var(--panel-accent-soft) !important;
-  color: #f2f3ff !important;
+  border-color: rgba(59, 130, 246, 0.28) !important;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.16), rgba(45, 212, 191, 0.08)) !important;
+  color: #f2f6ff !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
 }
 
 .app-shell .sidebar-nav-group a[aria-current='page'] .sidebar-link-icon {
-  background: rgba(105, 119, 248, 0.08) !important;
-  color: #9da6ff !important;
+  background: rgba(59, 130, 246, 0.14) !important;
+  color: #7dd3fc !important;
 }
 
 .app-shell .sidebar-system-card {
   min-height: 36px;
   margin-bottom: 4px !important;
   padding: 7px 9px !important;
-  border-color: rgba(52, 211, 153, 0.14) !important;
-  border-radius: 8px !important;
-  background: rgba(52, 211, 153, 0.055) !important;
+  border-color: rgba(45, 212, 191, 0.18) !important;
+  border-radius: 9px !important;
+  background: rgba(45, 212, 191, 0.07) !important;
 }
 
 .app-shell .app-header {
@@ -1188,9 +1038,10 @@ html.narcos-theme [class*="bg-teal-"] {
   z-index: 45;
   min-height: 58px !important;
   border-bottom: 1px solid var(--panel-border) !important;
-  background: rgba(7, 9, 14, 0.96) !important;
-  box-shadow: none !important;
-  backdrop-filter: blur(12px) !important;
+  background: rgba(8, 12, 20, 0.72) !important;
+  backdrop-filter: var(--panel-blur) !important;
+  -webkit-backdrop-filter: var(--panel-blur) !important;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.03) !important;
 }
 
 .app-shell .app-content {
@@ -1213,10 +1064,10 @@ html.narcos-theme [class*="bg-teal-"] {
 .app-shell .tab-intro-chip {
   height: 28px;
   padding: 0 10px !important;
-  border-color: rgba(52, 211, 153, 0.15) !important;
-  border-radius: 7px !important;
-  background: rgba(52, 211, 153, 0.055) !important;
-  color: #80ddb8 !important;
+  border-color: rgba(45, 212, 191, 0.2) !important;
+  border-radius: 8px !important;
+  background: rgba(45, 212, 191, 0.08) !important;
+  color: #5eead4 !important;
   font-size: 9px !important;
   font-weight: 650 !important;
 }
@@ -1225,9 +1076,10 @@ html.narcos-theme [class*="bg-teal-"] {
   margin-bottom: 12px !important;
   padding: 5px !important;
   border: 1px solid var(--panel-border) !important;
-  border-radius: 10px !important;
+  border-radius: 12px !important;
   background: var(--panel-surface) !important;
-  box-shadow: none !important;
+  backdrop-filter: var(--panel-blur) !important;
+  -webkit-backdrop-filter: var(--panel-blur) !important;
 }
 
 .app-shell .tab-workspace {
@@ -1236,7 +1088,7 @@ html.narcos-theme [class*="bg-teal-"] {
 
 .app-shell .tab-workspace > div,
 .app-shell .tab-workspace > section {
-  animation-duration: 160ms !important;
+  animation-duration: 200ms !important;
 }
 
 .app-shell .glass-card,
@@ -1247,11 +1099,12 @@ html.narcos-theme [class*="bg-teal-"] {
 .app-shell .tab-workspace [class*='bg-zinc-950/20'],
 .app-shell .tab-workspace [class*='bg-zinc-950/40'] {
   border: 1px solid var(--panel-border) !important;
-  border-radius: 11px !important;
+  border-radius: 14px !important;
   background-color: var(--panel-surface) !important;
   background-image: none !important;
-  box-shadow: none !important;
-  backdrop-filter: none !important;
+  backdrop-filter: var(--panel-blur) !important;
+  -webkit-backdrop-filter: var(--panel-blur) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035), 0 14px 40px rgba(2, 6, 15, 0.35) !important;
 }
 
 .app-shell .premium-card:hover,
@@ -1260,7 +1113,7 @@ html.narcos-theme [class*="bg-teal-"] {
   transform: none !important;
   border-color: var(--panel-border-strong) !important;
   background-color: var(--panel-surface-2) !important;
-  box-shadow: none !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 18px 50px rgba(2, 6, 15, 0.42) !important;
 }
 
 .app-shell .tab-workspace section > header {
@@ -1307,22 +1160,7 @@ html.narcos-theme [class*="bg-teal-"] {
 .app-shell .tab-workspace [class*='rounded-[2.5rem]'],
 .app-shell .tab-workspace [class*='rounded-[3rem]'],
 .app-shell .tab-workspace [class*='rounded-[2rem]'] {
-  border-radius: 12px !important;
-}
-
-.app-shell .tab-workspace [class*='bg-gradient-to-'] {
-  background-image: none !important;
-}
-
-.app-shell .tab-workspace [class*='shadow-2xl'],
-.app-shell .tab-workspace [class*='shadow-xl'],
-.app-shell .tab-workspace [class*='shadow-lg'],
-.app-shell .tab-workspace [class*='shadow-['] {
-  box-shadow: none !important;
-}
-
-.app-shell .tab-workspace [class*='backdrop-blur'] {
-  backdrop-filter: none !important;
+  border-radius: 14px !important;
 }
 
 .app-shell .tab-workspace table {
@@ -1331,14 +1169,14 @@ html.narcos-theme [class*="bg-teal-"] {
 }
 
 .app-shell .tab-workspace table thead {
-  background: #090d13 !important;
+  background: rgba(9, 14, 24, 0.6) !important;
 }
 
 .app-shell .tab-workspace table th {
   height: 34px;
   padding: 7px 10px !important;
   border-bottom: 1px solid var(--panel-border) !important;
-  color: #697386 !important;
+  color: #6b7893 !important;
   font-size: 8px !important;
   font-weight: 700 !important;
   letter-spacing: 0.1em !important;
@@ -1348,34 +1186,34 @@ html.narcos-theme [class*="bg-teal-"] {
 .app-shell .tab-workspace table td {
   height: 40px;
   padding: 7px 10px !important;
-  border-bottom: 1px solid rgba(32, 38, 48, 0.82) !important;
+  border-bottom: 1px solid rgba(148, 180, 255, 0.055) !important;
 }
 
 .app-shell .tab-workspace table tbody tr:hover {
-  background: rgba(105, 119, 248, 0.035) !important;
+  background: rgba(59, 130, 246, 0.05) !important;
 }
 
 .app-shell input:not([type='checkbox']):not([type='radio']),
 .app-shell select,
 .app-shell textarea {
   min-height: 34px;
-  border: 1px solid #252c37 !important;
-  border-radius: 8px !important;
-  background: #090d13 !important;
-  color: #dfe3ec !important;
+  border: 1px solid rgba(148, 180, 255, 0.12) !important;
+  border-radius: 9px !important;
+  background: rgba(9, 14, 23, 0.65) !important;
+  color: #dfe6f5 !important;
   box-shadow: none !important;
 }
 
 .app-shell input:focus,
 .app-shell select:focus,
 .app-shell textarea:focus {
-  border-color: rgba(105, 119, 248, 0.6) !important;
-  box-shadow: 0 0 0 2px rgba(105, 119, 248, 0.1) !important;
+  border-color: rgba(56, 189, 248, 0.55) !important;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.12) !important;
 }
 
 .app-shell button,
 .app-shell a {
-  border-radius: 8px;
+  border-radius: 9px;
   transition: color 120ms ease, background-color 120ms ease, border-color 120ms ease !important;
 }
 
@@ -1383,45 +1221,23 @@ html.narcos-theme [class*="bg-teal-"] {
   padding: 3px !important;
   gap: 2px !important;
   border: 1px solid var(--panel-border) !important;
-  border-radius: 9px !important;
-  background: #090d13 !important;
+  border-radius: 10px !important;
+  background: rgba(9, 14, 23, 0.6) !important;
 }
 
 .app-shell [role='tab'] {
   min-height: 32px !important;
   padding: 6px 10px !important;
-  border-radius: 7px !important;
+  border-radius: 8px !important;
   font-size: 9px !important;
   letter-spacing: 0.06em !important;
   box-shadow: none !important;
 }
 
 .app-shell [role='tab'][data-state='active'] {
-  background: var(--panel-accent) !important;
+  background: linear-gradient(135deg, var(--panel-accent), var(--panel-accent-teal)) !important;
   color: white !important;
-  box-shadow: none !important;
-}
-
-.app-shell [class*='text-cyan-'],
-.app-shell [class*='text-[#d4af37]'],
-.app-shell [class*='text-[#fbbf24]'] {
-  color: #9ba4ff !important;
-}
-
-.app-shell [class*='bg-cyan-300'],
-.app-shell [class*='bg-[#d4af37]'] {
-  background-color: var(--panel-accent) !important;
-  color: #fff !important;
-}
-
-.app-shell [class*='border-cyan-'],
-.app-shell [class*='border-[#d4af37]'] {
-  border-color: rgba(105, 119, 248, 0.26) !important;
-}
-
-.app-shell [class*='neon-glow'],
-.app-shell [class*='animate-ping'] {
-  filter: none !important;
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.28) !important;
 }
 
 @media (max-width: 1279px) {

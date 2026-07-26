@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { CalendarClock, Loader2, Medal, Send, ShieldCheck, Trophy, User } from 'lucide-react';
+import { CalendarClock, Loader2, Medal, Send, Trophy, User } from 'lucide-react';
 import { bonusPanelApi, gamesApi } from '../../api/client';
 import { cn, resolveTeamLogoUrl } from '../../lib/utils';
-import { LobbyMobileNav } from './LobbyMobileNav';
-import { lobbyExtraText, useLobbyPageContent } from '../../lib/lobbyContent';
+import { lobbyExtraText } from '../../lib/lobbyContent';
+import { useLobbyPageTheme, hexToRgba, type LobbyPalette } from '../../lib/lobbyTheme';
+import { LobbyPageShell, LobbyCard, LobbyIdentityBar, LobbySectionTitle } from './LobbyPageShell';
 
 type Match = {
   id: string;
@@ -26,7 +27,7 @@ type Prediction = {
 };
 
 export function SkorTahminSayfasi() {
-  const { content: pageContent } = useLobbyPageContent('prediction');
+  const { content: pageContent, palette, rootStyle, backgroundStyle } = useLobbyPageTheme('prediction');
   const [league, setLeague] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [username, setUsername] = useState('');
@@ -84,10 +85,10 @@ export function SkorTahminSayfasi() {
         setUsername(res.login);
         await loadLeague();
       } else {
-        setMessage(lobbyExtraText(pageContent, 'userNotFoundError', 'KullanÄ±cÄ± adÄ± bulunamadÄ±.'));
+        setMessage(lobbyExtraText(pageContent, 'userNotFoundError', 'Kullanıcı adı bulunamadı.'));
       }
     } catch {
-      setMessage(lobbyExtraText(pageContent, 'connectionError', 'BaÄŸlantÄ± hatasÄ± oluÅŸtu.'));
+      setMessage(lobbyExtraText(pageContent, 'connectionError', 'Bağlantı hatası oluştu.'));
     } finally {
       setChecking(false);
     }
@@ -99,7 +100,7 @@ export function SkorTahminSayfasi() {
     const awayScore = Number(current.away);
 
     if (!Number.isInteger(homeScore) || !Number.isInteger(awayScore) || homeScore < 0 || awayScore < 0) {
-      setMessage(lobbyExtraText(pageContent, 'validScoreError', 'LÃ¼tfen geÃ§erli skor girin.'));
+      setMessage(lobbyExtraText(pageContent, 'validScoreError', 'Lütfen geçerli skor girin.'));
       return;
     }
 
@@ -116,163 +117,287 @@ export function SkorTahminSayfasi() {
     }
   };
 
+  const rewardLabel = boardPeriod === 'weekly' ? league?.rewards?.weekly?.label : league?.rewards?.monthly?.label;
+  const dateFallback = lobbyExtraText(pageContent, 'dateUnknown', 'Tarih seçilmedi');
+
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#05060a] pb-10 font-sans text-zinc-100">
-      <LobbyMobileNav active="prediction" />
-
-      <main className="mx-auto w-full max-w-6xl px-3 py-5 sm:px-5 md:px-8 md:py-8">
-        <motion.section
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="relative overflow-hidden rounded-[2rem] border border-[#d4af37]/25 bg-gradient-to-br from-[#2a1907] via-[#0e0b06] to-[#07080d] p-5 shadow-[0_24px_80px_rgba(0,0,0,.32)] md:p-8"
+    <LobbyPageShell
+      active="prediction"
+      palette={palette}
+      rootStyle={rootStyle}
+      backgroundStyle={backgroundStyle}
+      eyebrow={pageContent.eyebrow}
+      title={league?.title || pageContent.title}
+      subtitle={league?.description || pageContent.subtitle}
+      wide
+      aside={
+        <span
+          className="flex h-11 w-11 items-center justify-center rounded-xl border"
+          style={{
+            borderColor: hexToRgba(palette.accentColor, 0.24),
+            backgroundColor: hexToRgba(palette.accentColor, 0.12),
+            color: palette.accentColor,
+          }}
         >
-          <div className="absolute -right-20 -top-24 h-72 w-72 rounded-full bg-[#d4af37]/18 blur-[85px]" />
-          <div className="relative z-10 grid grid-cols-1 gap-6 md:grid-cols-[1fr_260px] md:items-center">
-            <div>
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-300/15 bg-emerald-300/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-emerald-200">
-                <Trophy size={13} /> {pageContent.eyebrow}
-              </div>
-              <h1 className="text-4xl font-black leading-[0.95] tracking-[-0.055em] text-white md:text-6xl">
-                {league?.title || pageContent.title}
-              </h1>
-              <p className="mt-4 max-w-2xl text-sm font-medium leading-6 text-zinc-400 md:text-base">
-                {league?.description || pageContent.subtitle}
-              </p>
-            </div>
-            <div className="relative overflow-hidden rounded-[1.5rem] border border-[#d4af37]/25 bg-black/30 p-4">
-              <img src={monthlyPlayer.imageUrl || '/assets/brand/narcosbahis.png'} alt="AyÄ±n oyuncusu" className="absolute -right-8 -bottom-8 h-36 w-36 object-contain opacity-35" />
-              <div className="relative z-10 max-w-[72%]">
-                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#f4d36f]">{monthlyPlayer.title || 'AYIN OYUNCUSU'}</p>
-                <p className="mt-2 text-xl font-black leading-tight tracking-[-0.04em] text-white">{monthlyPlayer.mainText || league?.prize || 'Ã–dÃ¼l havuzu'}</p>
-                <p className="mt-3 text-xs font-bold leading-5 text-[#e9d5a2]">{monthlyPlayer.subtitle || league?.rewards?.monthly?.label || league?.rules}</p>
-              </div>
-            </div>
+          <Trophy size={20} />
+        </span>
+      }
+      toolbar={
+        <div className="flex flex-wrap items-center gap-2">
+          {activeUser && (
+            <span className="inline-flex items-center gap-1.5 rounded-lg border border-white/[0.08] bg-white/[0.05] px-2.5 py-1.5 text-[10px] font-black text-white">
+              <User size={12} style={{ color: palette.accentColor }} />
+              {activeUser}
+            </span>
+          )}
+          <span
+            className="rounded-lg border px-2.5 py-1.5 text-[10px] font-black tabular-nums"
+            style={{
+              borderColor: hexToRgba(palette.accentColor, 0.22),
+              backgroundColor: hexToRgba(palette.accentColor, 0.1),
+              color: palette.accentColor,
+            }}
+          >
+            {openMatches.length} {lobbyExtraText(pageContent, 'openStatus', 'Tahmine açık')}
+          </span>
+          <span className="rounded-lg border border-white/[0.06] bg-black/25 px-2.5 py-1.5 text-[10px] font-black text-zinc-500">
+            {matches.length} {lobbyExtraText(pageContent, 'matchesTitle', 'Tahmin maçları')}
+          </span>
+        </div>
+      }
+    >
+      {!activeUser && (
+        <LobbyIdentityBar
+          palette={palette}
+          label={pageContent.formTitle}
+          placeholder={pageContent.usernamePlaceholder}
+          value={username}
+          onChange={setUsername}
+          onSubmit={handleCheck}
+          submitLabel={pageContent.submitButton}
+          busy={checking}
+          icon={checking ? <Loader2 size={17} className="animate-spin" /> : <User size={17} />}
+          message={<p className="text-[11px] font-medium text-zinc-600">{pageContent.formDescription}</p>}
+        />
+      )}
+
+      {message && (
+        <p className="rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-2 text-[11px] font-bold text-zinc-300">
+          {message}
+        </p>
+      )}
+
+      <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <LobbyCard padded={false}>
+          <div className="px-3.5 pb-2 pt-3.5 md:px-4">
+            <LobbySectionTitle
+              title={lobbyExtraText(pageContent, 'matchesTitle', 'Tahmin maçları')}
+              action={`${openMatches.length}/${matches.length}`}
+            />
           </div>
-        </motion.section>
 
-        {!activeUser && (
-          <section className="mt-5 rounded-[1.6rem] border border-white/[0.07] bg-white/[0.04] p-4 md:p-5">
-            <div className="flex flex-col gap-3 md:flex-row md:items-end">
-              <div className="min-w-0 flex-1">
-                <label className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.16em] text-zinc-600">
-                  <User size={13} /> {pageContent.formTitle}
-                </label>
-                <input
-                  value={username}
-                  onChange={(event) => setUsername(event.target.value)}
-                  onKeyDown={(event) => event.key === 'Enter' && handleCheck()}
-                  placeholder={pageContent.usernamePlaceholder}
-                  className="h-12 w-full rounded-2xl border border-white/[0.07] bg-black/30 px-4 text-sm font-black text-white outline-none placeholder:text-zinc-700 focus:border-[#f4d36f]/40"
-                />
-              </div>
-              <button
-                type="button"
-                onClick={handleCheck}
-                disabled={!username.trim() || checking}
-                className="flex h-12 items-center justify-center gap-2 rounded-2xl bg-[#d4af37] px-6 text-xs font-black uppercase tracking-[0.14em] text-black disabled:opacity-60"
-              >
-                {checking ? <Loader2 size={16} className="animate-spin" /> : <ShieldCheck size={16} />}
-                {pageContent.submitButton}
-              </button>
+          {loading ? (
+            <div className="flex min-h-[180px] items-center justify-center">
+              <Loader2 className="animate-spin" size={22} style={{ color: palette.accentColor }} />
             </div>
-          </section>
-        )}
+          ) : matches.length ? (
+            <ul className="divide-y divide-white/[0.05]">
+              {matches.map((match, index) => {
+                const open = isMatchOpen(match);
+                const current = scores[match.id] || { home: '', away: '' };
+                const finished = match.status === 'finished' && match.homeScore !== null && match.awayScore !== null;
 
-        {message && (
-          <div className="mt-4 rounded-2xl border border-white/[0.07] bg-white/[0.04] px-4 py-3 text-sm font-bold text-zinc-300">
-            {message}
-          </div>
-        )}
-
-        <div className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
-          <section className="space-y-3">
-            <div className="flex items-end justify-between px-1">
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#f4d36f]/70">{pageContent.formDescription}</p>
-                <h2 className="text-2xl font-black tracking-[-0.04em] text-white">{lobbyExtraText(pageContent, 'matchesTitle', 'Tahmin maÃ§larÄ±')}</h2>
-              </div>
-              <span className="text-[10px] font-black uppercase tracking-[0.14em] text-zinc-600">{openMatches.length} {lobbyExtraText(pageContent, 'openStatus', 'aÃ§Ä±k maÃ§')}</span>
-            </div>
-
-            {loading ? (
-              <div className="rounded-[1.6rem] border border-white/[0.07] bg-white/[0.035] p-10 text-center text-zinc-500">
-                <Loader2 className="mx-auto animate-spin" />
-              </div>
-            ) : matches.length ? matches.map((match) => {
-              const open = isMatchOpen(match);
-              const current = scores[match.id] || { home: '', away: '' };
-
-              return (
-                <div key={match.id} className="rounded-[1.6rem] border border-white/[0.07] bg-white/[0.04] p-4 md:p-5">
-                  <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                    <div className="min-w-0">
-                      <div className="mb-2 flex flex-wrap items-center gap-2 text-[10px] font-black uppercase tracking-[0.12em] text-zinc-600">
-                        <span className="rounded-full bg-white/[0.06] px-2 py-1">{match.league}</span>
-                        <span className={cn('rounded-full px-2 py-1', open ? 'bg-emerald-300/10 text-[#f4d36f]' : 'bg-zinc-700/30 text-zinc-500')}>
-                          {open ? lobbyExtraText(pageContent, 'openStatus', 'Tahmine aÃ§Ä±k') : match.status === 'finished' ? lobbyExtraText(pageContent, 'finishedStatus', 'SonuÃ§landÄ±') : lobbyExtraText(pageContent, 'closedStatus', 'KapalÄ±')}
+                return (
+                  <motion.li
+                    key={match.id}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: Math.min(index * 0.025, 0.2) }}
+                    className="flex flex-col gap-2.5 px-3.5 py-2.5 transition hover:bg-white/[0.02] md:flex-row md:items-center md:justify-between md:gap-3 md:px-4"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.12em]">
+                        <span className="rounded-lg bg-white/[0.06] px-1.5 py-1 text-zinc-500">{match.league}</span>
+                        <span
+                          className={cn(
+                            'rounded-lg px-1.5 py-1',
+                            open ? '' : match.status === 'finished' ? 'bg-emerald-300/10 text-emerald-300' : 'bg-white/[0.04] text-zinc-600'
+                          )}
+                          style={open ? { backgroundColor: hexToRgba(palette.accentColor, 0.12), color: palette.accentColor } : undefined}
+                        >
+                          {open
+                            ? lobbyExtraText(pageContent, 'openStatus', 'Tahmine açık')
+                            : match.status === 'finished'
+                              ? lobbyExtraText(pageContent, 'finishedStatus', 'Sonuçlandı')
+                              : lobbyExtraText(pageContent, 'closedStatus', 'Kapalı')}
                         </span>
+                        {finished && (
+                          <span className="rounded-lg bg-white/[0.06] px-1.5 py-1 tabular-nums text-white">
+                            {match.homeScore} - {match.awayScore}
+                          </span>
+                        )}
                       </div>
-                      <div className="flex items-center gap-3">
+
+                      <div className="mt-1.5 flex items-center gap-2">
                         <TeamBadge logoUrl={resolveTeamLogoUrl(match.homeLogoUrl)} alt={match.homeTeam} />
-                        <h3 className="truncate text-xl font-black text-white">{match.homeTeam} - {match.awayTeam}</h3>
+                        <h3 className="truncate text-[12px] font-black leading-tight text-white md:text-[13px]">
+                          {match.homeTeam} - {match.awayTeam}
+                        </h3>
                         <TeamBadge logoUrl={resolveTeamLogoUrl(match.awayLogoUrl)} alt={match.awayTeam} />
                       </div>
-                      <p className="mt-2 flex items-center gap-2 text-xs font-bold text-zinc-500">
-                        <CalendarClock size={14} /> {formatMatchDate(match.startsAt)}
+
+                      <p className="mt-1 flex items-center gap-1.5 text-[11px] font-semibold text-zinc-600">
+                        <CalendarClock size={12} /> {formatMatchDate(match.startsAt, dateFallback)}
                       </p>
                     </div>
 
-                    <div className="grid grid-cols-[72px_18px_72px_48px] items-center gap-2">
-                      <ScoreInput value={current.home} disabled={!activeUser || !open} onChange={(value) => setScores({ ...scores, [match.id]: { ...current, home: value } })} />
-                      <span className="text-center text-zinc-600">:</span>
-                      <ScoreInput value={current.away} disabled={!activeUser || !open} onChange={(value) => setScores({ ...scores, [match.id]: { ...current, away: value } })} />
+                    <div className="flex shrink-0 items-center gap-1.5">
+                      <ScoreInput
+                        value={current.home}
+                        palette={palette}
+                        disabled={!activeUser || !open}
+                        onChange={(value) => setScores({ ...scores, [match.id]: { ...current, home: value } })}
+                      />
+                      <span className="text-[11px] font-black text-zinc-700">:</span>
+                      <ScoreInput
+                        value={current.away}
+                        palette={palette}
+                        disabled={!activeUser || !open}
+                        onChange={(value) => setScores({ ...scores, [match.id]: { ...current, away: value } })}
+                      />
                       <button
                         type="button"
                         disabled={!activeUser || !open || savingMatchId === match.id}
                         onClick={() => submitPrediction(match)}
-                        aria-label={lobbyExtraText(pageContent, 'submitAria', 'Tahmini gÃ¶nder')}
-                        className="flex h-12 items-center justify-center rounded-2xl bg-[#d4af37] text-black disabled:cursor-not-allowed disabled:opacity-45"
+                        aria-label={lobbyExtraText(pageContent, 'submitAria', 'Tahmini gönder')}
+                        className="ml-1 flex h-10 w-10 items-center justify-center rounded-xl text-white transition active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40"
+                        style={{
+                          background: `linear-gradient(90deg, ${palette.primaryColor}, ${palette.secondaryColor})`,
+                          boxShadow: `0 8px 22px ${hexToRgba(palette.primaryColor, 0.26)}`,
+                        }}
                       >
-                        {savingMatchId === match.id ? <Loader2 size={17} className="animate-spin" /> : <Send size={17} />}
+                        {savingMatchId === match.id ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
                       </button>
                     </div>
-                  </div>
-                </div>
-              );
-            }) : (
-              <div className="rounded-[1.6rem] border border-white/[0.07] bg-white/[0.035] p-10 text-center text-sm font-bold text-zinc-500">
-                {pageContent.emptyTitle}
-              </div>
-            )}
-          </section>
+                  </motion.li>
+                );
+              })}
+            </ul>
+          ) : (
+            <div className="px-4 py-10 text-center">
+              <p className="text-sm font-black text-white">{pageContent.emptyTitle}</p>
+              <p className="mt-1 text-[12px] font-medium text-zinc-500">{pageContent.emptyDescription}</p>
+            </div>
+          )}
+        </LobbyCard>
 
-          <aside className="space-y-3">
-            <div className="rounded-[1.6rem] border border-[#d4af37]/20 bg-white/[0.04] p-4">
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#f4d36f]">Skor tablosu</p>
-                <div className="flex rounded-xl border border-white/[0.08] bg-black/25 p-1 text-[9px] font-black uppercase tracking-wider">
-                  <button type="button" onClick={() => setBoardPeriod('weekly')} className={cn('rounded-lg px-2.5 py-1.5', boardPeriod === 'weekly' ? 'bg-[#d4af37] text-black' : 'text-zinc-500')}>HaftalÄ±k</button>
-                  <button type="button" onClick={() => setBoardPeriod('monthly')} className={cn('rounded-lg px-2.5 py-1.5', boardPeriod === 'monthly' ? 'bg-[#d4af37] text-black' : 'text-zinc-500')}>AylÄ±k</button>
-                </div>
-              </div>
-              <p className="mt-3 rounded-xl border border-[#d4af37]/15 bg-[#d4af37]/[0.06] px-3 py-2 text-[11px] font-bold text-[#ead8a4]">{boardPeriod === 'weekly' ? league?.rewards?.weekly?.label : league?.rewards?.monthly?.label}</p>
-              <div className="mt-3 space-y-2">
-                {leaderboard.slice(0, 10).map((item: any, index: number) => (
-                  <div key={item.username} className="flex items-center justify-between rounded-2xl border border-white/[0.06] bg-black/25 px-3 py-3">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <Medal size={18} className={index === 0 ? 'text-[#f4d36f]' : 'text-zinc-500'} />
-                      <span className="truncate text-sm font-black text-white">{maskUsername(item.username)}</span>
-                    </div>
-                    <span className="text-sm font-black text-[#f4d36f]">{item.points}P</span>
-                  </div>
-                ))}
-                {!leaderboard.length && <p className="py-6 text-center text-xs font-bold text-zinc-600">Ä°lk tahmini bekliyor.</p>}
+        <div className="flex flex-col gap-3.5">
+          <LobbyCard className="relative overflow-hidden">
+            <img
+              src={monthlyPlayer.imageUrl || '/assets/brand/narcosbahis.png'}
+              alt={monthlyPlayer.title || lobbyExtraText(pageContent, 'monthlyPlayerTitle', 'Ayın oyuncusu')}
+              className="pointer-events-none absolute -bottom-5 -right-5 h-24 w-24 object-contain opacity-25"
+            />
+            <div className="relative z-10 max-w-[78%]">
+              <p className="text-[9px] font-black uppercase tracking-[0.16em]" style={{ color: palette.accentColor }}>
+                {monthlyPlayer.title || lobbyExtraText(pageContent, 'monthlyPlayerTitle', 'Ayın oyuncusu')}
+              </p>
+              <p className="mt-1.5 text-[13px] font-black leading-tight tracking-[-0.02em] text-white">
+                {monthlyPlayer.mainText || league?.prize || lobbyExtraText(pageContent, 'prizePoolLabel', 'Ödül havuzu')}
+              </p>
+              <p className="mt-1.5 text-[11px] font-semibold leading-4" style={{ color: palette.mutedTextColor }}>
+                {monthlyPlayer.subtitle || league?.rewards?.monthly?.label || league?.rules}
+              </p>
+            </div>
+          </LobbyCard>
+
+          <LobbyCard padded={false}>
+            <div className="flex items-center justify-between gap-2 px-3.5 pb-2.5 pt-3.5 md:px-4">
+              <h2 className="truncate text-[13px] font-black tracking-[-0.02em] text-white">
+                {lobbyExtraText(pageContent, 'leaderboardTitle', 'Skor tablosu')}
+              </h2>
+              <div className="flex shrink-0 rounded-xl border border-white/[0.08] bg-black/25 p-1">
+                {(['weekly', 'monthly'] as const).map((period) => {
+                  const isActive = boardPeriod === period;
+                  return (
+                    <button
+                      key={period}
+                      type="button"
+                      onClick={() => setBoardPeriod(period)}
+                      className={cn(
+                        'rounded-lg px-2.5 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] transition',
+                        isActive ? 'text-white' : 'text-zinc-500 hover:text-zinc-300'
+                      )}
+                      style={
+                        isActive
+                          ? { background: `linear-gradient(90deg, ${palette.primaryColor}, ${palette.secondaryColor})` }
+                          : undefined
+                      }
+                    >
+                      {period === 'weekly'
+                        ? lobbyExtraText(pageContent, 'weeklyTab', 'Haftalık')
+                        : lobbyExtraText(pageContent, 'monthlyTab', 'Aylık')}
+                    </button>
+                  );
+                })}
               </div>
             </div>
-          </aside>
+
+            {rewardLabel && (
+              <p
+                className="mx-3.5 mb-2.5 rounded-xl border px-2.5 py-1.5 text-[11px] font-bold md:mx-4"
+                style={{
+                  borderColor: hexToRgba(palette.primaryColor, 0.18),
+                  backgroundColor: hexToRgba(palette.primaryColor, 0.08),
+                  color: palette.mutedTextColor,
+                }}
+              >
+                {rewardLabel}
+              </p>
+            )}
+
+            <div className="overflow-x-auto pb-1">
+              {leaderboard.length ? (
+                <table className="w-full border-collapse text-left">
+                  <thead>
+                    <tr className="border-y border-white/[0.05] bg-white/[0.02]">
+                      <th className="sticky top-0 px-3.5 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-zinc-500 md:px-4">#</th>
+                      <th className="sticky top-0 px-2 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-zinc-500">
+                        {lobbyExtraText(pageContent, 'playerColumn', 'Oyuncu')}
+                      </th>
+                      <th className="sticky top-0 px-3.5 py-1.5 text-right text-[9px] font-black uppercase tracking-[0.12em] text-zinc-500 md:px-4">
+                        {lobbyExtraText(pageContent, 'pointsColumn', 'Puan')}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/[0.04]">
+                    {leaderboard.slice(0, 10).map((item: any, index: number) => (
+                      <tr key={item.username} className="transition hover:bg-white/[0.02]">
+                        <td className="px-3.5 py-2 md:px-4">
+                          {index < 3 ? (
+                            <Medal size={14} style={{ color: index === 0 ? palette.accentColor : index === 1 ? '#a1a1aa' : '#b45309' }} />
+                          ) : (
+                            <span className="text-[11px] font-black tabular-nums text-zinc-600">{index + 1}</span>
+                          )}
+                        </td>
+                        <td className="px-2 py-2 text-[12px] font-black text-white">{maskUsername(item.username)}</td>
+                        <td className="px-3.5 py-2 text-right text-[12px] font-black tabular-nums md:px-4" style={{ color: palette.accentColor }}>
+                          {item.points}P
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <p className="px-4 py-8 text-center text-[11px] font-bold text-zinc-600">
+                  {lobbyExtraText(pageContent, 'leaderboardEmpty', 'İlk tahmini bekliyor.')}
+                </p>
+              )}
+            </div>
+          </LobbyCard>
         </div>
-      </main>
-    </div>
+      </div>
+    </LobbyPageShell>
   );
 }
 
@@ -283,7 +408,7 @@ function TeamBadge({ logoUrl, alt }: { logoUrl: string | null; alt: string }) {
     <img
       src={logoUrl}
       alt={alt}
-      className="h-8 w-8 rounded-full border border-white/10 object-contain bg-black/30"
+      className="h-6 w-6 shrink-0 rounded-full border border-white/10 bg-black/30 object-contain"
       onError={(event) => {
         const target = event.currentTarget as HTMLImageElement;
         target.style.display = 'none';
@@ -292,7 +417,17 @@ function TeamBadge({ logoUrl, alt }: { logoUrl: string | null; alt: string }) {
   );
 }
 
-function ScoreInput({ value, disabled, onChange }: { value: string; disabled: boolean; onChange: (value: string) => void }) {
+function ScoreInput({
+  value,
+  disabled,
+  palette,
+  onChange,
+}: {
+  value: string;
+  disabled: boolean;
+  palette: LobbyPalette;
+  onChange: (value: string) => void;
+}) {
   return (
     <input
       type="number"
@@ -301,7 +436,8 @@ function ScoreInput({ value, disabled, onChange }: { value: string; disabled: bo
       value={value}
       disabled={disabled}
       onChange={(event) => onChange(event.target.value)}
-      className="h-12 rounded-2xl border border-white/[0.08] bg-black/35 text-center text-lg font-black text-white outline-none focus:border-[#f4d36f]/40 disabled:text-zinc-700"
+      className="h-10 w-12 rounded-xl border border-white/[0.08] bg-black/35 text-center text-[13px] font-black text-white outline-none transition focus:border-[color:var(--lobby-primary)] disabled:text-zinc-700"
+      style={{ caretColor: palette.accentColor }}
     />
   );
 }
@@ -311,8 +447,8 @@ function isMatchOpen(match: Match) {
   return match.status === 'open' && (!startsAt || startsAt > Date.now());
 }
 
-function formatMatchDate(value: string) {
-  if (!value) return 'Tarih seÃ§ilmedi';
+function formatMatchDate(value: string, fallback: string) {
+  if (!value) return fallback;
   return new Intl.DateTimeFormat('tr-TR', {
     day: '2-digit',
     month: 'short',

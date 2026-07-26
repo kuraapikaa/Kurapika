@@ -21,7 +21,8 @@ export type AuditAction =
   | 'lynon_campaign_update'
   | 'bonus_check'
   | 'bonus_charge_as_cash'
-  | 'manual_adjustment';
+  | 'manual_adjustment'
+  | 'withdrawal_resolve';
 
 export interface AuditEntry {
   at: string;

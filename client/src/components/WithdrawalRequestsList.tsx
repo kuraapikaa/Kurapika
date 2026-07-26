@@ -1,9 +1,12 @@
 import { useNavigate } from 'react-router-dom';
+import { useMutation } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import type { WithdrawalRequestItem, WithdrawalRequestsResponse } from '../types/dashboard';
 import { formatNumber, formatDateTimeWithSeconds } from '../lib/format';
 import { Card } from './ui/Card';
 import { ErrorState } from './ui/ErrorState';
-import { AlertCircle, Banknote, CheckCircle2, Clock3, XCircle } from 'lucide-react';
+import { AlertCircle, Banknote, CheckCircle2, Clock3, Loader2, XCircle } from 'lucide-react';
+import { dashboardApi } from '../api/client';
 
 interface WithdrawalRequestsListProps {
   data: WithdrawalRequestsResponse | undefined;
@@ -40,7 +43,7 @@ function StatusBadge({ value }: { value: unknown }) {
 }
 
 function SummaryCard({ label, count, amount, tone }: { label: string; count: number; amount: number; tone: StatusTone }) {
-  const accent = tone === 'paid' ? 'text-emerald-300' : tone === 'rejected' ? 'text-rose-300' : tone === 'pending' ? 'text-amber-200' : 'text-indigo-300';
+  const accent = tone === 'paid' ? 'text-emerald-300' : tone === 'rejected' ? 'text-rose-300' : tone === 'pending' ? 'text-amber-200' : 'text-blue-300';
   return (
     <Card className="rounded-xl border-slate-700/60 bg-[#0d1119] p-4 shadow-none">
       <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">{label}</p>
@@ -54,6 +57,28 @@ function SummaryCard({ label, count, amount, tone }: { label: string; count: num
 
 export function WithdrawalRequestsList({ data, isLoading, error, onRetry }: WithdrawalRequestsListProps) {
   const navigate = useNavigate();
+
+  const rejectMutation = useMutation({
+    mutationFn: ({ id, amount }: { id: number | string; amount: number }) =>
+      dashboardApi.resolveWithdrawal(id, 'rejected', amount, 0),
+    onSuccess: (res) => {
+      if (res.HasError) {
+        toast.error(res.AlertMessage || 'Çekim talebi reddedilemedi.');
+        return;
+      }
+      toast.success('Çekim talebi reddedildi.');
+      onRetry?.();
+    },
+    onError: () => toast.error('Çekim talebi reddedilemedi.'),
+  });
+
+  const handleReject = (row: WithdrawalRequestItem) => {
+    const confirmed = window.confirm(
+      `${row.ClientLogin || `#${row.ClientId}`} kullanıcısının ${formatNumber(Number(row.Amount || 0))} ${row.CurrencyId || 'TRY'} tutarındaki çekim talebini reddetmek istediğinize emin misiniz?`
+    );
+    if (!confirmed) return;
+    rejectMutation.mutate({ id: row.Id, amount: Number(row.Amount || 0) });
+  };
 
   if (error) return <ErrorState message={error.message} onRetry={onRetry} className="rounded-xl" />;
   if (data?.HasError) {
@@ -80,7 +105,7 @@ export function WithdrawalRequestsList({ data, isLoading, error, onRetry }: With
     <section className="flex h-full min-h-0 flex-col gap-4">
       <header className="flex flex-col gap-4 rounded-xl border border-slate-700/60 bg-[#0d1119] p-5 shadow-none sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-indigo-400/20 bg-indigo-400/10 text-indigo-300">
+          <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-blue-400/20 bg-blue-400/10 text-blue-300">
             <Banknote size={19} />
           </span>
           <div>
@@ -104,7 +129,7 @@ export function WithdrawalRequestsList({ data, isLoading, error, onRetry }: With
         {isLoading ? (
           <div className="flex min-h-[320px] items-center justify-center">
             <div className="flex items-center gap-3 text-sm text-slate-400">
-              <span className="h-5 w-5 animate-spin rounded-full border-2 border-indigo-300/25 border-t-indigo-300" />
+              <span className="h-5 w-5 animate-spin rounded-full border-2 border-blue-300/25 border-t-blue-300" />
               Lynon çekim talepleri yükleniyor…
             </div>
           </div>
@@ -126,19 +151,22 @@ export function WithdrawalRequestsList({ data, isLoading, error, onRetry }: With
                   <th className="px-4 py-3">Yöntem</th>
                   <th className="px-4 py-3">Referans</th>
                   <th className="px-4 py-3">Not / Red nedeni</th>
+                  <th className="px-4 py-3">İşlem</th>
                 </tr>
               </thead>
               <tbody>
                 {requests.map(row => {
                   const reference = String(row.ReferenceNo ?? row.ExternalId ?? row.Id ?? '—');
                   const note = String(row.RejectReason || row.Notes || '—');
+                  const isPending = statusTone(row.StateName || row.State) === 'pending';
+                  const isRejectingThis = rejectMutation.isPending && rejectMutation.variables?.id === row.Id;
                   return (
-                    <tr key={String(row.Id)} className="border-t border-slate-800/80 hover:bg-indigo-400/[0.025]">
+                    <tr key={String(row.Id)} className="border-t border-slate-800/80 hover:bg-blue-400/[0.025]">
                       <td className="px-4 py-3">
                         <button
                           type="button"
                           onClick={() => row.ClientId && row.ClientLogin && navigate(`/oyuncu/${row.ClientId}/${row.ClientLogin}`)}
-                          className="font-semibold text-indigo-300 hover:text-indigo-200 hover:underline"
+                          className="font-semibold text-blue-300 hover:text-blue-200 hover:underline"
                         >
                           {row.ClientLogin || `#${row.ClientId}`}
                         </button>
@@ -150,6 +178,21 @@ export function WithdrawalRequestsList({ data, isLoading, error, onRetry }: With
                       <td className="px-4 py-3 text-slate-400">{row.PaymentSystemName || '—'}</td>
                       <td className="max-w-[210px] truncate px-4 py-3 font-mono text-[10px] text-slate-500" title={reference}>{reference}</td>
                       <td className="max-w-[260px] truncate px-4 py-3 text-slate-500" title={note}>{note}</td>
+                      <td className="px-4 py-3">
+                        {isPending ? (
+                          <button
+                            type="button"
+                            onClick={() => handleReject(row)}
+                            disabled={isRejectingThis}
+                            className="inline-flex items-center gap-1.5 rounded-md border border-rose-400/20 bg-rose-400/10 px-2.5 py-1.5 text-[10px] font-bold text-rose-300 transition hover:bg-rose-400/20 disabled:opacity-50"
+                          >
+                            {isRejectingThis ? <Loader2 size={12} className="animate-spin" /> : <XCircle size={12} />}
+                            Reddet
+                          </button>
+                        ) : (
+                          <span className="text-slate-700">—</span>
+                        )}
+                      </td>
                     </tr>
                   );
                 })}

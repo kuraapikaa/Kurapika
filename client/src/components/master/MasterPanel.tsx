@@ -146,14 +146,14 @@ export function MasterPanel() {
       <main className="relative mx-auto w-full max-w-[1900px] space-y-4 p-4">
         <header className="flex flex-col gap-3 rounded-xl border border-white/[0.07] bg-[#0d1119] p-4 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-3">
-            <div className="grid h-10 w-10 grid-cols-2 place-items-center gap-1 rounded-lg border border-indigo-400/20 bg-indigo-400/[0.1] p-2.5 text-indigo-300">
+            <div className="grid h-10 w-10 grid-cols-2 place-items-center gap-1 rounded-lg border border-blue-400/20 bg-blue-400/[0.1] p-2.5 text-blue-300">
               <span className="h-2.5 w-2.5 rounded bg-current" />
               <span className="h-2.5 w-2.5 rounded bg-current" />
               <span className="h-2.5 w-2.5 rounded bg-current" />
               <span className="h-2.5 w-2.5 rounded bg-current" />
             </div>
             <div>
-              <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-indigo-300/75">Master control</p>
+              <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-blue-300/75">Master control</p>
               <h1 className="mt-0.5 text-xl font-bold tracking-[-0.03em] text-white md:text-2xl">Müşteri panelleri</h1>
               <p className="mt-1 max-w-2xl text-xs font-medium text-slate-500">Tenant erişimlerini, domainleri ve marka ayarlarını tek merkezden yönetin.</p>
             </div>
@@ -165,7 +165,7 @@ export function MasterPanel() {
               <input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                className="h-9 w-full rounded-lg border border-white/[0.08] bg-[#090d13] pl-9 pr-3 text-xs font-semibold text-white outline-none transition focus:border-indigo-400/40 sm:w-64"
+                className="h-9 w-full rounded-lg border border-white/[0.08] bg-[#090d13] pl-9 pr-3 text-xs font-semibold text-white outline-none transition focus:border-blue-400/40 sm:w-64"
                 placeholder="Panel, domain veya e-posta ara"
               />
             </div>
@@ -177,7 +177,7 @@ export function MasterPanel() {
                   setShowAdd(true);
                 }
               }}
-              className="inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-indigo-400 px-4 text-xs font-bold text-white transition hover:bg-indigo-300"
+              className="inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-blue-400 px-4 text-xs font-bold text-white transition hover:bg-blue-300"
             >
               <Plus size={18} /> Yeni panel
             </button>
@@ -233,7 +233,7 @@ export function MasterPanel() {
               <button
                 onClick={handleSubmit}
                 disabled={isSaving}
-                className="inline-flex items-center justify-center gap-2 h-9 rounded-lg bg-indigo-400 px-5 text-xs font-bold text-white transition hover:bg-indigo-300 disabled:cursor-wait disabled:opacity-70"
+                className="inline-flex items-center justify-center gap-2 h-9 rounded-lg bg-blue-400 px-5 text-xs font-bold text-white transition hover:bg-blue-300 disabled:cursor-wait disabled:opacity-70"
               >
                 {isSaving ? <Loader2 size={17} className="animate-spin" /> : <Save size={17} />}
                 {isSaving ? 'Kaydediliyor...' : editingId ? 'Ayarları kaydet' : 'Paneli oluştur'}
@@ -295,7 +295,7 @@ function Field({ label, value, onChange, placeholder, type = 'text' }: { label: 
         type={type}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="h-9 w-full rounded-lg border border-white/[0.08] bg-[#090d13] px-3 text-xs font-semibold text-white outline-none transition placeholder:text-slate-700 focus:border-indigo-400/40 [color-scheme:dark]"
+        className="h-9 w-full rounded-lg border border-white/[0.08] bg-[#090d13] px-3 text-xs font-semibold text-white outline-none transition placeholder:text-slate-700 focus:border-blue-400/40 [color-scheme:dark]"
         placeholder={placeholder}
       />
     </div>
@@ -304,7 +304,7 @@ function Field({ label, value, onChange, placeholder, type = 'text' }: { label: 
 
 function TenantCard({ tenant, onEdit, onToggle, isUpdating }: { tenant: any; onEdit: () => void; onToggle: () => void; isUpdating: boolean }) {
   return (
-    <article className="group relative overflow-hidden rounded-xl border border-white/[0.07] bg-[#0d1119] p-4 transition hover:border-indigo-400/20">
+    <article className="group relative overflow-hidden rounded-xl border border-white/[0.07] bg-[#0d1119] p-4 transition hover:border-blue-400/20">
       <div className={cn('hidden absolute right-0 top-0 h-36 w-36 rounded-full blur-3xl', tenant.isActive ? 'bg-emerald-400/10' : 'bg-rose-400/10')} />
 
       <div className="relative flex items-start justify-between gap-3">

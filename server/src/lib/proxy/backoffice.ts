@@ -432,6 +432,36 @@ export async function proxyGetPartnerBonuses(
 // ─── SMS ─────────────────────────────────────────────────────────────────────
 
 /** Sempico SMS Gönderim Proxy */
+/** Sempico API'ye tek bir SMS gönderir. Hem route handler'lar hem background job'lar tarafından kullanılır. */
+export async function sendSmsMessage(
+  phone: string,
+  text: string,
+  smsConfig: { token: string; senderId: string; apiUrl: string }
+): Promise<{ ok: boolean; data?: string; message?: string }> {
+  if (!smsConfig.token) return { ok: false, message: 'SEMPICO_TOKEN eksik.' };
+
+  const q = new URLSearchParams({
+    token: smsConfig.token,
+    number: phone.replace(/\D/g, ''),
+    senderID: smsConfig.senderId,
+    text,
+  }).toString();
+
+  const url = `${smsConfig.apiUrl}?${q}`;
+  console.log(`[sms] Gönderiliyor: ${url.replace(smsConfig.token, '***')}`);
+
+  try {
+    const response = await fetch(url);
+    const data = await response.text();
+    console.log(`[sms] Yanıt [${response.status}]:`, data);
+    return response.ok ? { ok: true, data } : { ok: false, data };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error(`[sms] Hata (${phone}):`, message);
+    return { ok: false, message };
+  }
+}
+
 export async function proxySmsSend(
   request: FastifyRequest<{ Body: { phones: string[]; text: string } }>,
   reply: FastifyReply,
@@ -447,29 +477,11 @@ export async function proxySmsSend(
   const errors: { phone: string; status: string; data?: string; message?: string }[] = [];
 
   for (const phone of phones) {
-    const q = new URLSearchParams({
-      token: smsConfig.token,
-      number: phone.replace(/\D/g, ''),
-      senderID: smsConfig.senderId,
-      text,
-    }).toString();
-
-    const url = `${smsConfig.apiUrl}?${q}`;
-    console.log(`[sms] Gönderiliyor: ${url.replace(smsConfig.token, '***')}`);
-
-    try {
-      const response = await fetch(url);
-      const data = await response.text();
-      console.log(`[sms] Yanıt [${response.status}]:`, data);
-      if (response.ok) {
-        results.push({ phone, status: 'success', data });
-      } else {
-        errors.push({ phone, status: 'error', data });
-      }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      console.error(`[sms] Hata (${phone}):`, msg);
-      errors.push({ phone, status: 'error', message: msg });
+    const result = await sendSmsMessage(phone, text, smsConfig);
+    if (result.ok) {
+      results.push({ phone, status: 'success', data: result.data });
+    } else {
+      errors.push({ phone, status: 'error', data: result.data, message: result.message });
     }
   }
 

@@ -130,13 +130,13 @@ type LobbyDesignManagerProps = {
 
 const DEFAULT_QUICK_ACCESS_ITEMS: LobbyQuickAccessItem[] = [
   { id: 'bonus', label: 'Bonus Talep', desc: 'Kampanya ve freespin', to: '/bonus-talep', icon: 'gift', accentColor: '#fb7185', enabled: true },
-  { id: 'wheel', label: 'Şans Çarkı', desc: 'Çevir, ödül kazan', to: '/cark', icon: 'zap', accentColor: '#c084fc', enabled: true },
-  { id: 'scratch', label: 'Kazı Kazan', desc: 'Kartını kazı', to: '/kazi-kazan', icon: 'sparkles', accentColor: '#f0abfc', enabled: true },
+  { id: 'wheel', label: 'Şans Çarkı', desc: 'Çevir, ödül kazan', to: '/cark', icon: 'zap', accentColor: '#60a5fa', enabled: true },
+  { id: 'scratch', label: 'Kazı Kazan', desc: 'Kartını kazı', to: '/kazi-kazan', icon: 'sparkles', accentColor: '#5eead4', enabled: true },
   { id: 'prediction', label: 'Skor Tahmin', desc: 'Maç skoru bil', to: '/skor-tahmin', icon: 'goal', accentColor: '#6ee7b7', enabled: true },
-  { id: 'daily-tasks', label: 'Günlük Görevler', desc: 'API ilerleme', to: '/gorevler', icon: 'list-checks', accentColor: '#7dd3fc', enabled: true },  { id: 'tournament', label: 'Turnuva', desc: 'Sıralamaya gir', to: '/turnuva/gunluk', icon: 'trophy', accentColor: '#facc15', enabled: true },
-  { id: 'loyalty', label: 'Sadakat', desc: 'XP ve ödüller', to: '/sadakat', icon: 'star', accentColor: '#facc15', enabled: true },
-  { id: 'millionaires', label: 'Milyonerler', desc: 'Büyük kazançlar', to: '/milyonerler', icon: 'crown', accentColor: '#facc15', enabled: true },
-  { id: 'vip', label: 'VIP', desc: 'Özel üyelik', to: '/vip', icon: 'shield', accentColor: '#c084fc', enabled: true },
+  { id: 'daily-tasks', label: 'Günlük Görevler', desc: 'API ilerleme', to: '/gorevler', icon: 'list-checks', accentColor: '#7dd3fc', enabled: true },  { id: 'tournament', label: 'Turnuva', desc: 'Sıralamaya gir', to: '/turnuva/gunluk', icon: 'trophy', accentColor: '#38bdf8', enabled: true },
+  { id: 'loyalty', label: 'Sadakat', desc: 'XP ve ödüller', to: '/sadakat', icon: 'star', accentColor: '#38bdf8', enabled: true },
+  { id: 'millionaires', label: 'Milyonerler', desc: 'Büyük kazançlar', to: '/milyonerler', icon: 'crown', accentColor: '#38bdf8', enabled: true },
+  { id: 'vip', label: 'VIP', desc: 'Özel üyelik', to: '/vip', icon: 'shield', accentColor: '#60a5fa', enabled: true },
   { id: 'partner', label: 'İş Birliği', desc: 'Partner ol', to: '/ortaklik', icon: 'handshake', accentColor: '#7dd3fc', enabled: true },
   { id: 'call-me', label: 'Beni Ara', desc: '7/24 destek', to: '/beni-ara', icon: 'phone', accentColor: '#7dd3fc', enabled: true },
 ];
@@ -170,7 +170,7 @@ const LOBBY_THEME_PRESETS = [
   {
     id: 'purple',
     label: 'Mor',
-    primaryColor: '#a855f7',
+    primaryColor: '#3b82f6',
     secondaryColor: '#ec4899',
     accentColor: '#22d3ee',
     backgroundColor: '#05060a',
@@ -237,7 +237,7 @@ const LOBBY_THEME_PRESETS = [
 
 const DEFAULT_LOBBY_CONFIG: LobbyDesignConfig = {
   themePreset: 'purple',
-  primaryColor: '#a855f7',
+  primaryColor: '#3b82f6',
   secondaryColor: '#ec4899',
   accentColor: '#22d3ee',
   backgroundColor: '#05060a',
@@ -274,9 +274,9 @@ const DEFAULT_LOBBY_CONFIG: LobbyDesignConfig = {
       prizeSuffix: '₺',
       cardDescription: 'Sıralamaya gir, ödül havuzunda yerini al.',
       cards: [
-        { id: 'daily', label: 'Günlük', period: '24 saat', prizeFallback: '50.000', to: '/turnuva/gunluk', icon: 'zap', accentColor: '#facc15', enabled: true },
+        { id: 'daily', label: 'Günlük', period: '24 saat', prizeFallback: '50.000', to: '/turnuva/gunluk', icon: 'zap', accentColor: '#38bdf8', enabled: true },
         { id: 'weekly', label: 'Haftalık', period: '7 gün', prizeFallback: '250.000', to: '/turnuva/haftalik', icon: 'star', accentColor: '#7dd3fc', enabled: true },
-        { id: 'monthly', label: 'Aylık', period: '30 gün', prizeFallback: '500.000', to: '/turnuva/aylik', icon: 'trophy', accentColor: '#c084fc', enabled: true }
+        { id: 'monthly', label: 'Aylık', period: '30 gün', prizeFallback: '500.000', to: '/turnuva/aylik', icon: 'trophy', accentColor: '#60a5fa', enabled: true }
       ]
     },
     support: {
@@ -288,10 +288,10 @@ const DEFAULT_LOBBY_CONFIG: LobbyDesignConfig = {
       searchPlaceholder: 'Oyun ara...',
       infoTitle: '7/24 destek',
       infoDescription: 'Mobilde hızlı yardım için hazır.',
-      infoAccentColor: '#c084fc',
+      infoAccentColor: '#60a5fa',
       cards: [
         { id: 'call', title: 'Sizi arayalım', desc: 'Destek için numaranızı bırakın.', to: '/beni-ara', icon: 'phone', accentColor: '#7dd3fc', enabled: true },
-        { id: 'partner', title: 'İş birliği', desc: 'Yayıncı ve reklam başvurusu.', to: '/ortaklik', icon: 'handshake', accentColor: '#facc15', enabled: true }
+        { id: 'partner', title: 'İş birliği', desc: 'Yayıncı ve reklam başvurusu.', to: '/ortaklik', icon: 'handshake', accentColor: '#38bdf8', enabled: true }
       ]
     }
   }
@@ -900,6 +900,11 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
                       <TextField label="Başlık" value={page.title} onChange={(title) => updatePage(pageId, { title })} />
                       <TextField label="Birincil buton" value={page.primaryButton} onChange={(primaryButton) => updatePage(pageId, { primaryButton })} />
                       <TextField label="İkincil buton" value={page.secondaryButton} onChange={(secondaryButton) => updatePage(pageId, { secondaryButton })} />
+                      <PageAccentField
+                        value={page.accentColor ?? ''}
+                        fallback={theme.accentColor}
+                        onChange={(accentColor) => updatePage(pageId, { accentColor })}
+                      />
                     </div>
 
                     <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -1357,6 +1362,49 @@ function Panel({ title, icon: Icon, children }: { title: string; icon: LucideIco
       </div>
       {children}
     </section>
+  );
+}
+
+/**
+ * Sayfaya özel vurgu rengi. Boş bırakıldığında lobinin global accent rengi
+ * devralınır; "Temadan devral" bu yüzden değeri temizler, sıfırlamaz.
+ */
+function PageAccentField({ value, fallback, onChange }: { value: string; fallback: string; onChange: (value: string) => void }) {
+  const inherited = !isHexColor(value);
+  const effective = inherited ? fallback : value;
+  return (
+    <div className="rounded-lg border border-white/[0.07] bg-white/[0.035] p-3">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <span className="text-[10px] font-black uppercase tracking-[0.16em] text-zinc-500">Vurgu rengi</span>
+        {!inherited && (
+          <button
+            type="button"
+            onClick={() => onChange('')}
+            className="rounded border border-white/10 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.1em] text-zinc-400 transition hover:text-white"
+          >
+            Temadan devral
+          </button>
+        )}
+      </div>
+      <div className="flex items-center gap-2">
+        <input
+          type="color"
+          value={isHexColor(effective) ? effective : '#3b82f6'}
+          onChange={(event) => onChange(event.target.value)}
+          className="h-10 w-12 shrink-0 cursor-pointer rounded-lg border border-white/10 bg-transparent p-1"
+        />
+        <input
+          type="text"
+          value={value}
+          placeholder={`${fallback} (temadan)`}
+          onChange={(event) => onChange(event.target.value)}
+          className="h-10 min-w-0 flex-1 rounded-lg border border-white/[0.08] bg-black/25 px-3 text-sm font-bold text-white outline-none placeholder:text-zinc-600 focus:border-cyan-300/40"
+        />
+      </div>
+      <p className="mt-1.5 text-[10px] font-medium text-zinc-600">
+        {inherited ? 'Lobi temasının vurgu rengi kullanılıyor.' : 'Bu sayfa kendi vurgu rengini kullanıyor.'}
+      </p>
+    </div>
   );
 }
 

@@ -1,23 +1,71 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { dashboardApi } from '../api/client';
+import { dashboardApi, type DateRange } from '../api/client';
 import { formatNumber, formatDateTimeDisplay } from '../lib/format';
+import { DateRangeBar } from './DateRangeBar';
 import { Loader2, AlertCircle, Dices, Calendar } from 'lucide-react';
 
 interface PlayerCasinoBetsProps {
     clientId: number;
 }
 
+function todayYMD(offsetDays = 0): string {
+    const d = new Date();
+    d.setDate(d.getDate() - offsetDays);
+    return d.toISOString().slice(0, 10);
+}
+
+function TypeBadge({ value }: { value: unknown }) {
+    const label = String(value || '—');
+    const lower = label.toLocaleLowerCase('tr-TR');
+    const tone = lower.includes('kazanç')
+        ? 'border-emerald-400/20 bg-emerald-400/10 text-emerald-300'
+        : lower.includes('bahis')
+            ? 'border-blue-400/20 bg-blue-400/10 text-blue-300'
+            : 'border-slate-600/40 bg-slate-700/20 text-slate-300';
+    return (
+        <span className={`inline-flex items-center rounded-md border px-2 py-1 text-[10px] font-bold ${tone}`}>
+            {label}
+        </span>
+    );
+}
+
+function StateBadge({ value }: { value: unknown }) {
+    const label = String(value || '—');
+    const lower = label.toLocaleLowerCase('tr-TR');
+    const tone = /işlendi|processed|success|başarılı/.test(lower)
+        ? 'border-emerald-400/20 bg-emerald-400/10 text-emerald-300'
+        : /red|hata|fail|iptal/.test(lower)
+            ? 'border-rose-400/20 bg-rose-400/10 text-rose-300'
+            : 'border-slate-600/40 bg-slate-700/20 text-slate-300';
+    return (
+        <span className={`inline-flex items-center rounded-md border px-2 py-1 text-[10px] font-bold ${tone}`}>
+            {label}
+        </span>
+    );
+}
+
 export function PlayerCasinoBets({ clientId }: PlayerCasinoBetsProps) {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(20);
+    const [dateRange, setDateRange] = useState<DateRange>({ startDate: todayYMD(30), endDate: todayYMD() });
 
     const betsQuery = useQuery({
-        queryKey: ['player-casino-bets', clientId, page, rowsPerPage],
-        queryFn: () => dashboardApi.clientCasinoHistory(clientId, { SkeepRows: page * rowsPerPage, MaxRows: rowsPerPage }),
+        queryKey: ['player-casino-bets', clientId, page, rowsPerPage, dateRange],
+        queryFn: () => dashboardApi.clientCasinoHistory(clientId, {
+            SkeepRows: page * rowsPerPage,
+            MaxRows: rowsPerPage,
+            StartDateLocal: dateRange.startDate,
+            EndDateLocal: dateRange.endDate,
+        }),
         staleTime: 60 * 1000,
         retry: 1
     });
+
+    const handleRangeChange = (range: DateRange) => {
+        setDateRange(range);
+        setPage(0);
+    };
 
     const isError = betsQuery.isError || betsQuery.data?.HasError;
     const errorMessage = betsQuery.error instanceof Error ? betsQuery.error.message : betsQuery.data?.AlertMessage;
@@ -28,7 +76,7 @@ export function PlayerCasinoBets({ clientId }: PlayerCasinoBetsProps) {
     if (betsQuery.isLoading) {
         return (
             <div className="flex h-64 items-center justify-center">
-                <Loader2 size={32} className="animate-spin text-amber-500" />
+                <Loader2 size={32} className="animate-spin text-blue-500" />
             </div>
         );
     }
@@ -47,10 +95,16 @@ export function PlayerCasinoBets({ clientId }: PlayerCasinoBetsProps) {
 
     return (
         <div className="space-y-4 pt-6">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                 <h3 className="text-lg font-bold text-slate-200 flex items-center gap-2">
-                    <Dices size={18} className="text-amber-400" /> Casino Geçmişi ({totalCount})
+                    <Dices size={18} className="text-blue-400" /> Casino Geçmişi ({totalCount})
                 </h3>
+                <DateRangeBar
+                    range={dateRange}
+                    onRangeChange={handleRangeChange}
+                    onRefresh={() => betsQuery.refetch()}
+                    isLoading={betsQuery.isFetching}
+                />
             </div>
 
             {bets.length === 0 ? (
@@ -65,9 +119,13 @@ export function PlayerCasinoBets({ clientId }: PlayerCasinoBetsProps) {
                             <tr>
                                 <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Oyun Adı</th>
                                 <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Sağlayıcı</th>
+                                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Oyun Türü</th>
+                                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-500">İşlem Türü</th>
+                                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Durum</th>
                                 <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Tarih</th>
                                 <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-500 text-right">Tutar</th>
                                 <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-500 text-right">Kazanç</th>
+                                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-500">İşlem No</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
@@ -76,16 +134,26 @@ export function PlayerCasinoBets({ clientId }: PlayerCasinoBetsProps) {
                                 const isWon = winAmount > 0;
                                 const gameName = bet.GameName || bet.Game || '-';
                                 const providerName = bet.ProviderName || bet.Provider || '-';
+                                const documentId = bet.DocumentId ?? bet.Id ?? bet.DocId;
 
                                 return (
                                     <tr key={bet.Id || bet.DocId || Math.random()} className="hover:bg-white/[0.02] transition-colors">
-                                        <td className="p-4 font-bold text-amber-300">
+                                        <td className="p-4 font-bold text-blue-300">
                                             {gameName}
                                         </td>
                                         <td className="p-4">
                                             <span className="font-mono text-xs text-slate-400 px-2 py-1 bg-white/5 rounded">
                                                 {providerName}
                                             </span>
+                                        </td>
+                                        <td className="p-4">
+                                            <span className="font-mono text-[10px] uppercase text-slate-500">{bet.GameType || '—'}</span>
+                                        </td>
+                                        <td className="p-4">
+                                            <TypeBadge value={bet.TypeName} />
+                                        </td>
+                                        <td className="p-4">
+                                            <StateBadge value={bet.StateName} />
                                         </td>
                                         <td className="p-4">
                                             <div className="flex items-center gap-2 text-slate-300">
@@ -101,6 +169,11 @@ export function PlayerCasinoBets({ clientId }: PlayerCasinoBetsProps) {
                                         <td className="p-4 text-right">
                                             <span className={`font-mono font-bold ${isWon ? 'text-emerald-400' : 'text-slate-500'}`}>
                                                 {isWon ? `+${formatNumber(winAmount)}` : '0.00'}
+                                            </span>
+                                        </td>
+                                        <td className="p-4">
+                                            <span className="font-mono text-[10px] text-slate-600" title={String(documentId ?? '')}>
+                                                {String(documentId ?? '—')}
                                             </span>
                                         </td>
                                     </tr>

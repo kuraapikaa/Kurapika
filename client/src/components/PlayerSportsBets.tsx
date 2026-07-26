@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { dashboardApi } from '../api/client';
+import { dashboardApi, type DateRange } from '../api/client';
 import { formatNumber, formatDateTimeDisplay } from '../lib/format';
+import { DateRangeBar } from './DateRangeBar';
 import { Loader2, AlertCircle, ChevronDown, ChevronRight, Activity, Calendar } from 'lucide-react';
 import type { GetBetSelectionsResponse } from '../types/dashboard';
 
@@ -9,21 +10,42 @@ interface PlayerSportsBetsProps {
     clientId: number;
 }
 
+function todayYMD(offsetDays = 0): string {
+    const d = new Date();
+    d.setDate(d.getDate() - offsetDays);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+}
+
 export function PlayerSportsBets({ clientId }: PlayerSportsBetsProps) {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(20);
     const [expandedBetId, setExpandedBetId] = useState<number | null>(null);
+    const [dateRange, setDateRange] = useState<DateRange>({ startDate: todayYMD(30), endDate: todayYMD() });
 
     const betsQuery = useQuery({
-        queryKey: ['player-sports-bets', clientId, page, rowsPerPage],
-        queryFn: () => dashboardApi.clientBetHistory(clientId, { SkeepRows: page * rowsPerPage, MaxRows: rowsPerPage }),
+        queryKey: ['player-sports-bets', clientId, page, rowsPerPage, dateRange],
+        queryFn: () => dashboardApi.clientBetHistory(clientId, {
+            SkeepRows: page * rowsPerPage,
+            MaxRows: rowsPerPage,
+            StartDateLocal: dateRange.startDate,
+            EndDateLocal: dateRange.endDate,
+        }),
         staleTime: 60 * 1000,
         retry: 1
     });
 
+    const handleRangeChange = (range: DateRange) => {
+        setDateRange(range);
+        setPage(0);
+        setExpandedBetId(null);
+    };
+
     const betSelectionsQuery = useQuery({
         queryKey: ['player-sports-bet-selections', expandedBetId],
-        queryFn: () => expandedBetId ? dashboardApi.clientBetSelectionsHistory(expandedBetId) : Promise.resolve({ HasError: false, Data: [] } as GetBetSelectionsResponse),
+        queryFn: () => expandedBetId ? dashboardApi.clientBetSelectionsHistory(expandedBetId, clientId) : Promise.resolve({ HasError: false, Data: [] } as GetBetSelectionsResponse),
         enabled: expandedBetId !== null,
         staleTime: 60 * 1000
     });
@@ -40,7 +62,7 @@ export function PlayerSportsBets({ clientId }: PlayerSportsBetsProps) {
     if (betsQuery.isLoading) {
         return (
             <div className="flex h-64 items-center justify-center">
-                <Loader2 size={32} className="animate-spin text-violet-500" />
+                <Loader2 size={32} className="animate-spin text-blue-500" />
             </div>
         );
     }
@@ -59,10 +81,16 @@ export function PlayerSportsBets({ clientId }: PlayerSportsBetsProps) {
 
     return (
         <div className="space-y-4 pt-6">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                 <h3 className="text-lg font-bold text-slate-200 flex items-center gap-2">
-                    <Activity size={18} className="text-violet-400" /> Spor Bahisleri ({totalCount})
+                    <Activity size={18} className="text-blue-400" /> Spor Bahisleri ({totalCount})
                 </h3>
+                <DateRangeBar
+                    range={dateRange}
+                    onRangeChange={handleRangeChange}
+                    onRefresh={() => betsQuery.refetch()}
+                    isLoading={betsQuery.isFetching}
+                />
             </div>
 
             {bets.length === 0 ? (
@@ -111,7 +139,7 @@ export function PlayerSportsBets({ clientId }: PlayerSportsBetsProps) {
                                                     {formatNumber(bet.Amount)} {bet.CurrencyId ?? 'TRY'}
                                                 </span>
                                             </td>
-                                            <td className="p-4 font-bold text-violet-300">
+                                            <td className="p-4 font-bold text-blue-300">
                                                 {Number(bet.Price ?? 0).toFixed(2)}
                                             </td>
                                             <td className="p-4">
@@ -148,7 +176,7 @@ export function PlayerSportsBets({ clientId }: PlayerSportsBetsProps) {
                                                                     <div className="text-left sm:text-right shrink-0">
                                                                         <p className="text-xs text-slate-500 uppercase font-black">{sel.DisplayMarketName}</p>
                                                                         <div className="text-sm font-bold mt-1">
-                                                                            <span className="text-violet-300">{sel.DisplaySelectionName}</span>
+                                                                            <span className="text-blue-300">{sel.DisplaySelectionName}</span>
                                                                             <span className="text-slate-600 mx-2">•</span>
                                                                             <span className="text-emerald-400">@ {Number(sel.Price).toFixed(2)}</span>
                                                                         </div>

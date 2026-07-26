@@ -214,9 +214,9 @@ export function BattlePassPage() {
 
 function RewardCard({ title, label, claimed, disabled, claimedLabel, claimLabel, premium = false, onClaim }: { title: string; label: string; claimed: boolean; disabled: boolean; claimedLabel: string; claimLabel: string; premium?: boolean; onClaim: () => void }) {
   return (
-    <div className={cn('rounded-2xl border p-3', premium ? 'border-purple-300/15 bg-purple-400/10' : 'border-white/[0.08] bg-black/20')}>
+    <div className={cn('rounded-2xl border p-3', premium ? 'border-blue-300/15 bg-blue-400/10' : 'border-white/[0.08] bg-black/20')}>
       <div className="mb-3 flex items-center gap-2">
-        <Gift size={16} className={premium ? 'text-purple-200' : 'text-amber-200'} />
+        <Gift size={16} className={premium ? 'text-blue-200' : 'text-amber-200'} />
         <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">{title}</span>
       </div>
       <p className="min-h-[36px] text-sm font-black text-white">{label || 'XP ödülü'}</p>

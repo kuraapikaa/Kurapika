@@ -574,6 +574,8 @@ export interface GetClientProfileTransactionsResponse {
     Provider?: 'lynon' | 'legacy';
     Count: number;
     Objects: ClientProfileTransactionItem[];
+    /** Lynon modunda sunucunun döndürdüğü kanonik işlem türü listesi (tür filtresi için). */
+    TransactionTypes?: Array<{ id: string; name: string }>;
   };
 }
 export interface DetailedReportItem {
