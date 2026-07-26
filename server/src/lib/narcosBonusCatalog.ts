@@ -14,6 +14,7 @@ export interface NarcosBonusDefinition {
   tags: string[];
   rules: Record<string, unknown>;
   detailHtml: string;
+  image?: string;
 }
 
 const detail = (items: string[]) => `<ul>${items.map((item) => `<li>${item}</li>`).join('')}</ul>`;

@@ -17,15 +17,15 @@ export function NarcosKpiPanel({ dateRange, enabled }: { dateRange: DateRange; e
   const cards = [
     { label: 'Yatırım', value: kpi?.players?.deposits, icon: ArrowDownToLine, tone: 'text-emerald-300' },
     { label: 'Çekim', value: kpi?.players?.withdrawals, icon: ArrowUpFromLine, tone: 'text-rose-300' },
-    { label: 'GGR', value: kpi?.players?.ggr, icon: Activity, tone: 'text-[#f4d36f]' },
+    { label: 'GGR', value: kpi?.players?.ggr, icon: Activity, tone: 'text-[#5eead4]' },
     { label: 'Bonus', value: kpi?.bonuses?.amount, icon: Gift, tone: 'text-sky-300' },
-    { label: 'Toplam bakiye', value: kpi?.players?.totalBalance, icon: Wallet, tone: 'text-violet-300' },
+    { label: 'Toplam bakiye', value: kpi?.players?.totalBalance, icon: Wallet, tone: 'text-blue-300' },
   ];
 
   return (
-    <section className="rounded-2xl border border-[#d4af37]/20 bg-[#110d07]/80 p-4 shadow-[0_14px_45px_rgba(0,0,0,.2)]">
+    <section className="rounded-2xl border border-[#3b82f6]/20 bg-[#110d07]/80 p-4 shadow-[0_14px_45px_rgba(0,0,0,.2)]">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2 text-[#f4d36f]"><Database size={16} /><span className="text-[10px] font-black uppercase tracking-[0.16em]">Lynon canlı rapor KPI</span></div>
+        <div className="flex items-center gap-2 text-[#5eead4]"><Database size={16} /><span className="text-[10px] font-black uppercase tracking-[0.16em]">Lynon canlı rapor KPI</span></div>
         <span className="text-[10px] font-bold text-zinc-500">Ana kaynak: Players Overview · GMT+3 · 5 dk önbellek</span>
       </div>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">

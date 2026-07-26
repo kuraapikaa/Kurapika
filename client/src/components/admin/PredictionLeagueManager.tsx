@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { ImageUp, Plus, Trash2, Trophy } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { LynonAssignmentValuesField } from './LynonAssignmentValuesField';
+import { gamesApi } from '../../api/client';
 
 type PredictionMatch = {
   id: string;
@@ -100,6 +101,21 @@ export function PredictionLeagueManager({
       ...config,
       matches: config.matches.map((match) => match.id === id ? { ...match, ...patch } : match),
     });
+  };
+
+  const fetchTeamLogo = async (matchId: string, teamName: string, field: 'homeLogoUrl' | 'awayLogoUrl') => {
+    const name = teamName.trim();
+    if (!name) return;
+    const match = config.matches.find((m) => m.id === matchId);
+    if (match?.[field]) return; // Zaten bir logo girilmişse üzerine yazma.
+    try {
+      const res = await gamesApi.teamLogo(name);
+      if (res?.ok && res.imageUrl) {
+        updateMatch(matchId, { [field]: res.imageUrl });
+      }
+    } catch {
+      // Sessizce yut: admin dilerse logoyu manuel URL olarak girebilir.
+    }
   };
 
   const addMatch = () => {
@@ -207,8 +223,18 @@ export function PredictionLeagueManager({
           {config.matches.map((match) => (
             <div key={match.id} className="rounded-[1.5rem] border border-white/[0.07] bg-black/25 p-4">
               <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_1fr_150px_155px]">
-                <Field label="Ev sahibi" value={match.homeTeam} onChange={(value) => updateMatch(match.id, { homeTeam: value })} />
-                <Field label="Deplasman" value={match.awayTeam} onChange={(value) => updateMatch(match.id, { awayTeam: value })} />
+                <Field
+                  label="Ev sahibi"
+                  value={match.homeTeam}
+                  onChange={(value) => updateMatch(match.id, { homeTeam: value })}
+                  onBlur={() => fetchTeamLogo(match.id, match.homeTeam, 'homeLogoUrl')}
+                />
+                <Field
+                  label="Deplasman"
+                  value={match.awayTeam}
+                  onChange={(value) => updateMatch(match.id, { awayTeam: value })}
+                  onBlur={() => fetchTeamLogo(match.id, match.awayTeam, 'awayLogoUrl')}
+                />
                 <Field label="Lig" value={match.league} onChange={(value) => updateMatch(match.id, { league: value })} />
                 <div>
                   <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.14em] text-zinc-600">Başlama</label>
@@ -273,7 +299,7 @@ function CampaignField({ label, value, options, onChange }: { label: string; val
     </div>
   );
 }
-function Field({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
+function Field({ label, value, onChange, onBlur }: { label: string; value: string; onChange: (value: string) => void; onBlur?: () => void }) {
   return (
     <div>
       <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.14em] text-zinc-600">{label}</label>
@@ -281,6 +307,7 @@ function Field({ label, value, onChange }: { label: string; value: string; onCha
         type="text"
         value={value || ''}
         onChange={(event) => onChange(event.target.value)}
+        onBlur={onBlur}
         className="h-11 w-full rounded-2xl border border-white/[0.07] bg-black/30 px-3 text-sm font-bold text-white outline-none focus:border-emerald-300/40"
       />
     </div>

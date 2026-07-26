@@ -63,14 +63,14 @@ export function DashboardCharts({ data }: DashboardChartsProps) {
     return (
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
             <Card className="premium-card p-8 group">
-                <div className="absolute -right-16 -top-16 w-32 h-32 bg-purple-500/10 blur-[80px] rounded-full" />
+                <div className="absolute -right-16 -top-16 w-32 h-32 bg-blue-500/10 blur-[80px] rounded-full" />
                 <div className="flex items-center justify-between mb-8 relative z-10">
                     <div>
                         <h3 className="text-sm font-black uppercase tracking-[0.2em] text-white">GGR Dağılımı</h3>
                         <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-1">Dikey Bazlı Kâr Oranı</p>
                     </div>
                     <div className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/5">
-                        <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
+                        <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
                     </div>
                 </div>
                 <div className="h-72 w-full relative z-10">

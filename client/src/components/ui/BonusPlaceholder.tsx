@@ -22,7 +22,7 @@ export function BonusPlaceholder({
       icon: 'bg-gradient-to-br from-amber-300 to-orange-500',
     },
     purple: {
-      icon: 'bg-gradient-to-br from-purple-300 to-fuchsia-500',
+      icon: 'bg-gradient-to-br from-blue-300 to-teal-500',
     },
   };
 

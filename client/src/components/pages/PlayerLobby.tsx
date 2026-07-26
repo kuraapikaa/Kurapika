@@ -22,13 +22,13 @@ import {
   Star,
   Trophy,
   User,
-  Wallet,
   XCircle,
   Zap,
 } from 'lucide-react';
 import { type CSSProperties, useEffect, useMemo, useState } from 'react';
 import { bonusPanelApi, formsApi, gamesApi, loyaltyApi, tournamentApi } from '../../api/client';
 import { cn } from '../../lib/utils';
+import { normalizeLobbyPalette } from '../../lib/lobbyTheme';
 
 type LobbyTabId = 'games' | 'tournaments' | 'support';
 
@@ -121,13 +121,13 @@ type LobbyTheme = {
 
 const DEFAULT_QUICK_ACCESS_ITEMS: LobbyQuickAccessItem[] = [
   { id: 'bonus', label: 'Bonus Talep', desc: 'Kampanya ve freespin', to: '/bonus-talep', icon: 'gift', accentColor: '#fb7185', enabled: true },
-  { id: 'wheel', label: 'Şans Çarkı', desc: 'Çevir, ödül kazan', to: '/cark', icon: 'zap', accentColor: '#c084fc', enabled: true },
-  { id: 'scratch', label: 'Kazı Kazan', desc: 'Kartını kazı', to: '/kazi-kazan', icon: 'sparkles', accentColor: '#f0abfc', enabled: true },
+  { id: 'wheel', label: 'Şans Çarkı', desc: 'Çevir, ödül kazan', to: '/cark', icon: 'zap', accentColor: '#60a5fa', enabled: true },
+  { id: 'scratch', label: 'Kazı Kazan', desc: 'Kartını kazı', to: '/kazi-kazan', icon: 'sparkles', accentColor: '#5eead4', enabled: true },
   { id: 'prediction', label: 'Skor Tahmin', desc: 'Maç skoru bil', to: '/skor-tahmin', icon: 'goal', accentColor: '#6ee7b7', enabled: true },
-  { id: 'daily-tasks', label: 'Günlük Görevler', desc: 'API ilerleme', to: '/gorevler', icon: 'list-checks', accentColor: '#7dd3fc', enabled: true },  { id: 'tournament', label: 'Turnuva', desc: 'Sıralamaya gir', to: '/turnuva/gunluk', icon: 'trophy', accentColor: '#facc15', enabled: true },
-  { id: 'loyalty', label: 'Sadakat', desc: 'XP ve ödüller', to: '/sadakat', icon: 'star', accentColor: '#facc15', enabled: true },
-  { id: 'millionaires', label: 'Milyonerler', desc: 'Büyük kazançlar', to: '/milyonerler', icon: 'crown', accentColor: '#facc15', enabled: true },
-  { id: 'vip', label: 'VIP', desc: 'Özel üyelik', to: '/vip', icon: 'shield', accentColor: '#c084fc', enabled: true },
+  { id: 'daily-tasks', label: 'Günlük Görevler', desc: 'API ilerleme', to: '/gorevler', icon: 'list-checks', accentColor: '#7dd3fc', enabled: true },  { id: 'tournament', label: 'Turnuva', desc: 'Sıralamaya gir', to: '/turnuva/gunluk', icon: 'trophy', accentColor: '#38bdf8', enabled: true },
+  { id: 'loyalty', label: 'Sadakat', desc: 'XP ve ödüller', to: '/sadakat', icon: 'star', accentColor: '#38bdf8', enabled: true },
+  { id: 'millionaires', label: 'Milyonerler', desc: 'Büyük kazançlar', to: '/milyonerler', icon: 'crown', accentColor: '#38bdf8', enabled: true },
+  { id: 'vip', label: 'VIP', desc: 'Özel üyelik', to: '/vip', icon: 'shield', accentColor: '#60a5fa', enabled: true },
   { id: 'partner', label: 'İş Birliği', desc: 'Partner ol', to: '/ortaklik', icon: 'handshake', accentColor: '#7dd3fc', enabled: true },
   { id: 'call-me', label: 'Beni Ara', desc: '7/24 destek', to: '/beni-ara', icon: 'phone', accentColor: '#7dd3fc', enabled: true },
 ];
@@ -149,13 +149,13 @@ const QUICK_ACCESS_ICON_MAP = {
 
 const DEFAULT_LOBBY_THEME: LobbyTheme = {
   themePreset: 'gold',
-  primaryColor: '#d4af37',
-  secondaryColor: '#9a701a',
-  accentColor: '#f4d36f',
-  backgroundColor: '#100b04',
+  primaryColor: '#3b82f6',
+  secondaryColor: '#1d4ed8',
+  accentColor: '#5eead4',
+  backgroundColor: '#060911',
   surfaceColor: '#1a1005',
   textColor: '#fff7df',
-  mutedTextColor: '#c6ae76',
+  mutedTextColor: '#7dd3fc',
   backgroundImageUrl: '',
   backgroundOverlay: 72,
   banner: {
@@ -185,9 +185,9 @@ const DEFAULT_LOBBY_THEME: LobbyTheme = {
       prizeSuffix: '₺',
       cardDescription: 'Sıralamaya gir, ödül havuzunda yerini al.',
       cards: [
-        { id: 'daily', label: 'Günlük', period: '24 saat', prizeFallback: '50.000', to: '/turnuva/gunluk', icon: 'zap', accentColor: '#facc15', enabled: true },
+        { id: 'daily', label: 'Günlük', period: '24 saat', prizeFallback: '50.000', to: '/turnuva/gunluk', icon: 'zap', accentColor: '#38bdf8', enabled: true },
         { id: 'weekly', label: 'Haftalık', period: '7 gün', prizeFallback: '250.000', to: '/turnuva/haftalik', icon: 'star', accentColor: '#7dd3fc', enabled: true },
-        { id: 'monthly', label: 'Aylık', period: '30 gün', prizeFallback: '500.000', to: '/turnuva/aylik', icon: 'trophy', accentColor: '#c084fc', enabled: true }
+        { id: 'monthly', label: 'Aylık', period: '30 gün', prizeFallback: '500.000', to: '/turnuva/aylik', icon: 'trophy', accentColor: '#60a5fa', enabled: true }
       ]
     },
     support: {
@@ -199,20 +199,14 @@ const DEFAULT_LOBBY_THEME: LobbyTheme = {
       searchPlaceholder: 'Oyun ara...',
       infoTitle: '7/24 destek',
       infoDescription: 'Mobilde hızlı yardım için hazır.',
-      infoAccentColor: '#c084fc',
+      infoAccentColor: '#60a5fa',
       cards: [
         { id: 'call', title: 'Sizi arayalım', desc: 'Destek için numaranızı bırakın.', to: '/beni-ara', icon: 'phone', accentColor: '#7dd3fc', enabled: true },
-        { id: 'partner', title: 'İş birliği', desc: 'Yayıncı ve reklam başvurusu.', to: '/ortaklik', icon: 'handshake', accentColor: '#facc15', enabled: true }
+        { id: 'partner', title: 'İş birliği', desc: 'Yayıncı ve reklam başvurusu.', to: '/ortaklik', icon: 'handshake', accentColor: '#38bdf8', enabled: true }
       ]
     }
   }
 };
-
-function clampOverlay(value: unknown) {
-  const numeric = Number(value);
-  if (!Number.isFinite(numeric)) return DEFAULT_LOBBY_THEME.backgroundOverlay;
-  return Math.min(95, Math.max(0, Math.round(numeric)));
-}
 
 function asHexColor(value: unknown, fallback: string) {
   return typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value.trim()) ? value.trim() : fallback;
@@ -242,10 +236,10 @@ function normalizeQuickAccess(items: unknown): LobbyQuickAccessItem[] {
     const fallback = DEFAULT_QUICK_ACCESS_ITEMS[index] || DEFAULT_QUICK_ACCESS_ITEMS[0];
     const legacyAccentMap: Record<string, string> = {
       rose: '#fb7185',
-      purple: '#d4af37',
-      fuchsia: '#f4d36f',
+      purple: '#3b82f6',
+      fuchsia: '#5eead4',
       emerald: '#6ee7b7',
-      amber: '#facc15',
+      amber: '#38bdf8',
       sky: '#7dd3fc'
     };
     const legacyAccent = typeof (source as any).accent === 'string'
@@ -347,17 +341,21 @@ function normalizeLobbyTabs(config: any): LobbyTabsConfig {
 
 function normalizeLobbyTheme(config: any): LobbyTheme {
   const banner = config?.banner || {};
+  // Renkler admin panelindeki "Lobi Renkleri"nden gelir. Daha önce bu alanlar
+  // sabit varsayılana bağlıydı, bu yüzden paneldeki renk seçicileri hiçbir işe
+  // yaramıyordu; artık kayıtlı config okunuyor (geçersiz/boş değerde varsayılan).
+  const palette = normalizeLobbyPalette(config);
   return {
-    themePreset: 'gold',
-    primaryColor: DEFAULT_LOBBY_THEME.primaryColor,
-    secondaryColor: DEFAULT_LOBBY_THEME.secondaryColor,
-    accentColor: DEFAULT_LOBBY_THEME.accentColor,
-    backgroundColor: DEFAULT_LOBBY_THEME.backgroundColor,
-    surfaceColor: DEFAULT_LOBBY_THEME.surfaceColor,
-    textColor: DEFAULT_LOBBY_THEME.textColor,
-    mutedTextColor: DEFAULT_LOBBY_THEME.mutedTextColor,
-    backgroundImageUrl: asText(config?.backgroundImageUrl),
-    backgroundOverlay: clampOverlay(config?.backgroundOverlay),
+    themePreset: asText(config?.themePreset, 'gold'),
+    primaryColor: palette.primaryColor,
+    secondaryColor: palette.secondaryColor,
+    accentColor: palette.accentColor,
+    backgroundColor: palette.backgroundColor,
+    surfaceColor: palette.surfaceColor,
+    textColor: palette.textColor,
+    mutedTextColor: palette.mutedTextColor,
+    backgroundImageUrl: palette.backgroundImageUrl,
+    backgroundOverlay: palette.backgroundOverlay,
     banner: {
       enabled: banner.enabled === true,
       imageUrl: asText(banner.imageUrl),
@@ -558,7 +556,7 @@ export function PlayerLobby() {
   }, [lobbyTheme]);
 
   return (
-    <div className="narcos-lobby relative min-h-screen overflow-x-hidden bg-[#100b04] pb-24 font-sans text-zinc-100 selection:bg-[#d4af37]/30 md:pb-8" style={rootStyle}>
+    <div className="narcos-lobby relative min-h-screen overflow-x-hidden bg-[#060911] pb-[68px] font-sans text-zinc-100 selection:bg-[#3b82f6]/30 md:pb-6" style={rootStyle}>
       <div className="pointer-events-none fixed inset-0">
         <div className="absolute inset-0" style={backgroundStyle} />
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.018)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.018)_1px,transparent_1px)] bg-[size:42px_42px] opacity-50 md:bg-[size:72px_72px]" />
@@ -566,232 +564,244 @@ export function PlayerLobby() {
 
       <LiveTicker winners={liveWinners} theme={lobbyTheme} />
 
-      <main className="relative z-10 mx-auto flex w-full max-w-[1480px] flex-col gap-5 px-3 py-4 sm:px-5 md:gap-8 md:px-8 md:py-7">
-        <header className="space-y-3">
-          <div className="flex items-center justify-between gap-3">
-            <Link to="/lobi" className="flex min-w-0 items-center gap-3">
-              <div
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border"
-                style={{
-                  borderColor: hexToRgba(lobbyTheme.primaryColor, 0.24),
-                  backgroundColor: hexToRgba(lobbyTheme.primaryColor, 0.16),
-                  color: lobbyTheme.primaryColor,
-                  boxShadow: `0 0 30px ${hexToRgba(lobbyTheme.primaryColor, 0.2)}`
-                }}
-              >
-                <Zap size={23} className="fill-current" />
-              </div>
-              <div className="min-w-0">
-                <p className="truncate text-base font-black uppercase tracking-[-0.035em] sm:text-xl" style={{ color: lobbyTheme.textColor }}>Ödül Merkezi</p>
-                <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.16em]" style={{ color: lobbyTheme.mutedTextColor }}>
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,.85)]" />
-                  Mobil lobi
-                </p>
-              </div>
-            </Link>
-
-            <button type="button" aria-label="Bildirimler" className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.045] text-zinc-400">
-              <Bell size={20} />
-              <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full ring-2 ring-[#07070d]" style={{ backgroundColor: lobbyTheme.accentColor }} />
-            </button>
-          </div>
-
-          <section className="rounded-[1.7rem] border border-white/[0.075] bg-white/[0.045] p-3 shadow-[0_18px_55px_rgba(0,0,0,.28)] backdrop-blur-2xl md:p-4">
-            {activeUser ? (
-              <div className="flex items-center gap-3">
-                <div
-                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border"
-                  style={{
-                    borderColor: hexToRgba(lobbyTheme.primaryColor, 0.24),
-                    backgroundColor: hexToRgba(lobbyTheme.primaryColor, 0.16),
-                    color: lobbyTheme.primaryColor
-                  }}
-                >
-                  <User size={24} />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[9px] font-black uppercase tracking-[0.2em]" style={{ color: lobbyTheme.primaryColor }}>Hoş geldin</p>
-                  <p className="truncate text-base font-black uppercase text-white">{activeUser}</p>
-                  <div className="mt-1 flex flex-wrap items-center gap-2">
-                    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-300/15 bg-emerald-300/10 px-2 py-1 text-[10px] font-black text-emerald-300">
-                      <Wallet size={12} /> ₺{loyalty?.balance?.toLocaleString('tr-TR') || '0'}
-                    </span>
-                    {loyalty && (
-                      <span className="inline-flex items-center gap-1 rounded-full border border-amber-300/15 bg-amber-300/10 px-2 py-1 text-[10px] font-black text-amber-300">
-                        LVL {loyalty.level}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <button type="button" onClick={handleLogout} aria-label="Çıkış yap" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-rose-300/10 bg-rose-400/10 text-rose-300">
-                  <XCircle size={20} />
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-black/30 text-zinc-400">
-                    {checking ? <Loader2 size={22} className="animate-spin" style={{ color: lobbyTheme.primaryColor }} /> : <User size={22} />}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[9px] font-black uppercase tracking-[0.18em] text-zinc-500">Oyuncu doğrulama</p>
-                    <input
-                      type="text"
-                      value={username}
-                      onChange={(event) => setUsername(event.target.value)}
-                      onKeyDown={(event) => event.key === 'Enter' && handleCheck()}
-                      className="mt-1 w-full border-0 bg-transparent p-0 text-base font-black text-white outline-none placeholder:text-zinc-700 focus:ring-0"
-                      placeholder="Kullanıcı adınız"
-                    />
-                  </div>
-                </div>
-                {statusMessage && (
-                  <div className="rounded-2xl border border-rose-300/15 bg-rose-400/10 px-3 py-2 text-xs font-bold text-rose-200">
-                    {statusMessage}
-                  </div>
-                )}
-                <button
-                  type="button"
-                  onClick={handleCheck}
-                  disabled={!username.trim() || checking}
-                  className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#d4af37] to-[#9a701a] text-xs font-black uppercase tracking-[0.18em] text-white shadow-[0_14px_35px_rgba(212,175,55,.25)] disabled:cursor-not-allowed disabled:opacity-60"
-                  style={{
-                    background: `linear-gradient(90deg, ${lobbyTheme.primaryColor}, ${lobbyTheme.secondaryColor})`,
-                    boxShadow: `0 14px 35px ${hexToRgba(lobbyTheme.primaryColor, 0.28)}`
-                  }}
-                >
-                  {checking ? <Loader2 size={16} className="animate-spin" /> : <ShieldCheck size={16} />}
-                  Giriş yap
-                </button>
-              </div>
-            )}
-          </section>
-        </header>
-
-        <section className="grid grid-cols-5 gap-2 md:hidden" aria-label="Hızlı erişim">
-          {visibleQuickAccess.slice(0, 10).map((item) => (
-            <QuickAction
-              key={item.id}
-              to={item.to}
-              icon={QUICK_ACCESS_ICON_MAP[item.icon as keyof typeof QUICK_ACCESS_ICON_MAP] || Gift}
-              label={item.label}
-              accentColor={item.accentColor}
-            />
-          ))}
-        </section>
-
-        <LobbyBanner theme={lobbyTheme} />
-
-        <motion.section
-          initial={{ opacity: 0, y: 18 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="relative overflow-hidden rounded-[2rem] border p-5 shadow-[0_24px_80px_rgba(0,0,0,.35)] md:grid md:min-h-[360px] md:grid-cols-[1fr_280px] md:p-9"
-          style={{
-            borderColor: hexToRgba(lobbyTheme.primaryColor, 0.2),
-            background: `linear-gradient(135deg, ${hexToRgba(lobbyTheme.primaryColor, 0.28)}, ${hexToRgba(lobbyTheme.surfaceColor, 0.92)} 48%, ${hexToRgba(lobbyTheme.backgroundColor, 0.98)})`
-          }}
-        >
-          <div className="absolute -right-16 -top-20 h-64 w-64 rounded-full blur-[85px]" style={{ backgroundColor: hexToRgba(lobbyTheme.primaryColor, 0.24) }} />
-          <div
-            className="absolute bottom-0 left-0 h-px w-2/3"
-            style={{ background: `linear-gradient(90deg, ${hexToRgba(lobbyTheme.primaryColor, 0.7)}, transparent)` }}
-          />
-
-          <div className="relative z-10 flex flex-col justify-center">
-            <div
-              className="mb-5 inline-flex w-max items-center gap-2 rounded-full border px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.18em]"
+      <header
+        className="sticky top-0 z-30 border-b backdrop-blur-2xl"
+        style={{
+          borderColor: hexToRgba(lobbyTheme.textColor, 0.07),
+          backgroundColor: hexToRgba(lobbyTheme.backgroundColor, 0.82)
+        }}
+      >
+        <div className="mx-auto flex h-13 w-full max-w-[1400px] items-center justify-between gap-3 px-3 py-2 sm:px-5 md:h-14 md:px-7">
+          <Link to="/lobi" className="flex min-w-0 items-center gap-2.5">
+            <span
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border md:h-9 md:w-9"
               style={{
-                borderColor: hexToRgba(lobbyTheme.primaryColor, 0.18),
-                backgroundColor: hexToRgba(lobbyTheme.primaryColor, 0.12),
+                borderColor: hexToRgba(lobbyTheme.primaryColor, 0.26),
+                backgroundColor: hexToRgba(lobbyTheme.primaryColor, 0.14),
                 color: lobbyTheme.primaryColor
               }}
             >
-              <Star size={12} className="fill-current" />
-              Öne çıkan
-            </div>
-            <h1 className="max-w-[620px] text-4xl font-black leading-[0.94] tracking-[-0.065em] text-white sm:text-5xl md:text-6xl">
-              Bonusunu seç, talebini hızlıca gönder.
-            </h1>
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-              <Link to="/bonus-talep" className="inline-flex h-[52px] items-center justify-center gap-2 rounded-2xl bg-white px-6 py-4 text-sm font-black text-black transition active:scale-[0.98]">
-                Bonus talep et <ChevronRight size={18} />
-              </Link>
-              <Link
-                to="/cark"
-                className="inline-flex h-[52px] items-center justify-center gap-2 rounded-2xl border bg-white/[0.055] px-6 py-4 text-sm font-black text-white transition active:scale-[0.98]"
-                style={{ borderColor: hexToRgba(lobbyTheme.primaryColor, 0.22) }}
-              >
-                Çarkı çevir <Zap size={18} />
-              </Link>
-            </div>
-          </div>
+              <Zap size={17} className="fill-current" />
+            </span>
+            <span className="min-w-0">
+              <span className="block truncate text-[13px] font-black uppercase leading-none tracking-[-0.02em] md:text-[15px]" style={{ color: lobbyTheme.textColor }}>
+                Ödül Merkezi
+              </span>
+              <span className="mt-1 flex items-center gap-1.5 text-[9px] font-bold uppercase leading-none tracking-[0.14em]" style={{ color: lobbyTheme.mutedTextColor }}>
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_7px_rgba(52,211,153,.8)]" />
+                Canlı
+              </span>
+            </span>
+          </Link>
 
-          <div className="relative z-10 mt-7 hidden items-center justify-center md:flex">
-            <motion.div animate={{ y: [0, -16, 0] }} transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }} className="relative">
-              <div className="flex h-44 w-44 rotate-6 items-center justify-center rounded-[2.2rem] border border-white/10 bg-white/[0.07] shadow-2xl backdrop-blur-xl">
-                <Gift size={78} style={{ color: lobbyTheme.primaryColor, filter: `drop-shadow(0 0 20px ${hexToRgba(lobbyTheme.primaryColor, 0.45)})` }} />
-              </div>
-              <div className="absolute -bottom-5 -right-5 flex h-20 w-20 -rotate-12 items-center justify-center rounded-[1.5rem] border border-white/10 bg-[#0b0d13] text-amber-300 shadow-xl" style={{ backgroundColor: lobbyTheme.surfaceColor, color: lobbyTheme.accentColor }}>
-                <Zap size={34} />
-              </div>
-            </motion.div>
-          </div>
-        </motion.section>
-
-        <section className="rounded-[1.9rem] border border-white/[0.075] bg-white/[0.035] p-2 shadow-[0_18px_50px_rgba(0,0,0,.22)] backdrop-blur-2xl sm:p-3 md:p-4">
-          <div role="tablist" aria-label="Lobi bölümleri" className="grid grid-cols-3 gap-1 rounded-[1.45rem] border border-white/[0.06] bg-black/25 p-1">
-            {lobbyTabs.map((tab) => {
-              const Icon = tab.icon;
-              const isActive = activeLobbyTab === tab.id;
-
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={isActive}
-                  aria-controls={`lobby-panel-${tab.id}`}
-                  id={`lobby-tab-${tab.id}`}
-                  onClick={() => setActiveLobbyTab(tab.id)}
-                  className={cn(
-                    'flex min-w-0 flex-col items-center justify-center gap-1 rounded-[1.1rem] px-1.5 py-2.5 text-[9px] font-black uppercase tracking-[0.08em] transition sm:flex-row sm:gap-2 sm:px-3 sm:text-xs',
-                    isActive
-                      ? 'bg-white text-black shadow-[0_10px_28px_rgba(255,255,255,.12)]'
-                      : 'text-zinc-500 hover:bg-white/[0.055] hover:text-white'
-                  )}
+          <div className="flex min-w-0 items-center gap-2">
+            {activeUser && (
+              <div className="hidden min-w-0 items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.05] py-1 pl-1 pr-2.5 sm:flex">
+                <span
+                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
+                  style={{ backgroundColor: hexToRgba(lobbyTheme.primaryColor, 0.18), color: lobbyTheme.primaryColor }}
                 >
-                  <Icon size={17} className="shrink-0" />
-                  <span className="max-w-full truncate leading-none">{tab.label}</span>
-                  <span className={cn('hidden rounded-full px-2 py-1 text-[9px] tracking-[0.12em] lg:inline', isActive ? 'bg-black/10 text-black/55' : 'bg-white/5 text-zinc-600')}>
-                    {tab.hint}
+                  <User size={13} />
+                </span>
+                <span className="truncate text-[11px] font-black uppercase tracking-tight text-white">{activeUser}</span>
+                <span className="h-3 w-px bg-white/10" />
+                <span className="whitespace-nowrap text-[11px] font-black tabular-nums text-emerald-300">
+                  ₺{loyalty?.balance?.toLocaleString('tr-TR') || '0'}
+                </span>
+                {loyalty && (
+                  <>
+                    <span className="h-3 w-px bg-white/10" />
+                    <span className="whitespace-nowrap text-[11px] font-black tabular-nums text-amber-300">LVL {loyalty.level}</span>
+                  </>
+                )}
+              </div>
+            )}
+            <button
+              type="button"
+              aria-label="Bildirimler"
+              className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.045] text-zinc-400 transition hover:text-white md:h-9 md:w-9"
+            >
+              <Bell size={16} />
+              <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full" style={{ backgroundColor: lobbyTheme.accentColor }} />
+            </button>
+            {activeUser && (
+              <button
+                type="button"
+                onClick={handleLogout}
+                aria-label="Çıkış yap"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-rose-300/12 bg-rose-400/10 text-rose-300 transition hover:bg-rose-400/20 md:h-9 md:w-9"
+              >
+                <XCircle size={16} />
+              </button>
+            )}
+          </div>
+        </div>
+      </header>
+
+      <main className="relative z-10 mx-auto flex w-full max-w-[1400px] flex-col gap-3.5 px-3 py-3.5 sm:px-5 md:gap-4 md:px-7 md:py-5">
+        {!activeUser && (
+          <section className="rounded-2xl border border-white/[0.08] bg-white/[0.04] p-2.5 shadow-[0_10px_34px_rgba(0,0,0,.24)] backdrop-blur-2xl md:p-3">
+            <div className="flex flex-col gap-2 md:flex-row md:items-center">
+              <div className="flex min-w-0 flex-1 items-center gap-2.5 rounded-xl border border-white/[0.06] bg-black/25 px-3 py-2">
+                <span className="shrink-0 text-zinc-500">
+                  {checking ? <Loader2 size={17} className="animate-spin" style={{ color: lobbyTheme.primaryColor }} /> : <User size={17} />}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <label htmlFor="lobby-username" className="block text-[9px] font-black uppercase leading-none tracking-[0.16em] text-zinc-500">
+                    Oyuncu doğrulama
+                  </label>
+                  <input
+                    id="lobby-username"
+                    type="text"
+                    value={username}
+                    onChange={(event) => setUsername(event.target.value)}
+                    onKeyDown={(event) => event.key === 'Enter' && handleCheck()}
+                    className="mt-1 w-full border-0 bg-transparent p-0 text-sm font-black leading-none text-white outline-none placeholder:text-zinc-700 focus:ring-0"
+                    placeholder="Kullanıcı adınız"
+                  />
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handleCheck}
+                disabled={!username.trim() || checking}
+                className="flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl px-5 text-[11px] font-black uppercase tracking-[0.16em] text-white transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-55"
+                style={{
+                  background: `linear-gradient(90deg, ${lobbyTheme.primaryColor}, ${lobbyTheme.secondaryColor})`,
+                  boxShadow: `0 8px 22px ${hexToRgba(lobbyTheme.primaryColor, 0.26)}`
+                }}
+              >
+                {checking ? <Loader2 size={14} className="animate-spin" /> : <ShieldCheck size={14} />}
+                Giriş yap
+              </button>
+            </div>
+            {statusMessage && (
+              <p className="mt-2 rounded-xl border border-rose-300/15 bg-rose-400/10 px-3 py-1.5 text-[11px] font-bold text-rose-200">
+                {statusMessage}
+              </p>
+            )}
+          </section>
+        )}
+
+        <LobbyBanner theme={lobbyTheme} />
+
+        <div className="flex min-w-0 flex-col gap-3.5 md:gap-4">
+          <div className="flex min-w-0 flex-col gap-3.5 md:gap-4">
+            <motion.section
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="relative overflow-hidden rounded-2xl border p-4 shadow-[0_14px_44px_rgba(0,0,0,.3)] md:p-5"
+              style={{
+                borderColor: hexToRgba(lobbyTheme.primaryColor, 0.18),
+                background: `linear-gradient(120deg, ${hexToRgba(lobbyTheme.primaryColor, 0.24)}, ${hexToRgba(lobbyTheme.surfaceColor, 0.9)} 52%, ${hexToRgba(lobbyTheme.backgroundColor, 0.97)})`
+              }}
+            >
+              <div className="absolute -right-12 -top-16 h-44 w-44 rounded-full blur-[70px]" style={{ backgroundColor: hexToRgba(lobbyTheme.primaryColor, 0.22) }} />
+              <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <span
+                    className="inline-flex w-max items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.16em]"
+                    style={{
+                      borderColor: hexToRgba(lobbyTheme.primaryColor, 0.2),
+                      backgroundColor: hexToRgba(lobbyTheme.primaryColor, 0.12),
+                      color: lobbyTheme.primaryColor
+                    }}
+                  >
+                    <Star size={10} className="fill-current" />
+                    Öne çıkan
                   </span>
-                </button>
-              );
-            })}
+                  <h1 className="mt-2.5 max-w-[26ch] text-2xl font-black leading-[1.02] tracking-[-0.045em] text-white sm:text-[28px] md:text-[32px]">
+                    Bonusunu seç, talebini hızlıca gönder.
+                  </h1>
+                  <div className="mt-3.5 flex flex-wrap gap-2">
+                    <Link
+                      to="/bonus-talep"
+                      className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-white px-4 text-[12px] font-black text-black transition active:scale-[0.98]"
+                    >
+                      Bonus talep et <ChevronRight size={15} />
+                    </Link>
+                    <Link
+                      to="/cark"
+                      className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border bg-white/[0.06] px-4 text-[12px] font-black text-white transition hover:bg-white/[0.1] active:scale-[0.98]"
+                      style={{ borderColor: hexToRgba(lobbyTheme.primaryColor, 0.22) }}
+                    >
+                      Çarkı çevir <Zap size={15} />
+                    </Link>
+                  </div>
+                </div>
+
+                <motion.div
+                  animate={{ y: [0, -9, 0] }}
+                  transition={{ duration: 4.2, repeat: Infinity, ease: 'easeInOut' }}
+                  className="relative hidden shrink-0 sm:block"
+                >
+                  <div className="flex h-24 w-24 rotate-6 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.07] shadow-xl backdrop-blur-xl md:h-28 md:w-28">
+                    <Gift size={44} style={{ color: lobbyTheme.primaryColor, filter: `drop-shadow(0 0 14px ${hexToRgba(lobbyTheme.primaryColor, 0.4)})` }} />
+                  </div>
+                  <div
+                    className="absolute -bottom-3 -right-3 flex h-11 w-11 -rotate-12 items-center justify-center rounded-xl border border-white/10 shadow-lg"
+                    style={{ backgroundColor: lobbyTheme.surfaceColor, color: lobbyTheme.accentColor }}
+                  >
+                    <Zap size={20} />
+                  </div>
+                </motion.div>
+              </div>
+            </motion.section>
+
+            <section className="rounded-2xl border border-white/[0.075] bg-white/[0.032] p-2 shadow-[0_10px_34px_rgba(0,0,0,.2)] backdrop-blur-2xl md:p-2.5">
+              <div role="tablist" aria-label="Lobi bölümleri" className="grid grid-cols-3 gap-1 rounded-xl border border-white/[0.06] bg-black/25 p-1">
+                {lobbyTabs.map((tab) => {
+                  const Icon = tab.icon;
+                  const isActive = activeLobbyTab === tab.id;
+
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      role="tab"
+                      aria-selected={isActive}
+                      aria-controls={`lobby-panel-${tab.id}`}
+                      id={`lobby-tab-${tab.id}`}
+                      onClick={() => setActiveLobbyTab(tab.id)}
+                      className={cn(
+                        'flex min-w-0 items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-[10px] font-black uppercase tracking-[0.06em] transition sm:text-[11px]',
+                        isActive
+                          ? 'bg-white text-black shadow-[0_6px_18px_rgba(255,255,255,.1)]'
+                          : 'text-zinc-500 hover:bg-white/[0.055] hover:text-white'
+                      )}
+                    >
+                      <Icon size={14} className="shrink-0" />
+                      <span className="max-w-full truncate leading-none">{tab.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <motion.div
+                key={activeLobbyTab}
+                role="tabpanel"
+                id={`lobby-panel-${activeLobbyTab}`}
+                aria-labelledby={`lobby-tab-${activeLobbyTab}`}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.16 }}
+                className="pt-2.5"
+              >
+                {activeLobbyTab === 'games' && <GamesTab items={visibleQuickAccess} config={lobbyTheme.tabs.games} />}
+                {activeLobbyTab === 'tournaments' && <TournamentsTab cards={tournamentCards} config={lobbyTheme.tabs.tournaments} />}
+                {activeLobbyTab === 'support' && <SupportTab config={lobbyTheme.tabs.support} />}
+              </motion.div>
+            </section>
           </div>
 
-          <motion.div
-            key={activeLobbyTab}
-            role="tabpanel"
-            id={`lobby-panel-${activeLobbyTab}`}
-            aria-labelledby={`lobby-tab-${activeLobbyTab}`}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.18 }}
-            className="pt-3 sm:pt-4"
-          >
-            {activeLobbyTab === 'games' && <GamesTab items={visibleQuickAccess} config={lobbyTheme.tabs.games} />}
-            {activeLobbyTab === 'tournaments' && <TournamentsTab cards={tournamentCards} config={lobbyTheme.tabs.tournaments} />}
-            {activeLobbyTab === 'support' && <SupportTab config={lobbyTheme.tabs.support} />}
-          </motion.div>
-        </section>
+        </div>
       </main>
 
       <nav
-        className="fixed inset-x-0 bottom-0 z-50 border-t px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur-2xl md:hidden"
+        className="fixed inset-x-0 bottom-0 z-50 border-t px-2 pb-[max(0.4rem,env(safe-area-inset-bottom))] pt-1.5 backdrop-blur-2xl md:hidden"
         style={{
           borderColor: hexToRgba(lobbyTheme.textColor, 0.08),
-          backgroundColor: hexToRgba(lobbyTheme.surfaceColor, 0.92)
+          backgroundColor: hexToRgba(lobbyTheme.surfaceColor, 0.94)
         }}
       >
         <div className="mx-auto grid max-w-md grid-cols-4 gap-1">
@@ -821,35 +831,36 @@ function formatActionText(template: string, count: number) {
 
 function GamesTab({ items, config }: { items: LobbyQuickAccessItem[]; config: LobbyTabsConfig['games'] }) {
   return (
-    <div className="space-y-5">
+    <div className="space-y-2.5">
       <SectionTitle title={config.sectionTitle} action={formatActionText(config.actionText, items.length)} />
-      <div className="grid grid-cols-3 gap-3 md:gap-4 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         {items.map((item) => {
           const Icon = QUICK_ACCESS_ICON_MAP[item.icon as keyof typeof QUICK_ACCESS_ICON_MAP] || Gift;
-          const inner = (
-            <>
-              <div
-                className="flex h-16 w-16 items-center justify-center rounded-2xl border transition group-hover:scale-110 md:h-20 md:w-20"
+          return (
+            <Link
+              key={item.id}
+              to={item.to}
+              className="group flex items-center gap-2.5 rounded-xl border border-white/[0.07] bg-white/[0.035] p-2.5 transition hover:border-white/15 hover:bg-white/[0.065] active:scale-[0.98]"
+            >
+              <span
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition group-hover:scale-105"
                 style={{
-                  borderColor: hexToRgba(item.accentColor, 0.28),
-                  backgroundColor: hexToRgba(item.accentColor, 0.13),
+                  borderColor: hexToRgba(item.accentColor, 0.26),
+                  backgroundColor: hexToRgba(item.accentColor, 0.12),
                   color: item.accentColor
                 }}
               >
-                <Icon size={28} className="md:hidden" />
-                <Icon size={34} className="hidden md:block" />
-              </div>
-              <div>
-                <p className="text-xs font-black leading-tight text-white md:text-sm">{item.label}</p>
-                <p className="mt-1 text-[10px] font-semibold leading-tight text-zinc-600 md:text-[11px]">{item.desc}</p>
-              </div>
-            </>
+                <Icon size={17} />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="line-clamp-2 block text-[12px] font-black leading-tight text-white sm:line-clamp-1">{item.label}</span>
+                <span className="mt-1 hidden truncate text-[10px] font-semibold leading-none text-zinc-600 sm:block">{item.desc}</span>
+              </span>
+              <ChevronRight size={14} className="hidden shrink-0 text-zinc-700 transition group-hover:translate-x-0.5 group-hover:text-zinc-400 sm:block" />
+            </Link>
           );
-          const cardCls = 'group flex flex-col items-center gap-3 rounded-[1.6rem] border border-white/[0.07] bg-white/[0.035] p-4 text-center active:scale-[0.97] hover:bg-white/[0.06] transition md:p-5';
-          return <Link key={item.id} to={item.to} className={cardCls}>{inner}</Link>;
         })}
       </div>
-
     </div>
   );
 }
@@ -869,9 +880,9 @@ function TournamentsTab({ cards, config }: { cards: TournamentLobbyCard[]; confi
   }, [cards, selectedTournament]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2.5">
       <SectionTitle title={config.sectionTitle} action={config.actionText} />
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3" role="tablist" aria-label="Turnuva dönemleri">
+      <div className="grid grid-cols-3 gap-1.5" role="tablist" aria-label="Turnuva dönemleri">
         {cards.map((card) => {
           const Icon = QUICK_ACCESS_ICON_MAP[card.icon as keyof typeof QUICK_ACCESS_ICON_MAP] || Trophy;
           const selected = selectedTournament === card.id;
@@ -884,24 +895,24 @@ function TournamentsTab({ cards, config }: { cards: TournamentLobbyCard[]; confi
               aria-selected={selected}
               onClick={() => setSelectedTournament(card.id)}
               className={cn(
-                'group flex min-h-[92px] min-w-0 items-center gap-3 rounded-[1.25rem] border p-3 text-left transition active:scale-[0.98]',
+                'group flex min-w-0 items-center gap-2 rounded-xl border p-2 text-left transition active:scale-[0.98]',
                 selected
-                  ? 'border-white/20 bg-white text-black shadow-[0_18px_36px_rgba(255,255,255,.10)]'
-                  : 'border-white/[0.07] bg-white/[0.035] text-zinc-400 hover:border-white/12 hover:bg-white/[0.07] hover:text-white'
+                  ? 'border-white/20 bg-white text-black shadow-[0_8px_22px_rgba(255,255,255,.09)]'
+                  : 'border-white/[0.07] bg-white/[0.035] text-zinc-400 hover:border-white/15 hover:bg-white/[0.07] hover:text-white'
               )}
             >
               <span
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border"
                 style={selected
                   ? { borderColor: 'rgba(0,0,0,0.1)', backgroundColor: 'rgba(0,0,0,0.05)' }
                   : { borderColor: hexToRgba(card.accentColor, 0.18), backgroundColor: hexToRgba(card.accentColor, 0.1), color: card.accentColor }
                 }
               >
-                <Icon size={20} />
+                <Icon size={15} />
               </span>
-              <span className="min-w-0">
-                <span className="block truncate text-sm font-black uppercase tracking-[0.08em]">{card.label}</span>
-                <span className={cn('mt-1 block truncate text-[10px] font-black uppercase tracking-[0.14em]', selected ? 'text-black/45' : 'text-zinc-600')}>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[11px] font-black uppercase leading-none tracking-[0.04em]">{card.label}</span>
+                <span className={cn('mt-1 block truncate text-[9px] font-black uppercase leading-none tracking-[0.1em]', selected ? 'text-black/45' : 'text-zinc-600')}>
                   {card.period}
                 </span>
               </span>
@@ -910,14 +921,12 @@ function TournamentsTab({ cards, config }: { cards: TournamentLobbyCard[]; confi
         })}
       </div>
       {selectedCard && (
-        <div className="grid grid-cols-1 gap-3">
-          <TournamentCard
-            card={selectedCard}
-            rankHint={`${config.rankPrefix} #${selectedIndex + 1}`}
-            prizeSuffix={config.prizeSuffix}
-            description={config.cardDescription}
-          />
-        </div>
+        <TournamentCard
+          card={selectedCard}
+          rankHint={`${config.rankPrefix} #${selectedIndex + 1}`}
+          prizeSuffix={config.prizeSuffix}
+          description={config.cardDescription}
+        />
       )}
     </div>
   );
@@ -927,32 +936,32 @@ function SupportTab({ config }: { config: LobbyTabsConfig['support'] }) {
   const cards = config.cards.filter((card) => card.enabled !== false);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2.5">
       <SectionTitle title={config.sectionTitle} action={config.actionText} />
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_1fr_320px] md:gap-5">
+      <div className="relative">
+        <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600" />
+        <input
+          type="text"
+          placeholder={config.searchPlaceholder}
+          className="h-10 w-full rounded-xl border border-white/[0.06] bg-black/30 pl-9 pr-3 text-[12px] font-bold text-white outline-none transition placeholder:text-zinc-700 focus:border-[color:var(--lobby-primary)]/60"
+        />
+      </div>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
         {cards.map((card) => (
           <FeatureCard key={card.id} card={card} />
         ))}
-        <div className="rounded-[1.6rem] border border-white/[0.07] bg-white/[0.035] p-4 md:p-5">
-          <div className="relative">
-            <Search size={17} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600" />
-            <input
-              type="text"
-              placeholder={config.searchPlaceholder}
-              className="h-12 w-full rounded-2xl border border-white/[0.06] bg-black/30 pl-11 pr-4 text-sm font-bold text-white outline-none placeholder:text-zinc-700 focus:border-[#d4af37]/60"
-            />
-          </div>
-          <div
-            className="mt-4 rounded-2xl border p-4"
-            style={{
-              borderColor: hexToRgba(config.infoAccentColor, 0.18),
-              backgroundColor: hexToRgba(config.infoAccentColor, 0.1)
-            }}
-          >
-            <CheckCircle2 className="mb-3" style={{ color: config.infoAccentColor }} size={24} />
-            <p className="text-sm font-black text-white">{config.infoTitle}</p>
-            <p className="mt-1 text-xs font-medium leading-5 text-zinc-500">{config.infoDescription}</p>
-          </div>
+      </div>
+      <div
+        className="flex items-start gap-2.5 rounded-xl border p-3"
+        style={{
+          borderColor: hexToRgba(config.infoAccentColor, 0.18),
+          backgroundColor: hexToRgba(config.infoAccentColor, 0.09)
+        }}
+      >
+        <CheckCircle2 className="mt-0.5 shrink-0" style={{ color: config.infoAccentColor }} size={17} />
+        <div className="min-w-0">
+          <p className="text-[12px] font-black leading-tight text-white">{config.infoTitle}</p>
+          <p className="mt-1 text-[11px] font-medium leading-4 text-zinc-500">{config.infoDescription}</p>
         </div>
       </div>
     </div>
@@ -980,28 +989,28 @@ function LobbyBanner({ theme }: { theme: LobbyTheme }) {
     <motion.section
       initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
-      className="group relative flex min-h-[118px] overflow-hidden rounded-[1.7rem] border p-4 sm:min-h-[150px] sm:p-6 md:min-h-[190px] md:items-center md:p-8"
+      className="group relative flex min-h-[92px] items-center overflow-hidden rounded-2xl border p-3.5 sm:min-h-[110px] sm:p-5 md:min-h-[124px]"
       style={bannerStyle}
     >
       <div className="absolute inset-0 bg-gradient-to-r from-black/35 via-transparent to-transparent" />
       <div className="relative z-10 max-w-[620px]">
         {banner.title && (
-          <h2 className="max-w-full text-2xl font-black leading-[0.95] tracking-[-0.055em] text-white sm:text-4xl md:text-5xl">
+          <h2 className="max-w-full text-lg font-black leading-[1.05] tracking-[-0.035em] text-white sm:text-2xl md:text-[26px]">
             {banner.title}
           </h2>
         )}
         {banner.subtitle && (
-          <p className="mt-2 max-w-[520px] text-xs font-bold leading-5 text-white/78 sm:text-sm md:text-base">
+          <p className="mt-1 max-w-[520px] text-[11px] font-bold leading-4 text-white/75 sm:text-xs md:text-[13px]">
             {banner.subtitle}
           </p>
         )}
         {banner.ctaLabel && (
           <span
-            className="mt-4 inline-flex h-10 items-center justify-center gap-2 rounded-xl px-4 text-xs font-black uppercase tracking-[0.14em] text-black transition group-hover:translate-x-0.5"
+            className="mt-2.5 inline-flex h-8 items-center justify-center gap-1.5 rounded-lg px-3 text-[10px] font-black uppercase tracking-[0.12em] text-black transition group-hover:translate-x-0.5"
             style={{ backgroundColor: theme.accentColor }}
           >
             {banner.ctaLabel}
-            <ChevronRight size={16} />
+            <ChevronRight size={13} />
           </span>
         )}
       </div>
@@ -1022,34 +1031,25 @@ function LobbyBanner({ theme }: { theme: LobbyTheme }) {
 
 function LiveTicker({ winners, theme }: { winners: Array<{ user: string; win: string; game: string; time: string }>; theme: LobbyTheme }) {
   return (
-    <div className="relative z-20 flex h-9 w-full items-center overflow-hidden border-b border-white/[0.07] bg-black/70 backdrop-blur-xl md:h-10">
+    <div className="relative z-20 flex h-7 w-full items-center overflow-hidden border-b border-white/[0.07] bg-black/70 backdrop-blur-xl md:h-8">
       <div
-        className="z-10 flex h-full shrink-0 items-center gap-2 px-3 text-[9px] font-black uppercase tracking-[0.16em] text-white shadow-[8px_0_24px_rgba(0,0,0,.55)] md:px-6 md:text-[10px]"
+        className="z-10 flex h-full shrink-0 items-center gap-1.5 px-2.5 text-[9px] font-black uppercase tracking-[0.14em] text-white shadow-[8px_0_20px_rgba(0,0,0,.5)] md:px-4"
         style={{ background: `linear-gradient(90deg, ${theme.primaryColor}, ${theme.secondaryColor})` }}
       >
-        <Activity size={12} className="animate-pulse" />
+        <Activity size={10} className="animate-pulse" />
         Canlı
       </div>
-      <div className="lobby-marquee flex items-center gap-7 whitespace-nowrap px-5">
+      <div className="lobby-marquee flex items-center gap-5 whitespace-nowrap px-4">
         {[...winners, ...winners].map((winner, index) => (
-          <div key={`${winner.user}-${index}`} className="flex items-center gap-2 text-xs font-bold text-zinc-500">
+          <div key={`${winner.user}-${index}`} className="flex items-center gap-1.5 text-[11px] font-bold text-zinc-500">
             <span className="text-white">{winner.user}</span>
             <span style={{ color: theme.accentColor }}>{winner.win}</span>
-            <span className="rounded-md bg-white/5 px-2 py-0.5 text-[10px] text-zinc-500">{winner.game}</span>
-            <span className="text-[10px] text-zinc-700">{winner.time}</span>
+            <span className="rounded bg-white/5 px-1.5 py-0.5 text-[9px] text-zinc-500">{winner.game}</span>
+            <span className="text-[9px] text-zinc-700">{winner.time}</span>
           </div>
         ))}
       </div>
     </div>
-  );
-}
-
-function QuickAction({ to, icon: Icon, label, accentColor = '#a855f7' }: { to: string; icon: any; label: string; accentColor?: string }) {
-  return (
-    <Link to={to} className="flex min-h-[70px] flex-col items-center justify-center gap-2 rounded-2xl border border-white/[0.07] bg-white/[0.045] p-2 text-center active:scale-[0.98]">
-      <Icon size={20} style={{ color: accentColor }} />
-      <span className="text-[9px] font-black uppercase tracking-[0.06em] text-zinc-300 min-[390px]:text-[10px]">{label}</span>
-    </Link>
   );
 }
 
@@ -1069,7 +1069,7 @@ function TournamentCard({
   return (
     <Link
       to={card.to}
-      className="group flex min-h-[190px] flex-col justify-between overflow-hidden rounded-[1.4rem] border bg-gradient-to-br to-black/30 p-4 shadow-[0_14px_35px_rgba(0,0,0,.18)] transition active:scale-[0.98] md:p-5"
+      className="group flex min-h-[132px] flex-col justify-between overflow-hidden rounded-xl border bg-gradient-to-br to-black/30 p-3.5 shadow-[0_10px_28px_rgba(0,0,0,.18)] transition active:scale-[0.98] md:p-4"
       style={{
         borderColor: hexToRgba(card.accentColor, 0.18),
         backgroundImage: `linear-gradient(135deg, ${hexToRgba(card.accentColor, 0.2)}, rgba(0,0,0,0.3))`,
@@ -1077,30 +1077,30 @@ function TournamentCard({
       }}
     >
       <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <div
-            className="flex h-12 w-12 items-center justify-center rounded-2xl border"
+            className="flex h-9 w-9 items-center justify-center rounded-lg border"
             style={{
               borderColor: hexToRgba(card.accentColor, 0.2),
               backgroundColor: hexToRgba(card.accentColor, 0.1),
               color: card.accentColor
             }}
           >
-            <Icon size={22} />
+            <Icon size={17} />
           </div>
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-zinc-500">{card.period}</p>
-            <p className="mt-1 text-sm font-black uppercase text-white">{card.label}</p>
+          <div className="min-w-0">
+            <p className="text-[9px] font-black uppercase leading-none tracking-[0.12em] text-zinc-500">{card.period}</p>
+            <p className="mt-1 truncate text-[12px] font-black uppercase leading-none text-white">{card.label}</p>
           </div>
         </div>
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/[0.06] bg-white/[0.045] text-zinc-300 transition group-hover:translate-x-0.5 group-hover:text-white">
-          <ChevronRight size={17} />
+        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-white/[0.06] bg-white/[0.045] text-zinc-400 transition group-hover:translate-x-0.5 group-hover:text-white">
+          <ChevronRight size={14} />
         </div>
       </div>
-      <div>
-        <p className="text-[10px] font-black uppercase tracking-[0.16em] text-zinc-600">{rankHint}</p>
-        <p className="mt-1 truncate text-4xl font-black tracking-[-0.055em] text-white md:text-5xl">{card.prize}{prizeSuffix}</p>
-        <p className="mt-2 text-xs font-bold leading-5 text-zinc-500">{description}</p>
+      <div className="mt-3">
+        <p className="text-[9px] font-black uppercase tracking-[0.14em] text-zinc-600">{rankHint}</p>
+        <p className="mt-0.5 truncate text-2xl font-black tracking-[-0.045em] text-white md:text-[28px]">{card.prize}{prizeSuffix}</p>
+        <p className="mt-1.5 line-clamp-2 text-[11px] font-semibold leading-4 text-zinc-500">{description}</p>
       </div>
     </Link>
   );
@@ -1108,12 +1108,9 @@ function TournamentCard({
 
 function SectionTitle({ title, action }: { title: string; action?: string }) {
   return (
-    <div className="flex items-end justify-between gap-3 px-1">
-      <div className="min-w-0">
-        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-amber-200/70">Lobi</p>
-        <h2 className="truncate text-xl font-black tracking-[-0.04em] text-white md:text-2xl">{title}</h2>
-      </div>
-      {action && <span className="shrink-0 text-[10px] font-black uppercase tracking-[0.14em] text-zinc-600">{action}</span>}
+    <div className="flex items-baseline justify-between gap-3 px-0.5">
+      <h2 className="truncate text-[13px] font-black tracking-[-0.02em] text-white md:text-sm">{title}</h2>
+      {action && <span className="shrink-0 text-[9px] font-black uppercase tracking-[0.12em] text-zinc-600">{action}</span>}
     </div>
   );
 }
@@ -1123,31 +1120,37 @@ function FeatureCard({ card }: { card: LobbySupportCardConfig }) {
   const Icon = QUICK_ACCESS_ICON_MAP[card.icon as keyof typeof QUICK_ACCESS_ICON_MAP] || Phone;
 
   return (
-    <Link to={card.to} className="rounded-[1.6rem] border border-white/[0.075] bg-white/[0.04] p-4 active:scale-[0.98] md:p-6">
-      <div
-        className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl border"
+    <Link
+      to={card.to}
+      className="group flex items-start gap-2.5 rounded-xl border border-white/[0.075] bg-white/[0.038] p-3 transition hover:border-white/15 hover:bg-white/[0.065] active:scale-[0.98]"
+    >
+      <span
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border"
         style={{
           borderColor: hexToRgba(card.accentColor, 0.2),
           backgroundColor: hexToRgba(card.accentColor, 0.1),
           color: card.accentColor
         }}
       >
-        <Icon size={21} />
-      </div>
-      <h3 className="text-base font-black tracking-[-0.035em] text-white md:text-xl">{card.title}</h3>
-      <p className="mt-1 text-xs font-medium leading-5 text-zinc-500 md:text-sm">{card.desc}</p>
+        <Icon size={17} />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-[13px] font-black leading-tight tracking-[-0.015em] text-white">{card.title}</span>
+        <span className="mt-1 block text-[11px] font-medium leading-4 text-zinc-500">{card.desc}</span>
+      </span>
+      <ChevronRight size={14} className="mt-0.5 shrink-0 text-zinc-700 transition group-hover:translate-x-0.5 group-hover:text-zinc-400" />
     </Link>
   );
 }
 
-function BottomNav({ to, icon: Icon, label, active = false, accentColor = '#a855f7' }: { to: string; icon: any; label: string; active?: boolean; accentColor?: string }) {
+function BottomNav({ to, icon: Icon, label, active = false, accentColor = '#3b82f6' }: { to: string; icon: any; label: string; active?: boolean; accentColor?: string }) {
   return (
     <Link
       to={to}
-      className={cn('flex flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-[10px] font-black uppercase tracking-[0.08em]', active ? '' : 'text-zinc-500')}
+      className={cn('flex flex-col items-center justify-center gap-0.5 rounded-xl px-2 py-1.5 text-[9px] font-black uppercase tracking-[0.06em] transition', active ? '' : 'text-zinc-500')}
       style={active ? { backgroundColor: hexToRgba(accentColor, 0.16), color: accentColor } : undefined}
     >
-      <Icon size={19} />
+      <Icon size={17} />
       {label}
     </Link>
   );
@@ -1411,7 +1414,7 @@ export function VIPTab() {
                 placeholder="Kullanıcı adı *"
                 value={form.username}
                 onChange={(e) => setForm({ ...form, username: e.target.value })}
-                className="h-12 w-full rounded-2xl border border-white/[0.07] bg-black/30 px-4 text-sm font-bold text-white outline-none placeholder:text-zinc-700 focus:border-[#d4af37]/60"
+                className="h-12 w-full rounded-2xl border border-white/[0.07] bg-black/30 px-4 text-sm font-bold text-white outline-none placeholder:text-zinc-700 focus:border-[#3b82f6]/60"
                 required
               />
               <input
@@ -1419,27 +1422,27 @@ export function VIPTab() {
                 placeholder="Ad Soyad"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
-                className="h-12 w-full rounded-2xl border border-white/[0.07] bg-black/30 px-4 text-sm font-bold text-white outline-none placeholder:text-zinc-700 focus:border-[#d4af37]/60"
+                className="h-12 w-full rounded-2xl border border-white/[0.07] bg-black/30 px-4 text-sm font-bold text-white outline-none placeholder:text-zinc-700 focus:border-[#3b82f6]/60"
               />
               <input
                 type="email"
                 placeholder="E-posta"
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
-                className="h-12 w-full rounded-2xl border border-white/[0.07] bg-black/30 px-4 text-sm font-bold text-white outline-none placeholder:text-zinc-700 focus:border-[#d4af37]/60"
+                className="h-12 w-full rounded-2xl border border-white/[0.07] bg-black/30 px-4 text-sm font-bold text-white outline-none placeholder:text-zinc-700 focus:border-[#3b82f6]/60"
               />
               <input
                 type="tel"
                 placeholder="Telefon"
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                className="h-12 w-full rounded-2xl border border-white/[0.07] bg-black/30 px-4 text-sm font-bold text-white outline-none placeholder:text-zinc-700 focus:border-[#d4af37]/60"
+                className="h-12 w-full rounded-2xl border border-white/[0.07] bg-black/30 px-4 text-sm font-bold text-white outline-none placeholder:text-zinc-700 focus:border-[#3b82f6]/60"
               />
             </div>
             <button
               type="submit"
               disabled={submitting}
-              className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#d4af37] to-[#9a701a] text-xs font-black uppercase tracking-[0.16em] text-white shadow-[0_14px_35px_rgba(212,175,55,.22)] transition active:scale-[0.98] disabled:opacity-60"
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] text-xs font-black uppercase tracking-[0.16em] text-white shadow-[0_14px_35px_rgba(212,175,55,.22)] transition active:scale-[0.98] disabled:opacity-60"
             >
               {submitting ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
               {formButtonText}

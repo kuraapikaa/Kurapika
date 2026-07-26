@@ -34,13 +34,13 @@ const boundedPx = (value: string, fallback: number, min: number, max: number) =>
 };
 
 const PAGES = [
-  { id: 'lobi',          label: 'Oyun Lobisi',    path: '/lobi',              icon: Layout,   color: 'text-indigo-400', badge: 'Popüler' },
+  { id: 'lobi',          label: 'Oyun Lobisi',    path: '/lobi',              icon: Layout,   color: 'text-blue-400', badge: 'Popüler' },
   { id: 'cark',          label: 'Şans Çarkı',     path: '/cark',              icon: RotateCcw, color: 'text-amber-400' },
   { id: 'kazi-kazan',    label: 'Kazı Kazan',     path: '/kazi-kazan',        icon: Ticket,   color: 'text-orange-400' },
   { id: 'yazi-tura',     label: 'Yazı Tura',      path: '/yazi-tura',         icon: Swords,   color: 'text-cyan-400' },
-  { id: 'tas-kagit',     label: 'Taş Kağıt Makas',path: '/tas-kagit-makas',  icon: Scissors, color: 'text-pink-400' },
+  { id: 'tas-kagit',     label: 'Taş Kağıt Makas',path: '/tas-kagit-makas',  icon: Scissors, color: 'text-cyan-400' },
   { id: 'bonus-talep',   label: 'Bonus Talep',    path: '/bonus-talep',       icon: Gamepad2, color: 'text-emerald-400' },
-  { id: 'turnuva',       label: 'Günlük Turnuva', path: '/turnuva/gunluk',    icon: Trophy,   color: 'text-purple-400' },
+  { id: 'turnuva',       label: 'Günlük Turnuva', path: '/turnuva/gunluk',    icon: Trophy,   color: 'text-blue-400' },
   { id: 'beni-ara',      label: 'Beni Ara',       path: '/beni-ara',          icon: Phone,    color: 'text-sky-400' },
   { id: 'ortaklik',      label: 'Ortaklık',       path: '/ortaklik',          icon: Handshake,color: 'text-rose-400' },
   { id: 'sadakat',       label: 'Sadakat',        path: '/sadakat',           icon: Star,     color: 'text-yellow-400' },
@@ -307,7 +307,7 @@ export function IFrameGenerator() {
         <div className="lg:col-span-4 space-y-4">
           <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(18,18,30,0.7)' }}>
             <div className="flex items-center gap-2.5 px-5 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.2)' }}>
-              <Settings2 size={17} className="text-indigo-400" />
+              <Settings2 size={17} className="text-blue-400" />
               <h2 className="text-sm font-black text-white">Yapılandırma</h2>
             </div>
 
@@ -326,7 +326,7 @@ export function IFrameGenerator() {
                         aria-pressed={active}
                         onClick={() => set({ type: page.id })}
                         className={cn(
-                          'flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/50',
+                          'flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/50',
                           active
                             ? 'text-white'
                             : 'text-zinc-500 hover:text-zinc-300',
@@ -348,7 +348,7 @@ export function IFrameGenerator() {
                           </span>
                         )}
                         {active && (
-                          <Check size={13} className="text-indigo-400 flex-shrink-0" aria-hidden="true" />
+                          <Check size={13} className="text-blue-400 flex-shrink-0" aria-hidden="true" />
                         )}
                       </button>
                     );
@@ -368,7 +368,7 @@ export function IFrameGenerator() {
                       value={config.width}
                       onChange={e => set({ width: e.target.value })}
                       placeholder="100% veya 1200"
-                      className="w-full text-sm font-mono text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 transition-colors"
+                      className="w-full text-sm font-mono text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-colors"
                       style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.08)' }}
                     />
                   </div>
@@ -381,7 +381,7 @@ export function IFrameGenerator() {
                       onChange={e => set({ height: e.target.value })}
                       min="200"
                       max="2000"
-                      className="w-full text-sm font-mono text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 transition-colors"
+                      className="w-full text-sm font-mono text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-colors"
                       style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.08)' }}
                     />
                   </div>
@@ -403,7 +403,7 @@ export function IFrameGenerator() {
                         value={config.borderRadius}
                         onChange={e => set({ borderRadius: e.target.value })}
                         aria-valuetext={`${config.borderRadius}px`}
-                        className="w-16 sm:w-20 accent-indigo-500"
+                        className="w-16 sm:w-20 accent-blue-500"
                       />
                       <span className="text-xs font-bold text-zinc-500 w-9 text-right" aria-hidden="true">{config.borderRadius}px</span>
                     </div>
@@ -447,7 +447,7 @@ export function IFrameGenerator() {
                   type="button"
                   aria-pressed={device === 'desktop'}
                   onClick={() => setDevice('desktop')}
-                  className={cn('flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/50', device === 'desktop' ? 'text-white' : 'text-zinc-600 hover:text-zinc-400')}
+                  className={cn('flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/50', device === 'desktop' ? 'text-white' : 'text-zinc-600 hover:text-zinc-400')}
                   style={device === 'desktop' ? { background: 'rgba(99,102,241,0.2)', boxShadow: 'inset 0 0 0 1px rgba(99,102,241,0.3)' } : {}}
                 >
                   <Monitor size={14} aria-hidden="true" />
@@ -457,7 +457,7 @@ export function IFrameGenerator() {
                   type="button"
                   aria-pressed={device === 'mobile'}
                   onClick={() => setDevice('mobile')}
-                  className={cn('flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/50', device === 'mobile' ? 'text-white' : 'text-zinc-600 hover:text-zinc-400')}
+                  className={cn('flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/50', device === 'mobile' ? 'text-white' : 'text-zinc-600 hover:text-zinc-400')}
                   style={device === 'mobile' ? { background: 'rgba(99,102,241,0.2)', boxShadow: 'inset 0 0 0 1px rgba(99,102,241,0.3)' } : {}}
                 >
                   <Smartphone size={14} aria-hidden="true" />

@@ -271,8 +271,8 @@ export function TransactionsList({ dateRange }: TransactionsListProps) {
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-sm font-black text-blue-400 tracking-tight">{tx.TypeName}</span>
                                                     {tx.GameId && tx.GameId > 0 && (
-                                                        <div className="rounded-md bg-purple-500/10 px-1.5 py-0.5" title={`Oyun ID: ${tx.GameId}`}>
-                                                            <Gamepad2 size={12} className="text-purple-400" />
+                                                        <div className="rounded-md bg-blue-500/10 px-1.5 py-0.5" title={`Oyun ID: ${tx.GameId}`}>
+                                                            <Gamepad2 size={12} className="text-blue-400" />
                                                         </div>
                                                     )}
                                                 </div>

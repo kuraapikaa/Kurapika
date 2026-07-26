@@ -40,18 +40,18 @@ export function NetworkMap({ loginIp, clientId }: NetworkMapProps) {
                     <motion.div
                         animate={{ rotate: 360 }}
                         transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-                        className="absolute -inset-8 border border-dashed border-violet-500/20 rounded-full"
+                        className="absolute -inset-8 border border-dashed border-blue-500/20 rounded-full"
                     />
                     <motion.div
                         animate={{ rotate: -360 }}
                         transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
-                        className="absolute -inset-16 border border-dashed border-purple-500/10 rounded-full"
+                        className="absolute -inset-16 border border-dashed border-blue-500/10 rounded-full"
                     />
-                    <Globe className="text-violet-500/20" size={80} />
-                    <Loader2 size={40} className="animate-spin text-violet-500 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+                    <Globe className="text-blue-500/20" size={80} />
+                    <Loader2 size={40} className="animate-spin text-blue-500 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
                 </div>
                 <div className="space-y-2 text-center">
-                    <p className="text-violet-400 text-xs font-black tracking-[0.4em] uppercase">Ağ Taraması Yapılıyor</p>
+                    <p className="text-blue-400 text-xs font-black tracking-[0.4em] uppercase">Ağ Taraması Yapılıyor</p>
                     <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{loginIp} analiz ediliyor...</p>
                 </div>
             </div>
@@ -80,8 +80,8 @@ export function NetworkMap({ loginIp, clientId }: NetworkMapProps) {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="space-y-1 text-left">
                     <h3 className="text-xl font-black text-white flex items-center gap-3 tracking-tight">
-                        <div className="p-2 bg-violet-500/10 rounded-xl">
-                            <Globe size={20} className="text-violet-400" />
+                        <div className="p-2 bg-blue-500/10 rounded-xl">
+                            <Globe size={20} className="text-blue-400" />
                         </div>
                         Multi-Account Haritası
                     </h3>
@@ -100,7 +100,7 @@ export function NetworkMap({ loginIp, clientId }: NetworkMapProps) {
 
             <div className="relative w-full h-[600px] border border-white/5 bg-[#070b14] rounded-[3rem] overflow-hidden flex items-center justify-center group shadow-2xl">
                 {/* Visual Enhancers */}
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-violet-500/5 via-transparent to-transparent opacity-50" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-500/5 via-transparent to-transparent opacity-50" />
                 <div className="absolute inset-0 opacity-[0.05]" style={{ backgroundImage: 'radial-gradient(circle at center, #ffffff 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
 
                 {/* Orbit Rings */}
@@ -118,18 +118,18 @@ export function NetworkMap({ loginIp, clientId }: NetworkMapProps) {
                         "group/center w-36 h-36 rounded-full border-2 transition-all duration-500 flex flex-col items-center justify-center p-4 backdrop-blur-xl relative cursor-default",
                         isMultiAccountRisk
                             ? 'border-rose-500/40 bg-rose-950/40 shadow-[0_0_80px_rgba(244,63,94,0.2)]'
-                            : 'border-purple-500/40 bg-purple-950/40 shadow-[0_0_80px_rgba(99,102,241,0.15)]'
+                            : 'border-blue-500/40 bg-blue-950/40 shadow-[0_0_80px_rgba(99,102,241,0.15)]'
                     )}>
                         <div className={cn(
                             "absolute -inset-3 rounded-full border border-dashed animate-spin-slow opacity-30",
-                            isMultiAccountRisk ? 'border-rose-400' : 'border-purple-400'
+                            isMultiAccountRisk ? 'border-rose-400' : 'border-blue-400'
                         )} />
                         <div className="mb-2 p-2 bg-white/5 rounded-xl">
-                            <Server className={isMultiAccountRisk ? 'text-rose-400' : 'text-purple-400'} size={24} />
+                            <Server className={isMultiAccountRisk ? 'text-rose-400' : 'text-blue-400'} size={24} />
                         </div>
                         <span className={cn(
                             "text-xs font-black tracking-wider text-center",
-                            isMultiAccountRisk ? 'text-rose-200' : 'text-purple-200'
+                            isMultiAccountRisk ? 'text-rose-200' : 'text-blue-200'
                         )}>{loginIp}</span>
                         <p className="text-[10px] text-white/40 font-bold uppercase tracking-[0.2em] mt-1">Giriş IP</p>
 
@@ -199,7 +199,7 @@ export function NetworkMap({ loginIp, clientId }: NetworkMapProps) {
                                     "hover:shadow-[0_0_30px_rgba(139,92,246,0.3)] hover:-translate-y-1",
                                     isCurrentClient
                                         ? 'border-amber-500/50 bg-amber-950/60 shadow-[0_0_20px_rgba(245,158,11,0.1)] ring-4 ring-amber-500/10'
-                                        : 'border-white/10 bg-slate-900/80 hover:bg-slate-800/90 hover:border-violet-500/50'
+                                        : 'border-white/10 bg-slate-900/80 hover:bg-slate-800/90 hover:border-blue-500/50'
                                 )}
                                 onClick={() => {
                                     if (!isCurrentClient) {
@@ -210,7 +210,7 @@ export function NetworkMap({ loginIp, clientId }: NetworkMapProps) {
                             >
                                 <div className={cn(
                                     "mb-2 p-1.5 rounded-lg transition-colors",
-                                    isCurrentClient ? 'bg-amber-500/20 text-amber-400' : 'bg-white/5 text-slate-400 group-hover/node:bg-violet-500/20 group-hover/node:text-violet-400'
+                                    isCurrentClient ? 'bg-amber-500/20 text-amber-400' : 'bg-white/5 text-slate-400 group-hover/node:bg-blue-500/20 group-hover/node:text-blue-400'
                                 )}>
                                     <UserCircle2 size={24} />
                                 </div>
@@ -231,7 +231,7 @@ export function NetworkMap({ loginIp, clientId }: NetworkMapProps) {
 
                                 {!isCurrentClient && (
                                     <div className="absolute top-2 right-2 opacity-0 group-hover/node:opacity-100 transition-opacity">
-                                        <ExternalLink size={10} className="text-violet-400" />
+                                        <ExternalLink size={10} className="text-blue-400" />
                                     </div>
                                 )}
                             </motion.div>
@@ -284,7 +284,7 @@ export function NetworkMap({ loginIp, clientId }: NetworkMapProps) {
                                 }}
                                 className={cn(
                                     "text-[10px] font-black uppercase tracking-widest gap-2",
-                                    isMatch ? "text-amber-500 hover:bg-amber-500/10" : "text-violet-400 hover:bg-violet-500/10"
+                                    isMatch ? "text-amber-500 hover:bg-amber-500/10" : "text-blue-400 hover:bg-blue-500/10"
                                 )}
                             >
                                 Profil <ExternalLink size={12} />

@@ -21,7 +21,7 @@ export function LoadingState({ label = 'Yükleniyor...', className, compact }: L
       aria-live="polite"
       aria-label={label}
     >
-      <Loader2 size={compact ? 24 : 32} className="animate-spin text-violet-400" />
+      <Loader2 size={compact ? 24 : 32} className="animate-spin text-blue-400" />
       {!compact && <p className="text-sm font-medium">{label}</p>}
     </div>
   );

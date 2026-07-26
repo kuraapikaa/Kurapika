@@ -49,8 +49,8 @@ export function TasKagitMakasSayfasi() {
         <Link to="/lobi" className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors font-bold">
           <ArrowLeft size={20} /> Lobiye Dön
         </Link>
-        <div className="flex items-center gap-3 bg-indigo-500/10 px-4 py-2 rounded-2xl border border-indigo-500/20">
-          <Gamepad2 className="text-indigo-400" />
+        <div className="flex items-center gap-3 bg-blue-500/10 px-4 py-2 rounded-2xl border border-blue-500/20">
+          <Gamepad2 className="text-blue-400" />
           <span className="font-black">TAŞ - KAĞIT - MAKAS</span>
         </div>
       </div>
@@ -75,7 +75,7 @@ export function TasKagitMakasSayfasi() {
               <span className="text-xs font-black text-zinc-500 uppercase tracking-widest">Bilgisayar</span>
               <div className={`w-32 h-32 md:w-48 md:h-48 rounded-[2.5rem] flex items-center justify-center border-4 ${compChoice ? 'bg-zinc-900 border-white/10' : 'bg-transparent border-dashed border-zinc-800'}`}>
                  {gameState === 'playing' ? (
-                   <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                   <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
                  ) : compChoice && (
                     <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}><ChoiceIcon type={compChoice!} /></motion.div>
                  )}

@@ -37,15 +37,15 @@ export default function TurnuvaSayfasi() {
             title: 'HAFTALIK',
             prize: '250.000₺',
             icon: TrendingUp,
-            color: 'from-blue-400 to-indigo-600',
+            color: 'from-blue-400 to-blue-600',
             bgGlow: 'bg-blue-600/10'
         },
         aylik: {
             title: 'AYLIK',
             prize: '500.000₺',
             icon: Trophy,
-            color: 'from-purple-400 to-fuchsia-600',
-            bgGlow: 'bg-purple-600/10'
+            color: 'from-blue-400 to-teal-600',
+            bgGlow: 'bg-blue-600/10'
         }
     }[type] || {
         title: 'GÜNLÜK',
@@ -204,7 +204,7 @@ export default function TurnuvaSayfasi() {
                     animate={{ opacity: 1, scale: 1 }}
                     className="relative w-full rounded-[3rem] p-8 md:p-14 overflow-hidden border border-white/5 mb-10"
                 >
-                    <div className={cn("absolute inset-0 bg-gradient-to-br opacity-40 z-0", tournamentConfig.color.includes('purple') ? 'from-purple-900/40 via-zinc-950 to-zinc-950' : tournamentConfig.color.includes('amber') ? 'from-amber-900/20 via-zinc-950 to-zinc-950' : 'from-blue-900/20 via-zinc-950 to-zinc-950')} />
+                    <div className={cn("absolute inset-0 bg-gradient-to-br opacity-40 z-0", tournamentConfig.color.includes('purple') ? 'from-blue-900/40 via-zinc-950 to-zinc-950' : tournamentConfig.color.includes('amber') ? 'from-amber-900/20 via-zinc-950 to-zinc-950' : 'from-blue-900/20 via-zinc-950 to-zinc-950')} />
                     <div className="absolute right-0 top-0 w-full h-full opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
 
                     <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-10">
@@ -227,7 +227,7 @@ export default function TurnuvaSayfasi() {
                         <div className="relative group">
                             <div className={cn("absolute inset-0 blur-[60px] rounded-full animate-pulse transition-all duration-1000", tournamentConfig.bgGlow.replace('10', '40'))} />
                             <div className="relative w-48 h-48 md:w-64 md:h-64 rounded-[3.5rem] bg-zinc-950/40 backdrop-blur-3xl border border-white/10 flex items-center justify-center shadow-2xl rotate-6 group-hover:rotate-0 transition-all duration-700">
-                                <tournamentConfig.icon size={120} className={cn("transition-all duration-700", tournamentConfig.color.includes('amber') ? 'text-amber-400' : tournamentConfig.color.includes('purple') ? 'text-purple-400' : 'text-blue-400')} />
+                                <tournamentConfig.icon size={120} className={cn("transition-all duration-700", tournamentConfig.color.includes('amber') ? 'text-amber-400' : tournamentConfig.color.includes('purple') ? 'text-blue-400' : 'text-blue-400')} />
                                 <div className="absolute -bottom-2 -right-2 w-16 h-16 rounded-2xl bg-zinc-900 border border-white/10 flex items-center justify-center">
                                     <Star size={32} className="text-amber-400 fill-amber-400 animate-spin-slow" />
                                 </div>
@@ -293,7 +293,7 @@ export default function TurnuvaSayfasi() {
                                                     </div>
                                                 </td>
                                                 <td className="px-3 md:px-8 py-4 md:py-5">
-                                                    <span className="text-sm font-black text-white group-hover:text-purple-400 transition-colors uppercase">
+                                                    <span className="text-sm font-black text-white group-hover:text-blue-400 transition-colors uppercase">
                                                         {maskUsername(player.UserName)}
                                                     </span>
                                                 </td>

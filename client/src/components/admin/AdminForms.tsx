@@ -232,7 +232,7 @@ export function AdminForms() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatCard label="Beni Ara · Bekliyor" value={callStats.pending} color="border-sky-500/20 bg-sky-500/5" />
         <StatCard label="Beni Ara · Toplam" value={callStats.total} sub={`Bugün: ${callStats.today}`} color="border-white/5 bg-white/[0.02]" />
-        <StatCard label="Ortaklık · Bekliyor" value={partnershipStats.pending} color="border-purple-500/20 bg-purple-500/5" />
+        <StatCard label="Ortaklık · Bekliyor" value={partnershipStats.pending} color="border-blue-500/20 bg-blue-500/5" />
         <StatCard label="Ortaklık · Toplam" value={partnershipStats.total} sub={`Bugün: ${partnershipStats.today}`} color="border-white/5 bg-white/[0.02]" />
       </div>
 
@@ -251,11 +251,11 @@ export function AdminForms() {
         </button>
         <button
           onClick={() => { setActiveTab('partnership'); setStatusFilter('all'); setSearchTerm(''); }}
-          className={cn('px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-all', activeTab === 'partnership' ? 'bg-purple-500 text-white' : 'bg-white/5 text-zinc-400 hover:text-white')}
+          className={cn('px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-all', activeTab === 'partnership' ? 'bg-blue-500 text-white' : 'bg-white/5 text-zinc-400 hover:text-white')}
         >
           <Handshake size={15} /> Ortaklık
           {partnershipStats.pending > 0 && (
-            <span className={cn('rounded-full text-xs font-black px-1.5 py-0.5 min-w-[20px] text-center', activeTab === 'partnership' ? 'bg-black/20 text-white' : 'bg-purple-500/20 text-purple-400')}>
+            <span className={cn('rounded-full text-xs font-black px-1.5 py-0.5 min-w-[20px] text-center', activeTab === 'partnership' ? 'bg-black/20 text-white' : 'bg-blue-500/20 text-blue-400')}>
               {partnershipStats.pending}
             </span>
           )}
@@ -427,7 +427,7 @@ export function AdminForms() {
                           {new Date(r.createdAt).toLocaleString('tr-TR')}
                         </td>
                         <td className="px-5 py-3.5">
-                          <div className="font-bold text-purple-400 text-xs">{r.type}</div>
+                          <div className="font-bold text-blue-400 text-xs">{r.type}</div>
                           <div className="text-white text-sm mt-0.5">{r.contact}</div>
                         </td>
                         <td className="px-5 py-3.5">
@@ -602,14 +602,14 @@ export function AdminForms() {
             <div className="space-y-5">
               <div className="flex items-center justify-between pb-3 border-b border-white/[0.06]">
                 <h3 className="text-base font-black text-white flex items-center gap-2">
-                  <Handshake size={17} className="text-purple-400" /> Ortaklık Formu
+                  <Handshake size={17} className="text-blue-400" /> Ortaklık Formu
                 </h3>
                 <label className="flex items-center gap-2 cursor-pointer select-none">
                   <div
                     onClick={() => setPartnershipActive(v => !v)}
                     className={cn(
                       'relative w-10 h-5 rounded-full transition-colors cursor-pointer',
-                      partnershipActive ? 'bg-purple-500' : 'bg-white/10'
+                      partnershipActive ? 'bg-blue-500' : 'bg-white/10'
                     )}
                   >
                     <span className={cn(
@@ -631,7 +631,7 @@ export function AdminForms() {
                     type="text"
                     value={partnershipTitle}
                     onChange={e => setPartnershipTitle(e.target.value)}
-                    className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500/40"
+                    className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500/40"
                   />
                 </div>
                 <div>
@@ -640,7 +640,7 @@ export function AdminForms() {
                     value={partnershipDescription}
                     onChange={e => setPartnershipDescription(e.target.value)}
                     rows={2}
-                    className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500/40 resize-none"
+                    className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500/40 resize-none"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -650,7 +650,7 @@ export function AdminForms() {
                       type="text"
                       value={partnershipButtonText}
                       onChange={e => setPartnershipButtonText(e.target.value)}
-                      className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500/40"
+                      className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500/40"
                     />
                   </div>
                   <div>
@@ -659,7 +659,7 @@ export function AdminForms() {
                       type="text"
                       value={partnershipSuccessMessage}
                       onChange={e => setPartnershipSuccessMessage(e.target.value)}
-                      className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500/40"
+                      className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500/40"
                     />
                   </div>
                 </div>
@@ -679,7 +679,7 @@ export function AdminForms() {
                         a[idx] = e.target.value;
                         setPartnershipTypes(a);
                       }}
-                      className="flex-1 bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500/40"
+                      className="flex-1 bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500/40"
                     />
                     <button
                       onClick={() => setPartnershipTypes(partnershipTypes.filter((_, i) => i !== idx))}

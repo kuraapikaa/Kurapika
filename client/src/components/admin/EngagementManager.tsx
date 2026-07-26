@@ -288,7 +288,7 @@ function CampaignSelect({ label, value, options, onChange }: { label: string; va
   return (
     <div className="min-w-0">
       <label className="mb-2 block text-[10px] font-black uppercase tracking-widest text-slate-500">{label}</label>
-      <select value={value} onChange={(event) => onChange(event.target.value)} className="h-11 w-full rounded-lg border border-white/10 bg-black/25 px-3 text-sm font-bold text-white outline-none focus:border-[#f4d36f]/50">
+      <select value={value} onChange={(event) => onChange(event.target.value)} className="h-11 w-full rounded-lg border border-white/10 bg-black/25 px-3 text-sm font-bold text-white outline-none focus:border-[#5eead4]/50">
         <option value="">Canlı Lynon kampanyası seçin</option>
         {options.filter((option: any) => !option.isSpecial).map((option: any) => <option key={option.id} value={option.id}>{option.display}</option>)}
       </select>

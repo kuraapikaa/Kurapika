@@ -206,6 +206,25 @@ function calculateBonusAmount(account: AccountSnapshot, spec: PromoSpec): BonusC
     } else {
       calcDesc = `Eksik: minimum ${sorted[sorted.length - 1]?.min ?? 0} TRY gerekli; ${basisLabel.toLocaleLowerCase('tr-TR')} ${basis} TRY.`;
     }
+  } else if (spec.amountType === 'tieredRange' && spec.tieredRanges) {
+    const range = spec.tieredRanges.find((item) => basis >= item.min && basis <= item.max);
+    if (range) {
+      amount = range.bonus;
+      calcDesc = `${basisLabel} ${basis} TRY; ${range.min}-${range.max} TRY aralığı (${amount} TRY)`;
+    } else {
+      calcDesc = `${basisLabel} ${basis} TRY, tanımlı yatırım aralıklarından hiçbirine girmiyor.`;
+    }
+  } else if (spec.amountType === 'tieredPercentage' && spec.tieredPercentageRanges) {
+    const range = spec.tieredPercentageRanges.find((item) => basis >= item.min && basis <= item.max);
+    if (range) {
+      const raw = (basis * (range.percent ?? 0)) / 100;
+      const capped = range.maxBonus != null && raw > range.maxBonus ? range.maxBonus : raw;
+      amount = capped;
+      calcDesc = `${basisLabel} ${basis} TRY; ${range.min}-${range.max} TRY aralığı × %${range.percent}`
+        + (capped < raw ? ` = ${raw.toFixed(2)} TRY, ${range.maxBonus} TRY tavanına sınırlandı` : ` (${amount.toFixed(2)} TRY)`);
+    } else {
+      calcDesc = `${basisLabel} ${basis} TRY, tanımlı yüzdeli yatırım aralıklarından hiçbirine girmiyor.`;
+    }
   }
 
   if (amount > 0) {
@@ -214,7 +233,7 @@ function calculateBonusAmount(account: AccountSnapshot, spec: PromoSpec): BonusC
       calculatedAmount: amount,
     };
   }
-  if (spec.amountType === 'tiered') {
+  if (spec.amountType === 'tiered' || spec.amountType === 'tieredRange' || spec.amountType === 'tieredPercentage') {
     return { item: { id: 'bonus-calculation', label: 'Bonus Hakedişi: 0 TRY', ok: false, reason: calcDesc } };
   }
   return null;
@@ -405,6 +424,19 @@ export async function evaluateForAccount(
     });
   }
 
+  // 4.b İzin Verilen Sağlayıcılar
+  if (spec.allowedProviders && spec.allowedProviders.length > 0) {
+    const recentProviders = ((account as any).recentGameProviders as string[] | undefined) ?? [];
+    const normalizedAllowed = spec.allowedProviders.map((p) => p.toLocaleLowerCase('tr-TR'));
+    const ok = recentProviders.some((p) => normalizedAllowed.includes(p.toLocaleLowerCase('tr-TR')));
+    items.push({
+      id: 'allowed-providers-check',
+      label: `Geçerli Sağlayıcılar: ${spec.allowedProviders.join(', ')}`,
+      ok,
+      reason: ok ? 'UYGUN' : `Hata: Son aktivitelerde izin verilen sağlayıcılardan (${spec.allowedProviders.join(', ')}) oynanış bulunamadı.`,
+    });
+  }
+
   const overallOkInitial = items.every((i) => i.ok || i.id === 'exclusions-notice' || i.id === 'max-payout-check');
   const result: PromoChecklist = {
     promoId: promo.id,
@@ -477,6 +509,45 @@ export async function evaluateForAccount(
         label: 'Aynı Gün Tekrar Alamaz Kontrolü',
         ok,
         reason: ok ? 'UYGUN: Bugün alınmamış' : `RED: Bu bonus bugün zaten alındı`,
+      });
+    }
+
+    // 5.c.2 Telefon Numarası Onayı
+    if (spec.requiresPhoneVerified) {
+      const isPhoneVerified = Boolean((account as any).isPhoneVerified);
+      items.push({
+        id: 'requires-phone-verified',
+        label: 'Telefon Numarası Onayı Zorunlu',
+        ok: isPhoneVerified,
+        reason: isPhoneVerified ? 'UYGUN: Telefon numarası onaylı' : 'RED: Telefon numarası onaylı değil',
+      });
+    }
+
+    // 5.c.2b E-posta Onayı
+    if (spec.requiresEmailVerified) {
+      const isEmailVerified = Boolean((account as any).isEmailVerified);
+      items.push({
+        id: 'requires-email-verified',
+        label: 'E-posta Onayı Zorunlu',
+        ok: isEmailVerified,
+        reason: isEmailVerified ? 'UYGUN: E-posta adresi onaylı' : 'RED: E-posta adresi onaylı değil',
+      });
+    }
+
+    // 5.c.3 Aynı IP Kontrolü (çoklu hesap şüphesi)
+    if (spec.checkIPDuplicate) {
+      const sameIPClientsCount = Number((account as any).sameIPClientsCount ?? 0);
+      const loginIP = (account as any).loginIP as string | null | undefined;
+      const ok = sameIPClientsCount === 0;
+      items.push({
+        id: 'check-ip-duplicate',
+        label: 'Aynı IP Kontrolü',
+        ok,
+        reason: !loginIP
+          ? 'RED: Oyuncunun giriş IP bilgisi tespit edilemedi'
+          : ok
+            ? `UYGUN: ${loginIP} adresini kullanan başka hesap yok`
+            : `RED: ${loginIP} adresini kullanan ${sameIPClientsCount} başka hesap tespit edildi`,
       });
     }
 

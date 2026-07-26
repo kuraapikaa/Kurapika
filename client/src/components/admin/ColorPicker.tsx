@@ -10,7 +10,7 @@ interface ColorPickerProps {
 }
 
 const PRESETS = [
-  '#10b981', '#14b8a6', '#0ea5e9', '#6366f1', '#a855f7', 
+  '#10b981', '#14b8a6', '#0ea5e9', '#6366f1', '#3b82f6', 
   '#ec4899', '#f43f5e', '#f97316', '#f59e0b', '#27272a',
   '#ffffff', '#000000', '#3b82f6', '#ef4444', '#8b5cf6'
 ];
@@ -63,7 +63,7 @@ export function ColorPicker({ color, onChange, label }: ColorPickerProps) {
                     }}
                     className={cn(
                       "h-6 w-6 rounded-md border border-white/5 transition-transform hover:scale-110",
-                      color === p && "ring-2 ring-violet-500 ring-offset-2 ring-offset-zinc-900"
+                      color === p && "ring-2 ring-blue-500 ring-offset-2 ring-offset-zinc-900"
                     )}
                     style={{ backgroundColor: p }}
                   />

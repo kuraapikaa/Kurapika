@@ -4,12 +4,13 @@ import { User, Loader2, Trophy, Gift, AlertCircle, Ticket } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { gamesApi, bonusPanelApi } from '../../api/client';
 import { useQuery } from '@tanstack/react-query';
-import { LobbyMobileNav } from './LobbyMobileNav';
-import { lobbyExtraText, useLobbyPageContent } from '../../lib/lobbyContent';
+import { lobbyExtraText } from '../../lib/lobbyContent';
+import { useLobbyPageTheme, hexToRgba } from '../../lib/lobbyTheme';
+import { LobbyPageShell, LobbyCard, LobbySectionTitle, LobbyIdentityBar } from './LobbyPageShell';
 import { WheelSvg } from '../admin/WheelManager';
 
 export function CarkSayfasi() {
-  const { content: pageContent } = useLobbyPageContent('wheel');
+  const { content: pageContent, palette, rootStyle, backgroundStyle } = useLobbyPageTheme('wheel');
   const [username, setUsername] = useState('');
   const [playerChecked, setPlayerChecked] = useState(false);
   const [spinning, setSpinning] = useState(false);
@@ -40,8 +41,9 @@ export function CarkSayfasi() {
     rimColor: '#27272a',
     centerColor: '#27272a',
     pointerColor: '#ffffff',
-    glowColor: '#d4af37',
-    pageAccentColor: '#d4af37',
+    // Admin çark görünümü ayarlamadıysa lobi teması devreye girer.
+    glowColor: palette.primaryColor,
+    pageAccentColor: palette.accentColor,
     borderWidth: 8,
     centerSize: 52,
     labelSize: 11,
@@ -51,6 +53,7 @@ export function CarkSayfasi() {
   };
   const [loadingUser, setLoadingUser] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [spinError, setSpinError] = useState('');
 
   const handleCheck = async () => {
     if (!username.trim()) return;
@@ -77,24 +80,25 @@ export function CarkSayfasi() {
     setSpinning(true);
     setResult(null);
     setChargeStatus(null);
+    setSpinError('');
 
     try {
       const res = await gamesApi.playWheel(wheelCode);
       if (!res.ok) {
          setSpinning(false);
-         alert(res.message || lobbyExtraText(pageContent, 'playError', 'Hata oluştu.'));
+         setSpinError(res.message || lobbyExtraText(pageContent, 'playError', 'Hata oluştu.'));
          return;
       }
-      
+
       const serverResultIndex = res.sliceIndex;
       const spins = 8; // Daha fazla dönüş daha iyi hissettirir
       const sliceAngle = 360 / wheelSlices.length;
-      
+
       // Mevcut rotasyondan 0 noktasına tamamla + ekstra dönüşler + hedef dilime git
       const currentModRotation = rotation % 360;
       const toZero = 360 - currentModRotation;
       const targetOffset = (360 - (serverResultIndex * sliceAngle)) - (sliceAngle / 2);
-      
+
       const additionalRotation = toZero + (spins * 360) + targetOffset;
 
       setRotation(prev => prev + additionalRotation);
@@ -106,133 +110,209 @@ export function CarkSayfasi() {
       }, 5100);
     } catch (err) {
       setSpinning(false);
-      alert(lobbyExtraText(pageContent, 'sessionError', 'Döndürme sırasında bir hata oluştu. Oturumunuz süresi dolmuş olabilir.'));
+      setSpinError(lobbyExtraText(pageContent, 'sessionError', 'Döndürme sırasında bir hata oluştu. Oturumunuz süresi dolmuş olabilir.'));
     }
   };
 
-   return (
-    <div className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_50%_0%,#3e2606_0%,#100902_38%,#050505_74%)] pb-10 text-zinc-200 flex flex-col items-center">
-      <LobbyMobileNav active="wheel" />
+  const isLoss = result === 'Pas' || !!result?.toLowerCase().includes('boş');
 
-      <div className="mb-4 w-full max-w-xl px-3 pt-4 text-center sm:mb-6 sm:pt-7">
-         <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-[1.2rem] mx-auto bg-[linear-gradient(145deg,#f7d769,#9a6207)] border border-[#ffe69a]/70 shadow-[0_12px_38px_rgba(212,175,55,.27)] flex items-center justify-center mb-4">
-           <img 
-             src="https://i.ibb.co/0jKR3H02/lottery-1.png" 
-             alt={pageContent.title} 
-             className="w-8 h-8 sm:w-10 sm:h-10 object-contain drop-shadow-[0_5px_12px_rgba(0,0,0,.45)]" 
-           />
-         </div>
-         <p className="mb-2 text-[10px] font-black uppercase tracking-[0.18em] text-[#f4d36f]/80">{pageContent.eyebrow}</p>
-         <h1 className="text-3xl sm:text-4xl font-black tracking-[-0.05em] text-white">{pageContent.title}</h1>
-         <p className="text-sm sm:text-base text-zinc-500 font-medium mt-2">{pageContent.subtitle}</p>
-      </div>
-
+  return (
+    <LobbyPageShell
+      active="wheel"
+      palette={palette}
+      rootStyle={rootStyle}
+      backgroundStyle={backgroundStyle}
+      eyebrow={pageContent.eyebrow}
+      title={pageContent.title}
+      subtitle={pageContent.subtitle}
+      aside={
+        <span
+          className="flex h-11 w-11 items-center justify-center rounded-xl border"
+          style={{
+            borderColor: hexToRgba(palette.accentColor, 0.24),
+            backgroundColor: hexToRgba(palette.accentColor, 0.12),
+            color: palette.accentColor,
+          }}
+        >
+          <Trophy size={20} />
+        </span>
+      }
+      toolbar={
+        playerChecked ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-lg border border-white/[0.08] bg-white/[0.05] px-2.5 py-1.5 text-[10px] font-black text-white">
+              <User size={12} style={{ color: palette.accentColor }} />
+              {username}
+            </span>
+            <span
+              className="rounded-lg border px-2.5 py-1.5 text-[10px] font-black"
+              style={{
+                borderColor: hexToRgba(palette.accentColor, 0.22),
+                backgroundColor: hexToRgba(palette.accentColor, 0.1),
+                color: palette.accentColor,
+              }}
+            >
+              {spinning ? pageContent.loadingText : lobbyExtraText(pageContent, 'readyBadge', 'Çevirmeye hazır')}
+            </span>
+          </div>
+        ) : undefined
+      }
+    >
       {!playerChecked ? (
-        <div className="w-full max-w-[calc(100%-1.5rem)] sm:max-w-md bg-zinc-900/50 border border-white/5 rounded-3xl p-4 sm:p-6 backdrop-blur-xl">
-          <h2 className="mb-1 text-lg font-black text-white">{pageContent.formTitle}</h2>
-          <p className="mb-4 text-xs font-medium leading-5 text-zinc-500">{pageContent.formDescription}</p>
-          <label htmlFor="cark-username" className="flex items-center gap-2 text-xs font-black text-zinc-500 uppercase tracking-widest mb-3">
-             <User size={14} aria-hidden="true" /> {pageContent.usernameLabel}
-          </label>
-          <input
-            id="cark-username"
-            type="text"
+        <div className="mx-auto w-full max-w-xl">
+          <LobbyIdentityBar
+            palette={palette}
+            label={pageContent.usernameLabel}
             placeholder={pageContent.usernamePlaceholder}
             value={username}
-            onChange={e => setUsername(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleCheck()}
-            autoComplete="username"
-            className="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 mb-4 text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-[#d4af37]/30 font-semibold"
+            onChange={setUsername}
+            onSubmit={handleCheck}
+            submitLabel={pageContent.submitButton}
+            busy={loadingUser}
+            icon={loadingUser ? <Loader2 size={17} className="animate-spin" /> : <User size={17} />}
+            message={
+              errorMsg ? (
+                <p className="rounded-xl border border-rose-300/15 bg-rose-400/10 px-3 py-1.5 text-[11px] font-bold text-rose-200">{errorMsg}</p>
+              ) : (
+                <div>
+                  <p className="text-[11px] font-black text-zinc-400">{pageContent.formTitle}</p>
+                  <p className="mt-0.5 text-[11px] font-medium text-zinc-600">{pageContent.formDescription}</p>
+                </div>
+              )
+            }
           />
-          {errorMsg && <div className="text-rose-400 text-xs font-bold mb-3">{errorMsg}</div>}
-          <button 
-            onClick={handleCheck}
-            disabled={!username.trim() || loadingUser}
-            className="w-full py-4 bg-[#d4af37] hover:bg-[#f4d36f] text-[#100b04] font-black rounded-xl transition-all disabled:opacity-50"
-          >
-            {loadingUser ? <Loader2 className="animate-spin mx-auto" /> : pageContent.submitButton}
-          </button>
         </div>
       ) : (
-        <div className="w-full max-w-2xl px-3 flex flex-col items-center">
-           
-           {/* Panel ve lobi aynı SVG çarkını kullanır; uzun ödül adları otomatik satırlanır. */}
-           <div className="relative mb-7 flex w-full max-w-[410px] flex-col items-center isolate sm:mb-10">
-             <div className="w-[min(86vw,410px)] max-w-full">
-               <WheelSvg wheel={wheelSlices} appearance={wheelAppearance} size={420} rotation={rotation} spinning={spinning} />
-             </div>
-             <div className="-mt-3 h-12 w-32 bg-gradient-to-b from-[#8f5b0a] via-[#382205] to-[#090704] [clip-path:polygon(27%_0,73%_0,88%_100%,12%_100%)] sm:h-14 sm:w-40" />
-             <div className="-mt-1 h-3 w-44 rounded-sm border-t border-white/20 bg-gradient-to-b from-[#d4af37] via-[#7f5008] to-[#140c03] shadow-xl sm:w-52" />
-           </div>
-           <AnimatePresence mode="wait">
-             {result ? (
-               <motion.div 
-                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                 className="text-center w-full max-w-md bg-zinc-900/80 border border-white/10 rounded-3xl p-4 sm:p-6 backdrop-blur-xl"
-               >
-                  <Trophy size={40} className={cn("mx-auto mb-3", result === 'Pas' || result?.toLowerCase().includes('boş') ? 'text-zinc-500' : 'text-purple-400')} />
-                  <h2 className="text-2xl font-black text-white mb-1">{result === 'Pas' || result?.toLowerCase().includes('boş') ? pageContent.emptyTitle : pageContent.successTitle}</h2>
-                  <p className="text-purple-400 font-bold mb-4 text-lg">{result !== 'Pas' && !result?.toLowerCase().includes('boş') && result}</p>
-                  
-                  {chargeStatus && (
-                    <div className={cn(
-                      "mb-6 p-3 rounded-2xl flex items-center justify-center gap-2 text-xs font-bold border",
-                      chargeStatus.ok 
-                        ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" 
-                        : "bg-amber-500/10 text-amber-500 border-amber-500/20"
-                    )}>
-                      {chargeStatus.ok ? (
-                        <><Gift size={14} /> {pageContent.successDescription}</>
-                      ) : (
-                        <><AlertCircle size={14} /> {chargeStatus.message || lobbyExtraText(pageContent, 'bonusFailedText', 'Otomatik ekleme başarısız.')}</>
+        <div className="grid gap-2.5 lg:grid-cols-[minmax(0,1fr)_320px] md:gap-3.5">
+          {/* Panel ve lobi aynı SVG çarkını kullanır; uzun ödül adları otomatik satırlanır. */}
+          <LobbyCard className="flex items-center justify-center">
+            <div className="w-full max-w-[400px] px-1.5 py-2">
+              <WheelSvg wheel={wheelSlices} appearance={wheelAppearance} size={420} rotation={rotation} spinning={spinning} />
+            </div>
+          </LobbyCard>
+
+          <div className="flex min-w-0 flex-col gap-2.5">
+            <AnimatePresence mode="wait">
+              {result ? (
+                <motion.div
+                  key="result"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <LobbyCard>
+                    <div className="flex items-center gap-2.5">
+                      <span
+                        className={cn(
+                          'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-black/25',
+                          isLoss && 'text-zinc-500'
+                        )}
+                        style={isLoss ? undefined : { color: palette.accentColor }}
+                      >
+                        <Trophy size={17} />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <h2 className="truncate text-[13px] font-black tracking-[-0.02em] text-white">
+                          {isLoss ? pageContent.emptyTitle : pageContent.successTitle}
+                        </h2>
+                        <p className="mt-0.5 truncate text-[11px] font-bold text-zinc-500" style={isLoss ? undefined : { color: palette.accentColor }}>
+                          {isLoss ? pageContent.emptyDescription : result}
+                        </p>
+                      </div>
+                    </div>
+
+                    {chargeStatus && (
+                      <div
+                        className={cn(
+                          'mt-2.5 flex items-start gap-2 rounded-xl border px-3 py-2 text-[11px] font-bold',
+                          chargeStatus.ok
+                            ? 'border-emerald-400/20 bg-emerald-400/10 text-emerald-300'
+                            : 'border-amber-400/20 bg-amber-400/10 text-amber-300'
+                        )}
+                      >
+                        {chargeStatus.ok ? <Gift size={13} className="mt-px shrink-0" /> : <AlertCircle size={13} className="mt-px shrink-0" />}
+                        <span className="min-w-0 break-words">
+                          {chargeStatus.ok
+                            ? pageContent.successDescription
+                            : chargeStatus.message || lobbyExtraText(pageContent, 'bonusFailedText', 'Otomatik ekleme başarısız.')}
+                        </span>
+                      </div>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => { setResult(null); }}
+                      className="mt-2.5 flex h-10 w-full items-center justify-center rounded-xl border border-white/10 bg-white/[0.05] text-[11px] font-black uppercase tracking-[0.16em] text-zinc-200 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+                    >
+                      {pageContent.successButton}
+                    </button>
+                  </LobbyCard>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="controls"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <LobbyCard>
+                    <LobbySectionTitle title={lobbyExtraText(pageContent, 'controlsTitle', 'Çarkı Çevir')} />
+
+                    <label
+                      htmlFor="cark-code"
+                      className="mb-1.5 flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.16em] text-zinc-500"
+                    >
+                      <Ticket size={12} aria-hidden="true" />
+                      {lobbyExtraText(pageContent, 'codeLabel', 'Çark kodu')}
+                    </label>
+                    <div className="relative">
+                      <input
+                        id="cark-code"
+                        type="text"
+                        placeholder={lobbyExtraText(pageContent, 'codePlaceholder', 'Varsa Çark Kodunuz')}
+                        value={wheelCode}
+                        onChange={e => setWheelCode(e.target.value.toUpperCase())}
+                        className="h-10 w-full rounded-xl border border-white/[0.07] bg-black/30 px-3 pr-9 text-center text-[13px] font-black tracking-[0.14em] text-white outline-none transition placeholder:tracking-normal placeholder:text-zinc-700 focus:border-[color:var(--lobby-primary)]/60"
+                      />
+                      {wheelCode && (
+                        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" style={{ color: palette.accentColor }}>
+                          <Ticket size={14} />
+                        </span>
                       )}
                     </div>
-                  )}
-                  
-                  <button
-                    type="button"
-                    onClick={() => { setResult(null); }}
-                    className="w-full py-3 bg-white/10 hover:bg-white/15 text-white font-black rounded-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
-                  >
-                     {pageContent.successButton}
-                  </button>
-               </motion.div>
-             ) : (
-               <motion.div className="w-full max-w-sm space-y-3 sm:max-w-xs sm:space-y-4">
-                 <div className="relative">
-                    <input 
-                      type="text"
-                      placeholder={lobbyExtraText(pageContent, 'codePlaceholder', 'Varsa Çark Kodunuz')}
-                      value={wheelCode}
-                      onChange={e => setWheelCode(e.target.value.toUpperCase())}
-                      className="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-3 text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-[#d4af37]/30 font-bold text-center tracking-widest text-sm"
-                    />
-                    {wheelCode && (
-                       <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                          <Ticket size={16} className="text-purple-500" />
-                       </div>
-                    )}
-                 </div>
-                 <button
-                   type="button"
-                   onClick={spin}
-                   disabled={spinning}
-                   aria-label={spinning ? lobbyExtraText(pageContent, 'spinningAria', 'Çark dönüyor') : lobbyExtraText(pageContent, 'spinAria', 'Çarkı çevir')}
-                   className="w-full py-5 text-white font-black text-xl rounded-2xl transition-all disabled:opacity-50 disabled:grayscale hover:brightness-110 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/30"
-                   style={{
-                     background: `linear-gradient(90deg, ${wheelAppearance.pageAccentColor}, ${wheelAppearance.glowColor})`,
-                     boxShadow: `0 0 30px ${wheelAppearance.glowColor}55`
-                   }}
-                 >
-                    {spinning ? <Loader2 className="animate-spin mx-auto" aria-hidden="true" /> : pageContent.primaryButton}
-                 </button>
-               </motion.div>
-             )}
-           </AnimatePresence>
 
+                    {spinError && (
+                      <p className="mt-2 rounded-xl border border-rose-300/15 bg-rose-400/10 px-3 py-1.5 text-[11px] font-bold text-rose-200">
+                        {spinError}
+                      </p>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={spin}
+                      disabled={spinning}
+                      aria-label={spinning ? lobbyExtraText(pageContent, 'spinningAria', 'Çark dönüyor') : lobbyExtraText(pageContent, 'spinAria', 'Çarkı çevir')}
+                      className="mt-2.5 flex h-11 w-full items-center justify-center gap-2 rounded-xl text-[12px] font-black uppercase tracking-[0.16em] text-white transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+                      style={{
+                        background: `linear-gradient(90deg, ${palette.primaryColor}, ${palette.secondaryColor})`,
+                        boxShadow: `0 8px 22px ${hexToRgba(palette.primaryColor, 0.26)}`,
+                      }}
+                    >
+                      {spinning ? <Loader2 className="animate-spin" size={16} aria-hidden="true" /> : pageContent.primaryButton}
+                    </button>
+
+                    <p className="mt-2 text-[11px] font-medium leading-4 text-zinc-600">
+                      {spinning ? pageContent.loadingText : pageContent.formDescription}
+                    </p>
+                  </LobbyCard>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       )}
-    </div>
+    </LobbyPageShell>
   );
 }

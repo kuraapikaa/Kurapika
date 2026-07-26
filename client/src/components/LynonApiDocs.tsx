@@ -326,13 +326,13 @@ export function LynonApiDocs() {
   return (
     <div className="space-y-6">
       {/* Header Banner */}
-      <div className="relative overflow-hidden rounded-2xl border border-[#d4af37]/30 bg-gradient-to-r from-[#0b132b] via-[#0f172a] to-[#121c33] p-6 shadow-[0_10px_35px_rgba(0,0,0,0.4)]">
+      <div className="relative overflow-hidden rounded-2xl border border-[#3b82f6]/30 bg-gradient-to-r from-[#0b132b] via-[#0f172a] to-[#121c33] p-6 shadow-[0_10px_35px_rgba(0,0,0,0.4)]">
         <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-10 pointer-events-none">
-          <Database size={220} className="text-[#d4af37]" />
+          <Database size={220} className="text-[#3b82f6]" />
         </div>
         <div className="relative z-10 flex flex-wrap items-center justify-between gap-4">
           <div className="space-y-1">
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#d4af37]/40 bg-[#d4af37]/10 px-3 py-1 text-[11px] font-bold text-[#fbbf24]">
+            <div className="inline-flex items-center gap-2 rounded-full border border-[#3b82f6]/40 bg-[#3b82f6]/10 px-3 py-1 text-[11px] font-bold text-[#fbbf24]">
               <Sparkles size={13} /> LYNON BACKOFFICE V2 API CATALOG
             </div>
             <h1 className="text-2xl font-extrabold text-white tracking-tight">Lynon API & Endpoint Dökümantasyonu</h1>
@@ -371,7 +371,7 @@ export function LynonApiDocs() {
               onClick={() => setSelectedCategory(cat.id)}
               className={`flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-semibold transition-all ${
                 selectedCategory === cat.id
-                  ? 'bg-gradient-to-r from-[#d4af37] to-[#e5a93c] text-slate-950 font-bold shadow-[0_0_15px_rgba(212,175,55,0.3)]'
+                  ? 'bg-gradient-to-r from-[#3b82f6] to-[#e5a93c] text-slate-950 font-bold shadow-[0_0_15px_rgba(212,175,55,0.3)]'
                   : 'bg-[#0f172a] text-slate-300 hover:bg-[#162238] border border-slate-800'
               }`}
             >
@@ -394,7 +394,7 @@ export function LynonApiDocs() {
             placeholder="Endpoint veya metot ara..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-xl border border-slate-800 bg-[#0f172a] py-2 pl-9 pr-4 text-xs text-white placeholder-slate-500 focus:border-[#d4af37] focus:outline-none"
+            className="w-full rounded-xl border border-slate-800 bg-[#0f172a] py-2 pl-9 pr-4 text-xs text-white placeholder-slate-500 focus:border-[#3b82f6] focus:outline-none"
           />
         </div>
       </div>
@@ -414,7 +414,7 @@ export function LynonApiDocs() {
                 }}
                 className={`cursor-pointer rounded-xl border p-3.5 transition-all ${
                   isSelected
-                    ? 'border-[#d4af37] bg-[#131f37] shadow-[0_0_18px_rgba(212,175,55,0.15)]'
+                    ? 'border-[#3b82f6] bg-[#131f37] shadow-[0_0_18px_rgba(212,175,55,0.15)]'
                     : 'border-slate-800/80 bg-[#0e1726] hover:border-slate-700 hover:bg-[#111c30]'
                 }`}
               >
@@ -444,7 +444,7 @@ export function LynonApiDocs() {
         {/* Right Column: Endpoint Inspector & Live Runner */}
         <div className="lg:col-span-7">
           {activeEndpoint ? (
-            <Card className="border-[#d4af37]/30 bg-[#0e1726] p-6 space-y-6">
+            <Card className="border-[#3b82f6]/30 bg-[#0e1726] p-6 space-y-6">
               {/* Endpoint Header */}
               <div className="flex items-start justify-between gap-4 pb-4 border-b border-slate-800">
                 <div>
@@ -481,7 +481,7 @@ export function LynonApiDocs() {
                 <Button
                   onClick={() => handleRunTest(activeEndpoint)}
                   disabled={isTesting}
-                  className="bg-gradient-to-r from-[#d4af37] to-[#e5a93c] text-slate-950 font-bold hover:brightness-110 shadow-[0_0_15px_rgba(212,175,55,0.25)] flex items-center gap-2"
+                  className="bg-gradient-to-r from-[#3b82f6] to-[#e5a93c] text-slate-950 font-bold hover:brightness-110 shadow-[0_0_15px_rgba(212,175,55,0.25)] flex items-center gap-2"
                 >
                   {isTesting ? <RefreshCw size={14} className="animate-spin" /> : <Play size={14} />} Test Et
                 </Button>

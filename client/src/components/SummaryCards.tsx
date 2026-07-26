@@ -42,18 +42,18 @@ export function SummaryCards({ data, isLoading, error, onRetry }: SummaryCardsPr
       <Card
         className={cn(
           'premium-card flex min-h-[126px] flex-col justify-between overflow-hidden rounded-xl p-3.5',
-          'border-white/[0.07] bg-[#0d1119] hover:border-indigo-400/25',
+          'border-white/[0.07] bg-[#0d1119] hover:border-blue-400/25',
           colorClass === 'emerald' && 'border-emerald-400/15 bg-[#0c1515]',
-          colorClass === 'blue' && 'border-indigo-400/15 bg-[#0c111a]'
+          colorClass === 'blue' && 'border-blue-400/15 bg-[#0c111a]'
         )}
       >
         <div className="relative z-10 flex items-start justify-between gap-3">
           <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-500">{label}</p>
           <div className={cn(
             'flex h-8 w-8 items-center justify-center rounded-lg border',
-            colorClass === 'gold' ? 'border-indigo-400/15 bg-indigo-400/[0.08] text-indigo-300' :
+            colorClass === 'gold' ? 'border-blue-400/15 bg-blue-400/[0.08] text-blue-300' :
             colorClass === 'emerald' ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400' :
-            'border-indigo-400/15 bg-indigo-400/[0.08] text-indigo-300'
+            'border-blue-400/15 bg-blue-400/[0.08] text-blue-300'
           )}>
             {icon}
           </div>
@@ -98,13 +98,13 @@ export function SummaryCards({ data, isLoading, error, onRetry }: SummaryCardsPr
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.1 + (i * 0.05) }}
           >
-            <Card className="premium-card rounded-xl border-white/[0.07] bg-[#0d1119] p-3 group hover:border-indigo-400/20">
+            <Card className="premium-card rounded-xl border-white/[0.07] bg-[#0d1119] p-3 group hover:border-blue-400/20">
               <div className="flex items-center gap-3">
                 <div className={cn(
                   'flex h-8 w-8 items-center justify-center rounded-lg border',
                   item.color === 'emerald' ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400' :
                   item.color === 'blue' ? 'border-sky-500/30 bg-sky-500/10 text-sky-400' :
-                  'border-indigo-400/15 bg-indigo-400/[0.08] text-indigo-300'
+                  'border-blue-400/15 bg-blue-400/[0.08] text-blue-300'
                 )}>
                   {item.icon}
                 </div>

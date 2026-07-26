@@ -173,6 +173,10 @@ export const dashboardApi = {
   withdrawalRequests: (dateRange: DateRange) =>
     post<WithdrawalRequestsResponse>('/withdrawal-requests', getDefaultWithdrawalRequestBody(dateRange)),
 
+  /** Çekim talebini onayla/reddet: POST /admin/withdrawals/:transactionId/resolve */
+  resolveWithdrawal: (transactionId: number | string, status: 'rejected' | 'approved', amount: number, actualAmount?: number) =>
+    post<{ HasError: boolean; AlertMessage?: string }>(`/admin/withdrawals/${transactionId}/resolve`, { status, amount, actualAmount }),
+
   /** Oyuncu KPI Bilgileri: GET GetClientKpi?id=... */
   clientKpi: (clientId: number) =>
     get<GetClientKpiResponse>('/client-kpi', { id: String(clientId) }),
@@ -325,9 +329,10 @@ export const dashboardApi = {
     }),
 
   /** Oynanan bahis seçimleri: POST /client-bet-selections-history */
-  clientBetSelectionsHistory: (betId: number) =>
+  clientBetSelectionsHistory: (betId: number, clientId?: number) =>
     post<GetBetSelectionsResponse>('/client-bet-selections-history', {
       BetId: betId,
+      ClientId: clientId,
       Type: 1
     }),
 
@@ -820,6 +825,9 @@ export const gamesApi = {
   battlePassStatus: () => get<any>('/games/battle-pass/status'),
   claimBattlePassReward: (body: { level: number; track?: 'free' | 'premium' }) =>
     post<any>('/games/battle-pass/claim', body),
+  teamLogo: (name: string) => get<any>(`/admin/games/team-logo?name=${encodeURIComponent(name)}`),
+  telegramBonusStatus: () => get<any>('/games/telegram-bonus/status'),
+  verifyTelegramBonus: () => post<any>('/games/telegram-bonus/verify', {}),
 };
 
 export const formsApi = {

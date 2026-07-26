@@ -11,7 +11,7 @@ export function PromoCard({ promo, onClick }: PromoCardProps) {
     <button
       type="button"
       onClick={onClick}
-      className="group flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-slate-900/60 text-left transition-all hover:border-violet-500/30 hover:bg-slate-800/60 hover:shadow-lg hover:shadow-violet-500/10 focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+      className="group flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-slate-900/60 text-left transition-all hover:border-blue-500/30 hover:bg-slate-800/60 hover:shadow-lg hover:shadow-blue-500/10 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
     >
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-800/50">
         {promo.image ? (
@@ -32,7 +32,7 @@ export function PromoCard({ promo, onClick }: PromoCardProps) {
           {promo.title}
         </span>
         {promo.detailHtml && (
-          <span className="mt-1 text-[10px] font-medium uppercase tracking-wider text-violet-400/80">
+          <span className="mt-1 text-[10px] font-medium uppercase tracking-wider text-blue-400/80">
             Detay
           </span>
         )}

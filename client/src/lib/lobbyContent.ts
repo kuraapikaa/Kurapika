@@ -38,6 +38,11 @@ export type LobbyPageContent = {
   usernameLabel: string;
   usernamePlaceholder: string;
   submitButton: string;
+  /**
+   * Sayfaya özel vurgu rengi (#rrggbb). Boşsa lobinin global accent rengi kullanılır.
+   * Ortak iskeleti bozmadan her sayfaya kendi kimliğini vermek için.
+   */
+  accentColor?: string;
   extra: Record<string, string | string[]>;
 };
 
@@ -603,6 +608,9 @@ export function normalizeLobbyPageContent(pageId: LobbyPageId, page?: Partial<Lo
     usernameLabel: asString(source.usernameLabel, fallback.usernameLabel),
     usernamePlaceholder: asString(source.usernamePlaceholder, fallback.usernamePlaceholder),
     submitButton: asString(source.submitButton, fallback.submitButton),
+    accentColor: /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(String(source.accentColor ?? '').trim())
+      ? String(source.accentColor).trim()
+      : '',
     extra: normalizeExtra(fallback.extra, source.extra)
   };
 }

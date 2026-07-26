@@ -158,7 +158,7 @@ function PlayersTable({
                       </td>
                       <td className="px-6 py-5 border-b border-white/[0.02]">
                         {row.BTag ? (
-                          <span className="rounded-lg bg-purple-500/10 px-2.5 py-1 text-[10px] font-black text-purple-400 border border-purple-500/20 neon-glow-indigo uppercase tracking-widest">
+                          <span className="rounded-lg bg-blue-500/10 px-2.5 py-1 text-[10px] font-black text-blue-400 border border-blue-500/20 neon-glow-indigo uppercase tracking-widest">
                             {row.BTag}
                           </span>
                         ) : (
@@ -354,7 +354,7 @@ export function AllPlayersList({
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
           <div className="lg:col-span-6 relative group">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-2xl blur opacity-30 group-focus-within:opacity-100 transition duration-500" />
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500/20 to-blue-500/20 rounded-2xl blur opacity-30 group-focus-within:opacity-100 transition duration-500" />
             <div className="relative flex h-14 items-center gap-4 rounded-2xl bg-black/40 border border-white/[0.05] px-5 backdrop-blur-3xl">
               <Search className="text-zinc-500" size={20} />
               <input
@@ -367,7 +367,7 @@ export function AllPlayersList({
             </div>
           </div>
           <div className="lg:col-span-3 relative group">
-            <div className="absolute -inset-0.5 bg-purple-500/10 rounded-2xl blur opacity-30 group-focus-within:opacity-100 transition duration-500" />
+            <div className="absolute -inset-0.5 bg-blue-500/10 rounded-2xl blur opacity-30 group-focus-within:opacity-100 transition duration-500" />
             <div className="relative flex h-14 items-center gap-4 rounded-2xl bg-black/40 border border-white/[0.05] px-5 backdrop-blur-3xl">
               <Filter className="text-zinc-500" size={20} />
               <input

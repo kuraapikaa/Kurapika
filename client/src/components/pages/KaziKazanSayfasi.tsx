@@ -3,11 +3,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { User, Trophy, Loader2, Sparkles, RefreshCcw, Gift, AlertCircle } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { gamesApi, bonusPanelApi } from '../../api/client';
-import { LobbyMobileNav } from './LobbyMobileNav';
-import { lobbyExtraText, renderLobbyTemplate, useLobbyPageContent } from '../../lib/lobbyContent';
+import { lobbyExtraText, renderLobbyTemplate } from '../../lib/lobbyContent';
+import { useLobbyPageTheme, hexToRgba } from '../../lib/lobbyTheme';
+import { LobbyPageShell, LobbyCard, LobbySectionTitle, LobbyIdentityBar } from './LobbyPageShell';
 
 export function KaziKazanSayfasi() {
-  const { content: pageContent } = useLobbyPageContent('scratch');
+  const { content: pageContent, palette, rootStyle, backgroundStyle } = useLobbyPageTheme('scratch');
   const [username, setUsername] = useState('');
   const [playerChecked, setPlayerChecked] = useState(false);
   const [loadingUser, setLoadingUser] = useState(false);
@@ -40,17 +41,17 @@ export function KaziKazanSayfasi() {
         setPlayerChecked(false);
         return;
       }
-      
+
       const isWin = res.won;
       const reward = res.reward;
       setChargeStatus(res.chargeStatus);
-      
+
       let finalSymbols: string[] = [];
       if (isWin) {
          // Guarantee 3 matches
          const winSymbol = symbols[Math.floor(Math.random() * symbols.length)];
          finalSymbols = Array(9).fill('');
-         
+
          // Pick 3 random spots for the winning symbol
          let indices = [0,1,2,3,4,5,6,7,8];
          for(let i=0; i<3; i++) {
@@ -58,12 +59,12 @@ export function KaziKazanSayfasi() {
            const pPos = indices.splice(idx, 1)[0];
            finalSymbols[pPos] = winSymbol;
          }
-         
+
          // Fill rest randomly without making 3 matches of anything else
          for(let i=0; i<finalSymbols.length; i++){
            if(!finalSymbols[i]) finalSymbols[i] = symbols[Math.floor(Math.random() * symbols.length)];
          }
-         
+
          setResult(`Kazandınız! ${reward?.label || ''}`);
       } else {
          // Guarantee loss (no 3 matches)
@@ -118,63 +119,96 @@ export function KaziKazanSayfasi() {
     if (scratchedCount >= 9) return; // all scratched
     const newGrid = [...grid];
     if (newGrid[index].revealed) return;
-    
+
     newGrid[index].revealed = true;
     setGrid(newGrid);
-    
+
     const newCount = scratchedCount + 1;
     setScratchedCount(newCount);
   };
 
+  const finished = scratchedCount === 9 && !!result;
+  const isLoss = !!result?.includes('Maalesef');
+
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_50%_0%,#3f2504_0%,#100802_40%,#050505_72%)] pb-10 text-zinc-200 flex flex-col items-center">
-      <LobbyMobileNav active="scratch" />
-
-      <div className="w-full max-w-xl px-3 pt-6 mb-5 text-center sm:px-4 sm:pt-10 sm:mb-9">
-         <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-[1.5rem] mx-auto bg-[linear-gradient(145deg,#f7d769,#9a6207)] border border-[#ffe69a]/70 shadow-[0_12px_38px_rgba(212,175,55,.27)] flex items-center justify-center mb-4">
-           <img 
-             src="https://i.ibb.co/d4fMJ7wW/ticket-1.png" 
-             alt={pageContent.title} 
-             className="w-10 h-10 sm:w-12 sm:h-12 object-contain drop-shadow-[0_5px_12px_rgba(0,0,0,.45)]" 
-           />
-         </div>
-         <p className="mb-2 text-[10px] font-black uppercase tracking-[0.18em] text-orange-300/80">{pageContent.eyebrow}</p>
-         <h1 className="text-4xl sm:text-5xl font-black tracking-[-0.05em] text-white">{pageContent.title}</h1>
-         <p className="text-sm sm:text-base text-zinc-500 font-medium mt-2">{pageContent.subtitle}</p>
-      </div>
-
+    <LobbyPageShell
+      active="scratch"
+      palette={palette}
+      rootStyle={rootStyle}
+      backgroundStyle={backgroundStyle}
+      eyebrow={pageContent.eyebrow}
+      title={pageContent.title}
+      subtitle={pageContent.subtitle}
+      aside={
+        <span
+          className="flex h-11 w-11 items-center justify-center rounded-xl border"
+          style={{
+            borderColor: hexToRgba(palette.accentColor, 0.24),
+            backgroundColor: hexToRgba(palette.accentColor, 0.12),
+            color: palette.accentColor,
+          }}
+        >
+          <Sparkles size={20} />
+        </span>
+      }
+      toolbar={
+        playerChecked ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-lg border border-white/[0.08] bg-white/[0.05] px-2.5 py-1.5 text-[10px] font-black text-white">
+              <User size={12} style={{ color: palette.accentColor }} />
+              {username}
+            </span>
+            <span
+              className="rounded-lg border px-2.5 py-1.5 text-[10px] font-black"
+              style={{
+                borderColor: hexToRgba(palette.accentColor, 0.22),
+                backgroundColor: hexToRgba(palette.accentColor, 0.1),
+                color: palette.accentColor,
+              }}
+            >
+              {scratchedCount}/9
+            </span>
+          </div>
+        ) : undefined
+      }
+    >
       {!playerChecked ? (
-        <div className="w-full max-w-[calc(100%-1.5rem)] sm:max-w-md bg-zinc-900/50 border border-white/5 rounded-3xl p-4 sm:p-6 backdrop-blur-xl">
-          <h2 className="mb-1 text-lg font-black text-white">{pageContent.formTitle}</h2>
-          <p className="mb-4 text-xs font-medium leading-5 text-zinc-500">{pageContent.formDescription}</p>
-          <label htmlFor="kazi-username" className="flex items-center gap-2 text-xs font-black text-zinc-500 uppercase tracking-widest mb-3">
-             <User size={14} aria-hidden="true" /> {pageContent.usernameLabel}
-          </label>
-          <input
-            id="kazi-username"
-            type="text"
+        <div className="mx-auto w-full max-w-xl">
+          <LobbyIdentityBar
+            palette={palette}
+            label={pageContent.usernameLabel}
             placeholder={pageContent.usernamePlaceholder}
             value={username}
-            onChange={e => setUsername(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleCheck()}
-            autoComplete="username"
-            className="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 mb-4 text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-[#d4af37]/30 font-semibold"
+            onChange={setUsername}
+            onSubmit={handleCheck}
+            submitLabel={pageContent.submitButton}
+            busy={loadingUser}
+            icon={loadingUser ? <Loader2 size={17} className="animate-spin" /> : <User size={17} />}
+            message={
+              errorMsg ? (
+                <p className="rounded-xl border border-rose-300/15 bg-rose-400/10 px-3 py-1.5 text-[11px] font-bold text-rose-200">{errorMsg}</p>
+              ) : (
+                <div>
+                  <p className="text-[11px] font-black text-zinc-400">{pageContent.formTitle}</p>
+                  <p className="mt-0.5 text-[11px] font-medium text-zinc-600">{pageContent.formDescription}</p>
+                </div>
+              )
+            }
           />
-          {errorMsg && <div className="text-rose-400 text-xs font-bold mb-3">{errorMsg}</div>}
-          <button 
-            onClick={handleCheck}
-            disabled={!username.trim() || loadingUser}
-            className="w-full py-4 bg-[#d4af37] hover:bg-[#f4d36f] text-black font-black rounded-xl transition-all disabled:opacity-50"
-          >
-            {loadingUser ? <Loader2 className="animate-spin mx-auto" /> : pageContent.submitButton}
-          </button>
         </div>
       ) : (
-        <div className="w-full max-w-xl px-3 flex flex-col items-center">
-           
-           {/* Scratch Grid */}
-           <div role="grid" aria-label={lobbyExtraText(pageContent, 'gridLabel', 'Kazı-kazan kartı')} className="grid grid-cols-3 gap-3 w-full max-w-[520px] aspect-square mb-5 sm:mb-8 p-3 sm:p-5 bg-[linear-gradient(145deg,#1d1205,#090807)] border border-[#d4af37]/30 rounded-[2rem] shadow-[0_22px_70px_rgba(0,0,0,.55)]">
-             {grid.map((cell, i) => (
+        <div className="grid gap-2.5 lg:grid-cols-[minmax(0,1fr)_320px] md:gap-3.5">
+          <LobbyCard>
+            <LobbySectionTitle
+              title={lobbyExtraText(pageContent, 'gridLabel', 'Kazı-kazan kartı')}
+              action={`${scratchedCount}/9`}
+            />
+            <div
+              role="grid"
+              aria-label={lobbyExtraText(pageContent, 'gridLabel', 'Kazı-kazan kartı')}
+              className="mx-auto grid aspect-square w-full max-w-[420px] grid-cols-3 gap-2 sm:gap-2.5"
+            >
+              {grid.map((cell, i) => (
                 <div
                   key={cell.id}
                   role="gridcell"
@@ -185,7 +219,7 @@ export function KaziKazanSayfasi() {
                   aria-pressed={cell.revealed}
                   onClick={() => scratch(i)}
                   onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && scratch(i)}
-                  className="relative w-full h-full rounded-[1.35rem] overflow-hidden cursor-pointer bg-black/50 border border-[#d4af37]/15 shadow-[inset_0_1px_rgba(255,255,255,.1)] flex items-center justify-center text-3xl sm:text-4xl select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4af37]"
+                  className="relative flex h-full w-full cursor-pointer select-none items-center justify-center overflow-hidden rounded-xl border border-white/[0.07] bg-black/35 text-[26px] shadow-[inset_0_1px_rgba(255,255,255,.06)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--lobby-primary)] sm:text-[32px]"
                 >
                    {/* Hidden symbol */}
                    <span className={cn("transition-opacity duration-500", cell.revealed ? "opacity-100" : "opacity-0")} aria-hidden={!cell.revealed}>
@@ -193,59 +227,134 @@ export function KaziKazanSayfasi() {
                    </span>
 
                    {/* Cover layer */}
-                   <div className={cn(
-                     "absolute inset-0 bg-gradient-to-br from-[#f4d36f] to-[#9a701a] transition-opacity duration-500 flex items-center justify-center text-orange-200/50",
-                     cell.revealed ? "opacity-0 pointer-events-none" : "opacity-100"
-                   )} aria-hidden="true">
-                     <Sparkles size={24} />
+                   <div
+                     className={cn(
+                       "absolute inset-0 flex items-center justify-center text-white/45 transition-opacity duration-500",
+                       cell.revealed ? "opacity-0 pointer-events-none" : "opacity-100"
+                     )}
+                     style={{ background: `linear-gradient(135deg, ${palette.primaryColor}, ${palette.secondaryColor})` }}
+                     aria-hidden="true"
+                   >
+                     <Sparkles size={22} />
                    </div>
                 </div>
-             ))}
-           </div>
+              ))}
+            </div>
 
-           <AnimatePresence mode="wait">
-             {scratchedCount === 9 && result && (
-               <motion.div 
-                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                 className="text-center w-full bg-zinc-900/80 border border-white/10 rounded-3xl p-4 sm:p-6 backdrop-blur-xl"
-               >
-                  <Trophy size={40} className={cn("mx-auto mb-3", result.includes('Maalesef') ? 'text-zinc-500' : 'text-[#f4d36f]')} />
-                  <h2 className="text-2xl font-black text-white mb-2">{result.includes('Maalesef') ? pageContent.emptyTitle : pageContent.successTitle}</h2>
-                  <p className="text-[#f4d36f] font-bold mb-4 text-sm">{result.replace('Kazandınız! ', '')}</p>
-                  
-                  {!result.includes('Maalesef') && chargeStatus && (
-                    <div className={cn(
-                      "mb-6 p-3 rounded-2xl flex items-center justify-center gap-2 text-xs font-bold border",
-                      chargeStatus.ok 
-                        ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" 
-                        : "bg-amber-500/10 text-amber-500 border-amber-500/20"
-                    )}>
-                      {chargeStatus.ok ? (
-                        <><Gift size={14} /> {pageContent.successDescription}</>
-                      ) : (
-                        <><AlertCircle size={14} /> {chargeStatus.message || lobbyExtraText(pageContent, 'bonusFailedText', 'Ekleme başarısız.')}</>
-                      )}
+            {!finished && (
+              <p className="mt-2.5 text-center text-[11px] font-medium text-zinc-500">
+                {renderLobbyTemplate(lobbyExtraText(pageContent, 'progressTemplate', 'Bütün kareleri kazıyın ({count}/9)'), { count: scratchedCount })}
+              </p>
+            )}
+          </LobbyCard>
+
+          <div className="flex min-w-0 flex-col gap-2.5">
+            <AnimatePresence mode="wait">
+              {finished ? (
+                <motion.div
+                  key="result"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <LobbyCard>
+                    <div className="flex items-center gap-2.5">
+                      <span
+                        className={cn(
+                          'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-black/25',
+                          isLoss && 'text-zinc-500'
+                        )}
+                        style={isLoss ? undefined : { color: palette.accentColor }}
+                      >
+                        <Trophy size={17} />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <h2 className="truncate text-[13px] font-black tracking-[-0.02em] text-white">
+                          {isLoss ? pageContent.emptyTitle : pageContent.successTitle}
+                        </h2>
+                        <p
+                          className="mt-0.5 truncate text-[11px] font-bold text-zinc-500"
+                          style={isLoss ? undefined : { color: palette.accentColor }}
+                        >
+                          {isLoss ? pageContent.emptyDescription : result?.replace('Kazandınız! ', '')}
+                        </p>
+                      </div>
                     </div>
-                  )}
-                  
-                  <button
-                    type="button"
-                    onClick={initGame}
-                    className="w-full py-3 bg-orange-500/20 text-[#f4d36f] hover:bg-orange-500/30 font-black rounded-xl transition-all flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4af37]/50"
-                  >
-                     <RefreshCcw size={16} aria-hidden="true" /> {pageContent.primaryButton}
-                  </button>
-               </motion.div>
-             )}
-           </AnimatePresence>
 
-           {scratchedCount < 9 && (
-              <p className="text-zinc-500 font-medium">{renderLobbyTemplate(lobbyExtraText(pageContent, 'progressTemplate', 'Bütün kareleri kazıyın ({count}/9)'), { count: scratchedCount })}</p>
-           )}
+                    {!isLoss && chargeStatus && (
+                      <div
+                        className={cn(
+                          'mt-2.5 flex items-start gap-2 rounded-xl border px-3 py-2 text-[11px] font-bold',
+                          chargeStatus.ok
+                            ? 'border-emerald-400/20 bg-emerald-400/10 text-emerald-300'
+                            : 'border-amber-400/20 bg-amber-400/10 text-amber-300'
+                        )}
+                      >
+                        {chargeStatus.ok ? <Gift size={13} className="mt-px shrink-0" /> : <AlertCircle size={13} className="mt-px shrink-0" />}
+                        <span className="min-w-0 break-words">
+                          {chargeStatus.ok
+                            ? pageContent.successDescription
+                            : chargeStatus.message || lobbyExtraText(pageContent, 'bonusFailedText', 'Ekleme başarısız.')}
+                        </span>
+                      </div>
+                    )}
 
+                    <button
+                      type="button"
+                      onClick={initGame}
+                      className="mt-2.5 flex h-11 w-full items-center justify-center gap-2 rounded-xl text-[11px] font-black uppercase tracking-[0.16em] text-white transition active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+                      style={{
+                        background: `linear-gradient(90deg, ${palette.primaryColor}, ${palette.secondaryColor})`,
+                        boxShadow: `0 8px 22px ${hexToRgba(palette.primaryColor, 0.26)}`,
+                      }}
+                    >
+                      <RefreshCcw size={14} aria-hidden="true" /> {pageContent.primaryButton}
+                    </button>
+                  </LobbyCard>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="hint"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <LobbyCard>
+                    <LobbySectionTitle title={lobbyExtraText(pageContent, 'howToTitle', 'Nasıl oynanır?')} />
+                    <p className="text-[12px] font-medium leading-5 text-zinc-500">
+                      {grid.length === 0 ? pageContent.loadingText : pageContent.subtitle}
+                    </p>
+                    <div className="mt-2.5">
+                      <div className="mb-1.5 flex items-center justify-between text-[10px] font-black">
+                        <span className="text-[9px] font-black uppercase tracking-[0.16em] text-zinc-500">
+                          {lobbyExtraText(pageContent, 'progressLabel', 'İlerleme')}
+                        </span>
+                        <span className="tabular-nums" style={{ color: palette.accentColor }}>{scratchedCount}/9</span>
+                      </div>
+                      <div className="h-1.5 overflow-hidden rounded-full bg-black/40">
+                        <div
+                          className="h-full rounded-full transition-all"
+                          style={{
+                            width: `${(scratchedCount / 9) * 100}%`,
+                            background: `linear-gradient(90deg, ${palette.primaryColor}, ${palette.accentColor})`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                    {errorMsg && (
+                      <p className="mt-2.5 rounded-xl border border-rose-300/15 bg-rose-400/10 px-3 py-1.5 text-[11px] font-bold text-rose-200">
+                        {errorMsg}
+                      </p>
+                    )}
+                  </LobbyCard>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       )}
-    </div>
+    </LobbyPageShell>
   );
 }

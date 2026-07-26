@@ -49,12 +49,12 @@ function BonusTable({ rows, emptyMessage, status }: { rows: BonusListItem[]; emp
                       <div className="flex flex-col">
                         <span className="text-[10px] font-black text-zinc-600 tracking-wider">#{row.Id}</span>
                         <span className="text-[10px] font-bold text-emerald-500/80 uppercase tracking-tighter">EXT: #{row.ExternalId}</span>
-                        <span className="text-[10px] font-bold text-purple-400/60 uppercase tracking-tighter truncate max-w-[120px]">{row.Partner?.Name ?? 'Global'}</span>
+                        <span className="text-[10px] font-bold text-blue-400/60 uppercase tracking-tighter truncate max-w-[120px]">{row.Partner?.Name ?? 'Global'}</span>
                       </div>
                     </td>
                     <td className="px-6 py-5 border-b border-white/[0.02]">
                       <div className="flex flex-col gap-0.5">
-                        <span className="font-black text-white uppercase tracking-tight antialiased group-hover:text-purple-300 transition-colors">{row.Name}</span>
+                        <span className="font-black text-white uppercase tracking-tight antialiased group-hover:text-blue-300 transition-colors">{row.Name}</span>
                         {row.Description && (
                           <span className="text-[10px] font-medium text-zinc-500 line-clamp-1 max-w-[240px]" title={row.Description}>
                             {row.Description}
@@ -87,7 +87,7 @@ function BonusTable({ rows, emptyMessage, status }: { rows: BonusListItem[]; emp
                       <div className="text-[10px]">
                         {row.FreeSpinDefinition ? (
                           <div className="flex items-center gap-3">
-                            <span className="rounded-lg bg-purple-500/10 border border-purple-500/20 px-2 py-1 text-purple-400 font-black uppercase tracking-widest neon-glow-indigo">FreeSpin</span>
+                            <span className="rounded-lg bg-blue-500/10 border border-blue-500/20 px-2 py-1 text-blue-400 font-black uppercase tracking-widest neon-glow-indigo">FreeSpin</span>
                             <span className="font-black text-zinc-300 tabular-nums">{row.FreeSpinDefinition.FreeSpinsMinCount} &mdash; {row.FreeSpinDefinition.FreeSpinsMaxCount}</span>
                           </div>
                         ) : row.DepositDefinition ? (
@@ -140,15 +140,15 @@ export function BonusList({ data, isLoading, error }: BonusListProps) {
       <header className="flex flex-wrap items-center justify-between gap-6 px-1">
         <div className="flex items-center gap-4">
           <div className="relative group">
-            <div className="absolute -inset-1 rounded-2xl bg-purple-500/20 blur opacity-75 animate-pulse" />
-            <div className="relative rounded-2xl bg-black border border-purple-500/20 p-3.5 text-purple-400 shadow-2xl">
+            <div className="absolute -inset-1 rounded-2xl bg-blue-500/20 blur opacity-75 animate-pulse" />
+            <div className="relative rounded-2xl bg-black border border-blue-500/20 p-3.5 text-blue-400 shadow-2xl">
               <Gift size={24} />
             </div>
           </div>
           <div>
             <h2 className="text-2xl font-black text-white tracking-tighter uppercase antialiased">Promosyon Merkezi</h2>
             <div className="flex items-center gap-2 mt-0.5">
-              <div className="h-1.5 w-1.5 rounded-full bg-purple-500 animate-pulse" />
+              <div className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
               <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em]">Toplam {activeList.length} Aktif Kampanya & Kod</p>
             </div>
           </div>
@@ -163,7 +163,7 @@ export function BonusList({ data, isLoading, error }: BonusListProps) {
 
       {isLoading && (
         <Card className="flex h-64 flex-col items-center justify-center gap-4">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-violet-500 border-t-transparent" />
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" />
           <p className="text-sm font-semibold text-slate-500">Promosyon verileri yükleniyor…</p>
         </Card>
       )}

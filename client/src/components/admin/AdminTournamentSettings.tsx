@@ -48,7 +48,7 @@ export function AdminTournamentSettings() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <RefreshCw className="animate-spin text-purple-500" size={32} />
+        <RefreshCw className="animate-spin text-blue-500" size={32} />
       </div>
     );
   }
@@ -83,7 +83,7 @@ export function AdminTournamentSettings() {
                 type="text" 
                 value={settings.gunluk.prize}
                 onChange={(e) => updatePrize('gunluk', e.target.value)}
-                className="w-full h-12 bg-black/40 border border-white/5 rounded-xl px-4 text-white font-bold focus:border-purple-500/40 outline-none transition-all"
+                className="w-full h-12 bg-black/40 border border-white/5 rounded-xl px-4 text-white font-bold focus:border-blue-500/40 outline-none transition-all"
                 placeholder="Örn: 50.000"
               />
             </div>
@@ -101,7 +101,7 @@ export function AdminTournamentSettings() {
                 type="text" 
                 value={settings.haftalik.prize}
                 onChange={(e) => updatePrize('haftalik', e.target.value)}
-                className="w-full h-12 bg-black/40 border border-white/5 rounded-xl px-4 text-white font-bold focus:border-purple-500/40 outline-none transition-all"
+                className="w-full h-12 bg-black/40 border border-white/5 rounded-xl px-4 text-white font-bold focus:border-blue-500/40 outline-none transition-all"
                 placeholder="Örn: 250.000"
               />
             </div>
@@ -111,7 +111,7 @@ export function AdminTournamentSettings() {
           <div className="p-6 rounded-[2rem] bg-zinc-900/40 border border-white/5 space-y-4">
             <h3 className="text-lg font-black text-white flex items-center justify-between">
               Aylık Turnuva
-              <div className="px-3 py-1 rounded-full bg-purple-500/10 text-purple-500 text-[10px] uppercase font-black">30 Gün</div>
+              <div className="px-3 py-1 rounded-full bg-blue-500/10 text-blue-500 text-[10px] uppercase font-black">30 Gün</div>
             </h3>
             <div>
               <label className="block text-[10px] font-black text-zinc-500 uppercase mb-2">Ödül Havuzu (₺)</label>
@@ -119,7 +119,7 @@ export function AdminTournamentSettings() {
                 type="text" 
                 value={settings.aylik.prize}
                 onChange={(e) => updatePrize('aylik', e.target.value)}
-                className="w-full h-12 bg-black/40 border border-white/5 rounded-xl px-4 text-white font-bold focus:border-purple-500/40 outline-none transition-all"
+                className="w-full h-12 bg-black/40 border border-white/5 rounded-xl px-4 text-white font-bold focus:border-blue-500/40 outline-none transition-all"
                 placeholder="Örn: 500.000"
               />
             </div>
@@ -128,7 +128,7 @@ export function AdminTournamentSettings() {
 
         <button 
           disabled={saving}
-          className="w-full md:w-auto px-12 py-4 bg-purple-600 hover:bg-purple-500 text-white font-black rounded-2xl flex items-center justify-center gap-3 transition-all disabled:opacity-50"
+          className="w-full md:w-auto px-12 py-4 bg-blue-600 hover:bg-blue-500 text-white font-black rounded-2xl flex items-center justify-center gap-3 transition-all disabled:opacity-50"
         >
           {saving ? <RefreshCw className="animate-spin" size={20} /> : <Save size={20} />}
           DEĞİŞİKLİKLERİ KAYDET

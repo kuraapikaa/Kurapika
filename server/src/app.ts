@@ -36,6 +36,9 @@ export async function buildApp() {
   const app = Fastify({
     logger: true,
     trustProxy: true, // Proxy arkasında (Railway, Cloudflare vb.) session cookie'lerinin doğru çalışması için
+    // Varsayılan 1MB limiti, admin panelindeki base64 gömülü görsel yüklemelerini (ör. Ayın Oyuncusu fotoğrafı)
+    // kırpıyordu; bu ayarları taşıyan /admin/games/config isteği için yeterli boşluk bırakıyoruz.
+    bodyLimit: 15 * 1024 * 1024,
   });
 
   // ─── Güvenlik Pluginleri ──────────────────────────────────────────────────

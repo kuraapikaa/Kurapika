@@ -12,13 +12,15 @@ import {
   ChevronRight,
   X,
   Crown,
+  Send,
 } from 'lucide-react';
-import { bonusPanelApi, dashboardApi, adminApi } from '../../api/client';
-import { useQuery } from '@tanstack/react-query';
+import { bonusPanelApi, dashboardApi, adminApi, gamesApi } from '../../api/client';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { cn } from '../../lib/utils';
 import { BonusPlaceholder } from '../ui/BonusPlaceholder';
-import { LobbyMobileNav } from './LobbyMobileNav';
-import { lobbyExtraLines, lobbyExtraText, renderLobbyTemplate, useLobbyPageContent } from '../../lib/lobbyContent';
+import { LobbyPageShell, LobbyCard } from './LobbyPageShell';
+import { useLobbyPageTheme, hexToRgba } from '../../lib/lobbyTheme';
+import { lobbyExtraLines, lobbyExtraText, renderLobbyTemplate } from '../../lib/lobbyContent';
 import { friendlyBonusEligibilityMessage } from '../../lib/bonusEligibilityMessages';
 
 interface RichBonus {
@@ -45,8 +47,80 @@ function getBonusTags(rules: Record<string, any>): string[] {
   return tags;
 }
 
+function TelegramBonusCard({ username }: { username: string }) {
+  const queryClient = useQueryClient();
+  const { data: status, isLoading } = useQuery({
+    queryKey: ['telegram-bonus-status', username],
+    queryFn: () => gamesApi.telegramBonusStatus(),
+    enabled: Boolean(username),
+    staleTime: 15 * 1000,
+  });
+
+  const verifyMutation = useMutation({
+    mutationFn: () => gamesApi.verifyTelegramBonus(),
+    onSuccess: (res) => {
+      if (res?.ok) {
+        queryClient.invalidateQueries({ queryKey: ['telegram-bonus-status', username] });
+      }
+    },
+  });
+
+  if (!username || isLoading) return null;
+  const data = status?.data;
+  if (!data?.enabled) return null;
+
+  return (
+    <div className="flex flex-col gap-2.5 rounded-2xl border border-white/[0.08] bg-white/[0.04] p-3 sm:flex-row sm:items-center sm:justify-between md:p-3.5">
+      <div className="flex items-center gap-2.5">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[color:var(--lobby-primary)]/15 text-[color:var(--lobby-accent)]">
+          <Send size={17} />
+        </div>
+        <div className="min-w-0">
+          <h3 className="text-[13px] font-black text-white">Telegram Bonusu</h3>
+          <p className="text-[11px] font-medium leading-4 text-slate-400">
+            {data.claimed
+              ? 'Bonusunuzu aldınız, teşekkürler!'
+              : data.isLinked
+                ? `${data.channelUsername || 'Kanala'} katılıp doğrulayın, bonusunuz anında tanımlansın.`
+                : 'Telegram hesabınızı bağlayın, ardından kanala katılıp doğrulayın.'}
+          </p>
+        </div>
+      </div>
+      <div className="flex shrink-0 items-center gap-2">
+        {data.claimed ? (
+          <span className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500/15 px-2.5 py-1.5 text-[10px] font-black uppercase tracking-[0.1em] text-emerald-300">
+            <CheckCircle2 size={13} /> Alındı
+          </span>
+        ) : !data.isLinked ? (
+          <a
+            href={data.linkUrl || '#'}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-[color:var(--lobby-primary)] px-3.5 text-[10px] font-black uppercase tracking-[0.1em] text-white transition hover:opacity-90"
+          >
+            <Send size={13} /> Hesabı Bağla
+          </a>
+        ) : (
+          <button
+            type="button"
+            onClick={() => verifyMutation.mutate()}
+            disabled={verifyMutation.isPending}
+            className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-[color:var(--lobby-primary)] px-3.5 text-[10px] font-black uppercase tracking-[0.1em] text-white transition hover:opacity-90 disabled:opacity-60"
+          >
+            {verifyMutation.isPending ? <Loader2 size={13} className="animate-spin" /> : <ShieldCheck size={13} />}
+            Doğrula ve Bonusu Al
+          </button>
+        )}
+      </div>
+      {verifyMutation.data && !verifyMutation.data.ok && (
+        <p className="basis-full text-[11px] font-bold text-amber-400">{verifyMutation.data.message}</p>
+      )}
+    </div>
+  );
+}
+
 export function BonusTalepSayfasi() {
-  const { content: pageContent } = useLobbyPageContent('bonus');
+  const { content: pageContent, palette, rootStyle, backgroundStyle } = useLobbyPageTheme('bonus');
   const categories = useMemo(() => lobbyExtraLines(pageContent, 'categories', ['Tümü', 'Yatırım Bonusları', 'Kayıp Bonusları', 'Hediye Bonuslar', 'Spor']), [pageContent]);
   const allCategory = categories[0] || 'Tümü';
   const depositCategory = categories[1] || 'Yatırım Bonusları';
@@ -246,187 +320,181 @@ export function BonusTalepSayfasi() {
   };
 
   // Helper functions for styling
-  const getColorPrefix = (_bonus: RichBonus) => 'gold';
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,_rgba(37,99,235,0.18),_transparent_28%),linear-gradient(135deg,_#030712_0%,_#07111f_40%,_#09192d_100%)] pb-6 text-slate-200 font-sans flex flex-col">
-      <LobbyMobileNav active="bonus" />
-
-      <div className="w-full max-w-7xl mx-auto px-3 py-4 sm:px-4 md:p-8 flex-1 flex flex-col relative z-10 space-y-5 md:space-y-6">
-        <header className="overflow-hidden rounded-[1.75rem] border border-cyan-400/20 bg-slate-950/70 p-4 shadow-[0_0_0_1px_rgba(255,255,255,0.02),0_28px_80px_rgba(2,12,32,0.55)] backdrop-blur-xl sm:p-6">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(34,211,238,0.16),_transparent_30%)]" />
-          <div className="relative z-10">
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.25em] text-cyan-300">
-              <Crown size={14} /> {pageContent.eyebrow}
-            </div>
-            <h1 className="text-2xl font-black tracking-[-0.04em] text-white sm:text-4xl">{pageContent.title}</h1>
-            <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-slate-400 sm:text-base">{pageContent.subtitle}</p>
-          </div>
-        </header>
-
-        {/* Category Pills */}
-        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap mb-1">
-          {categories.map(cat => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={cn(
-                "min-h-[44px] px-3 py-2 rounded-xl text-[10px] sm:text-xs font-black transition-all border uppercase tracking-[0.08em] leading-tight",
-                selectedCategory === cat
-                  ? "bg-cyan-500/15 text-cyan-300 border-cyan-400/30 shadow-[0_0_20px_rgba(34,211,238,0.15)]"
-                  : "bg-white/5 text-slate-400 border-white/5 hover:bg-white/10"
-              )}
-            >
-              {cat}
-            </button>
-          ))}
+    <LobbyPageShell
+      active="bonus"
+      palette={palette}
+      rootStyle={rootStyle}
+      backgroundStyle={backgroundStyle}
+      eyebrow={pageContent.eyebrow}
+      title={pageContent.title}
+      subtitle={pageContent.subtitle}
+      wide
+      aside={
+        <span
+          className="flex h-11 w-11 items-center justify-center rounded-xl border"
+          style={{
+            borderColor: hexToRgba(palette.accentColor, 0.24),
+            backgroundColor: hexToRgba(palette.accentColor, 0.12),
+            color: palette.accentColor,
+          }}
+        >
+          <Crown size={20} />
+        </span>
+      }
+      toolbar={
+        <div className="flex flex-wrap gap-1.5">
+          {categories.map(cat => {
+            const isActive = selectedCategory === cat;
+            return (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => setSelectedCategory(cat)}
+                className={cn(
+                  'h-8 rounded-lg border px-3 text-[10px] font-black uppercase leading-none tracking-[0.06em] transition',
+                  isActive ? 'text-white' : 'border-white/[0.07] bg-white/[0.04] text-zinc-400 hover:bg-white/[0.08] hover:text-white'
+                )}
+                style={isActive ? {
+                  borderColor: hexToRgba(palette.accentColor, 0.35),
+                  backgroundColor: hexToRgba(palette.accentColor, 0.14),
+                  color: palette.accentColor,
+                } : undefined}
+              >
+                {cat}
+              </button>
+            );
+          })}
         </div>
+      }
+    >
+      <TelegramBonusCard username={debouncedUsername} />
 
-        {/* Loading State */}
-        {promosLoading && (
-          <div className="flex flex-col items-center justify-center gap-3 py-20 text-sm font-bold text-zinc-500">
-             <Loader2 className="animate-spin text-cyan-400" size={40} />
-             {pageContent.loadingText}
-          </div>
-        )}
+      {promosLoading && (
+        <LobbyCard className="flex min-h-[180px] flex-col items-center justify-center gap-2">
+          <Loader2 className="animate-spin" size={24} style={{ color: palette.accentColor }} />
+          <span className="text-[11px] font-bold text-zinc-500">{pageContent.loadingText}</span>
+        </LobbyCard>
+      )}
 
-        {/* Bonus Grid */}
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 md:gap-5">
-            {filteredBonuses.map(bonus => {
-              const prefix = getColorPrefix(bonus);
-              const isClosed = bonus.backofficeId == null;
+      {!promosLoading && filteredBonuses.length === 0 && (
+        <LobbyCard className="py-12 text-center">
+          <Gift className="mx-auto mb-2 opacity-20" size={32} />
+          <p className="text-sm font-black text-zinc-300">{pageContent.emptyTitle}</p>
+          {pageContent.emptyDescription && (
+            <p className="mt-1 text-[12px] font-medium text-zinc-500">{pageContent.emptyDescription}</p>
+          )}
+        </LobbyCard>
+      )}
 
-              const colorMap: Record<string, string> = {
-                gold: "text-[#f4d36f] border-[#d4af37]/35 bg-[#d4af37]/10 hover:border-[#edc65f]/55 hover:bg-[#d4af37]/20",
-              };
-              const bgGradientMap: Record<string, string> = {
-                gold: "from-[#d4af37]/25 to-transparent",
-              };
-              const btnColor = colorMap[prefix];
-              const gradColor = bgGradientMap[prefix];
+      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {filteredBonuses.map(bonus => {
+          const isClosed = bonus.backofficeId == null;
 
-              // Try to extract a big number for the visual (like %25 or 250₺)
-              const bigNumMatch = bonus.promoTitle.match(/(%\d+|\d+%|\d+₺|\d+ TL)/i);
-              const bigNum = bigNumMatch ? bigNumMatch[1] : (bonus.tags.find((t: string) => t.includes('%')) || '');
+          // Başlıktaki öne çıkan sayı (ör. %25 / 250₺) kart görselinde vurgulanır.
+          const bigNumMatch = bonus.promoTitle.match(/(%\d+|\d+%|\d+₺|\d+ TL)/i);
+          const bigNum = bigNumMatch ? bigNumMatch[1] : (bonus.tags.find((t: string) => t.includes('%')) || '');
 
-              const primaryTag = bonus.tags[0] || lobbyExtraText(pageContent, 'genericTag', 'Genel Bonus');
-              const cardDescription = renderLobbyTemplate(
-                lobbyExtraText(pageContent, 'cardDescriptionTemplate', '{bonus}! Şansınızı ayrıcalıklarla deneyin, kazanma şansınızı katlayın. Eğlenceye hemen katılın.'),
-                { bonus: bonus.promoTitle }
-              );
+          const primaryTag = bonus.tags[0] || lobbyExtraText(pageContent, 'genericTag', 'Genel Bonus');
+          const cardDescription = renderLobbyTemplate(
+            lobbyExtraText(pageContent, 'cardDescriptionTemplate', '{bonus}! Şansınızı ayrıcalıklarla deneyin, kazanma şansınızı katlayın. Eğlenceye hemen katılın.'),
+            { bonus: bonus.promoTitle }
+          );
 
-              return (
-                <div
-                  key={bonus.promoTitle}
-                  className="rounded-[1.55rem] sm:rounded-3xl border border-white/10 bg-slate-950/70 overflow-hidden flex flex-col group transition-all duration-300 hover:shadow-[0_20px_50px_rgba(2,12,32,0.45)] hover:border-cyan-400/20"
-                >
-                  {/* Top Image Box */}
-                  <div className="relative h-[168px] sm:h-[210px] md:h-[220px] w-full bg-[#151e2f] overflow-hidden">
-                     {/* Ambient background glow inside image box */}
-                     <div className={cn("absolute inset-0 bg-gradient-to-br opacity-50", gradColor)} />
-
-                     {/* Glow element removed as per request */}
-
-
-                     {/* The Image (if exists, else fallback shape) */}
-                     <div className="absolute right-0 bottom-0 top-0 w-3/5 overflow-hidden flex items-end justify-end pointer-events-none">
-                        {bonus.image ? (
-                          <img
-                            src={bonus.image}
-                            alt="promosyon"
-                            className="h-full object-cover object-right group-hover:scale-105 transition-transform duration-700 pointer-events-none"
-                            onError={(e) => {
-                              (e.target as any).style.display = 'none';
-                              const next = (e.target as any).nextElementSibling;
-                              if (next) next.style.display = 'flex';
-                            }}
-                          />
-                        ) : null}
-
-                        {/* Placeholder (hidden if img works, shown otherwise) */}
-                        <div
-                          className={cn(
-                            "absolute inset-0 flex items-center justify-end p-0 pr-4 pointer-events-none",
-                            bonus.image ? "hidden" : "flex"
-                          )}
-                          id={`placeholder-${bonus.promoTitle}`}
-                        >
-                           <BonusPlaceholder
-                              size={160}
-                              tone="amber"
-                              className="bg-transparent border-none shadow-none"
-                           />
-                        </div>
-                     </div>
-
-                     <div className="absolute top-4 left-4 sm:top-5 sm:left-5 z-10 flex flex-col gap-2">
-                        {/* Tag */}
-                        <div className="inline-flex">
-                           <div className={cn("px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-white/20 backdrop-blur-sm", btnColor)}>
-                              {primaryTag}
-                           </div>
-                        </div>
-                     </div>
-
-                     <div className="absolute bottom-4 left-4 sm:bottom-5 sm:left-5 z-10 flex flex-col pt-4">
-                        {bigNum && (
-                           <span className={cn(
-                              "text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter drop-shadow-md",
-                              'text-cyan-300'
-                           )}>
-                              {bigNum}
-                           </span>
-                        )}
-                        <span className="text-base sm:text-lg md:text-xl font-black text-white leading-tight uppercase drop-shadow-md max-w-[190px]">
-                           {bonus.promoTitle.replace(bigNum, '').trim().split(' ').slice(0, 3).join('\n')}
-                        </span>
-                     </div>
-                  </div>
-
-                  {/* Bottom Text & Actions */}
-                  <div className="p-4 sm:p-5 md:p-6 flex flex-col flex-1">
-                     <h3 className="font-bold text-sm sm:text-[15px] text-white leading-snug line-clamp-2 min-h-[40px] mb-2">
-                        {bonus.promoTitle}
-                     </h3>
-                     <p className="text-xs text-zinc-500 font-medium line-clamp-2 flex-1 mb-6">
-                        {cardDescription}
-                     </p>
-
-                     <div className="flex flex-col gap-2 mt-auto min-[390px]:flex-row">
-                        <button
-                           type="button"
-                           onClick={() => handleOpenDetails(bonus)}
-                           aria-label={`${bonus.promoTitle} ${lobbyExtraText(pageContent, 'detailTitleSuffix', 'detaylarını görüntüle')}`}
-                           className="flex-1 min-h-[46px] rounded-xl border border-white/10 bg-white/5 text-slate-400 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 hover:bg-white/10 hover:text-white transition-colors"
-                        >
-                           {pageContent.secondaryButton}
-                        </button>
-                        <button
-                           type="button"
-                           onClick={() => handleOpenModal(bonus)}
-                           disabled={isClosed}
-                           aria-label={isClosed ? `${bonus.promoTitle} ${lobbyExtraText(pageContent, 'closedAriaSuffix', 'şu an kapalı')}` : `${bonus.promoTitle} ${lobbyExtraText(pageContent, 'requestAriaSuffix', 'talep et')}`}
-                           className={cn(
-                              "flex-1 min-h-[46px] rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors",
-                              isClosed ? "opacity-50 grayscale cursor-not-allowed bg-slate-800 border-slate-700 text-slate-500" : "bg-cyan-500/15 text-cyan-300 border border-cyan-400/25 hover:bg-cyan-500/25"
-                           )}
-                        >
-                           {isClosed ? lobbyExtraText(pageContent, 'closedButton', 'KAPALI') : pageContent.primaryButton} {!isClosed && <ChevronRight size={14} />}
-                        </button>
-                     </div>
+          return (
+            <article
+              key={bonus.promoTitle}
+              className="group flex flex-col overflow-hidden rounded-2xl border border-white/[0.075] bg-white/[0.032] shadow-[0_10px_32px_rgba(0,0,0,.2)] backdrop-blur-2xl transition hover:border-white/15"
+            >
+              <div
+                className="relative h-[108px] w-full overflow-hidden"
+                style={{ background: `linear-gradient(135deg, ${hexToRgba(palette.primaryColor, 0.22)}, ${hexToRgba(palette.backgroundColor, 0.9)})` }}
+              >
+                <div className="pointer-events-none absolute bottom-0 right-0 top-0 flex w-1/2 items-end justify-end overflow-hidden">
+                  {bonus.image ? (
+                    <img
+                      src={bonus.image}
+                      alt=""
+                      className="h-full object-cover object-right transition-transform duration-500 group-hover:scale-105"
+                      onError={(e) => {
+                        (e.target as any).style.display = 'none';
+                        const next = (e.target as any).nextElementSibling;
+                        if (next) next.style.display = 'flex';
+                      }}
+                    />
+                  ) : null}
+                  <div
+                    className={cn('absolute inset-0 items-center justify-end pr-2', bonus.image ? 'hidden' : 'flex')}
+                  >
+                    <BonusPlaceholder size={92} tone="amber" className="border-none bg-transparent shadow-none" />
                   </div>
                 </div>
-              );
-            })}
 
-          {filteredBonuses.length === 0 && !promosLoading && (
-            <div className="col-span-1 md:col-span-2 lg:col-span-3 text-center py-20 text-zinc-500">
-              <Gift className="mx-auto mb-4 opacity-20" size={48} />
-              <p className="font-bold text-lg text-zinc-400">{pageContent.emptyTitle}</p>
-              {pageContent.emptyDescription && <p className="mt-2 text-sm font-medium">{pageContent.emptyDescription}</p>}
-            </div>
-          )}
-        </div>
+                <span
+                  className="absolute left-2.5 top-2.5 z-10 rounded border px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.08em] backdrop-blur-sm"
+                  style={{
+                    borderColor: hexToRgba(palette.accentColor, 0.3),
+                    backgroundColor: hexToRgba(palette.accentColor, 0.14),
+                    color: palette.accentColor,
+                  }}
+                >
+                  {primaryTag}
+                </span>
+
+                <div className="absolute bottom-2.5 left-2.5 z-10">
+                  {bigNum && (
+                    <span
+                      className="block text-2xl font-black leading-none tracking-tighter drop-shadow"
+                      style={{ color: palette.accentColor }}
+                    >
+                      {bigNum}
+                    </span>
+                  )}
+                  <span className="mt-0.5 line-clamp-2 block max-w-[130px] text-[11px] font-black uppercase leading-tight text-white drop-shadow">
+                    {bonus.promoTitle.replace(bigNum, '').trim()}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex flex-1 flex-col p-3">
+                <h3 className="line-clamp-2 text-[12px] font-black leading-tight text-white">{bonus.promoTitle}</h3>
+                <p className="mt-1 line-clamp-2 flex-1 text-[11px] font-medium leading-4 text-zinc-500">{cardDescription}</p>
+
+                <div className="mt-3 flex gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => handleOpenDetails(bonus)}
+                    aria-label={`${bonus.promoTitle} ${lobbyExtraText(pageContent, 'detailTitleSuffix', 'detaylarını görüntüle')}`}
+                    className="h-9 flex-1 rounded-xl border border-white/[0.08] bg-white/[0.04] text-[10px] font-black uppercase tracking-[0.08em] text-zinc-400 transition hover:bg-white/[0.09] hover:text-white"
+                  >
+                    {pageContent.secondaryButton}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleOpenModal(bonus)}
+                    disabled={isClosed}
+                    aria-label={isClosed
+                      ? `${bonus.promoTitle} ${lobbyExtraText(pageContent, 'closedAriaSuffix', 'şu an kapalı')}`
+                      : `${bonus.promoTitle} ${lobbyExtraText(pageContent, 'requestAriaSuffix', 'talep et')}`}
+                    className={cn(
+                      'flex h-9 flex-1 items-center justify-center gap-1 rounded-xl text-[10px] font-black uppercase tracking-[0.08em] transition',
+                      isClosed && 'cursor-not-allowed bg-white/[0.04] text-zinc-600'
+                    )}
+                    style={isClosed ? undefined : {
+                      background: `linear-gradient(90deg, ${palette.primaryColor}, ${palette.secondaryColor})`,
+                      color: '#fff',
+                      boxShadow: `0 6px 18px ${hexToRgba(palette.primaryColor, 0.24)}`,
+                    }}
+                  >
+                    {isClosed ? lobbyExtraText(pageContent, 'closedButton', 'Kapalı') : pageContent.primaryButton}
+                    {!isClosed && <ChevronRight size={12} />}
+                  </button>
+                </div>
+              </div>
+            </article>
+          );
+        })}
       </div>
 
       {/* Bonus Request Modal */}
@@ -448,33 +516,33 @@ export function BonusTalepSayfasi() {
                initial={{ opacity: 0, scale: 0.9, y: 20 }}
                animate={{ opacity: 1, scale: 1, y: 0 }}
                exit={{ opacity: 0, scale: 0.95, y: -20 }}
-               className="bg-[#0f1523] border border-white/10 rounded-t-[2rem] sm:rounded-[2rem] w-full max-w-md relative z-10 shadow-2xl overflow-hidden max-h-[92dvh] overflow-y-auto"
+               className="relative z-10 max-h-[92dvh] w-full max-w-md overflow-hidden overflow-y-auto rounded-t-2xl border border-white/10 bg-[#0d1119] shadow-2xl sm:rounded-2xl"
             >
                {submitSuccess ? (
-                  <div className="p-6 sm:p-8 text-center">
-                     <div className="w-20 h-20 rounded-full bg-emerald-500/10 border-2 border-emerald-500/20 flex items-center justify-center mx-auto mb-6">
-                        <CheckCircle2 size={40} className="text-emerald-400" />
+                  <div className="p-5 text-center">
+                     <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl border border-emerald-400/20 bg-emerald-400/10">
+                        <CheckCircle2 size={22} className="text-emerald-400" />
                      </div>
-                     <h2 className="text-2xl font-black text-white mb-3">{pageContent.successTitle}</h2>
-                     <p className="text-emerald-400 font-bold mb-8">{submitSuccess}</p>
+                     <h2 className="mb-1.5 text-base font-black text-white">{pageContent.successTitle}</h2>
+                     <p className="mb-4 text-[12px] font-bold text-emerald-300">{submitSuccess}</p>
 
                      <button
                         onClick={closeModal}
-                        className="w-full py-4 bg-white/5 hover:bg-white/10 text-white font-black rounded-xl transition-colors"
+                        className="h-10 w-full rounded-xl border border-white/10 bg-white/[0.05] text-[11px] font-black uppercase tracking-[0.12em] text-white transition hover:bg-white/10"
                      >
                         {pageContent.successButton}
                      </button>
                   </div>
                ) : (
                   <>
-                     <div className="sticky top-0 z-10 p-4 sm:p-6 border-b border-white/5 flex items-center justify-between gap-3 bg-[#0f1523]/95 backdrop-blur-xl">
-                        <h3 className="min-w-0 truncate text-base sm:text-lg font-black text-white" id="bonus-modal-title">{renderLobbyTemplate(pageContent.formTitle, { bonus: selectedBonus.promoTitle })}</h3>
+                     <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-white/5 bg-[#0d1119]/95 p-3.5 backdrop-blur-xl">
+                        <h3 className="min-w-0 truncate text-[13px] font-black text-white" id="bonus-modal-title">{renderLobbyTemplate(pageContent.formTitle, { bonus: selectedBonus.promoTitle })}</h3>
                         <button type="button" onClick={closeModal} aria-label={lobbyExtraText(pageContent, 'modalCloseLabel', 'Modalı kapat')} className="text-zinc-500 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 rounded-lg p-1">
                            <X size={20} aria-hidden="true" />
                         </button>
                      </div>
 
-                     <div className="p-4 sm:p-6 space-y-5 sm:space-y-6">
+                     <div className="space-y-3.5 p-3.5">
                         {pageContent.formDescription && (
                            <p className="text-sm font-medium leading-6 text-zinc-500">{pageContent.formDescription}</p>
                         )}
@@ -490,14 +558,14 @@ export function BonusTalepSayfasi() {
                               value={username}
                               onChange={e => setUsername(e.target.value)}
                               autoComplete="username"
-                              className="w-full bg-[#0a0f18] border border-white/5 rounded-xl px-4 py-4 text-white font-bold placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-[#d4af37]/30 focus:border-[#d4af37]/30 transition-all"
+                              className="h-11 w-full rounded-xl border border-white/[0.07] bg-black/30 px-3 text-[13px] font-bold text-white outline-none transition placeholder:text-zinc-700 focus:border-[color:var(--lobby-primary)]/60"
                            />
                         </div>
 
                         {/* Status Area */}
                         {debouncedUsername ? (
                            playerLoading ? (
-                              <div className="flex items-center justify-center gap-3 text-[#f4d36f] font-bold py-6 bg-[#d4af37]/5 rounded-xl border border-[#d4af37]/15">
+                              <div className="flex items-center justify-center gap-2 rounded-xl border border-white/[0.07] bg-white/[0.04] py-4 text-[12px] font-bold text-[color:var(--lobby-accent)]">
                                  <Loader2 className="animate-spin" size={18} /> {lobbyExtraText(pageContent, 'checkingText', 'Hesap kontrol ediliyor...')}
                               </div>
                            ) : playerData?.error ? (
@@ -564,7 +632,8 @@ export function BonusTalepSayfasi() {
                                  <button
                                     onClick={handleSubmit}
                                     disabled={submitting || (playerData.specificBonusCheck && !playerData.specificBonusCheck.overallOk)}
-                                    className="w-full flex items-center justify-center gap-2 bg-[#d4af37] hover:bg-[#edc65f] text-black py-4 rounded-xl font-black transition-all disabled:opacity-50 disabled:grayscale"
+                                    className="flex h-11 w-full items-center justify-center gap-2 rounded-xl text-[11px] font-black uppercase tracking-[0.14em] text-white transition active:scale-[0.99] disabled:opacity-50 disabled:grayscale"
+                                    style={{ background: `linear-gradient(90deg, ${palette.primaryColor}, ${palette.secondaryColor})`, boxShadow: `0 8px 22px ${hexToRgba(palette.primaryColor, 0.26)}` }}
                                  >
                                     {submitting ? <Loader2 className="animate-spin" size={18} /> : <Sparkles size={18} />}
                                     {submitting
@@ -607,9 +676,9 @@ export function BonusTalepSayfasi() {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -20 }}
-              className="bg-[#0f1523] border border-white/10 rounded-t-[2rem] sm:rounded-[2rem] w-full max-w-2xl relative z-10 shadow-2xl overflow-hidden max-h-[92dvh] overflow-y-auto"
+              className="relative z-10 max-h-[92dvh] w-full max-w-2xl overflow-hidden overflow-y-auto rounded-t-2xl border border-white/10 bg-[#0d1119] shadow-2xl sm:rounded-2xl"
             >
-              <div className="sticky top-0 z-10 p-4 sm:p-6 border-b border-white/5 flex items-center justify-between gap-3 bg-[#0f1523]/95 backdrop-blur-xl">
+              <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-white/5 bg-[#0d1119]/95 p-3.5 backdrop-blur-xl">
                 <div className="min-w-0 space-y-1">
                   <h3 className="truncate text-base sm:text-lg font-black text-white" id="bonus-detail-title">{selectedBonus.promoTitle}</h3>
                   <p className="text-[10px] text-zinc-500 font-bold">
@@ -686,7 +755,6 @@ export function BonusTalepSayfasi() {
           </div>
         )}
       </AnimatePresence>
-
-    </div>
+    </LobbyPageShell>
   );
 }

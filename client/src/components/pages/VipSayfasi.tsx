@@ -34,7 +34,7 @@ const TIER_STYLES = [
   { gradient: 'from-zinc-800/70 via-zinc-900/60 to-black', border: 'border-zinc-500/30', glow: '', badge_bg: 'bg-zinc-700/50 border-zinc-500/40', text: 'text-zinc-200', accent: 'text-zinc-400' },
   { gradient: 'from-amber-900/50 via-yellow-950/60 to-black', border: 'border-amber-400/50', glow: 'shadow-[0_0_60px_rgba(251,191,36,0.18),0_0_120px_rgba(251,191,36,0.08)] ring-1 ring-amber-400/20', badge_bg: 'bg-amber-500/20 border-amber-400/40', text: 'text-amber-100', accent: 'text-amber-400' },
   { gradient: 'from-sky-900/50 via-blue-950/60 to-black', border: 'border-sky-400/40', glow: '', badge_bg: 'bg-sky-500/20 border-sky-400/35', text: 'text-sky-100', accent: 'text-sky-400' },
-  { gradient: 'from-purple-900/50 via-violet-950/60 to-black', border: 'border-purple-400/40', glow: '', badge_bg: 'bg-purple-500/20 border-purple-400/35', text: 'text-purple-100', accent: 'text-purple-400' },
+  { gradient: 'from-blue-900/50 via-blue-950/60 to-black', border: 'border-blue-400/40', glow: '', badge_bg: 'bg-blue-500/20 border-blue-400/35', text: 'text-blue-100', accent: 'text-blue-400' },
 ];
 
 function useCountUp(target: number | null, duration = 1800) {
@@ -331,12 +331,12 @@ export function VipSayfasi() {
       {/* ── Application Form ── */}
       {formActive && (
         <section id="vip-form" className="relative z-10 mx-auto max-w-[640px] px-4 pb-28 md:px-10">
-          <div className="relative overflow-hidden rounded-[2.5rem] border border-purple-400/20 bg-gradient-to-b from-purple-950/60 to-black/80 p-7 shadow-[0_0_80px_rgba(168,85,247,0.14)] backdrop-blur-xl md:p-10">
+          <div className="relative overflow-hidden rounded-[2.5rem] border border-blue-400/20 bg-gradient-to-b from-blue-950/60 to-black/80 p-7 shadow-[0_0_80px_rgba(168,85,247,0.14)] backdrop-blur-xl md:p-10">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_50%_0%,rgba(168,85,247,0.15),transparent)]" />
 
             <div className="relative">
               <div className="mb-6 text-center">
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-purple-400/30 bg-purple-500/20 text-3xl shadow-[0_0_30px_rgba(168,85,247,0.25)]">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-blue-400/30 bg-blue-500/20 text-3xl shadow-[0_0_30px_rgba(168,85,247,0.25)]">
                   👑
                 </div>
                 <h2 className="text-2xl font-black tracking-[-0.04em] text-white md:text-3xl">{formTitle}</h2>
@@ -379,14 +379,14 @@ export function VipSayfasi() {
                         value={(form as any)[key]}
                         onChange={(e) => setForm({ ...form, [key]: e.target.value })}
                         required={required}
-                        className="w-full rounded-2xl border border-white/[0.08] bg-white/[0.05] px-4 py-3.5 text-sm font-bold text-white outline-none placeholder:text-zinc-700 transition focus:border-purple-400/50 focus:bg-white/[0.07]"
+                        className="w-full rounded-2xl border border-white/[0.08] bg-white/[0.05] px-4 py-3.5 text-sm font-bold text-white outline-none placeholder:text-zinc-700 transition focus:border-blue-400/50 focus:bg-white/[0.07]"
                       />
                     ))}
                   </div>
                   <button
                     type="submit"
                     disabled={submitting || !form.username.trim()}
-                    className="relative mt-1 flex h-14 w-full items-center justify-center gap-2.5 overflow-hidden rounded-2xl bg-gradient-to-r from-purple-600 to-fuchsia-600 text-sm font-black uppercase tracking-[0.16em] text-white shadow-[0_14px_40px_rgba(168,85,247,0.3)] transition hover:from-purple-500 hover:to-fuchsia-500 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+                    className="relative mt-1 flex h-14 w-full items-center justify-center gap-2.5 overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 to-teal-600 text-sm font-black uppercase tracking-[0.16em] text-white shadow-[0_14px_40px_rgba(168,85,247,0.3)] transition hover:from-blue-500 hover:to-teal-500 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {submitting
                       ? <Loader2 size={18} className="animate-spin" />

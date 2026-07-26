@@ -51,19 +51,19 @@ export function IntelligenceCenter() {
         <div className="space-y-8 p-6 animate-in fade-in duration-700">
             {/* Header Panel */}
             <header className="relative p-10 overflow-hidden rounded-[2.5rem] bg-zinc-900 border border-white/5 shadow-2xl">
-                <div className="absolute top-0 right-0 -mr-24 -mt-24 h-80 w-80 rounded-full bg-purple-500/10 blur-[120px]" />
-                <div className="absolute bottom-0 left-0 -ml-24 -mb-24 h-80 w-80 rounded-full bg-fuchsia-500/10 blur-[120px]" />
+                <div className="absolute top-0 right-0 -mr-24 -mt-24 h-80 w-80 rounded-full bg-blue-500/10 blur-[120px]" />
+                <div className="absolute bottom-0 left-0 -ml-24 -mb-24 h-80 w-80 rounded-full bg-teal-500/10 blur-[120px]" />
 
                 <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
                     <div className="flex items-center gap-6">
-                        <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br from-purple-500 via-fuchsia-500 to-emerald-500 p-[1px] shadow-2xl shadow-purple-500/20">
+                        <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br from-blue-500 via-teal-500 to-emerald-500 p-[1px] shadow-2xl shadow-blue-500/20">
                             <div className="flex h-full w-full items-center justify-center rounded-[23px] bg-zinc-900">
                                 <BrainCircuit className="text-white" size={32} />
                             </div>
                         </div>
                         <div>
                             <h1 className="text-3xl font-black tracking-tight text-white md:text-4xl">
-                                İstihbarat <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-fuchsia-400 to-emerald-400">Merkezi</span>
+                                İstihbarat <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-teal-400 to-emerald-400">Merkezi</span>
                             </h1>
                             <div className="mt-2 flex items-center gap-3">
                                 <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -77,7 +77,7 @@ export function IntelligenceCenter() {
                             onClick={() => setActiveView('clusters')}
                             className={cn(
                                 "flex items-center gap-2 px-6 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all",
-                                activeView === 'clusters' ? "bg-purple-500 text-white shadow-xl shadow-purple-500/20" : "text-zinc-500 hover:text-white"
+                                activeView === 'clusters' ? "bg-blue-500 text-white shadow-xl shadow-blue-500/20" : "text-zinc-500 hover:text-white"
                             )}
                         >
                             <Network size={16} /> ÇAKIŞMA RADARI
@@ -86,7 +86,7 @@ export function IntelligenceCenter() {
                             onClick={() => setActiveView('scorecards')}
                             className={cn(
                                 "flex items-center gap-2 px-6 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all",
-                                activeView === 'scorecards' ? "bg-fuchsia-500 text-white shadow-xl shadow-fuchsia-500/20" : "text-zinc-500 hover:text-white"
+                                activeView === 'scorecards' ? "bg-teal-500 text-white shadow-xl shadow-teal-500/20" : "text-zinc-500 hover:text-white"
                             )}
                         >
                             <BadgeCheck size={16} /> OYUNCU KARNESİ
@@ -101,7 +101,7 @@ export function IntelligenceCenter() {
                 {/* Statistics Bar */}
                 <div className="lg:col-span-12 grid grid-cols-1 md:grid-cols-4 gap-6">
                     <Card className="p-6 bg-zinc-900/50 border-white/5 flex items-center gap-5">
-                        <div className="h-14 w-14 rounded-2xl bg-purple-500/10 flex items-center justify-center text-purple-400"><Users size={24} /></div>
+                        <div className="h-14 w-14 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-400"><Users size={24} /></div>
                         <div>
                             <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Tespit Edilen Kümeler</p>
                             <p className="text-2xl font-black text-white">{clustersData?.clusters?.length || 0}</p>
@@ -142,7 +142,7 @@ export function IntelligenceCenter() {
                             >
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
-                                        <div className="h-10 w-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400"><Fingerprint size={20} /></div>
+                                        <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400"><Fingerprint size={20} /></div>
                                         <h2 className="text-xl font-black text-white uppercase tracking-tight">Çoklu Hesap Radarı</h2>
                                     </div>
                                     <p className="text-xs font-bold text-zinc-500 italic">Son 3 saniye içinde güncellendi.</p>
@@ -150,7 +150,7 @@ export function IntelligenceCenter() {
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                     {clustersData?.clusters?.map((cluster: any) => (
-                                        <Card key={cluster.id} className="relative overflow-hidden p-8 border-white/5 bg-zinc-900/80 backdrop-blur-md hover:border-purple-500/30 transition-all group">
+                                        <Card key={cluster.id} className="relative overflow-hidden p-8 border-white/5 bg-zinc-900/80 backdrop-blur-md hover:border-blue-500/30 transition-all group">
                                             <div className="absolute top-0 right-0 p-3">
                                                 <div className={cn(
                                                     "px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider",
@@ -175,7 +175,7 @@ export function IntelligenceCenter() {
                                                             </div>
                                                             <button
                                                                 onClick={() => { setSelectedId(client.id); setSelectedLogin(null); setActiveView('scorecards'); }}
-                                                                className="h-8 w-8 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400 opacity-0 group-hover/client:opacity-100 transition-all"
+                                                                className="h-8 w-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 opacity-0 group-hover/client:opacity-100 transition-all"
                                                             >
                                                                 <ChevronRight size={14} />
                                                             </button>
@@ -185,7 +185,7 @@ export function IntelligenceCenter() {
 
                                                 <div className="pt-4 border-t border-white/5 flex items-center justify-between">
                                                     <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Tespit: Sistem</span>
-                                                    <button className="text-[10px] font-black text-purple-400 hover:text-purple-300 uppercase tracking-widest">İNCELEME BAŞLAT</button>
+                                                    <button className="text-[10px] font-black text-blue-400 hover:text-blue-300 uppercase tracking-widest">İNCELEME BAŞLAT</button>
                                                 </div>
                                             </div>
                                         </Card>
@@ -213,8 +213,8 @@ export function IntelligenceCenter() {
                                     <div className="flex flex-col md:flex-row items-end gap-6">
                                         <div className="flex-1 space-y-3">
                                             <div className="flex items-center gap-2 px-1">
-                                                <Search size={14} className="text-fuchsia-400" />
-                                                <span className="text-[10px] font-black text-fuchsia-400 uppercase tracking-widest">Oyuncu Analiz Motoru</span>
+                                                <Search size={14} className="text-teal-400" />
+                                                <span className="text-[10px] font-black text-teal-400 uppercase tracking-widest">Oyuncu Analiz Motoru</span>
                                             </div>
                                             <input
                                                 type="text"
@@ -222,7 +222,7 @@ export function IntelligenceCenter() {
                                                 value={searchQuery}
                                                 onChange={(e) => setSearchQuery(e.target.value)}
                                                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                                                className="w-full h-16 bg-black/40 border-2 border-white/5 rounded-2xl px-6 text-xl font-black text-white focus:outline-none focus:border-fuchsia-500/50 transition-all"
+                                                className="w-full h-16 bg-black/40 border-2 border-white/5 rounded-2xl px-6 text-xl font-black text-white focus:outline-none focus:border-teal-500/50 transition-all"
                                             />
                                         </div>
                                         <button
@@ -243,14 +243,14 @@ export function IntelligenceCenter() {
                                         </motion.div>
                                     ) : scorecardLoading ? (
                                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center py-20">
-                                            <div className="h-12 w-12 rounded-full border-4 border-fuchsia-500/20 border-t-fuchsia-500 animate-spin mb-4" />
+                                            <div className="h-12 w-12 rounded-full border-4 border-teal-500/20 border-t-teal-500 animate-spin mb-4" />
                                             <p className="text-xs font-black text-zinc-500 uppercase tracking-[0.3em] animate-pulse">Pattern Analizi Yapılıyor</p>
                                         </motion.div>
                                     ) : scorecardData?.scorecard ? (
                                         <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                                             {/* Score Card Section */}
                                             <Card className="lg:col-span-1 p-10 bg-zinc-950 border-white/5 relative overflow-hidden flex flex-col items-center text-center">
-                                                <div className="absolute top-0 left-0 h-1 w-full bg-gradient-to-r from-transparent via-fuchsia-500/50 to-transparent" />
+                                                <div className="absolute top-0 left-0 h-1 w-full bg-gradient-to-r from-transparent via-teal-500/50 to-transparent" />
 
                                                 <div className="relative mb-10">
                                                     <svg className="h-48 w-48 -rotate-90">
@@ -290,7 +290,7 @@ export function IntelligenceCenter() {
                                                 <div className="mt-8 pt-8 border-t border-white/5 w-full text-left">
                                                     <div className="flex items-center justify-between mb-4">
                                                         <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Profil Sınıfı</span>
-                                                        <span className="px-3 py-1 rounded-lg bg-purple-500/20 text-purple-400 text-[10px] font-black uppercase">{scorecardData.scorecard.category}</span>
+                                                        <span className="px-3 py-1 rounded-lg bg-blue-500/20 text-blue-400 text-[10px] font-black uppercase">{scorecardData.scorecard.category}</span>
                                                     </div>
                                                 </div>
                                             </Card>
@@ -300,7 +300,7 @@ export function IntelligenceCenter() {
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                                     <Card className="p-8 bg-zinc-900 border-white/5 space-y-6">
                                                         <div className="flex items-center gap-3">
-                                                            <TrendingUp size={20} className="text-purple-400" />
+                                                            <TrendingUp size={20} className="text-blue-400" />
                                                             <h4 className="text-sm font-black text-white uppercase tracking-widest">Performans Metrikleri</h4>
                                                         </div>
                                                         <div className="space-y-5">
@@ -331,12 +331,12 @@ export function IntelligenceCenter() {
                                                     </Card>
                                                 </div>
 
-                                                <Card className="p-10 bg-gradient-to-br from-purple-500/10 to-transparent border-white/5">
+                                                <Card className="p-10 bg-gradient-to-br from-blue-500/10 to-transparent border-white/5">
                                                     <div className="flex items-center gap-4 mb-8">
-                                                        <Activity size={24} className="text-purple-400" />
+                                                        <Activity size={24} className="text-blue-400" />
                                                         <h4 className="text-lg font-black text-white tracking-tight">Sistem Karar Tavsiyesi</h4>
                                                     </div>
-                                                    <div className="p-6 rounded-2xl bg-black/40 border border-purple-500/30">
+                                                    <div className="p-6 rounded-2xl bg-black/40 border border-blue-500/30">
                                                         <p className="text-sm font-bold text-zinc-300 leading-relaxed">
                                                             {scorecardData.scorecard.trustScore > 80
                                                                 ? "Bu oyuncu patternleri tamamen normal ve güvenli sınırlar içerisinde. Manuel onay beklemeden VIP hızında işlem yapılabilir."
@@ -377,7 +377,7 @@ function MetricRow({ label, value, progress, color }: any) {
                     initial={{ width: 0 }}
                     animate={{ width: `${Math.min(100, Math.max(0, progress * 100))}%` }}
                     transition={{ duration: 1.5, ease: "easeOut" }}
-                    className={cn("h-full rounded-full", color || "bg-purple-500")}
+                    className={cn("h-full rounded-full", color || "bg-blue-500")}
                 />
             </div>
         </div>

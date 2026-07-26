@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Crown, ListChecks, Loader2, Palette, Save, Target, Ticket, Trophy } from 'lucide-react';
+import { Crown, ListChecks, Loader2, Palette, Save, Send, Target, Ticket, Trophy, LayoutGrid } from 'lucide-react';
 import { toast } from 'sonner';
 import { gamesApi, dashboardApi } from '../../api/client';
 import { cn } from '../../lib/utils';
@@ -11,8 +11,9 @@ import { PredictionLeagueManager } from './PredictionLeagueManager';
 import { MillionaireShowcaseManager } from './MillionaireShowcaseManager';
 import { EngagementManager } from './EngagementManager';
 import { LobbyDesignManager } from './LobbyDesignManager';
+import { TelegramBonusManager } from './TelegramBonusManager';
 
-type MainTab = 'wheel' | 'scratch' | 'prediction' | 'millionaires' | 'lobby' | 'dailyTasks';
+type MainTab = 'wheel' | 'scratch' | 'prediction' | 'millionaires' | 'lobby' | 'dailyTasks' | 'telegram';
 
 interface AdminGamesProps {
   initialTab?: MainTab;
@@ -29,7 +30,8 @@ const MODULE_TABS: Array<{
   { id: 'prediction', label: 'Skor Tahmin', description: 'Maç listesi ve tahmin ligi', icon: Trophy },
   { id: 'millionaires', label: 'Kazanç Vitrini', description: 'Büyük kazançlar ve video alanı', icon: Crown },
   { id: 'lobby', label: 'Lobi Tasarımı', description: 'Renk, arkaplan ve banner', icon: Palette },
-  { id: 'dailyTasks', label: 'Günlük Görevler', description: 'API metrikli görevler', icon: ListChecks },];
+  { id: 'dailyTasks', label: 'Günlük Görevler', description: 'API metrikli görevler', icon: ListChecks },
+  { id: 'telegram', label: 'Telegram Bonusu', description: 'Kanal üyeliği doğrulama', icon: Send },];
 
 export function AdminGames({ initialTab }: AdminGamesProps = {}) {
   const location = useLocation();
@@ -141,6 +143,16 @@ export function AdminGames({ initialTab }: AdminGamesProps = {}) {
     <div className="mx-auto w-full max-w-[1500px] space-y-5 p-4 pb-28 md:p-6">
       <div className="rounded-xl border border-white/10 bg-[#080d13]/95 p-3 shadow-[0_18px_60px_rgba(0,0,0,0.24)]">
         <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+          {singleTabMode && (
+            <Link
+              to="/admin/oyun-ayarlari"
+              className="inline-flex items-center gap-2 rounded-lg border border-white/[0.07] bg-white/[0.025] px-3 py-2 text-[11px] font-bold text-zinc-400 transition hover:border-white/15 hover:text-zinc-200"
+              title="Bu ayarlar, diğer tüm oyun modülleriyle birlikte 'Oyun Ayarları' altında tek bir yapılandırmada saklanır."
+            >
+              <LayoutGrid size={14} />
+              Tüm oyun modüllerini gör (Oyun Ayarları)
+            </Link>
+          )}
           {!singleTabMode && (
             <div className="grid flex-1 grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-7">
               {MODULE_TABS.map(tab => {
@@ -157,13 +169,13 @@ export function AdminGames({ initialTab }: AdminGamesProps = {}) {
                     className={cn(
                       'flex min-h-[74px] items-center gap-3 rounded-lg border px-4 text-left transition',
                       active
-                        ? 'border-[#f4d36f]/35 bg-[#f4d36f]/[0.08] text-white'
+                        ? 'border-[#5eead4]/35 bg-[#5eead4]/[0.08] text-white'
                         : 'border-white/[0.07] bg-white/[0.025] text-zinc-500 hover:border-white/15 hover:bg-white/[0.045] hover:text-zinc-200'
                     )}
                   >
                     <span className={cn(
                       'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg',
-                      active ? 'bg-[#f4d36f] text-black' : 'bg-black/35 text-zinc-500'
+                      active ? 'bg-[#5eead4] text-black' : 'bg-black/35 text-zinc-500'
                     )}>
                       <Icon size={18} />
                     </span>
@@ -181,7 +193,7 @@ export function AdminGames({ initialTab }: AdminGamesProps = {}) {
             type="button"
             onClick={() => saveMutation.mutate(config)}
             disabled={saveMutation.isPending}
-            className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-lg bg-[#d4af37] px-5 text-xs font-black uppercase tracking-widest text-zinc-950 transition hover:bg-[#f4d36f] disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-lg bg-[#3b82f6] px-5 text-xs font-black uppercase tracking-widest text-zinc-950 transition hover:bg-[#5eead4] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {saveMutation.isPending ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
             Değişiklikleri Kaydet
@@ -226,6 +238,12 @@ export function AdminGames({ initialTab }: AdminGamesProps = {}) {
         <LobbyDesignManager
           config={config.lobby}
           onUpdate={(lobby) => setConfig({ ...config, lobby })}
+        />
+      ) : mainTab === 'telegram' ? (
+        <TelegramBonusManager
+          config={config.telegramBonus}
+          bonusOptions={bonusOptions}
+          onUpdate={(telegramBonus) => setConfig({ ...config, telegramBonus })}
         />
       ) : (
         <EngagementManager

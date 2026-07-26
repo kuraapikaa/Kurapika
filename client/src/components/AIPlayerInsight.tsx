@@ -68,11 +68,11 @@ export function AIPlayerInsight({ data, ipData }: AIPlayerInsightProps) {
         hasNoBonus && { label: 'No Bonus User', tone: 'border-zinc-500/30 bg-zinc-500/10 text-zinc-300' },
         hasNoBonus && Number(data.DepositAmount ?? 0) > 0 && { label: 'No Gift User', tone: 'border-amber-400/30 bg-amber-400/10 text-amber-200' },
         (isMultiAccount || isWinner) && { label: 'Risk Review', tone: 'border-orange-400/30 bg-orange-400/10 text-orange-200' },
-        Number(data.DepositAmount ?? 0) >= 100000 && { label: 'VIP', tone: 'border-[#d4af37]/40 bg-[#d4af37]/10 text-[#f4d36f]' },
-        Number(data.DepositAmount ?? 0) >= 25000 && Number(data.DepositAmount ?? 0) < 100000 && { label: 'Before VIP', tone: 'border-[#d4af37]/25 bg-[#d4af37]/5 text-[#e8c660]' },
+        Number(data.DepositAmount ?? 0) >= 100000 && { label: 'VIP', tone: 'border-[#3b82f6]/40 bg-[#3b82f6]/10 text-[#5eead4]' },
+        Number(data.DepositAmount ?? 0) >= 25000 && Number(data.DepositAmount ?? 0) < 100000 && { label: 'Before VIP', tone: 'border-[#3b82f6]/25 bg-[#3b82f6]/5 text-[#e8c660]' },
         Number(data.DepositAmount ?? 0) >= 100000 && (isMultiAccount || isWinner) && { label: 'High Value - High Risk', tone: 'border-rose-400/40 bg-rose-500/15 text-rose-200' },
-        casinoVolume >= 25000 && casinoVolume > sportVolume * 2 && isWinner && { label: 'Risky Roulette', tone: 'border-fuchsia-400/30 bg-fuchsia-400/10 text-fuchsia-200' },
-        sportVolume >= 25000 && isWinner && { label: 'Surebet', tone: 'border-violet-400/30 bg-violet-400/10 text-violet-200' },
+        casinoVolume >= 25000 && casinoVolume > sportVolume * 2 && isWinner && { label: 'Risky Roulette', tone: 'border-teal-400/30 bg-teal-400/10 text-teal-200' },
+        sportVolume >= 25000 && isWinner && { label: 'Surebet', tone: 'border-blue-400/30 bg-blue-400/10 text-blue-200' },
         riskLevel !== 'DÜŞÜK' && { label: 'High Risk', tone: 'border-rose-400/30 bg-rose-500/10 text-rose-200' },
         isWinner && { label: 'Negative', tone: 'border-rose-400/25 bg-rose-500/10 text-rose-200' },
         (isMultiAccount || Number(data.WithdrawalAmount ?? 0) > Number(data.DepositAmount ?? 0) * 0.9) && { label: 'Review', tone: 'border-orange-400/25 bg-orange-400/10 text-orange-200' },
@@ -81,18 +81,18 @@ export function AIPlayerInsight({ data, ipData }: AIPlayerInsightProps) {
         <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="rounded-[2rem] border border-purple-500/30 bg-purple-950/20 p-6 md:p-8 backdrop-blur-md mb-8 relative overflow-hidden group"
+            className="rounded-[2rem] border border-blue-500/30 bg-blue-950/20 p-6 md:p-8 backdrop-blur-md mb-8 relative overflow-hidden group"
         >
-            <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-purple-500/20 transition-colors" />
+            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-blue-500/20 transition-colors" />
 
             <div className="flex flex-col md:flex-row gap-6 items-start relative z-10">
-                <div className="flex-shrink-0 bg-purple-500/20 p-4 rounded-2xl border border-purple-500/30">
-                    <BrainCircuit size={32} className="text-purple-400" />
+                <div className="flex-shrink-0 bg-blue-500/20 p-4 rounded-2xl border border-blue-500/30">
+                    <BrainCircuit size={32} className="text-blue-400" />
                 </div>
 
                 <div className="flex-1 space-y-3">
                     <div className="flex items-center gap-3 flex-wrap">
-                        <h3 className="text-lg font-black text-purple-300 tracking-wide uppercase">Bugs Software AI Analiz Karnesi</h3>
+                        <h3 className="text-lg font-black text-blue-300 tracking-wide uppercase">Bugs Software AI Analiz Karnesi</h3>
                         <span className={`px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full border ${riskColor}`}>
                             Risk Seviyesi: {riskLevel}
                         </span>
@@ -110,7 +110,7 @@ export function AIPlayerInsight({ data, ipData }: AIPlayerInsightProps) {
                             ))}
                         </div>
                     )}
-                    <p className="text-sm md:text-base text-purple-100/80 leading-relaxed font-medium">
+                    <p className="text-sm md:text-base text-blue-100/80 leading-relaxed font-medium">
                         {totalVolume > 0 ? (
                             <>
                                 Bu oyuncu sistemde ağırlıklı olarak <span className="font-bold text-white border-b border-white/20 pb-0.5">{preferredCategory}</span> kategorisinde işlem yapıyor.

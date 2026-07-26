@@ -161,12 +161,12 @@ export function AutoWithdrawPanel() {
   return (
     <div className="animate-in space-y-6">
       {/* Hero header */}
-      <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-slate-900/90 via-slate-900/70 to-violet-950/30 p-6 shadow-xl shadow-violet-500/5">
-        <div className="absolute right-0 top-0 h-64 w-96 rounded-full bg-violet-500/10 blur-3xl" />
-        <div className="absolute bottom-0 left-0 h-32 w-64 rounded-full bg-purple-500/5 blur-2xl" />
+      <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-slate-900/90 via-slate-900/70 to-blue-950/30 p-6 shadow-xl shadow-blue-500/5">
+        <div className="absolute right-0 top-0 h-64 w-96 rounded-full bg-blue-500/10 blur-3xl" />
+        <div className="absolute bottom-0 left-0 h-32 w-64 rounded-full bg-blue-500/5 blur-2xl" />
         <div className="relative flex flex-wrap items-center justify-between gap-6">
           <div className="flex min-w-0 flex-1 items-center gap-4">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-lg shadow-violet-500/25 ring-2 ring-white/10">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25 ring-2 ring-white/10">
               <Zap size={28} />
             </div>
             <div className="min-w-0">
@@ -179,7 +179,7 @@ export function AutoWithdrawPanel() {
                   {dateLabel}
                 </span>
                 {lastRun && (
-                  <span className="rounded-full bg-violet-500/15 px-3 py-1 text-[10px] font-bold text-violet-300 ring-1 ring-violet-500/20">
+                  <span className="rounded-full bg-blue-500/15 px-3 py-1 text-[10px] font-bold text-blue-300 ring-1 ring-blue-500/20">
                     Son çalışma: {new Date(lastRun).toLocaleString('tr-TR', { dateStyle: 'short', timeStyle: 'short' })}
                   </span>
                 )}
@@ -190,7 +190,7 @@ export function AutoWithdrawPanel() {
             type="button"
             onClick={handleRefresh}
             disabled={withdrawalRequestsQuery.isLoading}
-            className="group relative flex items-center gap-2 overflow-hidden rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 px-5 py-2.5 text-sm font-black text-white shadow-lg shadow-violet-500/25 transition-all duration-300 hover:from-violet-500 hover:to-purple-500 hover:shadow-violet-500/40 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
+            className="group relative flex items-center gap-2 overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-blue-600 px-5 py-2.5 text-sm font-black text-white shadow-lg shadow-blue-500/25 transition-all duration-300 hover:from-blue-500 hover:to-blue-500 hover:shadow-blue-500/40 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
           >
             <RefreshCw size={18} className={withdrawalRequestsQuery.isFetching ? 'animate-spin' : ''} />
             Yenile
@@ -267,8 +267,8 @@ export function AutoWithdrawPanel() {
       {loadingClientId !== null && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-5 bg-slate-950/90 backdrop-blur-md">
           <div className="relative">
-            <div className="absolute inset-0 animate-ping rounded-full bg-violet-500/20" />
-            <Loader2 size={56} className="relative animate-spin text-violet-400" />
+            <div className="absolute inset-0 animate-ping rounded-full bg-blue-500/20" />
+            <Loader2 size={56} className="relative animate-spin text-blue-400" />
           </div>
           <p className="text-xl font-bold text-white">Analiz yapılıyor...</p>
           <p className="text-sm text-slate-400">Oyuncu #{loadingClientId}</p>
@@ -277,10 +277,10 @@ export function AutoWithdrawPanel() {
 
       {/* Table card - hidden when analysis is open */}
       {!modalData && (
-        <div className="overflow-hidden rounded-2xl border border-white/5 bg-slate-900/40 shadow-xl transition-shadow hover:shadow-2xl hover:shadow-violet-500/5">
+        <div className="overflow-hidden rounded-2xl border border-white/5 bg-slate-900/40 shadow-xl transition-shadow hover:shadow-2xl hover:shadow-blue-500/5">
           <div className="flex flex-col border-b border-white/5 bg-white/5 sm:flex-row sm:items-center sm:justify-between px-6 py-4 gap-4">
             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-400">
-              <Wallet size={16} className="text-violet-400" />
+              <Wallet size={16} className="text-blue-400" />
               Çekim talepleri listesi
             </div>
 
@@ -295,7 +295,7 @@ export function AutoWithdrawPanel() {
                     setSearchTerm(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="h-9 w-48 rounded-xl border border-white/10 bg-slate-950/50 pl-9 pr-3 text-xs text-white placeholder:text-slate-600 focus:border-violet-500/50 focus:outline-none focus:ring-1 focus:ring-violet-500/50"
+                  className="h-9 w-48 rounded-xl border border-white/10 bg-slate-950/50 pl-9 pr-3 text-xs text-white placeholder:text-slate-600 focus:border-blue-500/50 focus:outline-none focus:ring-1 focus:ring-blue-500/50"
                 />
               </div>
 
@@ -307,7 +307,7 @@ export function AutoWithdrawPanel() {
                     setStatusFilter(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="h-9 rounded-xl border border-white/10 bg-slate-950/50 pl-3 pr-8 text-xs font-bold text-slate-300 focus:border-violet-500/50 focus:outline-none focus:ring-1 focus:ring-violet-500/50 appearance-none"
+                  className="h-9 rounded-xl border border-white/10 bg-slate-950/50 pl-3 pr-8 text-xs font-bold text-slate-300 focus:border-blue-500/50 focus:outline-none focus:ring-1 focus:ring-blue-500/50 appearance-none"
                 >
                   <option value="all">Tüm Durumlar</option>
                   <option value="pending">Bekleyenler</option>
@@ -385,7 +385,7 @@ export function AutoWithdrawPanel() {
                           {row.ClientLogin ? (
                             <Link
                               to={`/oyuncu/${row.ClientId}/${row.ClientLogin}`}
-                              className="text-xs text-slate-500 transition-colors hover:text-violet-400 block w-fit mt-0.5"
+                              className="text-xs text-slate-500 transition-colors hover:text-blue-400 block w-fit mt-0.5"
                             >
                               {row.ClientLogin}
                             </Link>

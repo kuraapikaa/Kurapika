@@ -17,7 +17,7 @@ export function TopCasinoGames({ data, isLoading, error }: TopCasinoGamesProps) 
     <Card className="p-6">
       <CardHeader className="p-0 pb-5 flex flex-row items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="rounded-xl bg-purple-500/10 p-2.5 text-purple-400 ring-1 ring-purple-500/20">
+          <div className="rounded-xl bg-blue-500/10 p-2.5 text-blue-400 ring-1 ring-blue-500/20">
             <Gamepad2 size={20} />
           </div>
           <CardTitle className="text-white font-bold text-base mb-0">En İyi Casino Oyunları</CardTitle>
@@ -38,7 +38,7 @@ export function TopCasinoGames({ data, isLoading, error }: TopCasinoGamesProps) 
         )}
         {isLoading && (
           <div className="flex h-48 flex-col items-center justify-center gap-3">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-purple-500 border-t-transparent" />
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
             <div className="text-sm font-medium text-slate-500">Oyun verileri çekiliyor...</div>
           </div>
         )}
@@ -68,8 +68,8 @@ export function TopCasinoGames({ data, isLoading, error }: TopCasinoGamesProps) 
                     >
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="h-2 w-2 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.5)] opacity-0 group-hover:opacity-100 transition-opacity" />
-                          <span className="font-semibold text-slate-200 group-hover:text-purple-300 transition-colors">{r.Name}</span>
+                          <div className="h-2 w-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(168,85,247,0.5)] opacity-0 group-hover:opacity-100 transition-opacity" />
+                          <span className="font-semibold text-slate-200 group-hover:text-blue-300 transition-colors">{r.Name}</span>
                         </div>
                       </td>
                       <td className="px-5 py-4 text-right tabular-nums text-slate-300">

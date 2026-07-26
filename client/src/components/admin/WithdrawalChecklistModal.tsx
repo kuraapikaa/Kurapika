@@ -276,12 +276,12 @@ export function WithdrawalChecklistModal({
       {/* Header: kompakt */}
       <div className="flex items-center justify-between gap-3 px-4 py-3 bg-slate-900/90 border-b border-white/10">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-500/20 text-violet-400">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-500/20 text-blue-400">
             <ShieldCheck size={20} />
           </div>
           <div className="min-w-0">
             <h3 className="text-base font-black text-white truncate">Otomatik Çekim Kontrolü</h3>
-            <p className="text-xs text-slate-400">ID: <span className="tabular-nums text-violet-400">{account.id ?? account.ClientId ?? '—'}</span></p>
+            <p className="text-xs text-slate-400">ID: <span className="tabular-nums text-blue-400">{account.id ?? account.ClientId ?? '—'}</span></p>
           </div>
         </div>
         <button onClick={onClose} className="shrink-0 rounded-lg p-2 text-slate-400 hover:bg-white/10 hover:text-white" aria-label="Kapat">
@@ -347,7 +347,7 @@ export function WithdrawalChecklistModal({
 
         {account.lastDepositBonuses && account.lastDepositBonuses.length > 0 && (
           <div className="rounded-xl border border-white/5 bg-slate-950/40 p-3">
-            <h4 className="text-xs font-black uppercase tracking-wide text-pink-400 flex items-center gap-2 mb-2"><Gift size={14} /> Kullanılan bonuslar ({account.lastDepositBonuses.length})</h4>
+            <h4 className="text-xs font-black uppercase tracking-wide text-cyan-400 flex items-center gap-2 mb-2"><Gift size={14} /> Kullanılan bonuslar ({account.lastDepositBonuses.length})</h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {account.lastDepositBonuses.map((bonus, i) => (
                 <div key={i} className="p-2.5 rounded-lg bg-white/[0.02] border border-white/5">
@@ -400,9 +400,9 @@ export function WithdrawalChecklistModal({
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          {wagerSummary && <RuleBlock title="Wager" result={wagerSummary} icon={Timer} colorClass="text-violet-400" />}
-          {withdrawalRulesCheck && <RuleBlock title="Çekim kuralları" result={withdrawalRulesCheck} icon={ShieldCheck} colorClass="text-violet-400" />}
-          {bonusRules && <RuleBlock title="Bonus kuralları" result={bonusRules} icon={Gift} colorClass="text-pink-400" />}
+          {wagerSummary && <RuleBlock title="Wager" result={wagerSummary} icon={Timer} colorClass="text-blue-400" />}
+          {withdrawalRulesCheck && <RuleBlock title="Çekim kuralları" result={withdrawalRulesCheck} icon={ShieldCheck} colorClass="text-blue-400" />}
+          {bonusRules && <RuleBlock title="Bonus kuralları" result={bonusRules} icon={Gift} colorClass="text-cyan-400" />}
         </div>
 
         {checklists && checklists.length > 0 && (() => {

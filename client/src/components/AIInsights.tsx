@@ -38,7 +38,7 @@ export function AIInsights() {
         <div className="space-y-8 mt-8">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-500/10 text-purple-400">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10 text-blue-400">
                         <Sparkles size={20} />
                     </div>
                     <div>
@@ -70,7 +70,7 @@ export function AIInsights() {
                             <Card className={cn(
                                 "relative overflow-hidden p-6 border-white/5 bg-zinc-900/60 backdrop-blur-2xl group hover:scale-[1.01] transition-all duration-500 shadow-2xl",
                                 insight.type === 'critical' ? "border-rose-500/20 shadow-rose-500/5" :
-                                    insight.type === 'warning' ? "border-amber-500/20 shadow-amber-500/5" : "border-purple-500/20 shadow-purple-500/5"
+                                    insight.type === 'warning' ? "border-amber-500/20 shadow-amber-500/5" : "border-blue-500/20 shadow-blue-500/5"
                             )}>
                                 <div className="flex items-start gap-4">
                                     <div className={cn(
@@ -89,9 +89,9 @@ export function AIInsights() {
                                         </div>
                                         <p className="text-xs font-semibold text-zinc-400 leading-relaxed">{insight.description}</p>
                                         <div className="pt-4 mt-4 border-t border-white/5 relative bg-white/[0.02] -mx-6 px-6 py-4">
-                                            <div className="flex items-center gap-2 text-purple-400 mb-1.5">
+                                            <div className="flex items-center gap-2 text-blue-400 mb-1.5">
                                                 <Target size={14} />
-                                                <span className="text-[9px] font-black uppercase tracking-widest text-purple-300">Stratejik Tavsiye</span>
+                                                <span className="text-[9px] font-black uppercase tracking-widest text-blue-300">Stratejik Tavsiye</span>
                                             </div>
                                             <p className="text-[12px] font-bold text-zinc-200 leading-normal">{insight.recommendation}</p>
                                         </div>
@@ -105,7 +105,7 @@ export function AIInsights() {
                                         className={cn(
                                             "h-full rounded-full relative",
                                             insight.type === 'critical' ? "bg-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.5)]" :
-                                                insight.type === 'warning' ? "bg-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.5)]" : "bg-purple-500 shadow-[0_0_15px_rgba(99,102,241,0.5)]"
+                                                insight.type === 'warning' ? "bg-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.5)]" : "bg-blue-500 shadow-[0_0_15px_rgba(99,102,241,0.5)]"
                                         )}
                                     >
                                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse" />
@@ -119,8 +119,8 @@ export function AIInsights() {
                 {/* Bonus Recommendations Section */}
                 <div className="space-y-6">
                     <div className="flex items-center gap-2 px-1">
-                        <Gift size={14} className="text-fuchsia-400" />
-                        <span className="text-[10px] font-black text-fuchsia-400 uppercase tracking-widest">Bonus & Kampanya Önerileri</span>
+                        <Gift size={14} className="text-teal-400" />
+                        <span className="text-[10px] font-black text-teal-400 uppercase tracking-widest">Bonus & Kampanya Önerileri</span>
                     </div>
                     {bonuses.length === 0 ? (
                         <Card className="p-8 border-dashed border-white/5 bg-white/[0.01] flex flex-col items-center justify-center text-center space-y-3">
@@ -134,10 +134,10 @@ export function AIInsights() {
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: i * 0.1 }}
                         >
-                            <Card className="p-6 bg-gradient-to-br from-purple-500/5 to-fuchsia-500/5 border-white/5 group hover:border-purple-500/20 transition-all duration-300 shadow-xl backdrop-blur-sm">
+                            <Card className="p-6 bg-gradient-to-br from-blue-500/5 to-teal-500/5 border-white/5 group hover:border-blue-500/20 transition-all duration-300 shadow-xl backdrop-blur-sm">
                                 <div className="flex items-center justify-between mb-4">
                                     <div className="flex items-center gap-3">
-                                        <div className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center text-fuchsia-400 border border-white/5">
+                                        <div className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center text-teal-400 border border-white/5">
                                             <Zap size={20} />
                                         </div>
                                         <div>
@@ -153,7 +153,7 @@ export function AIInsights() {
                                 <div className="p-4 rounded-2xl bg-black/40 border border-white/5 space-y-3">
                                     <div className="flex items-center justify-between">
                                         <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Önerilen Oran</span>
-                                        <span className="text-xs font-black text-purple-400">{bonus.suggestedAmount}</span>
+                                        <span className="text-xs font-black text-blue-400">{bonus.suggestedAmount}</span>
                                     </div>
                                     <p className="text-[11px] font-medium text-zinc-400 leading-relaxed italic border-t border-white/5 pt-3">
                                         "{bonus.reasoning}"
@@ -171,7 +171,7 @@ export function AIInsights() {
                         <motion.div
                             animate={{ top: ['0%', '100%', '0%'] }}
                             transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                            className="absolute left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-purple-500/50 to-transparent z-0"
+                            className="absolute left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-blue-500/50 to-transparent z-0"
                         />
 
                         <div className="relative z-10 flex flex-col items-center space-y-4">
@@ -179,10 +179,10 @@ export function AIInsights() {
                                 <motion.div
                                     animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
                                     transition={{ duration: 2, repeat: Infinity }}
-                                    className="absolute inset-0 bg-purple-500 rounded-full blur-xl"
+                                    className="absolute inset-0 bg-blue-500 rounded-full blur-xl"
                                 />
-                                <div className="relative h-12 w-12 rounded-full bg-zinc-900 border border-purple-500/30 flex items-center justify-center shadow-2xl">
-                                    <Zap size={20} className="text-purple-400 animate-pulse" />
+                                <div className="relative h-12 w-12 rounded-full bg-zinc-900 border border-blue-500/30 flex items-center justify-center shadow-2xl">
+                                    <Zap size={20} className="text-blue-400 animate-pulse" />
                                 </div>
                             </div>
 
@@ -195,7 +195,7 @@ export function AIInsights() {
                                                 key={i}
                                                 animate={{ height: [4, 12, 4] }}
                                                 transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }}
-                                                className="w-1 bg-purple-500/60 rounded-full"
+                                                className="w-1 bg-blue-500/60 rounded-full"
                                             />
                                         ))}
                                     </div>
@@ -213,7 +213,7 @@ export function AIInsights() {
 
                             <p className="text-[10px] text-zinc-400 font-medium leading-relaxed max-w-[300px] border-t border-white/5 pt-4">
                                 YZ modelleri verilerinizi saniyeler içinde analiz etmeye devam ediyor. <br />
-                                <span className="text-purple-500/60 font-black italic">Sistemsel optimizasyon aktif.</span>
+                                <span className="text-blue-500/60 font-black italic">Sistemsel optimizasyon aktif.</span>
                             </p>
                         </div>
                     </Card>

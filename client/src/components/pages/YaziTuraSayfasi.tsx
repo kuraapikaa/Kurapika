@@ -37,8 +37,8 @@ export function YaziTuraSayfasi() {
         <Link to="/lobi" className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors font-bold">
           <ArrowLeft size={20} /> Lobiye Dön
         </Link>
-        <div className="flex items-center gap-3 bg-purple-500/10 px-4 py-2 rounded-2xl border border-purple-500/20">
-          <CircleDollarSign className="text-purple-400" />
+        <div className="flex items-center gap-3 bg-blue-500/10 px-4 py-2 rounded-2xl border border-blue-500/20">
+          <CircleDollarSign className="text-blue-400" />
           <span className="font-black">YAZI - TURA</span>
         </div>
       </div>
@@ -76,7 +76,7 @@ export function YaziTuraSayfasi() {
                     onClick={() => !flipping && setChoice(item as any)}
                     className={`flex-1 py-4 rounded-2xl font-black transition-all border ${
                       choice === item 
-                        ? 'bg-purple-600 border-purple-400 text-white shadow-[0_0_20px_rgba(168,85,247,0.4)]' 
+                        ? 'bg-blue-600 border-blue-400 text-white shadow-[0_0_20px_rgba(168,85,247,0.4)]' 
                         : 'bg-black/40 border-white/5 text-zinc-500 hover:text-white hover:border-white/10'
                     }`}
                   >
@@ -89,7 +89,7 @@ export function YaziTuraSayfasi() {
           <button
             onClick={flipCoin}
             disabled={!choice || flipping}
-            className="w-full py-6 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl font-black text-xl shadow-xl transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:hover:scale-100 flex items-center justify-center gap-3"
+            className="w-full py-6 bg-gradient-to-r from-blue-600 to-blue-600 rounded-2xl font-black text-xl shadow-xl transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:hover:scale-100 flex items-center justify-center gap-3"
           >
             {flipping ? <RotateCcw className="animate-spin" /> : 'PARAYI AT!'}
           </button>

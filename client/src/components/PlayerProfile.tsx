@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { dashboardApi, adminApi } from '../api/client';
 import { formatNumber, formatDateTimeDisplay, formatDateTimeWithSeconds } from '../lib/format';
 import { TRANSACTION_TYPES } from '../lib/constants';
+import { getPlayerCategoryFromListRow } from '../lib/playerCategories';
 import type { ClientBonusItem } from '../types/dashboard';
 import {
     User,
@@ -45,6 +46,7 @@ import { cn } from '../lib/utils';
 import { Button } from './ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/Card';
 import { PlayerSportsBets } from './PlayerSportsBets';
+import { PlayerCasinoBets } from './PlayerCasinoBets';
 import { AdvancedCharts } from './PlayerAdvancedCharts';
 import { NetworkMap } from './NetworkMap';
 import { AIPlayerInsight } from './AIPlayerInsight';
@@ -122,7 +124,7 @@ function defaultTransactionDateRange(): { start: string; end: string } {
     return { start: toLocalYMD(start), end: toLocalYMD(end) };
 }
 
-type ProfileTab = 'overview' | 'notes' | 'bonuses' | 'transactions' | 'sports-bets' | 'detailed-report' | 'ip-addresses';
+type ProfileTab = 'overview' | 'notes' | 'bonuses' | 'transactions' | 'sports-bets' | 'casino-bets' | 'detailed-report' | 'ip-addresses';
 
 export function PlayerProfile() {
     const [activeTab, setActiveTab] = useState<ProfileTab>('overview');
@@ -223,6 +225,22 @@ export function PlayerProfile() {
             MaxRows: rowsPerPage
         }),
         staleTime: 60 * 1000,
+        enabled: !!clientId && activeTab === 'transactions',
+    });
+
+    // Bu oyuncunun geçmişinde fiilen görülen Lynon işlem tiplerini keşfetmek için
+    // tip filtresi uygulanmadan geniş bir örnek çekiyoruz; sabit listede olmayan
+    // tipler (ör. yeni bir ödeme yöntemi) filtreye otomatik eklensin diye.
+    const { data: txTypesSampleData } = useQuery({
+        queryKey: ['client-profile-transaction-types', clientId, appliedTxStart, appliedTxEnd],
+        queryFn: () => dashboardApi.clientProfileTransactions({
+            ClientId: clientId,
+            StartTimeLocal: ymdToLocalDateTime(appliedTxStart, false),
+            EndTimeLocal: ymdToLocalDateTime(appliedTxEnd, true),
+            SkeepRows: 0,
+            MaxRows: 500
+        }),
+        staleTime: 5 * 60 * 1000,
         enabled: !!clientId && activeTab === 'transactions',
     });
 
@@ -376,7 +394,22 @@ export function PlayerProfile() {
     const totalPages = Math.ceil(totalCount / rowsPerPage);
     const isLynonTransactions = transactionsData?.Data?.Provider === 'lynon';
     const transactionTypeOptions: Array<{ id: number | string; name: string }> = isLynonTransactions
-        ? LYNON_TRANSACTION_TYPES
+        ? (() => {
+            // Sunucu kanonik listeyi (tüm Lynon operationType'ları) döner; yoksa sabit
+            // çekirdek listeye düşülür. Üstüne bu oyuncuda fiilen görülen, listede
+            // olmayan tipler (ör. yeni bir ödeme yöntemi) eklenir.
+            const canonical = (transactionsData?.Data?.TransactionTypes
+                || txTypesSampleData?.Data?.TransactionTypes
+                || LYNON_TRANSACTION_TYPES) as Array<{ id: string; name: string }>;
+            const discovered = (txTypesSampleData?.Data?.Objects || []) as Array<{ TypeCode?: string; TypeName?: string }>;
+            const merged = new Map(canonical.map((t) => [t.id, t.name]));
+            discovered.forEach((row) => {
+                if (row.TypeCode && !merged.has(row.TypeCode)) {
+                    merged.set(row.TypeCode, row.TypeName || row.TypeCode);
+                }
+            });
+            return Array.from(merged, ([id, name]) => ({ id, name }));
+        })()
         : TRANSACTION_TYPES.filter((type) => type.id !== '').map((type) => ({ id: Number(type.id), name: type.name }));
 
     const handlePageChange = (newPage: number) => {
@@ -533,6 +566,7 @@ export function PlayerProfile() {
         { value: 'bonuses', icon: Gift, label: 'Bonuslar' },
         { value: 'transactions', icon: History, label: 'İşlemler' },
         { value: 'sports-bets', icon: Trophy, label: 'Spor Bahisleri' },
+        { value: 'casino-bets', icon: Gamepad2, label: 'Casino Bahisleri' },
         { value: 'detailed-report', icon: BarChart3, label: 'Detaylı Rapor' },
         { value: 'ip-addresses', icon: Globe, label: 'IP Adresleri' },
     ];
@@ -548,7 +582,7 @@ export function PlayerProfile() {
             <Card className="mb-3 p-3.5">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center gap-2">
-                        <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-indigo-400/20 bg-indigo-400/[0.1] text-indigo-300">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-blue-400/20 bg-blue-400/[0.1] text-blue-300">
                             <User size={20} />
                         </div>
                         <div className="min-w-0 text-left">
@@ -556,28 +590,21 @@ export function PlayerProfile() {
                                 <h2 className="text-lg font-bold tracking-[-0.025em] text-white sm:text-xl">
                                     {kpi?.Name || kpi?.Login || login || 'Oyuncu'}
                                 </h2>
-                                {(kpi?.DepositAmount || 0) > 100000 ? (
-                                    <span className={cn(
-                                        'rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ring-1',
-                                        'bg-amber-500/15 text-amber-400 ring-amber-500/30'
-                                    )}>
-                                        VIP Balina
-                                    </span>
-                                ) : (kpi?.DepositCount === 0 && kpi?.DepositAmount === 0) ? (
-                                    <span className={cn(
-                                        'rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ring-1',
-                                        'bg-slate-500/15 text-slate-400 ring-slate-500/30'
-                                    )}>
-                                        Yeni Kayıt
-                                    </span>
-                                ) : (
-                                    <span className={cn(
-                                        'rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ring-1',
-                                        'bg-violet-500/15 text-violet-300 ring-violet-500/30'
-                                    )}>
-                                        Standart Profil
-                                    </span>
-                                )}
+                                {(() => {
+                                    const category = getPlayerCategoryFromListRow({ Id: Number(id) }, (kpi as Record<string, unknown> | undefined) ?? undefined);
+                                    return (
+                                        <span
+                                            className="rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ring-1"
+                                            style={{
+                                                backgroundColor: category.colorBg,
+                                                color: category.colorText,
+                                                boxShadow: `inset 0 0 0 1px ${category.colorText}4d`,
+                                            }}
+                                        >
+                                            {category.label}
+                                        </span>
+                                    );
+                                })()}
                             </div>
                             <p className="mt-1 text-xs font-semibold text-slate-500 uppercase tracking-wider">Müşteri ID: #{id}</p>
                         </div>
@@ -605,8 +632,8 @@ export function PlayerProfile() {
                             value={value}
                             className={cn(
                                 'inline-flex h-8 items-center gap-1.5 rounded-md px-2.5 text-[9px] font-bold uppercase tracking-[0.06em] transition-colors',
-                                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950',
-                                'data-[state=active]:bg-indigo-400 data-[state=active]:text-white',
+                                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950',
+                                'data-[state=active]:bg-blue-400 data-[state=active]:text-white',
                                 'data-[state=inactive]:text-slate-500 data-[state=inactive]:hover:bg-white/5 data-[state=inactive]:hover:text-slate-300'
                             )}
                         >
@@ -725,8 +752,8 @@ export function PlayerProfile() {
                                     <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
                                         <Card className="p-4">
                                             <CardHeader className="flex flex-row p-0 pb-3 items-center justify-between">
-                                                <CardTitle className="text-purple-400">Sportbook Analizi</CardTitle>
-                                                <TrendingUp className="text-purple-400 shrink-0" size={20} />
+                                                <CardTitle className="text-blue-400">Sportbook Analizi</CardTitle>
+                                                <TrendingUp className="text-blue-400 shrink-0" size={20} />
                                             </CardHeader>
                                             <CardContent className="space-y-2 p-0">
                                                 <DetailRow label="Toplam Bahis Tutarı" value={formatNumber(kpi.TotalSportStakes)} unit="TRY" icon={Activity} color="indigo" />
@@ -747,8 +774,8 @@ export function PlayerProfile() {
 
                                         <Card className="p-4">
                                             <CardHeader className="flex flex-row p-0 pb-3 items-center justify-between">
-                                                <CardTitle className="text-purple-400">Casino Analizi</CardTitle>
-                                                <Gamepad2 className="text-purple-400 shrink-0" size={20} />
+                                                <CardTitle className="text-blue-400">Casino Analizi</CardTitle>
+                                                <Gamepad2 className="text-blue-400 shrink-0" size={20} />
                                             </CardHeader>
                                             <CardContent className="space-y-2 p-0">
                                                 <DetailRow label="Toplam Bahis Miktarı" value={formatNumber(kpi.TotalCasinoStakes)} unit="TRY" icon={Activity} color="purple" />
@@ -817,6 +844,18 @@ export function PlayerProfile() {
                                     transition={{ duration: 0.2 }}
                                 >
                                     <PlayerSportsBets clientId={Number(id)} />
+                                </motion.div>
+                            )}
+
+                            {activeTab === 'casino-bets' && (
+                                <motion.div
+                                    key="casino-bets"
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, scale: 0.98 }}
+                                    transition={{ duration: 0.2 }}
+                                >
+                                    <PlayerCasinoBets clientId={Number(id)} />
                                 </motion.div>
                             )}
 
@@ -1311,7 +1350,7 @@ export function PlayerProfile() {
                                                                                     {tx.DocumentTypeName}
                                                                                 </p>
                                                                                 {tx.Game && (
-                                                                                    <span className="text-[9px] font-bold bg-purple-500/10 text-purple-400 px-1.5 py-0.5 rounded uppercase">
+                                                                                    <span className="text-[9px] font-bold bg-blue-500/10 text-blue-400 px-1.5 py-0.5 rounded uppercase">
                                                                                         {tx.Game}
                                                                                     </span>
                                                                                 )}
@@ -1431,8 +1470,8 @@ export function PlayerProfile() {
                                     <section className="rounded-[2.5rem] border border-white/5 bg-slate-900/40 p-8 backdrop-blur-md text-left">
                                         <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                             <div className="flex min-w-0 items-center gap-2.5">
-                                                <h3 className="text-xs font-black uppercase tracking-[0.4em] text-purple-400">Detaylı Oyuncu Raporu</h3>
-                                                <BarChart3 className="text-purple-400" size={20} />
+                                                <h3 className="text-xs font-black uppercase tracking-[0.4em] text-blue-400">Detaylı Oyuncu Raporu</h3>
+                                                <BarChart3 className="text-blue-400" size={20} />
                                             </div>
 
                                             <div className="flex flex-wrap items-center gap-4 bg-slate-950/40 p-4 rounded-2xl border border-white/5">
@@ -1440,19 +1479,19 @@ export function PlayerProfile() {
                                                     <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Tarih</span>
                                                     <button
                                                         onClick={() => handleDetailedReportQuickDate('today')}
-                                                        className={`px-3 py-1.5 rounded-lg border text-[10px] font-black transition-all uppercase tracking-widest ${detStart === todayYMD && detEnd === todayYMD ? 'bg-purple-500 text-white border-purple-400' : 'bg-white/5 text-slate-400 border-white/10 hover:bg-white/10 hover:text-white'}`}
+                                                        className={`px-3 py-1.5 rounded-lg border text-[10px] font-black transition-all uppercase tracking-widest ${detStart === todayYMD && detEnd === todayYMD ? 'bg-blue-500 text-white border-blue-400' : 'bg-white/5 text-slate-400 border-white/10 hover:bg-white/10 hover:text-white'}`}
                                                     >
                                                         Bugün
                                                     </button>
                                                     <button
                                                         onClick={() => handleDetailedReportQuickDate('yesterday')}
-                                                        className={`px-3 py-1.5 rounded-lg border text-[10px] font-black transition-all uppercase tracking-widest ${detStart === detEnd && detStart === yesterdayYMD ? 'bg-purple-500 text-white border-purple-400' : 'bg-white/5 text-slate-400 border-white/10 hover:bg-white/10 hover:text-white'}`}
+                                                        className={`px-3 py-1.5 rounded-lg border text-[10px] font-black transition-all uppercase tracking-widest ${detStart === detEnd && detStart === yesterdayYMD ? 'bg-blue-500 text-white border-blue-400' : 'bg-white/5 text-slate-400 border-white/10 hover:bg-white/10 hover:text-white'}`}
                                                     >
                                                         Dün
                                                     </button>
                                                 </div>
                                                 <div className="flex items-center gap-2">
-                                                    <Calendar size={16} className="text-purple-400" />
+                                                    <Calendar size={16} className="text-blue-400" />
                                                     <input
                                                         type="date"
                                                         value={detStart}
@@ -1476,7 +1515,7 @@ export function PlayerProfile() {
                                                             setDetStart(kpi.LastDepositTimeLocal.slice(0, 10));
                                                         }
                                                     }}
-                                                    className="px-3 py-1.5 rounded-lg bg-purple-500/10 border border-purple-500/20 text-[10px] font-black text-purple-400 hover:bg-purple-500/20 transition-all uppercase tracking-widest"
+                                                    className="px-3 py-1.5 rounded-lg bg-blue-500/10 border border-blue-500/20 text-[10px] font-black text-blue-400 hover:bg-blue-500/20 transition-all uppercase tracking-widest"
                                                 >
                                                     Son Yatırıma Git
                                                 </button>
@@ -1508,14 +1547,14 @@ export function PlayerProfile() {
                                                                     value={`${formatNumber(report.TotalBalance)} TRY`}
                                                                     subValue="Bakiye + Bonus"
                                                                     icon={Layers}
-                                                                    colorClass="bg-purple-500/10 text-purple-400"
+                                                                    colorClass="bg-blue-500/10 text-blue-400"
                                                                 />
                                                                 <StatBox
                                                                     title="Aktif Bonus"
                                                                     value={`${formatNumber(report.ActiveBonusAmount)} TRY`}
                                                                     subValue={report.ActiveBonusType ? `Tip: ${report.ActiveBonusType}` : "Aktif Bonus"}
                                                                     icon={Gift}
-                                                                    colorClass="bg-purple-500/10 text-purple-400"
+                                                                    colorClass="bg-blue-500/10 text-blue-400"
                                                                 />
                                                                 <StatBox
                                                                     title="Birikmiş Bonus"
@@ -1566,8 +1605,8 @@ export function PlayerProfile() {
                                                         <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
                                                             <div className="rounded-[2.5rem] border border-white/5 bg-slate-900/40 p-8 text-left backdrop-blur-md">
                                                                 <div className="mb-8 flex items-center justify-between">
-                                                                    <h3 className="text-xs font-black uppercase tracking-[0.4em] text-purple-400">Sportbook Analizi</h3>
-                                                                    <TrendingUp className="text-purple-400" size={20} />
+                                                                    <h3 className="text-xs font-black uppercase tracking-[0.4em] text-blue-400">Sportbook Analizi</h3>
+                                                                    <TrendingUp className="text-blue-400" size={20} />
                                                                 </div>
                                                                 <div className="space-y-4">
                                                                     <DetailRow label="Toplam Bahis" value={formatNumber(report.SportTotalBetAmount)} unit="TRY" icon={Activity} color="indigo" />
@@ -1582,8 +1621,8 @@ export function PlayerProfile() {
 
                                                             <div className="rounded-[2.5rem] border border-white/5 bg-slate-900/40 p-8 text-left backdrop-blur-md">
                                                                 <div className="mb-8 flex items-center justify-between">
-                                                                    <h3 className="text-xs font-black uppercase tracking-[0.4em] text-purple-400">Casino Analizi</h3>
-                                                                    <Gamepad2 className="text-purple-400" size={20} />
+                                                                    <h3 className="text-xs font-black uppercase tracking-[0.4em] text-blue-400">Casino Analizi</h3>
+                                                                    <Gamepad2 className="text-blue-400" size={20} />
                                                                 </div>
                                                                 <div className="space-y-4">
                                                                     <DetailRow label="Toplam Ciro" value={formatNumber(report.CasinoTotalBetAmount)} unit="TRY" icon={Activity} color="purple" />
@@ -1644,7 +1683,7 @@ export function PlayerProfile() {
                                                                 <div className="min-w-0 text-left">
                                                                     <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-3">Hesap Detayı</p>
                                                                     <div className="flex items-center gap-2">
-                                                                        <div className="h-10 w-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 ring-1 ring-purple-500/20">
+                                                                        <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 ring-1 ring-blue-500/20">
                                                                             <Users size={20} />
                                                                         </div>
                                                                         <p className="text-sm font-black text-white">{report.IsVerified ? 'ONAYLI HESAP' : 'ONAYSIZ'}</p>
@@ -1694,10 +1733,10 @@ function StatBox({ title, value, subValue, icon: Icon, colorClass }: any) {
 
 function DetailRow({ label, value, unit, icon: Icon, color }: any) {
     const colorMap: Record<string, string> = {
-        indigo: 'bg-purple-500/10 text-purple-400',
+        indigo: 'bg-blue-500/10 text-blue-400',
         emerald: 'bg-emerald-500/10 text-emerald-400',
         rose: 'bg-rose-500/10 text-rose-400',
-        purple: 'bg-purple-500/10 text-purple-400',
+        purple: 'bg-blue-500/10 text-blue-400',
     };
     return (
         <div className={cn(
