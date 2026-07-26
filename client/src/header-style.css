@@ -1,0 +1,195 @@
+/*
+ * Premium Gold Theme Header Styles
+ * Inspired by NarcosBahis (https://narcosbahis.com/tr/)
+ * Optimized for high-end gaming and casino interfaces.
+ */
+
+:root {
+    /* Color Palette */
+    --gold-primary: #d4af37;
+    --gold-secondary: #f9d976;
+    --gold-accent: #ffeb3b;
+    --gold-gradient: linear-gradient(135deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
+    --gold-shimmer: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.4) 50%,
+        rgba(255, 255, 255, 0) 100%
+    );
+    
+    --bg-header: #0a0a0a;
+    --bg-header-glass: rgba(10, 10, 10, 0.95);
+    --text-main: #ffffff;
+    --text-muted: #b0b0b0;
+    --transition-speed: 0.3s;
+    --header-height: 80px;
+    --font-heading: 'Barlow Condensed', 'Inter', sans-serif;
+}
+
+/* Header Container */
+.premium-header {
+    width: 100%;
+    height: var(--header-height);
+    background: var(--bg-header-glass);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 40px;
+    box-sizing: border-box;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+}
+
+.header-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+}
+
+.header-logo img {
+    height: 45px;
+    filter: drop-shadow(0 0 5px rgba(212, 175, 55, 0.4));
+}
+
+/* Navigation Links */
+.nav-menu {
+    display: flex;
+    gap: 30px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-item {
+    text-decoration: none;
+    color: var(--text-main);
+    font-family: var(--font-heading);
+    font-size: 16px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: color var(--transition-speed) ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+}
+
+.nav-item:hover {
+    color: var(--gold-primary);
+}
+
+.nav-item::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--gold-primary);
+    transition: width var(--transition-speed);
+}
+
+.nav-item:hover::after {
+    width: 100%;
+}
+
+/* Action Buttons */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+/* Gold Gradient Button (Register Style) */
+.btn-gold {
+    background: var(--gold-gradient);
+    background-size: 400% 400%;
+    color: #000;
+    padding: 12px 28px;
+    border-radius: 4px;
+    border: none;
+    font-family: var(--font-heading);
+    font-weight: 800;
+    font-size: 15px;
+    text-transform: uppercase;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+}
+
+.btn-gold:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 25px rgba(212, 175, 55, 0.6);
+    animation: gold-pulse 2s infinite linear;
+}
+
+.btn-gold::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 60%;
+    height: 100%;
+    background: var(--gold-shimmer);
+    transform: skewX(-25deg);
+    transition: 0.5s;
+}
+
+.btn-gold:hover::before {
+    left: 150%;
+    transition: 0.7s;
+}
+
+/* Login Button Profile Style */
+.btn-login {
+    background: transparent;
+    color: var(--text-main);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 10px 24px;
+    border-radius: 4px;
+    font-family: var(--font-heading);
+    font-weight: 600;
+    font-size: 15px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all var(--transition-speed);
+}
+
+.btn-login:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--gold-primary);
+    color: var(--gold-primary);
+}
+
+/* Animations */
+@keyframes gold-pulse {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Responsive Styles */
+@media (max-width: 1024px) {
+    .premium-header {
+        padding: 0 20px;
+    }
+    
+    .nav-menu {
+        display: none; /* Add a hamburger menu for actual use */
+    }
+}
+
+/* Icons styling if used (FontAwesome etc.) */
+.nav-item i {
+    font-size: 18px;
+    color: inherit;
+}

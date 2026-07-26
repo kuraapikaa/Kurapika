@@ -1,0 +1,270 @@
+{
+    "wheelAppearance":  {
+                            "rimColor":  "#27272a",
+                            "centerColor":  "#27272a",
+                            "pointerColor":  "#ffffff",
+                            "glowColor":  "#a855f7",
+                            "pageAccentColor":  "#a855f7",
+                            "borderWidth":  8,
+                            "centerSize":  52,
+                            "labelSize":  11,
+                            "glowStrength":  0,
+                            "glossy":  true
+                        },
+    "wheelDailyLimit": 1,
+  "wheel": [
+    { "id": "wheel-pass", "label": "Tekrar Dene", "bgColor": "#111827", "textColor": "#ffffff", "probability": 100, "type": "none", "bonusId": null, "amount": 0, "isLoss": true },
+    { "id": "wheel-fs-sweet-100", "label": "100 Freespin", "detail": "Sweet Bonanza · 1 ₺ spin", "bgColor": "#b7791f", "textColor": "#ffffff", "probability": 0, "type": "bonus", "rewardKind": "freespin", "bonusId": null, "amount": 100, "gameName": "Sweet Bonanza", "spinValue": 1, "spinCount": 100, "requiresConfiguration": true, "isLoss": false },
+    { "id": "wheel-fs-gates-150", "label": "150 Freespin", "detail": "Gates of Olympus · 1 ₺ spin", "bgColor": "#7c3aed", "textColor": "#ffffff", "probability": 0, "type": "bonus", "rewardKind": "freespin", "bonusId": null, "amount": 150, "gameName": "Gates of Olympus", "spinValue": 1, "spinCount": 150, "requiresConfiguration": true, "isLoss": false },
+    { "id": "wheel-cash-150", "label": "150 ₺ Nakit", "detail": "Çevrimsiz direkt bakiye", "bgColor": "#166534", "textColor": "#ffffff", "probability": 0, "type": "cash", "rewardKind": "cash", "bonusId": null, "amount": 150, "noWagering": true, "requiresConfiguration": true, "isLoss": false },
+    { "id": "wheel-cash-250", "label": "250 ₺ Nakit", "detail": "Çevrimsiz direkt bakiye", "bgColor": "#1d4ed8", "textColor": "#ffffff", "probability": 0, "type": "cash", "rewardKind": "cash", "bonusId": null, "amount": 250, "noWagering": true, "requiresConfiguration": true, "isLoss": false },
+    { "id": "wheel-freebet-500", "label": "500 ₺ Freebet", "detail": "Min. 1.80 oran · min. 3 maç kombine", "bgColor": "#be123c", "textColor": "#ffffff", "probability": 0, "type": "bonus", "rewardKind": "freebet", "bonusId": 1880, "amount": 500, "minOdd": 1.8, "minSelectionCount": 3, "betTypes": ["express"], "assignmentValues": { "BonusMoneyAmount": 500 }, "requiresConfiguration": false, "isLoss": false },
+    { "id": "wheel-fs-sweet-500", "label": "500 ₺ Freespin", "detail": "Sweet Bonanza · 250 spin · 2 ₺", "bgColor": "#c2410c", "textColor": "#ffffff", "probability": 0, "type": "bonus", "rewardKind": "freespin", "bonusId": null, "amount": 500, "gameName": "Sweet Bonanza", "spinValue": 2, "spinCount": 250, "requiresConfiguration": true, "isLoss": false },
+    { "id": "wheel-cash-500", "label": "500 ₺ Nakit", "detail": "Çevrimsiz direkt bakiye", "bgColor": "#0f766e", "textColor": "#ffffff", "probability": 0, "type": "cash", "rewardKind": "cash", "bonusId": null, "amount": 500, "noWagering": true, "requiresConfiguration": true, "isLoss": false },
+    { "id": "wheel-cash-10000", "label": "10.000 ₺ Nakit", "detail": "Çevrimsiz direkt bakiye", "bgColor": "#92400e", "textColor": "#ffffff", "probability": 0, "type": "cash", "rewardKind": "cash", "bonusId": null, "amount": 10000, "noWagering": true, "requiresConfiguration": true, "isLoss": false },
+    { "id": "wheel-cash-50000", "label": "50.000 ₺ Nakit", "detail": "Çevrimsiz direkt bakiye", "bgColor": "#991b1b", "textColor": "#ffffff", "probability": 0, "type": "cash", "rewardKind": "cash", "bonusId": null, "amount": 50000, "noWagering": true, "requiresConfiguration": true, "isLoss": false },
+    { "id": "wheel-watch", "label": "Apple Watch Ultra 3", "detail": "Fiziksel ödül · sınırlı stok", "bgColor": "#334155", "textColor": "#ffffff", "probability": 0, "type": "physical", "rewardKind": "physical", "bonusId": null, "amount": 0, "stock": 0, "requiresConfiguration": true, "isLoss": false },
+    { "id": "wheel-iphone", "label": "iPhone 17 Pro Max 1TB", "detail": "Fiziksel ödül · sınırlı stok", "bgColor": "#1e293b", "textColor": "#ffffff", "probability": 0, "type": "physical", "rewardKind": "physical", "bonusId": null, "amount": 0, "stock": 0, "requiresConfiguration": true, "isLoss": false }
+  ],
+  "scratchcard":  {
+                        "baseWinProbability":  10,
+                        "rewards":  [
+                                        {
+                                            "id":  1,
+                                            "label":  "25 TL Freebet",
+                                            "probability":  60,
+                                            "type":  "bonus",
+                                            "bonusId":  "1875",
+                                            "amount":  25
+                                        },
+                                        {
+                                            "id":  2,
+                                            "label":  "50 TL Bonus",
+                                            "probability":  35,
+                                            "type":  "bonus",
+                                            "bonusId":  "1876",
+                                            "amount":  50
+                                        },
+                                        {
+                                            "id":  3,
+                                            "label":  "100 TL Bonus",
+                                            "probability":  5,
+                                            "type":  "bonus",
+                                            "bonusId":  "1877",
+                                            "amount":  100
+                                        }
+                                    ]
+                    },
+    "wheelMinInvestment":  500,
+    "millionaires":  {
+                         "isActive":  true,
+                         "eyebrow":  "BÜyÜk KazanÇ Vitrini",
+                         "title":  "BÜyÜk kazanÇ anları burada parlıyor",
+                         "description":  "Öne Çıkan kazanÇ kayıtlarını, video anlarını ve yÜksek ÖdÜl hikayelerini tek ekranda keşfet.",
+                         "ctaLabel":  "Kazancı izle",
+                         "showTicker":  true,
+                         "showSocial":  false,
+                         "disclaimer":  "18+ Sorumlu oyun. GÖrseller ve videolar yalnızca izinli iÇeriklerle kullanılmalıdır.",
+                         "socialLinks":  [
+                                             {
+                                                 "id":  "instagram",
+                                                 "label":  "Instagram",
+                                                 "url":  ""
+                                             },
+                                             {
+                                                 "id":  "telegram",
+                                                 "label":  "Telegram",
+                                                 "url":  ""
+                                             }
+                                         ],
+                         "records":  [
+                                         {
+                                             "id":  "win-1",
+                                             "title":  "Gates of Olympus Super Scatter",
+                                             "amount":  "₺1.210.512",
+                                             "player":  "A***",
+                                             "game":  "Gates of Olympus Super Scatter",
+                                             "imageUrl":  "/assets/millionaires/gates-super-scatter.jpg",
+                                             "posterUrl":  "/assets/millionaires/gates-super-scatter.jpg",
+                                             "videoUrl":  "https://www.ppreplaylink.net/uHS0jHVp4K",
+                                             "featured":  false
+                                         },
+                                         {
+                                             "id":  "win-2",
+                                             "title":  "Big Bass Bonanza Keeping it Reel",
+                                             "amount":  "₺1.441.075",
+                                             "player":  "M***",
+                                             "game":  "Big Bass Bonanza Keeping it Reel",
+                                             "imageUrl":  "/assets/millionaires/big-bass-bonanza-keeping-it-reel.jpg",
+                                             "posterUrl":  "/assets/millionaires/big-bass-bonanza-keeping-it-reel.jpg",
+                                             "videoUrl":  "https://www.ppreplaylink.net/WKReDGMLaU",
+                                             "featured":  false
+                                         },
+                                         {
+                                             "id":  "win-3",
+                                             "title":  "Gates of Olympus 1000",
+                                             "amount":  "₺750.000",
+                                             "player":  "D***",
+                                             "game":  "Gates of Olympus 1000",
+                                             "imageUrl":  "/assets/millionaires/gates-olympus-1000.jpg",
+                                             "posterUrl":  "/assets/millionaires/gates-olympus-1000.jpg",
+                                             "videoUrl":  "https://www.ppreplaylink.net/iIrVagzrdf",
+                                             "featured":  false
+                                         },
+                                         {
+                                             "id":  "win-4",
+                                             "title":  "Big Bass Splash 1000",
+                                             "amount":  "₺853.100",
+                                             "player":  "S***",
+                                             "game":  "Big Bass Splash 1000",
+                                             "imageUrl":  "/assets/millionaires/big-bass-splash-1000.jpg",
+                                             "posterUrl":  "/assets/millionaires/big-bass-splash-1000.jpg",
+                                             "videoUrl":  "https://www.ppreplaylink.net/i7RehODsPE",
+                                             "featured":  false
+                                         },
+                                         {
+                                             "id":  "win-5",
+                                             "title":  "Gates of Olympus",
+                                             "amount":  "₺2.000.000",
+                                             "player":  "K***",
+                                             "game":  "Gates of Olympus",
+                                             "imageUrl":  "/assets/millionaires/gates-of-olympus.jpg",
+                                             "posterUrl":  "/assets/millionaires/gates-of-olympus.jpg",
+                                             "videoUrl":  "https://www.ppreplaylink.net/NJLIpRw4zW",
+                                             "featured":  false
+                                         },
+                                         {
+                                             "id":  "win-6",
+                                             "title":  "Gates of Olympus Super Scatter",
+                                             "amount":  "₺714.000",
+                                             "player":  "B***",
+                                             "game":  "Gates of Olympus Super Scatter",
+                                             "imageUrl":  "/assets/millionaires/gates-super-scatter.jpg",
+                                             "posterUrl":  "/assets/millionaires/gates-super-scatter.jpg",
+                                             "videoUrl":  "https://www.ppreplaylink.net/QS1MfZnC7m",
+                                             "featured":  false
+                                         },
+                                         {
+                                             "id":  "win-7",
+                                             "title":  "Starlight Princess 1000",
+                                             "amount":  "₺2.400.000",
+                                             "player":  "E***",
+                                             "game":  "Starlight Princess 1000",
+                                             "imageUrl":  "/assets/millionaires/starlight-princess-1000.png",
+                                             "posterUrl":  "/assets/millionaires/starlight-princess-1000.png",
+                                             "videoUrl":  "https://www.ppreplaylink.net/JnpZlOPrAs",
+                                             "featured":  false
+                                         },
+                                         {
+                                             "id":  "win-8",
+                                             "title":  "Fruit Party 2",
+                                             "amount":  "₺1.240.680",
+                                             "player":  "C***",
+                                             "game":  "Fruit Party 2",
+                                             "imageUrl":  "/assets/millionaires/fruit-party-2.jpg",
+                                             "posterUrl":  "/assets/millionaires/fruit-party-2.jpg",
+                                             "videoUrl":  "https://www.ppreplaylink.net/gQh1zRCTJ9",
+                                             "featured":  false
+                                         },
+                                         {
+                                             "id":  "win-9",
+                                             "title":  "5 Lion Megaways 2",
+                                             "amount":  "₺785.600",
+                                             "player":  "N***",
+                                             "game":  "5 Lion Megaways 2",
+                                             "imageUrl":  "/assets/millionaires/five-lion-megaways-2.jpg",
+                                             "posterUrl":  "/assets/millionaires/five-lion-megaways-2.jpg",
+                                             "videoUrl":  "https://www.ppreplaylink.net/OW87vpJrGw",
+                                             "featured":  false
+                                         },
+                                         {
+                                             "id":  "win-10",
+                                             "title":  "Sweet Bonanza 1000",
+                                             "amount":  "₺1.041.540",
+                                             "player":  "R***",
+                                             "game":  "Sweet Bonanza 1000",
+                                             "imageUrl":  "/assets/millionaires/sweet-bonanza-1000.jpg",
+                                             "posterUrl":  "/assets/millionaires/sweet-bonanza-1000.jpg",
+                                             "videoUrl":  "https://www.ppreplaylink.net/uk1hsdQgHv",
+                                             "featured":  false
+                                         },
+                                         {
+                                             "id":  "win-11",
+                                             "title":  "Gates of Olympus Super Scatter",
+                                             "amount":  "₺1.010.880",
+                                             "player":  "T***",
+                                             "game":  "Gates of Olympus Super Scatter",
+                                             "imageUrl":  "/assets/millionaires/gates-super-scatter.jpg",
+                                             "posterUrl":  "/assets/millionaires/gates-super-scatter.jpg",
+                                             "videoUrl":  "https://www.ppreplaylink.net/iQhLCif2fg",
+                                             "featured":  false
+                                         },
+                                         {
+                                             "id":  "win-12",
+                                             "title":  "Gates of Olympus 1000",
+                                             "amount":  "₺920.000",
+                                             "player":  "Y***",
+                                             "game":  "Gates of Olympus 1000",
+                                             "imageUrl":  "/assets/millionaires/gates-olympus-1000.jpg",
+                                             "posterUrl":  "/assets/millionaires/gates-olympus-1000.jpg",
+                                             "videoUrl":  "https://www.ppreplaylink.net/ERReI97g6O",
+                                             "featured":  false
+                                         },
+                                         {
+                                             "id":  "win-13",
+                                             "title":  "Gates of Olympus 1000",
+                                             "amount":  "₺890.000",
+                                             "player":  "L***",
+                                             "game":  "Gates of Olympus 1000",
+                                             "imageUrl":  "/assets/millionaires/gates-olympus-1000.jpg",
+                                             "posterUrl":  "/assets/millionaires/gates-olympus-1000.jpg",
+                                             "videoUrl":  "https://www.ppreplaylink.net/FnVwxwwxP5",
+                                             "featured":  false
+                                         },
+                                         {
+                                             "id":  "win-14",
+                                             "title":  "Gates of Olympus Dice",
+                                             "amount":  "₺670.000",
+                                             "player":  "O***",
+                                             "game":  "Gates of Olympus Dice",
+                                             "imageUrl":  "/assets/millionaires/gates-olympus-dice.png",
+                                             "posterUrl":  "/assets/millionaires/gates-olympus-dice.png",
+                                             "videoUrl":  "https://www.ppreplaylink.net/eOFqvpmbEX",
+                                             "featured":  false
+                                         },
+                                         {
+                                             "id":  "win-15",
+                                             "title":  "Gates of Olympus Super Scatter",
+                                             "amount":  "₺1.650.000",
+                                             "player":  "P***",
+                                             "game":  "Gates of Olympus Super Scatter",
+                                             "imageUrl":  "/assets/millionaires/gates-super-scatter.jpg",
+                                             "posterUrl":  "/assets/millionaires/gates-super-scatter.jpg",
+                                             "videoUrl":  "https://www.ppreplaylink.net/JCbwwa0426",
+                                             "featured":  false
+                                         },
+                                         {
+                                             "id":  "win-16",
+                                             "title":  "Sugar Rush 1000",
+                                             "amount":  "₺4.059.260",
+                                             "player":  "Z***",
+                                             "game":  "Sugar Rush 1000",
+                                             "imageUrl":  "/assets/millionaires/sugar-rush-1000.png",
+                                             "posterUrl":  "/assets/millionaires/sugar-rush-1000.png",
+                                             "videoUrl":  "https://www.ppreplaylink.net/k9lhEUotSu",
+                                             "featured":  true
+                                         },
+                                         {
+                                             "id":  "win-17",
+                                             "title":  "Gems Bonanza",
+                                             "amount":  "₺612.500",
+                                             "player":  "G***",
+                                             "game":  "Gems Bonanza",
+                                             "imageUrl":  "/assets/millionaires/gems-bonanza.png",
+                                             "posterUrl":  "/assets/millionaires/gems-bonanza.png",
+                                             "videoUrl":  "https://www.ppreplaylink.net/UPq8prHGoF",
+                                             "featured":  false
+                                         }
+                                     ]
+                     }
+}

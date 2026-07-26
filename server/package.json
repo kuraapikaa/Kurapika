@@ -1,0 +1,50 @@
+{
+    "name":  "betconstruct-dashboard-server",
+    "version":  "1.0.0",
+    "type":  "module",
+    "scripts":  {
+                    "build":  "tsc",
+                    "dev":  "tsx watch src/index.ts",
+                    "start":  "cross-env NODE_ENV=production node dist/index.js",
+                    "typecheck":  "tsc --noEmit",
+                    "test":  "vitest run",
+                    "test:watch":  "vitest",
+                    "test:coverage":  "vitest run --coverage",
+                    "fetch-promos":  "node scripts/fetch-promotions.mjs",
+                    "fetch-promos-details":  "cross-env FETCH_PROMO_DETAILS=1 node scripts/fetch-promotions.mjs",
+                    "migrate:passwords":  "tsx src/scripts/migrate-tenant-passwords.ts",
+                    "migrate:storage":  "tsx src/scripts/migrate-json-to-postgres.ts"
+                },
+    "dependencies":  {
+                         "@fastify/cookie":  "^9.4.0",
+                         "@fastify/cors":  "^9.0.1",
+                         "@fastify/helmet":  "^11.1.1",
+                         "@fastify/rate-limit":  "^9.1.0",
+                         "@fastify/session":  "^10.9.0",
+                         "@fastify/static":  "^7.0.4",
+                         "@fastify/swagger":  "^8.15.0",
+                         "@fastify/swagger-ui":  "^2.1.0",
+                         "@sinclair/typebox":  "^0.34.49",
+                         "bcryptjs":  "^3.0.3",
+                         "dotenv":  "^16.4.5",
+                         "fastify":  "^4.28.1",
+                         "jsdom":  "^22.1.0",
+                         "node-fetch":  "^3.3.1",
+                         "pg":  "^8.22.0",
+                         "qrcode":  "^1.5.4",
+                         "redis":  "^6.1.0",
+                         "whatsapp-web.js":  "^1.34.6"
+                     },
+    "devDependencies":  {
+                            "@types/bcryptjs":  "^2.4.6",
+                            "@types/jsdom":  "^27.0.0",
+                            "@types/node":  "^22.9.0",
+                            "@types/pg":  "^8.20.0",
+                            "@types/qrcode":  "^1.5.6",
+                            "cross-env":  "^7.0.3",
+                            "playwright":  "^1.58.2",
+                            "tsx":  "^4.19.2",
+                            "typescript":  "^5.6.3",
+                            "vitest":  "^4.1.5"
+                        }
+}

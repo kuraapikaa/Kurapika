@@ -1,0 +1,14 @@
+{
+  "gunluk": {
+    "prize": "100.000",
+    "isActive": true
+  },
+  "haftalik": {
+    "prize": "250.000",
+    "isActive": true
+  },
+  "aylik": {
+    "prize": "500.000",
+    "isActive": true
+  }
+}

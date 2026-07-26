@@ -1,0 +1,39 @@
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Yerel ortam ve kimlik bilgileri
+.env
+.env.*
+!.env.example
+server/.backoffice-auth.json
+server/.dashboard-auth.json
+server/.wwebjs_auth/
+server/.wwebjs_cache/
+
+# Derleme, log ve geçici çalışma çıktıları
+*.log
+*.local
+.tmp-*/
+scratch/
+server/artifacts/
+*.docx
+
+# Tenant ve oyuncu çalışma verileri
+server/src/data/tenants.json
+server/src/data/forms-data/
+server/src/data/forms-settings/
+server/src/data/player-loyalty.json
+server/src/data/player-loyalty/
+server/src/data/wheel-codes.json
+server/src/data/wheel-codes/
+server/src/data/wheel-claims/
+server/src/data/prediction-entries/
+server/src/data/prediction-settlements/
+server/src/data/engagement/
+server/src/data/next-day-bonus-runs/
+server/src/data/game-settings/*.json
+server/src/data/*.bak.*
+server/src/data/**/*.bak.*
+server/src/data/*-auth.json
+server/src/data/audit*.json

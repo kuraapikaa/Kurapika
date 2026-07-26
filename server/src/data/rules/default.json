@@ -1,0 +1,142 @@
+{
+  "PROMO_SPECS": {
+    "1306": {
+      "enabled": true,
+      "type": "partner",
+      "partnerBonusId": "1306",
+      "amountType": "tiered"
+    },
+    "1844": {
+      "enabled": true,
+      "type": "partner",
+      "partnerBonusId": "1844",
+      "freespinGame": "194814",
+      "freespinCount": 100,
+      "freespinBetLevel": 1,
+      "isAutoCharge": true,
+      "onlyNewUsersNoDepositNoWithdraw": true,
+      "maxBalanceToClaim": 0,
+      "amountType": "fixed",
+      "fixedAmount": 100,
+      "freespinGameId": 194814,
+      "freespinGameProviderId": 1
+    },
+    "1845": {
+      "enabled": true,
+      "type": "partner",
+      "partnerBonusId": "1845",
+      "amountType": "percentage",
+      "percentageAmount": 100,
+      "checkLastTransactionIsDeposit": true,
+      "excludeFromLossCalculations": true,
+      "isAutoCharge": true,
+      "checkSameDayUsage": true,
+      "checkSingleInvestmentUsage": true,
+      "minBalanceToClaim": 500,
+      "maxBalanceToClaim": 2000,
+      "principalWagerMult": 1,
+      "bonusWagerMult": 5,
+      "maxPayoutMult": 5,
+      "minDepositAmount": 1,
+      "perDayLimit": 1,
+      "perWeekLimit": 7,
+      "isFirstDepositBonus": true,
+      "activeDays": [
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "saturday",
+        "sunday"
+      ],
+      "canReceiveWheelBonus": false,
+      "canReceiveLossBonus": false
+    },
+    "1847": {
+      "enabled": false,
+      "type": "partner",
+      "partnerBonusId": "1847"
+    },
+    "1849": {
+      "enabled": false,
+      "type": "partner",
+      "partnerBonusId": "1849",
+      "freespinBetLevel": 1,
+      "freespinCount": 1,
+      "freespinGameId": 195202,
+      "freespinGameProviderId": 1
+    },
+    "1857": {
+      "enabled": false,
+      "type": "partner",
+      "partnerBonusId": "1857"
+    },
+    "1870": {
+      "enabled": false,
+      "type": "partner",
+      "partnerBonusId": "1870"
+    },
+    "1871": {
+      "enabled": false,
+      "type": "partner",
+      "partnerBonusId": "1871"
+    },
+    "1872": {
+      "enabled": false,
+      "type": "partner",
+      "partnerBonusId": "1872"
+    },
+    "1873": {
+      "enabled": false,
+      "type": "partner",
+      "partnerBonusId": "1873"
+    },
+    "1874": {
+      "enabled": false,
+      "type": "partner",
+      "partnerBonusId": "1874"
+    },
+    "1878": {
+      "enabled": false,
+      "type": "partner",
+      "partnerBonusId": "1878"
+    },
+    "1879": {
+      "enabled": false,
+      "type": "partner",
+      "partnerBonusId": "1879"
+    },
+    "1880": {
+      "enabled": false,
+      "type": "partner",
+      "partnerBonusId": "1880"
+    },
+    "1881": {
+      "enabled": false,
+      "type": "partner",
+      "partnerBonusId": "1881"
+    },
+    "1882": {
+      "enabled": false,
+      "type": "partner",
+      "partnerBonusId": "1882"
+    },
+    "1883": {
+      "enabled": false,
+      "type": "partner",
+      "partnerBonusId": "1883"
+    },
+    "1884": {
+      "enabled": false,
+      "type": "partner",
+      "partnerBonusId": "1884"
+    },
+    "1885": {
+      "enabled": false,
+      "type": "partner",
+      "partnerBonusId": "1885"
+    }
+  },
+  "PROMO_TITLE_SPECS": {}
+}
