@@ -117,8 +117,8 @@ export function TransactionsList({ dateRange }: TransactionsListProps) {
 
     if (error) {
         return (
-            <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-12 text-center text-rose-400">
-                <p className="text-lg font-black uppercase tracking-widest">Hata</p>
+            <div className="rounded-xl border border-rose-500/20 bg-rose-500/5 p-12 text-center text-rose-400">
+                <p className="text-lg font-semibold uppercase tracking-widest">Hata</p>
                 <p className="mt-2 text-sm opacity-70">{(error as any).message || 'İşlemler yüklenemedi.'}</p>
             </div>
         );
@@ -129,18 +129,18 @@ export function TransactionsList({ dateRange }: TransactionsListProps) {
             {/* Header */}
             <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-400 ring-1 ring-blue-500/20">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/10 text-blue-400 ring-1 ring-blue-500/20">
                         <History size={24} />
                     </div>
                     <div className="text-left">
-                        <h2 className="text-xl font-black text-white tracking-tight">İşlem Geçmişi</h2>
+                        <h2 className="text-xl font-semibold text-white tracking-tight">İşlem Geçmişi</h2>
                         <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Tüm finansal hareketler</p>
                     </div>
                 </div>
 
                 {/* Rows Per Page Selector (Top) */}
-                <div className="flex items-center gap-3 bg-slate-900/40 px-4 py-2 rounded-2xl border border-white/5 ring-1 ring-white/5">
-                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">SATIR SAYISI:</span>
+                <div className="flex items-center gap-3 bg-slate-900/40 px-4 py-2 rounded-xl border border-white/5 ring-1 ring-white/5">
+                    <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">SATIR SAYISI:</span>
                     <select
                         value={rowsPerPage}
                         onChange={(e) => {
@@ -161,10 +161,10 @@ export function TransactionsList({ dateRange }: TransactionsListProps) {
 
 
             {/* Filter Section */}
-            <div className="rounded-2xl border border-white/5 bg-slate-900/40 backdrop-blur-md overflow-hidden transition-all">
+            <div className="rounded-xl border border-white/5 bg-slate-900/40 backdrop-blur-md overflow-hidden transition-all">
                 <button
                     onClick={() => setIsFilterOpen(!isFilterOpen)}
-                    className="flex w-full items-center justify-between px-6 py-4 text-left hover:bg-white/5 transition-colors"
+                    className="flex w-full items-center justify-between px-3 py-2.5 text-left hover:bg-white/5 transition-colors"
                 >
                     <div className="flex items-center gap-2 text-blue-400">
                         <Filter size={18} />
@@ -224,14 +224,14 @@ export function TransactionsList({ dateRange }: TransactionsListProps) {
                         <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
                             <button
                                 onClick={handleResetFilters}
-                                className="flex items-center gap-2 rounded-xl bg-slate-800 px-6 py-2.5 text-sm font-black text-slate-400 hover:bg-slate-700 hover:text-white transition-all ring-1 ring-white/5 uppercase tracking-widest"
+                                className="flex items-center gap-2 rounded-xl bg-slate-800 px-6 py-2.5 text-sm font-semibold text-slate-400 hover:bg-slate-700 hover:text-white transition-all ring-1 ring-white/5 uppercase tracking-widest"
                             >
                                 <RotateCcw size={16} />
                                 Sıfırla
                             </button>
                             <button
                                 onClick={handleApplyFilters}
-                                className="flex items-center gap-2 rounded-xl bg-blue-600 px-8 py-2.5 text-sm font-black text-white hover:bg-blue-500 shadow-lg shadow-blue-500/20 transition-all uppercase tracking-widest"
+                                className="flex items-center gap-2 rounded-xl bg-blue-600 px-8 py-2.5 text-sm font-semibold text-white hover:bg-blue-500 shadow-lg shadow-blue-500/20 transition-all uppercase tracking-widest"
                             >
                                 <Check size={16} />
                                 Uygula
@@ -242,11 +242,11 @@ export function TransactionsList({ dateRange }: TransactionsListProps) {
             </div>
 
             {/* Table Section */}
-            <div className="rounded-[2.5rem] border border-white/5 bg-slate-900/40 p-4 backdrop-blur-md overflow-hidden">
+            <div className="rounded-xl border border-white/5 bg-slate-900/40 p-4 backdrop-blur-md overflow-hidden">
                 {isLoading ? (
                     <div className="flex flex-col items-center justify-center py-32 gap-6">
                         <Loader2 className="h-12 w-12 animate-spin text-blue-500" />
-                        <p className="text-sm font-black text-slate-500 uppercase tracking-[0.4em] animate-pulse">İşlemler Alınıyor...</p>
+                        <p className="text-sm font-semibold text-slate-500 uppercase tracking-[0.4em] animate-pulse">İşlemler Alınıyor...</p>
                     </div>
                 ) : transactions.length === 0 ? (
                     <div className="py-32 text-center text-slate-500 italic text-sm">Bu filtrelerle kayıtlı işlem bulunamadı.</div>
@@ -255,12 +255,12 @@ export function TransactionsList({ dateRange }: TransactionsListProps) {
                         <table className="w-full text-left">
                             <thead>
                                 <tr className="border-b border-white/5 sticky top-0 bg-slate-900/90 backdrop-blur-md z-10">
-                                    <th className="pb-4 pl-6 pt-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Oyuncu Info</th>
-                                    <th className="pb-4 pt-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">İşlem Detayı</th>
-                                    <th className="pb-4 pt-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Miktar</th>
-                                    <th className="pb-4 pt-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Tarih</th>
-                                    <th className="pb-4 pt-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">İşlem Yapan</th>
-                                    <th className="pb-4 pt-2 pr-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">Durum</th>
+                                    <th className="pb-4 pl-6 pt-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Oyuncu Info</th>
+                                    <th className="pb-4 pt-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">İşlem Detayı</th>
+                                    <th className="pb-4 pt-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Miktar</th>
+                                    <th className="pb-4 pt-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Tarih</th>
+                                    <th className="pb-4 pt-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">İşlem Yapan</th>
+                                    <th className="pb-4 pt-2 pr-6 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400 text-right">Durum</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/5">
@@ -272,7 +272,7 @@ export function TransactionsList({ dateRange }: TransactionsListProps) {
                                                     <User size={18} />
                                                 </div>
                                                 <div className="text-left">
-                                                    <p className="text-sm font-black text-white tracking-tight">{tx.ClientLogin}</p>
+                                                    <p className="text-sm font-semibold text-white tracking-tight">{tx.ClientLogin}</p>
                                                     <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">ID: #{tx.ClientId}</p>
                                                 </div>
                                             </div>
@@ -280,7 +280,7 @@ export function TransactionsList({ dateRange }: TransactionsListProps) {
                                         <td className="py-6">
                                             <div className="text-left">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-sm font-black text-blue-400 tracking-tight">{tx.TypeName}</span>
+                                                    <span className="text-sm font-semibold text-blue-400 tracking-tight">{tx.TypeName}</span>
                                                     {tx.GameId && tx.GameId > 0 && (
                                                         <div className="rounded-md bg-blue-500/10 px-1.5 py-0.5" title={`Oyun ID: ${tx.GameId}`}>
                                                             <Gamepad2 size={12} className="text-blue-400" />
@@ -296,7 +296,7 @@ export function TransactionsList({ dateRange }: TransactionsListProps) {
                                         </td>
                                         <td className="py-6">
                                             <div className="flex flex-col items-start">
-                                                <span className={`text-base font-black ${tx.Amount >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                                <span className={`text-base font-semibold ${tx.Amount >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                                                     {tx.Amount >= 0 ? '+' : ''}{formatNumber(tx.Amount)} {tx.CurrencyId}
                                                 </span>
                                                 {tx.ExchangedAmount !== tx.Amount && (
@@ -313,7 +313,7 @@ export function TransactionsList({ dateRange }: TransactionsListProps) {
                                         <td className="py-6">
                                             <div className="flex items-center gap-2 bg-white/5 py-1.5 px-3 rounded-lg w-fit ring-1 ring-white/5">
                                                 <FileText size={14} className="text-slate-500" />
-                                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{tx.UserName}</span>
+                                                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">{tx.UserName}</span>
                                             </div>
                                         </td>
                                         <td className="py-6 pr-6 text-right">
@@ -321,14 +321,14 @@ export function TransactionsList({ dateRange }: TransactionsListProps) {
                                                 const isRejected = String(tx.TypeName ?? '').toLowerCase().includes('reddedilmiştir');
                                                 if (isRejected) {
                                                     return (
-                                                        <span className="rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-widest ring-1 bg-rose-500/10 text-rose-400 ring-rose-500/20">
+                                                        <span className="rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-widest ring-1 bg-rose-500/10 text-rose-400 ring-rose-500/20">
                                                             REDDEDİLMİŞ
                                                         </span>
                                                     );
                                                 }
                                                 const isApproved = tx.State === 10;
                                                 return (
-                                                    <span className={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-widest ring-1 ${isApproved
+                                                    <span className={`rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-widest ring-1 ${isApproved
                                                         ? 'bg-emerald-500/10 text-emerald-400 ring-emerald-500/20'
                                                         : 'bg-amber-500/10 text-amber-400 ring-amber-500/20'
                                                         }`}>
@@ -347,7 +347,7 @@ export function TransactionsList({ dateRange }: TransactionsListProps) {
                 {/* Pagination */}
                 {!isLoading && transactions.length > 0 && (
                     <div className="mt-6 border-t border-white/5 pt-6 flex flex-col sm:flex-row items-center justify-between px-6 gap-4">
-                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">
+                        <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-[0.2em]">
                             Toplam {formatNumber(totalCount)} işlemden {(page - 1) * rowsPerPage + 1}-{Math.min(page * rowsPerPage, totalCount)} arası gösteriliyor
                         </p>
 
@@ -375,10 +375,10 @@ export function TransactionsList({ dateRange }: TransactionsListProps) {
                                     value={jumpPage}
                                     onChange={(e) => setJumpPage(e.target.value)}
                                     onBlur={() => setJumpPage(page.toString())}
-                                    className="w-8 bg-transparent text-center text-sm font-black text-white outline-none"
+                                    className="w-8 bg-transparent text-center text-sm font-semibold text-white outline-none"
                                 />
-                                <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">/</span>
-                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{totalPages}</span>
+                                <span className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest">/</span>
+                                <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">{totalPages}</span>
                             </form>
 
                             <button
@@ -416,7 +416,7 @@ interface FilterInputProps {
 function FilterInput({ label, value, onChange, disabled, icon: Icon }: FilterInputProps) {
     return (
         <div className="space-y-1.5">
-            <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider pl-1">{label}</label>
+            <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider pl-1">{label}</label>
             <div className="relative">
                 {Icon && <Icon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />}
                 <input
@@ -441,7 +441,7 @@ interface FilterSelectProps {
 function FilterSelect({ label, value, onChange, options }: FilterSelectProps) {
     return (
         <div className="space-y-1.5">
-            <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider pl-1">{label}</label>
+            <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider pl-1">{label}</label>
             <select
                 value={value}
                 onChange={(e) => onChange?.(e.target.value)}

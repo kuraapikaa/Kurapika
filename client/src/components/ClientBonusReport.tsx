@@ -65,7 +65,7 @@ export function ClientBonusReport() {
 
     if (error || response?.HasError) {
         return (
-            <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-12 text-center">
+            <div className="rounded-xl border border-rose-500/20 bg-rose-500/5 p-12 text-center">
                 <AlertCircle size={48} className="mx-auto mb-4 text-rose-500/50" />
                 <h3 className="text-lg font-bold text-rose-400">Rapor Yüklenemedi</h3>
                 <p className="text-sm text-slate-500 mt-2">{response?.AlertMessage || (error as Error)?.message}</p>
@@ -83,30 +83,30 @@ export function ClientBonusReport() {
         <div className="space-y-6 animate-in fade-in duration-500 flex flex-col min-h-0 h-full">
             {/* Header Cards */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:grid-cols-3 shrink-0">
-                <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-5 backdrop-blur-sm relative overflow-hidden group">
+                <div className="rounded-xl border border-white/5 bg-slate-900/40 p-5 backdrop-blur-sm relative overflow-hidden group">
                     <div className="absolute top-0 right-0 p-3 opacity-20 group-hover:opacity-40 transition-opacity">
                         <Gift size={24} className="text-amber-400" />
                     </div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Toplam Bonus Tutarı</p>
-                    <p className="text-2xl font-black text-white tabular-nums">
+                    <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 mb-1">Toplam Bonus Tutarı</p>
+                    <p className="text-2xl font-semibold text-white tabular-nums">
                         {formatNumber(totalBonusAmount)} <span className="text-sm font-normal text-slate-500">TRY</span>
                     </p>
                 </div>
-                <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-5 backdrop-blur-sm relative overflow-hidden group">
+                <div className="rounded-xl border border-white/5 bg-slate-900/40 p-5 backdrop-blur-sm relative overflow-hidden group">
                     <div className="absolute top-0 right-0 p-3 opacity-20 group-hover:opacity-40 transition-opacity">
                         <Search size={24} className="text-blue-400" />
                     </div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Verilen Bonus Sayısı</p>
-                    <p className="text-2xl font-black text-white tabular-nums">
+                    <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 mb-1">Verilen Bonus Sayısı</p>
+                    <p className="text-2xl font-semibold text-white tabular-nums">
                         {formatNumber(filteredData.length)}
                     </p>
                 </div>
-                <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-5 backdrop-blur-sm relative overflow-hidden group">
+                <div className="rounded-xl border border-rose-500/20 bg-rose-500/5 p-5 backdrop-blur-sm relative overflow-hidden group">
                     <div className="absolute top-0 right-0 p-3 opacity-20 group-hover:opacity-40 transition-opacity">
                         <TrendingDown size={24} className="text-rose-400" />
                     </div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-rose-500 mb-1">Bonus Gideri (Maliyet)</p>
-                    <p className="text-2xl font-black text-rose-400 tabular-nums">
+                    <p className="text-[10px] font-semibold uppercase tracking-widest text-rose-500 mb-1">Bonus Gideri (Maliyet)</p>
+                    <p className="text-2xl font-semibold text-rose-400 tabular-nums">
                         {formatNumber(totalBonusCost)} <span className="text-sm font-normal text-rose-500/50">TRY</span>
                     </p>
                 </div>
@@ -115,8 +115,8 @@ export function ClientBonusReport() {
             {/* Dashboard Analiz Kartları */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* En Çok Kullanılan Bonuslar */}
-                <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-5 shadow-lg">
-                    <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2 mb-4">
+                <div className="rounded-xl border border-white/5 bg-slate-900/40 p-5 shadow-lg">
+                    <h3 className="text-xs font-semibold uppercase tracking-widest text-slate-400 flex items-center gap-2 mb-4">
                         <BarChart3 size={16} className="text-blue-400" />
                         En Çok Alınanlar
                     </h3>
@@ -126,7 +126,7 @@ export function ClientBonusReport() {
                                 <span className="text-xs font-bold text-slate-300 truncate pr-4 group-hover:text-blue-400 transition-colors">
                                     {bonus.name}
                                 </span>
-                                <span className="text-xs font-mono font-black text-white bg-white/10 px-2 py-0.5 rounded-md">
+                                <span className="text-xs font-mono font-semibold text-white bg-white/10 px-2 py-0.5 rounded-md">
                                     {bonus.count} kez
                                 </span>
                             </div>
@@ -136,8 +136,8 @@ export function ClientBonusReport() {
                 </div>
 
                 {/* En Çok Kazandıran (Maliyetli) Bonuslar */}
-                <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-5 shadow-lg">
-                    <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2 mb-4">
+                <div className="rounded-xl border border-white/5 bg-slate-900/40 p-5 shadow-lg">
+                    <h3 className="text-xs font-semibold uppercase tracking-widest text-slate-400 flex items-center gap-2 mb-4">
                         <Trophy size={16} className="text-emerald-400" />
                         En Çok Kazandıranlar
                     </h3>
@@ -148,7 +148,7 @@ export function ClientBonusReport() {
                                     <span className="text-xs font-bold text-slate-300 truncate pr-2 group-hover:text-emerald-400 transition-colors">
                                         {bonus.name}
                                     </span>
-                                    <span className="text-xs font-mono font-black text-emerald-400">
+                                    <span className="text-xs font-mono font-semibold text-emerald-400">
                                         {formatNumber(bonus.paid)} ₺
                                     </span>
                                 </div>
@@ -162,8 +162,8 @@ export function ClientBonusReport() {
                 </div>
 
                 {/* En Pahalı (Yüksek Mevla) Bonuslar */}
-                <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-5 shadow-lg">
-                    <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2 mb-4">
+                <div className="rounded-xl border border-white/5 bg-slate-900/40 p-5 shadow-lg">
+                    <h3 className="text-xs font-semibold uppercase tracking-widest text-slate-400 flex items-center gap-2 mb-4">
                         <Flame size={16} className="text-rose-400" />
                         En Yüksek Hacimliler
                     </h3>
@@ -173,7 +173,7 @@ export function ClientBonusReport() {
                                 <span className="text-xs font-bold text-slate-300 truncate pr-4 group-hover:text-rose-400 transition-colors">
                                     {bonus.name}
                                 </span>
-                                <span className="text-xs font-mono font-black text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-md">
+                                <span className="text-xs font-mono font-semibold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-md">
                                     {formatNumber(bonus.amount)} ₺
                                 </span>
                             </div>
@@ -184,9 +184,9 @@ export function ClientBonusReport() {
             </div>
 
             {/* Table Section */}
-            <div className="rounded-2xl border border-white/5 bg-slate-900/40 shadow-xl overflow-hidden flex flex-col flex-1 min-h-0">
-                <div className="border-b border-white/5 bg-white/5 px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
-                    <h3 className="text-sm font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+            <div className="rounded-xl border border-white/5 bg-slate-900/40 shadow-xl overflow-hidden flex flex-col flex-1 min-h-0">
+                <div className="border-b border-white/5 bg-white/5 px-3 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
+                    <h3 className="text-sm font-semibold uppercase tracking-widest text-slate-400 flex items-center gap-2">
                         <Gift size={18} className="text-amber-400" />
                         Tüm Verilen Bonuslar
                     </h3>
@@ -208,14 +208,14 @@ export function ClientBonusReport() {
                 <div className="overflow-auto flex-1 h-[600px]">
                     <table className="w-full text-sm text-left relative">
                         <thead className="sticky top-0 z-10 bg-slate-900/95 backdrop-blur-sm">
-                            <tr className="border-b border-white/5 text-[10px] font-black uppercase tracking-widest text-slate-500">
-                                <th className="px-6 py-4 whitespace-nowrap">Oyuncu</th>
-                                <th className="px-6 py-4 whitespace-nowrap">Bonus Türü</th>
-                                <th className="px-6 py-4 text-right whitespace-nowrap">Verilen (TRY)</th>
-                                <th className="px-6 py-4 text-right whitespace-nowrap">Ödenen (TRY)</th>
-                                <th className="px-6 py-4 text-right whitespace-nowrap">Çevrim (Anlık/Hedef)</th>
-                                <th className="px-6 py-4 whitespace-nowrap text-center">Durum / Sonuç</th>
-                                <th className="px-6 py-4 whitespace-nowrap">Ekleyen & Tarih</th>
+                            <tr className="border-b border-white/5 text-[10px] font-semibold uppercase tracking-widest text-slate-500">
+                                <th className="px-3 py-2.5 whitespace-nowrap">Oyuncu</th>
+                                <th className="px-3 py-2.5 whitespace-nowrap">Bonus Türü</th>
+                                <th className="px-3 py-2.5 text-right whitespace-nowrap">Verilen (TRY)</th>
+                                <th className="px-3 py-2.5 text-right whitespace-nowrap">Ödenen (TRY)</th>
+                                <th className="px-3 py-2.5 text-right whitespace-nowrap">Çevrim (Anlık/Hedef)</th>
+                                <th className="px-3 py-2.5 whitespace-nowrap text-center">Durum / Sonuç</th>
+                                <th className="px-3 py-2.5 whitespace-nowrap">Ekleyen & Tarih</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
@@ -227,13 +227,13 @@ export function ClientBonusReport() {
                                 filteredData.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage).map((item: any, idx: number) => {
                                     return (
                                         <tr key={idx} className="group hover:bg-white/[0.02] transition-colors">
-                                            <td className="px-6 py-4">
+                                            <td className="px-3 py-2.5">
                                                 <div className="flex flex-col">
                                                     <span className="font-bold text-slate-200">{item.ClientId}</span>
                                                     <span className="text-[10px] text-slate-500 truncate max-w-[200px]">{item.ClientName || "-"}</span>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4">
+                                            <td className="px-3 py-2.5">
                                                 <div className="flex flex-col">
                                                     <span className="font-bold text-amber-400">{item.Name || "Bonus"}</span>
                                                     <span className="text-[10px] text-slate-500 truncate max-w-[250px]" title={item.Description}>
@@ -241,15 +241,15 @@ export function ClientBonusReport() {
                                                     </span>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 text-right">
+                                            <td className="px-3 py-2.5 text-right">
                                                 <div className="flex flex-col items-end">
-                                                    <span className="font-mono font-black text-rose-400">{formatNumber(item.Amount)}</span>
+                                                    <span className="font-mono font-semibold text-rose-400">{formatNumber(item.Amount)}</span>
                                                     <span className="text-[10px] text-slate-500">Real: {formatNumber(item.RealAmount)}</span>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 text-right">
+                                            <td className="px-3 py-2.5 text-right">
                                                 <div className="flex flex-col items-end">
-                                                    <span className="font-mono font-black text-emerald-400">
+                                                    <span className="font-mono font-semibold text-emerald-400">
                                                         {formatNumber(item.TotalPaidAmount > 0 ? item.TotalPaidAmount : (item.AmountInRc || item.Amount))}
                                                     </span>
                                                     <span className="text-[10px] text-slate-500">
@@ -257,7 +257,7 @@ export function ClientBonusReport() {
                                                     </span>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 text-right">
+                                            <td className="px-3 py-2.5 text-right">
                                                 <div className="flex flex-col items-end">
                                                     <span className="font-mono font-bold text-slate-300">
                                                         {formatNumber(item.WageredAmount)} / {formatNumber(item.ToWagerAmount)}
@@ -267,7 +267,7 @@ export function ClientBonusReport() {
                                                     </span>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 text-center">
+                                            <td className="px-3 py-2.5 text-center">
                                                 <div className="flex flex-col items-center">
                                                     {item.ResultType === 0 && <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-500">Aktif/Bekliyor</span>}
                                                     {item.ResultType === 1 && <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-500">Kazanıldı</span>}
@@ -276,7 +276,7 @@ export function ClientBonusReport() {
                                                     <span className="text-[9px] text-slate-500 uppercase mt-1">Accept: {item.AcceptanceType}</span>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4">
+                                            <td className="px-3 py-2.5">
                                                 <div className="flex flex-col">
                                                     <span className="font-mono text-[11px] text-slate-300">{item.CreatedByUserName || "Sistem"}</span>
                                                     <span className="font-mono text-[10px] text-slate-500">{item.CreatedLocal?.split('T').join(' ').split('.')[0] || "-"}</span>
@@ -290,7 +290,7 @@ export function ClientBonusReport() {
                     </table>
                 </div>
                 {/* Pagination Controls */}
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-white/5 bg-slate-900/95 px-6 py-4">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-white/5 bg-slate-900/95 px-3 py-2.5">
                     <div className="flex items-center gap-2 text-sm text-slate-400">
                         <span>Gösterilen: </span>
                         <select

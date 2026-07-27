@@ -95,42 +95,42 @@ export function DepositsList({ data, isLoading, error }: DepositsListProps) {
             <header className="flex flex-wrap items-center justify-between gap-6 px-1">
                 <div className="flex items-center gap-4">
                     <div className="relative group">
-                        <div className="absolute -inset-1 rounded-2xl bg-emerald-500/20 blur opacity-75 animate-pulse" />
-                        <div className="relative rounded-2xl bg-black border border-emerald-500/20 p-3.5 text-emerald-400 shadow-2xl">
+                        <div className="absolute -inset-1 rounded-xl bg-emerald-500/20 blur opacity-75 animate-pulse" />
+                        <div className="relative rounded-xl bg-black border border-emerald-500/20 p-3.5 text-emerald-400 shadow-2xl">
                             <Wallet size={24} />
                         </div>
                     </div>
                     <div>
-                        <h2 className="text-2xl font-black text-white tracking-tighter uppercase antialiased">Yatırım İşlemleri</h2>
+                        <h2 className="text-2xl font-semibold text-white tracking-tighter uppercase antialiased">Yatırım İşlemleri</h2>
                         <div className="flex items-center gap-2 mt-0.5">
                             <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                            <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em]">Finansal Giriş & Bakiye Hareketleri</p>
+                            <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.2em]">Finansal Giriş & Bakiye Hareketleri</p>
                         </div>
                     </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-4">
-                    <div className="premium-card flex items-center gap-6 rounded-2xl px-6 py-3 border-white/5 bg-zinc-950/40 shadow-inner">
+                    <div className="premium-card flex items-center gap-6 rounded-xl px-6 py-3 border-white/5 bg-zinc-950/40 shadow-inner">
                         <div className="flex flex-col">
-                            <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">Toplam İşlem</span>
-                            <span className="text-sm font-black text-white tabular-nums">{formatNumber(count)}</span>
+                            <span className="text-[9px] font-semibold text-zinc-500 uppercase tracking-widest">Toplam İşlem</span>
+                            <span className="text-sm font-semibold text-white tabular-nums">{formatNumber(count)}</span>
                         </div>
                         <div className="h-8 w-px bg-white/5" />
                         <div className="flex flex-col">
-                            <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">Toplam Tutar</span>
+                            <span className="text-[9px] font-semibold text-zinc-500 uppercase tracking-widest">Toplam Tutar</span>
                             <div className="flex items-baseline gap-1.5">
-                                <span className="text-sm font-black text-emerald-400 tabular-nums neon-glow-emerald">{formatNumber(totalAmount)}</span>
+                                <span className="text-sm font-semibold text-emerald-400 tabular-nums neon-glow-emerald">{formatNumber(totalAmount)}</span>
                                 <span className="text-[9px] font-bold text-emerald-600/60 tracking-tighter">TRY</span>
                             </div>
                         </div>
                     </div>
-                    <Button variant="secondary" size="sm" className="rounded-xl border-white/5 bg-white/5 hover:bg-white/10 uppercase font-black text-[10px] tracking-widest gap-2">
+                    <Button variant="secondary" size="sm" className="rounded-xl border-white/5 bg-white/5 hover:bg-white/10 uppercase font-semibold text-[10px] tracking-widest gap-2">
                         <Download size={14} /> DIŞA AKTAR
                     </Button>
                 </div>
             </header>
 
             {isLoading ? (
-                <div className="flex flex-1 flex-col items-center justify-center gap-4 rounded-3xl border border-white/5 bg-slate-900/40 min-h-[400px]">
+                <div className="flex flex-1 flex-col items-center justify-center gap-4 rounded-xl border border-white/5 bg-slate-900/40 min-h-[400px]">
                     <div className="h-12 w-12 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent" />
                     <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Yatırım verileri senkronize ediliyor...</p>
                 </div>
@@ -142,7 +142,7 @@ export function DepositsList({ data, isLoading, error }: DepositsListProps) {
                                 <tr>
                                     {allKeys.map((key, idx) => (
                                         <th key={key} className={cn(
-                                            "px-6 py-5 font-black text-[10px] uppercase tracking-[0.15em] text-zinc-500 text-left whitespace-nowrap border-b border-white/[0.04]",
+                                            "px-3 py-2.5 font-semibold text-[10px] uppercase tracking-[0.15em] text-zinc-500 text-left whitespace-nowrap border-b border-white/[0.04]",
                                             idx === 0 && "pl-8"
                                         )}>
                                             {columnLabels[key] ?? key}
@@ -173,8 +173,8 @@ export function DepositsList({ data, isLoading, error }: DepositsListProps) {
                                             >
                                                 {allKeys.map((key, colIdx) => (
                                                     <td key={key} className={cn(
-                                                        "px-6 py-4 whitespace-nowrap text-zinc-400 group-hover:text-white transition-colors border-b border-white/[0.02]",
-                                                        colIdx === 0 && "pl-8 font-black text-zinc-500"
+                                                        "px-3 py-2.5 whitespace-nowrap text-zinc-400 group-hover:text-white transition-colors border-b border-white/[0.02]",
+                                                        colIdx === 0 && "pl-8 font-semibold text-zinc-500"
                                                     )}>
                                                         {formatCell(key, (row as any)[key], row)}
                                                     </td>
