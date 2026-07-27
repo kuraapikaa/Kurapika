@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, Suspense, lazy, useEffect } from 'react';
+import { matchesTr } from './lib/turkishSearch';
 import { GlobalNotifications } from './components/GlobalNotifications';
 import { useMemo } from 'react';
 import { useLocation, NavLink } from 'react-router-dom';
@@ -563,12 +564,12 @@ export default function App() {
   // Hızlı menü araması. 28 öğe taramayı yavaşlatıyordu; Türkçe karakterler
   // için locale-aware karşılaştırma (İ/ı sorunu için toLocaleLowerCase).
   const filteredNavGroups = useMemo(() => {
-    const q = navQuery.trim().toLocaleLowerCase('tr-TR');
+    const q = navQuery.trim();
     if (!q) return visibleNavGroups;
     return visibleNavGroups
       .map((group) => ({
         ...group,
-        items: group.items.filter((item) => item.label.toLocaleLowerCase('tr-TR').includes(q)),
+        items: group.items.filter((item) => matchesTr(item.label, q)),
       }))
       .filter((group) => group.items.length > 0);
   }, [visibleNavGroups, navQuery]);
