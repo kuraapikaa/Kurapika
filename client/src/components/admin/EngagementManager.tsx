@@ -159,10 +159,10 @@ export function EngagementManager({
           <div className="rounded-xl border border-white/10 bg-[#080d13]">
             <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-4">
               <div>
-                <h3 className="text-sm font-black text-white">Görevler</h3>
+                <h3 className="text-sm font-semibold text-white">Görevler</h3>
                 <p className="mt-1 text-xs font-medium text-slate-500">Metrik, hedef ve ödül eşleşmelerini düzenleyin.</p>
               </div>
-              <button type="button" onClick={addTask} className="inline-flex h-10 items-center gap-2 rounded-lg bg-cyan-300 px-4 text-xs font-black uppercase tracking-widest text-zinc-950">
+              <button type="button" onClick={addTask} className="inline-flex h-10 items-center gap-2 rounded-lg bg-cyan-300 px-4 text-xs font-semibold uppercase tracking-widest text-zinc-950">
                 <Plus size={15} />
                 Görev Ekle
               </button>
@@ -171,7 +171,7 @@ export function EngagementManager({
               {daily.tasks.map((task: any) => (
                 <div key={task.id} className="rounded-xl border border-white/[0.08] bg-black/20 p-4">
                   <div className="mb-4 flex items-center justify-between gap-3">
-                    <label className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-400">
+                    <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-slate-400">
                       <input type="checkbox" checked={task.active !== false} onChange={(event) => updateTask(task.id, { active: event.target.checked })} />
                       Aktif
                     </label>
@@ -211,7 +211,7 @@ export function EngagementManager({
               <DateField label="Başlangıç" value={pass.startsAt} onChange={(startsAt) => updatePass({ startsAt })} />
               <DateField label="Bitiş" value={pass.endsAt} onChange={(endsAt) => updatePass({ endsAt })} />
               <TextField className="xl:col-span-3" label="Açıklama" value={pass.description} onChange={(description) => updatePass({ description })} />
-              <label className="flex h-[66px] items-center gap-3 rounded-lg border border-white/10 bg-black/25 px-3 text-xs font-black uppercase tracking-widest text-slate-400">
+              <label className="flex h-[66px] items-center gap-3 rounded-lg border border-white/10 bg-black/25 px-3 text-xs font-semibold uppercase tracking-widest text-slate-400">
                 <input type="checkbox" checked={pass.premiumEnabled === true} onChange={(event) => updatePass({ premiumEnabled: event.target.checked })} />
                 Premium hat
               </label>
@@ -227,7 +227,7 @@ export function EngagementManager({
             {pass.xpRules.map((rule: any) => (
               <div key={rule.id} className="rounded-xl border border-white/[0.08] bg-black/20 p-4">
                 <div className="mb-4 flex items-center justify-between gap-3">
-                  <label className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-400">
+                  <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-slate-400">
                     <input type="checkbox" checked={rule.active !== false} onChange={(event) => updateRule(rule.id, { active: event.target.checked })} />
                     Aktif
                   </label>
@@ -256,9 +256,9 @@ export function EngagementManager({
               <div key={level.level} className="rounded-xl border border-white/[0.08] bg-black/20 p-4">
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-300 text-sm font-black text-zinc-950">{level.level}</div>
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-300 text-sm font-semibold text-zinc-950">{level.level}</div>
                     <div>
-                      <div className="text-sm font-black text-white">Seviye {level.level}</div>
+                      <div className="text-sm font-semibold text-white">Seviye {level.level}</div>
                       <div className="text-xs font-bold text-slate-600">{level.requiredXp || 0} XP</div>
                     </div>
                   </div>
@@ -287,7 +287,7 @@ export function EngagementManager({
 function CampaignSelect({ label, value, options, onChange }: { label: string; value: string; options: any[]; onChange: (value: string) => void }) {
   return (
     <div className="min-w-0">
-      <label className="mb-2 block text-[10px] font-black uppercase tracking-widest text-slate-500">{label}</label>
+      <label className="mb-2 block text-[10px] font-semibold uppercase tracking-widest text-slate-500">{label}</label>
       <select value={value} onChange={(event) => onChange(event.target.value)} className="h-11 w-full rounded-lg border border-white/10 bg-black/25 px-3 text-sm font-bold text-white outline-none focus:border-[#5eead4]/50">
         <option value="">Canlı Lynon kampanyası seçin</option>
         {options.filter((option: any) => !option.isSpecial).map((option: any) => <option key={option.id} value={option.id}>{option.display}</option>)}
@@ -304,11 +304,11 @@ function HeaderCard({ icon: Icon, title, desc, active, onActiveChange }: { icon:
             <Icon size={20} />
           </span>
           <div>
-            <h2 className="text-lg font-black text-white">{title}</h2>
+            <h2 className="text-lg font-semibold text-white">{title}</h2>
             <p className="mt-1 text-xs font-medium text-slate-500">{desc}</p>
           </div>
         </div>
-        <label className={cn('inline-flex h-10 items-center gap-2 rounded-lg border px-3 text-xs font-black uppercase tracking-widest', active ? 'border-emerald-300/20 bg-emerald-300/10 text-emerald-300' : 'border-white/10 bg-white/[0.03] text-slate-500')}>
+        <label className={cn('inline-flex h-10 items-center gap-2 rounded-lg border px-3 text-xs font-semibold uppercase tracking-widest', active ? 'border-emerald-300/20 bg-emerald-300/10 text-emerald-300' : 'border-white/10 bg-white/[0.03] text-slate-500')}>
           <input type="checkbox" checked={active} onChange={(event) => onActiveChange(event.target.checked)} />
           {active ? 'Aktif' : 'Pasif'}
         </label>
@@ -323,9 +323,9 @@ function ConfigList({ title, action, icon: Icon, onAdd, children }: { title: str
       <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-4">
         <div className="flex items-center gap-3">
           <Icon size={18} className="text-cyan-300" />
-          <h3 className="text-sm font-black text-white">{title}</h3>
+          <h3 className="text-sm font-semibold text-white">{title}</h3>
         </div>
-        <button type="button" onClick={onAdd} className="inline-flex h-10 items-center gap-2 rounded-lg bg-cyan-300 px-4 text-xs font-black uppercase tracking-widest text-zinc-950">
+        <button type="button" onClick={onAdd} className="inline-flex h-10 items-center gap-2 rounded-lg bg-cyan-300 px-4 text-xs font-semibold uppercase tracking-widest text-zinc-950">
           <Plus size={15} />
           {action}
         </button>
@@ -342,7 +342,7 @@ function fieldClass(extra?: string) {
 function TextField({ label, value, onChange, className, list }: { label: string; value: string; onChange: (value: string) => void; className?: string; list?: string }) {
   return (
     <label className={fieldClass(className)}>
-      <span className="mb-1.5 block text-[10px] font-black uppercase tracking-widest text-slate-500">{label}</span>
+      <span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-widest text-slate-500">{label}</span>
       <input
         type="text"
         list={list}
@@ -357,12 +357,12 @@ function TextField({ label, value, onChange, className, list }: { label: string;
 function NumberField({ label, value, onChange }: { label: string; value: number; onChange: (value: number) => void }) {
   return (
     <label className="min-w-0">
-      <span className="mb-1.5 block text-[10px] font-black uppercase tracking-widest text-slate-500">{label}</span>
+      <span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-widest text-slate-500">{label}</span>
       <input
         type="number"
         value={value ?? 0}
         onChange={(event) => onChange(Number(event.target.value))}
-        className="h-10 w-full rounded-lg border border-white/10 bg-[#060a10] px-3 text-sm font-black text-white outline-none transition focus:border-cyan-300/50"
+        className="h-10 w-full rounded-lg border border-white/10 bg-[#060a10] px-3 text-sm font-semibold text-white outline-none transition focus:border-cyan-300/50"
       />
     </label>
   );
@@ -371,12 +371,12 @@ function NumberField({ label, value, onChange }: { label: string; value: number;
 function DateField({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
   return (
     <label className="min-w-0">
-      <span className="mb-1.5 block text-[10px] font-black uppercase tracking-widest text-slate-500">{label}</span>
+      <span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-widest text-slate-500">{label}</span>
       <input
         type="datetime-local"
         value={toDateTimeLocal(value)}
         onChange={(event) => onChange(fromDateTimeLocal(event.target.value))}
-        className="h-10 w-full rounded-lg border border-white/10 bg-[#060a10] px-3 text-sm font-black text-white outline-none transition focus:border-cyan-300/50"
+        className="h-10 w-full rounded-lg border border-white/10 bg-[#060a10] px-3 text-sm font-semibold text-white outline-none transition focus:border-cyan-300/50"
       />
     </label>
   );
@@ -385,11 +385,11 @@ function DateField({ label, value, onChange }: { label: string; value: string; o
 function SelectField({ label, value, options, onChange }: { label: string; value: string; options: Array<{ id: string; label: string }>; onChange: (value: string) => void }) {
   return (
     <label className="min-w-0">
-      <span className="mb-1.5 block text-[10px] font-black uppercase tracking-widest text-slate-500">{label}</span>
+      <span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-widest text-slate-500">{label}</span>
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="h-10 w-full rounded-lg border border-white/10 bg-[#060a10] px-3 text-sm font-black text-white outline-none transition focus:border-cyan-300/50"
+        className="h-10 w-full rounded-lg border border-white/10 bg-[#060a10] px-3 text-sm font-semibold text-white outline-none transition focus:border-cyan-300/50"
       >
         {options.map((option) => (
           <option key={option.id} value={option.id}>{option.label}</option>

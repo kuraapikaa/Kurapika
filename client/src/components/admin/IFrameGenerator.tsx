@@ -293,7 +293,7 @@ export function IFrameGenerator() {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-black tracking-tight text-white">iFrame Entegrasyon Merkezi</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-white">iFrame Entegrasyon Merkezi</h1>
           <p className="mt-0.5 text-sm text-zinc-500">Oyunları kendi platformunuza gömmek için hazır kod üreticisi</p>
         </div>
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border"
@@ -305,16 +305,16 @@ export function IFrameGenerator() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
         {/* ── Config Panel ── */}
         <div className="lg:col-span-4 space-y-4">
-          <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(18,18,30,0.7)' }}>
+          <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(18,18,30,0.7)' }}>
             <div className="flex items-center gap-2.5 px-5 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.2)' }}>
               <Settings2 size={17} className="text-blue-400" />
-              <h2 className="text-sm font-black text-white">Yapılandırma</h2>
+              <h2 className="text-sm font-semibold text-white">Yapılandırma</h2>
             </div>
 
             <div className="p-5 space-y-6">
               {/* Page selector */}
               <div>
-                <p className="text-[10px] uppercase tracking-widest font-black text-zinc-500 mb-2.5">Gömülecek Sayfa</p>
+                <p className="text-[10px] uppercase tracking-widest font-semibold text-zinc-500 mb-2.5">Gömülecek Sayfa</p>
                 <div className="grid grid-cols-1 gap-1.5">
                   {PAGES.map(page => {
                     const Icon = page.icon;
@@ -342,7 +342,7 @@ export function IFrameGenerator() {
                         <Icon size={15} className={active ? page.color : 'text-zinc-600'} aria-hidden="true" />
                         <span className="text-[13px] font-bold flex-1">{page.label}</span>
                         {page.badge && (
-                          <span className="text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full"
+                          <span className="text-[9px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded-full"
                             style={{ background: 'rgba(99,102,241,0.2)', color: '#a5b4fc' }}>
                             {page.badge}
                           </span>
@@ -358,7 +358,7 @@ export function IFrameGenerator() {
 
               {/* Size (only relevant for desktop) */}
               <div>
-                <p className="text-[10px] uppercase tracking-widest font-black text-zinc-500 mb-2.5">Boyutlar</p>
+                <p className="text-[10px] uppercase tracking-widest font-semibold text-zinc-500 mb-2.5">Boyutlar</p>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label htmlFor="iframe-width" className="text-[10px] text-zinc-600 mb-1 block">Genişlik</label>
@@ -390,7 +390,7 @@ export function IFrameGenerator() {
 
               {/* Style */}
               <div>
-                <p className="text-[10px] uppercase tracking-widest font-black text-zinc-500 mb-2.5">Stil</p>
+                <p className="text-[10px] uppercase tracking-widest font-semibold text-zinc-500 mb-2.5">Stil</p>
                 <div className="space-y-2.5">
                   {/* Border radius */}
                   <div className="flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-xl"
@@ -430,12 +430,12 @@ export function IFrameGenerator() {
         {/* ── Right Panel ── */}
         <div className="lg:col-span-8 space-y-5">
           {/* Preview card */}
-          <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(18,18,30,0.7)' }}>
+          <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(18,18,30,0.7)' }}>
             {/* Preview header */}
             <div className="flex flex-wrap items-center justify-between gap-3 px-4 sm:px-5 py-3.5" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.2)' }}>
               <div className="flex items-center gap-2.5">
                 <ExternalLink size={16} className="text-sky-400" aria-hidden="true" />
-                <h2 className="text-sm font-black text-white">Canlı Önizleme</h2>
+                <h2 className="text-sm font-semibold text-white">Canlı Önizleme</h2>
                 <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-400">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" aria-hidden="true" /> CANLI
                 </span>
@@ -533,12 +533,12 @@ export function IFrameGenerator() {
           </div>
 
           {/* Code panel */}
-          <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(18,18,30,0.7)' }}>
+          <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(18,18,30,0.7)' }}>
             <div className="flex items-center justify-between px-5 py-3.5" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.2)' }}>
               <div className="flex items-center gap-2.5">
                 <Code2 size={16} className="text-emerald-400" />
-                <h2 className="text-sm font-black text-white">Embed Kodu</h2>
-                <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md"
+                <h2 className="text-sm font-semibold text-white">Embed Kodu</h2>
+                <span className="text-[10px] font-semibold uppercase tracking-widest px-2 py-0.5 rounded-md"
                   style={{ background: 'rgba(16,185,129,0.1)', color: '#34d399' }}>HTML</span>
               </div>
               <button
@@ -577,7 +577,7 @@ export function IFrameGenerator() {
                 style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.12)' }}>
                 <Info size={14} className="text-amber-500 flex-shrink-0 mt-0.5" />
                 <p className="text-[12px] leading-relaxed font-medium" style={{ color: 'rgba(253,230,138,0.6)' }}>
-                  <span className="text-amber-400 font-black uppercase text-[10px] tracking-widest block mb-1">Önemli</span>
+                  <span className="text-amber-400 font-semibold uppercase text-[10px] tracking-widest block mb-1">Önemli</span>
                   Kodu sitenizin herhangi bir HTML bölümüne yapıştırın. İçerik sitenizle tam uyumlu çalışacak şekilde optimize edilmiştir.
                 </p>
               </div>

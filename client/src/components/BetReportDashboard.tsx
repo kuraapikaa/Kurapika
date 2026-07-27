@@ -31,7 +31,7 @@ export function BetReportDashboard({
 }: BetReportDashboardProps) {
   if (error) {
     return (
-      <div className="animate-in rounded-3xl border border-rose-500/20 bg-rose-500/5 p-8 text-center text-rose-400 backdrop-blur-xl">
+      <div className="animate-in rounded-xl border border-rose-500/20 bg-rose-500/5 p-8 text-center text-rose-400 backdrop-blur-xl">
         <ShieldAlert size={48} className="mx-auto mb-4 opacity-20" />
         <h3 className="text-lg font-bold">Veri İletişim Hatası</h3>
         <p className="mt-2 text-sm opacity-70">{error.message}</p>
@@ -42,7 +42,7 @@ export function BetReportDashboard({
   const firstPage = data?.pages?.[0];
   if (firstPage?.HasError) {
     return (
-      <div className="animate-in rounded-3xl border border-amber-500/20 bg-amber-500/5 p-8 text-center text-amber-400 backdrop-blur-xl">
+      <div className="animate-in rounded-xl border border-amber-500/20 bg-amber-500/5 p-8 text-center text-amber-400 backdrop-blur-xl">
         <ShieldAlert size={48} className="mx-auto mb-4 opacity-20" />
         <h3 className="text-lg font-bold">API Uyarısı</h3>
         <p className="mt-2 text-sm opacity-70">{firstPage.AlertMessage ?? 'Bilinmeyen sistem hatası'}</p>
@@ -113,7 +113,7 @@ export function BetReportDashboard({
 
   if (isLoading) {
     return (
-      <div className="flex h-64 flex-col items-center justify-center gap-4 rounded-3xl border border-white/5 bg-slate-900/40">
+      <div className="flex h-64 flex-col items-center justify-center gap-4 rounded-xl border border-white/5 bg-slate-900/40">
         <div className="h-12 w-12 animate-spin rounded-full border-4 border-cyan-500 border-t-transparent" />
         <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Bahis motoru analiz ediliyor...</p>
       </div>
@@ -141,16 +141,16 @@ export function BetReportDashboard({
                   <div className={cn("flex h-10 w-10 items-center justify-center rounded-xl bg-black/40 border border-white/5", card.iconClass, card.glowClass)}>
                     <card.icon size={20} />
                   </div>
-                  <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">{card.label}</span>
+                  <span className="text-[10px] font-semibold text-zinc-600 uppercase tracking-widest">{card.label}</span>
                 </div>
 
                 <div>
                   <div className="flex items-baseline gap-1.5">
-                    <span className="text-3xl font-black text-white tabular-nums tracking-tighter antialiased">
+                    <span className="text-3xl font-semibold text-white tabular-nums tracking-tighter antialiased">
                       {card.value}
                     </span>
                     {card.currency && (
-                      <span className="text-xs font-black text-zinc-600 uppercase">{card.currency}</span>
+                      <span className="text-xs font-semibold text-zinc-600 uppercase">{card.currency}</span>
                     )}
                   </div>
                   <p className="mt-1 text-[9px] font-bold text-zinc-500 uppercase tracking-tighter opacity-70">
@@ -167,13 +167,13 @@ export function BetReportDashboard({
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="flex items-center gap-4 rounded-2xl border border-amber-500/10 bg-amber-500/5 p-4 backdrop-blur-md"
+          className="flex items-center gap-4 rounded-xl border border-amber-500/10 bg-amber-500/5 p-4 backdrop-blur-md"
         >
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/20 text-amber-500 border border-amber-500/20 neon-glow-amber">
             <BarChart3 size={18} />
           </div>
           <div>
-            <p className="text-[11px] font-black text-white uppercase tracking-wider">Kısmi Veri Analizi</p>
+            <p className="text-[11px] font-semibold text-white uppercase tracking-wider">Kısmi Veri Analizi</p>
             <p className="text-[10px] font-bold text-amber-500/70 uppercase tracking-tight mt-0.5">
               Özet veriler şu an sadece ilk {formatNumber(objects.length)} kaydı kapsamaktadır. Tam analiz için listenin tamamını yükleyiniz.
             </p>

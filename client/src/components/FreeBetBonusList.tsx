@@ -15,7 +15,7 @@ export function FreeBetBonusList({ data, isLoading, error }: FreeBetBonusListPro
 
   return (
     <section className="mt-10">
-      <h2 className={cn('mb-4 text-xs font-black uppercase tracking-[0.2em] text-blue-400 border-b border-white/10 pb-2')}>
+      <h2 className={cn('mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-blue-400 border-b border-white/10 pb-2')}>
         Freebet bonusları ({count})
       </h2>
       {error && (

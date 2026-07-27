@@ -20,12 +20,12 @@ export function NetworkMap({ loginIp, clientId }: NetworkMapProps) {
 
     if (!loginIp) {
         return (
-            <div className="rounded-3xl border border-white/5 bg-slate-900/20 p-20 text-center flex flex-col items-center justify-center text-slate-500 backdrop-blur-sm">
+            <div className="rounded-xl border border-white/5 bg-slate-900/20 p-20 text-center flex flex-col items-center justify-center text-slate-500 backdrop-blur-sm">
                 <div className="relative mb-6">
                     <Globe size={64} className="opacity-10" />
                     <AlertTriangle size={24} className="absolute -bottom-2 -right-2 text-amber-500/50" />
                 </div>
-                <p className="font-black uppercase tracking-[0.3em] text-sm text-slate-400">Veri Eksikliği</p>
+                <p className="font-semibold uppercase tracking-[0.3em] text-sm text-slate-400">Veri Eksikliği</p>
                 <p className="text-xs text-slate-500 mt-2 max-w-xs leading-relaxed">Bu oyuncunun aktif bir IP kaydı bulunamadı. Multi-account analizi için yeterli veri yok.</p>
             </div>
         );
@@ -35,7 +35,7 @@ export function NetworkMap({ loginIp, clientId }: NetworkMapProps) {
 
     if (isLoading) {
         return (
-            <div className="flex h-[500px] items-center justify-center flex-col gap-6 bg-slate-950/20 rounded-3xl border border-white/5">
+            <div className="flex h-[500px] items-center justify-center flex-col gap-6 bg-slate-950/20 rounded-xl border border-white/5">
                 <div className="relative">
                     <motion.div
                         animate={{ rotate: 360 }}
@@ -51,7 +51,7 @@ export function NetworkMap({ loginIp, clientId }: NetworkMapProps) {
                     <Loader2 size={40} className="animate-spin text-blue-500 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
                 </div>
                 <div className="space-y-2 text-center">
-                    <p className="text-blue-400 text-xs font-black tracking-[0.4em] uppercase">Ağ Taraması Yapılıyor</p>
+                    <p className="text-blue-400 text-xs font-semibold tracking-[0.4em] uppercase">Ağ Taraması Yapılıyor</p>
                     <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{loginIp} analiz ediliyor...</p>
                 </div>
             </div>
@@ -60,7 +60,7 @@ export function NetworkMap({ loginIp, clientId }: NetworkMapProps) {
 
     if (isError) {
         return (
-            <div className="rounded-3xl border border-rose-500/20 bg-rose-500/5 p-12 text-center text-rose-400 flex flex-col items-center gap-4">
+            <div className="rounded-xl border border-rose-500/20 bg-rose-500/5 p-12 text-center text-rose-400 flex flex-col items-center gap-4">
                 <AlertTriangle size={48} className="opacity-50" />
                 <div className="space-y-1">
                     <p className="font-bold">Bağlantı Hatası</p>
@@ -79,7 +79,7 @@ export function NetworkMap({ loginIp, clientId }: NetworkMapProps) {
         <div className="space-y-8 animate-in fade-in duration-700">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="space-y-1 text-left">
-                    <h3 className="text-xl font-black text-white flex items-center gap-3 tracking-tight">
+                    <h3 className="text-xl font-semibold text-white flex items-center gap-3 tracking-tight">
                         <div className="p-2 bg-blue-500/10 rounded-xl">
                             <Globe size={20} className="text-blue-400" />
                         </div>
@@ -91,14 +91,14 @@ export function NetworkMap({ loginIp, clientId }: NetworkMapProps) {
                     <motion.div
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
-                        className="flex items-center gap-2 bg-rose-500/10 text-rose-400 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border border-rose-500/20 shadow-[0_0_20px_rgba(244,63,94,0.1)]"
+                        className="flex items-center gap-2 bg-rose-500/10 text-rose-400 px-4 py-2 rounded-xl text-[10px] font-semibold uppercase tracking-widest border border-rose-500/20 shadow-[0_0_20px_rgba(244,63,94,0.1)]"
                     >
                         <AlertTriangle size={14} className="animate-pulse" /> Şüpheli İp Çakışması ({allClients.length} Hesap)
                     </motion.div>
                 )}
             </div>
 
-            <div className="relative w-full h-[600px] border border-white/5 bg-[#070b14] rounded-[3rem] overflow-hidden flex items-center justify-center group shadow-2xl">
+            <div className="relative w-full h-[600px] border border-white/5 bg-[#070b14] rounded-xl overflow-hidden flex items-center justify-center group shadow-2xl">
                 {/* Visual Enhancers */}
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-500/5 via-transparent to-transparent opacity-50" />
                 <div className="absolute inset-0 opacity-[0.05]" style={{ backgroundImage: 'radial-gradient(circle at center, #ffffff 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
@@ -128,7 +128,7 @@ export function NetworkMap({ loginIp, clientId }: NetworkMapProps) {
                             <Server className={isMultiAccountRisk ? 'text-rose-400' : 'text-blue-400'} size={24} />
                         </div>
                         <span className={cn(
-                            "text-xs font-black tracking-wider text-center",
+                            "text-xs font-semibold tracking-wider text-center",
                             isMultiAccountRisk ? 'text-rose-200' : 'text-blue-200'
                         )}>{loginIp}</span>
                         <p className="text-[10px] text-white/40 font-bold uppercase tracking-[0.2em] mt-1">Giriş IP</p>
@@ -195,7 +195,7 @@ export function NetworkMap({ loginIp, clientId }: NetworkMapProps) {
                                     delay: index * 0.1 + 0.5
                                 }}
                                 className={cn(
-                                    "absolute flex flex-col items-center justify-center w-28 h-28 rounded-3xl border backdrop-blur-md p-3 z-20 cursor-pointer pointer-events-auto transition-all duration-300 group/node",
+                                    "absolute flex flex-col items-center justify-center w-28 h-28 rounded-xl border backdrop-blur-md p-3 z-20 cursor-pointer pointer-events-auto transition-all duration-300 group/node",
                                     "hover:shadow-[0_0_30px_rgba(139,92,246,0.3)] hover:-translate-y-1",
                                     isCurrentClient
                                         ? 'border-amber-500/50 bg-amber-950/60 shadow-[0_0_20px_rgba(245,158,11,0.1)] ring-4 ring-amber-500/10'
@@ -216,13 +216,13 @@ export function NetworkMap({ loginIp, clientId }: NetworkMapProps) {
                                 </div>
 
                                 {isCurrentClient && (
-                                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-amber-500 text-slate-950 text-[8px] font-black px-2 py-0.5 rounded-full uppercase shadow-lg whitespace-nowrap">
+                                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-amber-500 text-slate-950 text-[8px] font-semibold px-2 py-0.5 rounded-full uppercase shadow-lg whitespace-nowrap">
                                         Aktif Profil
                                     </div>
                                 )}
 
                                 <span className={cn(
-                                    "text-[11px] font-black mt-1 leading-tight text-center px-1 max-w-full truncate",
+                                    "text-[11px] font-semibold mt-1 leading-tight text-center px-1 max-w-full truncate",
                                     isCurrentClient ? 'text-amber-200' : 'text-slate-200 group-hover/node:text-white'
                                 )}>
                                     {String(client.ClientLogin || client.Login || client.FirstName || 'İsimsiz')}
@@ -248,7 +248,7 @@ export function NetworkMap({ loginIp, clientId }: NetworkMapProps) {
                             key={`list-${client.Id}`}
                             whileHover={{ y: -2 }}
                             className={cn(
-                                "flex items-center justify-between p-5 rounded-2xl border transition-all duration-300",
+                                "flex items-center justify-between p-5 rounded-xl border transition-all duration-300",
                                 isMatch
                                     ? "bg-amber-500/5 border-amber-500/20 shadow-lg shadow-amber-500/5"
                                     : "bg-slate-900/40 border-white/5 hover:border-white/10"
@@ -263,11 +263,11 @@ export function NetworkMap({ loginIp, clientId }: NetworkMapProps) {
                                 </div>
                                 <div className="flex flex-col text-left">
                                     <div className="flex items-center gap-2">
-                                        <span className="font-black text-sm text-slate-200">
+                                        <span className="font-semibold text-sm text-slate-200">
                                             {client.FirstName || 'İsimsiz'} {client.LastName || ''}
                                         </span>
                                         {isMatch && (
-                                            <span className="bg-amber-500 text-slate-950 text-[8px] px-1.5 py-0.5 rounded font-black uppercase tracking-tighter">İnceleniyor</span>
+                                            <span className="bg-amber-500 text-slate-950 text-[8px] px-1.5 py-0.5 rounded font-semibold uppercase tracking-tighter">İnceleniyor</span>
                                         )}
                                     </div>
                                     <span className="text-xs font-mono text-slate-500 mt-0.5 tracking-tight">
@@ -283,7 +283,7 @@ export function NetworkMap({ loginIp, clientId }: NetworkMapProps) {
                                     window.open(`/#/oyuncu/${client.Id}/${username}`, '_blank');
                                 }}
                                 className={cn(
-                                    "text-[10px] font-black uppercase tracking-widest gap-2",
+                                    "text-[10px] font-semibold uppercase tracking-widest gap-2",
                                     isMatch ? "text-amber-500 hover:bg-amber-500/10" : "text-blue-400 hover:bg-blue-500/10"
                                 )}
                             >

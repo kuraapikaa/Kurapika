@@ -29,7 +29,7 @@ export function ColorPicker({ color, onChange, label }: ColorPickerProps) {
           className="h-5 w-5 rounded-md border border-white/10 shadow-sm" 
           style={{ backgroundColor: color }} 
         />
-        <span className="text-[11px] font-black text-zinc-300 uppercase tracking-tight">{color}</span>
+        <span className="text-[11px] font-semibold text-zinc-300 uppercase tracking-tight">{color}</span>
         <Pipette size={12} className="ml-auto text-zinc-500 group-hover:text-zinc-300" />
       </button>
 
@@ -47,7 +47,7 @@ export function ColorPicker({ color, onChange, label }: ColorPickerProps) {
               className="absolute left-0 top-full z-[70] mt-2 w-48 rounded-xl border border-white/10 bg-zinc-900 p-3 shadow-2xl backdrop-blur-xl"
             >
               <div className="mb-2 flex items-center justify-between">
-                <span className="text-[10px] font-black text-zinc-500 uppercase">Renk Seçin</span>
+                <span className="text-[10px] font-semibold text-zinc-500 uppercase">Renk Seçin</span>
                 <button onClick={() => setIsOpen(false)} className="rounded-md p-1 hover:bg-white/5">
                    <X size={12} className="text-zinc-500" />
                 </button>
@@ -81,7 +81,7 @@ export function ColorPicker({ color, onChange, label }: ColorPickerProps) {
                   type="text"
                   value={color}
                   onChange={(e) => onChange(e.target.value)}
-                  className="w-full bg-transparent text-[10px] font-black text-white outline-none"
+                  className="w-full bg-transparent text-[10px] font-semibold text-white outline-none"
                   placeholder="#000000"
                 />
               </div>

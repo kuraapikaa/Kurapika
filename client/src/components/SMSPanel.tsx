@@ -187,7 +187,7 @@ export const SMSPanel: React.FC = () => {
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-black italic tracking-tighter text-white uppercase">
+                    <h1 className="text-3xl font-semibold italic tracking-tighter text-white uppercase">
                         SMS <span className="text-blue-500">MERKEZİ</span>
                     </h1>
                     <p className="text-slate-400 text-sm mt-1">Gelişmiş SMS yönetim paneli</p>
@@ -243,7 +243,7 @@ export const SMSPanel: React.FC = () => {
                                         </CardTitle>
                                         <button
                                             onClick={handleCleanNumbers}
-                                            className="flex items-center gap-1.5 px-3 py-1 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 rounded-lg text-[10px] font-black uppercase tracking-widest border border-blue-500/20 transition-all"
+                                            className="flex items-center gap-1.5 px-3 py-1 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 rounded-lg text-[10px] font-semibold uppercase tracking-widest border border-blue-500/20 transition-all"
                                             title="Numaraları temizle, kopyaları sil ve 90 formatına getir"
                                         >
                                             <Wand2 className="w-3.5 h-3.5" /> TEMİZLE
@@ -303,7 +303,7 @@ export const SMSPanel: React.FC = () => {
                                         <Button
                                             onClick={handleSend}
                                             disabled={isSending || stats.phones.length === 0}
-                                            className="w-full md:w-auto min-w-[200px] h-14 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-500 hover:to-blue-500 shadow-xl shadow-blue-500/20 group"
+                                            className="w-full md:w-auto min-w-[200px] h-14 rounded-xl bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-500 hover:to-blue-500 shadow-xl shadow-blue-500/20 group"
                                         >
                                             {isSending ? (
                                                 <>
@@ -339,7 +339,7 @@ export const SMSPanel: React.FC = () => {
                                     </div>
                                     <div className="flex justify-between items-center p-4 bg-blue-600/20 rounded-xl border border-blue-500/30">
                                         <span className="text-sm text-blue-300 font-bold uppercase tracking-wider">Toplam Tahmini SMS</span>
-                                        <span className="text-2xl font-black text-white">{stats.totalSms}</span>
+                                        <span className="text-2xl font-semibold text-white">{stats.totalSms}</span>
                                     </div>
 
                                     <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl text-[11px] text-amber-200/70 leading-relaxed">
@@ -353,7 +353,7 @@ export const SMSPanel: React.FC = () => {
 
                             <div className="relative group">
                                 <div className="absolute inset-0 bg-blue-500/10 blur-3xl rounded-full transition-opacity group-hover:opacity-100 opacity-50" />
-                                <div className="relative bg-[#0F0F12] border-8 border-slate-900 rounded-[3rem] p-4 shadow-2xl min-h-[400px]">
+                                <div className="relative bg-[#0F0F12] border-8 border-slate-900 rounded-xl p-4 shadow-2xl min-h-[400px]">
                                     <div className="w-20 h-1.5 bg-slate-800 rounded-full mx-auto mb-6" />
                                     <div className="flex items-center gap-3 mb-6">
                                         <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold text-white">S</div>
@@ -362,7 +362,7 @@ export const SMSPanel: React.FC = () => {
                                             <div className="text-xs font-bold text-white tracking-widest uppercase">GÖNDERİCİ</div>
                                         </div>
                                     </div>
-                                    <div className="bg-slate-800/80 rounded-2xl rounded-tl-none p-4 text-xs text-slate-200 leading-relaxed border border-white/5 backdrop-blur-md">
+                                    <div className="bg-slate-800/80 rounded-xl rounded-tl-none p-4 text-xs text-slate-200 leading-relaxed border border-white/5 backdrop-blur-md">
                                         {message || "Mesaj önizlemesi burada görünecek..."}
                                     </div>
                                     <div className="mt-2 text-[10px] text-slate-600 font-medium">Şimdi • SMS</div>
@@ -425,11 +425,11 @@ export const SMSPanel: React.FC = () => {
                                 <table className="w-full text-left border-collapse">
                                     <thead>
                                         <tr className="bg-white/5">
-                                            <th className="p-4 text-xs font-black text-slate-500 uppercase tracking-[0.2em] border-b border-white/10">ZAMAN</th>
-                                            <th className="p-4 text-xs font-black text-slate-500 uppercase tracking-[0.2em] border-b border-white/10">MESAJ</th>
-                                            <th className="p-4 text-xs font-black text-slate-500 uppercase tracking-[0.2em] border-b border-white/10">ALICI</th>
-                                            <th className="p-4 text-xs font-black text-slate-500 uppercase tracking-[0.2em] border-b border-white/10">DURUM</th>
-                                            <th className="p-4 text-xs font-black text-slate-500 uppercase tracking-[0.2em] border-b border-white/10"></th>
+                                            <th className="p-4 text-xs font-semibold text-slate-500 uppercase tracking-[0.2em] border-b border-white/10">ZAMAN</th>
+                                            <th className="p-4 text-xs font-semibold text-slate-500 uppercase tracking-[0.2em] border-b border-white/10">MESAJ</th>
+                                            <th className="p-4 text-xs font-semibold text-slate-500 uppercase tracking-[0.2em] border-b border-white/10">ALICI</th>
+                                            <th className="p-4 text-xs font-semibold text-slate-500 uppercase tracking-[0.2em] border-b border-white/10">DURUM</th>
+                                            <th className="p-4 text-xs font-semibold text-slate-500 uppercase tracking-[0.2em] border-b border-white/10"></th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -462,15 +462,15 @@ export const SMSPanel: React.FC = () => {
                                                     </td>
                                                     <td className="p-4">
                                                         {log.status === 'success' ? (
-                                                            <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-emerald-400 px-2 py-1 bg-emerald-500/10 rounded-lg">
+                                                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-widest text-emerald-400 px-2 py-1 bg-emerald-500/10 rounded-lg">
                                                                 <CheckCircle2 className="w-3 h-3" /> BAŞARILI
                                                             </span>
                                                         ) : log.status === 'partial' ? (
-                                                            <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-amber-400 px-2 py-1 bg-amber-500/10 rounded-lg">
+                                                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-widest text-amber-400 px-2 py-1 bg-amber-500/10 rounded-lg">
                                                                 <AlertCircle className="w-3 h-3" /> KISMİ
                                                             </span>
                                                         ) : (
-                                                            <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-rose-400 px-2 py-1 bg-rose-500/10 rounded-lg">
+                                                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-widest text-rose-400 px-2 py-1 bg-rose-500/10 rounded-lg">
                                                                 <AlertCircle className="w-3 h-3" /> HATALI
                                                             </span>
                                                         )}

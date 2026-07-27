@@ -102,10 +102,10 @@ export function LoginPage({ onLoginSuccess, tenantConfig }: LoginPageProps) {
                 </span>
               </div>
 
-              <div className="login-provider-card mb-5 rounded-2xl p-3.5">
+              <div className="login-provider-card mb-5 rounded-xl p-3.5">
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-300">Partner altyapı</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-orange-300">Partner altyapı</p>
                     <p className="mt-1 text-xs font-medium text-slate-400">Seçili bağlantı, oturum boyunca veri kaynağını belirler.</p>
                   </div>
 
@@ -124,7 +124,7 @@ export function LoginPage({ onLoginSuccess, tenantConfig }: LoginPageProps) {
                       type="button"
                       onClick={() => setProvider(option)}
                       className={cn(
-                        'login-provider-option min-h-[44px] rounded-xl border px-3 text-xs font-black uppercase tracking-wider transition-colors',
+                        'login-provider-option min-h-[44px] rounded-xl border px-3 text-xs font-semibold uppercase tracking-wider transition-colors',
                         provider === option
                           ? option === 'lynon' ? 'border-orange-400/50 bg-orange-500 text-black' : 'border-sky-400/50 bg-sky-400 text-slate-950'
                           : 'border-white/10 bg-white/[0.04] text-slate-400 hover:bg-white/[0.08] hover:text-white'
@@ -213,7 +213,7 @@ export function LoginPage({ onLoginSuccess, tenantConfig }: LoginPageProps) {
               animate={{ opacity: 1, scale: 1 }}
               className="login-panel flex w-full max-w-[460px] flex-col items-center py-12 text-center"
             >
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-300/10 text-cyan-300">
+              <div className="flex h-16 w-16 items-center justify-center rounded-xl border border-cyan-300/20 bg-cyan-300/10 text-cyan-300">
                 <CheckCircle2 size={30} />
               </div>
               <h2 className="mt-6 text-2xl font-semibold text-white">Erişim onaylandı</h2>

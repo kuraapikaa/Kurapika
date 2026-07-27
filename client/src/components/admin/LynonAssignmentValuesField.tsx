@@ -33,7 +33,7 @@ export function LynonAssignmentValuesField({
 
   return (
     <label className="block space-y-2 rounded-xl border border-amber-300/10 bg-amber-300/[0.025] p-3">
-      <span className="block text-[9px] font-black uppercase tracking-[0.14em] text-amber-200/70">{label}</span>
+      <span className="block text-[9px] font-semibold uppercase tracking-[0.14em] text-amber-200/70">{label}</span>
       <textarea
         value={text}
         onFocus={() => setFocused(true)}

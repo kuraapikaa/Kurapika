@@ -230,8 +230,8 @@ export function RiskAnalysisPage() {
 
   return (
     <div className="animate-in space-y-6">
-      <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-slate-900/90 to-slate-900/70 p-6">
-        <h2 className="flex items-center gap-3 text-xl font-black text-white">
+      <div className="rounded-xl border border-white/10 bg-gradient-to-br from-slate-900/90 to-slate-900/70 p-6">
+        <h2 className="flex items-center gap-3 text-xl font-semibold text-white">
           <Shield size={28} className="text-blue-400" />
           Risk Analizi
         </h2>
@@ -269,7 +269,7 @@ export function RiskAnalysisPage() {
       </div>
 
       {loading && (
-        <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-white/5 bg-slate-900/40 py-16">
+        <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-white/5 bg-slate-900/40 py-16">
           <Loader2 size={48} className="animate-spin text-blue-400" />
           <p className="text-slate-400">Analiz yapılıyor...</p>
         </div>
@@ -277,7 +277,7 @@ export function RiskAnalysisPage() {
 
       {report && !loading && execReport && (
         <div className="space-y-6">
-          <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-6 flex items-center justify-between gap-4 flex-wrap">
+          <div className="rounded-xl border border-white/5 bg-slate-900/40 p-6 flex items-center justify-between gap-4 flex-wrap">
             <div>
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Analiz Edilen Oyuncu</p>
               <p className="text-xl font-bold text-white mt-1">{report.login} <span className="text-slate-500 font-mono text-base ml-2">#{report.clientId}</span></p>
@@ -296,10 +296,10 @@ export function RiskAnalysisPage() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-1 bg-gradient-to-br from-blue-500/10 to-transparent">
+          <div className="rounded-xl border border-white/10 bg-slate-900/40 p-1 bg-gradient-to-br from-blue-500/10 to-transparent">
             {/* 1. RİSK SKORU & SINIFLANDIRMA */}
             <div className="p-6">
-              <h3 className="text-xs font-black uppercase tracking-widest text-blue-400 mb-4 flex items-center gap-2 border-b border-white/5 pb-2">
+              <h3 className="text-xs font-semibold uppercase tracking-widest text-blue-400 mb-4 flex items-center gap-2 border-b border-white/5 pb-2">
                 1. Risk Skoru & Sınıflandırma
               </h3>
               <div className="flex items-center gap-6 mt-4">
@@ -318,7 +318,7 @@ export function RiskAnalysisPage() {
 
             {/* 2. KRİTİK İNCELEME */}
             <div className="p-6 border-t border-white/5">
-              <h3 className="text-xs font-black uppercase tracking-widest text-blue-400 mb-4 flex items-center gap-2 border-b border-white/5 pb-2">
+              <h3 className="text-xs font-semibold uppercase tracking-widest text-blue-400 mb-4 flex items-center gap-2 border-b border-white/5 pb-2">
                 2. Kritik İnceleme (Deep Dive)
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
@@ -347,7 +347,7 @@ export function RiskAnalysisPage() {
 
             {/* 3. KARAR VE AKSİYON */}
             <div className="p-6 border-t border-white/5">
-              <h3 className="text-xs font-black uppercase tracking-widest text-blue-400 mb-4 flex items-center gap-2 border-b border-white/5 pb-2">
+              <h3 className="text-xs font-semibold uppercase tracking-widest text-blue-400 mb-4 flex items-center gap-2 border-b border-white/5 pb-2">
                 3. Karar Ve Aksiyon (Executive Summary)
               </h3>
               <div className="space-y-4 mt-4 text-sm bg-slate-800/50 p-5 rounded-xl border border-white/5">
@@ -368,7 +368,7 @@ export function RiskAnalysisPage() {
 
             {/* 4. ANALİST NOTU */}
             <div className="p-6 border-t border-white/5 bg-blue-950/10 rounded-b-xl">
-              <h3 className="text-xs font-black uppercase tracking-widest text-blue-400 mb-4 flex items-center gap-2 border-b border-white/5 pb-2">
+              <h3 className="text-xs font-semibold uppercase tracking-widest text-blue-400 mb-4 flex items-center gap-2 border-b border-white/5 pb-2">
                 4. Analist Notu
               </h3>
               <div className="mt-4 p-5 rounded-xl border border-blue-500/20 bg-blue-900/10 relative">

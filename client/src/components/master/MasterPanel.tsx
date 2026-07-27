@@ -200,7 +200,7 @@ export function MasterPanel() {
             <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-cyan-300/10 blur-3xl" />
             <div className="relative mb-4 flex items-start justify-between gap-4">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.24em] text-cyan-300/70">{editingId ? 'Düzenleme modu' : 'Yeni kurulum'}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-cyan-300/70">{editingId ? 'Düzenleme modu' : 'Yeni kurulum'}</p>
                 <h2 className="mt-1 text-lg font-bold tracking-[-0.025em] text-white">{editingId ? 'Panel ayarlarını düzenle' : 'Yeni müşteri paneli oluştur'}</h2>
               </div>
               <button onClick={handleReset} className="rounded-xl border border-white/10 bg-white/[0.03] p-2 text-slate-500 transition hover:text-white">
@@ -216,7 +216,7 @@ export function MasterPanel() {
               <Field label="Partner ID" value={form.partnerId} onChange={(value) => updateForm('partnerId', value)} placeholder="Opsiyonel" />
               <Field label="Bitiş tarihi" value={form.expireDate} onChange={(value) => updateForm('expireDate', value)} type="date" />
               <div>
-                <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">Tema rengi</label>
+                <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Tema rengi</label>
                 <div className="flex items-center gap-2 rounded-lg border border-white/[0.08] bg-[#090d13] p-1">
                   <input type="color" value={form.themeColor} onChange={(event) => updateForm('themeColor', event.target.value)} className="h-10 w-12 cursor-pointer rounded-xl border-0 bg-transparent" />
                   <input value={form.themeColor} onChange={(event) => updateForm('themeColor', event.target.value)} className="min-w-0 flex-1 bg-transparent px-2 py-2 text-sm font-bold text-white outline-none" />
@@ -277,7 +277,7 @@ function MetricCard({ label, value, icon: Icon, tone }: { label: string; value: 
   return (
     <div className="rounded-xl border border-white/[0.07] bg-[#0d1119] p-3.5">
       <div className="flex items-center justify-between">
-        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">{label}</p>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">{label}</p>
         <div className={cn('flex h-8 w-8 items-center justify-center rounded-lg border', toneClass)}>
           <Icon size={18} />
         </div>
@@ -290,7 +290,7 @@ function MetricCard({ label, value, icon: Icon, tone }: { label: string; value: 
 function Field({ label, value, onChange, placeholder, type = 'text' }: { label: string; value: string; onChange: (value: string) => void; placeholder?: string; type?: string }) {
   return (
     <div>
-      <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">{label}</label>
+      <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">{label}</label>
       <input
         type={type}
         value={value}
@@ -368,7 +368,7 @@ function InfoRow({ icon: Icon, label, value, title }: { icon: any; label: string
   return (
     <div className="flex min-h-8 items-center gap-2 rounded-lg border border-white/[0.055] bg-black/15 px-2.5 py-1.5 text-[11px]" title={title}>
       <Icon className="h-4 w-4 shrink-0 text-slate-500" />
-      <span className="w-16 shrink-0 text-[10px] font-black uppercase tracking-[0.16em] text-slate-600">{label}</span>
+      <span className="w-16 shrink-0 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-600">{label}</span>
       <span className="min-w-0 truncate font-semibold text-slate-300">{value}</span>
     </div>
   );

@@ -110,13 +110,13 @@ export function AffiliatePanel() {
               <ChevronLeft size={18} />
             </button>
             <div>
-              <h2 className="text-xl font-black text-white">{selectedBTag} oyuncuları</h2>
+              <h2 className="text-xl font-semibold text-white">{selectedBTag} oyuncuları</h2>
               <p className="text-xs text-slate-500">BTag ayrıntısı istek üzerine, en fazla 100 kayıtla yüklenir.</p>
             </div>
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#0d1119]">
+        <div className="overflow-hidden rounded-xl border border-white/10 bg-[#0d1119]">
           {selectedBTag === 'BTag Yok' ? (
             <div className="p-10 text-center text-sm text-slate-500">BTag değeri olmayan oyuncular için ayrıntılı arama yapılmaz.</div>
           ) : playersQuery.isLoading ? (
@@ -175,7 +175,7 @@ export function AffiliatePanel() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-cyan-300/70">Affiliate merkezi</p>
-          <h2 className="mt-1 text-2xl font-black text-white">BTag performansı</h2>
+          <h2 className="mt-1 text-2xl font-semibold text-white">BTag performansı</h2>
           <p className="mt-1 text-sm text-slate-500">Oyuncu ve mali performans, Lynon Oyuncu Genel Bakış raporundan tek istekte hesaplanır.</p>
         </div>
         <label className="relative block w-full sm:w-72">
@@ -186,15 +186,15 @@ export function AffiliatePanel() {
 
       <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         {cards.map((card) => (
-          <div key={card.label} className="rounded-2xl border border-white/[0.07] bg-[#0d1119] p-4">
+          <div key={card.label} className="rounded-xl border border-white/[0.07] bg-[#0d1119] p-4">
             <div className={`mb-3 inline-flex rounded-lg bg-white/[0.04] p-2 ${card.color}`}><card.icon size={17} /></div>
             <div className="text-[9px] font-bold uppercase tracking-[0.16em] text-slate-600">{card.label}</div>
-            <div className="mt-1 text-xl font-black tabular-nums text-white">{card.value}</div>
+            <div className="mt-1 text-xl font-semibold tabular-nums text-white">{card.value}</div>
           </div>
         ))}
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#0d1119]">
+      <div className="overflow-hidden rounded-xl border border-white/10 bg-[#0d1119]">
         <div className="flex items-center justify-between border-b border-white/5 px-5 py-4">
           <div className="flex items-center gap-2"><BarChart3 size={17} className="text-cyan-300" /><h3 className="text-sm font-bold text-white">BTag kârlılık listesi</h3></div>
           <span className="text-[10px] text-slate-600">{filteredStats.length} kayıt</span>
@@ -217,7 +217,7 @@ export function AffiliatePanel() {
                   <td className="px-5 py-4 font-bold text-slate-300">{formatNumber(item.totalPlayers)}</td>
                   <td className="px-5 py-4"><span className="text-emerald-300">{formatNumber(item.activePlayers)}</span><span className="ml-2 text-slate-600">%{formatNumber(item.conversionRate)}</span></td>
                   <td className="px-5 py-4 text-right"><span className="text-emerald-300">{formatNumber(item.totalDeposits)}</span><span className="mx-2 text-slate-700">/</span><span className="text-rose-300">{formatNumber(item.totalWithdrawals)}</span></td>
-                  <td className={`px-5 py-4 text-right font-black ${item.netRevenue >= 0 ? 'text-cyan-300' : 'text-rose-300'}`}>{formatNumber(item.netRevenue)} ₺</td>
+                  <td className={`px-5 py-4 text-right font-semibold ${item.netRevenue >= 0 ? 'text-cyan-300' : 'text-rose-300'}`}>{formatNumber(item.netRevenue)} ₺</td>
                 </tr>
               ))}
             </tbody>

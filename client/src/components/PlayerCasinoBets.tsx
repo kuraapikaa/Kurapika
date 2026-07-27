@@ -117,15 +117,15 @@ export function PlayerCasinoBets({ clientId }: PlayerCasinoBetsProps) {
                     <table className="w-full text-left text-sm">
                         <thead className="bg-slate-900 border-b border-white/10">
                             <tr>
-                                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Oyun Adı</th>
-                                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Sağlayıcı</th>
-                                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Oyun Türü</th>
-                                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-500">İşlem Türü</th>
-                                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Durum</th>
-                                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Tarih</th>
-                                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-500 text-right">Tutar</th>
-                                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-500 text-right">Kazanç</th>
-                                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-500">İşlem No</th>
+                                <th className="p-4 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Oyun Adı</th>
+                                <th className="p-4 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Sağlayıcı</th>
+                                <th className="p-4 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Oyun Türü</th>
+                                <th className="p-4 text-[10px] font-semibold uppercase tracking-widest text-slate-500">İşlem Türü</th>
+                                <th className="p-4 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Durum</th>
+                                <th className="p-4 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Tarih</th>
+                                <th className="p-4 text-[10px] font-semibold uppercase tracking-widest text-slate-500 text-right">Tutar</th>
+                                <th className="p-4 text-[10px] font-semibold uppercase tracking-widest text-slate-500 text-right">Kazanç</th>
+                                <th className="p-4 text-[10px] font-semibold uppercase tracking-widest text-slate-500">İşlem No</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
