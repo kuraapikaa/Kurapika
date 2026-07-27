@@ -128,13 +128,13 @@ export function PredictionLeagueManager({
 
   return (
     <div className="space-y-6">
-      <section className="rounded-[2rem] border border-white/[0.07] bg-zinc-950/45 p-5 md:p-6">
+      <section className="rounded-xl border border-white/[0.07] bg-zinc-950/45 p-5 md:p-6">
         <div className="mb-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-emerald-300/70">Spor etkinliği</p>
-            <h2 className="mt-1 text-2xl font-black tracking-[-0.04em] text-white">Skor Tahmin Ligi</h2>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-300/70">Spor etkinliği</p>
+            <h2 className="mt-1 text-2xl font-semibold tracking-[-0.04em] text-white">Skor Tahmin Ligi</h2>
           </div>
-          <label className="flex w-fit cursor-pointer items-center gap-3 rounded-2xl border border-white/[0.07] bg-black/30 px-4 py-3 text-xs font-black uppercase tracking-[0.12em] text-zinc-300">
+          <label className="flex w-fit cursor-pointer items-center gap-3 rounded-xl border border-white/[0.07] bg-black/30 px-4 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-300">
             <input
               type="checkbox"
               checked={config.isActive}
@@ -152,9 +152,9 @@ export function PredictionLeagueManager({
           <Field label="Puanlama" value={config.rules} onChange={(value) => updateField('rules', value)} />
         </div>
 
-        <div className="mt-4 grid grid-cols-1 gap-4 rounded-[1.5rem] border border-amber-300/15 bg-amber-300/[0.04] p-4 lg:grid-cols-2">
+        <div className="mt-4 grid grid-cols-1 gap-4 rounded-xl border border-amber-300/15 bg-amber-300/[0.04] p-4 lg:grid-cols-2">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.16em] text-amber-200">Haftalık ödül</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-200">Haftalık ödül</p>
             <p className="mt-1 text-xs font-medium text-zinc-500">İlk 10 oyuncu için 200 TL Freebet kampanyası seçin.</p>
             <Field label="Ödül açıklaması" value={config.weeklyRewardLabel || 'İlk 10 oyuncuya kişi başı 200 TL Freebet'} onChange={(value) => updateField('weeklyRewardLabel', value)} />
             <CampaignField label="Lynon kampanyası" value={String(config.weeklyRewardCampaignId || '')} options={bonusOptions} onChange={(value) => updateField('weeklyRewardCampaignId', value || null)} />            <div className="mt-3">
@@ -162,7 +162,7 @@ export function PredictionLeagueManager({
             </div>
           </div>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.16em] text-amber-200">Aylık ödül</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-200">Aylık ödül</p>
             <p className="mt-1 text-xs font-medium text-zinc-500">Ayın lideri için 500 TL Freebet kampanyası seçin.</p>
             <Field label="Ödül açıklaması" value={config.monthlyRewardLabel || 'Ayın liderine 500 TL Freebet'} onChange={(value) => updateField('monthlyRewardLabel', value)} />
             <CampaignField label="Lynon kampanyası" value={String(config.monthlyRewardCampaignId || '')} options={bonusOptions} onChange={(value) => updateField('monthlyRewardCampaignId', value || null)} />            <div className="mt-3">
@@ -171,17 +171,17 @@ export function PredictionLeagueManager({
           </div>
         </div>
 
-        <div className="mt-3 rounded-2xl border border-emerald-300/15 bg-emerald-300/[0.035] p-4">
+        <div className="mt-3 rounded-xl border border-emerald-300/15 bg-emerald-300/[0.035] p-4">
           <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-emerald-200">Lynon ödül dağıtımı</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-200">Lynon ödül dağıtımı</p>
               <p className="mt-1 text-xs text-zinc-500">Önizleme yalnızca sıralamayı kontrol eder. Dağıtım işlemi dönem + oyuncu bazında tek sefer çalışır.</p>
             </div>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              <button type="button" onClick={() => runSettlement('weekly', true)} disabled={!!settling} className="h-10 rounded-xl border border-white/10 bg-white/5 px-3 text-[10px] font-black text-zinc-300 disabled:opacity-40">HAFTALIK ÖNİZLE</button>
-              <button type="button" onClick={() => runSettlement('weekly', false)} disabled={!!settling} className="h-10 rounded-xl bg-emerald-400 px-3 text-[10px] font-black text-black disabled:opacity-40">HAFTALIK DAĞIT</button>
-              <button type="button" onClick={() => runSettlement('monthly', true)} disabled={!!settling} className="h-10 rounded-xl border border-white/10 bg-white/5 px-3 text-[10px] font-black text-zinc-300 disabled:opacity-40">AYLIK ÖNİZLE</button>
-              <button type="button" onClick={() => runSettlement('monthly', false)} disabled={!!settling} className="h-10 rounded-xl bg-amber-300 px-3 text-[10px] font-black text-black disabled:opacity-40">AYLIK DAĞIT</button>
+              <button type="button" onClick={() => runSettlement('weekly', true)} disabled={!!settling} className="h-10 rounded-xl border border-white/10 bg-white/5 px-3 text-[10px] font-semibold text-zinc-300 disabled:opacity-40">HAFTALIK ÖNİZLE</button>
+              <button type="button" onClick={() => runSettlement('weekly', false)} disabled={!!settling} className="h-10 rounded-xl bg-emerald-400 px-3 text-[10px] font-semibold text-black disabled:opacity-40">HAFTALIK DAĞIT</button>
+              <button type="button" onClick={() => runSettlement('monthly', true)} disabled={!!settling} className="h-10 rounded-xl border border-white/10 bg-white/5 px-3 text-[10px] font-semibold text-zinc-300 disabled:opacity-40">AYLIK ÖNİZLE</button>
+              <button type="button" onClick={() => runSettlement('monthly', false)} disabled={!!settling} className="h-10 rounded-xl bg-amber-300 px-3 text-[10px] font-semibold text-black disabled:opacity-40">AYLIK DAĞIT</button>
             </div>
           </div>
           {settlementResult && (
@@ -190,13 +190,13 @@ export function PredictionLeagueManager({
             </div>
           )}
         </div>
-        <div className="mt-4 rounded-[1.5rem] border border-white/[0.07] bg-black/25 p-4">
-          <div className="mb-3 flex items-center gap-2 text-amber-200"><ImageUp size={16} /><span className="text-xs font-black uppercase tracking-[0.14em]">Ayın oyuncusu alanı</span></div>
+        <div className="mt-4 rounded-xl border border-white/[0.07] bg-black/25 p-4">
+          <div className="mb-3 flex items-center gap-2 text-amber-200"><ImageUp size={16} /><span className="text-xs font-semibold uppercase tracking-[0.14em]">Ayın oyuncusu alanı</span></div>
           <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_1fr_1.2fr_180px]">
             <Field label="Container başlığı" value={config.monthlyPlayer?.title || 'AYIN OYUNCUSU'} onChange={(value) => updateMonthlyPlayer({ title: value })} />
             <Field label="Ana metin" value={config.monthlyPlayer?.mainText || ''} onChange={(value) => updateMonthlyPlayer({ mainText: value })} />
             <Field label="Alt metin" value={config.monthlyPlayer?.subtitle || ''} onChange={(value) => updateMonthlyPlayer({ subtitle: value })} />
-            <label className="flex h-[66px] cursor-pointer items-center justify-center rounded-2xl border border-dashed border-amber-300/25 bg-amber-300/[0.06] px-3 text-center text-[10px] font-black uppercase tracking-[0.1em] text-amber-100">
+            <label className="flex h-[66px] cursor-pointer items-center justify-center rounded-xl border border-dashed border-amber-300/25 bg-amber-300/[0.06] px-3 text-center text-[10px] font-semibold uppercase tracking-[0.1em] text-amber-100">
               PNG yükle
               <input type="file" accept="image/png,image/webp,image/jpeg" className="sr-only" onChange={(event) => handleMonthlyPlayerImage(event.target.files?.[0])} />
             </label>
@@ -204,16 +204,16 @@ export function PredictionLeagueManager({
         </div>
       </section>
 
-      <section className="rounded-[2rem] border border-white/[0.07] bg-zinc-950/45 p-5 md:p-6">
+      <section className="rounded-xl border border-white/[0.07] bg-zinc-950/45 p-5 md:p-6">
         <div className="mb-5 flex items-center justify-between gap-3">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-600">Fikstür</p>
-            <h3 className="text-xl font-black text-white">Tahmin maçları</h3>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-600">Fikstür</p>
+            <h3 className="text-xl font-semibold text-white">Tahmin maçları</h3>
           </div>
           <button
             type="button"
             onClick={addMatch}
-            className="flex h-11 items-center gap-2 rounded-2xl bg-emerald-400 px-4 text-xs font-black uppercase tracking-[0.12em] text-black"
+            className="flex h-11 items-center gap-2 rounded-xl bg-emerald-400 px-4 text-xs font-semibold uppercase tracking-[0.12em] text-black"
           >
             <Plus size={16} /> Maç ekle
           </button>
@@ -221,7 +221,7 @@ export function PredictionLeagueManager({
 
         <div className="space-y-3">
           {config.matches.map((match) => (
-            <div key={match.id} className="rounded-[1.5rem] border border-white/[0.07] bg-black/25 p-4">
+            <div key={match.id} className="rounded-xl border border-white/[0.07] bg-black/25 p-4">
               <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_1fr_150px_155px]">
                 <Field
                   label="Ev sahibi"
@@ -237,12 +237,12 @@ export function PredictionLeagueManager({
                 />
                 <Field label="Lig" value={match.league} onChange={(value) => updateMatch(match.id, { league: value })} />
                 <div>
-                  <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.14em] text-zinc-600">Başlama</label>
+                  <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-600">Başlama</label>
                   <input
                     type="datetime-local"
                     value={(match.startsAt || '').slice(0, 16)}
                     onChange={(event) => updateMatch(match.id, { startsAt: event.target.value })}
-                    className="h-11 w-full rounded-2xl border border-white/[0.07] bg-black/30 px-3 text-xs font-bold text-white outline-none focus:border-emerald-300/40"
+                    className="h-11 w-full rounded-xl border border-white/[0.07] bg-black/30 px-3 text-xs font-bold text-white outline-none focus:border-emerald-300/40"
                   />
                 </div>
               </div>
@@ -251,11 +251,11 @@ export function PredictionLeagueManager({
                 <Field label="Ev logo (PNG URL)" value={match.homeLogoUrl || ''} onChange={(value) => updateMatch(match.id, { homeLogoUrl: value })} />
                 <Field label="Dep. logo (PNG URL)" value={match.awayLogoUrl || ''} onChange={(value) => updateMatch(match.id, { awayLogoUrl: value })} />
                 <div>
-                  <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.14em] text-zinc-600">Durum</label>
+                  <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-600">Durum</label>
                   <select
                     value={match.status}
                     onChange={(event) => updateMatch(match.id, { status: event.target.value as PredictionMatch['status'] })}
-                    className="h-11 w-full rounded-2xl border border-white/[0.07] bg-black/30 px-3 text-xs font-bold text-white outline-none focus:border-emerald-300/40"
+                    className="h-11 w-full rounded-xl border border-white/[0.07] bg-black/30 px-3 text-xs font-bold text-white outline-none focus:border-emerald-300/40"
                   >
                     <option value="open">Tahmine açık</option>
                     <option value="closed">Kapalı</option>
@@ -268,7 +268,7 @@ export function PredictionLeagueManager({
                   type="button"
                   onClick={() => removeMatch(match.id)}
                   aria-label="Maçı sil"
-                  className="mt-auto flex h-11 items-center justify-center rounded-2xl border border-rose-300/15 bg-rose-400/10 text-rose-300"
+                  className="mt-auto flex h-11 items-center justify-center rounded-xl border border-rose-300/15 bg-rose-400/10 text-rose-300"
                 >
                   <Trash2 size={17} />
                 </button>
@@ -277,7 +277,7 @@ export function PredictionLeagueManager({
           ))}
 
           {config.matches.length === 0 && (
-            <div className="rounded-[1.5rem] border border-dashed border-white/[0.1] bg-black/20 p-8 text-center">
+            <div className="rounded-xl border border-dashed border-white/[0.1] bg-black/20 p-8 text-center">
               <Trophy className="mx-auto mb-3 text-zinc-600" size={32} />
               <p className="text-sm font-bold text-zinc-500">Henüz maç eklenmedi.</p>
             </div>
@@ -291,8 +291,8 @@ export function PredictionLeagueManager({
 function CampaignField({ label, value, options, onChange }: { label: string; value: string; options: Array<{ id: string; display: string }>; onChange: (value: string) => void }) {
   return (
     <div className="mt-3">
-      <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.14em] text-zinc-600">{label}</label>
-      <select value={value} onChange={(event) => onChange(event.target.value)} className="h-11 w-full rounded-2xl border border-white/[0.07] bg-black/30 px-3 text-sm font-bold text-white outline-none focus:border-amber-300/40">
+      <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-600">{label}</label>
+      <select value={value} onChange={(event) => onChange(event.target.value)} className="h-11 w-full rounded-xl border border-white/[0.07] bg-black/30 px-3 text-sm font-bold text-white outline-none focus:border-amber-300/40">
         <option value="">Kampanya seçilmedi</option>
         {options.filter((option) => !option.id.startsWith('pas')).map((option) => <option key={option.id} value={option.id}>{option.display}</option>)}
       </select>
@@ -302,13 +302,13 @@ function CampaignField({ label, value, options, onChange }: { label: string; val
 function Field({ label, value, onChange, onBlur }: { label: string; value: string; onChange: (value: string) => void; onBlur?: () => void }) {
   return (
     <div>
-      <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.14em] text-zinc-600">{label}</label>
+      <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-600">{label}</label>
       <input
         type="text"
         value={value || ''}
         onChange={(event) => onChange(event.target.value)}
         onBlur={onBlur}
-        className="h-11 w-full rounded-2xl border border-white/[0.07] bg-black/30 px-3 text-sm font-bold text-white outline-none focus:border-emerald-300/40"
+        className="h-11 w-full rounded-xl border border-white/[0.07] bg-black/30 px-3 text-sm font-bold text-white outline-none focus:border-emerald-300/40"
       />
     </div>
   );
@@ -317,7 +317,7 @@ function Field({ label, value, onChange, onBlur }: { label: string; value: strin
 function NumberField({ label, value, onChange }: { label: string; value: number | null; onChange: (value: number | null) => void }) {
   return (
     <div>
-      <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.14em] text-zinc-600">{label}</label>
+      <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-600">{label}</label>
       <input
         type="number"
         min={0}
@@ -325,7 +325,7 @@ function NumberField({ label, value, onChange }: { label: string; value: number 
         value={value ?? ''}
         onChange={(event) => onChange(event.target.value === '' ? null : Number(event.target.value))}
         className={cn(
-          'h-11 w-full rounded-2xl border border-white/[0.07] bg-black/30 px-3 text-sm font-bold text-white outline-none focus:border-emerald-300/40',
+          'h-11 w-full rounded-xl border border-white/[0.07] bg-black/30 px-3 text-sm font-bold text-white outline-none focus:border-emerald-300/40',
           value == null && 'text-zinc-500'
         )}
       />

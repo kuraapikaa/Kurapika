@@ -50,33 +50,33 @@ export function IntelligenceCenter() {
     return (
         <div className="space-y-8 p-6 animate-in fade-in duration-700">
             {/* Header Panel */}
-            <header className="relative p-10 overflow-hidden rounded-[2.5rem] bg-zinc-900 border border-white/5 shadow-2xl">
+            <header className="relative p-10 overflow-hidden rounded-xl bg-zinc-900 border border-white/5 shadow-2xl">
                 <div className="absolute top-0 right-0 -mr-24 -mt-24 h-80 w-80 rounded-full bg-blue-500/10 blur-[120px]" />
                 <div className="absolute bottom-0 left-0 -ml-24 -mb-24 h-80 w-80 rounded-full bg-teal-500/10 blur-[120px]" />
 
                 <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
                     <div className="flex items-center gap-6">
-                        <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br from-blue-500 via-teal-500 to-emerald-500 p-[1px] shadow-2xl shadow-blue-500/20">
+                        <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 via-teal-500 to-emerald-500 p-[1px] shadow-2xl shadow-blue-500/20">
                             <div className="flex h-full w-full items-center justify-center rounded-[23px] bg-zinc-900">
                                 <BrainCircuit className="text-white" size={32} />
                             </div>
                         </div>
                         <div>
-                            <h1 className="text-3xl font-black tracking-tight text-white md:text-4xl">
+                            <h1 className="text-3xl font-semibold tracking-tight text-white md:text-4xl">
                                 İstihbarat <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-teal-400 to-emerald-400">Merkezi</span>
                             </h1>
                             <div className="mt-2 flex items-center gap-3">
                                 <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                                <p className="text-[11px] font-black text-zinc-500 uppercase tracking-[0.2em]">Sistem İzleme Aktif</p>
+                                <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-[0.2em]">Sistem İzleme Aktif</p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="flex bg-zinc-900/50 p-1.5 rounded-2xl border border-white/5 backdrop-blur-xl">
+                    <div className="flex bg-zinc-900/50 p-1.5 rounded-xl border border-white/5 backdrop-blur-xl">
                         <button
                             onClick={() => setActiveView('clusters')}
                             className={cn(
-                                "flex items-center gap-2 px-6 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all",
+                                "flex items-center gap-2 px-6 py-3 rounded-xl text-[11px] font-semibold uppercase tracking-widest transition-all",
                                 activeView === 'clusters' ? "bg-blue-500 text-white shadow-xl shadow-blue-500/20" : "text-zinc-500 hover:text-white"
                             )}
                         >
@@ -85,7 +85,7 @@ export function IntelligenceCenter() {
                         <button
                             onClick={() => setActiveView('scorecards')}
                             className={cn(
-                                "flex items-center gap-2 px-6 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all",
+                                "flex items-center gap-2 px-6 py-3 rounded-xl text-[11px] font-semibold uppercase tracking-widest transition-all",
                                 activeView === 'scorecards' ? "bg-teal-500 text-white shadow-xl shadow-teal-500/20" : "text-zinc-500 hover:text-white"
                             )}
                         >
@@ -101,31 +101,31 @@ export function IntelligenceCenter() {
                 {/* Statistics Bar */}
                 <div className="lg:col-span-12 grid grid-cols-1 md:grid-cols-4 gap-6">
                     <Card className="p-6 bg-zinc-900/50 border-white/5 flex items-center gap-5">
-                        <div className="h-14 w-14 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-400"><Users size={24} /></div>
+                        <div className="h-14 w-14 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400"><Users size={24} /></div>
                         <div>
-                            <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Tespit Edilen Kümeler</p>
-                            <p className="text-2xl font-black text-white">{clustersData?.clusters?.length || 0}</p>
+                            <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">Tespit Edilen Kümeler</p>
+                            <p className="text-2xl font-semibold text-white">{clustersData?.clusters?.length || 0}</p>
                         </div>
                     </Card>
                     <Card className="p-6 bg-zinc-900/50 border-white/5 flex items-center gap-5">
-                        <div className="h-14 w-14 rounded-2xl bg-rose-500/10 flex items-center justify-center text-rose-400"><ShieldAlert size={24} /></div>
+                        <div className="h-14 w-14 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-400"><ShieldAlert size={24} /></div>
                         <div>
-                            <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Kritik Riskli Oyuncular</p>
-                            <p className="text-2xl font-black text-white">12</p>
+                            <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">Kritik Riskli Oyuncular</p>
+                            <p className="text-2xl font-semibold text-white">12</p>
                         </div>
                     </Card>
                     <Card className="p-6 bg-zinc-900/50 border-white/5 flex items-center gap-5">
-                        <div className="h-14 w-14 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-400"><Activity size={24} /></div>
+                        <div className="h-14 w-14 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-400"><Activity size={24} /></div>
                         <div>
-                            <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Günlük Analiz Hacmi</p>
-                            <p className="text-2xl font-black text-white">~1.2k</p>
+                            <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">Günlük Analiz Hacmi</p>
+                            <p className="text-2xl font-semibold text-white">~1.2k</p>
                         </div>
                     </Card>
                     <Card className="p-6 bg-zinc-900/50 border-white/5 flex items-center gap-5">
-                        <div className="h-14 w-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-400"><Zap size={24} /></div>
+                        <div className="h-14 w-14 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400"><Zap size={24} /></div>
                         <div>
-                            <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Sistem Analiz Verimliliği</p>
-                            <p className="text-2xl font-black text-white">%98.4</p>
+                            <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">Sistem Analiz Verimliliği</p>
+                            <p className="text-2xl font-semibold text-white">%98.4</p>
                         </div>
                     </Card>
                 </div>
@@ -143,7 +143,7 @@ export function IntelligenceCenter() {
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
                                         <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400"><Fingerprint size={20} /></div>
-                                        <h2 className="text-xl font-black text-white uppercase tracking-tight">Çoklu Hesap Radarı</h2>
+                                        <h2 className="text-xl font-semibold text-white uppercase tracking-tight">Çoklu Hesap Radarı</h2>
                                     </div>
                                     <p className="text-xs font-bold text-zinc-500 italic">Son 3 saniye içinde güncellendi.</p>
                                 </div>
@@ -153,7 +153,7 @@ export function IntelligenceCenter() {
                                         <Card key={cluster.id} className="relative overflow-hidden p-8 border-white/5 bg-zinc-900/80 backdrop-blur-md hover:border-blue-500/30 transition-all group">
                                             <div className="absolute top-0 right-0 p-3">
                                                 <div className={cn(
-                                                    "px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider",
+                                                    "px-2 py-1 rounded-lg text-[9px] font-semibold uppercase tracking-wider",
                                                     cluster.riskScore > 70 ? "bg-rose-500/20 text-rose-400" : "bg-amber-500/20 text-amber-400"
                                                 )}>
                                                     RISK: %{cluster.riskScore}
@@ -162,7 +162,7 @@ export function IntelligenceCenter() {
 
                                             <div className="space-y-6">
                                                 <div className="space-y-1">
-                                                    <p className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em]">{cluster.type} TEMELLİ ÇAKIŞMA</p>
+                                                    <p className="text-[10px] font-semibold text-zinc-600 uppercase tracking-[0.2em]">{cluster.type} TEMELLİ ÇAKIŞMA</p>
                                                     <p className="text-sm font-bold text-zinc-300">{cluster.reason}</p>
                                                 </div>
 
@@ -170,7 +170,7 @@ export function IntelligenceCenter() {
                                                     {cluster.clients.map((client: any) => (
                                                         <div key={client.id} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 group/client hover:bg-white/10 transition-all">
                                                             <div className="flex flex-col">
-                                                                <span className="text-xs font-black text-white">{client.login}</span>
+                                                                <span className="text-xs font-semibold text-white">{client.login}</span>
                                                                 <span className="text-[10px] text-zinc-500 font-bold uppercase">ID: {client.id}</span>
                                                             </div>
                                                             <button
@@ -184,17 +184,17 @@ export function IntelligenceCenter() {
                                                 </div>
 
                                                 <div className="pt-4 border-t border-white/5 flex items-center justify-between">
-                                                    <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Tespit: Sistem</span>
-                                                    <button className="text-[10px] font-black text-blue-400 hover:text-blue-300 uppercase tracking-widest">İNCELEME BAŞLAT</button>
+                                                    <span className="text-[10px] font-semibold text-zinc-600 uppercase tracking-widest">Tespit: Sistem</span>
+                                                    <button className="text-[10px] font-semibold text-blue-400 hover:text-blue-300 uppercase tracking-widest">İNCELEME BAŞLAT</button>
                                                 </div>
                                             </div>
                                         </Card>
                                     ))}
 
                                     {(!clustersData?.clusters || clustersData.clusters.length === 0) && (
-                                        <div className="col-span-full py-32 text-center rounded-[3rem] bg-zinc-900/30 border border-dashed border-white/10">
+                                        <div className="col-span-full py-32 text-center rounded-xl bg-zinc-900/30 border border-dashed border-white/10">
                                             <ShieldCheck className="mx-auto text-emerald-500/30 mb-6" size={64} />
-                                            <p className="text-lg font-black text-zinc-500">Çakışan hesap kümesi bulunmadı.</p>
+                                            <p className="text-lg font-semibold text-zinc-500">Çakışan hesap kümesi bulunmadı.</p>
                                             <p className="text-sm text-zinc-600 font-bold mt-2 uppercase tracking-widest">Tüm ağ temiz görünüyor.</p>
                                         </div>
                                     )}
@@ -214,7 +214,7 @@ export function IntelligenceCenter() {
                                         <div className="flex-1 space-y-3">
                                             <div className="flex items-center gap-2 px-1">
                                                 <Search size={14} className="text-teal-400" />
-                                                <span className="text-[10px] font-black text-teal-400 uppercase tracking-widest">Oyuncu Analiz Motoru</span>
+                                                <span className="text-[10px] font-semibold text-teal-400 uppercase tracking-widest">Oyuncu Analiz Motoru</span>
                                             </div>
                                             <input
                                                 type="text"
@@ -222,12 +222,12 @@ export function IntelligenceCenter() {
                                                 value={searchQuery}
                                                 onChange={(e) => setSearchQuery(e.target.value)}
                                                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                                                className="w-full h-16 bg-black/40 border-2 border-white/5 rounded-2xl px-6 text-xl font-black text-white focus:outline-none focus:border-teal-500/50 transition-all"
+                                                className="w-full h-16 bg-black/40 border-2 border-white/5 rounded-xl px-6 text-xl font-semibold text-white focus:outline-none focus:border-teal-500/50 transition-all"
                                             />
                                         </div>
                                         <button
                                             onClick={handleSearch}
-                                            className="h-16 px-12 bg-white text-zinc-950 rounded-2xl text-[12px] font-black shadow-2xl hover:bg-zinc-200 transition-all active:scale-95 flex items-center gap-3 uppercase tracking-widest"
+                                            className="h-16 px-12 bg-white text-zinc-950 rounded-xl text-[12px] font-semibold shadow-2xl hover:bg-zinc-200 transition-all active:scale-95 flex items-center gap-3 uppercase tracking-widest"
                                         >
                                             <Zap size={18} /> ANALİZİ BAŞLAT
                                         </button>
@@ -238,13 +238,13 @@ export function IntelligenceCenter() {
                                     {scorecardError ? (
                                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-20 text-center">
                                             <AlertTriangle className="mx-auto text-rose-500 mb-4" size={48} />
-                                            <p className="text-lg font-black text-white uppercase tracking-tight">ANALİZ HATASI</p>
+                                            <p className="text-lg font-semibold text-white uppercase tracking-tight">ANALİZ HATASI</p>
                                             <p className="text-sm text-zinc-500 font-bold mt-2">{(scorecardError as any)?.response?.data?.AlertMessage || 'Kullanıcı bulunamadı veya sistem hatası oluştu.'}</p>
                                         </motion.div>
                                     ) : scorecardLoading ? (
                                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center py-20">
                                             <div className="h-12 w-12 rounded-full border-4 border-teal-500/20 border-t-teal-500 animate-spin mb-4" />
-                                            <p className="text-xs font-black text-zinc-500 uppercase tracking-[0.3em] animate-pulse">Pattern Analizi Yapılıyor</p>
+                                            <p className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.3em] animate-pulse">Pattern Analizi Yapılıyor</p>
                                         </motion.div>
                                     ) : scorecardData?.scorecard ? (
                                         <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -268,18 +268,18 @@ export function IntelligenceCenter() {
                                                         />
                                                     </svg>
                                                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                                        <span className="text-5xl font-black text-white">{scorecardData.scorecard.trustScore}</span>
-                                                        <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mt-1">GÜVEN PUANI</span>
+                                                        <span className="text-5xl font-semibold text-white">{scorecardData.scorecard.trustScore}</span>
+                                                        <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest mt-1">GÜVEN PUANI</span>
                                                     </div>
                                                 </div>
 
                                                 <div className="space-y-2 mb-10">
-                                                    <h3 className="text-2xl font-black text-white uppercase tracking-tight">{scorecardData.scorecard.login}</h3>
+                                                    <h3 className="text-2xl font-semibold text-white uppercase tracking-tight">{scorecardData.scorecard.login}</h3>
                                                     <p className="text-xs font-bold text-zinc-500">ID: {scorecardData.scorecard.clientId}</p>
                                                 </div>
 
                                                 <div className={cn(
-                                                    "w-full py-4 rounded-2xl text-[11px] font-black tracking-[0.2em] uppercase shadow-lg",
+                                                    "w-full py-4 rounded-xl text-[11px] font-semibold tracking-[0.2em] uppercase shadow-lg",
                                                     scorecardData.scorecard.riskLevel === 'low' ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" :
                                                         scorecardData.scorecard.riskLevel === 'medium' ? "bg-amber-500/10 text-amber-400 border border-amber-500/20" :
                                                             "bg-rose-500/10 text-rose-400 border border-rose-500/20"
@@ -289,8 +289,8 @@ export function IntelligenceCenter() {
 
                                                 <div className="mt-8 pt-8 border-t border-white/5 w-full text-left">
                                                     <div className="flex items-center justify-between mb-4">
-                                                        <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Profil Sınıfı</span>
-                                                        <span className="px-3 py-1 rounded-lg bg-blue-500/20 text-blue-400 text-[10px] font-black uppercase">{scorecardData.scorecard.category}</span>
+                                                        <span className="text-[10px] font-semibold text-zinc-600 uppercase tracking-widest">Profil Sınıfı</span>
+                                                        <span className="px-3 py-1 rounded-lg bg-blue-500/20 text-blue-400 text-[10px] font-semibold uppercase">{scorecardData.scorecard.category}</span>
                                                     </div>
                                                 </div>
                                             </Card>
@@ -301,7 +301,7 @@ export function IntelligenceCenter() {
                                                     <Card className="p-8 bg-zinc-900 border-white/5 space-y-6">
                                                         <div className="flex items-center gap-3">
                                                             <TrendingUp size={20} className="text-blue-400" />
-                                                            <h4 className="text-sm font-black text-white uppercase tracking-widest">Performans Metrikleri</h4>
+                                                            <h4 className="text-sm font-semibold text-white uppercase tracking-widest">Performans Metrikleri</h4>
                                                         </div>
                                                         <div className="space-y-5">
                                                             <MetricRow label="Yatırım/Çekim Oranı" value={(scorecardData.scorecard.metrics.depositWithdrawalRatio * 100).toFixed(1) + '%'} progress={scorecardData.scorecard.metrics.depositWithdrawalRatio} />
@@ -313,7 +313,7 @@ export function IntelligenceCenter() {
                                                     <Card className="p-8 bg-zinc-900 border-white/5 space-y-6">
                                                         <div className="flex items-center gap-3">
                                                             <AlertTriangle size={20} className="text-rose-400" />
-                                                            <h4 className="text-sm font-black text-white uppercase tracking-widest">Kritik Bulgular</h4>
+                                                            <h4 className="text-sm font-semibold text-white uppercase tracking-widest">Kritik Bulgular</h4>
                                                         </div>
                                                         <div className="space-y-3">
                                                             {scorecardData.scorecard.topFlags.map((flag: string, i: number) => (
@@ -334,9 +334,9 @@ export function IntelligenceCenter() {
                                                 <Card className="p-10 bg-gradient-to-br from-blue-500/10 to-transparent border-white/5">
                                                     <div className="flex items-center gap-4 mb-8">
                                                         <Activity size={24} className="text-blue-400" />
-                                                        <h4 className="text-lg font-black text-white tracking-tight">Sistem Karar Tavsiyesi</h4>
+                                                        <h4 className="text-lg font-semibold text-white tracking-tight">Sistem Karar Tavsiyesi</h4>
                                                     </div>
-                                                    <div className="p-6 rounded-2xl bg-black/40 border border-blue-500/30">
+                                                    <div className="p-6 rounded-xl bg-black/40 border border-blue-500/30">
                                                         <p className="text-sm font-bold text-zinc-300 leading-relaxed">
                                                             {scorecardData.scorecard.trustScore > 80
                                                                 ? "Bu oyuncu patternleri tamamen normal ve güvenli sınırlar içerisinde. Manuel onay beklemeden VIP hızında işlem yapılabilir."
@@ -370,7 +370,7 @@ function MetricRow({ label, value, progress, color }: any) {
         <div className="space-y-2">
             <div className="flex items-center justify-between">
                 <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{label}</span>
-                <span className="text-xs font-black text-white">{value}</span>
+                <span className="text-xs font-semibold text-white">{value}</span>
             </div>
             <div className="h-1.5 w-full bg-black/60 rounded-full overflow-hidden">
                 <motion.div

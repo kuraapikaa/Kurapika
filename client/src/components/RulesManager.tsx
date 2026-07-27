@@ -330,30 +330,30 @@ export function RulesManager() {
             <div className="relative h-16 w-16">
                 <div className="absolute inset-0 rounded-full border-4 border-blue-500/20 border-t-blue-500 animate-spin" />
             </div>
-            <p className="text-sm font-black text-blue-400 uppercase tracking-widest animate-pulse">Sistem Yükleniyor</p>
+            <p className="text-sm font-semibold text-blue-400 uppercase tracking-widest animate-pulse">Sistem Yükleniyor</p>
         </div>
     );
 
     return (
         <div className="max-w-[1400px] mx-auto space-y-10 py-6 animate-in fade-in duration-700">
             {/* Premium Header */}
-            <header className="relative overflow-hidden rounded-[2.5rem] bg-zinc-900 border border-white/5 p-8 md:p-12">
+            <header className="relative overflow-hidden rounded-xl bg-zinc-900 border border-white/5 p-8 md:p-12">
                 <div className="absolute top-0 right-0 -mr-20 -mt-20 h-64 w-64 rounded-full bg-blue-500/10 blur-[100px]" />
 
                 <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
                     <div className="flex items-center gap-3">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-teal-500 p-[1px] shadow-lg shadow-blue-500/20">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-teal-500 p-[1px] shadow-lg shadow-blue-500/20">
                             <div className="flex h-full w-full items-center justify-center rounded-[14px] bg-zinc-900">
                                 <Settings className="text-white" size={24} />
                             </div>
                         </div>
                         <div>
-                            <h1 className="text-4xl font-black tracking-tighter text-white md:text-5xl">
+                            <h1 className="text-4xl font-semibold tracking-tighter text-white md:text-5xl">
                                 Kural <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-teal-400 to-cyan-400">Merkezi</span>
                             </h1>
                             <div className="flex items-center gap-2 mt-2">
                                 <div className="h-1 w-8 rounded-full bg-blue-500" />
-                                <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.3em]">Advanced Neural Logic Engine</p>
+                                <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.3em]">Advanced Neural Logic Engine</p>
                             </div>
                         </div>
                     </div>
@@ -361,14 +361,14 @@ export function RulesManager() {
                     <div className="flex flex-wrap items-center gap-4">
                         <button
                             onClick={() => queryClient.invalidateQueries({ queryKey: ['admin-rules'] })}
-                            className="group flex items-center justify-center h-12 w-12 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all active:scale-95"
+                            className="group flex items-center justify-center h-12 w-12 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all active:scale-95"
                         >
                             <RefreshCw size={20} className={cn("text-zinc-400 group-hover:text-white transition-colors", mutation.isPending && "animate-spin")} />
                         </button>
                         <Button
                             variant="primary"
                             onClick={() => setIsAdding(!isAdding)}
-                            className="h-12 px-8 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 shadow-xl shadow-blue-500/20 border-none font-black tracking-widest text-xs"
+                            className="h-12 px-8 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 shadow-xl shadow-blue-500/20 border-none font-semibold tracking-widest text-xs"
                         >
                             <Plus size={18} className="mr-2" /> YENİ KURAL EKLE
                         </Button>
@@ -386,7 +386,7 @@ export function RulesManager() {
                                 placeholder="Kural veya ID ara..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full h-14 bg-zinc-900/40 backdrop-blur-xl border border-white/5 rounded-2xl pl-12 pr-4 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/20 transition-all font-bold"
+                                className="w-full h-14 bg-zinc-900/40 backdrop-blur-xl border border-white/5 rounded-xl pl-12 pr-4 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/20 transition-all font-bold"
                             />
                         </div>
                     </div>
@@ -399,8 +399,8 @@ export function RulesManager() {
                                 exit={{ opacity: 0, y: -20, scale: 0.95 }}
                                 className="relative group"
                             >
-                                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-transparent blur-2xl rounded-3xl" />
-                                <div className="relative p-8 rounded-[2.5rem] bg-zinc-900 border border-blue-500/20 shadow-2xl overflow-hidden">
+                                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-transparent blur-2xl rounded-xl" />
+                                <div className="relative p-8 rounded-xl bg-zinc-900 border border-blue-500/20 shadow-2xl overflow-hidden">
                                     <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                                         <Plus size={80} className="text-blue-500" />
                                     </div>
@@ -410,7 +410,7 @@ export function RulesManager() {
                                                 <Plus size={20} />
                                             </div>
                                             <div>
-                                                <h3 className="text-lg font-black text-white uppercase tracking-tight">YENİ BONUS KURALI TANIMLA</h3>
+                                                <h3 className="text-lg font-semibold text-white uppercase tracking-tight">YENİ BONUS KURALI TANIMLA</h3>
                                                 <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em]">{activeTab === 'id' ? 'Platform ID Bazlı Mapping' : 'Başlık Bazlı Mapping'}</p>
                                             </div>
                                         </div>
@@ -418,12 +418,12 @@ export function RulesManager() {
                                         <div className="space-y-6">
                                             {/* Tür Seçimi */}
                                             <div className="space-y-3">
-                                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Bonus Tipi (Hangi yöntemle eklenecek?)</label>
+                                                <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest ml-1">Bonus Tipi (Hangi yöntemle eklenecek?)</label>
                                                 <div className="grid grid-cols-2 gap-3">
                                                     <button
                                                         onClick={() => setNewType('partner')}
                                                         className={cn(
-                                                            "flex items-center justify-center gap-2 h-14 rounded-2xl border font-black text-[11px] transition-all uppercase tracking-widest",
+                                                            "flex items-center justify-center gap-2 h-14 rounded-xl border font-semibold text-[11px] transition-all uppercase tracking-widest",
                                                             newType === 'partner'
                                                                 ? "bg-blue-500/20 border-blue-500/50 text-blue-400"
                                                                 : "bg-black/20 border-white/5 text-zinc-500 hover:border-white/10"
@@ -434,7 +434,7 @@ export function RulesManager() {
                                                     <button
                                                         onClick={() => setNewType('cash')}
                                                         className={cn(
-                                                            "flex items-center justify-center gap-2 h-14 rounded-2xl border font-black text-[11px] transition-all uppercase tracking-widest",
+                                                            "flex items-center justify-center gap-2 h-14 rounded-xl border font-semibold text-[11px] transition-all uppercase tracking-widest",
                                                             newType === 'cash'
                                                                 ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-400"
                                                                 : "bg-black/20 border-white/5 text-zinc-500 hover:border-white/10"
@@ -446,14 +446,14 @@ export function RulesManager() {
                                             </div>
 
                                             <div className="space-y-3">
-                                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">
+                                                <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest ml-1">
                                                     {newType === 'partner' ? 'Platform Bonus ID' : 'Referans ID / Tanımlayıcı'}
                                                 </label>
                                                 {newType === 'partner' ? (
                                                     <select
                                                         value={newKey}
                                                         onChange={(e) => setNewKey(e.target.value)}
-                                                        className="w-full h-16 bg-black/40 border border-[#3b82f6]/25 rounded-2xl px-5 text-sm text-white focus:outline-none focus:border-[#3b82f6]/70 transition-all font-black"
+                                                        className="w-full h-16 bg-black/40 border border-[#3b82f6]/25 rounded-xl px-5 text-sm text-white focus:outline-none focus:border-[#3b82f6]/70 transition-all font-semibold"
                                                     >
                                                         <option value="">Lynon kampanyası seçin ({promos.length})</option>
                                                         {addOptions.map((option) => (
@@ -467,7 +467,7 @@ export function RulesManager() {
                                                         onChange={(e) => setNewKey(e.target.value)}
                                                         onKeyDown={(e) => e.key === 'Enter' && handleAddRule()}
                                                         placeholder="Bir isim veya ID girin"
-                                                        className="w-full h-16 bg-black/40 border border-white/10 rounded-2xl px-6 text-lg text-white placeholder:text-zinc-700 focus:outline-none focus:border-[#3b82f6]/50 transition-all font-black"
+                                                        className="w-full h-16 bg-black/40 border border-white/10 rounded-xl px-6 text-lg text-white placeholder:text-zinc-700 focus:outline-none focus:border-[#3b82f6]/50 transition-all font-semibold"
                                                     />
                                                 )}
                                                 <p className="text-[10px] text-zinc-600 font-bold ml-1 uppercase tracking-wider">
@@ -479,15 +479,15 @@ export function RulesManager() {
                                         </div>
 
                                         {selectedBonusLabel && (
-                                            <div className="p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 flex items-center gap-3">
+                                            <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20 flex items-center gap-3">
                                                 <CheckCircle2 size={16} className="text-emerald-500" />
-                                                <p className="text-sm font-black text-emerald-400">Hedef Bonus: {selectedBonusLabel}</p>
+                                                <p className="text-sm font-semibold text-emerald-400">Hedef Bonus: {selectedBonusLabel}</p>
                                             </div>
                                         )}
 
                                         <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/5">
-                                            <button onClick={() => setIsAdding(false)} className="px-8 py-3 text-[11px] font-black text-zinc-500 hover:text-white transition-colors">İPTAL</button>
-                                            <Button variant="primary" onClick={handleAddRule} className="h-12 px-12 rounded-xl bg-white text-black font-black text-[11px] shadow-2xl border-none hover:bg-zinc-200">KURALI OLUŞTUR</Button>
+                                            <button onClick={() => setIsAdding(false)} className="px-8 py-3 text-[11px] font-semibold text-zinc-500 hover:text-white transition-colors">İPTAL</button>
+                                            <Button variant="primary" onClick={handleAddRule} className="h-12 px-12 rounded-xl bg-white text-black font-semibold text-[11px] shadow-2xl border-none hover:bg-zinc-200">KURALI OLUŞTUR</Button>
                                         </div>
                                     </div>
                                 </div>
@@ -500,7 +500,7 @@ export function RulesManager() {
                             <div
                                 key={key}
                                 className={cn(
-                                    "relative rounded-[2rem] border transition-all duration-300",
+                                    "relative rounded-xl border transition-all duration-300",
                                     editKey === key
                                         ? "bg-blue-500/5 border-blue-500/50 p-8"
                                         : "bg-zinc-900 border-white/5 hover:border-white/20 p-6 md:px-8 group"
@@ -516,8 +516,8 @@ export function RulesManager() {
                                                     </div>
                                                     <div className="space-y-1">
                                                         <div className="flex items-center gap-3">
-                                                            <h3 className="text-3xl font-black text-white tracking-tighter">{key}</h3>
-                                                            {spec.enabled === false && <span className="px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-500 text-[9px] font-black border border-rose-500/20 uppercase tracking-widest">Pasif</span>}
+                                                            <h3 className="text-3xl font-semibold text-white tracking-tighter">{key}</h3>
+                                                            {spec.enabled === false && <span className="px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-500 text-[9px] font-semibold border border-rose-500/20 uppercase tracking-widest">Pasif</span>}
                                                         </div>
                                                          {getPromoTitleForRuleKey(key) && (
                                                             <div className="text-sm font-bold text-emerald-400/90 flex items-center gap-2">
@@ -530,14 +530,14 @@ export function RulesManager() {
                                                 <div className="flex gap-3">
                                                     <button
                                                         onClick={() => setEditKey(null)}
-                                                        className="px-6 py-3 rounded-xl bg-white/5 text-[11px] font-black text-zinc-500 hover:text-white transition-all uppercase tracking-widest"
+                                                        className="px-6 py-3 rounded-xl bg-white/5 text-[11px] font-semibold text-zinc-500 hover:text-white transition-all uppercase tracking-widest"
                                                     >
                                                         İPTAL
                                                     </button>
                                                     <Button
                                                         variant="primary"
                                                         onClick={() => handleUpdateRule(key, editValue!)}
-                                                        className="h-12 px-10 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 font-black text-[11px] border-none shadow-xl shadow-blue-500/10 uppercase tracking-widest"
+                                                        className="h-12 px-10 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 font-semibold text-[11px] border-none shadow-xl shadow-blue-500/10 uppercase tracking-widest"
                                                         disabled={mutation.isPending}
                                                     >
                                                         {mutation.isPending ? 'KAYDEDİLİYOR...' : 'KURALI GÜNCELLE'}
@@ -548,7 +548,7 @@ export function RulesManager() {
                                             <div className="space-y-8">
                                                 {/* Section: Type & Amount */}
                                                 <div className="space-y-4">
-                                                    <h4 className="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                                                    <h4 className="text-[10px] font-semibold text-blue-400 uppercase tracking-[0.2em] flex items-center gap-2">
                                                         <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
                                                         Tür & Tutar Ayarları
                                                     </h4>
@@ -562,12 +562,12 @@ export function RulesManager() {
                                                     </div>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                                         <div className="space-y-2">
-                                                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block pl-1">Bonus Tipi</label>
+                                                            <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest block pl-1">Bonus Tipi</label>
                                                             <p className="text-[10px] text-zinc-600 font-medium pl-1 mb-1">Bonusun hangi mekanizma ile ekleneceğini belirler.</p>
                                                             <select
                                                                 value={editValue?.type ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, type: e.target.value as any })}
-                                                                className="w-full h-12 bg-zinc-950 border border-white/10 rounded-2xl px-4 text-xs text-white focus:border-blue-500 transition-all outline-none font-bold"
+                                                                className="w-full h-12 bg-zinc-950 border border-white/10 rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all outline-none font-bold"
                                                             >
                                                                 <option value="">Seçiniz...</option>
                                                                 <option value="partner">Partner Bonus</option>
@@ -576,24 +576,24 @@ export function RulesManager() {
                                                         </div>
                                                         {editValue?.type === 'partner' && (
                                                             <div className="space-y-2">
-                                                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block pl-1">Partner Bonus ID</label>
+                                                                <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest block pl-1">Partner Bonus ID</label>
                                                                 <p className="text-[10px] text-zinc-600 font-medium pl-1 mb-1">Backoffice üzerindeki bonusun benzersiz tanımlayıcısı.</p>
                                                                 <input
                                                                     type="text"
                                                                     value={editValue?.partnerBonusId ?? ''}
                                                                     onChange={(e) => setEditValue({ ...editValue, partnerBonusId: e.target.value })}
-                                                                    className="w-full h-12 bg-zinc-950 border border-white/10 rounded-2xl px-4 text-xs text-white focus:border-blue-500 transition-all outline-none font-bold"
+                                                                    className="w-full h-12 bg-zinc-950 border border-white/10 rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all outline-none font-bold"
                                                                     placeholder="Örn: 656569"
                                                                 />
                                                             </div>
                                                         )}
                                                         <div className="space-y-2">
-                                                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block pl-1">Tutar Tipi</label>
+                                                            <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest block pl-1">Tutar Tipi</label>
                                                             <p className="text-[10px] text-zinc-600 font-medium pl-1 mb-1">Eklenecek miktarın nasıl hesaplanacağını seçin.</p>
                                                             <select
                                                                 value={editValue?.amountType ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, amountType: e.target.value as any })}
-                                                                className="w-full h-12 bg-zinc-950 border border-white/10 rounded-2xl px-4 text-xs text-white focus:border-blue-500 transition-all outline-none font-bold"
+                                                                className="w-full h-12 bg-zinc-950 border border-white/10 rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all outline-none font-bold"
                                                             >
                                                                 <option value="">Seçiniz...</option>
                                                                 <option value="fixed">Sabit Tutar</option>
@@ -609,32 +609,32 @@ export function RulesManager() {
                                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                                                         {editValue?.amountType === 'fixed' && (
                                                             <div className="space-y-2">
-                                                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block pl-1">Sabit Tutar (₺)</label>
+                                                                <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest block pl-1">Sabit Tutar (₺)</label>
                                                                 <input
                                                                     type="number"
                                                                     value={editValue?.fixedAmount ?? ''}
                                                                     onChange={(e) => setEditValue({ ...editValue, fixedAmount: Number(e.target.value) })}
-                                                                    className="w-full h-12 bg-zinc-950 border border-white/10 rounded-2xl px-4 text-xs text-white focus:border-blue-500 transition-all outline-none font-bold"
+                                                                    className="w-full h-12 bg-zinc-950 border border-white/10 rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all outline-none font-bold"
                                                                 />
                                                             </div>
                                                         )}
                                                         {editValue?.amountType === 'percentage' && (
                                                             <div className="space-y-2">
-                                                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block pl-1">Yüzde (%)</label>
+                                                                <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest block pl-1">Yüzde (%)</label>
                                                                 <input
                                                                     type="number"
                                                                     value={editValue?.percentageAmount ?? ''}
                                                                     onChange={(e) => setEditValue({ ...editValue, percentageAmount: Number(e.target.value) })}
-                                                                    className="w-full h-12 bg-zinc-950 border border-white/10 rounded-2xl px-4 text-xs text-white focus:border-blue-500 transition-all outline-none font-bold"
+                                                                    className="w-full h-12 bg-zinc-950 border border-white/10 rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all outline-none font-bold"
                                                                 />
                                                             </div>
                                                         )}
                                                     </div>
 
                                                     {editValue?.amountType === 'tiered' && (
-                                                        <div className="p-4 rounded-2xl bg-zinc-950/40 border border-white/10 space-y-4">
+                                                        <div className="p-4 rounded-xl bg-zinc-950/40 border border-white/10 space-y-4">
                                                             <div className="flex items-center justify-between">
-                                                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block pl-1">Barem Ayarları</label>
+                                                                <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest block pl-1">Barem Ayarları</label>
                                                                 <Button
                                                                     variant="ghost"
                                                                     size="sm"
@@ -686,9 +686,9 @@ export function RulesManager() {
                                                     )}
 
                                                     {editValue?.amountType === 'tieredRange' && (
-                                                        <div className="p-4 rounded-2xl bg-zinc-950/40 border border-white/10 space-y-4">
+                                                        <div className="p-4 rounded-xl bg-zinc-950/40 border border-white/10 space-y-4">
                                                             <div className="flex items-center justify-between">
-                                                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block pl-1">Yatırım Aralığı Ayarları</label>
+                                                                <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest block pl-1">Yatırım Aralığı Ayarları</label>
                                                                 <Button
                                                                     variant="ghost"
                                                                     size="sm"
@@ -752,10 +752,10 @@ export function RulesManager() {
                                                     )}
 
                                                     {editValue?.amountType === 'tieredPercentage' && (
-                                                        <div className="p-4 rounded-2xl bg-zinc-950/40 border border-white/10 space-y-4">
+                                                        <div className="p-4 rounded-xl bg-zinc-950/40 border border-white/10 space-y-4">
                                                             <div className="flex items-center justify-between">
                                                                 <div>
-                                                                    <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block pl-1">Yüzdeli Yatırım Baremi Aralığı</label>
+                                                                    <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest block pl-1">Yüzdeli Yatırım Baremi Aralığı</label>
                                                                     <p className="mt-1 pl-1 text-[10px] text-zinc-600">Yatırım aralığa düşerse bonus, sabit tutar yerine yatırımın yüzdesi olarak hesaplanır. Tavan boş bırakılırsa sınır uygulanmaz.</p>
                                                                 </div>
                                                                 <Button
@@ -826,7 +826,7 @@ export function RulesManager() {
                                                 {/* Lynon F: Process FreeSpin */}
                                                 <div className="space-y-4 pt-4 border-t border-white/5">
                                                     <div>
-                                                        <h4 className="text-[10px] font-black text-amber-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                                                        <h4 className="text-[10px] font-semibold text-amber-400 uppercase tracking-[0.2em] flex items-center gap-2">
                                                             <div className="h-1.5 w-1.5 rounded-full bg-amber-400" />
                                                             Freespin / F: Process FreeSpin
                                                         </h4>
@@ -834,7 +834,7 @@ export function RulesManager() {
                                                     </div>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
                                                         <label className="space-y-2">
-                                                            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Bet Level*</span>
+                                                            <span className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Bet Level*</span>
                                                             <input
                                                                 type="number"
                                                                 min={1}
@@ -846,7 +846,7 @@ export function RulesManager() {
                                                             />
                                                         </label>
                                                         <label className="space-y-2">
-                                                            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Count*</span>
+                                                            <span className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Count*</span>
                                                             <input
                                                                 type="number"
                                                                 min={1}
@@ -858,7 +858,7 @@ export function RulesManager() {
                                                             />
                                                         </label>
                                                         <label className="space-y-2">
-                                                            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Game ID*</span>
+                                                            <span className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Game ID*</span>
                                                             <input
                                                                 type="number"
                                                                 min={1}
@@ -870,7 +870,7 @@ export function RulesManager() {
                                                             />
                                                         </label>
                                                         <label className="space-y-2">
-                                                            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Provider ID*</span>
+                                                            <span className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Provider ID*</span>
                                                             <input
                                                                 type="number"
                                                                 min={1}
@@ -885,7 +885,7 @@ export function RulesManager() {
                                                 </div>
                                                 {/* Section: Automation & Rules */}
                                                 <div className="space-y-4 pt-4 border-t border-white/5">
-                                                    <h4 className="text-[10px] font-black text-rose-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                                                    <h4 className="text-[10px] font-semibold text-rose-400 uppercase tracking-[0.2em] flex items-center gap-2">
                                                         <div className="h-1.5 w-1.5 rounded-full bg-rose-500" />
                                                         Otomasyon Ayarları
                                                     </h4>
@@ -918,7 +918,7 @@ export function RulesManager() {
 
                                                 {/* Section: Rule Engine Switches */}
                                                 <div className="space-y-4 pt-4 border-t border-white/5">
-                                                    <h4 className="text-[10px] font-black text-sky-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                                                    <h4 className="text-[10px] font-semibold text-sky-400 uppercase tracking-[0.2em] flex items-center gap-2">
                                                         <div className="h-1.5 w-1.5 rounded-full bg-sky-500" />
                                                         Bağımsız Kural Kontrolleri
                                                     </h4>
@@ -976,30 +976,30 @@ export function RulesManager() {
 
                                                 {/* Section: Limits */}
                                                 <div className="space-y-4 pt-4 border-t border-white/5">
-                                                    <h4 className="text-[10px] font-black text-amber-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                                                    <h4 className="text-[10px] font-semibold text-amber-400 uppercase tracking-[0.2em] flex items-center gap-2">
                                                         <div className="h-1.5 w-1.5 rounded-full bg-amber-500" />
                                                         Gelişmiş Limitler
                                                     </h4>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                                                         <div className="space-y-2">
-                                                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block pl-1">Min Bakiye Limiti</label>
+                                                            <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest block pl-1">Min Bakiye Limiti</label>
                                                             <p className="text-[10px] text-zinc-600 font-medium pl-1 mb-1">Bonus talebi anındaki minimum bakiye sınırı.</p>
                                                             <input
                                                                 type="number"
                                                                 value={editValue?.minBalanceToClaim ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, minBalanceToClaim: Number(e.target.value) })}
-                                                                className="w-full h-12 bg-zinc-950 border border-white/10 rounded-2xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
+                                                                className="w-full h-12 bg-zinc-950 border border-white/10 rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
                                                                 placeholder="N/A"
                                                             />
                                                         </div>
                                                         <div className="space-y-2">
-                                                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block pl-1">Max Bakiye Limiti</label>
+                                                            <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest block pl-1">Max Bakiye Limiti</label>
                                                             <p className="text-[10px] text-zinc-600 font-medium pl-1 mb-1">Bonus talebi anındaki maksimum bakiye sınırı.</p>
                                                             <input
                                                                 type="number"
                                                                 value={editValue?.maxBalanceToClaim ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, maxBalanceToClaim: Number(e.target.value) })}
-                                                                className="w-full h-12 bg-zinc-950 border border-white/10 rounded-2xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
+                                                                className="w-full h-12 bg-zinc-950 border border-white/10 rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
                                                                 placeholder="N/A"
                                                             />
                                                         </div>
@@ -1008,86 +1008,86 @@ export function RulesManager() {
 
                                                 {/* Section: Wager & Payout Rules */}
                                                 <div className="space-y-4 pt-4 border-t border-white/5">
-                                                    <h4 className="text-[10px] font-black text-amber-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                                                    <h4 className="text-[10px] font-semibold text-amber-400 uppercase tracking-[0.2em] flex items-center gap-2">
                                                         <div className="h-1.5 w-1.5 rounded-full bg-amber-500" />
                                                         Çevrim & Ödeme Kuralları
                                                     </h4>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                                                         <div className="space-y-2">
-                                                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block pl-1">Ana Para Çevrimi</label>
+                                                            <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest block pl-1">Ana Para Çevrimi</label>
                                                             <p className="text-[10px] text-zinc-600 font-medium pl-1 mb-1">Anaparanın kaç katı çevrilmeli?</p>
                                                             <input
                                                                 type="number"
                                                                 value={editValue?.principalWagerMult ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, principalWagerMult: Number(e.target.value) })}
-                                                                className="w-full h-12 bg-zinc-950 border border-white/10 rounded-2xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
+                                                                className="w-full h-12 bg-zinc-950 border border-white/10 rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
                                                                 placeholder="1 (Default)"
                                                             />
                                                         </div>
                                                         <div className="space-y-2">
-                                                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block pl-1">Bonus Çevrimi</label>
+                                                            <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest block pl-1">Bonus Çevrimi</label>
                                                             <p className="text-[10px] text-zinc-600 font-medium pl-1 mb-1">Bonusun kaç katı çevrilmeli?</p>
                                                             <input
                                                                 type="number"
                                                                 value={editValue?.bonusWagerMult ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, bonusWagerMult: Number(e.target.value) })}
-                                                                className="w-full h-12 bg-zinc-950 border border-white/10 rounded-2xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
+                                                                className="w-full h-12 bg-zinc-950 border border-white/10 rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
                                                                 placeholder="0 (Çevrimsiz)"
                                                             />
                                                         </div>
                                                         <div className="space-y-2">
-                                                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block pl-1">Ürün Çevrimi — Casino</label>
+                                                            <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest block pl-1">Ürün Çevrimi — Casino</label>
                                                             <p className="text-[10px] text-zinc-600 font-medium pl-1 mb-1">Otomatik çekim onayında casino bahisleri için ayrı çarpan.</p>
                                                             <input
                                                                 type="number"
                                                                 value={editValue?.casinoWagering ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, casinoWagering: Number(e.target.value) })}
-                                                                className="w-full h-12 bg-zinc-950 border border-white/10 rounded-2xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
+                                                                className="w-full h-12 bg-zinc-950 border border-white/10 rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
                                                                 placeholder="Kullanılmıyor"
                                                             />
                                                         </div>
                                                         <div className="space-y-2">
-                                                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block pl-1">Ürün Çevrimi — Spor</label>
+                                                            <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest block pl-1">Ürün Çevrimi — Spor</label>
                                                             <p className="text-[10px] text-zinc-600 font-medium pl-1 mb-1">Otomatik çekim onayında spor bahisleri için ayrı çarpan.</p>
                                                             <input
                                                                 type="number"
                                                                 value={editValue?.sportWagering ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, sportWagering: Number(e.target.value) })}
-                                                                className="w-full h-12 bg-zinc-950 border border-white/10 rounded-2xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
+                                                                className="w-full h-12 bg-zinc-950 border border-white/10 rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
                                                                 placeholder="Kullanılmıyor"
                                                             />
                                                         </div>
                                                         <div className="space-y-2">
-                                                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block pl-1">Spor Kuponu Şartı (Min Oran)</label>
+                                                            <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest block pl-1">Spor Kuponu Şartı (Min Oran)</label>
                                                             <p className="text-[10px] text-zinc-600 font-medium pl-1 mb-1">Otomatik çekim onayında en az bu orana sahip bir kupon aranır.</p>
                                                             <input
                                                                 type="number"
                                                                 step="0.01"
                                                                 value={editValue?.minSportOdds ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, minSportOdds: Number(e.target.value) })}
-                                                                className="w-full h-12 bg-zinc-950 border border-white/10 rounded-2xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
+                                                                className="w-full h-12 bg-zinc-950 border border-white/10 rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
                                                                 placeholder="Kullanılmıyor"
                                                             />
                                                         </div>
                                                         <div className="space-y-2">
-                                                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block pl-1">Kazanç Çarpanı (Max)</label>
+                                                            <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest block pl-1">Kazanç Çarpanı (Max)</label>
                                                             <p className="text-[10px] text-zinc-600 font-medium pl-1 mb-1">Bonusun max kaç katı çekilebilir?</p>
                                                             <input
                                                                 type="number"
                                                                 value={editValue?.maxPayoutMult ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, maxPayoutMult: Number(e.target.value) })}
-                                                                className="w-full h-12 bg-zinc-950 border border-white/10 rounded-2xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
+                                                                className="w-full h-12 bg-zinc-950 border border-white/10 rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
                                                                 placeholder="10 (Örn)"
                                                             />
                                                         </div>
                                                         <div className="space-y-2">
-                                                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block pl-1">Sabit Max Kazanç</label>
+                                                            <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest block pl-1">Sabit Max Kazanç</label>
                                                             <p className="text-[10px] text-zinc-600 font-medium pl-1 mb-1">Çekilebilecek maksimum net tutar.</p>
                                                             <input
                                                                 type="number"
                                                                 value={editValue?.maxPayoutFixed ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, maxPayoutFixed: Number(e.target.value) })}
-                                                                className="w-full h-12 bg-zinc-950 border border-white/10 rounded-2xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
+                                                                className="w-full h-12 bg-zinc-950 border border-white/10 rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
                                                                 placeholder="Sınırsız"
                                                             />
                                                         </div>
@@ -1096,57 +1096,57 @@ export function RulesManager() {
 
                                                 {/* Section: Advanced Deposit Limits */}
                                                 <div className="space-y-4 pt-4 border-t border-white/5">
-                                                    <h4 className="text-[10px] font-black text-cyan-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                                                    <h4 className="text-[10px] font-semibold text-cyan-400 uppercase tracking-[0.2em] flex items-center gap-2">
                                                         <div className="h-1.5 w-1.5 rounded-full bg-cyan-500" />
                                                         Gelişmiş Yatırım Limitleri
                                                     </h4>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                                                         <div className="space-y-2">
-                                                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block pl-1">Min Yatırım (Aralık)</label>
+                                                            <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest block pl-1">Min Yatırım (Aralık)</label>
                                                             <p className="text-[10px] text-zinc-600 font-medium pl-1 mb-1">Yatırım tutarı en az kaç olmalı?</p>
                                                             <input
                                                                 type="number"
                                                                 value={editValue?.minDepositAmount ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, minDepositAmount: Number(e.target.value) })}
-                                                                className="w-full h-12 bg-zinc-950 border border-white/10 rounded-2xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
+                                                                className="w-full h-12 bg-zinc-950 border border-white/10 rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
                                                                 placeholder="Alt sınır"
                                                             />
                                                         </div>
                                                         <div className="space-y-2">
-                                                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block pl-1">Max Yatırım (Aralık)</label>
+                                                            <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest block pl-1">Max Yatırım (Aralık)</label>
                                                             <p className="text-[10px] text-zinc-600 font-medium pl-1 mb-1">Yatırım tutarı en fazla kaç olmalı?</p>
                                                             <input
                                                                 type="number"
                                                                 value={editValue?.maxDepositAmount ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, maxDepositAmount: Number(e.target.value) })}
-                                                                className="w-full h-12 bg-zinc-950 border border-white/10 rounded-2xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
+                                                                className="w-full h-12 bg-zinc-950 border border-white/10 rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
                                                                 placeholder="Üst sınır"
                                                             />
                                                         </div>
                                                         <div className="space-y-2">
-                                                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block pl-1">Günlük Kullanım</label>
+                                                            <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest block pl-1">Günlük Kullanım</label>
                                                             <p className="text-[10px] text-zinc-600 font-medium pl-1 mb-1">Bir günde kaç kez alınabilir?</p>
                                                             <input
                                                                 type="number"
                                                                 value={editValue?.perDayLimit ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, perDayLimit: Number(e.target.value) })}
-                                                                className="w-full h-12 bg-zinc-950 border border-white/10 rounded-2xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
+                                                                className="w-full h-12 bg-zinc-950 border border-white/10 rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
                                                                 placeholder="Sınırsız"
                                                             />
                                                         </div>
                                                         <div className="space-y-2">
-                                                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block pl-1">Haftalık Kullanım</label>
+                                                            <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest block pl-1">Haftalık Kullanım</label>
                                                             <p className="text-[10px] text-zinc-600 font-medium pl-1 mb-1">Bir haftada kaç kez alınabilir?</p>
                                                             <input
                                                                 type="number"
                                                                 value={editValue?.perWeekLimit ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, perWeekLimit: Number(e.target.value) })}
-                                                                className="w-full h-12 bg-zinc-950 border border-white/10 rounded-2xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
+                                                                className="w-full h-12 bg-zinc-950 border border-white/10 rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
                                                                 placeholder="Sınırsız"
                                                             />
                                                         </div>
                                                         <div className="space-y-2 md:col-span-2">
-                                                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block pl-1">İzin Verilen Sağlayıcılar</label>
+                                                            <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest block pl-1">İzin Verilen Sağlayıcılar</label>
                                                             <p className="text-[10px] text-zinc-600 font-medium pl-1 mb-1">Virgülle ayırın. Boş bırakılırsa tüm sağlayıcılar geçerlidir. Ör: Pragmatic Play, Evolution</p>
                                                             <input
                                                                 type="text"
@@ -1158,7 +1158,7 @@ export function RulesManager() {
                                                                         .map((p) => p.trim())
                                                                         .filter(Boolean),
                                                                 })}
-                                                                className="w-full h-12 bg-zinc-950 border border-white/10 rounded-2xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
+                                                                className="w-full h-12 bg-zinc-950 border border-white/10 rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
                                                                 placeholder="Pragmatic Play"
                                                             />
                                                         </div>
@@ -1167,7 +1167,7 @@ export function RulesManager() {
 
                                                 {/* Section: Additional Logic Switches */}
                                                 <div className="space-y-4 pt-4 border-t border-white/5">
-                                                    <h4 className="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                                                    <h4 className="text-[10px] font-semibold text-blue-400 uppercase tracking-[0.2em] flex items-center gap-2">
                                                         <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
                                                         Ekstra Kontrol Switchleri
                                                     </h4>
@@ -1196,13 +1196,13 @@ export function RulesManager() {
 
                                                 {/* Section: Time & Category Constraints */}
                                                 <div className="space-y-4 pt-4 border-t border-white/5">
-                                                    <h4 className="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                                                    <h4 className="text-[10px] font-semibold text-blue-400 uppercase tracking-[0.2em] flex items-center gap-2">
                                                         <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
                                                         Zaman & Kategori Kısıtlamaları
                                                     </h4>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                                         <div className="space-y-3">
-                                                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block pl-1">Aktif Günler</label>
+                                                            <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest block pl-1">Aktif Günler</label>
                                                             <p className="text-[10px] text-zinc-600 font-medium pl-1 mb-1">Bonusun hangi günlerde talep edilebileceğini seçin.</p>
                                                             <div className="grid grid-cols-4 gap-2">
                                                                 {['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'].map((day, idx) => {
@@ -1219,7 +1219,7 @@ export function RulesManager() {
                                                                                 setEditValue({ ...editValue, activeDays: next });
                                                                             }}
                                                                             className={cn(
-                                                                                "h-10 rounded-xl text-[10px] font-black transition-all border",
+                                                                                "h-10 rounded-xl text-[10px] font-semibold transition-all border",
                                                                                 isActive ? "bg-blue-500/20 text-blue-400 border-blue-500/30" : "bg-zinc-950 text-zinc-600 border-white/5"
                                                                             )}
                                                                         >
@@ -1231,30 +1231,30 @@ export function RulesManager() {
                                                         </div>
                                                         <div className="grid grid-cols-2 gap-4">
                                                             <div className="space-y-2">
-                                                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block pl-1">Başlangıç Saati</label>
+                                                                <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest block pl-1">Başlangıç Saati</label>
                                                                 <input
                                                                     type="time"
                                                                     value={editValue?.startTime ?? ''}
                                                                     onChange={(e) => setEditValue({ ...editValue, startTime: e.target.value })}
-                                                                    className="w-full h-12 bg-zinc-950 border border-white/10 rounded-2xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
+                                                                    className="w-full h-12 bg-zinc-950 border border-white/10 rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
                                                                 />
                                                             </div>
                                                             <div className="space-y-2">
-                                                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block pl-1">Bitiş Saati</label>
+                                                                <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest block pl-1">Bitiş Saati</label>
                                                                 <input
                                                                     type="time"
                                                                     value={editValue?.endTime ?? ''}
                                                                     onChange={(e) => setEditValue({ ...editValue, endTime: e.target.value })}
-                                                                    className="w-full h-12 bg-zinc-950 border border-white/10 rounded-2xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
+                                                                    className="w-full h-12 bg-zinc-950 border border-white/10 rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
                                                                 />
                                                             </div>
                                                             <div className="col-span-2 space-y-2">
-                                                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block pl-1">Kategori Filtresi</label>
+                                                                <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest block pl-1">Kategori Filtresi</label>
                                                                 <input
                                                                     type="text"
                                                                     value={editValue?.category ?? ''}
                                                                     onChange={(e) => setEditValue({ ...editValue, category: e.target.value })}
-                                                                    className="w-full h-12 bg-zinc-950 border border-white/10 rounded-2xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
+                                                                    className="w-full h-12 bg-zinc-950 border border-white/10 rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
                                                                     placeholder="Örn: Slot, Canlı Casino..."
                                                                 />
                                                             </div>
@@ -1277,26 +1277,26 @@ export function RulesManager() {
                                         <motion.div key="view" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                                             <div className="space-y-4 flex-1">
                                                 <div className="space-y-1">
-                                                    <span className="text-lg font-black text-white tracking-tight">{key}</span>
+                                                    <span className="text-lg font-semibold text-white tracking-tight">{key}</span>
                                                     {getPromoTitleForRuleKey(key) && (
-                                                        <p className="text-[11px] font-black text-emerald-300">
+                                                        <p className="text-[11px] font-semibold text-emerald-300">
                                                             {getPromoTitleForRuleKey(key)}
                                                         </p>
                                                     )}
                                                 </div>
                                                 <div className="flex flex-wrap gap-8">
                                                     {spec.type && (
-                                                        <div className="space-y-1 p-3 rounded-2xl bg-blue-500/5 border border-blue-500/10">
-                                                            <p className="text-[9px] font-black text-blue-500/70 uppercase">Bonus Tipi</p>
-                                                            <p className="text-sm font-black text-blue-400">
+                                                        <div className="space-y-1 p-3 rounded-xl bg-blue-500/5 border border-blue-500/10">
+                                                            <p className="text-[9px] font-semibold text-blue-500/70 uppercase">Bonus Tipi</p>
+                                                            <p className="text-sm font-semibold text-blue-400">
                                                                 {spec.type === 'partner' ? `Partner #${spec.partnerBonusId}` : 'Nakit'}
                                                             </p>
                                                         </div>
                                                     )}
                                                     {spec.amountType && (
-                                                        <div className="space-y-1 p-3 rounded-2xl bg-emerald-500/5 border border-emerald-500/10">
-                                                            <p className="text-[9px] font-black text-emerald-500/70 uppercase">Tutar Ayarı</p>
-                                                            <p className="text-sm font-black text-emerald-400">
+                                                        <div className="space-y-1 p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
+                                                            <p className="text-[9px] font-semibold text-emerald-500/70 uppercase">Tutar Ayarı</p>
+                                                            <p className="text-sm font-semibold text-emerald-400">
                                                                 {spec.amountType === 'fixed' ? `${spec.fixedAmount}₺ Sabit` :
                                                                  spec.amountType === 'percentage' ? `%${spec.percentageAmount}` :
                                                                  spec.amountType === 'full' ? 'Tam Yatırım' :
@@ -1305,8 +1305,8 @@ export function RulesManager() {
                                                             </p>
                                                         </div>
                                                     )}
-                                                    <div className="space-y-1 p-3 rounded-2xl bg-zinc-800/50 border border-white/5">
-                                                        <p className="text-[9px] font-black text-zinc-500 uppercase">Kontroller</p>
+                                                    <div className="space-y-1 p-3 rounded-xl bg-zinc-800/50 border border-white/5">
+                                                        <p className="text-[9px] font-semibold text-zinc-500 uppercase">Kontroller</p>
                                                         <div className="flex gap-1.5 mt-1">
                                                             {spec.checkPendingWithdrawal && <div className="w-2 h-2 rounded-full bg-rose-500" title="Çekim Kontrolü" />}
                                                             {spec.checkLastTransactionIsDeposit && <div className="w-2 h-2 rounded-full bg-amber-500" title="Son İşlem" />}
@@ -1326,14 +1326,14 @@ export function RulesManager() {
                                                         setEditKey(key);
                                                         setEditValue({ ...spec, partnerBonusId: spec.partnerBonusId ?? (linked?.PartnerBonusId != null ? String(linked.PartnerBonusId) : undefined) });
                                                     }}
-                                                    className="h-12 w-12 flex items-center justify-center rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 hover:bg-blue-500 hover:text-white transition-all shadow-lg"
+                                                    className="h-12 w-12 flex items-center justify-center rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 hover:bg-blue-500 hover:text-white transition-all shadow-lg"
                                                     title="Düzenle"
                                                 >
                                                     <Edit2 size={18} />
                                                 </button>
                                                 <button
                                                     onClick={() => handleDeleteRule(key)}
-                                                    className="h-12 w-12 flex items-center justify-center rounded-2xl bg-zinc-800 hover:bg-rose-500 border border-white/5 text-zinc-500 hover:text-white transition-all shadow-lg"
+                                                    className="h-12 w-12 flex items-center justify-center rounded-xl bg-zinc-800 hover:bg-rose-500 border border-white/5 text-zinc-500 hover:text-white transition-all shadow-lg"
                                                     title="Sil"
                                                 >
                                                     <Trash2 size={18} />
@@ -1355,8 +1355,8 @@ export function RulesManager() {
                                 <CheckCircle2 className="text-emerald-500" size={32} />
                             </div>
                             <div>
-                                <h4 className="text-xl font-black text-white tracking-tight">Analiz Motoru Aktif</h4>
-                                <div className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] mt-2 italic flex items-center justify-center gap-2">
+                                <h4 className="text-xl font-semibold text-white tracking-tight">Analiz Motoru Aktif</h4>
+                                <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.2em] mt-2 italic flex items-center justify-center gap-2">
                                     <div className="h-1 w-1 rounded-full bg-emerald-500 animate-pulse" />
                                     Senkronizasyon Başarılı
                                 </div>
@@ -1369,12 +1369,12 @@ export function RulesManager() {
                             <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 border border-blue-500/20">
                                 <Info size={18} />
                             </div>
-                            <h4 className="text-xs font-black text-white uppercase tracking-widest">Sistem Rehberi</h4>
+                            <h4 className="text-xs font-semibold text-white uppercase tracking-widest">Sistem Rehberi</h4>
                         </div>
 
                         <div className="space-y-8">
                             <section className="space-y-4">
-                                <h5 className="text-[9px] font-black text-zinc-400 uppercase tracking-widest border-b border-white/5 pb-2">🎯 TEMEL MANTIK</h5>
+                                <h5 className="text-[9px] font-semibold text-zinc-400 uppercase tracking-widest border-b border-white/5 pb-2">🎯 TEMEL MANTIK</h5>
                                 <div className="space-y-3">
                                     <div>
                                         <h6 className="text-[10px] font-bold text-white mb-1">ID Bazlı Mod</h6>
@@ -1388,7 +1388,7 @@ export function RulesManager() {
                             </section>
 
                             <section className="space-y-4">
-                                <h5 className="text-[9px] font-black text-zinc-400 uppercase tracking-widest border-b border-white/5 pb-2">⚙️ OTOMASYON</h5>
+                                <h5 className="text-[9px] font-semibold text-zinc-400 uppercase tracking-widest border-b border-white/5 pb-2">⚙️ OTOMASYON</h5>
                                 <div className="space-y-3">
                                     <div>
                                         <h6 className="text-[10px] font-bold text-white mb-1">Otomatik Ekleme</h6>
@@ -1402,7 +1402,7 @@ export function RulesManager() {
                             </section>
 
                             <section className="space-y-4">
-                                <h5 className="text-[9px] font-black text-zinc-400 uppercase tracking-widest border-b border-white/5 pb-2">🛡️ KRİTİK KONTROLLER</h5>
+                                <h5 className="text-[9px] font-semibold text-zinc-400 uppercase tracking-widest border-b border-white/5 pb-2">🛡️ KRİTİK KONTROLLER</h5>
                                 <div className="space-y-3">
                                     <div>
                                         <h6 className="text-[10px] font-bold text-teal-400 mb-1">Single ID Takibi</h6>
@@ -1433,8 +1433,8 @@ function StatItem({ label, value, unit, color }: any) {
     if (value === undefined || value === null) return null;
     return (
         <div className="space-y-1 px-4 py-2 rounded-xl bg-white/[0.02] border border-white/[0.03]">
-            <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">{label}</p>
-            <p className={cn("text-sm font-black", color || "text-zinc-200")}>
+            <p className="text-[9px] font-semibold text-zinc-500 uppercase tracking-widest">{label}</p>
+            <p className={cn("text-sm font-semibold", color || "text-zinc-200")}>
                 {value} <span className="text-[10px] text-zinc-500 font-bold uppercase">{unit}</span>
             </p>
         </div>
@@ -1443,12 +1443,12 @@ function StatItem({ label, value, unit, color }: any) {
 
 function ToggleField({ label, description, value, onChange }: { label: string; description?: string; value: boolean | undefined; onChange: (v: boolean | undefined) => void }) {
     return (
-        <div className="group space-y-4 p-6 rounded-[2rem] bg-zinc-950/40 border border-white/5 hover:border-blue-500/20 transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/5">
+        <div className="group space-y-4 p-6 rounded-xl bg-zinc-950/40 border border-white/5 hover:border-blue-500/20 transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/5">
             <div className="min-h-[48px]">
-                <p className="text-[10px] font-black text-zinc-400 group-hover:text-white uppercase tracking-[0.1em] transition-colors">{label}</p>
+                <p className="text-[10px] font-semibold text-zinc-400 group-hover:text-white uppercase tracking-[0.1em] transition-colors">{label}</p>
                 {description && <p className="text-[11px] text-zinc-600 font-medium mt-2 leading-relaxed line-clamp-2">{description}</p>}
             </div>
-            <div className="flex p-1.5 bg-black/60 rounded-2xl border border-white/5 shadow-inner">
+            <div className="flex p-1.5 bg-black/60 rounded-xl border border-white/5 shadow-inner">
                 {[
                     { val: true, label: 'EVET', color: 'bg-emerald-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.4)]' },
                     { val: false, label: 'HAYIR', color: 'bg-rose-500 text-white shadow-[0_0_20px_rgba(244,63,94,0.4)]' },
@@ -1459,7 +1459,7 @@ function ToggleField({ label, description, value, onChange }: { label: string; d
                         type="button"
                         onClick={() => onChange(opt.val)}
                         className={cn(
-                            "relative flex-1 h-10 rounded-xl text-[10px] font-black tracking-widest transition-all duration-500 flex items-center justify-center",
+                            "relative flex-1 h-10 rounded-xl text-[10px] font-semibold tracking-widest transition-all duration-500 flex items-center justify-center",
                             value === opt.val ? opt.color : "text-zinc-600 hover:text-zinc-500"
                         )}
                     >
@@ -1528,34 +1528,34 @@ function LynonCampaignEditor({ campaignId }: { campaignId: number }) {
 
     if (!validId) return null;
     return (
-        <div className="rounded-[2rem] border border-amber-400/20 bg-amber-400/[0.035] p-6 md:p-8 space-y-6">
+        <div className="rounded-xl border border-amber-400/20 bg-amber-400/[0.035] p-6 md:p-8 space-y-6">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-300">Lynon Bonus Engine V2</p>
-                    <h4 className="mt-1 text-xl font-black text-white">Kampanya ve tüm blok parametreleri</h4>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-300">Lynon Bonus Engine V2</p>
+                    <h4 className="mt-1 text-xl font-semibold text-white">Kampanya ve tüm blok parametreleri</h4>
                     <p className="mt-2 max-w-3xl text-xs leading-relaxed text-zinc-500">Tarih, para birimi, atama limiti, şablon, assignmentLimits ve blocksConfiguration değerleri doğrudan Lynon’a kaydedilir. ID ve site alanları değiştirilemez.</p>
                 </div>
                 <div className="flex gap-2">
-                    <button type="button" onClick={() => refetch()} disabled={isLoading} className="h-11 rounded-xl border border-white/10 bg-white/5 px-4 text-xs font-black text-zinc-300 hover:bg-white/10 disabled:opacity-50">
+                    <button type="button" onClick={() => refetch()} disabled={isLoading} className="h-11 rounded-xl border border-white/10 bg-white/5 px-4 text-xs font-semibold text-zinc-300 hover:bg-white/10 disabled:opacity-50">
                         <RefreshCw size={15} className={cn('mr-2 inline', isLoading && 'animate-spin')} /> YENİLE
                     </button>
-                    <Button type="button" variant="primary" onClick={() => saveMutation.mutate()} disabled={isLoading || saveMutation.isPending} className="h-11 rounded-xl border-none bg-amber-400 px-6 text-xs font-black text-black hover:bg-amber-300">
+                    <Button type="button" variant="primary" onClick={() => saveMutation.mutate()} disabled={isLoading || saveMutation.isPending} className="h-11 rounded-xl border-none bg-amber-400 px-6 text-xs font-semibold text-black hover:bg-amber-300">
                         {saveMutation.isPending ? 'LYNON’A KAYDEDİLİYOR...' : 'LYNON’A KAYDET'}
                     </Button>
                 </div>
             </div>
             {error && <div className="rounded-xl border border-rose-500/20 bg-rose-500/5 p-4 text-xs font-bold text-rose-300">{(error as Error).message}</div>}
             {isLoading ? (
-                <div className="py-10 text-center text-xs font-black uppercase tracking-widest text-zinc-600">Parametreler yükleniyor...</div>
+                <div className="py-10 text-center text-xs font-semibold uppercase tracking-widest text-zinc-600">Parametreler yükleniyor...</div>
             ) : (
                 <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
                     <label className="space-y-2">
-                        <span className="block text-[10px] font-black uppercase tracking-widest text-zinc-500">Kampanya parametreleri</span>
-                        <textarea value={campaignJson} onChange={(event) => setCampaignJson(event.target.value)} spellCheck={false} className="min-h-[360px] w-full rounded-2xl border border-white/10 bg-black/50 p-4 font-mono text-[11px] leading-relaxed text-amber-100 outline-none focus:border-amber-400/50" />
+                        <span className="block text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Kampanya parametreleri</span>
+                        <textarea value={campaignJson} onChange={(event) => setCampaignJson(event.target.value)} spellCheck={false} className="min-h-[360px] w-full rounded-xl border border-white/10 bg-black/50 p-4 font-mono text-[11px] leading-relaxed text-amber-100 outline-none focus:border-amber-400/50" />
                     </label>
                     <label className="space-y-2">
-                        <span className="block text-[10px] font-black uppercase tracking-widest text-zinc-500">Bonuslar ve blocksConfiguration</span>
-                        <textarea value={bonusesJson} onChange={(event) => setBonusesJson(event.target.value)} spellCheck={false} className="min-h-[360px] w-full rounded-2xl border border-white/10 bg-black/50 p-4 font-mono text-[11px] leading-relaxed text-emerald-100 outline-none focus:border-emerald-400/50" />
+                        <span className="block text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Bonuslar ve blocksConfiguration</span>
+                        <textarea value={bonusesJson} onChange={(event) => setBonusesJson(event.target.value)} spellCheck={false} className="min-h-[360px] w-full rounded-xl border border-white/10 bg-black/50 p-4 font-mono text-[11px] leading-relaxed text-emerald-100 outline-none focus:border-emerald-400/50" />
                     </label>
                 </div>
             )}
@@ -1633,24 +1633,24 @@ function PromoContentEditor({ externalId, promoTitle }: { externalId: number; pr
     });
 
     return (
-        <div className="space-y-6 p-8 rounded-[2.5rem] bg-zinc-950/40 border border-white/5 relative overflow-hidden group">
+        <div className="space-y-6 p-8 rounded-xl bg-zinc-950/40 border border-white/5 relative overflow-hidden group">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500/50 via-blue-500/50 to-transparent opacity-30" />
 
             <div className="flex flex-col md:flex-row items-start justify-between gap-6 relative z-10">
                 <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-emerald-400">
+                    <div className="h-12 w-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-emerald-400">
                         <Sparkles size={24} />
                     </div>
                     <div className="space-y-1">
-                        <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em]">Platform Override Content</p>
-                        <h4 className="text-xl font-black text-white">Bonus Görünümü & İçerik</h4>
+                        <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.2em]">Platform Override Content</p>
+                        <h4 className="text-xl font-semibold text-white">Bonus Görünümü & İçerik</h4>
                     </div>
                 </div>
                 <div className="flex gap-3">
                     <button
                         disabled={clearMutation.isPending || isLoading}
                         onClick={() => clearMutation.mutate()}
-                        className="px-6 py-2.5 rounded-xl bg-white/5 text-[10px] font-black text-zinc-500 hover:text-white transition-all uppercase tracking-widest"
+                        className="px-6 py-2.5 rounded-xl bg-white/5 text-[10px] font-semibold text-zinc-500 hover:text-white transition-all uppercase tracking-widest"
                     >
                         SIFIRLA
                     </button>
@@ -1658,7 +1658,7 @@ function PromoContentEditor({ externalId, promoTitle }: { externalId: number; pr
                         variant="primary"
                         disabled={saveMutation.isPending || isLoading}
                         onClick={() => saveMutation.mutate()}
-                        className="h-11 px-10 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-black text-[10px] border-none shadow-lg shadow-emerald-500/10 uppercase tracking-widest"
+                        className="h-11 px-10 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-[10px] border-none shadow-lg shadow-emerald-500/10 uppercase tracking-widest"
                     >
                         {saveMutation.isPending ? 'KAYDEDİLİYOR...' : 'İÇERİĞİ GÜNCELLE'}
                     </Button>
@@ -1668,50 +1668,50 @@ function PromoContentEditor({ externalId, promoTitle }: { externalId: number; pr
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-4">
                 <div className="space-y-6">
                     <div className="space-y-2">
-                        <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block pl-1">Alternatif Başlık</label>
+                        <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest block pl-1">Alternatif Başlık</label>
                         <input
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
-                            className="w-full h-14 bg-black/40 border border-white/10 rounded-2xl px-5 text-sm text-white focus:border-blue-500/50 transition-all outline-none font-bold"
+                            className="w-full h-14 bg-black/40 border border-white/10 rounded-xl px-5 text-sm text-white focus:border-blue-500/50 transition-all outline-none font-bold"
                             placeholder="Orijinal başlığı gizlemek için doldurun..."
                         />
                     </div>
                     <div className="space-y-2">
-                        <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block pl-1">Preview Görsel URL</label>
+                        <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest block pl-1">Preview Görsel URL</label>
                         <input
                             value={image}
                             onChange={(e) => setImage(e.target.value)}
-                            className="w-full h-14 bg-black/40 border border-white/10 rounded-2xl px-5 text-sm text-white focus:border-blue-500/50 transition-all outline-none font-bold"
+                            className="w-full h-14 bg-black/40 border border-white/10 rounded-xl px-5 text-sm text-white focus:border-blue-500/50 transition-all outline-none font-bold"
                             placeholder="https://..."
                         />
                     </div>
                     <div className="space-y-2">
-                        <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block pl-1">Açıklama (HTML)</label>
+                        <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest block pl-1">Açıklama (HTML)</label>
                         <textarea
                             value={detailHtml}
                             onChange={(e) => setDetailHtml(e.target.value)}
-                            className="w-full min-h-[220px] bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-sm text-zinc-300 focus:border-blue-500/50 transition-all outline-none leading-relaxed"
+                            className="w-full min-h-[220px] bg-black/40 border border-white/10 rounded-xl px-5 py-4 text-sm text-zinc-300 focus:border-blue-500/50 transition-all outline-none leading-relaxed"
                             placeholder="HTML formatında bonus detaylarını girin..."
                         />
                     </div>
                 </div>
 
                 <div className="space-y-3">
-                    <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block pl-1">CANLI ÖNİZLEME</label>
-                    <div className="relative rounded-[2rem] border border-white/5 bg-zinc-900/50 p-6 h-full min-h-[400px] overflow-hidden group/preview">
+                    <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest block pl-1">CANLI ÖNİZLEME</label>
+                    <div className="relative rounded-xl border border-white/5 bg-zinc-900/50 p-6 h-full min-h-[400px] overflow-hidden group/preview">
                         <div className="absolute inset-0 bg-gradient-to-b from-blue-500/5 to-transparent opacity-0 group-hover/preview:opacity-100 transition-opacity" />
 
                         {image?.trim() ? (
-                            <img src={image.trim()} alt="" className="w-full aspect-video object-cover rounded-2xl border border-white/10 shadow-2xl mb-6" />
+                            <img src={image.trim()} alt="" className="w-full aspect-video object-cover rounded-xl border border-white/10 shadow-2xl mb-6" />
                         ) : (
-                            <div className="w-full aspect-video rounded-2xl bg-black/40 border border-dashed border-white/10 flex flex-col items-center justify-center text-zinc-600 gap-3 mb-6">
+                            <div className="w-full aspect-video rounded-xl bg-black/40 border border-dashed border-white/10 flex flex-col items-center justify-center text-zinc-600 gap-3 mb-6">
                                 <Sparkles size={32} className="opacity-20" />
-                                <span className="text-[10px] font-black uppercase tracking-widest">Görsel Bekleniyor</span>
+                                <span className="text-[10px] font-semibold uppercase tracking-widest">Görsel Bekleniyor</span>
                             </div>
                         )}
 
                         <div className="space-y-4 relative z-10">
-                            <h5 className="text-xl font-black text-white">{title?.trim() || promoTitle || 'Bonus Başlığı'}</h5>
+                            <h5 className="text-xl font-semibold text-white">{title?.trim() || promoTitle || 'Bonus Başlığı'}</h5>
                             <div className="h-px w-12 bg-blue-500" />
                             {detailHtml?.trim() ? (
                                 <div className="text-sm text-zinc-400 font-medium leading-relaxed max-h-[150px] overflow-auto custom-scrollbar pr-2" dangerouslySetInnerHTML={{ __html: detailHtml }} />

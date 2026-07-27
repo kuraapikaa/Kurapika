@@ -711,7 +711,7 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
                       <span key={color} className="h-7 flex-1 rounded-md border border-white/10" style={{ backgroundColor: color }} />
                     ))}
                   </span>
-                  <span className="block text-xs font-black uppercase tracking-[0.12em] text-white">{preset.label}</span>
+                  <span className="block text-xs font-semibold uppercase tracking-[0.12em] text-white">{preset.label}</span>
                 </button>
               );
             })}
@@ -739,7 +739,7 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
               onChange={(backgroundImageUrl) => updateTheme({ backgroundImageUrl })}
             />
             <div className="rounded-lg border border-white/[0.07] bg-black/20 p-3">
-              <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.16em] text-zinc-500">
+              <label className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-500">
                 <SlidersHorizontal size={14} />
                 Koyuluk
               </label>
@@ -751,7 +751,7 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
                 onChange={(event) => updateTheme({ backgroundOverlay: clampOverlay(event.target.value) })}
                 className="mt-4 w-full accent-cyan-300"
               />
-              <div className="mt-2 flex items-center justify-between text-xs font-black text-zinc-400">
+              <div className="mt-2 flex items-center justify-between text-xs font-semibold text-zinc-400">
                 <span>0</span>
                 <span className="rounded-md bg-white/10 px-2 py-1 text-white">{theme.backgroundOverlay}%</span>
                 <span>95</span>
@@ -764,7 +764,7 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
           <div className="space-y-4">
             <label className="flex items-center justify-between gap-4 rounded-lg border border-white/[0.07] bg-white/[0.035] p-4">
               <span>
-                <span className="block text-sm font-black text-white">Banner aktif</span>
+                <span className="block text-sm font-semibold text-white">Banner aktif</span>
                 <span className="mt-1 block text-xs font-medium text-zinc-500">Lobinin üst bölümünde geniş kampanya görseli gösterilir.</span>
               </span>
               <input
@@ -800,20 +800,20 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
           <div className="space-y-2">
             <div className="flex flex-col gap-3 rounded-lg border border-white/[0.07] bg-white/[0.035] p-3 md:flex-row md:items-center md:justify-between">
               <div className="min-w-0">
-                <p className="text-sm font-black text-white">Lobi kartları</p>
+                <p className="text-sm font-semibold text-white">Lobi kartları</p>
                 <p className="mt-0.5 truncate text-xs font-medium text-zinc-500">Başlık, açıklama, link, ikon ve renk tek satırda düzenlenir.</p>
               </div>
               <button
                 type="button"
                 onClick={addQuickAccess}
-                className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-lg bg-cyan-300 px-3 text-[10px] font-black uppercase tracking-[0.12em] text-zinc-950 transition hover:bg-cyan-200"
+                className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-lg bg-cyan-300 px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-950 transition hover:bg-cyan-200"
               >
                 <Plus size={14} />
                 Kart ekle
               </button>
             </div>
 
-            <div className="hidden grid-cols-[34px_40px_minmax(120px,1fr)_minmax(140px,1.2fr)_minmax(120px,1fr)_118px_76px_108px] gap-2 px-2 text-[9px] font-black uppercase tracking-[0.14em] text-zinc-600 xl:grid">
+            <div className="hidden grid-cols-[34px_40px_minmax(120px,1fr)_minmax(140px,1.2fr)_minmax(120px,1fr)_118px_76px_108px] gap-2 px-2 text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-600 xl:grid">
               <span>Aktif</span>
               <span>İkon</span>
               <span>Başlık</span>
@@ -862,7 +862,7 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
         <Panel title="Sayfa İçerikleri" icon={MonitorSmartphone}>
           <div className="space-y-3">
             <div className="rounded-lg border border-white/[0.07] bg-white/[0.035] p-3">
-              <p className="text-sm font-black text-white">Lobi elemanlarının açtığı sayfalar</p>
+              <p className="text-sm font-semibold text-white">Lobi elemanlarının açtığı sayfalar</p>
               <p className="mt-0.5 text-xs font-medium text-zinc-500">Başlık, açıklama, buton, boş durum, form ve sayfaya özel metinler buradan düzenlenir.</p>
             </div>
 
@@ -876,12 +876,12 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
                 <details key={pageId} open={pageId === 'bonus'} className="group rounded-xl border border-white/[0.08] bg-black/20">
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-3 marker:hidden">
                     <span className="min-w-0">
-                      <span className="block truncate text-sm font-black text-white">{page.label}</span>
+                      <span className="block truncate text-sm font-semibold text-white">{page.label}</span>
                       <span className="mt-0.5 block truncate text-xs font-medium text-zinc-500">
                         {quickAccessItem ? `Kart: ${quickAccessItem.label} · ${page.path}` : page.path}
                       </span>
                     </span>
-                    <span className="rounded-lg border border-white/[0.08] bg-white/[0.04] px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-zinc-400 group-open:text-cyan-300">
+                    <span className="rounded-lg border border-white/[0.08] bg-white/[0.04] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-400 group-open:text-cyan-300">
                       Düzenle
                     </span>
                   </summary>
@@ -926,7 +926,7 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
 
                     {extraFields.length > 0 && (
                       <div className="rounded-lg border border-white/[0.07] bg-white/[0.025] p-3">
-                        <p className="mb-3 text-[10px] font-black uppercase tracking-[0.16em] text-zinc-500">Sayfaya özel elementler</p>
+                        <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-500">Sayfaya özel elementler</p>
                         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                           {extraFields.map((field) => {
                             const value = page.extra[field.key];
@@ -980,8 +980,8 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
               </div>
 
               <div className="mt-4 flex items-center justify-between gap-3">
-                <p className="text-xs font-black uppercase tracking-[0.16em] text-zinc-500">Turnuva kartları</p>
-                <button type="button" onClick={addTournamentCard} className="inline-flex h-9 items-center gap-2 rounded-lg bg-cyan-300 px-3 text-[10px] font-black uppercase tracking-[0.12em] text-zinc-950">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">Turnuva kartları</p>
+                <button type="button" onClick={addTournamentCard} className="inline-flex h-9 items-center gap-2 rounded-lg bg-cyan-300 px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-950">
                   <Plus size={14} />
                   Kart ekle
                 </button>
@@ -999,7 +999,7 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
                             <Icon size={19} />
                           </span>
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-black text-white">{item.label}</p>
+                            <p className="truncate text-sm font-semibold text-white">{item.label}</p>
                             <p className="truncate text-xs text-zinc-500">{item.period} · {item.to}</p>
                           </div>
                         </div>
@@ -1038,8 +1038,8 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
               </div>
 
               <div className="mt-4 flex items-center justify-between gap-3">
-                <p className="text-xs font-black uppercase tracking-[0.16em] text-zinc-500">Destek kartları</p>
-                <button type="button" onClick={addSupportCard} className="inline-flex h-9 items-center gap-2 rounded-lg bg-cyan-300 px-3 text-[10px] font-black uppercase tracking-[0.12em] text-zinc-950">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">Destek kartları</p>
+                <button type="button" onClick={addSupportCard} className="inline-flex h-9 items-center gap-2 rounded-lg bg-cyan-300 px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-950">
                   <Plus size={14} />
                   Kart ekle
                 </button>
@@ -1057,7 +1057,7 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
                             <Icon size={19} />
                           </span>
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-black text-white">{item.title}</p>
+                            <p className="truncate text-sm font-semibold text-white">{item.title}</p>
                             <p className="truncate text-xs text-zinc-500">{item.to}</p>
                           </div>
                         </div>
@@ -1089,13 +1089,13 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
         <div className="rounded-xl border border-white/10 bg-[#080d13]/95 p-4 shadow-[0_18px_60px_rgba(0,0,0,0.24)]">
           <div className="mb-4 flex items-center justify-between">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-300/70">Canlı görünüm</p>
-              <h3 className="text-lg font-black text-white">Lobi önizlemesi</h3>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-300/70">Canlı görünüm</p>
+              <h3 className="text-lg font-semibold text-white">Lobi önizlemesi</h3>
             </div>
             <MonitorSmartphone className="text-zinc-500" size={20} />
           </div>
           <div className="overflow-hidden rounded-xl border border-white/10" style={pagePreviewStyle}>
-            <div className="border-b border-white/10 bg-black/45 px-4 py-2 text-[10px] font-black uppercase tracking-[0.16em]">
+            <div className="border-b border-white/10 bg-black/45 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.16em]">
               <span style={{ color: theme.accentColor }}>Canlı</span>
             </div>
             <div className="space-y-3 p-4">
@@ -1111,14 +1111,14 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
                   <Palette size={19} />
                 </div>
                 <div>
-                  <p className="text-sm font-black">Ödül Merkezi</p>
+                  <p className="text-sm font-semibold">Ödül Merkezi</p>
                   <p className="text-[10px] font-bold uppercase tracking-[0.14em]" style={{ color: theme.mutedTextColor }}>Mobil lobi</p>
                 </div>
               </div>
 
               {theme.banner.enabled && (
                 <div className="min-h-[96px] rounded-xl border border-white/10 p-4" style={bannerPreviewStyle}>
-                  <p className="max-w-[260px] text-lg font-black leading-tight">{theme.banner.title || 'Banner başlığı'}</p>
+                  <p className="max-w-[260px] text-lg font-semibold leading-tight">{theme.banner.title || 'Banner başlığı'}</p>
                   <p className="mt-1 max-w-[240px] text-xs font-semibold" style={{ color: theme.textColor }}>{theme.banner.subtitle || 'Banner açıklaması'}</p>
                 </div>
               )}
@@ -1139,7 +1139,7 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
                       >
                         <Icon size={18} />
                       </div>
-                      <p className="mt-2 truncate text-[11px] font-black">{item.label}</p>
+                      <p className="mt-2 truncate text-[11px] font-semibold">{item.label}</p>
                       <p className="mt-0.5 truncate text-[9px] font-semibold" style={{ color: theme.mutedTextColor }}>{item.desc}</p>
                     </div>
                   );
@@ -1153,11 +1153,11 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
                   background: `linear-gradient(135deg, ${hexToRgba(theme.primaryColor, 0.18)}, ${hexToRgba(theme.surfaceColor, 0.92)})`
                 }}
               >
-                <p className="text-[10px] font-black uppercase tracking-[0.18em]" style={{ color: theme.primaryColor }}>Öne çıkan</p>
-                <p className="mt-2 text-2xl font-black leading-none">Bonusunu seç.</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em]" style={{ color: theme.primaryColor }}>Öne çıkan</p>
+                <p className="mt-2 text-2xl font-semibold leading-none">Bonusunu seç.</p>
                 <button
                   type="button"
-                  className="mt-4 h-10 rounded-lg px-4 text-xs font-black text-white"
+                  className="mt-4 h-10 rounded-lg px-4 text-xs font-semibold text-white"
                   style={{ background: `linear-gradient(90deg, ${theme.primaryColor}, ${theme.secondaryColor})` }}
                 >
                   {theme.banner.ctaLabel || 'Hemen katıl'}
@@ -1304,7 +1304,7 @@ function TabBaseEditor({
     <section className="rounded-xl border border-white/[0.08] bg-black/20 p-4">
       <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
-          <h4 className="text-sm font-black text-white">{title}</h4>
+          <h4 className="text-sm font-semibold text-white">{title}</h4>
           <p className="mt-1 text-xs font-medium text-zinc-500">Tab başlığı, alt etiketi ve içerik başlığı.</p>
         </div>
         <TogglePill checked={value.enabled} onChange={(enabled) => onChange({ enabled })} />
@@ -1322,7 +1322,7 @@ function TabBaseEditor({
 
 function TogglePill({ checked, onChange }: { checked: boolean; onChange: (checked: boolean) => void }) {
   return (
-    <label className="inline-flex h-9 items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.035] px-3 text-[10px] font-black uppercase tracking-[0.12em] text-zinc-300">
+    <label className="inline-flex h-9 items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.035] px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-300">
       <input
         type="checkbox"
         checked={checked}
@@ -1337,7 +1337,7 @@ function TogglePill({ checked, onChange }: { checked: boolean; onChange: (checke
 function IconSelect({ value, onChange, label = 'İkon' }: { value: string; onChange: (value: string) => void; label?: string }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-[10px] font-black uppercase tracking-[0.16em] text-zinc-500">{label}</span>
+      <span className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-500">{label}</span>
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
@@ -1358,7 +1358,7 @@ function Panel({ title, icon: Icon, children }: { title: string; icon: LucideIco
         <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-300 text-zinc-950">
           <Icon size={18} />
         </span>
-        <h3 className="text-base font-black text-white">{title}</h3>
+        <h3 className="text-base font-semibold text-white">{title}</h3>
       </div>
       {children}
     </section>
@@ -1375,12 +1375,12 @@ function PageAccentField({ value, fallback, onChange }: { value: string; fallbac
   return (
     <div className="rounded-lg border border-white/[0.07] bg-white/[0.035] p-3">
       <div className="mb-2 flex items-center justify-between gap-2">
-        <span className="text-[10px] font-black uppercase tracking-[0.16em] text-zinc-500">Vurgu rengi</span>
+        <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-500">Vurgu rengi</span>
         {!inherited && (
           <button
             type="button"
             onClick={() => onChange('')}
-            className="rounded border border-white/10 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.1em] text-zinc-400 transition hover:text-white"
+            className="rounded border border-white/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.1em] text-zinc-400 transition hover:text-white"
           >
             Temadan devral
           </button>
@@ -1412,7 +1412,7 @@ function ColorField({ label, value, onChange }: { label: string; value: string; 
   const colorValue = isHexColor(value) ? value : '#000000';
   return (
     <label className="block rounded-lg border border-white/[0.07] bg-white/[0.035] p-3">
-      <span className="mb-2 block text-[10px] font-black uppercase tracking-[0.16em] text-zinc-500">{label}</span>
+      <span className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-500">{label}</span>
       <span className="flex items-center gap-2">
         <input
           type="color"
@@ -1446,7 +1446,7 @@ function TextField({
 }) {
   return (
     <label className="block">
-      <span className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.16em] text-zinc-500">
+      <span className="mb-2 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-500">
         {Icon && <Icon size={13} />}
         {label}
       </span>
@@ -1479,7 +1479,7 @@ function TextAreaField({
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-[10px] font-black uppercase tracking-[0.16em] text-zinc-500">{label}</span>
+      <span className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-500">{label}</span>
       <textarea
         value={value}
         placeholder={placeholder}
