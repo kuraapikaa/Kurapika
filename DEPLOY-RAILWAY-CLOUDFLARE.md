@@ -1,6 +1,22 @@
-# Yayına Alma: Railway + Cloudflare
+# Yayına Alma: Railway + Cloudflare — narcosbahis.vip
 
-Bu doküman bu projeye özel; genel bir rehber değil. Değerler kodda doğrulandı.
+Bu doküman bu projeye ve bu domaine özel; genel bir rehber değil. Değerler kodda doğrulandı.
+
+## Mevcut durum (2026-07-27 tespiti)
+
+| Kontrol | Sonuç |
+|---|---|
+| Nameserver'lar | `gigi.ns.cloudflare.com`, `damiete.ns.cloudflare.com` — Cloudflare'da ✓ |
+| Zone | Aktif, DNS çözülüyor ✓ |
+| Kök + `www` | Cloudflare proxy IP'lerine çözülüyor (`104.21.63.243`, `172.67.173.94`) ✓ |
+| HTTP yanıtı | **530 — `error code: 1033`** ✗ |
+
+**1033 = Cloudflare Tunnel hatası.** DNS kayıtları bir Cloudflare Tunnel'a bakıyor ama
+tünel bağlayıcısı çalışmıyor (bu makinede `~/.cloudflared` yok — tünel başka bir yerde
+kurulmuş ya da silinmiş, DNS kayıtları öksüz kalmış).
+
+Railway'e geçtiğimiz için bu kayıtlar **tünel yerine Railway'i göstermeli**. Aşağıdaki
+2.3 adımı bunu anlatıyor.
 
 ## Mimari — neden Cloudflare tek başına yetmiyor
 
@@ -61,8 +77,8 @@ Uygulama servisi → **Settings → Volumes → New Volume**
 ```
 NODE_ENV=production
 PORT=3750
-CORS_ORIGIN=https://SENIN-DOMAIN
-FRAME_ANCESTORS=https://SENIN-DOMAIN
+CORS_ORIGIN=https://narcosbahis.vip
+FRAME_ANCESTORS=https://narcosbahis.vip
 
 SESSION_SECRET=<en az 64 karakter — .env.production.NEW>
 SESSION_COOKIE_SECURE=true
@@ -126,10 +142,10 @@ Nameserver'lar Dynadot'ta zaten Cloudflare'a çevrildi. Kalanlar:
 
 ### 2.1 Zone aktif mi
 
-Cloudflare Dashboard → domain → durum **Active** olmalı. `Pending Nameserver Update` görünüyorsa propagasyon sürüyor (5 dk – 24 sa). Kontrol:
+Cloudflare Dashboard → narcosbahis.vip → durum **Active** olmalı. `Pending Nameserver Update` görünüyorsa propagasyon sürüyor (5 dk – 24 sa). Kontrol:
 
 ```bash
-dig +short NS SENIN-DOMAIN
+dig +short NS narcosbahis.vip
 ```
 
 Cloudflare nameserver'ları dönmeli.
@@ -139,9 +155,15 @@ Cloudflare nameserver'ları dönmeli.
 Railway → uygulama servisi → **Settings → Networking → Custom Domain** → domainini gir.
 Railway sana bir CNAME hedefi verir (`xxx.up.railway.app`). Bunu not al.
 
-### 2.3 DNS kaydı
+### 2.3 DNS kaydı — önce mevcut tünel kaydını temizle
 
-Cloudflare → **DNS → Records → Add record**:
+Şu an kök ve `www` bir Cloudflare Tunnel'a bakıyor ve tünel çalışmadığı için 1033
+veriyor. Cloudflare → **DNS → Records**:
+
+1. Kök (`narcosbahis.vip`) ve `www` kayıtlarını bul. Hedefleri büyük ihtimalle
+   `<uuid>.cfargotunnel.com` görünecek.
+2. Bu kayıtları **sil** (ya da hedefini aşağıdaki Railway adresiyle değiştir).
+3. Yerlerine şunları ekle:
 
 | Type | Name | Target | Proxy |
 |---|---|---|---|
@@ -149,6 +171,18 @@ Cloudflare → **DNS → Records → Add record**:
 | CNAME | `www` | `xxx.up.railway.app` | Proxied 🟠 |
 
 Kök domain için CNAME → Cloudflare bunu CNAME flattening ile çözer, sorun değil.
+
+> **Zero Trust tarafını da temizle:** Tünel artık kullanılmayacaksa
+> [one.dash.cloudflare.com](https://one.dash.cloudflare.com) → **Networks → Tunnels**
+> altındaki eski tüneli sil. Bırakılırsa ileride DNS'i geri çalabilir.
+
+Doğrulama (kayıt değişikliğinden 1-2 dk sonra):
+
+```bash
+curl -sS -o /dev/null -w "%{http_code}\n" https://narcosbahis.vip/api/health   # 200 bekleniyor
+```
+
+`530` görüyorsan hâlâ tünele bakıyor; `521/522` görüyorsan Railway ayakta değil.
 
 ### 2.4 SSL
 
@@ -164,8 +198,8 @@ Kök domain için CNAME → Cloudflare bunu CNAME flattening ile çözer, sorun 
 Domain kesinleşince Railway'de güncelle ve yeniden deploy et:
 
 ```
-CORS_ORIGIN=https://SENIN-DOMAIN
-FRAME_ANCESTORS=https://SENIN-DOMAIN
+CORS_ORIGIN=https://narcosbahis.vip
+FRAME_ANCESTORS=https://narcosbahis.vip
 ```
 
 Bunlar yanlışsa panel açılır ama API çağrıları CORS'tan düşer.
@@ -174,7 +208,7 @@ Bunlar yanlışsa panel açılır ama API çağrıları CORS'tan düşer.
 
 ## 3. Yayın sonrası kontrol listesi
 
-- [ ] `https://SENIN-DOMAIN/api/health` → `ok:true`
+- [ ] `https://narcosbahis.vip/api/health` → `ok:true`
 - [ ] Panele giriş çalışıyor (Redis oturumu ayakta)
 - [ ] Lynon girişi çalışıyor → `/api/health` içinde `lynon.authenticated:true`
 - [ ] Lobi ve alt sayfalar açılıyor (`/#/lobi`, `/#/bonus-talep`)
