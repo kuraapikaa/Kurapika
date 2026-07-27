@@ -50,7 +50,7 @@ export function GlobalNotifications() {
                             });
 
                             toast.custom(() => (
-                                <div className="flex items-start gap-3 p-4 bg-zinc-900/90 border border-emerald-500/20 backdrop-blur-xl rounded-2xl shadow-2xl animate-in fade-in slide-in-from-right-8 pointer-events-auto w-80">
+                                <div className="flex items-start gap-3 p-4 bg-zinc-900/90 border border-emerald-500/20 backdrop-blur-xl rounded-xl shadow-2xl animate-in fade-in slide-in-from-right-8 pointer-events-auto w-80">
                                     <div className="p-2 bg-emerald-500/10 rounded-full shrink-0">
                                         <ArrowUpFromLine size={20} className="text-emerald-400" />
                                     </div>
@@ -65,7 +65,7 @@ export function GlobalNotifications() {
                                             <span className="font-bold text-zinc-300">{dep.ClientId}</span> numaralı oyuncu
                                         </p>
                                         <div className="mt-2 flex items-center justify-between">
-                                            <span className="font-mono font-black text-emerald-400 text-lg">
+                                            <span className="font-mono font-semibold text-emerald-400 text-lg">
                                                 + {formatNumber(dep.Amount)} ₺
                                             </span>
                                             <span className="text-[10px] text-zinc-500 truncate max-w-[100px]" title={dep.PaymentSystemName || ""}>
@@ -96,7 +96,7 @@ export function GlobalNotifications() {
                             });
 
                             toast.custom(() => (
-                                <div className="flex items-start gap-3 p-4 bg-zinc-900/90 border border-amber-500/20 backdrop-blur-xl rounded-2xl shadow-2xl animate-in fade-in slide-in-from-right-8 pointer-events-auto w-80">
+                                <div className="flex items-start gap-3 p-4 bg-zinc-900/90 border border-amber-500/20 backdrop-blur-xl rounded-xl shadow-2xl animate-in fade-in slide-in-from-right-8 pointer-events-auto w-80">
                                     <div className="p-2 bg-amber-500/10 rounded-full shrink-0">
                                         <ArrowDownToLine size={20} className="text-amber-400" />
                                     </div>
@@ -111,7 +111,7 @@ export function GlobalNotifications() {
                                             <span className="font-bold text-zinc-300">{wth.ClientId}</span> talep etti
                                         </p>
                                         <div className="mt-2 flex items-center justify-between">
-                                            <span className="font-mono font-black text-amber-400 text-lg">
+                                            <span className="font-mono font-semibold text-amber-400 text-lg">
                                                 - {formatNumber(wth.Amount)} ₺
                                             </span>
                                             <span className="text-[10px] text-zinc-500 truncate max-w-[100px]" title={wth.PaymentSystemName || ""}>

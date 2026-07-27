@@ -652,11 +652,11 @@ export function PlayerProfile() {
                                 <div className="h-8 w-8 animate-ping rounded-full bg-blue-500/20" />
                             </div>
                         </div>
-                        <p className="text-sm font-black text-slate-500 uppercase tracking-[0.4em] animate-pulse">Veriler Çekiliyor...</p>
+                        <p className="text-sm font-semibold text-slate-500 uppercase tracking-[0.4em] animate-pulse">Veriler Çekiliyor...</p>
                     </div>
                 ) : kpiError || !kpi ? (
-                    <div className="rounded-[2.5rem] border border-rose-500/20 bg-rose-500/5 py-32 text-center text-rose-400">
-                        <p className="text-lg font-black uppercase tracking-widest">Veri Hatası</p>
+                    <div className="rounded-xl border border-rose-500/20 bg-rose-500/5 py-32 text-center text-rose-400">
+                        <p className="text-lg font-semibold uppercase tracking-widest">Veri Hatası</p>
                         <p className="mt-2 text-sm opacity-70">Bu oyuncuya ait veriler şu an BetConstruct servisinden alınamıyor.</p>
                     </div>
                 ) : (
@@ -674,7 +674,7 @@ export function PlayerProfile() {
                                     {<AIPlayerInsight data={kpi} ipData={clientsByIPData} />}
                                     <section>
                                         <div className="mb-3 flex items-center gap-3 text-left">
-                                            <h3 className="text-xs font-black uppercase tracking-[0.4em] text-blue-500">Mali Performans</h3>
+                                            <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-blue-500">Mali Performans</h3>
                                             <div className="h-px flex-1 bg-gradient-to-r from-blue-500/20 to-transparent" />
                                         </div>
                                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -862,9 +862,9 @@ export function PlayerProfile() {
 
 
                             {activeTab === 'notes' && (
-                                <section className="rounded-[2.5rem] border border-white/5 bg-slate-900/40 p-8 backdrop-blur-md text-left">
+                                <section className="rounded-xl border border-white/5 bg-slate-900/40 p-8 backdrop-blur-md text-left">
                                     <div className="mb-8 flex items-center justify-between">
-                                        <h3 className="text-xs font-black uppercase tracking-[0.4em] text-amber-400">Oyuncu Notları</h3>
+                                        <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-amber-400">Oyuncu Notları</h3>
                                         <MessageSquare className="text-amber-400" size={20} />
                                     </div>
 
@@ -875,13 +875,13 @@ export function PlayerProfile() {
                                     ) : (
                                         <div className="space-y-4">
                                             {notes.map((note: any) => (
-                                                <div key={note.Id} className="rounded-2xl bg-slate-950/60 p-6 border border-white/5 hover:border-white/10 transition-all relative group">
+                                                <div key={note.Id} className="rounded-xl bg-slate-950/60 p-6 border border-white/5 hover:border-white/10 transition-all relative group">
                                                     <div className="mb-2 flex items-center justify-between">
                                                         <div className="flex items-center gap-2">
                                                             <div className="rounded-xl bg-blue-500/10 p-2 text-blue-400">
                                                                 <UserCheck size={18} />
                                                             </div>
-                                                            <span className="text-xs font-black text-blue-400 uppercase tracking-widest">{note.CreatedBy}</span>
+                                                            <span className="text-xs font-semibold text-blue-400 uppercase tracking-widest">{note.CreatedBy}</span>
                                                         </div>
                                                         <div className="flex items-center gap-2 text-slate-500">
                                                             <Clock size={14} />
@@ -890,7 +890,7 @@ export function PlayerProfile() {
                                                     </div>
                                                     <p className="text-base text-slate-300 leading-relaxed font-medium">{note.Note}</p>
                                                     {note.TypeName && (
-                                                        <span className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity text-[9px] font-black bg-white/5 px-3 py-1 rounded text-slate-400 uppercase tracking-widest ring-1 ring-white/5">
+                                                        <span className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity text-[9px] font-semibold bg-white/5 px-3 py-1 rounded text-slate-400 uppercase tracking-widest ring-1 ring-white/5">
                                                             {note.TypeName}
                                                         </span>
                                                     )}
@@ -902,15 +902,15 @@ export function PlayerProfile() {
                             )}
 
                             {activeTab === 'bonuses' && (
-                                <section className="rounded-[2.5rem] border border-white/5 bg-slate-900/40 p-8 backdrop-blur-md text-left">
+                                <section className="rounded-xl border border-white/5 bg-slate-900/40 p-8 backdrop-blur-md text-left">
                                     <div className="space-y-6">
                                         <div className="flex items-center justify-between">
-                                            <h3 className="text-xs font-black uppercase tracking-[0.4em] text-cyan-400">Bonus Hareketleri</h3>
+                                            <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-cyan-400">Bonus Hareketleri</h3>
                                         </div>
 
-                                        <div className="flex flex-col md:flex-row items-end gap-3 p-4 rounded-2xl bg-slate-950/40 border border-white/5">
+                                        <div className="flex flex-col md:flex-row items-end gap-3 p-4 rounded-xl bg-slate-950/40 border border-white/5">
                                             <div className="flex-1 w-full space-y-2">
-                                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Hızlı Bonus Tanımla</label>
+                                                <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest ml-1">Hızlı Bonus Tanımla</label>
                                                     <select
                                                         value={selectedQuickBonus}
                                                         onChange={(e) => setSelectedQuickBonus(e.target.value)}
@@ -923,7 +923,7 @@ export function PlayerProfile() {
                                                     </select>
                                             </div>
                                             <div className="w-full md:w-32 space-y-2">
-                                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Miktar</label>
+                                                <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest ml-1">Miktar</label>
                                                 <input
                                                     type="number"
                                                     value={quickBonusAmount}
@@ -936,15 +936,15 @@ export function PlayerProfile() {
                                                 variant="primary"
                                                 onClick={handleQuickCharge}
                                                 disabled={isQuickCharging || !selectedQuickBonus}
-                                                className="h-10 px-6 bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase tracking-widest text-[10px] shadow-lg shadow-emerald-500/20 disabled:opacity-50"
+                                                className="h-10 px-6 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold uppercase tracking-widest text-[10px] shadow-lg shadow-emerald-500/20 disabled:opacity-50"
                                             >
                                                 {isQuickCharging ? <RotateCcw className="animate-spin" size={14} /> : 'TANIMLA'}
                                             </Button>
                                         </div>
 
-                                        <div className="grid grid-cols-1 gap-3 rounded-2xl border border-white/5 bg-slate-950/40 p-4 md:grid-cols-[180px_140px_1fr_auto] md:items-end">
+                                        <div className="grid grid-cols-1 gap-3 rounded-xl border border-white/5 bg-slate-950/40 p-4 md:grid-cols-[180px_140px_1fr_auto] md:items-end">
                                             <div className="space-y-2">
-                                                <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-slate-500">Correction Type</label>
+                                                <label className="ml-1 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Correction Type</label>
                                                 <select
                                                     value={correctionType}
                                                     onChange={(e) => setCorrectionType(e.target.value as 'crediting' | 'debiting')}
@@ -955,7 +955,7 @@ export function PlayerProfile() {
                                                 </select>
                                             </div>
                                             <div className="space-y-2">
-                                                <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-slate-500">Amount (TRY)</label>
+                                                <label className="ml-1 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Amount (TRY)</label>
                                                 <input
                                                     type="number"
                                                     min="0.01"
@@ -967,7 +967,7 @@ export function PlayerProfile() {
                                                 />
                                             </div>
                                             <div className="space-y-2">
-                                                <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-slate-500">İşlem Notu</label>
+                                                <label className="ml-1 text-[10px] font-semibold uppercase tracking-widest text-slate-500">İşlem Notu</label>
                                                 <input
                                                     type="text"
                                                     maxLength={50}
@@ -982,7 +982,7 @@ export function PlayerProfile() {
                                                 onClick={handleBalanceCorrection}
                                                 disabled={isCorrectingBalance || !correctionAmount}
                                                 className={cn(
-                                                    'h-10 px-5 text-[10px] font-black uppercase tracking-widest text-white disabled:opacity-50',
+                                                    'h-10 px-5 text-[10px] font-semibold uppercase tracking-widest text-white disabled:opacity-50',
                                                     correctionType === 'crediting' ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-rose-600 hover:bg-rose-500'
                                                 )}
                                             >
@@ -992,11 +992,11 @@ export function PlayerProfile() {
 
                                         <div className="flex items-center justify-between pt-4 border-t border-white/5">
                                             <div className="flex items-center gap-2">
-                                                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500">Mevcut Bonus Kayıtları</h4>
+                                                <h4 className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Mevcut Bonus Kayıtları</h4>
                                                 <Button
                                                     variant="primary"
                                                     size="sm"
-                                                    className="h-7 px-3 text-[10px] font-black uppercase tracking-widest gap-2 bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20"
+                                                    className="h-7 px-3 text-[10px] font-semibold uppercase tracking-widest gap-2 bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20"
                                                     onClick={() => navigate('/bonus-talep', { state: { login: kpi?.Login } })}
                                                 >
                                                     <Gift size={14} />
@@ -1006,7 +1006,7 @@ export function PlayerProfile() {
 
                                             <div className="relative" ref={bonusDropdownRef}>
                                                 <div className="flex flex-col gap-1.5 min-w-[280px]">
-                                                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Tarih Seçici</label>
+                                                    <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest ml-1">Tarih Seçici</label>
                                                     <div className="flex">
                                                         <div className="flex h-10 flex-1 items-center gap-2 rounded-l-xl bg-white/5 border border-white/10 px-4 text-xs font-bold text-slate-300">
                                                             {appliedBonusStart && appliedBonusEnd
@@ -1025,7 +1025,7 @@ export function PlayerProfile() {
 
                                                 {isBonusDateOpen && (
                                                     <div
-                                                        className="absolute right-0 top-full z-[100] mt-2 w-full rounded-2xl border border-white/10 bg-slate-900 p-2 shadow-2xl animate-in fade-in slide-in-from-top-2"
+                                                        className="absolute right-0 top-full z-[100] mt-2 w-full rounded-xl border border-white/10 bg-slate-900 p-2 shadow-2xl animate-in fade-in slide-in-from-top-2"
                                                         onClick={(e) => e.stopPropagation()}
                                                     >
                                                         {[
@@ -1049,7 +1049,7 @@ export function PlayerProfile() {
                                                             </button>
                                                         ))}
                                                         <div className="mt-2 border-t border-white/5 pt-2 flex flex-col gap-2 p-2">
-                                                            <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Özel Tarih</span>
+                                                            <span className="text-[9px] font-semibold text-slate-500 uppercase tracking-widest">Özel Tarih</span>
                                                             <div className="grid grid-cols-2 gap-2">
                                                                 <input
                                                                     type="date"
@@ -1074,7 +1074,7 @@ export function PlayerProfile() {
                                                                     setAppliedBonusEnd(bonusEnd);
                                                                     setIsBonusDateOpen(false);
                                                                 }}
-                                                                className="w-full py-2 bg-cyan-600 rounded-lg text-[10px] font-black text-white hover:bg-cyan-500 transition-all uppercase"
+                                                                className="w-full py-2 bg-cyan-600 rounded-lg text-[10px] font-semibold text-white hover:bg-cyan-500 transition-all uppercase"
                                                             >
                                                                 Uygula
                                                             </button>
@@ -1085,14 +1085,14 @@ export function PlayerProfile() {
                                         </div>
 
                                         {isBonusesLoading ? (
-                                            <div className="py-24 text-center rounded-2xl bg-slate-800/20 border border-white/5">
+                                            <div className="py-24 text-center rounded-xl bg-slate-800/20 border border-white/5">
                                                 <div className="inline-flex items-center gap-3 text-slate-400">
                                                     <div className="h-6 w-6 rounded-full border-2 border-cyan-500/40 border-t-cyan-400 animate-spin" />
                                                     <span className="text-xs font-bold uppercase tracking-widest">Bonuslar yükleniyor</span>
                                                 </div>
                                             </div>
                                         ) : bonuses.length === 0 ? (
-                                            <div className="py-24 text-center rounded-2xl bg-slate-800/10 border border-white/5">
+                                            <div className="py-24 text-center rounded-xl bg-slate-800/10 border border-white/5">
                                                 <Gift className="mx-auto text-slate-600 mb-3" size={32} />
                                                 <p className="text-sm text-slate-500 font-medium">Katılım sağlanan bir bonus bulunamadı.</p>
                                             </div>
@@ -1101,7 +1101,7 @@ export function PlayerProfile() {
                                                 <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
                                                     <table className="w-full text-left min-w-[1200px]">
                                                         <thead>
-                                                            <tr className="bg-slate-800/60 text-[10px] font-black uppercase tracking-wider text-slate-400 whitespace-nowrap border-b border-white/10">
+                                                            <tr className="bg-slate-800/60 text-[10px] font-semibold uppercase tracking-wider text-slate-400 whitespace-nowrap border-b border-white/10">
                                                                 <th className="py-3.5 pl-5 pr-3 font-medium">ID</th>
                                                                 <th className="py-3.5 px-3 font-medium">Bonus Adı</th>
                                                                 <th className="py-3.5 px-3 font-medium">Oluşturulma</th>
@@ -1185,14 +1185,14 @@ export function PlayerProfile() {
                             )}
 
                             {activeTab === 'transactions' && (
-                                <section className="rounded-[2.5rem] border border-white/5 bg-slate-900/40 p-8 backdrop-blur-md text-left">
+                                <section className="rounded-xl border border-white/5 bg-slate-900/40 p-8 backdrop-blur-md text-left">
                                     <div className="mb-6 flex items-center justify-between">
                                         <div className="flex min-w-0 items-center gap-2.5">
-                                            <h3 className="text-xs font-black uppercase tracking-[0.4em] text-blue-400">İşlem Hareketleri</h3>
+                                            <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-blue-400">İşlem Hareketleri</h3>
                                             <History className="text-blue-400" size={20} />
                                         </div>
-                                        <div className="flex items-center gap-3 bg-slate-950/40 px-4 py-2 rounded-2xl border border-white/5 ring-1 ring-white/5">
-                                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">SATIR SAYISI:</span>
+                                        <div className="flex items-center gap-3 bg-slate-950/40 px-4 py-2 rounded-xl border border-white/5 ring-1 ring-white/5">
+                                            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">SATIR SAYISI:</span>
                                             <select
                                                 value={rowsPerPage}
                                                 onChange={(e) => {
@@ -1210,9 +1210,9 @@ export function PlayerProfile() {
                                         </div>
                                     </div>
 
-                                    <div className="mb-8 flex flex-wrap items-end gap-6 rounded-2xl border border-white/5 bg-slate-950/40 p-6">
+                                    <div className="mb-8 flex flex-wrap items-end gap-6 rounded-xl border border-white/5 bg-slate-950/40 p-6">
                                         <div className="flex flex-col gap-3">
-                                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Hızlı Tarih Seçimi</span>
+                                            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Hızlı Tarih Seçimi</span>
                                             <div className="flex flex-wrap gap-2">
                                                 {[
                                                     { id: 'today', label: 'Bugün' },
@@ -1237,7 +1237,7 @@ export function PlayerProfile() {
 
                                         <div className="flex items-center gap-2">
                                             <div className="flex flex-col gap-2">
-                                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Özel Aralık</span>
+                                                <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Özel Aralık</span>
                                                 <div className="flex items-center gap-2">
                                                     <input
                                                         type="date"
@@ -1257,7 +1257,7 @@ export function PlayerProfile() {
                                         </div>
 
                                         <div className="relative" ref={txTypeDropdownRef}>
-                                            <span className="mr-2 text-[10px] font-black text-slate-500 uppercase tracking-widest">Tür</span>
+                                            <span className="mr-2 text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Tür</span>
                                             <button
                                                 type="button"
                                                 onClick={() => setTxTypeDropdownOpen((o) => !o)}
@@ -1331,7 +1331,7 @@ export function PlayerProfile() {
                                                 <div className="overflow-x-auto">
                                                     <table className="w-full text-left">
                                                         <thead>
-                                                            <tr className="border-b border-white/5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
+                                                            <tr className="border-b border-white/5 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
                                                                 <th className="pb-4 pl-4">İşlem Türü / Ref</th>
                                                                 <th className="pb-4">Miktar</th>
                                                                 <th className="pb-4">Bakiye</th>
@@ -1346,7 +1346,7 @@ export function PlayerProfile() {
                                                                     <td className="py-6 pl-4">
                                                                         <div>
                                                                             <div className="flex items-center gap-2">
-                                                                                <p className="text-sm font-black text-white group-hover:text-blue-400 transition-colors">
+                                                                                <p className="text-sm font-semibold text-white group-hover:text-blue-400 transition-colors">
                                                                                     {tx.DocumentTypeName}
                                                                                 </p>
                                                                                 {tx.Game && (
@@ -1363,7 +1363,7 @@ export function PlayerProfile() {
                                                                         </div>
                                                                     </td>
                                                                     <td className="py-6">
-                                                                        <span className={`text-sm font-black ${tx.Operation === 2 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                                                        <span className={`text-sm font-semibold ${tx.Operation === 2 ? 'text-emerald-400' : 'text-rose-400'}`}>
                                                                             {tx.Operation === 2 ? '+' : '-'}{formatNumber(tx.Amount)} {tx.CurrencyId}
                                                                         </span>
                                                                     </td>
@@ -1376,7 +1376,7 @@ export function PlayerProfile() {
                                                                         <span className="text-[11px] font-bold text-slate-400">{formatDateTimeWithSeconds(tx.CreatedLocal)}</span>
                                                                     </td>
                                                                     <td className="py-6">
-                                                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-white/5 px-2 py-1 rounded-md">
+                                                                        <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 bg-white/5 px-2 py-1 rounded-md">
                                                                             {tx.UserName}
                                                                         </span>
                                                                     </td>
@@ -1392,7 +1392,7 @@ export function PlayerProfile() {
                                                                             return (
                                                                                 <div className="flex items-center gap-2">
                                                                                     <div className={`h-2 w-2 rounded-full ${dotClass}`} />
-                                                                                    <span className={`text-[10px] font-black uppercase tracking-widest ${textClass}`}>{label}</span>
+                                                                                    <span className={`text-[10px] font-semibold uppercase tracking-widest ${textClass}`}>{label}</span>
                                                                                 </div>
                                                                             );
                                                                         })()}
@@ -1409,7 +1409,7 @@ export function PlayerProfile() {
 
                                     {transactions.length > 0 && (
                                         <div className="mt-8 flex flex-col items-center justify-between gap-6 border-t border-white/5 pt-8 sm:flex-row">
-                                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">
+                                            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-[0.2em]">
                                                 Toplam {formatNumber(totalCount)} işlemden {(page - 1) * rowsPerPage + 1}-{Math.min(page * rowsPerPage, totalCount)} arası gösteriliyor
                                             </p>
 
@@ -1437,10 +1437,10 @@ export function PlayerProfile() {
                                                         value={jumpPage}
                                                         onChange={(e) => setJumpPage(e.target.value)}
                                                         onBlur={() => setJumpPage(page.toString())}
-                                                        className="w-8 bg-transparent text-center text-sm font-black text-white outline-none"
+                                                        className="w-8 bg-transparent text-center text-sm font-semibold text-white outline-none"
                                                     />
-                                                    <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">/</span>
-                                                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{totalPages}</span>
+                                                    <span className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest">/</span>
+                                                    <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">{totalPages}</span>
                                                 </form>
 
                                                 <button
@@ -1467,25 +1467,25 @@ export function PlayerProfile() {
 
                             {
                                 activeTab === 'detailed-report' && (
-                                    <section className="rounded-[2.5rem] border border-white/5 bg-slate-900/40 p-8 backdrop-blur-md text-left">
+                                    <section className="rounded-xl border border-white/5 bg-slate-900/40 p-8 backdrop-blur-md text-left">
                                         <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                             <div className="flex min-w-0 items-center gap-2.5">
-                                                <h3 className="text-xs font-black uppercase tracking-[0.4em] text-blue-400">Detaylı Oyuncu Raporu</h3>
+                                                <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-blue-400">Detaylı Oyuncu Raporu</h3>
                                                 <BarChart3 className="text-blue-400" size={20} />
                                             </div>
 
-                                            <div className="flex flex-wrap items-center gap-4 bg-slate-950/40 p-4 rounded-2xl border border-white/5">
+                                            <div className="flex flex-wrap items-center gap-4 bg-slate-950/40 p-4 rounded-xl border border-white/5">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Tarih</span>
+                                                    <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Tarih</span>
                                                     <button
                                                         onClick={() => handleDetailedReportQuickDate('today')}
-                                                        className={`px-3 py-1.5 rounded-lg border text-[10px] font-black transition-all uppercase tracking-widest ${detStart === todayYMD && detEnd === todayYMD ? 'bg-blue-500 text-white border-blue-400' : 'bg-white/5 text-slate-400 border-white/10 hover:bg-white/10 hover:text-white'}`}
+                                                        className={`px-3 py-1.5 rounded-lg border text-[10px] font-semibold transition-all uppercase tracking-widest ${detStart === todayYMD && detEnd === todayYMD ? 'bg-blue-500 text-white border-blue-400' : 'bg-white/5 text-slate-400 border-white/10 hover:bg-white/10 hover:text-white'}`}
                                                     >
                                                         Bugün
                                                     </button>
                                                     <button
                                                         onClick={() => handleDetailedReportQuickDate('yesterday')}
-                                                        className={`px-3 py-1.5 rounded-lg border text-[10px] font-black transition-all uppercase tracking-widest ${detStart === detEnd && detStart === yesterdayYMD ? 'bg-blue-500 text-white border-blue-400' : 'bg-white/5 text-slate-400 border-white/10 hover:bg-white/10 hover:text-white'}`}
+                                                        className={`px-3 py-1.5 rounded-lg border text-[10px] font-semibold transition-all uppercase tracking-widest ${detStart === detEnd && detStart === yesterdayYMD ? 'bg-blue-500 text-white border-blue-400' : 'bg-white/5 text-slate-400 border-white/10 hover:bg-white/10 hover:text-white'}`}
                                                     >
                                                         Dün
                                                     </button>
@@ -1496,14 +1496,14 @@ export function PlayerProfile() {
                                                         type="date"
                                                         value={detStart}
                                                         onChange={(e) => setDetStart(e.target.value)}
-                                                        className="bg-transparent text-xs font-black text-white outline-none [color-scheme:dark]"
+                                                        className="bg-transparent text-xs font-semibold text-white outline-none [color-scheme:dark]"
                                                     />
                                                     <span className="text-slate-600 font-bold">/</span>
                                                     <input
                                                         type="date"
                                                         value={detEnd}
                                                         onChange={(e) => setDetEnd(e.target.value)}
-                                                        className="bg-transparent text-xs font-black text-white outline-none [color-scheme:dark]"
+                                                        className="bg-transparent text-xs font-semibold text-white outline-none [color-scheme:dark]"
                                                     />
                                                     <span className="text-[10px] font-bold text-slate-500 tabular-nums">
                                                         {ymdToDDMMYY(detStart)} / {ymdToDDMMYY(detEnd)}
@@ -1515,7 +1515,7 @@ export function PlayerProfile() {
                                                             setDetStart(kpi.LastDepositTimeLocal.slice(0, 10));
                                                         }
                                                     }}
-                                                    className="px-3 py-1.5 rounded-lg bg-blue-500/10 border border-blue-500/20 text-[10px] font-black text-blue-400 hover:bg-blue-500/20 transition-all uppercase tracking-widest"
+                                                    className="px-3 py-1.5 rounded-lg bg-blue-500/10 border border-blue-500/20 text-[10px] font-semibold text-blue-400 hover:bg-blue-500/20 transition-all uppercase tracking-widest"
                                                 >
                                                     Son Yatırıma Git
                                                 </button>
@@ -1532,7 +1532,7 @@ export function PlayerProfile() {
                                                     <div key={idx} className="space-y-12 animate-in fade-in slide-in-from-top-4 duration-500">
                                                         <section>
                                                             <div className="mb-3 flex items-center gap-3 text-left">
-                                                                <h3 className="text-xs font-black uppercase tracking-[0.4em] text-blue-500">Bakiye ve Bonus Özeti</h3>
+                                                                <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-blue-500">Bakiye ve Bonus Özeti</h3>
                                                                 <div className="h-px flex-1 bg-gradient-to-r from-blue-500/20 to-transparent" />
                                                             </div>
                                                             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -1567,7 +1567,7 @@ export function PlayerProfile() {
 
                                                         <section>
                                                             <div className="mb-3 flex items-center gap-3 text-left">
-                                                                <h3 className="text-xs font-black uppercase tracking-[0.4em] text-emerald-500">Dönem Performansı</h3>
+                                                                <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-emerald-500">Dönem Performansı</h3>
                                                                 <div className="h-px flex-1 bg-gradient-to-r from-emerald-500/20 to-transparent" />
                                                             </div>
                                                             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -1603,9 +1603,9 @@ export function PlayerProfile() {
                                                         </section>
 
                                                         <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
-                                                            <div className="rounded-[2.5rem] border border-white/5 bg-slate-900/40 p-8 text-left backdrop-blur-md">
+                                                            <div className="rounded-xl border border-white/5 bg-slate-900/40 p-8 text-left backdrop-blur-md">
                                                                 <div className="mb-8 flex items-center justify-between">
-                                                                    <h3 className="text-xs font-black uppercase tracking-[0.4em] text-blue-400">Sportbook Analizi</h3>
+                                                                    <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-blue-400">Sportbook Analizi</h3>
                                                                     <TrendingUp className="text-blue-400" size={20} />
                                                                 </div>
                                                                 <div className="space-y-4">
@@ -1619,9 +1619,9 @@ export function PlayerProfile() {
                                                                 </div>
                                                             </div>
 
-                                                            <div className="rounded-[2.5rem] border border-white/5 bg-slate-900/40 p-8 text-left backdrop-blur-md">
+                                                            <div className="rounded-xl border border-white/5 bg-slate-900/40 p-8 text-left backdrop-blur-md">
                                                                 <div className="mb-8 flex items-center justify-between">
-                                                                    <h3 className="text-xs font-black uppercase tracking-[0.4em] text-blue-400">Casino Analizi</h3>
+                                                                    <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-blue-400">Casino Analizi</h3>
                                                                     <Gamepad2 className="text-blue-400" size={20} />
                                                                 </div>
                                                                 <div className="space-y-4">
@@ -1636,8 +1636,8 @@ export function PlayerProfile() {
                                                             </div>
                                                         </div>
 
-                                                        <section className="rounded-[2.5rem] border border-white/5 bg-slate-950/40 p-10">
-                                                            <h4 className="mb-10 text-center text-xs font-black uppercase tracking-[0.5em] text-slate-500">Dönem Sonu ve Bonus Kazanımları</h4>
+                                                        <section className="rounded-xl border border-white/5 bg-slate-950/40 p-10">
+                                                            <h4 className="mb-10 text-center text-xs font-semibold uppercase tracking-[0.5em] text-slate-500">Dönem Sonu ve Bonus Kazanımları</h4>
                                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
                                                                 <InfoTile label="Real Para Toplam Kazanç" value={`${formatNumber(report.RealMoneyWonAmount)} TRY`} icon={Trophy} isSuccess={true} />
                                                                 <InfoTile label="Bonus Toplam Kazanç" value={`${formatNumber(report.BonusWonAmount)} TRY`} icon={Gift} />
@@ -1645,48 +1645,48 @@ export function PlayerProfile() {
                                                             </div>
                                                         </section>
 
-                                                        <div className="rounded-[2.5rem] border border-white/5 bg-slate-900/40 p-10 backdrop-blur-md">
+                                                        <div className="rounded-xl border border-white/5 bg-slate-900/40 p-10 backdrop-blur-md">
                                                             <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-4">
                                                                 <div className="min-w-0 text-left">
-                                                                    <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-3">Dönem Başlangıç Bakiyesi</p>
+                                                                    <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-3">Dönem Başlangıç Bakiyesi</p>
                                                                     <div className="flex items-center gap-2">
                                                                         <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 ring-1 ring-blue-500/20">
                                                                             <Wallet size={20} />
                                                                         </div>
-                                                                        <p className="text-xl font-black text-white">{formatNumber(report.PeriodStartBalance)} <span className="text-[10px] text-slate-500">TRY</span></p>
+                                                                        <p className="text-xl font-semibold text-white">{formatNumber(report.PeriodStartBalance)} <span className="text-[10px] text-slate-500">TRY</span></p>
                                                                     </div>
                                                                     <p className="mt-2 text-[9px] text-slate-500 italic">Casino: {formatNumber(report.CasinoPeriodStartBalance)}</p>
                                                                 </div>
 
                                                                 <div className="min-w-0 text-left">
-                                                                    <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-3">Dönem Bitiş Bakiyesi</p>
+                                                                    <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-3">Dönem Bitiş Bakiyesi</p>
                                                                     <div className="flex items-center gap-2">
                                                                         <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 ring-1 ring-emerald-500/20">
                                                                             <CheckCircle2 size={20} />
                                                                         </div>
-                                                                        <p className="text-xl font-black text-white">{formatNumber(report.PeriodEndBalance)} <span className="text-[10px] text-slate-500">TRY</span></p>
+                                                                        <p className="text-xl font-semibold text-white">{formatNumber(report.PeriodEndBalance)} <span className="text-[10px] text-slate-500">TRY</span></p>
                                                                     </div>
                                                                     <p className="mt-2 text-[9px] text-slate-500 italic">Casino: {formatNumber(report.CasinoPeriodEndBalance)}</p>
                                                                 </div>
 
                                                                 <div className="min-w-0 text-left">
-                                                                    <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-3">Kayıt Bilgileri</p>
+                                                                    <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-3">Kayıt Bilgileri</p>
                                                                     <div className="flex items-center gap-2">
                                                                         <div className="h-10 w-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-400 ring-1 ring-amber-500/20">
                                                                             <Calendar size={20} />
                                                                         </div>
-                                                                        <p className="text-sm font-black text-white">{formatDateTimeDisplay(report.RegistrationDateLocal)}</p>
+                                                                        <p className="text-sm font-semibold text-white">{formatDateTimeDisplay(report.RegistrationDateLocal)}</p>
                                                                     </div>
                                                                     <p className="mt-2 text-[9px] text-slate-500">BTag: {report.BTag || 'Yok'}</p>
                                                                 </div>
 
                                                                 <div className="min-w-0 text-left">
-                                                                    <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-3">Hesap Detayı</p>
+                                                                    <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-3">Hesap Detayı</p>
                                                                     <div className="flex items-center gap-2">
                                                                         <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 ring-1 ring-blue-500/20">
                                                                             <Users size={20} />
                                                                         </div>
-                                                                        <p className="text-sm font-black text-white">{report.IsVerified ? 'ONAYLI HESAP' : 'ONAYSIZ'}</p>
+                                                                        <p className="text-sm font-semibold text-white">{report.IsVerified ? 'ONAYLI HESAP' : 'ONAYSIZ'}</p>
                                                                     </div>
                                                                     <p className="mt-2 text-[9px] text-slate-500">Affilate ID: {report.AffilateId || 'Mevcut Değil'}</p>
                                                                 </div>
@@ -1700,7 +1700,7 @@ export function PlayerProfile() {
                                 )}
 
                             {activeTab === 'ip-addresses' && (
-                                <section className="rounded-[2.5rem] border border-white/5 bg-slate-900/40 p-8 backdrop-blur-md text-left">
+                                <section className="rounded-xl border border-white/5 bg-slate-900/40 p-8 backdrop-blur-md text-left">
                                     <NetworkMap loginIp={loginIP || null} clientId={id!} />
                                 </section>
                             )}
@@ -1767,7 +1767,7 @@ function InfoTile({ label, value, icon: Icon, isSuccess }: any) {
                 <Icon size={15} />
             </div>
             <div className="min-w-0 text-left">
-                <p className="text-[9px] font-black text-slate-500 uppercase tracking-wider">{label}</p>
+                <p className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider">{label}</p>
                 <p className={cn(
                     'mt-0.5 truncate text-xs font-semibold tracking-tight',
                     (isSuccess || value === 'ONAYLI HESAP') ? 'text-emerald-400' : 'text-white'

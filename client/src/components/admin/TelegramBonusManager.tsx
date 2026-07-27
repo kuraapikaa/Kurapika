@@ -28,14 +28,14 @@ export function TelegramBonusManager({ config, bonusOptions, onUpdate }: Telegra
             <Send size={20} />
           </div>
           <div>
-            <div className="text-sm font-black text-white">Telegram Bonusu</div>
+            <div className="text-sm font-semibold text-white">Telegram Bonusu</div>
             <p className="mt-0.5 text-xs font-medium text-zinc-500">
               Oyuncu Telegram hesabını bağlar, kanala/gruba katılır; bot API üzerinden gerçek zamanlı üyelik kontrolü yapılıp bonus otomatik tanımlanır.
             </p>
           </div>
         </div>
         <label className="inline-flex items-center gap-3">
-          <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Aktif</span>
+          <span className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Aktif</span>
           <button
             type="button"
             role="switch"
@@ -58,7 +58,7 @@ export function TelegramBonusManager({ config, bonusOptions, onUpdate }: Telegra
 
       <div className="grid grid-cols-1 gap-5 rounded-lg border border-white/10 bg-zinc-950/70 p-5 md:grid-cols-2">
         <div className="space-y-2">
-          <label className="block text-[10px] font-black uppercase tracking-widest text-zinc-500">Kanal/Grup Kullanıcı Adı</label>
+          <label className="block text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Kanal/Grup Kullanıcı Adı</label>
           <input
             type="text"
             value={config.channelUsername}
@@ -70,7 +70,7 @@ export function TelegramBonusManager({ config, bonusOptions, onUpdate }: Telegra
         </div>
 
         <div className="space-y-2">
-          <label className="block text-[10px] font-black uppercase tracking-widest text-zinc-500">Chat ID</label>
+          <label className="block text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Chat ID</label>
           <input
             type="text"
             value={config.chatId}
@@ -82,7 +82,7 @@ export function TelegramBonusManager({ config, bonusOptions, onUpdate }: Telegra
         </div>
 
         <div className="space-y-2">
-          <label className="block text-[10px] font-black uppercase tracking-widest text-zinc-500">Bonus</label>
+          <label className="block text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Bonus</label>
           <select
             value={config.bonusId ?? ''}
             onChange={(e) => {
@@ -100,7 +100,7 @@ export function TelegramBonusManager({ config, bonusOptions, onUpdate }: Telegra
         </div>
 
         <div className="space-y-2">
-          <label className="block text-[10px] font-black uppercase tracking-widest text-zinc-500">Tutar (TL)</label>
+          <label className="block text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Tutar (TL)</label>
           <input
             type="number"
             min={0}

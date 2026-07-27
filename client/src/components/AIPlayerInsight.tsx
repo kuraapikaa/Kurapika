@@ -81,22 +81,22 @@ export function AIPlayerInsight({ data, ipData }: AIPlayerInsightProps) {
         <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="rounded-[2rem] border border-blue-500/30 bg-blue-950/20 p-6 md:p-8 backdrop-blur-md mb-8 relative overflow-hidden group"
+            className="rounded-xl border border-blue-500/30 bg-blue-950/20 p-6 md:p-8 backdrop-blur-md mb-8 relative overflow-hidden group"
         >
             <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-blue-500/20 transition-colors" />
 
             <div className="flex flex-col md:flex-row gap-6 items-start relative z-10">
-                <div className="flex-shrink-0 bg-blue-500/20 p-4 rounded-2xl border border-blue-500/30">
+                <div className="flex-shrink-0 bg-blue-500/20 p-4 rounded-xl border border-blue-500/30">
                     <BrainCircuit size={32} className="text-blue-400" />
                 </div>
 
                 <div className="flex-1 space-y-3">
                     <div className="flex items-center gap-3 flex-wrap">
-                        <h3 className="text-lg font-black text-blue-300 tracking-wide uppercase">Bugs Software AI Analiz Karnesi</h3>
-                        <span className={`px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full border ${riskColor}`}>
+                        <h3 className="text-lg font-semibold text-blue-300 tracking-wide uppercase">Bugs Software AI Analiz Karnesi</h3>
+                        <span className={`px-3 py-1 text-[10px] font-semibold uppercase tracking-widest rounded-full border ${riskColor}`}>
                             Risk Seviyesi: {riskLevel}
                         </span>
-                        <div className={`flex items-center gap-1.5 px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full border border-white/10 bg-black/20 ${personaColor}`}>
+                        <div className={`flex items-center gap-1.5 px-3 py-1 text-[10px] font-semibold uppercase tracking-widest rounded-full border border-white/10 bg-black/20 ${personaColor}`}>
                             {icon} {persona}
                         </div>
                     </div>
@@ -104,7 +104,7 @@ export function AIPlayerInsight({ data, ipData }: AIPlayerInsightProps) {
                     {profileTags.length > 0 && (
                         <div className="flex flex-wrap gap-2">
                             {profileTags.map((tag) => (
-                                <span key={tag.label} className={`rounded-full border px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.08em] ${tag.tone}`}>
+                                <span key={tag.label} className={`rounded-full border px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.08em] ${tag.tone}`}>
                                     {tag.label}
                                 </span>
                             ))}

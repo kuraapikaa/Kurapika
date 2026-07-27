@@ -79,7 +79,7 @@ export function BetReportList({
 
   if (error) {
     return (
-      <div className="rounded-3xl border border-rose-500/20 bg-rose-500/5 p-8 text-center text-rose-400 backdrop-blur-xl">
+      <div className="rounded-xl border border-rose-500/20 bg-rose-500/5 p-8 text-center text-rose-400 backdrop-blur-xl">
         <ShieldAlert size={48} className="mx-auto mb-4 opacity-20" />
         <h3 className="text-lg font-bold">Veri İletişim Hatası</h3>
         <p className="mt-2 text-sm opacity-70">{error.message}</p>
@@ -118,11 +118,11 @@ export function BetReportList({
     }
     if (typeof val === 'number' && AMOUNT_KEYS.has(key)) {
       const isNegative = val < 0;
-      return <span className={cn("font-black tabular-nums tracking-tighter", isNegative ? "text-rose-500" : "text-white")}>{formatNumber(val)}</span>;
+      return <span className={cn("font-semibold tabular-nums tracking-tighter", isNegative ? "text-rose-500" : "text-white")}>{formatNumber(val)}</span>;
     }
     if (typeof val === 'boolean') {
       return val ?
-        <span className="inline-flex items-center gap-1 text-cyan-400 font-black text-[10px] uppercase"><Zap size={10} /> EVET</span> :
+        <span className="inline-flex items-center gap-1 text-cyan-400 font-semibold text-[10px] uppercase"><Zap size={10} /> EVET</span> :
         <span className="text-zinc-700 font-bold text-[10px] uppercase">HAYIR</span>;
     }
     if (key === 'StateName') {
@@ -133,7 +133,7 @@ export function BetReportList({
 
       return (
         <span className={cn(
-          "inline-flex items-center rounded-lg px-2.5 py-1 text-[9px] font-black border uppercase tracking-widest",
+          "inline-flex items-center rounded-lg px-2.5 py-1 text-[9px] font-semibold border uppercase tracking-widest",
           isWon ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 neon-glow-emerald" :
             isLost ? "bg-rose-500/10 text-rose-500 border-rose-500/20" :
               isPending ? "bg-amber-500/10 text-amber-500 border-amber-500/20" :
@@ -144,7 +144,7 @@ export function BetReportList({
       );
     }
     if (key === 'Id') {
-      return <span className="text-[10px] font-black text-cyan-500/70 tabular-nums">#{String(val)}</span>;
+      return <span className="text-[10px] font-semibold text-cyan-500/70 tabular-nums">#{String(val)}</span>;
     }
     if (key === 'ClientLogin') {
       const clientId = (row as any).ClientId;
@@ -156,7 +156,7 @@ export function BetReportList({
             e.stopPropagation();
             if (clientId != null && login) navigate(`/oyuncu/${Number(clientId)}/${encodeURIComponent(login)}`);
           }}
-          className="flex items-center gap-1.5 font-black text-white hover:text-cyan-400 transition-colors uppercase tracking-tight"
+          className="flex items-center gap-1.5 font-semibold text-white hover:text-cyan-400 transition-colors uppercase tracking-tight"
         >
           <div className="w-5 h-5 rounded bg-white/5 flex items-center justify-center">
             <User size={10} className="text-zinc-500" />
@@ -181,18 +181,18 @@ export function BetReportList({
           <div className="flex shrink-0 items-center justify-between border-b border-white/[0.05] bg-black/40 px-8 py-5 backdrop-blur-3xl">
             <div className="flex items-center gap-3">
               <div className="h-2 w-2 rounded-full bg-cyan-500 animate-pulse" />
-              <span className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] antialiased">Bahis Veri Akışı & Sinyal Analizi</span>
+              <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-[0.2em] antialiased">Bahis Veri Akışı & Sinyal Analizi</span>
             </div>
             {!isLoading && (
               <div className="flex items-center gap-6">
                 <div className="flex flex-col items-end">
                   <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-tighter">İşlem Hacmi</span>
-                  <span className="text-xs font-black text-white tabular-nums">{formatNumber(objects.length)}</span>
+                  <span className="text-xs font-semibold text-white tabular-nums">{formatNumber(objects.length)}</span>
                 </div>
                 <div className="w-px h-6 bg-white/5" />
                 <div className="flex flex-col items-end">
                   <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-tighter">Toplam Ciro</span>
-                  <span className="text-xs font-black text-emerald-400 tabular-nums">{formatNumber(totalCiro)} <span className="text-[8px] opacity-50">TRY</span></span>
+                  <span className="text-xs font-semibold text-emerald-400 tabular-nums">{formatNumber(totalCiro)} <span className="text-[8px] opacity-50">TRY</span></span>
                 </div>
               </div>
             )}
@@ -203,9 +203,9 @@ export function BetReportList({
           <table className="w-full text-sm border-separate border-spacing-0">
             <thead className="sticky top-0 z-20">
               <tr className="text-left text-[10px] uppercase tracking-[0.2em] text-zinc-500 bg-black/80 backdrop-blur-md">
-                <th className="px-6 py-5 font-black pl-8 border-b border-white/[0.04]">Eylem</th>
+                <th className="px-3 py-2.5 font-semibold pl-4 border-b border-white/[0.04]">Eylem</th>
                 {allKeys.map((key) => (
-                  <th key={key} className="px-6 py-5 font-black border-b border-white/[0.04] whitespace-nowrap">
+                  <th key={key} className="px-3 py-2.5 font-semibold border-b border-white/[0.04] whitespace-nowrap">
                     {COLUMN_LABELS[key] ?? key}
                   </th>
                 ))}
@@ -217,7 +217,7 @@ export function BetReportList({
                   <td colSpan={allKeys.length + 1} className="p-32 text-center">
                     <div className="flex flex-col items-center gap-4">
                       <div className="h-10 w-10 animate-spin rounded-full border-4 border-cyan-500 border-t-transparent" />
-                      <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Veri paketleri senkronize ediliyor...</p>
+                      <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">Veri paketleri senkronize ediliyor...</p>
                     </div>
                   </td>
                 </tr>
@@ -237,7 +237,7 @@ export function BetReportList({
                   return (
                     <Fragment key={rowId}>
                       <tr className="group transition-all duration-300 hover:bg-cyan-500/[0.02]">
-                        <td className="px-6 py-5 pl-8 border-b border-white/[0.02]">
+                        <td className="px-3 py-2.5 pl-4 border-b border-white/[0.02]">
                           <button
                             type="button"
                             onClick={() => setSelectionsModalBetId(isExpanded ? null : Number(r.Id))}
@@ -250,7 +250,7 @@ export function BetReportList({
                           </button>
                         </td>
                         {allKeys.map((key) => (
-                          <td key={key} className="px-6 py-5 border-b border-white/[0.02] whitespace-nowrap">
+                          <td key={key} className="px-3 py-2.5 border-b border-white/[0.02] whitespace-nowrap">
                             {formatCell(key, r[key], row as BetReportItem)}
                           </td>
                         ))}
@@ -263,13 +263,13 @@ export function BetReportList({
                               animate={{ opacity: 1, height: 'auto' }}
                               className="bg-black/40 backdrop-blur-3xl p-8"
                             >
-                              <div className="rounded-3xl border border-cyan-500/20 bg-cyan-500/[0.02] overflow-hidden">
+                              <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/[0.02] overflow-hidden">
                                 <div className="flex items-center justify-between px-8 py-5 border-b border-cyan-500/10 bg-black/20">
                                   <div className="flex items-center gap-3">
                                     <div className="p-2 rounded-lg bg-cyan-500/10 text-cyan-400">
                                       <Zap size={16} />
                                     </div>
-                                    <span className="text-[11px] font-black text-white uppercase tracking-widest">Bahis Seçimleri & Piyasa Detayı</span>
+                                    <span className="text-[11px] font-semibold text-white uppercase tracking-widest">Bahis Seçimleri & Piyasa Detayı</span>
                                   </div>
                                 </div>
                                 <div className="p-4">
@@ -284,32 +284,32 @@ export function BetReportList({
                                         const isWon = /WON|KAZAN/i.test(s.StateName);
                                         const isLost = /LOST|KAYIP/i.test(s.StateName);
                                         return (
-                                          <div key={sIdx} className="rounded-2xl bg-zinc-950/40 border border-white/5 p-5">
+                                          <div key={sIdx} className="rounded-xl bg-zinc-950/40 border border-white/5 p-5">
                                             <div className="flex items-start justify-between gap-4">
                                               <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2 mb-1">
                                                   <Globe size={10} className="text-zinc-600" />
-                                                  <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest truncate">{s.SportName} · {s.CompetitionName}</span>
+                                                  <span className="text-[9px] font-semibold text-zinc-500 uppercase tracking-widest truncate">{s.SportName} · {s.CompetitionName}</span>
                                                 </div>
-                                                <p className="text-sm font-black text-white uppercase tracking-tight truncate mb-3">{s.MatchName}</p>
+                                                <p className="text-sm font-semibold text-white uppercase tracking-tight truncate mb-3">{s.MatchName}</p>
                                                 <div className="grid grid-cols-2 gap-4">
                                                   <div className="flex flex-col">
-                                                    <span className="text-[8px] font-black text-zinc-600 uppercase">Piyasa</span>
+                                                    <span className="text-[8px] font-semibold text-zinc-600 uppercase">Piyasa</span>
                                                     <span className="text-[11px] font-bold text-zinc-300 truncate">{s.MarketName}</span>
                                                   </div>
                                                   <div className="flex flex-col">
-                                                    <span className="text-[8px] font-black text-zinc-600 uppercase">Seçim</span>
-                                                    <span className="text-[11px] font-black text-cyan-400 truncate">{s.SelectionName}</span>
+                                                    <span className="text-[8px] font-semibold text-zinc-600 uppercase">Seçim</span>
+                                                    <span className="text-[11px] font-semibold text-cyan-400 truncate">{s.SelectionName}</span>
                                                   </div>
                                                 </div>
                                               </div>
                                               <div className="flex flex-col items-end gap-3">
                                                 <div className="text-right">
-                                                  <span className="text-[8px] font-black text-zinc-600 uppercase">Oran</span>
-                                                  <p className="text-lg font-black text-white tabular-nums">{formatNumber(s.Price)}</p>
+                                                  <span className="text-[8px] font-semibold text-zinc-600 uppercase">Oran</span>
+                                                  <p className="text-lg font-semibold text-white tabular-nums">{formatNumber(s.Price)}</p>
                                                 </div>
                                                 <span className={cn(
-                                                  "px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest border",
+                                                  "px-2 py-0.5 rounded text-[9px] font-semibold uppercase tracking-widest border",
                                                   isWon ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" :
                                                     isLost ? "bg-rose-500/10 text-rose-500 border-rose-500/20" :
                                                       "bg-zinc-500/10 text-zinc-500 border-zinc-500/20"
@@ -340,14 +340,14 @@ export function BetReportList({
             <div className="flex items-center gap-8">
               <div className="flex flex-col">
                 <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-tighter">Listedeki Veri</span>
-                <span className="text-xs font-black text-white">
+                <span className="text-xs font-semibold text-white">
                   {formatNumber(objects.length)} {totalCount > objects.length && <span className="text-zinc-500"> / {formatNumber(totalCount)}</span>}
                 </span>
               </div>
               <div className="w-px h-8 bg-white/5" />
               <div className="flex flex-col">
                 <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-tighter">Toplam Hacim</span>
-                <span className="text-xs font-black text-emerald-400">{formatNumber(totalCiro)} <span className="text-[8px] opacity-50">TRY</span></span>
+                <span className="text-xs font-semibold text-emerald-400">{formatNumber(totalCiro)} <span className="text-[8px] opacity-50">TRY</span></span>
               </div>
             </div>
 
@@ -356,7 +356,7 @@ export function BetReportList({
                 type="button"
                 onClick={() => onLoadMore?.()}
                 disabled={isFetchingNextPage}
-                className="group relative flex items-center gap-3 rounded-2xl bg-cyan-600 px-8 py-3.5 text-[11px] font-black text-white shadow-xl shadow-cyan-600/20 hover:bg-cyan-500 transition-all uppercase tracking-widest disabled:opacity-20"
+                className="group relative flex items-center gap-3 rounded-xl bg-cyan-600 px-8 py-3.5 text-[11px] font-semibold text-white shadow-xl shadow-cyan-600/20 hover:bg-cyan-500 transition-all uppercase tracking-widest disabled:opacity-20"
               >
                 {isFetchingNextPage ? (
                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white" />

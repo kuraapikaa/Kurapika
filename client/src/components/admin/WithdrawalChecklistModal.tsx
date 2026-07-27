@@ -104,9 +104,9 @@ function RuleBlock({
           <div className={`p-1.5 rounded-lg ${colorClass}`}>
             <Icon size={16} />
           </div>
-          <h4 className="text-xs font-black uppercase tracking-wide text-white/90">{title}</h4>
+          <h4 className="text-xs font-semibold uppercase tracking-wide text-white/90">{title}</h4>
         </div>
-        <span className={`rounded-full px-2.5 py-1 text-xs font-black ${result.overallOk ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}`}>
+        <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${result.overallOk ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}`}>
           {result.overallOk ? 'OK' : 'KRİTİK'}
         </span>
       </div>
@@ -146,11 +146,11 @@ function RiskRuleBlock({ title, result }: { title: string; result: RuleSetResult
         }`}
     >
       <div className="flex items-center justify-between mb-2">
-        <h4 className="text-xs font-black uppercase tracking-wide text-white/90 flex items-center gap-2">
+        <h4 className="text-xs font-semibold uppercase tracking-wide text-white/90 flex items-center gap-2">
           <ShieldAlert size={16} className={hasHigh ? 'text-rose-400' : 'text-amber-400'} />
           {title}
         </h4>
-        <span className={`rounded-full px-2.5 py-1 text-xs font-black ${result.overallOk ? 'bg-emerald-500/20 text-emerald-400' : hasHigh ? 'bg-rose-500/20 text-rose-400' : 'bg-amber-500/20 text-amber-400'}`}>
+        <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${result.overallOk ? 'bg-emerald-500/20 text-emerald-400' : hasHigh ? 'bg-rose-500/20 text-rose-400' : 'bg-amber-500/20 text-amber-400'}`}>
           {badge}
         </span>
       </div>
@@ -266,7 +266,7 @@ export function WithdrawalChecklistModal({
 
   const content = (
     <div
-      className={`relative flex w-full max-w-[95vw] flex-col overflow-hidden bg-slate-900 border border-white/10 rounded-2xl shadow-2xl ${inline ? 'max-h-[85vh] animate-in fade-in duration-200' : 'max-h-[90vh] animate-in zoom-in-95 duration-300'
+      className={`relative flex w-full max-w-[95vw] flex-col overflow-hidden bg-slate-900 border border-white/10 rounded-xl shadow-2xl ${inline ? 'max-h-[85vh] animate-in fade-in duration-200' : 'max-h-[90vh] animate-in zoom-in-95 duration-300'
         }`}
       onClick={inline ? undefined : (e) => e.stopPropagation()}
       role={inline ? 'region' : 'dialog'}
@@ -280,7 +280,7 @@ export function WithdrawalChecklistModal({
             <ShieldCheck size={20} />
           </div>
           <div className="min-w-0">
-            <h3 className="text-base font-black text-white truncate">Otomatik Çekim Kontrolü</h3>
+            <h3 className="text-base font-semibold text-white truncate">Otomatik Çekim Kontrolü</h3>
             <p className="text-xs text-slate-400">ID: <span className="tabular-nums text-blue-400">{account.id ?? account.ClientId ?? '—'}</span></p>
           </div>
         </div>
@@ -293,20 +293,20 @@ export function WithdrawalChecklistModal({
         {/* Özet: tek satır */}
         <div className="flex flex-wrap items-stretch gap-3">
           <div className="flex-1 min-w-[140px] rounded-xl border border-white/5 bg-white/[0.02] p-3">
-            <span className="text-xs font-black text-slate-500 uppercase block mb-0.5">Oyuncu</span>
-            <p className="text-base font-black text-white truncate">{account.ClientLogin || '—'}</p>
+            <span className="text-xs font-semibold text-slate-500 uppercase block mb-0.5">Oyuncu</span>
+            <p className="text-base font-semibold text-white truncate">{account.ClientLogin || '—'}</p>
             <p className="text-xs text-slate-500 truncate">{account.ClientName || '—'}</p>
             {account.isFirstWithdrawal && <span className="mt-1.5 inline-block rounded-full bg-amber-500/20 px-2.5 py-1 text-xs font-bold text-amber-400">İlk çekim</span>}
           </div>
           <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3 min-w-[100px]">
-            <span className="text-xs font-black text-slate-500 uppercase block mb-0.5">Bakiye</span>
-            <p className="text-lg font-black text-emerald-400 tabular-nums">{formatNumber(account.balance)} <span className="text-xs text-slate-500">TRY</span></p>
+            <span className="text-xs font-semibold text-slate-500 uppercase block mb-0.5">Bakiye</span>
+            <p className="text-lg font-semibold text-emerald-400 tabular-nums">{formatNumber(account.balance)} <span className="text-xs text-slate-500">TRY</span></p>
           </div>
           <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3 min-w-[160px]">
-            <span className="text-xs font-black text-slate-500 uppercase block mb-0.5">Baz yatırım</span>
+            <span className="text-xs font-semibold text-slate-500 uppercase block mb-0.5">Baz yatırım</span>
             {account.lastDeposit ? (
               <>
-                <p className="text-lg font-black text-white tabular-nums">{formatNumber(account.lastDeposit.amount)} TRY</p>
+                <p className="text-lg font-semibold text-white tabular-nums">{formatNumber(account.lastDeposit.amount)} TRY</p>
                 <p className="text-xs text-slate-500 mt-0.5">
                   {(() => {
                     const raw = account.lastDeposit.dateLocal ?? '';
@@ -319,10 +319,10 @@ export function WithdrawalChecklistModal({
             ) : <p className="text-base text-slate-500">—</p>}
           </div>
           <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3 min-w-[160px]">
-            <span className="text-xs font-black text-slate-500 uppercase block mb-0.5">En yüksek kazanç (Round)</span>
+            <span className="text-xs font-semibold text-slate-500 uppercase block mb-0.5">En yüksek kazanç (Round)</span>
             {highestWin ? (
               <>
-                <p className="text-lg font-black text-emerald-400 tabular-nums">{formatNumber(highestWin.Amount)} TRY</p>
+                <p className="text-lg font-semibold text-emerald-400 tabular-nums">{formatNumber(highestWin.Amount)} TRY</p>
                 <p className="text-[10px] text-slate-500 mt-0.5 truncate max-w-[140px]">
                   {highestWin.Game || 'Casino / Slot'}
                 </p>
@@ -333,7 +333,7 @@ export function WithdrawalChecklistModal({
 
         {account.notes && account.notes.length > 0 && (
           <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-3">
-            <h4 className="text-xs font-black uppercase tracking-wide text-amber-400/90 flex items-center gap-2 mb-2"><AlertCircle size={14} /> Üye notları</h4>
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-amber-400/90 flex items-center gap-2 mb-2"><AlertCircle size={14} /> Üye notları</h4>
             <div className="space-y-2 max-h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10">
               {account.notes.map((note, i) => (
                 <div key={note.id || i} className="p-2.5 rounded-lg bg-slate-900/50 border border-white/5">
@@ -347,7 +347,7 @@ export function WithdrawalChecklistModal({
 
         {account.lastDepositBonuses && account.lastDepositBonuses.length > 0 && (
           <div className="rounded-xl border border-white/5 bg-slate-950/40 p-3">
-            <h4 className="text-xs font-black uppercase tracking-wide text-cyan-400 flex items-center gap-2 mb-2"><Gift size={14} /> Kullanılan bonuslar ({account.lastDepositBonuses.length})</h4>
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-cyan-400 flex items-center gap-2 mb-2"><Gift size={14} /> Kullanılan bonuslar ({account.lastDepositBonuses.length})</h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {account.lastDepositBonuses.map((bonus, i) => (
                 <div key={i} className="p-2.5 rounded-lg bg-white/[0.02] border border-white/5">
@@ -358,7 +358,7 @@ export function WithdrawalChecklistModal({
                         <span className="rounded bg-slate-600/30 px-1.5 py-0.5 text-[9px] font-bold text-slate-400 border border-slate-500/30">Süresi dolmuş</span>
                       )}
                       {bonus.ToWagerAmount > 0 ? (
-                        <span className="text-xs font-black text-amber-500 tabular-nums">{formatNumber(bonus.ToWagerAmount)} TRY kalan</span>
+                        <span className="text-xs font-semibold text-amber-500 tabular-nums">{formatNumber(bonus.ToWagerAmount)} TRY kalan</span>
                       ) : (
                         <span className="text-xs font-bold text-emerald-400">Tamamlandı</span>
                       )}
@@ -387,12 +387,12 @@ export function WithdrawalChecklistModal({
 
         {account.profileTransactionsByType && (
           <div className="rounded-xl border border-white/5 bg-slate-950/40 p-3">
-            <h4 className="text-xs font-black uppercase tracking-wide text-slate-400 flex items-center gap-2 mb-2"><Activity size={14} /> Hacim (son 3 gün)</h4>
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400 flex items-center gap-2 mb-2"><Activity size={14} /> Hacim (son 3 gün)</h4>
             <div className="flex flex-wrap gap-2">
               {Object.entries(account.profileTransactionsByType).map(([name, data]) => (
                 <span key={name} className="px-2.5 py-1.5 rounded-lg bg-white/[0.03] border border-white/5 text-xs">
                   <span className="text-slate-500 truncate max-w-[120px] inline-block align-bottom">{name}</span>
-                  <span className="ml-1.5 font-black text-white tabular-nums">{data.count}</span>
+                  <span className="ml-1.5 font-semibold text-white tabular-nums">{data.count}</span>
                 </span>
               ))}
             </div>
@@ -413,7 +413,7 @@ export function WithdrawalChecklistModal({
           const otherPromos = checklists.filter(p => !activeBonusNames.some(name => p.promoTitle.toLowerCase().includes(name) || name.includes(p.promoTitle.toLowerCase()))).slice(0, 2);
           return (
             <div className="space-y-3">
-              <h4 className="text-xs font-black uppercase tracking-wide text-slate-500">Promosyon kontrolleri</h4>
+              <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Promosyon kontrolleri</h4>
               {activePromos.length === 0 ? (
                 <p className="text-xs text-slate-500 italic">Aktif bonus eşleşmesi yok.</p>
               ) : (
@@ -439,7 +439,7 @@ export function WithdrawalChecklistModal({
         </button>
         <button
           onClick={onClose}
-          className="flex items-center gap-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 px-5 py-2.5 text-xs font-black uppercase text-white"
+          className="flex items-center gap-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 px-5 py-2.5 text-xs font-semibold uppercase text-white"
         >
           Ödeme emrini doğrula
           <ArrowRight size={14} />

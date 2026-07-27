@@ -136,17 +136,17 @@ export function MillionaireShowcaseManager({
           <div className="space-y-5 p-5 md:p-6">
             <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
               <div>
-                <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-amber-300/20 bg-amber-300/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-amber-200">
+                <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-amber-300/20 bg-amber-300/10 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-200">
                   <Crown size={13} />
                   Lobi vitrini
                 </div>
-                <h2 className="text-2xl font-black tracking-[-0.04em] text-white md:text-3xl">Büyük Kazanç Vitrini</h2>
+                <h2 className="text-2xl font-semibold tracking-[-0.04em] text-white md:text-3xl">Büyük Kazanç Vitrini</h2>
                 <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-zinc-500">
                   Lobide görünecek kazanç alanını, kayıtları ve video bağlantılarını buradan yönetin.
                 </p>
               </div>
 
-              <label className="flex w-fit cursor-pointer items-center gap-3 rounded-lg border border-white/10 bg-black/30 px-4 py-3 text-xs font-black uppercase tracking-[0.12em] text-zinc-300">
+              <label className="flex w-fit cursor-pointer items-center gap-3 rounded-lg border border-white/10 bg-black/30 px-4 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-300">
                 <input
                   type="checkbox"
                   checked={safeConfig.isActive}
@@ -191,29 +191,29 @@ export function MillionaireShowcaseManager({
             <div className="rounded-xl border border-white/10 bg-[#05080d] p-4">
               <div className="mb-4 flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-zinc-600">Canlı önizleme</p>
-                  <h3 className="text-lg font-black text-white">Lobi kartı</h3>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-600">Canlı önizleme</p>
+                  <h3 className="text-lg font-semibold text-white">Lobi kartı</h3>
                 </div>
                 <Eye size={18} className="text-amber-300" />
               </div>
 
               <div className="overflow-hidden rounded-xl border border-amber-300/15 bg-gradient-to-br from-[#18120a] via-[#090b10] to-[#05070b] p-4">
-                <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-amber-300/20 bg-amber-300/10 px-3 py-1 text-[9px] font-black uppercase tracking-[0.14em] text-amber-200">
+                <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-amber-300/20 bg-amber-300/10 px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-amber-200">
                   <Sparkles size={12} />
                   {safeConfig.eyebrow}
                 </div>
-                <h4 className="text-3xl font-black leading-none tracking-[-0.05em] text-white">{safeConfig.title}</h4>
+                <h4 className="text-3xl font-semibold leading-none tracking-[-0.05em] text-white">{safeConfig.title}</h4>
                 <p className="mt-3 line-clamp-3 text-sm font-medium leading-6 text-zinc-400">{safeConfig.description}</p>
 
                 {featuredRecord && (
                   <div className="mt-6 rounded-lg border border-white/10 bg-white/[0.04] p-4">
-                    <p className="text-[10px] font-black uppercase tracking-[0.16em] text-zinc-500">Öne çıkan kayıt</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-500">Öne çıkan kayıt</p>
                     <div className="mt-2 flex items-end justify-between gap-3">
                       <div className="min-w-0">
-                        <p className="truncate text-base font-black text-white">{featuredRecord.title}</p>
+                        <p className="truncate text-base font-semibold text-white">{featuredRecord.title}</p>
                         <p className="mt-1 text-xs font-bold text-zinc-500">{featuredRecord.player} · {featuredRecord.game}</p>
                       </div>
-                      <p className="shrink-0 text-2xl font-black text-amber-200">{featuredRecord.amount}</p>
+                      <p className="shrink-0 text-2xl font-semibold text-amber-200">{featuredRecord.amount}</p>
                     </div>
                   </div>
                 )}
@@ -226,13 +226,13 @@ export function MillionaireShowcaseManager({
       <section className="rounded-xl border border-white/10 bg-[#080d13]/95">
         <div className="flex flex-col gap-3 border-b border-white/10 p-5 md:flex-row md:items-center md:justify-between md:p-6">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-600">İçerik</p>
-            <h3 className="text-xl font-black text-white">Kazanç kayıtları</h3>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-600">İçerik</p>
+            <h3 className="text-xl font-semibold text-white">Kazanç kayıtları</h3>
           </div>
           <button
             type="button"
             onClick={addRecord}
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-amber-300 px-4 text-xs font-black uppercase tracking-[0.12em] text-zinc-950 transition hover:bg-amber-200"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-amber-300 px-4 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-950 transition hover:bg-amber-200"
           >
             <Plus size={16} />
             Kayıt ekle
@@ -262,13 +262,13 @@ export function MillionaireShowcaseManager({
       <section className="rounded-xl border border-white/10 bg-[#080d13]/95 p-5 md:p-6">
         <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-600">Bağlantılar</p>
-            <h3 className="text-xl font-black text-white">Sosyal linkler</h3>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-600">Bağlantılar</p>
+            <h3 className="text-xl font-semibold text-white">Sosyal linkler</h3>
           </div>
           <button
             type="button"
             onClick={addSocial}
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-4 text-xs font-black uppercase tracking-[0.12em] text-white transition hover:bg-white/[0.07]"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-4 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:bg-white/[0.07]"
           >
             <Plus size={15} />
             Link ekle
@@ -319,7 +319,7 @@ function RecordEditor({
       <div className="mb-4 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className={cn(
-            'flex h-10 w-10 items-center justify-center rounded-lg border text-xs font-black',
+            'flex h-10 w-10 items-center justify-center rounded-lg border text-xs font-semibold',
             record.featured
               ? 'border-amber-300/30 bg-amber-300/15 text-amber-200'
               : 'border-white/10 bg-white/[0.04] text-zinc-500'
@@ -327,7 +327,7 @@ function RecordEditor({
             #{index + 1}
           </div>
           <div>
-            <p className="text-sm font-black text-white">Kazanç kartı</p>
+            <p className="text-sm font-semibold text-white">Kazanç kartı</p>
             <p className="text-xs font-semibold text-zinc-600">Görsel, poster ve video URL alanları</p>
           </div>
         </div>
@@ -351,7 +351,7 @@ function RecordEditor({
         <Field label="Video URL" value={record.videoUrl || ''} onChange={(value) => onUpdate({ videoUrl: value })} className="md:col-span-2" />
       </div>
 
-      <label className="mt-4 flex cursor-pointer items-center gap-3 rounded-lg border border-white/10 bg-white/[0.035] px-4 py-3 text-xs font-black uppercase tracking-[0.12em] text-zinc-300">
+      <label className="mt-4 flex cursor-pointer items-center gap-3 rounded-lg border border-white/10 bg-white/[0.035] px-4 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-300">
         <input
           type="checkbox"
           checked={Boolean(record.featured)}
@@ -378,8 +378,8 @@ function StatCard({ label, value, icon: Icon, tone }: { label: string; value: st
           <Icon size={18} />
         </div>
         <div className="min-w-0">
-          <p className="truncate text-[10px] font-black uppercase tracking-[0.14em] text-zinc-600">{label}</p>
-          <p className="truncate text-xl font-black text-white">{value}</p>
+          <p className="truncate text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-600">{label}</p>
+          <p className="truncate text-xl font-semibold text-white">{value}</p>
         </div>
       </div>
     </div>
@@ -406,7 +406,7 @@ function ToggleCard({
         className="mt-1 h-4 w-4 accent-amber-300"
       />
       <span>
-        <span className="block text-sm font-black text-white">{title}</span>
+        <span className="block text-sm font-semibold text-white">{title}</span>
         <span className="mt-1 block text-xs font-medium leading-5 text-zinc-500">{description}</span>
       </span>
     </label>
@@ -426,7 +426,7 @@ function Field({
 }) {
   return (
     <div className={className}>
-      <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.14em] text-zinc-600">{label}</label>
+      <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-600">{label}</label>
       <input
         type="text"
         value={value || ''}
@@ -450,7 +450,7 @@ function TextArea({
 }) {
   return (
     <div className={className}>
-      <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.14em] text-zinc-600">{label}</label>
+      <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-600">{label}</label>
       <textarea
         value={value || ''}
         onChange={(event) => onChange(event.target.value)}

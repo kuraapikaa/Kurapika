@@ -180,7 +180,7 @@ export function AdminGames({ initialTab }: AdminGamesProps = {}) {
                       <Icon size={18} />
                     </span>
                     <span className="min-w-0">
-                      <span className="block text-sm font-black">{tab.label}</span>
+                      <span className="block text-sm font-semibold">{tab.label}</span>
                       <span className="mt-0.5 block truncate text-[11px] font-semibold text-zinc-500">{tab.description}</span>
                     </span>
                   </button>
@@ -193,7 +193,7 @@ export function AdminGames({ initialTab }: AdminGamesProps = {}) {
             type="button"
             onClick={() => saveMutation.mutate(config)}
             disabled={saveMutation.isPending}
-            className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-lg bg-[#3b82f6] px-5 text-xs font-black uppercase tracking-widest text-zinc-950 transition hover:bg-[#5eead4] disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-lg bg-[#3b82f6] px-5 text-xs font-semibold uppercase tracking-widest text-zinc-950 transition hover:bg-[#5eead4] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {saveMutation.isPending ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
             Değişiklikleri Kaydet

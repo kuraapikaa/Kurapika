@@ -102,12 +102,12 @@ export function PlayerSportsBets({ clientId }: PlayerSportsBetsProps) {
                     <table className="w-full text-left text-sm">
                         <thead className="bg-slate-900 border-b border-white/10">
                             <tr>
-                                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Kupon Id</th>
-                                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Tarih</th>
-                                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-500 text-right">Tutar</th>
-                                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Oran</th>
-                                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Durum</th>
-                                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-500 text-right">Kazanç</th>
+                                <th className="p-4 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Kupon Id</th>
+                                <th className="p-4 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Tarih</th>
+                                <th className="p-4 text-[10px] font-semibold uppercase tracking-widest text-slate-500 text-right">Tutar</th>
+                                <th className="p-4 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Oran</th>
+                                <th className="p-4 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Durum</th>
+                                <th className="p-4 text-[10px] font-semibold uppercase tracking-widest text-slate-500 text-right">Kazanç</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
@@ -174,7 +174,7 @@ export function PlayerSportsBets({ clientId }: PlayerSportsBetsProps) {
                                                                         <p className="text-xs text-slate-500 mt-1">{formatDateTimeDisplay(sel.StartTimeLocal)} | <span className="text-amber-500/80">{sel.MatchInfo}</span></p>
                                                                     </div>
                                                                     <div className="text-left sm:text-right shrink-0">
-                                                                        <p className="text-xs text-slate-500 uppercase font-black">{sel.DisplayMarketName}</p>
+                                                                        <p className="text-xs text-slate-500 uppercase font-semibold">{sel.DisplayMarketName}</p>
                                                                         <div className="text-sm font-bold mt-1">
                                                                             <span className="text-blue-300">{sel.DisplaySelectionName}</span>
                                                                             <span className="text-slate-600 mx-2">•</span>

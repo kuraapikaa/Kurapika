@@ -19,11 +19,11 @@ export function PromoDetailModal({ promo, onClose }: PromoDetailModalProps) {
       onClick={onClose}
     >
       <div
-        className="relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-white/10 bg-slate-900 shadow-2xl"
+        className="relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-white/10 bg-slate-900 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-white/10 bg-slate-800/50 px-6 py-4">
-          <h2 className="truncate pr-4 text-lg font-black text-white">{promo.title}</h2>
+        <div className="flex items-center justify-between border-b border-white/10 bg-slate-800/50 px-3 py-2.5">
+          <h2 className="truncate pr-4 text-lg font-semibold text-white">{promo.title}</h2>
           <button
             type="button"
             onClick={onClose}

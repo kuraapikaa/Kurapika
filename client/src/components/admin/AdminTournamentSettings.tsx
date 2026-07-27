@@ -56,7 +56,7 @@ export function AdminTournamentSettings() {
   return (
     <div className="p-6">
       <div className="mb-8">
-        <h2 className="text-2xl font-black text-white flex items-center gap-3">
+        <h2 className="text-2xl font-semibold text-white flex items-center gap-3">
           <Trophy className="text-amber-500" /> Turnuva Yönetimi
         </h2>
         <p className="text-zinc-500 text-sm mt-1">Sitedeki turnuvaların ödül havuzlarını ve aktiflik durumlarını buradan yönetin.</p>
@@ -64,7 +64,7 @@ export function AdminTournamentSettings() {
 
       <form onSubmit={handleSave} className="space-y-6 max-w-2xl">
         {message && (
-          <div className={`p-4 rounded-2xl flex items-center gap-3 ${message.type === 'success' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-500 border border-rose-500/20'}`}>
+          <div className={`p-4 rounded-xl flex items-center gap-3 ${message.type === 'success' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-500 border border-rose-500/20'}`}>
             {message.type === 'success' ? <CheckCircle2 size={20} /> : <AlertCircle size={20} />}
             <span className="font-bold text-sm">{message.text}</span>
           </div>
@@ -72,13 +72,13 @@ export function AdminTournamentSettings() {
 
         <div className="grid grid-cols-1 gap-6">
           {/* Daily */}
-          <div className="p-6 rounded-[2rem] bg-zinc-900/40 border border-white/5 space-y-4">
-            <h3 className="text-lg font-black text-white flex items-center justify-between">
+          <div className="p-6 rounded-xl bg-zinc-900/40 border border-white/5 space-y-4">
+            <h3 className="text-lg font-semibold text-white flex items-center justify-between">
               Günlük Turnuva
-              <div className="px-3 py-1 rounded-full bg-amber-500/10 text-amber-500 text-[10px] uppercase font-black">24 Saat</div>
+              <div className="px-3 py-1 rounded-full bg-amber-500/10 text-amber-500 text-[10px] uppercase font-semibold">24 Saat</div>
             </h3>
             <div>
-              <label className="block text-[10px] font-black text-zinc-500 uppercase mb-2">Ödül Havuzu (₺)</label>
+              <label className="block text-[10px] font-semibold text-zinc-500 uppercase mb-2">Ödül Havuzu (₺)</label>
               <input 
                 type="text" 
                 value={settings.gunluk.prize}
@@ -90,13 +90,13 @@ export function AdminTournamentSettings() {
           </div>
 
           {/* Weekly */}
-          <div className="p-6 rounded-[2rem] bg-zinc-900/40 border border-white/5 space-y-4">
-            <h3 className="text-lg font-black text-white flex items-center justify-between">
+          <div className="p-6 rounded-xl bg-zinc-900/40 border border-white/5 space-y-4">
+            <h3 className="text-lg font-semibold text-white flex items-center justify-between">
               Haftalık Turnuva
-              <div className="px-3 py-1 rounded-full bg-blue-500/10 text-blue-500 text-[10px] uppercase font-black">7 Gün</div>
+              <div className="px-3 py-1 rounded-full bg-blue-500/10 text-blue-500 text-[10px] uppercase font-semibold">7 Gün</div>
             </h3>
             <div>
-              <label className="block text-[10px] font-black text-zinc-500 uppercase mb-2">Ödül Havuzu (₺)</label>
+              <label className="block text-[10px] font-semibold text-zinc-500 uppercase mb-2">Ödül Havuzu (₺)</label>
               <input 
                 type="text" 
                 value={settings.haftalik.prize}
@@ -108,13 +108,13 @@ export function AdminTournamentSettings() {
           </div>
 
           {/* Monthly */}
-          <div className="p-6 rounded-[2rem] bg-zinc-900/40 border border-white/5 space-y-4">
-            <h3 className="text-lg font-black text-white flex items-center justify-between">
+          <div className="p-6 rounded-xl bg-zinc-900/40 border border-white/5 space-y-4">
+            <h3 className="text-lg font-semibold text-white flex items-center justify-between">
               Aylık Turnuva
-              <div className="px-3 py-1 rounded-full bg-blue-500/10 text-blue-500 text-[10px] uppercase font-black">30 Gün</div>
+              <div className="px-3 py-1 rounded-full bg-blue-500/10 text-blue-500 text-[10px] uppercase font-semibold">30 Gün</div>
             </h3>
             <div>
-              <label className="block text-[10px] font-black text-zinc-500 uppercase mb-2">Ödül Havuzu (₺)</label>
+              <label className="block text-[10px] font-semibold text-zinc-500 uppercase mb-2">Ödül Havuzu (₺)</label>
               <input 
                 type="text" 
                 value={settings.aylik.prize}
@@ -128,7 +128,7 @@ export function AdminTournamentSettings() {
 
         <button 
           disabled={saving}
-          className="w-full md:w-auto px-12 py-4 bg-blue-600 hover:bg-blue-500 text-white font-black rounded-2xl flex items-center justify-center gap-3 transition-all disabled:opacity-50"
+          className="w-full md:w-auto px-12 py-4 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl flex items-center justify-center gap-3 transition-all disabled:opacity-50"
         >
           {saving ? <RefreshCw className="animate-spin" size={20} /> : <Save size={20} />}
           DEĞİŞİKLİKLERİ KAYDET

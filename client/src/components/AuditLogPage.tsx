@@ -32,7 +32,7 @@ export function AuditLogPage() {
       <ErrorState
         message={error instanceof Error ? error.message : 'Audit kaydı yüklenemedi'}
         onRetry={() => refetch()}
-        className="rounded-2xl"
+        className="rounded-xl"
       />
     );
   }
@@ -41,7 +41,7 @@ export function AuditLogPage() {
     <section className="space-y-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-black text-white flex items-center gap-2">
+          <h1 className="text-xl font-semibold text-white flex items-center gap-2">
             <FileText size={24} className="text-blue-500" />
             Audit kaydı
           </h1>

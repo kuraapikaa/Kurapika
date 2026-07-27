@@ -148,7 +148,7 @@ export function VIPSettings() {
               type="button"
               onClick={() => setActiveTab(id)}
               className={cn(
-                'flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-black uppercase tracking-wider transition',
+                'flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold uppercase tracking-wider transition',
                 activeTab === id ? 'bg-cyan-400 text-black' : 'text-zinc-500 hover:text-white'
               )}
             >
@@ -165,7 +165,7 @@ export function VIPSettings() {
             type="button"
             onClick={() => saveMutation.mutate()}
             disabled={saveMutation.isPending}
-            className="inline-flex h-10 items-center gap-2 rounded-lg bg-cyan-300 px-5 text-xs font-black uppercase tracking-widest text-zinc-950 transition hover:bg-cyan-200 disabled:opacity-60"
+            className="inline-flex h-10 items-center gap-2 rounded-lg bg-cyan-300 px-5 text-xs font-semibold uppercase tracking-widest text-zinc-950 transition hover:bg-cyan-200 disabled:opacity-60"
           >
             {saveMutation.isPending ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
             Kaydet
@@ -215,11 +215,11 @@ export function VIPSettings() {
                     <div className="flex items-center gap-3">
                       <span className="text-xl">{tier.badge}</span>
                       <div className="text-left">
-                        <p className="text-sm font-black text-white">{tier.label}</p>
+                        <p className="text-sm font-semibold text-white">{tier.label}</p>
                         <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-600">{tier.sublabel}</p>
-                        <p className="mt-1 text-[10px] font-black uppercase tracking-wider text-cyan-300/80">Min. yatırım: {tier.minDeposit || 'Belirtilmedi'}</p>
+                        <p className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-cyan-300/80">Min. yatırım: {tier.minDeposit || 'Belirtilmedi'}</p>
                       </div>
-                      {tier.popular && <span className="rounded-full bg-amber-300/20 px-2 py-0.5 text-[9px] font-black text-amber-300">Popüler</span>}
+                      {tier.popular && <span className="rounded-full bg-amber-300/20 px-2 py-0.5 text-[9px] font-semibold text-amber-300">Popüler</span>}
                     </div>
                     {expandedTier === tier.id ? <ChevronUp size={16} className="text-zinc-500" /> : <ChevronDown size={16} className="text-zinc-500" />}
                   </button>
@@ -235,7 +235,7 @@ export function VIPSettings() {
                         </div>
                       </div>
                       <div>
-                        <p className="mb-2 text-[10px] font-black uppercase tracking-wider text-zinc-600">Avantajlar</p>
+                        <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-zinc-600">Avantajlar</p>
                         <div className="space-y-2">
                           {tier.perks.map((perk, pi) => (
                             <div key={pi} className="flex gap-2">
@@ -260,7 +260,7 @@ export function VIPSettings() {
                           <button
                             type="button"
                             onClick={() => updateTier(tier.id, 'perks', [...tier.perks, ''])}
-                            className="flex h-9 items-center gap-2 rounded-lg border border-white/[0.06] bg-white/[0.03] px-3 text-xs font-black text-zinc-400 hover:text-white"
+                            className="flex h-9 items-center gap-2 rounded-lg border border-white/[0.06] bg-white/[0.03] px-3 text-xs font-semibold text-zinc-400 hover:text-white"
                           >
                             <Plus size={13} /> Avantaj ekle
                           </button>
@@ -314,7 +314,7 @@ export function VIPSettings() {
               <button
                 type="button"
                 onClick={() => setConfig({ ...config, faq: [...config.faq, { id: `f${Date.now()}`, q: '', a: '' }] })}
-                className="flex h-9 items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 text-xs font-black text-zinc-400 hover:text-white"
+                className="flex h-9 items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 text-xs font-semibold text-zinc-400 hover:text-white"
               >
                 <Plus size={13} /> Soru ekle
               </button>
@@ -337,7 +337,7 @@ export function VIPSettings() {
           {formsQuery.isLoading ? (
             <div className="flex h-40 items-center justify-center"><Loader2 className="animate-spin text-white/40" size={24} /></div>
           ) : vipApps.length === 0 ? (
-            <div className="flex h-40 flex-col items-center justify-center gap-2 rounded-2xl border border-white/[0.06] bg-white/[0.02]">
+            <div className="flex h-40 flex-col items-center justify-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02]">
               <Crown className="text-zinc-700" size={28} />
               <p className="text-sm font-bold text-zinc-600">Henüz VIP başvurusu yok</p>
             </div>
@@ -347,14 +347,14 @@ export function VIPSettings() {
                 <thead>
                   <tr className="border-b border-white/[0.07] bg-black/30">
                     {['Kullanıcı', 'Ad Soyad', 'E-posta', 'Telefon', 'Tarih', 'Durum', ''].map((h) => (
-                      <th key={h} className="px-3 py-2.5 text-left font-black uppercase tracking-wider text-zinc-600">{h}</th>
+                      <th key={h} className="px-3 py-2.5 text-left font-semibold uppercase tracking-wider text-zinc-600">{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {vipApps.map((app) => (
                     <tr key={app.id} className="border-b border-white/[0.05] hover:bg-white/[0.02]">
-                      <td className="px-3 py-2.5 font-black text-white">{app.username}</td>
+                      <td className="px-3 py-2.5 font-semibold text-white">{app.username}</td>
                       <td className="px-3 py-2.5 text-zinc-400">{app.name || '—'}</td>
                       <td className="px-3 py-2.5 text-zinc-400">{app.email || '—'}</td>
                       <td className="px-3 py-2.5 text-zinc-400">{app.phone || '—'}</td>
@@ -398,7 +398,7 @@ export function VIPSettings() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="rounded-xl border border-white/[0.07] bg-[#080d13]/90 p-4 md:p-5">
-      <p className="mb-4 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">{title}</p>
+      <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-500">{title}</p>
       {children}
     </div>
   );
@@ -423,7 +423,7 @@ function Field({ label, value, onChange, className, multiline }: { label: string
   const base = 'w-full rounded-lg border border-white/[0.07] bg-black/30 px-3 text-xs font-bold text-white outline-none placeholder:text-zinc-700 focus:border-cyan-400/40';
   return (
     <div className={cn('space-y-1', className)}>
-      <p className="text-[9px] font-black uppercase tracking-wider text-zinc-600">{label}</p>
+      <p className="text-[9px] font-semibold uppercase tracking-wider text-zinc-600">{label}</p>
       {multiline ? (
         <textarea value={value} onChange={(e) => onChange(e.target.value)} rows={3} className={cn(base, 'py-2 resize-none')} />
       ) : (

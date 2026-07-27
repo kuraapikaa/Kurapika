@@ -27,7 +27,7 @@ function StatCard({ label, value, sub, color }: { label: string; value: number; 
   return (
     <div className={cn('rounded-xl border p-4 space-y-1', color)}>
       <p className="text-xs font-bold uppercase tracking-widest opacity-60">{label}</p>
-      <p className="text-3xl font-black text-white">{value}</p>
+      <p className="text-3xl font-semibold text-white">{value}</p>
       {sub && <p className="text-xs opacity-50">{sub}</p>}
     </div>
   );
@@ -42,9 +42,9 @@ function NoteModal({
   const [note, setNote] = useState(currentNote);
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-      <div className="w-full max-w-md bg-[#0e1421] border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
+      <div className="w-full max-w-md bg-[#0e1421] border border-white/10 rounded-xl overflow-hidden shadow-2xl">
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
-          <h3 className="text-sm font-black text-white flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-white flex items-center gap-2">
             <StickyNote size={16} className="text-amber-400" /> Admin Notu
           </h3>
           <button onClick={onClose} className="text-zinc-500 hover:text-white transition-colors">
@@ -66,7 +66,7 @@ function NoteModal({
             <button
               onClick={() => onSave(note)}
               disabled={isSaving}
-              className="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-black text-sm font-black flex items-center gap-2 transition-colors disabled:opacity-50"
+              className="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-black text-sm font-semibold flex items-center gap-2 transition-colors disabled:opacity-50"
             >
               {isSaving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
               Kaydet
@@ -244,7 +244,7 @@ export function AdminForms() {
         >
           <Phone size={15} /> Beni Ara
           {callStats.pending > 0 && (
-            <span className={cn('rounded-full text-xs font-black px-1.5 py-0.5 min-w-[20px] text-center', activeTab === 'call' ? 'bg-black/30 text-black' : 'bg-sky-500/20 text-sky-400')}>
+            <span className={cn('rounded-full text-xs font-semibold px-1.5 py-0.5 min-w-[20px] text-center', activeTab === 'call' ? 'bg-black/30 text-black' : 'bg-sky-500/20 text-sky-400')}>
               {callStats.pending}
             </span>
           )}
@@ -255,7 +255,7 @@ export function AdminForms() {
         >
           <Handshake size={15} /> Ortaklık
           {partnershipStats.pending > 0 && (
-            <span className={cn('rounded-full text-xs font-black px-1.5 py-0.5 min-w-[20px] text-center', activeTab === 'partnership' ? 'bg-black/20 text-white' : 'bg-blue-500/20 text-blue-400')}>
+            <span className={cn('rounded-full text-xs font-semibold px-1.5 py-0.5 min-w-[20px] text-center', activeTab === 'partnership' ? 'bg-black/20 text-white' : 'bg-blue-500/20 text-blue-400')}>
               {partnershipStats.pending}
             </span>
           )}
@@ -326,11 +326,11 @@ export function AdminForms() {
             </button>
           </div>
 
-          <div className="bg-zinc-900/50 border border-white/5 rounded-2xl overflow-hidden">
+          <div className="bg-zinc-900/50 border border-white/5 rounded-xl overflow-hidden">
             {activeTab === 'call' && (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm text-zinc-400">
-                  <thead className="bg-black/20 text-xs uppercase font-black text-zinc-500">
+                  <thead className="bg-black/20 text-xs uppercase font-semibold text-zinc-500">
                     <tr>
                       <th className="px-5 py-4">Tarih</th>
                       <th className="px-5 py-4">Kullanıcı</th>
@@ -409,7 +409,7 @@ export function AdminForms() {
             {activeTab === 'partnership' && (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm text-zinc-400">
-                  <thead className="bg-black/20 text-xs uppercase font-black text-zinc-500">
+                  <thead className="bg-black/20 text-xs uppercase font-semibold text-zinc-500">
                     <tr>
                       <th className="px-5 py-4">Tarih</th>
                       <th className="px-5 py-4">Tür & İletişim</th>
@@ -496,12 +496,12 @@ export function AdminForms() {
 
       {/* Settings tab */}
       {activeTab === 'settings' && (
-        <div className="bg-zinc-900/50 border border-white/5 rounded-2xl p-6 space-y-8">
+        <div className="bg-zinc-900/50 border border-white/5 rounded-xl p-6 space-y-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Beni Ara settings */}
             <div className="space-y-5">
               <div className="flex items-center justify-between pb-3 border-b border-white/[0.06]">
-                <h3 className="text-base font-black text-white flex items-center gap-2">
+                <h3 className="text-base font-semibold text-white flex items-center gap-2">
                   <Phone size={17} className="text-sky-400" /> Beni Ara Formu
                 </h3>
                 <label className="flex items-center gap-2 cursor-pointer select-none">
@@ -522,7 +522,7 @@ export function AdminForms() {
               </div>
 
               <div className="space-y-3">
-                <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
                   <Type size={11} /> Form İçeriği
                 </p>
                 <div>
@@ -566,7 +566,7 @@ export function AdminForms() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block">
+                <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest block">
                   Aranma Sebepleri Seçenekleri
                 </label>
                 {callReasons.map((reason, idx) => (
@@ -601,7 +601,7 @@ export function AdminForms() {
             {/* Ortaklık settings */}
             <div className="space-y-5">
               <div className="flex items-center justify-between pb-3 border-b border-white/[0.06]">
-                <h3 className="text-base font-black text-white flex items-center gap-2">
+                <h3 className="text-base font-semibold text-white flex items-center gap-2">
                   <Handshake size={17} className="text-blue-400" /> Ortaklık Formu
                 </h3>
                 <label className="flex items-center gap-2 cursor-pointer select-none">
@@ -622,7 +622,7 @@ export function AdminForms() {
               </div>
 
               <div className="space-y-3">
-                <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
                   <Type size={11} /> Form İçeriği
                 </p>
                 <div>
@@ -666,7 +666,7 @@ export function AdminForms() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block">
+                <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest block">
                   Başvuru Türleri
                 </label>
                 {partnershipTypes.map((type, idx) => (
@@ -703,7 +703,7 @@ export function AdminForms() {
             <button
               onClick={handleSaveSettings}
               disabled={updateSettingsMutation.isPending}
-              className="bg-emerald-500 hover:bg-emerald-400 text-black px-6 py-2.5 rounded-xl text-sm font-black flex items-center gap-2 transition-all disabled:opacity-50"
+              className="bg-emerald-500 hover:bg-emerald-400 text-black px-6 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all disabled:opacity-50"
             >
               {updateSettingsMutation.isPending ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
               Ayarları Kaydet
@@ -725,14 +725,14 @@ export function AdminForms() {
       {/* Delete confirm */}
       {confirmDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="w-full max-w-sm bg-[#0e1421] border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
+          <div className="w-full max-w-sm bg-[#0e1421] border border-white/10 rounded-xl overflow-hidden shadow-2xl">
             <div className="p-6 space-y-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-rose-500/10 flex items-center justify-center">
                   <AlertTriangle size={18} className="text-rose-400" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-black text-white">Kaydı Sil</h3>
+                  <h3 className="text-sm font-semibold text-white">Kaydı Sil</h3>
                   <p className="text-xs text-zinc-500 mt-0.5">Bu işlem geri alınamaz.</p>
                 </div>
               </div>
@@ -746,7 +746,7 @@ export function AdminForms() {
                 <button
                   onClick={() => deleteMutation.mutate(confirmDelete)}
                   disabled={deleteMutation.isPending}
-                  className="flex-1 py-2 rounded-lg bg-rose-500 hover:bg-rose-400 text-white text-sm font-black flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+                  className="flex-1 py-2 rounded-lg bg-rose-500 hover:bg-rose-400 text-white text-sm font-semibold flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
                 >
                   {deleteMutation.isPending ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
                   Sil

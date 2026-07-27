@@ -267,8 +267,8 @@ export function AutoWithdrawPanel() {
 
       {/* Table card - hidden when analysis is open */}
       {!modalData && (
-        <div className="overflow-hidden rounded-2xl border border-white/5 bg-slate-900/40 shadow-xl transition-shadow hover:shadow-2xl hover:shadow-blue-500/5">
-          <div className="flex flex-col border-b border-white/5 bg-white/5 sm:flex-row sm:items-center sm:justify-between px-6 py-4 gap-4">
+        <div className="overflow-hidden rounded-xl border border-white/5 bg-slate-900/40 shadow-xl transition-shadow hover:shadow-2xl hover:shadow-blue-500/5">
+          <div className="flex flex-col border-b border-white/5 bg-white/5 sm:flex-row sm:items-center sm:justify-between px-3 py-2.5 gap-4">
             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-400">
               <Wallet size={16} className="text-blue-400" />
               Çekim talepleri listesi
@@ -328,7 +328,7 @@ export function AutoWithdrawPanel() {
               </div>
             </div>
           ) : withdrawalRequestsQuery.error ? (
-            <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-rose-500/20 bg-rose-500/5 p-12">
+            <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-rose-500/20 bg-rose-500/5 p-12">
               <AlertCircle size={48} className="text-rose-400/80" />
               <h3 className="font-bold text-rose-300">Liste yüklenemedi</h3>
               <p className="text-center text-sm text-rose-300/80">{(withdrawalRequestsQuery.error as Error).message}</p>
@@ -342,7 +342,7 @@ export function AutoWithdrawPanel() {
             </div>
           ) : filteredRequests.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-4 py-20">
-              <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-slate-800/50 text-slate-500">
+              <div className="flex h-20 w-20 items-center justify-center rounded-xl bg-slate-800/50 text-slate-500">
                 <Inbox size={40} />
               </div>
               <p className="font-bold text-slate-400">Aramanıza veya filtrenize uygun talep bulunamadı.</p>
@@ -397,7 +397,7 @@ export function AutoWithdrawPanel() {
                             type="button"
                             onClick={() => handleCheck(row.ClientId, row.RequestTimeLocal ?? row.RequestTime ?? undefined)}
                             disabled={loadingClientId !== null}
-                            className="group/btn relative overflow-hidden rounded-xl border border-emerald-500/40 bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-2.5 text-[11px] font-black uppercase tracking-wider text-white shadow-lg shadow-emerald-500/20 transition-all duration-300 hover:from-emerald-500 hover:to-teal-500 hover:scale-105 hover:shadow-emerald-500/35 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
+                            className="group/btn relative overflow-hidden rounded-xl border border-emerald-500/40 bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-white shadow-lg shadow-emerald-500/20 transition-all duration-300 hover:from-emerald-500 hover:to-teal-500 hover:scale-105 hover:shadow-emerald-500/35 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
                           >
                             <span className="relative z-10">KONTROL ET</span>
                           </button>
@@ -410,7 +410,7 @@ export function AutoWithdrawPanel() {
 
               {/* Sayfalama */}
               {totalPages > 1 && (
-                <div className="flex items-center justify-between border-t border-white/5 bg-slate-900/50 px-6 py-4">
+                <div className="flex items-center justify-between border-t border-white/5 bg-slate-900/50 px-3 py-2.5">
                   <span className="text-xs font-medium text-slate-400">
                     Sayfa {currentPage} / {totalPages}
                   </span>

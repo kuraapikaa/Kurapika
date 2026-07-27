@@ -35,21 +35,21 @@ export function BetReportsSection({
       <header className="flex flex-wrap items-center justify-between gap-8 px-1">
         <div className="flex items-center gap-4">
           <div className="relative group">
-            <div className="absolute -inset-1 rounded-2xl bg-cyan-500/20 blur opacity-75 animate-pulse" />
-            <div className="relative rounded-2xl bg-black border border-cyan-500/20 p-3.5 text-cyan-400 shadow-2xl">
+            <div className="absolute -inset-1 rounded-xl bg-cyan-500/20 blur opacity-75 animate-pulse" />
+            <div className="relative rounded-xl bg-black border border-cyan-500/20 p-3.5 text-cyan-400 shadow-2xl">
               <BarChart3 size={24} />
             </div>
           </div>
           <div>
-            <h2 className="text-2xl font-black text-white tracking-tighter uppercase antialiased">Bahis Raporları</h2>
+            <h2 className="text-2xl font-semibold text-white tracking-tighter uppercase antialiased">Bahis Raporları</h2>
             <div className="flex items-center gap-2 mt-0.5">
               <div className="h-1.5 w-1.5 rounded-full bg-cyan-500 animate-pulse" />
-              <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em]">Merkezi Bahis Analizi & Performans İzleme</p>
+              <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.2em]">Merkezi Bahis Analizi & Performans İzleme</p>
             </div>
           </div>
         </div>
 
-        <div className="inline-flex p-1.5 rounded-2xl bg-black/40 backdrop-blur-3xl border border-white/[0.05] relative gap-1">
+        <div className="inline-flex p-1.5 rounded-xl bg-black/40 backdrop-blur-3xl border border-white/[0.05] relative gap-1">
           {[
             { id: 'summary' as const, label: 'ÖZET ANALİZ', icon: LayoutGrid },
             { id: 'list' as const, label: 'DETAYLI LİSTE', icon: List },
@@ -58,7 +58,7 @@ export function BetReportsSection({
               key={id}
               onClick={() => setSubTab(id)}
               className={cn(
-                "relative group flex items-center gap-2 px-5 py-2.5 text-[10px] font-black uppercase tracking-[0.1em] transition-all duration-500 rounded-xl overflow-hidden",
+                "relative group flex items-center gap-2 px-5 py-2.5 text-[10px] font-semibold uppercase tracking-[0.1em] transition-all duration-500 rounded-xl overflow-hidden",
                 subTab === id ? "text-white" : "text-zinc-500 hover:text-zinc-300"
               )}
             >

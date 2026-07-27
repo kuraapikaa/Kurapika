@@ -244,7 +244,7 @@ export function AutoBonusPanel({ variant = 'admin', prefilledLogin }: AutoBonusP
 
             {/* Search Section */}
             {!isPlayerPanel && (
-                <section className="bg-zinc-900/50 border border-white/5 rounded-2xl p-6 backdrop-blur-xl mb-6">
+                <section className="bg-zinc-900/50 border border-white/5 rounded-xl p-6 backdrop-blur-xl mb-6">
                     <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4">
                         <div className="flex-1 relative">
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={20} />
@@ -293,7 +293,7 @@ export function AutoBonusPanel({ variant = 'admin', prefilledLogin }: AutoBonusP
                         {!isPlayerPanel && (
                             <div className="lg:col-span-7 space-y-6">
                                 {/* Profile Overview */}
-                                <div className="bg-zinc-900/50 border border-white/5 rounded-2xl p-6 backdrop-blur-xl">
+                                <div className="bg-zinc-900/50 border border-white/5 rounded-xl p-6 backdrop-blur-xl">
                                     <div className="flex items-center justify-between mb-6">
                                         <div className="flex items-center gap-4">
                                             <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-blue-500 to-blue-500 flex items-center justify-center text-white font-bold text-xl shadow-lg">
@@ -305,7 +305,7 @@ export function AutoBonusPanel({ variant = 'admin', prefilledLogin }: AutoBonusP
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <div className="text-2xl font-black text-emerald-400">
+                                            <div className="text-2xl font-semibold text-emerald-400">
                                                 {account?.balance?.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' })}
                                             </div>
                                             <p className="text-zinc-500 text-xs font-medium">Güncel Bakiye</p>
@@ -351,7 +351,7 @@ export function AutoBonusPanel({ variant = 'admin', prefilledLogin }: AutoBonusP
                                 {/* Checks */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {/* Risk Analizi */}
-                                    <div className="bg-zinc-900/50 border border-white/5 rounded-2xl p-5 backdrop-blur-xl">
+                                    <div className="bg-zinc-900/50 border border-white/5 rounded-xl p-5 backdrop-blur-xl">
                                         <h4 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
                                             <ShieldCheck className="text-rose-400" size={16} />
                                             Risk Analizi
@@ -373,7 +373,7 @@ export function AutoBonusPanel({ variant = 'admin', prefilledLogin }: AutoBonusP
                                     </div>
 
                                     {/* Bonus Kontrolleri */}
-                                    <div className="bg-zinc-900/50 border border-white/5 rounded-2xl p-5 backdrop-blur-xl">
+                                    <div className="bg-zinc-900/50 border border-white/5 rounded-xl p-5 backdrop-blur-xl">
                                         <h4 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
                                             <CheckCircle2 className="text-blue-400" size={16} />
                                             Bonus & Çekim Koşulları
@@ -402,7 +402,7 @@ export function AutoBonusPanel({ variant = 'admin', prefilledLogin }: AutoBonusP
                                 </div>
 
                                 {/* Transactions Highlight */}
-                                <div className="bg-zinc-900/50 border border-white/5 rounded-2xl p-5 backdrop-blur-xl">
+                                <div className="bg-zinc-900/50 border border-white/5 rounded-xl p-5 backdrop-blur-xl">
                                     <h4 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
                                         <History className="text-zinc-400" size={16} />
                                         Son İşlemler
@@ -441,7 +441,7 @@ export function AutoBonusPanel({ variant = 'admin', prefilledLogin }: AutoBonusP
 
                         {/* Right Column: Bonus Selection & Action */}
                         <div className={isPlayerPanel ? "w-full max-w-[600px] space-y-6" : "lg:col-span-5 space-y-6"}>
-                            <div className="bg-zinc-900/50 border border-white/5 rounded-2xl p-6 backdrop-blur-xl sticky top-6">
+                            <div className="bg-zinc-900/50 border border-white/5 rounded-xl p-6 backdrop-blur-xl sticky top-6">
                                 <h3 className="font-bold text-white mb-4 flex items-center gap-2">
                                     <Gift className="text-emerald-400" size={18} />
                                     {isPlayerPanel ? 'Bonus Listesinden Seçin' : 'Tanımlanacak Bonusu Seçin'}
@@ -572,7 +572,7 @@ export function AutoBonusPanel({ variant = 'admin', prefilledLogin }: AutoBonusP
                                     )}
                                     <Button
                                         variant="primary"
-                                        className="w-full py-4 text-base font-black"
+                                        className="w-full py-4 text-base font-semibold"
                                         disabled={isCharging || !account?.id || selectedBonusId == null}
                                         onClick={handleBonusRequest}
                                     >
@@ -608,7 +608,7 @@ export function AutoBonusPanel({ variant = 'admin', prefilledLogin }: AutoBonusP
                     animate={{ opacity: 1 }}
                     className="flex flex-col items-center justify-center py-24 text-center"
                 >
-                    <div className="w-20 h-20 rounded-3xl bg-zinc-900 border border-white/5 flex items-center justify-center mb-6 shadow-2xl">
+                    <div className="w-20 h-20 rounded-xl bg-zinc-900 border border-white/5 flex items-center justify-center mb-6 shadow-2xl">
                         <User className="text-zinc-700" size={40} />
                     </div>
                     <h3 className="text-lg font-bold text-zinc-300">Oyuncu Sorgulayın</h3>

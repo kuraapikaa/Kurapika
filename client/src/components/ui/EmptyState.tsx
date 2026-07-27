@@ -22,7 +22,7 @@ export function EmptyState({ title, description, icon, className }: EmptyStatePr
       role="status"
       aria-label={title}
     >
-      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-700/30 text-slate-500">
+      <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-slate-700/30 text-slate-500">
         {icon ?? <Inbox size={28} />}
       </div>
       <p className="text-sm font-medium text-slate-300">{title}</p>

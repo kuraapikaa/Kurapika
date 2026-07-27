@@ -42,7 +42,7 @@ export function LiveAlerts() {
                         </div>
                     </div>
                     <div>
-                        <h3 className="text-sm font-black uppercase tracking-[0.2em] text-white">Sistem Uyarıları</h3>
+                        <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-white">Sistem Uyarıları</h3>
                         <div className="flex items-center gap-2 mt-0.5">
                             <span className="flex h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse" />
                             <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Anlık Takip</p>
@@ -50,7 +50,7 @@ export function LiveAlerts() {
                     </div>
                 </div>
                 <div className="px-2 py-1 rounded-full bg-white/5 border border-white/10">
-                    <span className="text-[9px] font-black text-zinc-500 uppercase tracking-tighter">Sistem Durumu: KRİTİK</span>
+                    <span className="text-[9px] font-semibold text-zinc-500 uppercase tracking-tighter">Sistem Durumu: KRİTİK</span>
                 </div>
             </div>
 
@@ -89,7 +89,7 @@ export function LiveAlerts() {
                                             {alert.severity === 'high' ? <ShieldAlert size={14} /> : <AlertTriangle size={14} />}
                                         </div>
                                         <div className="flex flex-col">
-                                            <span className="text-[11px] font-black text-white uppercase tracking-wider">{alert.clientLogin || 'Bilinmiyor'}</span>
+                                            <span className="text-[11px] font-semibold text-white uppercase tracking-wider">{alert.clientLogin || 'Bilinmiyor'}</span>
                                             <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-tighter">{alert.type?.replace(/_/g, ' ')}</span>
                                         </div>
                                     </div>
@@ -108,10 +108,10 @@ export function LiveAlerts() {
                                 </p>
 
                                 <div className="mt-3 pt-3 border-t border-white/[0.05] flex items-center justify-between">
-                                    <span className="text-[8px] font-black text-zinc-500 uppercase tracking-[0.1em]">{alert.date}</span>
+                                    <span className="text-[8px] font-semibold text-zinc-500 uppercase tracking-[0.1em]">{alert.date}</span>
                                     <div className="flex items-center gap-1.5">
                                         <div className={cn("w-1.5 h-1.5 rounded-full", alert.severity === 'high' ? "bg-rose-500" : "bg-amber-500")} />
-                                        <span className="text-[8px] font-black uppercase text-zinc-400">{alert.severity === 'high' ? 'TEHLİKELİ' : 'DİKKAT'}</span>
+                                        <span className="text-[8px] font-semibold uppercase text-zinc-400">{alert.severity === 'high' ? 'TEHLİKELİ' : 'DİKKAT'}</span>
                                     </div>
                                 </div>
                             </motion.div>
