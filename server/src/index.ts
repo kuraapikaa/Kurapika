@@ -163,6 +163,15 @@ if (isProduction) {
     '.svg': 'image/svg+xml',
     '.woff2': 'font/woff2',
   };
+  // Vite çıktısında /assets/* dosya adları içerik hash'i taşır (index-a1b2c3.js);
+  // içerik değişince ad da değişir, bu yüzden uzun süre önbelleğe alınabilirler.
+  // HTML ve hash'siz dosyalar her istekte doğrulanmalı.
+  const cacheControlFor = (resolvedPath: string, ext: string): string => {
+    if (ext === '.html') return 'no-cache, must-revalidate';
+    const hashli = /[.-][A-Za-z0-9_-]{8,}\.[a-z0-9]+$/.test(resolvedPath);
+    return hashli ? 'public, max-age=31536000, immutable' : 'public, max-age=3600';
+  };
+
   app.get('*', async (request, reply) => {
     const pathname = request.url?.split('?')[0] ?? '/';
     const safePath = join(clientDist, pathname === '/' ? 'index.html' : pathname.replace(/^\//, ''));
@@ -173,9 +182,15 @@ if (isProduction) {
     if (existsSync(resolved) && statSync(resolved).isFile()) {
       const ext = resolved.slice(resolved.lastIndexOf('.'));
       if (mime[ext]) reply.type(mime[ext]);
+      reply.header('Cache-Control', cacheControlFor(resolved, ext));
       return reply.send(createReadStream(resolved));
     }
     const indexHtml = join(clientDist, 'index.html');
+    // SPA kabuğu asla önbelleğe alınmamalı: güvenlik başlıkları (CSP,
+    // frame-ancestors) yanıtla birlikte taşındığı için önbellekten servis
+    // edilen eski bir kopya, sunucu güncellense bile eski politikayı uygular.
+    // Ayrıca yeni deploy'lar kullanıcılara ulaşmaz.
+    reply.header('Cache-Control', 'no-cache, must-revalidate');
     return reply.type('text/html').send(createReadStream(indexHtml));
   });
 } else {
