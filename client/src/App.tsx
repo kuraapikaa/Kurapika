@@ -34,8 +34,7 @@ import {
   Palette,
   Crown,
   Handshake,
-  type LucideIcon
-} from 'lucide-react';
+  type LucideIcon, ChevronLeft, ChevronRight, Search} from 'lucide-react';
 import { cn } from './lib/utils';
 import { LoadingState } from './components/ui/LoadingState';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -362,6 +361,12 @@ export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  // 28 menü öğesi 6 grupta; sabit 224px her ekranda yer kaplıyordu ve daraltma
+  // yoktu. Rail modu tercihi oturumlar arası korunur.
+  const [navCollapsed, setNavCollapsed] = useState(() => {
+    try { return localStorage.getItem('admin_nav_collapsed') === '1'; } catch { return false; }
+  });
+  const [navQuery, setNavQuery] = useState('');
   const [isMasterAuth, setIsMasterAuth] = useState<boolean | null>(null);
 
   // Tenant/Branding Config
@@ -554,6 +559,28 @@ export default function App() {
       items: group.items.filter((item) => canAccessTab(currentUser, item.id)),
     }))
     .filter((group) => group.items.length > 0), [currentUser]);
+
+  // Hızlı menü araması. 28 öğe taramayı yavaşlatıyordu; Türkçe karakterler
+  // için locale-aware karşılaştırma (İ/ı sorunu için toLocaleLowerCase).
+  const filteredNavGroups = useMemo(() => {
+    const q = navQuery.trim().toLocaleLowerCase('tr-TR');
+    if (!q) return visibleNavGroups;
+    return visibleNavGroups
+      .map((group) => ({
+        ...group,
+        items: group.items.filter((item) => item.label.toLocaleLowerCase('tr-TR').includes(q)),
+      }))
+      .filter((group) => group.items.length > 0);
+  }, [visibleNavGroups, navQuery]);
+
+  const toggleNavCollapsed = useCallback(() => {
+    setNavCollapsed((prev) => {
+      const next = !prev;
+      try { localStorage.setItem('admin_nav_collapsed', next ? '1' : '0'); } catch { /* yoksay */ }
+      if (next) setNavQuery('');
+      return next;
+    });
+  }, []);
   const hasActiveAccess = canAccessTab(currentUser, activeTab);
 
   return (
@@ -669,8 +696,9 @@ export default function App() {
           />
 
           <aside
+            style={{ ['--nav-w' as any]: navCollapsed ? '64px' : '224px' }}
             className={cn(
-              "premium-sidebar fixed left-0 top-0 z-50 flex h-full w-[228px] flex-col transition-transform duration-200 ease-out md:w-[224px] md:translate-x-0",
+              "premium-sidebar fixed left-0 top-0 z-50 flex h-full w-[228px] flex-col transition-[transform,width] duration-200 ease-out md:w-[var(--nav-w)] md:translate-x-0",
               sidebarOpen ? "translate-x-0" : "-translate-x-full"
             )}
           >
@@ -680,7 +708,7 @@ export default function App() {
                   <i className="rounded-[2px] bg-blue-300" /><i className="rounded-[2px] bg-blue-300" />
                   <i className="rounded-[2px] bg-blue-300" /><i className="rounded-[2px] bg-blue-300" />
                 </span>
-                <span className="min-w-0 leading-tight">
+                <span className={cn("min-w-0 leading-tight", navCollapsed && "md:hidden")}>
                   <strong className="block truncate text-[13px] font-bold tracking-[-0.02em] text-white">Bugs Software</strong>
                   <small className="mt-0.5 block truncate text-[8px] font-semibold uppercase tracking-[0.18em] text-slate-600">Control Suite</small>
                 </span>
@@ -693,12 +721,40 @@ export default function App() {
               >
                 <X size={18} />
               </button>
+              <button
+                type="button"
+                onClick={toggleNavCollapsed}
+                aria-expanded={!navCollapsed}
+                aria-label={navCollapsed ? 'Menüyü genişlet' : 'Menüyü daralt'}
+                title={navCollapsed ? 'Menüyü genişlet' : 'Menüyü daralt'}
+                className="hidden md:flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-zinc-500 transition-colors hover:bg-white/[0.06] hover:text-white"
+              >
+                {navCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+              </button>
             </div>
+            {!navCollapsed && (
+              <div className="shrink-0 px-2 pt-2.5">
+                <div className="relative">
+                  <Search size={13} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-600" />
+                  <input
+                    type="text"
+                    value={navQuery}
+                    onChange={(e) => setNavQuery(e.target.value)}
+                    placeholder="Menüde ara"
+                    aria-label="Menüde ara"
+                    className="h-8 w-full rounded-lg border border-white/[0.07] bg-black/25 pl-7 pr-2 text-[11px] font-medium text-white outline-none transition placeholder:text-slate-600 focus:border-blue-300/40"
+                  />
+                </div>
+              </div>
+            )}
             <nav className="flex-1 overflow-y-auto px-2 py-2.5" aria-label="Menü">
               <div ref={sidebarNavRef} className="space-y-3.5" onKeyDown={handleSidebarKeyDown} role="menu">
-                {visibleNavGroups.map((group) => (
+                {filteredNavGroups.length === 0 && (
+                  <p className="px-2 py-4 text-center text-[11px] text-slate-600">Eşleşen menü yok.</p>
+                )}
+                {filteredNavGroups.map((group) => (
                   <section key={group.label} className="sidebar-nav-group">
-                    <p className="sidebar-section-label">{group.label}</p>
+                    <p className={cn("sidebar-section-label", navCollapsed && "md:hidden")}>{group.label}</p>
                     <div className="space-y-0.5">
                       {group.items.map((item) => {
                         const Icon = item.icon;
@@ -707,7 +763,8 @@ export default function App() {
                             key={item.path}
                             to={item.path}
                             end={item.end}
-                            className={({ isActive }) => tabStyle(isActive)}
+                            title={navCollapsed ? item.label : undefined}
+                            className={({ isActive }) => cn(tabStyle(isActive), navCollapsed && 'md:justify-center md:px-0')}
                           >
                             {({ isActive }) => (
                               <>
@@ -715,8 +772,8 @@ export default function App() {
                                 <span className="sidebar-link-icon relative z-10">
                                   <Icon size={14} strokeWidth={1.9} />
                                 </span>
-                                <span className="relative z-10 min-w-0 flex-1 truncate">{item.label}</span>
-                                {isActive && <span className="relative z-10 h-1.5 w-1.5 rounded-full bg-blue-300" />}
+                                <span className={cn('relative z-10 min-w-0 flex-1 truncate', navCollapsed && 'md:hidden')}>{item.label}</span>
+                                {isActive && <span className={cn('relative z-10 h-1.5 w-1.5 rounded-full bg-blue-300', navCollapsed && 'md:hidden')} />}
                               </>
                             )}
                           </NavLink>
@@ -729,7 +786,7 @@ export default function App() {
 
             </nav>
             <div className="border-t border-white/[0.06] p-2">
-              <div className="sidebar-system-card">
+              <div className={cn("sidebar-system-card", navCollapsed && "md:hidden")}>
                 <div className="flex items-center gap-2">
                   <span className="relative flex h-2 w-2">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-300 opacity-50" />
@@ -739,14 +796,25 @@ export default function App() {
                 </div>
                 <span className="text-[10px] text-slate-600">Yerel yönetici oturumu</span>
               </div>
-              <button onClick={handleLogout} className="flex h-9 w-full items-center gap-2 rounded-lg px-2.5 text-[11px] font-semibold text-slate-500 transition hover:bg-rose-400/[0.06] hover:text-rose-300">
-                <LogOut size={18} /> Güvenli çıkış
+              <button
+                onClick={handleLogout}
+                title={navCollapsed ? 'Güvenli çıkış' : undefined}
+                className={cn(
+                  'flex h-9 w-full items-center gap-2 rounded-lg px-2.5 text-[11px] font-semibold text-slate-500 transition hover:bg-rose-400/[0.06] hover:text-rose-300',
+                  navCollapsed && 'md:justify-center md:px-0'
+                )}
+              >
+                <LogOut size={18} />
+                <span className={cn(navCollapsed && 'md:hidden')}>Güvenli çıkış</span>
               </button>
             </div>
           </aside>
 
           {/* Content */}
-          <div className="relative z-10 flex min-w-0 flex-1 flex-col pl-0 md:pl-[224px]">
+          <div className={cn(
+            "relative z-10 flex min-w-0 flex-1 flex-col pl-0 transition-[padding] duration-200 ease-out",
+            navCollapsed ? "md:pl-[64px]" : "md:pl-[224px]"
+          )}>
             <header className="app-header relative z-40 w-full flex-shrink-0 px-3 md:px-4">
               <div className="mx-auto flex h-[58px] max-w-[1900px] items-center justify-between gap-3">
                 <div className="flex min-w-0 flex-1 items-center gap-3">
