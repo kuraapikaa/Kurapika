@@ -3,31 +3,85 @@ import { Search, Shield, AlertTriangle, Loader2, User } from 'lucide-react';
 import { dashboardApi } from '../api/client';
 import { checkWithdrawal, type RuleSetResult } from '../api/admin';
 import { formatNumber } from '../lib/format';
+import { cn } from '../lib/utils';
 import { getPlayerCategory, type PlayerCategory } from '../lib/playerCategories';
+import { StatusBadge } from './ui/admin';
 
-/** 0-100 risk skoru: risk analizi maddelerindeki başarısız oranı. */
+/**
+ * Risk skoru — severity ağırlıklı.
+ *
+ * Önceden `başarısız / toplam` hesaplanıyordu ve riskAnalyzer'ın her maddeye
+ * verdiği `severity` alanı yok sayılıyordu. Sonuç ters çalışıyordu: düşük
+ * öncelikli 8 kontrolün (churn-risk, vip-high-roller gibi, ki bunlar
+ * dolandırıcılık sinyali değil) başarısız olması skoru 25'e çıkarırken,
+ * klasik aklama sinyali olan withdraw-without-deposit tek başına 3 veriyordu.
+ * Skor >= 70'te "Money Launderer Candidate" etiketi basıldığı için bu fark
+ * doğrudan yanlış sınıflandırmaya yol açıyordu.
+ */
+const SEVERITY_WEIGHT: Record<string, number> = { high: 3, medium: 2, low: 1 };
+
 function computeRiskScore(riskAnalysis: RuleSetResult | undefined): number {
-  if (!riskAnalysis?.items?.length) return 0;
-  const failed = riskAnalysis.items.filter((i) => !i.ok).length;
-  return Math.min(100, Math.round((failed / riskAnalysis.items.length) * 100));
+  const items = riskAnalysis?.items;
+  if (!items?.length) return 0;
+
+  let failedWeight = 0;
+  let totalWeight = 0;
+  for (const item of items) {
+    const weight = SEVERITY_WEIGHT[String((item as any).severity ?? 'medium')] ?? 2;
+    totalWeight += weight;
+    if (!item.ok) failedWeight += weight;
+  }
+  if (totalWeight === 0) return 0;
+  return Math.min(100, Math.round((failedWeight / totalWeight) * 100));
 }
 
-function RiskScoreBadge({ score }: { score: number }) {
+/** Skoru besleyen başarısız kontroller — en ağırdan hafife. */
+function failedBySeverity(riskAnalysis: RuleSetResult | undefined) {
+  const items = riskAnalysis?.items ?? [];
+  const failed = items.filter((i) => !i.ok);
+  const rank = (s: unknown) => SEVERITY_WEIGHT[String(s ?? 'medium')] ?? 2;
+  return {
+    high: failed.filter((i) => rank((i as any).severity) === 3).length,
+    medium: failed.filter((i) => rank((i as any).severity) === 2).length,
+    low: failed.filter((i) => rank((i as any).severity) === 1).length,
+    total: failed.length,
+    checked: items.length,
+  };
+}
+
+function RiskScoreBadge({ score, breakdown }: { score: number; breakdown?: ReturnType<typeof failedBySeverity> }) {
   const level = score >= 70 ? 'high' : score >= 40 ? 'medium' : 'low';
-  const colors =
+  const tone =
     level === 'high'
-      ? 'bg-rose-500/20 text-rose-300 ring-rose-500/40'
+      ? 'border-rose-400/25 bg-rose-400/10 text-rose-300'
       : level === 'medium'
-        ? 'bg-amber-500/20 text-amber-300 ring-amber-500/40'
-        : 'bg-emerald-500/20 text-emerald-300 ring-emerald-500/40';
+        ? 'border-amber-300/25 bg-amber-300/10 text-amber-200'
+        : 'border-emerald-400/25 bg-emerald-400/10 text-emerald-300';
+
   return (
-    <span
-      className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-2xl font-black ring-2 ${colors}`}
-      title="0 = düşük risk, 100 = yüksek risk"
-    >
-      <Shield size={28} />
-      {score}
-    </span>
+    <div className="flex items-center gap-3">
+      <span
+        className={cn('inline-flex items-center gap-2 rounded-lg border px-3 py-2', tone)}
+        title="0 = düşük risk, 100 = yüksek risk. Severity ağırlıklı (yüksek 3, orta 2, düşük 1)."
+      >
+        <Shield size={18} />
+        <span className="text-[22px] font-semibold leading-none tabular-nums">{score}</span>
+      </span>
+
+      {breakdown && breakdown.checked > 0 && (
+        <div className="min-w-0">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+            {breakdown.total}/{breakdown.checked} kontrol başarısız
+          </p>
+          <div className="mt-1 flex flex-wrap items-center gap-1">
+            {breakdown.high > 0 && <StatusBadge tone="danger">{breakdown.high} yüksek</StatusBadge>}
+            {breakdown.medium > 0 && <StatusBadge tone="warning">{breakdown.medium} orta</StatusBadge>}
+            {breakdown.low > 0 && <StatusBadge tone="neutral">{breakdown.low} düşük</StatusBadge>}
+            {breakdown.total === 0 && <StatusBadge tone="success">Tüm kontroller temiz</StatusBadge>}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -251,7 +305,7 @@ export function RiskAnalysisPage() {
               <div className="flex items-center gap-6 mt-4">
                 <div>
                   <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Skor:</p>
-                  <RiskScoreBadge score={riskScore} />
+                  <RiskScoreBadge score={riskScore} breakdown={failedBySeverity(report.riskAnalysis)} />
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Etiket:</p>

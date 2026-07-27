@@ -8,24 +8,47 @@ import { checkWithdrawal, getWithdrawalAutoStatus } from '../../api/admin';
 import { WithdrawalChecklistModal } from './WithdrawalChecklistModal';
 import { formatNumber, formatDateTimeWithSeconds } from '../../lib/format';
 import { useDateRange } from '../../context/DateRangeContext';
+import { AdminCard, StatusBadge as Chip } from '../ui/admin';
+import { cn } from '../../lib/utils';
+
+type WithdrawStatus = 'paid' | 'rejected' | 'pending' | 'other';
+
+/**
+ * Çekim durumu sınıflandırması.
+ *
+ * Düz `.toLowerCase()` Türkçe "İ" (U+0130) harfini `i` + birleşen nokta
+ * (U+0069 U+0307) yapar; bu yüzden `/iptal/i` "İptal" ile ASLA eşleşmiyordu ve
+ * iptal edilen çekimler reddedilen toplamına girmiyordu. `toLocaleLowerCase('tr-TR')`
+ * doğru sonucu verir. Ayrıca eski desendeki çıplak `red` alternatifi alt-dizi
+ * eşleşmesi yapıyordu ("Credited", "Transferred" gibi durumları da yakalardı);
+ * kelime sınırlı hâle getirildi.
+ */
+export function classifyWithdrawStatus(stateName?: string | null): WithdrawStatus {
+  const v = String(stateName ?? '').toLocaleLowerCase('tr-TR').normalize('NFC');
+  if (!v) return 'other';
+  if (/ödendi|paid|başarılı|success/.test(v)) return 'paid';
+  if (/reddedildi|\bred\b|reject|cancel|iptal|başarısız|failed/.test(v)) return 'rejected';
+  if (/izin verildi|bekliyor|beklemede|onay|pending|allow|yeni|new|created|oluşturuldu/.test(v)) return 'pending';
+  return 'other';
+}
 
 function StatusBadge({ stateName }: { stateName?: string | null }) {
-  const v = String(stateName ?? '').toLowerCase();
-  if (/ödendi|paid/i.test(v))
+  const kind = classifyWithdrawStatus(stateName);
+  if (kind === 'paid')
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2.5 py-1 text-[10px] font-bold text-emerald-400 ring-1 ring-emerald-500/30">
         <CheckCircle2 size={12} />
         Ödendi
       </span>
     );
-  if (/reddedildi|red|reject|cancel|iptal/i.test(v))
+  if (kind === 'rejected')
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-500/15 px-2.5 py-1 text-[10px] font-bold text-rose-400 ring-1 ring-rose-500/30">
         <XCircle size={12} />
         Reddedildi
       </span>
     );
-  if (/izin verildi|bekliyor|onay|pending|allow/i.test(v))
+  if (kind === 'pending')
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 px-2.5 py-1 text-[10px] font-bold text-amber-400 ring-1 ring-amber-500/30">
         <Clock size={12} />
@@ -36,6 +59,33 @@ function StatusBadge({ stateName }: { stateName?: string | null }) {
     <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-500/15 px-2.5 py-1 text-[10px] font-bold text-slate-400 ring-1 ring-slate-500/20">
       {stateName || '—'}
     </span>
+  );
+}
+
+const STAT_TONE = {
+  success: 'border-emerald-400/20 bg-emerald-400/[0.08] text-emerald-300',
+  warning: 'border-amber-300/20 bg-amber-300/[0.08] text-amber-200',
+  danger: 'border-rose-400/20 bg-rose-400/[0.08] text-rose-300',
+  neutral: 'border-white/[0.08] bg-white/[0.04] text-slate-300',
+} as const;
+
+function StatCard({ label, amount, count, tone, icon }: {
+  label: string; amount: number; count: number;
+  tone: keyof typeof STAT_TONE; icon: React.ReactNode;
+}) {
+  return (
+    <AdminCard className="flex items-center gap-3 p-3.5">
+      <span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border', STAT_TONE[tone])}>
+        {icon}
+      </span>
+      <div className="min-w-0">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">{label}</p>
+        <p className="mt-1 truncate text-[17px] font-semibold leading-none tabular-nums text-white">
+          {formatNumber(amount)} <span className="text-[11px] font-medium text-slate-500">TRY</span>
+        </p>
+        <p className="mt-1 text-[11px] text-slate-500">{count} işlem</p>
+      </div>
+    </AdminCard>
   );
 }
 
@@ -87,10 +137,7 @@ export function AutoWithdrawPanel() {
       }
       // 2) Durum filtresi
       if (statusFilter !== 'all') {
-        const state = String(req.StateName || '').toLowerCase();
-        if (statusFilter === 'paid' && !/ödendi|paid/i.test(state)) return false;
-        if (statusFilter === 'rejected' && !/reddedildi|red|reject|cancel|iptal/i.test(state)) return false;
-        if (statusFilter === 'pending' && !/izin verildi|bekliyor|onay|pending|allow/i.test(state)) return false;
+        if (classifyWithdrawStatus(req.StateName) !== statusFilter) return false;
       }
       return true;
     })
@@ -108,14 +155,20 @@ export function AutoWithdrawPanel() {
     currentPage * itemsPerPage
   );
 
-  const paidRequests = allRequests.filter(r => /ödendi|paid/i.test(r.StateName || ''));
-  const rejectedRequests = allRequests.filter(r => /reddedildi|red|reject|cancel|iptal/i.test(r.StateName || ''));
+  const paidRequests = allRequests.filter(r => classifyWithdrawStatus(r.StateName) === 'paid');
+  const rejectedRequests = allRequests.filter(r => classifyWithdrawStatus(r.StateName) === 'rejected');
 
   const paidCount = paidRequests.length;
   const paidAmount = paidRequests.reduce((acc, r) => acc + (r.Amount || 0), 0);
 
   const rejectedCount = rejectedRequests.length;
   const rejectedAmount = rejectedRequests.reduce((acc, r) => acc + (r.Amount || 0), 0);
+
+  // Bekleyen aksiyon gerektiren sayı; özet kartlarında yoktu, eklendi.
+  const pendingRequests = allRequests.filter(r => classifyWithdrawStatus(r.StateName) === 'pending');
+  const pendingCount = pendingRequests.length;
+  const pendingAmount = pendingRequests.reduce((acc, r) => acc + (r.Amount || 0), 0);
+  const totalAmount = allRequests.reduce((acc, r) => acc + (r.Amount || 0), 0);
 
 
   const handleRefresh = () => {
@@ -160,28 +213,22 @@ export function AutoWithdrawPanel() {
 
   return (
     <div className="animate-in space-y-6">
-      {/* Hero header */}
-      <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-slate-900/90 via-slate-900/70 to-blue-950/30 p-6 shadow-xl shadow-blue-500/5">
-        <div className="absolute right-0 top-0 h-64 w-96 rounded-full bg-blue-500/10 blur-3xl" />
-        <div className="absolute bottom-0 left-0 h-32 w-64 rounded-full bg-blue-500/5 blur-2xl" />
-        <div className="relative flex flex-wrap items-center justify-between gap-6">
-          <div className="flex min-w-0 flex-1 items-center gap-4">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25 ring-2 ring-white/10">
-              <Zap size={28} />
-            </div>
+      {/* Başlık */}
+      <AdminCard className="p-4 md:p-5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="flex min-w-0 flex-1 items-start gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.04] text-slate-300">
+              <Zap size={18} />
+            </span>
             <div className="min-w-0">
-              <h2 className="text-xl font-black tracking-tight text-white sm:text-2xl">Otomatik Çekim Kontrolü</h2>
-              <p className="mt-1 text-xs font-bold uppercase tracking-widest text-slate-400">
-                Çekim talepleri · Tarih aralığına göre
-              </p>
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                <span className="rounded-full bg-white/10 px-3 py-1 text-[10px] font-bold text-slate-300 ring-1 ring-white/10">
-                  {dateLabel}
-                </span>
+              <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-white">Otomatik Çekim Kontrolü</h2>
+              <p className="mt-0.5 text-[12px] text-slate-500">Çekim talepleri · tarih aralığına göre</p>
+              <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                <Chip tone="neutral">{dateLabel}</Chip>
                 {lastRun && (
-                  <span className="rounded-full bg-blue-500/15 px-3 py-1 text-[10px] font-bold text-blue-300 ring-1 ring-blue-500/20">
+                  <Chip tone="info">
                     Son çalışma: {new Date(lastRun).toLocaleString('tr-TR', { dateStyle: 'short', timeStyle: 'short' })}
-                  </span>
+                  </Chip>
                 )}
               </div>
             </div>
@@ -190,77 +237,20 @@ export function AutoWithdrawPanel() {
             type="button"
             onClick={handleRefresh}
             disabled={withdrawalRequestsQuery.isLoading}
-            className="group relative flex items-center gap-2 overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-blue-600 px-5 py-2.5 text-sm font-black text-white shadow-lg shadow-blue-500/25 transition-all duration-300 hover:from-blue-500 hover:to-blue-500 hover:shadow-blue-500/40 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
+            className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.04] px-3.5 text-[12px] font-semibold text-slate-200 transition-colors hover:bg-white/[0.08] disabled:opacity-50"
           >
-            <RefreshCw size={18} className={withdrawalRequestsQuery.isFetching ? 'animate-spin' : ''} />
+            <RefreshCw size={15} className={withdrawalRequestsQuery.isFetching ? 'animate-spin' : ''} />
             Yenile
           </button>
         </div>
-      </div>
+      </AdminCard>
 
-      {/* Stats cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {/* Paid Stats */}
-        <div className="group relative overflow-hidden rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4 transition-all duration-300 hover:border-emerald-500/30 hover:bg-emerald-500/10">
-          <div className="absolute -right-4 -top-4 opacity-5">
-            <CheckCircle2 size={80} className="text-emerald-500" />
-          </div>
-          <div className="relative flex items-center gap-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20 transition-all group-hover:scale-110">
-              <ArrowUpFromLine size={20} />
-            </div>
-            <div className="space-y-0.5">
-              <p className="text-[10px] font-black uppercase tracking-wider text-emerald-500/70">Ödenen Toplam</p>
-              <div className="flex items-baseline gap-1.5">
-                <p className="text-xl font-black tabular-nums text-emerald-400">{formatNumber(paidAmount)}</p>
-                <span className="text-[10px] font-bold text-emerald-600/60 uppercase">TRY</span>
-              </div>
-              <p className="text-[10px] font-bold text-slate-500">{paidCount} İşlem</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Rejected Stats */}
-        <div className="group relative overflow-hidden rounded-2xl border border-rose-500/20 bg-rose-500/5 p-4 transition-all duration-300 hover:border-rose-500/30 hover:bg-rose-500/10">
-          <div className="absolute -right-4 -top-4 opacity-5">
-            <XCircle size={80} className="text-rose-500" />
-          </div>
-          <div className="relative flex items-center gap-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-500/10 text-rose-400 ring-1 ring-rose-500/20 transition-all group-hover:scale-110">
-              <ArrowDownToLine size={20} />
-            </div>
-            <div className="space-y-0.5">
-              <p className="text-[10px] font-black uppercase tracking-wider text-rose-500/70">Reddedilen Toplam</p>
-              <div className="flex items-baseline gap-1.5">
-                <p className="text-xl font-black tabular-nums text-rose-400">{formatNumber(rejectedAmount)}</p>
-                <span className="text-[10px] font-bold text-rose-600/60 uppercase">TRY</span>
-              </div>
-              <p className="text-[10px] font-bold text-slate-500">{rejectedCount} İşlem</p>
-            </div>
-          </div>
-        </div>
-
-        {/* General Stats */}
-        <div className="group relative overflow-hidden rounded-2xl border border-white/5 bg-white/5 p-4 transition-all duration-300 hover:bg-white/[0.08]">
-          <div className="absolute -right-4 -top-4 opacity-5">
-            <Zap size={80} className="text-slate-400" />
-          </div>
-          <div className="relative flex items-center gap-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/5 text-slate-400 ring-1 ring-white/10 transition-all group-hover:scale-110">
-              <ListOrdered size={20} />
-            </div>
-            <div className="space-y-0.5">
-              <p className="text-[10px] font-black uppercase tracking-wider text-slate-500">Genel Toplam</p>
-              <div className="flex items-baseline gap-1.5">
-                <p className="text-xl font-black tabular-nums text-white">
-                  {formatNumber((allRequests || []).reduce((acc: number, r: any) => acc + (r.Amount || 0), 0))}
-                </p>
-                <span className="text-[10px] font-bold text-slate-600 uppercase">TRY</span>
-              </div>
-              <p className="text-[10px] font-bold text-slate-500">{(allRequests || []).length} İşlem</p>
-            </div>
-          </div>
-        </div>
+      {/* Özet — ödenen / bekleyen / reddedilen / toplam */}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard label="Ödenen" amount={paidAmount} count={paidCount} tone="success" icon={<ArrowUpFromLine size={16} />} />
+        <StatCard label="Bekleyen" amount={pendingAmount} count={pendingCount} tone="warning" icon={<Clock size={16} />} />
+        <StatCard label="Reddedilen" amount={rejectedAmount} count={rejectedCount} tone="danger" icon={<ArrowDownToLine size={16} />} />
+        <StatCard label="Genel Toplam" amount={totalAmount} count={allRequests.length} tone="neutral" icon={<ListOrdered size={16} />} />
       </div>
 
       {/* Loading overlay */}
