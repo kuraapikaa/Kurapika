@@ -42,13 +42,26 @@ export async function buildApp() {
   });
 
   // ─── Güvenlik Pluginleri ──────────────────────────────────────────────────
+  // FRAME_ANCESTORS: panelin hangi sitelere iframe olarak gömülebileceği.
+  // Önceden frameAncestors ["'self'"] olarak SABİT yazılıydı ve bu değişken
+  // hiç okunmuyordu — ayarlanmış olsa bile etkisizdi. Boş bırakılırsa yalnızca
+  // kendi origin'i (güvenli varsayılan) geçerlidir.
+  const frameAncestors = (process.env.FRAME_ANCESTORS ?? '')
+    .split(/[\s,]+/)
+    .map((v) => v.trim())
+    .filter(Boolean);
+  const frameAncestorsDirective = frameAncestors.length > 0
+    ? ["'self'", ...frameAncestors]
+    : ["'self'"];
+  const gomulebilir = frameAncestors.length > 0;
+
   await app.register(helmet, {
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
         baseUri: ["'self'"],
         objectSrc: ["'none'"],
-        frameAncestors: ["'self'"],
+        frameAncestors: frameAncestorsDirective,
         scriptSrc: ["'self'", "'unsafe-inline'"],
         styleSrc: ["'self'", "'unsafe-inline'", 'https:'],
         imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
@@ -57,7 +70,11 @@ export async function buildApp() {
         upgradeInsecureRequests: isProduction ? [] : null,
       },
     },
-    crossOriginResourcePolicy: { policy: 'same-site' },
+    // X-Frame-Options tek bir origin kabul eder ve eski tarayıcılarda
+    // frame-ancestors'ı ezer; gömme izni verildiğinde kapatılmalı, yoksa
+    // CSP doğru olsa bile iframe engellenir.
+    frameguard: gomulebilir ? false : { action: 'sameorigin' },
+    crossOriginResourcePolicy: { policy: gomulebilir ? 'cross-origin' : 'same-site' },
     referrerPolicy: { policy: 'no-referrer' },
     hidePoweredBy: true,
   });
