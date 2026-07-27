@@ -532,6 +532,9 @@ export interface GetClientTransactionsResponse {
   Data: {
     Count: number;
     Objects: ClientTransactionItem[];
+    Provider?: 'lynon' | 'legacy';
+    /** Lynon modunda sunucunun döndürdüğü kanonik tür listesi (tür filtresi için). */
+    TransactionTypes?: Array<{ id: string; name: string }>;
   };
 }
 export interface ClientProfileTransactionItem {

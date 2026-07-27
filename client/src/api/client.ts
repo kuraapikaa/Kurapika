@@ -209,6 +209,8 @@ export const dashboardApi = {
     CashDeskId?: number | null;
     CurrencyId?: string;
     TypeId?: string;
+    /** Lynon tür kodları (ör. 'financial.Bet', 'payment.deposit'). Sunucu yalnızca bunu okur. */
+    DocumentTypeIds?: string[];
     UserName?: string;
     PaymentSystemId?: number | null;
     IsTest?: boolean | null;
@@ -236,6 +238,7 @@ export const dashboardApi = {
       PaymentSystemId: options.PaymentSystemId ?? null,
       SkeepRows: options.SkeepRows ?? 0,
       TypeId: options.TypeId ?? "",
+      DocumentTypeIds: options.DocumentTypeIds ?? [],
       UserName: options.UserName ?? "",
       OrderedItem: 1,
       IsOrderedDesc: true

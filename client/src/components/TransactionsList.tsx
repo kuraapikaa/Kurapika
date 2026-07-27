@@ -52,6 +52,9 @@ export function TransactionsList({ dateRange }: TransactionsListProps) {
         queryKey: ['all-transactions', dateRange.startDate, dateRange.endDate, page, activeFilters],
         queryFn: () => dashboardApi.clientTransactions({
             ...activeFilters,
+            // Lynon tür kodları '.' içerir (financial.Bet); sunucu yalnızca
+            // DocumentTypeIds'i okur, TypeId'yi yok sayar.
+            DocumentTypeIds: activeFilters.TypeId?.includes('.') ? [activeFilters.TypeId] : [],
             dateRange,
             SkeepRows: (page - 1) * rowsPerPage,
             MaxRows: rowsPerPage
@@ -60,6 +63,14 @@ export function TransactionsList({ dateRange }: TransactionsListProps) {
     });
 
     const transactions = data?.Data?.Objects || [];
+    // Lynon modunda sunucu kanonik tür listesini döndürür (financial.* / payment.*).
+    // Eski numerik TRANSACTION_TYPES yalnızca legacy BetConstruct için geçerli;
+    // Lynon'a gönderildiğinde sunucu tarafında hiç okunmadığı için filtre ölüydü.
+    const serverTypes = data?.Data?.TransactionTypes;
+    const isLynon = data?.Data?.Provider === 'lynon' || (serverTypes?.length ?? 0) > 0;
+    const typeOptions = isLynon
+        ? [{ label: 'Tümü', value: '' }, ...(serverTypes ?? []).map(t => ({ label: t.name, value: t.id }))]
+        : TRANSACTION_TYPES.map(t => ({ label: t.name, value: t.id }));
     const totalCount = data?.Data?.Count || 0;
     const totalPages = Math.ceil(totalCount / rowsPerPage);
 
@@ -183,7 +194,7 @@ export function TransactionsList({ dateRange }: TransactionsListProps) {
                                 label="Tür"
                                 value={filters.TypeId}
                                 onChange={(v) => setFilters({ ...filters, TypeId: v })}
-                                options={TRANSACTION_TYPES.map(t => ({ label: t.name, value: t.id }))}
+                                options={typeOptions}
                             />
                             <FilterInput label="Oyuncu Kimliği" value={filters.ClientId} onChange={(v) => setFilters({ ...filters, ClientId: v })} />
                             <FilterInput label="Dış Kimlik" value={filters.ExternalId} onChange={(v) => setFilters({ ...filters, ExternalId: v })} />
