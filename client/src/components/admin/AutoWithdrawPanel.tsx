@@ -9,23 +9,44 @@ import { WithdrawalChecklistModal } from './WithdrawalChecklistModal';
 import { formatNumber, formatDateTimeWithSeconds } from '../../lib/format';
 import { useDateRange } from '../../context/DateRangeContext';
 
+type WithdrawStatus = 'paid' | 'rejected' | 'pending' | 'other';
+
+/**
+ * Çekim durumu sınıflandırması.
+ *
+ * Düz `.toLowerCase()` Türkçe "İ" (U+0130) harfini `i` + birleşen nokta
+ * (U+0069 U+0307) yapar; bu yüzden `/iptal/i` "İptal" ile ASLA eşleşmiyordu ve
+ * iptal edilen çekimler reddedilen toplamına girmiyordu. `toLocaleLowerCase('tr-TR')`
+ * doğru sonucu verir. Ayrıca eski desendeki çıplak `red` alternatifi alt-dizi
+ * eşleşmesi yapıyordu ("Credited", "Transferred" gibi durumları da yakalardı);
+ * kelime sınırlı hâle getirildi.
+ */
+export function classifyWithdrawStatus(stateName?: string | null): WithdrawStatus {
+  const v = String(stateName ?? '').toLocaleLowerCase('tr-TR').normalize('NFC');
+  if (!v) return 'other';
+  if (/ödendi|paid|başarılı|success/.test(v)) return 'paid';
+  if (/reddedildi|\bred\b|reject|cancel|iptal|başarısız|failed/.test(v)) return 'rejected';
+  if (/izin verildi|bekliyor|beklemede|onay|pending|allow|yeni|new|created|oluşturuldu/.test(v)) return 'pending';
+  return 'other';
+}
+
 function StatusBadge({ stateName }: { stateName?: string | null }) {
-  const v = String(stateName ?? '').toLowerCase();
-  if (/ödendi|paid/i.test(v))
+  const kind = classifyWithdrawStatus(stateName);
+  if (kind === 'paid')
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2.5 py-1 text-[10px] font-bold text-emerald-400 ring-1 ring-emerald-500/30">
         <CheckCircle2 size={12} />
         Ödendi
       </span>
     );
-  if (/reddedildi|red|reject|cancel|iptal/i.test(v))
+  if (kind === 'rejected')
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-500/15 px-2.5 py-1 text-[10px] font-bold text-rose-400 ring-1 ring-rose-500/30">
         <XCircle size={12} />
         Reddedildi
       </span>
     );
-  if (/izin verildi|bekliyor|onay|pending|allow/i.test(v))
+  if (kind === 'pending')
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 px-2.5 py-1 text-[10px] font-bold text-amber-400 ring-1 ring-amber-500/30">
         <Clock size={12} />
@@ -87,10 +108,7 @@ export function AutoWithdrawPanel() {
       }
       // 2) Durum filtresi
       if (statusFilter !== 'all') {
-        const state = String(req.StateName || '').toLowerCase();
-        if (statusFilter === 'paid' && !/ödendi|paid/i.test(state)) return false;
-        if (statusFilter === 'rejected' && !/reddedildi|red|reject|cancel|iptal/i.test(state)) return false;
-        if (statusFilter === 'pending' && !/izin verildi|bekliyor|onay|pending|allow/i.test(state)) return false;
+        if (classifyWithdrawStatus(req.StateName) !== statusFilter) return false;
       }
       return true;
     })
@@ -108,8 +126,8 @@ export function AutoWithdrawPanel() {
     currentPage * itemsPerPage
   );
 
-  const paidRequests = allRequests.filter(r => /ödendi|paid/i.test(r.StateName || ''));
-  const rejectedRequests = allRequests.filter(r => /reddedildi|red|reject|cancel|iptal/i.test(r.StateName || ''));
+  const paidRequests = allRequests.filter(r => classifyWithdrawStatus(r.StateName) === 'paid');
+  const rejectedRequests = allRequests.filter(r => classifyWithdrawStatus(r.StateName) === 'rejected');
 
   const paidCount = paidRequests.length;
   const paidAmount = paidRequests.reduce((acc, r) => acc + (r.Amount || 0), 0);
