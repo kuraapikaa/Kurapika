@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { matchesAnyTr } from '../lib/turkishSearch';
 import { Card } from './ui/Card';
 import { Button } from './ui/Button';
 import {
@@ -263,12 +264,10 @@ export function LynonApiDocs() {
   const filteredEndpoints = useMemo(() => {
     return LYNON_ENDPOINTS_DATA.filter((ep) => {
       const matchCat = selectedCategory === 'all' || ep.category === selectedCategory;
-      const q = searchQuery.toLowerCase().trim();
+      const q = searchQuery.trim();
       const matchSearch =
         !q ||
-        ep.title.toLowerCase().includes(q) ||
-        ep.endpoint.toLowerCase().includes(q) ||
-        ep.description.toLowerCase().includes(q);
+        matchesAnyTr([ep.title, ep.endpoint, ep.description], q);
       return matchCat && matchSearch;
     });
   }, [selectedCategory, searchQuery]);

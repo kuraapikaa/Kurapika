@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { matchesTr } from '../lib/turkishSearch';
 import { useQuery, useQueries } from '@tanstack/react-query';
 import { dashboardApi } from '../api/client';
 import { formatNumber, formatDateDisplay } from '../lib/format';
@@ -78,7 +79,7 @@ export function ChurnPrevention() {
         const totalDep = kpi?.TotalDeposit || p.TotalDeposit || 0;
         const isVip = totalDep > 5000 || (kpi?.ProfitAndLose || 0) > 5000;
 
-        const matchesSearch = p.Login?.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesSearch = matchesTr(p.Login, searchTerm);
         const matchesVip = showVipOnly ? isVip : true;
 
         return matchesSearch && matchesVip;

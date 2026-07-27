@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { matchesAnyTr } from '../../lib/turkishSearch';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Check, KeyRound, Loader2, Lock, Plus, Save, ShieldCheck, Trash2, UserCog, Users } from 'lucide-react';
 import { toast } from 'sonner';
@@ -49,11 +50,10 @@ export function UserSystem() {
 
   const staffUsers = data?.data || [];
   const filteredUsers = useMemo(() => {
-    const term = search.trim().toLowerCase();
+    const term = search.trim();
     if (!term) return staffUsers;
-    return staffUsers.filter((user: any) =>
-      [user.name, user.username, user.role].filter(Boolean).some((value) => String(value).toLowerCase().includes(term))
-    );
+    // Türkçe duyarlı: "ibrahim" sorgusu "İbrahim" kaydını bulmalı.
+    return staffUsers.filter((user: any) => matchesAnyTr([user.name, user.username, user.role], term));
   }, [search, staffUsers]);
 
   const resetForm = () => {
