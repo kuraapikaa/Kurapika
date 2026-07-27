@@ -14,12 +14,45 @@ export interface NormalizedPromo {
   raw?: string;
 }
 
+/**
+ * Promosyon metnindeki para tutarını sayıya çevirir.
+ *
+ * Önceki desen `(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d+)?)` sayının HER ZAMAN binlik
+ * ayracıyla yazıldığını varsayıyordu. `\d{1,3}` açgözlü olduğu için ayraçsız
+ * yazımda yalnızca ilk üç hane yakalanıyor, kalanı düşüyordu:
+ *   "5000 ₺"  -> 500   (10x düşük)
+ *   "10000 ₺" -> 100   (100x düşük)
+ *   "2500 ₺"  -> 250
+ * Ayraçlı yazım ("1.500 ₺") doğru çalıştığı için hata gözden kaçmış. Bu değer
+ * bonus üst sınırı (maxBonus) olarak kullanıldığından doğrudan para etkisi var.
+ *
+ * Yeni desen iki biçimi ayrı ele alır: ayraçlı gruplama VEYA düz hane dizisi.
+ */
 function parseCurrencyNumber(text: string | null | undefined): number | undefined {
   if (!text) return undefined;
-  const m = text.replace(/\s/g, '').match(/(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d+)?)/);
+  const compact = text.replace(/\s/g, '');
+  // 1) ayraçlı: 1.500 / 1.234,56   2) düz: 5000 / 5000,50
+  const m = compact.match(/(\d{1,3}(?:[.,]\d{3})+(?:[.,]\d{1,2})?|\d+(?:[.,]\d{1,2})?)/);
   if (!m) return undefined;
-  // normalize thousand separators
-  let num = m[1].replace(/\./g, '').replace(',', '.');
+
+  let num = m[1];
+  const grouped = /[.,]\d{3}(?:[.,]|$)/.test(num);
+
+  if (grouped) {
+    const lastComma = num.lastIndexOf(',');
+    const lastDot = num.lastIndexOf('.');
+    const decIdx = Math.max(lastComma, lastDot);
+    const tailLen = num.length - decIdx - 1;
+    // Son ayraçtan sonra 1-2 hane varsa o ondalıktır (1.234,56); değilse binlik.
+    if (decIdx > -1 && tailLen > 0 && tailLen <= 2) {
+      num = `${num.slice(0, decIdx).replace(/[.,]/g, '')}.${num.slice(decIdx + 1)}`;
+    } else {
+      num = num.replace(/[.,]/g, '');
+    }
+  } else {
+    num = num.replace(',', '.');
+  }
+
   const v = Number(num);
   return Number.isFinite(v) ? v : undefined;
 }
