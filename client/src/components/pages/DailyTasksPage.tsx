@@ -7,6 +7,7 @@ import { bonusPanelApi, gamesApi } from '../../api/client';
 import { cn } from '../../lib/utils';
 import { lobbyExtraText } from '../../lib/lobbyContent';
 import { useLobbyPageTheme, hexToRgba, type LobbyPalette } from '../../lib/lobbyTheme';
+import { useOtomatikOturum } from '../../lib/useParentUsername';
 import { LobbyPageShell, LobbyCard, LobbyIdentityBar } from './LobbyPageShell';
 
 export function DailyTasksPage() {
@@ -16,6 +17,14 @@ export function DailyTasksPage() {
   const [checking, setChecking] = useState(false);
   const [loginError, setLoginError] = useState('');
   const queryClient = useQueryClient();
+
+  // Ana sitede giriş yapmış oyuncunun kimliği (iframe -> postMessage).
+  // Panel oturumunu da kurar; aksi halde sunucu uçları 401 döner.
+  const { username: otoAd } = useOtomatikOturum();
+  useEffect(() => {
+    if (!otoAd) return;
+    setActiveUser(otoAd);
+  }, [otoAd]);
 
   useEffect(() => {
     bonusPanelApi.me().then((res) => {

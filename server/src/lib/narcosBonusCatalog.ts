@@ -53,8 +53,8 @@ export const NARCOS_BONUSES: NarcosBonusDefinition[] = [
   {
     key: 'loss-30', title: '%30 Kayıp Bonusu', campaignTitle: '%30 Kayıp Bonusu', category: 'loss', templateId: 38,
     description: 'Son yatırımı kaybeden oyunculara kademeli iade.', validityDays: 1, tags: ['Kayıp Bonusu', '1x Çevrim', '24 Saat'],
-    rules: { lossBonus: true, requestWithinHours: 24, balanceBelow: 10, noOpenBets: true, tiers: [{ from: 50, to: 4999, percent: 20 }, { from: 5000, to: 49999, percent: 25 }, { from: 50000, percent: 30 }], wageringMultiplier: 1, minSportOdds: 1.3, maxCashoutMultiplier: 20 },
-    detailHtml: detail(['50–4.999 TL kayıpta %20, 5.000–49.999 TL’de %25, 50.000 TL ve üzerinde %30 iade.', 'Talep, yatırımı takip eden 24 saat içinde yapılır.', 'Talepte bakiye 10 TL altında ve açık bahis/casino turu olmamalıdır.', 'Casino/canlı casino veya minimum 1.30 oranlı spor bahislerinde 1x çevrim; maksimum kazanç 20x.']),
+    rules: { lossBonus: true, requestWithinHours: 24, balanceBelow: 10, noOpenBets: true, amountType: 'tieredPercentage', tieredPercentageRanges: [{ min: 50, max: 4999, percent: 20 }, { min: 5000, max: 19999, percent: 25 }, { min: 20000, max: Number.MAX_SAFE_INTEGER, percent: 30 }], wageringMultiplier: 1, minSportOdds: 1.3, maxCashoutMultiplier: 20 },
+    detailHtml: detail(['50–4.999 TL kayıpta %20, 5.000–19.999 TL’de %25, 20.000 TL ve üzerinde %30 iade.', 'Talep, yatırımı takip eden 24 saat içinde yapılır.', 'Talepte bakiye 10 TL altında ve açık bahis/casino turu olmamalıdır.', 'Casino/canlı casino veya minimum 1.30 oranlı spor bahislerinde 1x çevrim; maksimum kazanç 20x.']),
   },
   {
     key: 'deposit-freespin', title: 'Her Yatırıma Freespin', campaignTitle: 'Her Yatırıma Freespin!', category: 'gift', templateId: 76,

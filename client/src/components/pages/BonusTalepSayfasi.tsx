@@ -23,7 +23,7 @@ import { LobbyPageShell, LobbyCard } from './LobbyPageShell';
 import { useLobbyPageTheme, hexToRgba } from '../../lib/lobbyTheme';
 import { lobbyExtraLines, lobbyExtraText, renderLobbyTemplate } from '../../lib/lobbyContent';
 import { friendlyBonusEligibilityMessage } from '../../lib/bonusEligibilityMessages';
-import { useParentUsername } from '../../lib/useParentUsername';
+import { useOtomatikOturum } from '../../lib/useParentUsername';
 
 interface RichBonus {
   promoTitle: string;
@@ -137,7 +137,7 @@ export function BonusTalepSayfasi() {
   const [selectedBonus, setSelectedBonus] = useState<RichBonus | null>(null);
   const [username, setUsername] = useState('');
   const [debouncedUsername, setDebouncedUsername] = useState('');
-  const { username: ustPencereKullanici, bekleniyor: kimlikBekleniyorHam } = useParentUsername();
+  const { username: ustPencereKullanici, bekleniyor: kimlikBekleniyorHam } = useOtomatikOturum();
   // Elimizde herhangi bir ad varken "bekleniyor" göstermenin anlamı yok.
   const kimlikBekleniyor = kimlikBekleniyorHam && !username;
 

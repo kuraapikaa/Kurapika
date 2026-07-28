@@ -28,6 +28,7 @@ import {
 import { type CSSProperties, useEffect, useMemo, useState } from 'react';
 import { bonusPanelApi, formsApi, loyaltyApi, tournamentApi } from '../../api/client';
 import { fetchGamesConfigCached, readCachedGamesConfig } from '../../lib/lobbyConfigCache';
+import { useOtomatikOturum } from '../../lib/useParentUsername';
 import { cn } from '../../lib/utils';
 import { normalizeLobbyPalette } from '../../lib/lobbyTheme';
 
@@ -412,6 +413,17 @@ export function PlayerLobby() {
     { user: 'Can***', win: '₺1.150', game: 'Şans Çarkı', time: '10 dk önce' },
     { user: 'Deniz***', win: '₺22.400', game: 'Sugar Rush', time: '12 dk önce' },
   ], []);
+
+  // Ana sitede giriş yapmış oyuncunun kimliği (iframe -> postMessage).
+  // Panel oturumunu da kurduğu için lobide artık kullanıcı adı sorulmuyor.
+  const { username: otoAd } = useOtomatikOturum();
+  useEffect(() => {
+    if (!otoAd) return;
+    setActiveUser(otoAd);
+    setUserStatus('success');
+    setUsername(otoAd);
+    try { localStorage.setItem('saved_username', otoAd); } catch { /* depolama kapalı */ }
+  }, [otoAd]);
 
   useEffect(() => {
     const query = new URLSearchParams(location.search);

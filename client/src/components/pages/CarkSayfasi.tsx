@@ -6,6 +6,7 @@ import { gamesApi, bonusPanelApi } from '../../api/client';
 import { useQuery } from '@tanstack/react-query';
 import { lobbyExtraText } from '../../lib/lobbyContent';
 import { useLobbyPageTheme, hexToRgba } from '../../lib/lobbyTheme';
+import { useOtomatikOturum } from '../../lib/useParentUsername';
 import { fetchGamesConfigCached, readCachedGamesConfig } from '../../lib/lobbyConfigCache';
 import { LobbyPageShell, LobbyCard, LobbySectionTitle, LobbyIdentityBar } from './LobbyPageShell';
 import { WheelSvg } from '../admin/WheelManager';
@@ -18,6 +19,15 @@ export function CarkSayfasi() {
   const [result, setResult] = useState<string | null>(null);
   const [rotation, setRotation] = useState(0);
   const [wheelCode, setWheelCode] = useState('');
+
+  // Ana sitede giriş yapmış oyuncunun kimliği (iframe -> postMessage).
+  // Panel oturumunu da kurar; aksi halde sunucu uçları 401 döner.
+  const { username: otoAd } = useOtomatikOturum();
+  useEffect(() => {
+    if (!otoAd) return;
+    setUsername(otoAd);
+    setPlayerChecked(true);
+  }, [otoAd]);
 
   // Oturum kontrolü
   useEffect(() => {
