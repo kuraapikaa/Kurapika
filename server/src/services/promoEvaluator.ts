@@ -187,6 +187,26 @@ function checkUsageLimits(account: AccountSnapshot, spec: PromoSpec | undefined,
   return items;
 }
 
+/**
+ * Bonus talebini ENGELLEMEYEN madde kimlikleri.
+ *
+ * Slot/spor çevrim maddeleri (principal-wager, bonus-wagering) bilerek burada:
+ * çevrim şartı bonus TALEBİNİN önünü kesmemeli, yalnızca otomatik çekim
+ * kontrollerini beslemeli. Otomatik çekim bu maddelere bağlı değil; kendi
+ * kontrolleri var (withdrawalEngine.evaluateWagerSummary -> principal-turnover,
+ * bonus-wagering) ve autoWithdrawJob onları ayrı `wagerOk` olarak kullanıyor.
+ * Yani buradan çıkarmak çekim tarafını zayıflatmaz.
+ *
+ * Maddeler listede GÖRÜNMEYE devam eder; sadece overallOk'u düşürmezler.
+ */
+const ENGELLEMEYEN_MADDELER = new Set([
+  'exclusions-notice',
+  'max-payout-check',
+  'bonus-calculation',
+  'principal-wager',
+  'bonus-wagering',
+]);
+
 // ─── Bonus Tutar Hesaplama ───────────────────────────────────────────────────
 
 interface BonusCalculation {
@@ -451,7 +471,7 @@ export async function evaluateForAccount(
     });
   }
 
-  const overallOkInitial = items.every((i) => i.ok || i.id === 'exclusions-notice' || i.id === 'max-payout-check');
+  const overallOkInitial = items.every((i) => i.ok || ENGELLEMEYEN_MADDELER.has(i.id));
   const result: PromoChecklist = {
     promoId: promo.id,
     promoTitle: promo.title,
@@ -728,6 +748,6 @@ export async function evaluateForAccount(
     });
   }
 
-  result.overallOk = items.every((i) => i.ok || i.id === 'exclusions-notice' || i.id === 'max-payout-check' || i.id === 'bonus-calculation');
+  result.overallOk = items.every((i) => i.ok || ENGELLEMEYEN_MADDELER.has(i.id));
   return result;
 }
