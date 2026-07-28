@@ -13,6 +13,7 @@ import {
   X,
   Crown,
   Send,
+  AlertCircle,
 } from 'lucide-react';
 import { bonusPanelApi, dashboardApi, adminApi, gamesApi } from '../../api/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -22,6 +23,7 @@ import { LobbyPageShell, LobbyCard } from './LobbyPageShell';
 import { useLobbyPageTheme, hexToRgba } from '../../lib/lobbyTheme';
 import { lobbyExtraLines, lobbyExtraText, renderLobbyTemplate } from '../../lib/lobbyContent';
 import { friendlyBonusEligibilityMessage } from '../../lib/bonusEligibilityMessages';
+import { useParentUsername } from '../../lib/useParentUsername';
 
 interface RichBonus {
   promoTitle: string;
@@ -135,6 +137,9 @@ export function BonusTalepSayfasi() {
   const [selectedBonus, setSelectedBonus] = useState<RichBonus | null>(null);
   const [username, setUsername] = useState('');
   const [debouncedUsername, setDebouncedUsername] = useState('');
+  const { username: ustPencereKullanici, bekleniyor: kimlikBekleniyorHam } = useParentUsername();
+  // Elimizde herhangi bir ad varken "bekleniyor" göstermenin anlamı yok.
+  const kimlikBekleniyor = kimlikBekleniyorHam && !username;
 
   const [playerData, setPlayerData] = useState<any>(null);
   const [playerLoading, setPlayerLoading] = useState(false);
@@ -149,7 +154,8 @@ export function BonusTalepSayfasi() {
     }
   }, [allCategory, categories, selectedCategory]);
 
-  // Oturum kontrolü
+  // Oturum kontrolü: önce panelin kendi oturumu, yoksa kayıtlı ad.
+  // Ana siteden gelen kimlik (useParentUsername) bunların ikisini de ezer.
   useEffect(() => {
     bonusPanelApi.me().then(res => {
       if (res.ok) {
@@ -161,6 +167,11 @@ export function BonusTalepSayfasi() {
       }
     });
   }, []);
+
+  // Ana sitedeki oturumdan gelen kullanıcı adı en güvenilir kaynak.
+  useEffect(() => {
+    if (ustPencereKullanici) setUsername(ustPencereKullanici);
+  }, [ustPencereKullanici]);
 
   // Debounce username input
   useEffect(() => {
@@ -271,10 +282,14 @@ export function BonusTalepSayfasi() {
 
   const handleOpenModal = (b: RichBonus) => {
     setSelectedBonus(b);
-    // Eğer session varsa username'i sıfırlama
+    // Eğer session varsa username'i sıfırlama. Ana siteden kimlik geldiyse
+    // panel oturumu olmasa da temizleme: kullanıcı adı artık elle girilmiyor,
+    // sıfırlarsak oyuncunun bonus talep etmesi imkânsız hale gelir.
     bonusPanelApi.me().then(res => {
        if (res.ok) {
           setUsername(res.login);
+       } else if (ustPencereKullanici) {
+          setUsername(ustPencereKullanici);
        } else {
           setUsername('');
           setPlayerData(null);
@@ -546,20 +561,34 @@ export function BonusTalepSayfasi() {
                         {pageContent.formDescription && (
                            <p className="text-sm font-medium leading-6 text-zinc-500">{pageContent.formDescription}</p>
                         )}
+                        {/* Kullanıcı adı artık elle yazılmıyor: oturum ana siteden
+                            (postMessage ile) veya panel oturumundan geliyor. */}
                         <div>
-                           <label htmlFor="bonus-modal-username" className="flex items-center gap-2 text-xs font-black text-zinc-500 uppercase tracking-widest mb-2">
+                           <span className="flex items-center gap-2 text-xs font-black text-zinc-500 uppercase tracking-widest mb-2">
                               <User size={14} aria-hidden="true" /> {pageContent.usernameLabel}
-                           </label>
-                           <input
-                              id="bonus-modal-username"
-                              type="text"
-                              autoFocus
-                              placeholder={pageContent.usernamePlaceholder}
-                              value={username}
-                              onChange={e => setUsername(e.target.value)}
-                              autoComplete="username"
-                              className="h-11 w-full rounded-xl border border-white/[0.07] bg-black/30 px-3 text-[13px] font-bold text-white outline-none transition placeholder:text-zinc-700 focus:border-[color:var(--lobby-primary)]/60"
-                           />
+                           </span>
+                           {username ? (
+                              <div
+                                 data-testid="bonus-modal-username"
+                                 className="flex h-11 w-full items-center rounded-xl border border-white/[0.07] bg-black/30 px-3 text-[13px] font-bold text-white"
+                              >
+                                 {username}
+                              </div>
+                           ) : kimlikBekleniyor ? (
+                              <div className="flex h-11 w-full items-center gap-2 rounded-xl border border-white/[0.07] bg-black/30 px-3 text-[13px] font-bold text-zinc-500">
+                                 <Loader2 className="animate-spin" size={16} />
+                                 {lobbyExtraText(pageContent, 'identityLoadingText', 'Hesabınız alınıyor...')}
+                              </div>
+                           ) : (
+                              <div className="flex items-center gap-3 rounded-xl border border-amber-500/20 bg-amber-500/10 p-4 text-sm font-bold text-amber-300">
+                                 <AlertCircle size={20} className="shrink-0" />
+                                 {lobbyExtraText(
+                                    pageContent,
+                                    'loginRequiredText',
+                                    'Bonus talebi için siteye giriş yapmanız gerekiyor.'
+                                 )}
+                              </div>
+                           )}
                         </div>
 
                         {/* Status Area */}

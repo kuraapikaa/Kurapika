@@ -26,7 +26,8 @@ import {
   Zap,
 } from 'lucide-react';
 import { type CSSProperties, useEffect, useMemo, useState } from 'react';
-import { bonusPanelApi, formsApi, gamesApi, loyaltyApi, tournamentApi } from '../../api/client';
+import { bonusPanelApi, formsApi, loyaltyApi, tournamentApi } from '../../api/client';
+import { fetchGamesConfigCached, readCachedGamesConfig } from '../../lib/lobbyConfigCache';
 import { cn } from '../../lib/utils';
 import { normalizeLobbyPalette } from '../../lib/lobbyTheme';
 
@@ -394,7 +395,11 @@ export function PlayerLobby() {
   const [activeUser, setActiveUser] = useState<string | null>(null);
   const [settings, setSettings] = useState<any>(null);
   const [loyalty, setLoyalty] = useState<any>(null);
-  const [lobbyConfig, setLobbyConfig] = useState<any>(null);
+  // İlk kareyi son bilinen yapılandırmayla boya: aksi halde lobi önce
+  // varsayılan tasarımla açılıp yanıt gelince yeniden boyanıyor (flash).
+  const [lobbyConfig, setLobbyConfig] = useState<any>(
+    () => readCachedGamesConfig()?.data?.lobby ?? null
+  );
   const [activeLobbyTab, setActiveLobbyTab] = useState<LobbyTabId>('games');
 
   const liveWinners = useMemo(() => [
@@ -443,7 +448,7 @@ export function PlayerLobby() {
 
     restorePlayer();
     tournamentApi.getSettings().then(setSettings).catch(() => {});
-    gamesApi.config().then((res: any) => {
+    fetchGamesConfigCached().then((res: any) => {
       setLobbyConfig(res?.data?.lobby || null);
     }).catch(() => {});
   }, [location.search]);
@@ -1247,9 +1252,11 @@ export function VIPTab() {
   const [sent, setSent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const [vipConfig, setVipConfig] = useState<any>(null);
+  const [vipConfig, setVipConfig] = useState<any>(
+    () => readCachedGamesConfig()?.data?.vip ?? null
+  );
   useEffect(() => {
-    gamesApi.config().then((res: any) => {
+    fetchGamesConfigCached().then((res: any) => {
       if (res?.data?.vip) setVipConfig(res.data.vip);
     }).catch(() => {});
   }, []);
