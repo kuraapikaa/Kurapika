@@ -445,12 +445,12 @@ const DEFAULT_GAME_SETTINGS = {
   },
   wheelDailyLimit: 1,
   wheel: [
-    { id: 'wheel-pass', label: 'Tekrar Dene', bgColor: '#111827', textColor: '#ffffff', probability: 100, type: 'none', bonusId: null, amount: 0, isLoss: true },
+    { id: 'wheel-pass', label: 'Tekrar Dene', bgColor: '#111827', textColor: '#ffffff', probability: 97, type: 'none', bonusId: null, amount: 0, isLoss: true },
     { id: 'wheel-fs-sweet-100', label: '100 Freespin', detail: 'Sweet Bonanza · 1 ₺ spin', bgColor: '#b7791f', textColor: '#ffffff', probability: 0, type: 'bonus', rewardKind: 'freespin', bonusId: null, amount: 100, gameName: 'Sweet Bonanza', spinValue: 1, spinCount: 100, requiresConfiguration: true, isLoss: false },
     { id: 'wheel-fs-gates-150', label: '150 Freespin', detail: 'Gates of Olympus · 1 ₺ spin', bgColor: '#7c3aed', textColor: '#ffffff', probability: 0, type: 'bonus', rewardKind: 'freespin', bonusId: null, amount: 150, gameName: 'Gates of Olympus', spinValue: 1, spinCount: 150, requiresConfiguration: true, isLoss: false },
     { id: 'wheel-cash-150', label: '150 ₺ Nakit', detail: 'Çevrimsiz direkt bakiye', bgColor: '#166534', textColor: '#ffffff', probability: 0, type: 'cash', rewardKind: 'cash', bonusId: null, amount: 150, noWagering: true, requiresConfiguration: true, isLoss: false },
     { id: 'wheel-cash-250', label: '250 ₺ Nakit', detail: 'Çevrimsiz direkt bakiye', bgColor: '#1d4ed8', textColor: '#ffffff', probability: 0, type: 'cash', rewardKind: 'cash', bonusId: null, amount: 250, noWagering: true, requiresConfiguration: true, isLoss: false },
-    { id: 'wheel-freebet-500', label: '500 ₺ Freebet', detail: 'Min. 1.80 oran · min. 3 maç kombine', bgColor: '#be123c', textColor: '#ffffff', probability: 0, type: 'bonus', rewardKind: 'freebet', bonusId: 1880, amount: 500, minOdd: 1.8, minSelectionCount: 3, betTypes: ['express'], assignmentValues: { BonusMoneyAmount: 500 }, requiresConfiguration: false, isLoss: false },
+    { id: 'wheel-freebet-500', label: '500 ₺ Freebet', detail: 'Min. 1.80 oran · min. 3 maç kombine', bgColor: '#be123c', textColor: '#ffffff', probability: 3, type: 'bonus', rewardKind: 'freebet', bonusId: 1880, amount: 500, minOdd: 1.8, minSelectionCount: 3, betTypes: ['express'], assignmentValues: { BonusMoneyAmount: 500 }, requiresConfiguration: false, isLoss: false },
     { id: 'wheel-fs-sweet-500', label: '500 ₺ Freespin', detail: 'Sweet Bonanza · 250 spin · 2 ₺', bgColor: '#c2410c', textColor: '#ffffff', probability: 0, type: 'bonus', rewardKind: 'freespin', bonusId: null, amount: 500, gameName: 'Sweet Bonanza', spinValue: 2, spinCount: 250, requiresConfiguration: true, isLoss: false },
     { id: 'wheel-cash-500', label: '500 ₺ Nakit', detail: 'Çevrimsiz direkt bakiye', bgColor: '#0f766e', textColor: '#ffffff', probability: 0, type: 'cash', rewardKind: 'cash', bonusId: null, amount: 500, noWagering: true, requiresConfiguration: true, isLoss: false },
     { id: 'wheel-cash-10000', label: '10.000 ₺ Nakit', detail: 'Çevrimsiz direkt bakiye', bgColor: '#92400e', textColor: '#ffffff', probability: 0, type: 'cash', rewardKind: 'cash', bonusId: null, amount: 10000, noWagering: true, requiresConfiguration: true, isLoss: false },
@@ -1524,6 +1524,33 @@ async function chargeBonusToPlayer(login: string, bonusId: number | null, label:
     }
 }
 
+/**
+ * Bu tutarın üzerindeki nakit ödüller "yüksek nakit" sayılır ve çarkta asla
+ * çıkmaz. Elle onaylı kampanya dışında dağıtılmaları istenmiyor.
+ */
+const YUKSEK_NAKIT_ESIGI = 1000;
+
+/**
+ * Bir dilimin çekilişe girip giremeyeceği. Olasılık admin panelinde yanlışlıkla
+ * sıfırdan farklı bırakılsa bile burada engellenir; kural veriye değil koda bağlı.
+ *
+ * Üç gerekçe:
+ *  1. requiresConfiguration → deliverWheelReward zaten teslim edemiyor
+ *     ("Bu ödül henüz Lynon teslimatına bağlanmamış"). Oyuncuya kazandı deyip
+ *     ardından hata göstermek en kötü sonuç.
+ *  2. physical → fiziksel ödüller çarkta dağıtılmıyor.
+ *  3. cash > YUKSEK_NAKIT_ESIGI → yüksek nakit ödüller çarkta dağıtılmıyor.
+ */
+export function cekilebilirMi(slice: any): boolean {
+  if (!slice) return false;
+  // Kayıp dilimi ("Tekrar Dene") her zaman çekilebilir.
+  if (slice.type === 'none' || slice.isLoss === true) return true;
+  if (slice.requiresConfiguration === true) return false;
+  if (slice.type === 'physical') return false;
+  if (slice.type === 'cash' && Number(slice.amount) > YUKSEK_NAKIT_ESIGI) return false;
+  return true;
+}
+
 async function deliverWheelReward(login: string, slice: any) {
   if (!slice || slice.type === 'none' || slice.isLoss) {
     return { ok: true, delivery: 'none', message: 'Bu turda ödül çıkmadı.' };
@@ -1661,7 +1688,11 @@ export async function gamesRoutes(app: FastifyInstance) {
 
       const wheelSlices = Array.isArray(settings.wheel) ? settings.wheel : [];
       const activeSlices = wheelSlices
-        .map((slice: any, index: number) => ({ slice, index, weight: Math.max(0, Number(slice.probability) || 0) }))
+        .map((slice: any, index: number) => ({
+          slice,
+          index,
+          weight: cekilebilirMi(slice) ? Math.max(0, Number(slice.probability) || 0) : 0,
+        }))
         .filter((item: any) => item.weight > 0);
       const totalWeight = activeSlices.reduce((sum: number, item: any) => sum + item.weight, 0);
       if (totalWeight <= 0) {

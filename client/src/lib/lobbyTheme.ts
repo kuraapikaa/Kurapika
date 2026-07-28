@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { CSSProperties } from 'react';
-import { gamesApi } from '../api/client';
+import { fetchGamesConfigCached, readCachedGamesConfig } from './lobbyConfigCache';
 import { normalizeLobbyPageContent, type LobbyPageId } from './lobbyContent';
 
 /**
@@ -113,11 +113,14 @@ export function paletteBackgroundStyle(palette: LobbyPalette): CSSProperties {
 export function useLobbyPageTheme(pageId: LobbyPageId) {
   const query = useQuery({
     queryKey: ['games-config', 'lobby-pages'],
-    queryFn: () => gamesApi.config(),
+    queryFn: fetchGamesConfigCached,
     staleTime: 5 * 60 * 1000,
   });
 
-  const lobby = query.data?.data?.lobby;
+  // İlk kareyi son bilinen paletle boya, yoksa varsayılana düş.
+  // placeholderData KULLANMIYORUZ: o yalnızca sorgu "pending" iken geçerli,
+  // istek hata verirse düşüyor ve sayfa yine varsayılana dönüyordu.
+  const lobby = query.data?.data?.lobby ?? readCachedGamesConfig()?.data?.lobby;
 
   const content = useMemo(
     () => normalizeLobbyPageContent(pageId, lobby?.pages?.[pageId]),

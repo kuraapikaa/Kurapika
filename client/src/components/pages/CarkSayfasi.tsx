@@ -6,6 +6,7 @@ import { gamesApi, bonusPanelApi } from '../../api/client';
 import { useQuery } from '@tanstack/react-query';
 import { lobbyExtraText } from '../../lib/lobbyContent';
 import { useLobbyPageTheme, hexToRgba } from '../../lib/lobbyTheme';
+import { fetchGamesConfigCached, readCachedGamesConfig } from '../../lib/lobbyConfigCache';
 import { LobbyPageShell, LobbyCard, LobbySectionTitle, LobbyIdentityBar } from './LobbyPageShell';
 import { WheelSvg } from '../admin/WheelManager';
 
@@ -30,11 +31,14 @@ export function CarkSayfasi() {
 
   const { data: configRes } = useQuery({
     queryKey: ['games-config'],
-    queryFn: () => gamesApi.config(),
+    queryFn: fetchGamesConfigCached,
     staleTime: 0 // Her zaman en güncel ayarları çek
   });
 
-  const wheelSlices = configRes?.data?.wheel || [
+  // Çark ilk karede doğru dilimlerle çizilsin; yanıt gelince üzerine yazılır.
+  const config = configRes ?? readCachedGamesConfig();
+
+  const wheelSlices = config?.data?.wheel || [
     { id: 1, label: 'Pas', color: 'bg-zinc-800', isLoss: true }
   ];
   const wheelAppearance = {

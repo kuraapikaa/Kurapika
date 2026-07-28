@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { gamesApi } from '../api/client';
+import { fetchGamesConfigCached, readCachedGamesConfig } from './lobbyConfigCache';
 
 export type LobbyPageId =
   | 'bonus'
@@ -641,13 +641,16 @@ export function renderLobbyTemplate(template: string, values: Record<string, str
 export function useLobbyPageContent(pageId: LobbyPageId) {
   const query = useQuery({
     queryKey: ['games-config', 'lobby-pages'],
-    queryFn: () => gamesApi.config(),
+    queryFn: fetchGamesConfigCached,
     staleTime: 5 * 60 * 1000
   });
 
+  // Sorgu henüz bitmediyse VEYA hata verdiyse son bilinen içerikle boya.
+  const lobby = query.data?.data?.lobby ?? readCachedGamesConfig()?.data?.lobby;
+
   const content = useMemo(() => (
-    normalizeLobbyPageContent(pageId, query.data?.data?.lobby?.pages?.[pageId])
-  ), [pageId, query.data?.data?.lobby?.pages]);
+    normalizeLobbyPageContent(pageId, lobby?.pages?.[pageId])
+  ), [pageId, lobby?.pages]);
 
   return {
     content,
