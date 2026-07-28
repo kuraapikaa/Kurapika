@@ -3,6 +3,7 @@ import type { AccountSnapshot } from './withdrawalEngine.js';
 import { humanDelay } from '../lib/humanDelay.js';
 import { backofficeGet, backofficePost } from '../lib/httpClient.js';
 import { createLogger } from '../lib/logger.js';
+import { lossBasisExcludedBonusNames } from '../lib/narcosBonusCatalog.js';
 
 const log = createLogger('accountSnapshot');
 
@@ -211,20 +212,8 @@ export async function buildAccountSnapshotFromClientId(
 
   const totalDeposits = kpiData?.TotalDeposit != null ? Number(kpiData.TotalDeposit) : undefined;
 
-  // Kayıp bonusunun tabanı. promoEvaluator `account.netLoss` okuyordu ama bu alan
-  // HİÇBİR YERDE yazılmıyordu; sonuç olarak kayıp bonusu her oyuncuda
-  // "doğrulanmış net kaybı yok" ile reddediliyordu.
-  //
-  // Tanım: yatırım toplamı − çekim toplamı, negatifse 0. Yani oyuncunun siteye
-  // bıraktığı net para. Lynon KPI'sı alan adını iki biçimde döndürebiliyor
-  // (TotalWithdraw / TotalWithdrawal), ikisi de karşılanır.
-  //
-  // Para etkisi olduğu için eksik veriyle tahmin YAPMAYIZ: yatırım toplamı yoksa
-  // netLoss undefined kalır ve kural "kaybı yok" diyerek güvenli tarafta reddeder.
-  const totalWithdrawalsRaw = kpiData?.TotalWithdraw ?? kpiData?.TotalWithdrawal;
-  const netLoss = totalDeposits != null
-    ? Math.max(0, totalDeposits - Number(totalWithdrawalsRaw ?? 0))
-    : undefined;
+  // netLoss aşağıda, profil işlemleri okunduktan sonra hesaplanır:
+  // yatırımları tek tek elemek gerektiği için KPI toplamları yetmiyor.
   const registrationDate =
     (kpiData?.FirstDepositTimeLocal as string) ?? (clientItem?.CreatedLocalDate as string);
   const accountAgeDays = registrationDate ? daysSinceDate(registrationDate) : undefined;
@@ -376,6 +365,49 @@ export async function buildAccountSnapshotFromClientId(
     0
   );
   const isFirstWithdrawal = withdrawalAnyCount === 0;
+
+  // ─── Kayıp bonusu tabanı (netLoss) ─────────────────────────────────────────
+  //
+  // Formül: yatırım (yatırım bonusu almış olanlar hariç) − çekim, negatifse 0.
+  //
+  // Neden KPI toplamları değil: yatırımları TEK TEK elemek gerekiyor, KPI yalnızca
+  // toplam veriyor. Bu yüzden hesap profil işlemleri penceresinden yapılır; yatırım
+  // ve çekim aynı pencereden alındığı için tutarlıdır.
+  //
+  // Bu alan daha önce promoEvaluator tarafından okunuyor ama HİÇBİR YERDE
+  // yazılmıyordu; kayıp bonusu her oyuncuda "net kaybı yok" ile reddediliyordu.
+  const haricAdlar = lossBasisExcludedBonusNames().map((ad) => ad.toLocaleLowerCase('tr-TR'));
+
+  // Yatırım bonusu almış yatırımları işaretle. Lynon'da bonus ile yatırım arasında
+  // doğrudan bağ yok; bonusun oluşturulma anından ÖNCEKİ en yakın yatırım o bonusa
+  // ait sayılır. Her yatırım en fazla bir bonusa eşleşir (aynı yatırım iki kez
+  // düşülmesin diye).
+  const yatirimlar = depositTxs
+    .map((tx) => ({ tutar: Math.abs(Number(tx.Amount) || 0), an: parseDateToTime(tx.CreatedLocal), eslesti: false }))
+    .filter((y) => y.an > 0)
+    .sort((a, b) => a.an - b.an);
+
+  for (const bonus of bonusesList) {
+    const ad = String((bonus as { Name?: unknown }).Name ?? '').toLocaleLowerCase('tr-TR');
+    if (!ad || !haricAdlar.some((h) => ad.includes(h) || h.includes(ad))) continue;
+    const bonusAni = parseDateToTime((bonus as { CreatedLocal?: string }).CreatedLocal);
+    if (!bonusAni) continue;
+    let aday: (typeof yatirimlar)[number] | undefined;
+    for (const y of yatirimlar) {
+      if (y.eslesti || y.an > bonusAni) continue;
+      if (!aday || y.an > aday.an) aday = y;   // bonustan önceki EN YAKIN yatırım
+    }
+    if (aday) aday.eslesti = true;
+  }
+
+  const sayilanYatirim = yatirimlar.reduce((t, y) => t + (y.eslesti ? 0 : y.tutar), 0);
+  const odenenCekim = WITHDRAWAL_PAID_TYPE_KEYS.reduce(
+    (t, key) => t + Math.abs(profileTransactionsByType[key]?.totalAmount ?? 0),
+    0
+  );
+  // Pencerede hiç yatırım yoksa "kayıp yok" demek yanlış olur (veri eksikliği ile
+  // gerçek sıfır ayırt edilemez); undefined bırakılır ve kural güvenli tarafta reddeder.
+  const netLoss = yatirimlar.length > 0 ? Math.max(0, sayilanYatirim - odenenCekim) : undefined;
 
   const notesList = notesData.map((n: any) => ({
     id: n.Id,
