@@ -62,6 +62,11 @@ export type PromoSpec = {
      * hesaplanan tutar o tavanla sınırlanır.
      */
     tieredPercentageRanges?: Array<{ min: number; max: number; percent: number; maxBonus?: number }>;
+    /**
+     * Bonus tutarının hangi tabana göre hesaplanacağı. Belirtilmezse lossBonus
+     * kuralları net kaybı, diğerleri son yatırımı kullanır.
+     */
+    basisSource?: 'lastDeposit' | 'netLoss';
     checkPendingWithdrawal?: boolean;
     checkLastTransactionIsDeposit?: boolean;
     checkSingleInvestmentUsage?: boolean;

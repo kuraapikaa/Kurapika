@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { bonusPanelApi } from '../api/client';
 
 /**
  * Panel ana sitede iframe olarak gömülü çalışır. Oyuncunun oturumu ana sitede
@@ -71,4 +72,49 @@ export function useParentUsername(): { username: string | null; bekleniyor: bool
   }, []);
 
   return { username, bekleniyor };
+}
+
+/**
+ * Ana siteden gelen kullanıcı adıyla PANEL OTURUMUNU da kurar.
+ *
+ * Kullanıcı adını ekranda göstermek yetmiyor: çark ve kazı-kazan uçları
+ * sunucuda `request.session.bonusPanelUser` arıyor (games.ts). Oturum
+ * kurulmazsa oyuncu adını görür ama "Önce kullanıcı adı doğrulaması
+ * yapmalısınız" hatası alır.
+ *
+ * Panelin kendi oturumu zaten varsa ona dokunmayız.
+ */
+export function useOtomatikOturum(): { username: string | null; bekleniyor: boolean } {
+  const { username: ustPencereAdi, bekleniyor: kimlikBekleniyor } = useParentUsername();
+  const [username, setUsername] = useState<string | null>(null);
+  const [oturumDeneniyor, setOturumDeneniyor] = useState(false);
+
+  // Panelin mevcut oturumu
+  useEffect(() => {
+    let iptal = false;
+    bonusPanelApi.me().then((res) => {
+      if (!iptal && res.ok) setUsername(res.login);
+    }).catch(() => { /* oturum yok */ });
+    return () => { iptal = true; };
+  }, []);
+
+  // Ana siteden kimlik geldiyse oturumu onunla kur
+  useEffect(() => {
+    if (!ustPencereAdi || username) return;
+    let iptal = false;
+    setOturumDeneniyor(true);
+    bonusPanelApi.login(ustPencereAdi)
+      .then((res: any) => {
+        if (iptal) return;
+        if (res?.ok && res.login) {
+          setUsername(res.login);
+          try { localStorage.setItem('saved_username', res.login); } catch { /* yok */ }
+        }
+      })
+      .catch(() => { /* ağ hatası: elle akış devrede kalır */ })
+      .finally(() => { if (!iptal) setOturumDeneniyor(false); });
+    return () => { iptal = true; };
+  }, [ustPencereAdi, username]);
+
+  return { username, bekleniyor: (kimlikBekleniyor || oturumDeneniyor) && !username };
 }

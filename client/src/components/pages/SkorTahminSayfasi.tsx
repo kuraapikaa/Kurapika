@@ -5,6 +5,7 @@ import { bonusPanelApi, gamesApi } from '../../api/client';
 import { cn, resolveTeamLogoUrl } from '../../lib/utils';
 import { lobbyExtraText } from '../../lib/lobbyContent';
 import { useLobbyPageTheme, hexToRgba, type LobbyPalette } from '../../lib/lobbyTheme';
+import { useOtomatikOturum } from '../../lib/useParentUsername';
 import { LobbyPageShell, LobbyCard, LobbyIdentityBar, LobbySectionTitle } from './LobbyPageShell';
 
 type Match = {
@@ -47,6 +48,15 @@ export function SkorTahminSayfasi() {
       setLoading(false);
     }
   };
+
+  // Ana sitede giriş yapmış oyuncunun kimliği (iframe -> postMessage).
+  // Panel oturumunu da kurar; aksi halde sunucu uçları 401 döner.
+  const { username: otoAd } = useOtomatikOturum();
+  useEffect(() => {
+    if (!otoAd) return;
+    setActiveUser(otoAd);
+    setUsername(otoAd);
+  }, [otoAd]);
 
   useEffect(() => {
     bonusPanelApi.me().then((res) => {

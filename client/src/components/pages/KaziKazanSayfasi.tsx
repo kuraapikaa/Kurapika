@@ -5,6 +5,7 @@ import { cn } from '../../lib/utils';
 import { gamesApi, bonusPanelApi } from '../../api/client';
 import { lobbyExtraText, renderLobbyTemplate } from '../../lib/lobbyContent';
 import { useLobbyPageTheme, hexToRgba } from '../../lib/lobbyTheme';
+import { useOtomatikOturum } from '../../lib/useParentUsername';
 import { LobbyPageShell, LobbyCard, LobbySectionTitle, LobbyIdentityBar } from './LobbyPageShell';
 
 export function KaziKazanSayfasi() {
@@ -17,6 +18,15 @@ export function KaziKazanSayfasi() {
   const [grid, setGrid] = useState<{ id: number, symbol: string, revealed: boolean }[]>([]);
   const [result, setResult] = useState<string | null>(null);
   const [chargeStatus, setChargeStatus] = useState<any>(null);
+
+  // Ana sitede giriş yapmış oyuncunun kimliği (iframe -> postMessage).
+  // Panel oturumunu da kurar; aksi halde sunucu uçları 401 döner.
+  const { username: otoAd } = useOtomatikOturum();
+  useEffect(() => {
+    if (!otoAd) return;
+    setUsername(otoAd);
+    setPlayerChecked(true);
+  }, [otoAd]);
 
   // Oturum kontrolü
   useEffect(() => {

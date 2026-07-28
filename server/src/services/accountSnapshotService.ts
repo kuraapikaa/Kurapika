@@ -210,6 +210,21 @@ export async function buildAccountSnapshotFromClientId(
   const clientItem = clientsData?.Objects?.[0];
 
   const totalDeposits = kpiData?.TotalDeposit != null ? Number(kpiData.TotalDeposit) : undefined;
+
+  // Kayıp bonusunun tabanı. promoEvaluator `account.netLoss` okuyordu ama bu alan
+  // HİÇBİR YERDE yazılmıyordu; sonuç olarak kayıp bonusu her oyuncuda
+  // "doğrulanmış net kaybı yok" ile reddediliyordu.
+  //
+  // Tanım: yatırım toplamı − çekim toplamı, negatifse 0. Yani oyuncunun siteye
+  // bıraktığı net para. Lynon KPI'sı alan adını iki biçimde döndürebiliyor
+  // (TotalWithdraw / TotalWithdrawal), ikisi de karşılanır.
+  //
+  // Para etkisi olduğu için eksik veriyle tahmin YAPMAYIZ: yatırım toplamı yoksa
+  // netLoss undefined kalır ve kural "kaybı yok" diyerek güvenli tarafta reddeder.
+  const totalWithdrawalsRaw = kpiData?.TotalWithdraw ?? kpiData?.TotalWithdrawal;
+  const netLoss = totalDeposits != null
+    ? Math.max(0, totalDeposits - Number(totalWithdrawalsRaw ?? 0))
+    : undefined;
   const registrationDate =
     (kpiData?.FirstDepositTimeLocal as string) ?? (clientItem?.CreatedLocalDate as string);
   const accountAgeDays = registrationDate ? daysSinceDate(registrationDate) : undefined;
@@ -396,5 +411,6 @@ export async function buildAccountSnapshotFromClientId(
     profileTransactionsByType: Object.keys(profileTransactionsByType).length ? profileTransactionsByType : undefined,
     isNoDepositOverride,
     isWeeklyDiscountBaseline,
+    netLoss,
   };
 }

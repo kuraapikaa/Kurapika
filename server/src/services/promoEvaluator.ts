@@ -51,13 +51,27 @@ export function getSpecForBonus(specs: RulesConfig, bonusId: number, bonusName: 
 
 // ─── Minimum Yatırım Kontrolü ────────────────────────────────────────────────
 
+/**
+ * Bonus tutarının hesaplandığı taban.
+ *
+ * Kayıp bonusunda taban yatırım DEĞİL kayıptır: "1.000 ₺ kayba 200 ₺" gibi
+ * baremler oyuncunun net kaybına göre işler. lossBonus işaretli kurallar
+ * otomatik olarak netLoss tabanını kullanır; ayrıca basisSource ile açıkça
+ * seçilebilir.
+ */
 function depositBasis(account: AccountSnapshot, spec: PromoSpec | undefined): number {
+  if (spec?.basisSource === 'netLoss' || (spec?.lossBonus === true && spec?.basisSource == null)) {
+    return Number((account as any).netLoss ?? 0);
+  }
   return spec?.isNextDayBonus === true
     ? Number((account as any).previousDayDepositTotal ?? 0)
     : Number(account.lastDeposit?.amount ?? 0);
 }
 
 function depositBasisLabel(spec: PromoSpec | undefined): string {
+  if (spec?.basisSource === 'netLoss' || (spec?.lossBonus === true && spec?.basisSource == null)) {
+    return 'Net kayıp';
+  }
   return spec?.isNextDayBonus === true ? 'Önceki gün toplam yatırımı' : 'Son yatırım';
 }
 
