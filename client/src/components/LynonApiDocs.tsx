@@ -325,7 +325,7 @@ export function LynonApiDocs() {
   return (
     <div className="space-y-6">
       {/* Header Banner */}
-      <div className="relative overflow-hidden rounded-2xl border border-[#3b82f6]/30 bg-gradient-to-r from-[#0b132b] via-[#0f172a] to-[#121c33] p-6 shadow-[0_10px_35px_rgba(0,0,0,0.4)]">
+      <div className="relative overflow-hidden rounded-xl border border-[#3b82f6]/30 bg-gradient-to-r from-[#0b132b] via-[#0f172a] to-[#121c33] p-6 shadow-[0_10px_35px_rgba(0,0,0,0.4)]">
         <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-10 pointer-events-none">
           <Database size={220} className="text-[#3b82f6]" />
         </div>
@@ -342,11 +342,11 @@ export function LynonApiDocs() {
           <div className="flex items-center gap-3">
             <div className="rounded-xl border border-white/10 bg-black/40 px-4 py-2.5 text-center">
               <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Toplam Uç</span>
-              <span className="text-lg font-black text-[#fbbf24]">{LYNON_ENDPOINTS_DATA.length}</span>
+              <span className="text-lg font-semibold text-[#fbbf24]">{LYNON_ENDPOINTS_DATA.length}</span>
             </div>
             <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-2.5 text-center">
               <span className="block text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Durum</span>
-              <span className="text-xs font-black text-emerald-300 flex items-center gap-1">
+              <span className="text-xs font-semibold text-emerald-300 flex items-center gap-1">
                 <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" /> OIDC Aktif
               </span>
             </div>
@@ -419,7 +419,7 @@ export function LynonApiDocs() {
               >
                 <div className="flex items-center justify-between gap-2 mb-1.5">
                   <span
-                    className={`rounded-md px-2 py-0.5 text-[10px] font-black uppercase ${
+                    className={`rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase ${
                       ep.method === 'GET'
                         ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
                         : ep.method === 'POST'
@@ -449,7 +449,7 @@ export function LynonApiDocs() {
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <span
-                      className={`rounded-md px-2.5 py-1 text-xs font-black ${
+                      className={`rounded-md px-2.5 py-1 text-xs font-semibold ${
                         activeEndpoint.method === 'GET'
                           ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
                           : activeEndpoint.method === 'POST'

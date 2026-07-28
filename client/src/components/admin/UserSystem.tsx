@@ -132,11 +132,11 @@ export function UserSystem() {
   return (
     <div className="space-y-6">
       <section className="grid gap-4 xl:grid-cols-[1.05fr_.95fr]">
-        <div className="rounded-[1.75rem] border border-slate-800 bg-[#101722]/90 p-5 shadow-2xl shadow-black/20">
+        <div className="rounded-xl border border-slate-800 bg-[#101722]/90 p-5 shadow-2xl shadow-black/20">
           <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-300/80">Kullanıcı sistemi</p>
-              <h2 className="mt-1 text-2xl font-black tracking-[-0.045em] text-white">Çalışan alt panelleri</h2>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-cyan-300/80">Kullanıcı sistemi</p>
+              <h2 className="mt-1 text-2xl font-semibold tracking-[-0.045em] text-white">Çalışan alt panelleri</h2>
               <p className="mt-2 max-w-2xl text-sm font-medium text-slate-500">
                 Müşteri admini ekip üyeleri için ayrı giriş oluşturur; hangi panel bölümlerini göreceklerini buradan seçer.
               </p>
@@ -158,7 +158,7 @@ export function UserSystem() {
               type="password"
             />
             <div>
-              <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">Rol şablonu</label>
+              <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Rol şablonu</label>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {ROLE_OPTIONS.map((role) => (
                   <button
@@ -166,7 +166,7 @@ export function UserSystem() {
                     type="button"
                     onClick={() => selectPreset(role.id)}
                     className={cn(
-                      'rounded-2xl border px-3 py-2 text-xs font-black transition',
+                      'rounded-xl border px-3 py-2 text-xs font-semibold transition',
                       form.role === role.id
                         ? 'border-cyan-300/40 bg-cyan-300 text-slate-950'
                         : 'border-slate-800 bg-black/20 text-slate-400 hover:text-white'
@@ -179,13 +179,13 @@ export function UserSystem() {
             </div>
           </div>
 
-          <div className="mt-5 rounded-[1.5rem] border border-slate-800 bg-black/20 p-4">
+          <div className="mt-5 rounded-xl border border-slate-800 bg-black/20 p-4">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <ShieldCheck size={18} className="text-cyan-300" />
-                <h3 className="text-sm font-black text-white">Yetkiler</h3>
+                <h3 className="text-sm font-semibold text-white">Yetkiler</h3>
               </div>
-              <span className="rounded-full bg-cyan-300/10 px-3 py-1 text-[11px] font-black text-cyan-200">
+              <span className="rounded-full bg-cyan-300/10 px-3 py-1 text-[11px] font-semibold text-cyan-200">
                 {form.permissions.length}/{PERMISSIONS.length} açık
               </span>
             </div>
@@ -198,7 +198,7 @@ export function UserSystem() {
                     type="button"
                     onClick={() => togglePermission(permission.id)}
                     className={cn(
-                      'flex items-start gap-3 rounded-2xl border p-3 text-left transition',
+                      'flex items-start gap-3 rounded-xl border p-3 text-left transition',
                       selected ? 'border-cyan-300/30 bg-cyan-300/[0.10]' : 'border-slate-800 bg-[#0b111a] hover:border-slate-700'
                     )}
                   >
@@ -206,7 +206,7 @@ export function UserSystem() {
                       <Check size={13} />
                     </span>
                     <span>
-                      <span className="block text-sm font-black text-white">{permission.label}</span>
+                      <span className="block text-sm font-semibold text-white">{permission.label}</span>
                       <span className="mt-0.5 block text-xs font-medium text-slate-500">{permission.hint}</span>
                     </span>
                   </button>
@@ -220,7 +220,7 @@ export function UserSystem() {
               type="button"
               onClick={() => updateForm('isActive', !form.isActive)}
               className={cn(
-                'inline-flex h-11 items-center justify-center gap-2 rounded-2xl border px-4 text-sm font-black transition',
+                'inline-flex h-11 items-center justify-center gap-2 rounded-xl border px-4 text-sm font-semibold transition',
                 form.isActive ? 'border-emerald-400/25 bg-emerald-400/10 text-emerald-200' : 'border-rose-400/25 bg-rose-400/10 text-rose-200'
               )}
             >
@@ -228,7 +228,7 @@ export function UserSystem() {
             </button>
             <div className="flex gap-2">
               {editingId && (
-                <button type="button" onClick={resetForm} className="h-11 rounded-2xl border border-slate-800 px-5 text-sm font-bold text-slate-400 transition hover:text-white">
+                <button type="button" onClick={resetForm} className="h-11 rounded-xl border border-slate-800 px-5 text-sm font-bold text-slate-400 transition hover:text-white">
                   Vazgeç
                 </button>
               )}
@@ -236,7 +236,7 @@ export function UserSystem() {
                 type="button"
                 onClick={() => saveMutation.mutate()}
                 disabled={saveMutation.isPending || !form.name.trim() || !form.username.trim() || (!editingId && !form.password.trim())}
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-cyan-300 px-6 text-sm font-black text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-cyan-300 px-6 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {saveMutation.isPending ? <Loader2 size={17} className="animate-spin" /> : editingId ? <Save size={17} /> : <Plus size={17} />}
                 {editingId ? 'Kaydet' : 'Çalışan aç'}
@@ -245,11 +245,11 @@ export function UserSystem() {
           </div>
         </div>
 
-        <div className="rounded-[1.75rem] border border-slate-800 bg-[#101722]/90 p-5">
+        <div className="rounded-xl border border-slate-800 bg-[#101722]/90 p-5">
           <div className="mb-4 flex items-center justify-between gap-3">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">Ekip listesi</p>
-              <h3 className="mt-1 text-xl font-black text-white">Tanımlı çalışanlar</h3>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-500">Ekip listesi</p>
+              <h3 className="mt-1 text-xl font-semibold text-white">Tanımlı çalışanlar</h3>
             </div>
             <Users className="text-cyan-300" size={24} />
           </div>
@@ -257,7 +257,7 @@ export function UserSystem() {
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Çalışan ara"
-            className="mb-4 h-11 w-full rounded-2xl border border-slate-800 bg-black/25 px-4 text-sm font-semibold text-white outline-none transition focus:border-cyan-300/40"
+            className="mb-4 h-11 w-full rounded-xl border border-slate-800 bg-black/25 px-4 text-sm font-semibold text-white outline-none transition focus:border-cyan-300/40"
           />
 
           {isLoading ? (
@@ -267,16 +267,16 @@ export function UserSystem() {
           ) : (
             <div className="space-y-3">
               {filteredUsers.map((user: any) => (
-                <article key={user.id} className="rounded-2xl border border-slate-800 bg-black/20 p-4">
+                <article key={user.id} className="rounded-xl border border-slate-800 bg-black/20 p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
                         <span className={cn('h-2.5 w-2.5 rounded-full', user.isActive !== false ? 'bg-emerald-400' : 'bg-rose-400')} />
-                        <h4 className="truncate text-sm font-black text-white">{user.name}</h4>
+                        <h4 className="truncate text-sm font-semibold text-white">{user.name}</h4>
                       </div>
                       <p className="mt-1 text-xs font-semibold text-slate-500">{user.username}</p>
                     </div>
-                    <span className="rounded-full border border-cyan-300/15 bg-cyan-300/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-cyan-200">
+                    <span className="rounded-full border border-cyan-300/15 bg-cyan-300/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-cyan-200">
                       {ROLE_OPTIONS.find((role) => role.id === user.role)?.label || user.role}
                     </span>
                   </div>
@@ -289,7 +289,7 @@ export function UserSystem() {
                     {(user.permissions || []).length > 5 && <span className="rounded-full bg-white/[0.05] px-2 py-1 text-[10px] font-bold text-slate-400">+{user.permissions.length - 5}</span>}
                   </div>
                   <div className="mt-4 flex gap-2">
-                    <button onClick={() => editUser(user)} className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-700 bg-white/[0.03] px-3 py-2 text-xs font-black text-slate-300 transition hover:text-white">
+                    <button onClick={() => editUser(user)} className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-700 bg-white/[0.03] px-3 py-2 text-xs font-semibold text-slate-300 transition hover:text-white">
                       <UserCog size={15} /> Düzenle
                     </button>
                     <button
@@ -304,7 +304,7 @@ export function UserSystem() {
                 </article>
               ))}
               {filteredUsers.length === 0 && (
-                <div className="rounded-2xl border border-dashed border-slate-800 py-12 text-center">
+                <div className="rounded-xl border border-dashed border-slate-800 py-12 text-center">
                   <KeyRound className="mx-auto mb-3 text-slate-600" />
                   <p className="text-sm font-bold text-slate-400">Henüz çalışan hesabı yok.</p>
                 </div>
@@ -320,13 +320,13 @@ export function UserSystem() {
 function Field({ label, value, onChange, placeholder, type = 'text' }: { label: string; value: string; onChange: (value: string) => void; placeholder?: string; type?: string }) {
   return (
     <div>
-      <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">{label}</label>
+      <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">{label}</label>
       <input
         type={type}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
-        className="h-12 w-full rounded-2xl border border-slate-800 bg-black/25 px-4 text-sm font-semibold text-white outline-none transition placeholder:text-slate-700 focus:border-cyan-300/40"
+        className="h-12 w-full rounded-xl border border-slate-800 bg-black/25 px-4 text-sm font-semibold text-white outline-none transition placeholder:text-slate-700 focus:border-cyan-300/40"
       />
     </div>
   );
@@ -334,9 +334,9 @@ function Field({ label, value, onChange, placeholder, type = 'text' }: { label: 
 
 function MiniStat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-2xl border border-slate-800 bg-black/20 px-4 py-3">
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">{label}</p>
-      <p className="mt-1 text-xl font-black text-white">{value}</p>
+    <div className="rounded-xl border border-slate-800 bg-black/20 px-4 py-3">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">{label}</p>
+      <p className="mt-1 text-xl font-semibold text-white">{value}</p>
     </div>
   );
 }

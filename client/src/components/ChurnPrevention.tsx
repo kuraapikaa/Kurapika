@@ -88,13 +88,13 @@ export function ChurnPrevention() {
     return (
         <div className="animate-in space-y-6 pb-20">
             {/* Header */}
-            <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between bg-slate-900/40 p-6 rounded-[2.5rem] border border-white/5 backdrop-blur-md">
+            <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between bg-slate-900/40 p-6 rounded-xl border border-white/5 backdrop-blur-md">
                 <div className="flex items-center gap-3">
-                    <div className="rounded-2xl bg-rose-500/20 p-3 text-rose-400 shadow-xl shadow-rose-500/10">
+                    <div className="rounded-xl bg-rose-500/20 p-3 text-rose-400 shadow-xl shadow-rose-500/10">
                         <UserX size={28} />
                     </div>
                     <div>
-                        <h2 className="text-2xl font-black text-white tracking-tight">Kayıp Hatırlatıcı (Churn)</h2>
+                        <h2 className="text-2xl font-semibold text-white tracking-tight">Kayıp Hatırlatıcı (Churn)</h2>
                         <p className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mt-1">İnaktif Oyuncu Takip Paneli</p>
                     </div>
                 </div>
@@ -107,7 +107,7 @@ export function ChurnPrevention() {
                             setPage(1);
                         }}
                         className={cn(
-                            "flex items-center gap-2 px-6 py-2.5 rounded-2xl text-xs font-black transition-all border",
+                            "flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-semibold transition-all border",
                             showVipOnly
                                 ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white border-amber-400 shadow-lg shadow-amber-500/20"
                                 : "bg-white/5 text-slate-400 border-white/10 hover:text-white"
@@ -127,12 +127,12 @@ export function ChurnPrevention() {
                                 setSearchTerm(e.target.value);
                                 setPage(1);
                             }}
-                            className="h-11 w-64 rounded-2xl border border-white/10 bg-slate-950/60 pl-11 pr-4 text-sm font-medium text-white transition-all focus:border-rose-500/50 focus:ring-1 focus:ring-rose-500/20 outline-none"
+                            className="h-11 w-64 rounded-xl border border-white/10 bg-slate-950/60 pl-11 pr-4 text-sm font-medium text-white transition-all focus:border-rose-500/50 focus:ring-1 focus:ring-rose-500/20 outline-none"
                         />
                     </div>
 
-                    <div className="flex items-center gap-2 rounded-2xl bg-white/5 border border-white/10 p-1.5">
-                        <span className="pl-3 text-[10px] font-black text-slate-500 uppercase">Süre:</span>
+                    <div className="flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 p-1.5">
+                        <span className="pl-3 text-[10px] font-semibold text-slate-500 uppercase">Süre:</span>
                         <div className="flex gap-1">
                             {[3, 7, 15, 30].map((days) => (
                                 <button
@@ -142,7 +142,7 @@ export function ChurnPrevention() {
                                         setPage(1);
                                     }}
                                     className={cn(
-                                        "px-4 py-2 rounded-xl text-[10px] font-black transition-all",
+                                        "px-4 py-2 rounded-xl text-[10px] font-semibold transition-all",
                                         inactivityDays === days
                                             ? "bg-rose-600 text-white shadow-lg shadow-rose-600/20"
                                             : "text-slate-400 hover:text-white hover:bg-white/5"
@@ -157,7 +157,7 @@ export function ChurnPrevention() {
             </div>
 
             {/* Info Box */}
-            <div className="rounded-2xl border border-blue-500/20 bg-blue-500/5 p-4 flex items-start gap-4">
+            <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-4 flex items-start gap-4">
                 <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400">
                     <AlertTriangle size={20} />
                 </div>
@@ -172,11 +172,11 @@ export function ChurnPrevention() {
             </div>
 
             {/* Table */}
-            <div className="rounded-[2.5rem] border border-white/5 bg-slate-900/40 backdrop-blur-md overflow-hidden shadow-2xl">
+            <div className="rounded-xl border border-white/5 bg-slate-900/40 backdrop-blur-md overflow-hidden shadow-2xl">
                 <div className="flex items-center justify-between px-8 py-6 border-b border-white/5">
                     <div className="flex items-center gap-3">
                         <Clock size={18} className="text-rose-400" />
-                        <h3 className="text-sm font-black text-white uppercase tracking-wider">İnaktif Oyuncu Listesi</h3>
+                        <h3 className="text-sm font-semibold text-white uppercase tracking-wider">İnaktif Oyuncu Listesi</h3>
                     </div>
                     {isFetching && <Loader2 className="h-4 w-4 animate-spin text-slate-500" />}
                     <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
@@ -187,7 +187,7 @@ export function ChurnPrevention() {
                 <div className="overflow-x-auto min-h-[400px]">
                     <table className="w-full text-left">
                         <thead>
-                            <tr className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 border-b border-white/5 opacity-70">
+                            <tr className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400 border-b border-white/5 opacity-70">
                                 <th className="px-8 py-5">Oyuncu / ID</th>
                                 <th className="px-8 py-5">Son Giriş</th>
                                 <th className="px-8 py-5">Kayıt Tarihi</th>
@@ -234,11 +234,11 @@ export function ChurnPrevention() {
                                             <td className="px-8 py-5">
                                                 <div className="flex flex-col">
                                                     <div className="flex items-center gap-2">
-                                                        <span className="text-sm font-black text-white">
+                                                        <span className="text-sm font-semibold text-white">
                                                             {player.Login}
                                                         </span>
                                                         {isVipCandidate && (
-                                                            <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/20 px-1.5 py-0.5 text-[9px] font-black text-amber-500 border border-amber-500/30">
+                                                            <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/20 px-1.5 py-0.5 text-[9px] font-semibold text-amber-500 border border-amber-500/30">
                                                                 <Crown size={10} /> VIP ADAYI
                                                             </span>
                                                         )}
@@ -269,7 +269,7 @@ export function ChurnPrevention() {
                                             <td className="px-8 py-5 text-right">
                                                 <div className="flex flex-col items-end">
                                                     <span className={cn(
-                                                        "text-sm font-black tabular-nums",
+                                                        "text-sm font-semibold tabular-nums",
                                                         isHighBalance ? "text-emerald-400" : (player.Balance || 0) > 10 ? "text-white" : "text-slate-600"
                                                     )}>
                                                         {formatNumber(player.Balance || 0)} {player.CurrencyId}
@@ -282,7 +282,7 @@ export function ChurnPrevention() {
                                             <td className="px-8 py-5 text-right">
                                                 <div className="flex flex-col items-end">
                                                     <span className={cn(
-                                                        "text-sm font-black tabular-nums",
+                                                        "text-sm font-semibold tabular-nums",
                                                         isVipCandidate ? "text-amber-500" : "text-slate-300"
                                                     )}>
                                                         {formatNumber(totalDep)}
@@ -296,7 +296,7 @@ export function ChurnPrevention() {
                                                 <Link
                                                     to={`/oyuncu/${player.Id}/${player.Login}`}
                                                     className={cn(
-                                                        "inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-[10px] font-black transition-all uppercase tracking-widest",
+                                                        "inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-[10px] font-semibold transition-all uppercase tracking-widest",
                                                         isVipCandidate
                                                             ? "bg-amber-600 text-white border-amber-500 hover:bg-amber-500"
                                                             : "bg-white/5 border-white/10 text-slate-300 hover:bg-rose-500 hover:text-white hover:border-rose-500"
@@ -316,7 +316,7 @@ export function ChurnPrevention() {
                 {/* Pagination */}
                 {totalPages > 1 && (
                     <div className="flex items-center justify-between px-8 py-6 border-t border-white/5 bg-slate-900/20">
-                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                        <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">
                             Sayfa {page} / {totalPages} · Toplam {totalCount} Kayıt
                         </p>
                         <div className="flex items-center gap-2">
