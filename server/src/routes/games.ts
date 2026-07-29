@@ -8,7 +8,7 @@ import { getBackofficeToken } from '../lib/authStore.js';
 import { resolveTenantKeyForRequest, safeTenantKey } from '../lib/tenant.js';
 import { readStoredDocument, writeStoredDocument } from '../lib/documentStore.js';
 import { isLynonConfigured, lynonAssignCampaignToPlayer, lynonBuildBonusEligibilitySnapshot, lynonCreditPlayerMainAccount, lynonFindPlayerByLogin, lynonPlayerActivity } from '../services/lynonBackofficeService.js';
-import { getChatMemberStatus, isActiveMemberStatus, isTelegramConfigured, sendTelegramMessage } from '../services/telegramService.js';
+import { getChatMember, isTelegramConfigured, sendTelegramMessage } from '../services/telegramService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -1906,8 +1906,21 @@ const selectedSlice = selected.slice;
       return reply.status(422).send({ ok: false, message: 'Önce Telegram hesabınızı bağlayın.', linkRequired: true });
     }
 
-    const status = await getChatMemberStatus(telegramBonus.chatId, telegramUserId);
-    if (!isActiveMemberStatus(status)) {
+    const membership = await getChatMember(telegramBonus.chatId, telegramUserId);
+    if (!membership.ok) {
+      // Sorgu düştüyse oyuncuyu "üye değil" diye suçlamıyoruz; en sık sebep botun
+      // kanalda yönetici olmaması veya chatId'nin yanlış olmasıdır.
+      request.log.error(
+        { chatId: telegramBonus.chatId, telegramUserId, telegramError: membership.error },
+        '[telegram] Üyelik sorgulanamadı — bot kanalda yönetici mi, chatId doğru mu?'
+      );
+      return reply.status(503).send({
+        ok: false,
+        message: 'Telegram üyeliğiniz şu anda doğrulanamıyor. Lütfen biraz sonra tekrar deneyin.',
+        verificationFailed: true,
+      });
+    }
+    if (!membership.isMember) {
       return reply.status(422).send({
         ok: false,
         message: `${telegramBonus.channelUsername || 'Telegram kanalına'} katılmanız gerekiyor.`,
