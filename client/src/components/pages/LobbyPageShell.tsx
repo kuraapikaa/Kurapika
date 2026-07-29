@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { LobbyMobileNav } from './LobbyMobileNav';
-import { hexToRgba, type LobbyPalette } from '../../lib/lobbyTheme';
+import { hexToRgba, LOBBY_TOKENS, type LobbyPalette } from '../../lib/lobbyTheme';
 import { cn } from '../../lib/utils';
 
 type PublicPage = 'bonus' | 'wheel' | 'scratch' | 'tournament' | 'prediction' | 'missions' | 'call';
@@ -43,13 +43,12 @@ export function LobbyPageShell({
 }: LobbyPageShellProps) {
   return (
     <div
-      className="narcos-lobby relative min-h-screen overflow-x-hidden font-sans text-zinc-100"
-      style={rootStyle}
+      className="narcos-lobby relative min-h-screen overflow-x-hidden font-lobby"
+      style={{ ...rootStyle, color: palette.textColor }}
     >
-      <div className="pointer-events-none fixed inset-0">
-        <div className="absolute inset-0" style={backgroundStyle} />
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.015)_1px,transparent_1px)] bg-[size:44px_44px] opacity-50 md:bg-[size:72px_72px]" />
-      </div>
+      {/* Izgara dokusu kaldırıldı: yeni tasarımda zemin düz, derinlik yalnızca
+          tepedeki altın hâleden geliyor. İki katman birlikte kirli görünüyordu. */}
+      <div className="pointer-events-none fixed inset-0" style={backgroundStyle} />
 
       <LobbyMobileNav active={active} />
 
@@ -59,47 +58,46 @@ export function LobbyPageShell({
           wide ? 'max-w-[1400px]' : 'max-w-[1100px]'
         )}
       >
+        {/* Başlık artık kutu içinde değil. Mockup'ta sayfa doğrudan tipografiyle
+            açılıyor; çerçeveli "hero kartı" her sayfada tekrarlanınca içerikten
+            önce gelen bir gürültü katmanına dönüşüyordu. */}
         <motion.header
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.2 }}
-          className="relative overflow-hidden rounded-2xl border p-4 shadow-[0_12px_38px_rgba(0,0,0,.28)] md:p-5"
-          style={{
-            borderColor: hexToRgba(palette.primaryColor, 0.18),
-            background: `linear-gradient(120deg, ${hexToRgba(palette.primaryColor, 0.2)}, ${hexToRgba(palette.surfaceColor, 0.9)} 55%, ${hexToRgba(palette.backgroundColor, 0.97)})`,
-          }}
+          transition={{ duration: 0.22 }}
+          className="relative flex flex-wrap items-end justify-between gap-3 pt-1"
         >
-          <div
-            className="absolute -right-14 -top-16 h-40 w-40 rounded-full blur-[70px]"
-            style={{ backgroundColor: hexToRgba(palette.accentColor, 0.2) }}
-          />
-          <div className="relative z-10 flex flex-wrap items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              {eyebrow && (
-                <span
-                  className="inline-flex w-max items-center rounded-full border px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.16em]"
-                  style={{
-                    borderColor: hexToRgba(palette.accentColor, 0.22),
-                    backgroundColor: hexToRgba(palette.accentColor, 0.12),
-                    color: palette.accentColor,
-                  }}
-                >
-                  {eyebrow}
-                </span>
-              )}
-              <h1 className="mt-2 text-xl font-black leading-tight tracking-[-0.035em] text-white sm:text-2xl md:text-[26px]">
-                {title}
-              </h1>
-              {subtitle && (
-                <p className="mt-1.5 max-w-[65ch] text-[12px] font-medium leading-5 text-zinc-400 md:text-[13px]">
-                  {subtitle}
-                </p>
-              )}
-            </div>
-            {aside && <div className="shrink-0">{aside}</div>}
+          <div className="min-w-0 flex-1">
+            {eyebrow && (
+              <span
+                className="block text-[10px] font-extrabold uppercase leading-none"
+                style={{ letterSpacing: LOBBY_TOKENS.tracking.label, color: palette.primaryColor }}
+              >
+                {eyebrow}
+              </span>
+            )}
+            <h1
+              className="mt-2 text-[22px] font-black leading-[1.08] tracking-[-0.03em] sm:text-[26px] md:text-[28px]"
+              style={{ color: palette.textColor }}
+            >
+              {title}
+            </h1>
+            {subtitle && (
+              <p
+                className="mt-1.5 max-w-[62ch] text-[12px] font-medium leading-5 md:text-[13px]"
+                style={{ color: palette.mutedTextColor }}
+              >
+                {subtitle}
+              </p>
+            )}
           </div>
-          {toolbar && <div className="relative z-10 mt-3.5">{toolbar}</div>}
+          {aside && <div className="shrink-0">{aside}</div>}
         </motion.header>
+
+        {/* Başlığı içerikten ayıran saç teli çizgi — kutu yerine tek kural. */}
+        <div className="h-px w-full" style={{ backgroundColor: LOBBY_TOKENS.border(0.09) }} />
+
+        {toolbar && <div className="relative z-10">{toolbar}</div>}
 
         {children}
       </main>
@@ -119,11 +117,14 @@ export function LobbyCard({
 }) {
   return (
     <section
-      className={cn(
-        'rounded-2xl border border-white/[0.075] bg-white/[0.032] shadow-[0_10px_32px_rgba(0,0,0,.2)] backdrop-blur-2xl',
-        padded && 'p-3.5 md:p-4',
-        className
-      )}
+      className={cn('border', padded && 'p-3.5 md:p-4', className)}
+      style={{
+        borderRadius: LOBBY_TOKENS.radius.card,
+        borderColor: LOBBY_TOKENS.border(0.09),
+        // Yüzey rengi zeminden yalnızca bir tık açık; ayrım kenarlıkla kuruluyor,
+        // gölge ve blur ile değil. Mockup'ın düz, baskı gibi duran dili bu.
+        backgroundColor: 'rgba(243, 236, 221, 0.022)',
+      }}
     >
       {children}
     </section>
@@ -133,9 +134,18 @@ export function LobbyCard({
 /** Kart içi bölüm başlığı. */
 export function LobbySectionTitle({ title, action }: { title: string; action?: ReactNode }) {
   return (
-    <div className="mb-2.5 flex items-baseline justify-between gap-3">
-      <h2 className="truncate text-[13px] font-black tracking-[-0.02em] text-white">{title}</h2>
-      {action && <span className="shrink-0 text-[9px] font-black uppercase tracking-[0.12em] text-zinc-600">{action}</span>}
+    <div className="mb-3 flex items-baseline justify-between gap-3">
+      <h2 className="truncate text-[13px] font-extrabold tracking-[-0.015em] text-[color:var(--lobby-text)]">
+        {title}
+      </h2>
+      {action && (
+        <span
+          className="shrink-0 text-[9px] font-extrabold uppercase text-[color:var(--lobby-muted)]"
+          style={{ letterSpacing: LOBBY_TOKENS.tracking.tight }}
+        >
+          {action}
+        </span>
+      )}
     </div>
   );
 }
@@ -167,10 +177,20 @@ export function LobbyIdentityBar({
   return (
     <LobbyCard>
       <div className="flex flex-col gap-2 md:flex-row md:items-center">
-        <div className="flex min-w-0 flex-1 items-center gap-2.5 rounded-xl border border-white/[0.06] bg-black/25 px-3 py-2">
-          {icon && <span className="shrink-0 text-zinc-500">{icon}</span>}
+        <div
+          className="flex min-w-0 flex-1 items-center gap-2.5 border px-3 py-2"
+          style={{
+            borderRadius: LOBBY_TOKENS.radius.control,
+            borderColor: LOBBY_TOKENS.border(0.1),
+            backgroundColor: 'rgba(0, 0, 0, 0.28)',
+          }}
+        >
+          {icon && <span className="shrink-0" style={{ color: palette.mutedTextColor }}>{icon}</span>}
           <div className="min-w-0 flex-1">
-            <span className="block text-[9px] font-black uppercase leading-none tracking-[0.16em] text-zinc-500">
+            <span
+              className="block text-[9px] font-extrabold uppercase leading-none"
+              style={{ letterSpacing: LOBBY_TOKENS.tracking.label, color: palette.mutedTextColor }}
+            >
               {label}
             </span>
             <input
@@ -179,7 +199,8 @@ export function LobbyIdentityBar({
               onChange={(event) => onChange(event.target.value)}
               onKeyDown={(event) => event.key === 'Enter' && onSubmit()}
               placeholder={placeholder}
-              className="mt-1 w-full border-0 bg-transparent p-0 text-sm font-black leading-none text-white outline-none placeholder:text-zinc-700 focus:ring-0"
+              className="mt-1 w-full border-0 bg-transparent p-0 text-sm font-extrabold leading-none outline-none focus:ring-0"
+              style={{ color: palette.textColor }}
             />
           </div>
         </div>
@@ -187,10 +208,14 @@ export function LobbyIdentityBar({
           type="button"
           onClick={onSubmit}
           disabled={busy || !value.trim()}
-          className="flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl px-5 text-[11px] font-black uppercase tracking-[0.16em] text-white transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-55"
+          className="flex h-10 shrink-0 items-center justify-center gap-2 px-5 text-[11px] font-extrabold uppercase transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-55"
           style={{
-            background: `linear-gradient(90deg, ${palette.primaryColor}, ${palette.secondaryColor})`,
-            boxShadow: `0 8px 22px ${hexToRgba(palette.primaryColor, 0.26)}`,
+            borderRadius: LOBBY_TOKENS.radius.control,
+            letterSpacing: LOBBY_TOKENS.tracking.label,
+            // Altin dolgu uzerinde koyu metin: mockup'ta birincil aksiyonun imzasi.
+            background: `linear-gradient(120deg, ${palette.primaryColor}, ${palette.secondaryColor})`,
+            color: '#171204',
+            boxShadow: `0 8px 22px ${hexToRgba(palette.primaryColor, 0.18)}`,
           }}
         >
           {submitLabel}

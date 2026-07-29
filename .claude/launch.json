@@ -3,9 +3,16 @@
   "configurations": [
     {
       "name": "client",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "--prefix", "client"],
+      "runtimeExecutable": "client/node_modules/.bin/vite.cmd",
+      "runtimeArgs": ["--port", "5173", "--strictPort"],
       "port": 5173
+    },
+    {
+      "name": "lobi",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["--no-install", "vite", "--port", "5174", "--strictPort"],
+      "cwd": "client",
+      "port": 5174
     }
   ]
 }

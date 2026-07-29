@@ -21,17 +21,44 @@ export type LobbyPalette = {
   backgroundOverlay: number;
 };
 
+/**
+ * Lobi yeniden tasarımının renk sistemi.
+ *
+ * Sıcak siyah zemin + krem metin + altın vurgu. Kazanç tutarları yeşille
+ * ayrılır; para hareketi tek renkte toplandığı için ekranda aranmadan bulunur.
+ *
+ * DİKKAT: bu yalnızca VARSAYILAN. Admin "Lobi Tasarımı" bölümünden palet
+ * kaydedildiyse veritabanındaki değer bunu ezer ve burada yapılan değişiklik
+ * canlıda görünmez.
+ */
 export const DEFAULT_LOBBY_PALETTE: LobbyPalette = {
-  primaryColor: '#3b82f6',
-  secondaryColor: '#1d4ed8',
-  accentColor: '#5eead4',
-  backgroundColor: '#060911',
-  surfaceColor: '#0d1119',
-  textColor: '#f1f5f9',
-  mutedTextColor: '#7dd3fc',
+  primaryColor: '#e7c574',
+  secondaryColor: '#d3a952',
+  accentColor: '#5fd6a7',
+  backgroundColor: '#0e0c09',
+  surfaceColor: '#121009',
+  textColor: '#f3ecdd',
+  mutedTextColor: '#8f8674',
   backgroundImageUrl: '',
   backgroundOverlay: 72,
 };
+
+/**
+ * Palete bağlı olmayan, tasarımın kendi ölçüleri.
+ *
+ * Renkler admin'den değişebildiği için bunlar ayrı tutuldu: yazı ölçeği,
+ * köşe yarıçapı ve kenarlık şiddeti tasarımın kimliği ve tema değişse de sabit.
+ */
+export const LOBBY_TOKENS = {
+  /** Mockup'ta baskın yarıçaplar: kart 12, geniş yüzey 20, rozet tam yuvarlak. */
+  radius: { pill: '9999px', card: '12px', panel: '20px', control: '10px' },
+  /** Büyük harf mikro etiketlerin harf aralığı — tasarımın en belirgin imzası. */
+  tracking: { label: '0.16em', tight: '0.12em' },
+  /** Kenarlıklar metin renginin düşük alfası; ayrı bir gri getirilmiyor. */
+  border: (alpha: number) => `rgba(243, 236, 221, ${alpha})`,
+  /** Kazanç/pozitif tutar rengi. */
+  win: '#5fd6a7',
+} as const;
 
 const HEX_PATTERN = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
 
@@ -101,8 +128,15 @@ export function paletteBackgroundStyle(palette: LobbyPalette): CSSProperties {
       backgroundRepeat: 'no-repeat',
     };
   }
+  // Tepeden yayılan geniş bir altın hâle, sağ omuzda daha zayıf bir yeşil.
+  // Elips (daire değil): ekran genişledikçe ışık yatayda yayılıyor, dikeyde
+  // sabit kalıyor; böylece masaüstünde tepeye yapışık bir vinyet oluşuyor.
   return {
-    background: `radial-gradient(circle at 12% 0%, ${hexToRgba(palette.primaryColor, 0.2)}, transparent 34%), radial-gradient(circle at 92% 22%, ${hexToRgba(palette.accentColor, 0.12)}, transparent 30%), linear-gradient(180deg, ${palette.backgroundColor}, ${palette.surfaceColor} 55%, ${palette.backgroundColor})`,
+    background: [
+      `radial-gradient(ellipse 900px 420px at 50% -80px, ${hexToRgba(palette.primaryColor, 0.09)}, transparent 70%)`,
+      `radial-gradient(ellipse 600px 400px at 92% 30%, ${hexToRgba(palette.accentColor, 0.045)}, transparent 70%)`,
+      `linear-gradient(180deg, ${palette.backgroundColor}, ${palette.surfaceColor} 60%, ${palette.backgroundColor})`,
+    ].join(', '),
   };
 }
 
