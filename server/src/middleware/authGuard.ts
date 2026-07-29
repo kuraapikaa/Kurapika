@@ -50,6 +50,11 @@ const PUBLIC_PREFIXES = [
 const BONUS_PANEL_PATHS = new Set([
   '/api/admin/bonus/check-player',
   '/api/admin/bonus/charge',
+  // Bonus talep sayfasi bonus katalogunu buradan okuyor. Listede olmadigi
+  // icin oyuncu oturumuyla 401 doniyordu ve sayfa bos bonus listesiyle
+  // aciliyordu. Uc kullanicidan parametre almiyor; yalnizca oyuncunun zaten
+  // gormesi gereken kampanya listesini donuyor.
+  '/api/admin/bonus/partner-list',
 ]);
 
 function isPublicPath(path: string): boolean {
