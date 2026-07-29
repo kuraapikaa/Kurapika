@@ -1954,11 +1954,19 @@ const selectedSlice = selected.slice;
   // Telegram Bot API'nin update'leri gönderdiği webhook. `/start <login>` mesajıyla
   // oyuncunun bonus panel giriş adını Telegram kullanıcı kimliğine bağlar.
   app.post('/telegram/webhook', async (request: any, reply) => {
-    if (config.telegram.webhookSecret) {
-      const provided = request.headers['x-telegram-bot-api-secret-token'];
-      if (provided !== config.telegram.webhookSecret) {
-        return reply.status(401).send({ ok: false });
-      }
+    // Bu uç kimlik doğrulamasız erişilebilir olmak ZORUNDA (Telegram'ın panel
+    // oturumu yok), dolayısıyla tek koruma paylaşılan sırdır. Sır tanımlı
+    // değilse ucu açık bırakmak yerine kapatıyoruz: aksi halde herkes sahte
+    // /start gönderip başka bir oyuncunun hesabını kendi Telegram kimliğine
+    // bağlayabilir ve onun bonusunu alabilirdi.
+    if (!config.telegram.webhookSecret) {
+      request.log.error('[telegram] TELEGRAM_WEBHOOK_SECRET tanımlı değil; webhook kapalı.');
+      return reply.status(503).send({ ok: false });
+    }
+    const provided = request.headers['x-telegram-bot-api-secret-token'];
+    if (provided !== config.telegram.webhookSecret) {
+      request.log.warn('[telegram] Webhook secret eşleşmedi; istek reddedildi.');
+      return reply.status(401).send({ ok: false });
     }
     const message = request.body?.message;
     const text = String(message?.text || '').trim();
