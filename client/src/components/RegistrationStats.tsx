@@ -219,11 +219,11 @@ export function RegistrationStats({ dateRange }: RegistrationStatsProps) {
                         </Link>
                       </td>
                       <td>{formatDateTime(player.CreatedLocal)}</td>
-                      <td>{player.FirstDepositTimeLocal ? <span className="text-emerald-300">{formatDateTime(player.FirstDepositTimeLocal)}</span> : <span className="text-slate-700">Henüz yok</span>}</td>
+                      <td>{player.FirstDepositTimeLocal ? <span className="text-emerald-300">{formatDateTime(player.FirstDepositTimeLocal)}</span> : <span className="text-[color:var(--panel-faint,#5c6470)]">Henüz yok</span>}</td>
                       <td className="text-right font-semibold text-white">{formatNumber(player.DepositCount)}</td>
-                      <td>{player.BTag ? <span className="registration-btag">{player.BTag}</span> : <span className="text-slate-700">—</span>}</td>
+                      <td>{player.BTag ? <span className="registration-btag">{player.BTag}</span> : <span className="text-[color:var(--panel-faint,#5c6470)]">—</span>}</td>
                       <td className="text-right">
-                        <strong className={player.DepositAmount > 0 ? 'text-emerald-300' : 'text-slate-600'}>
+                        <strong className={player.DepositAmount > 0 ? 'text-emerald-300' : 'text-[color:var(--panel-faint,#5c6470)]'}>
                           {formatNumber(player.DepositAmount)} {player.CurrencyId}
                         </strong>
                       </td>

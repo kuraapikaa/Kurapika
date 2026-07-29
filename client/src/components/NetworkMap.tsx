@@ -20,13 +20,13 @@ export function NetworkMap({ loginIp, clientId }: NetworkMapProps) {
 
     if (!loginIp) {
         return (
-            <div className="rounded-xl border border-white/5 bg-[rgba(242,244,248,0.20)] p-20 text-center flex flex-col items-center justify-center text-slate-500 backdrop-blur-sm">
+            <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.20)] p-20 text-center flex flex-col items-center justify-center text-[color:var(--panel-muted,#8a919c)] backdrop-blur-sm">
                 <div className="relative mb-6">
                     <Globe size={64} className="opacity-10" />
                     <AlertTriangle size={24} className="absolute -bottom-2 -right-2 text-amber-500/50" />
                 </div>
-                <p className="font-semibold uppercase tracking-[0.3em] text-sm text-slate-400">Veri Eksikliği</p>
-                <p className="text-xs text-slate-500 mt-2 max-w-xs leading-relaxed">Bu oyuncunun aktif bir IP kaydı bulunamadı. Multi-account analizi için yeterli veri yok.</p>
+                <p className="font-semibold uppercase tracking-[0.3em] text-sm text-[color:var(--panel-muted,#8a919c)]">Veri Eksikliği</p>
+                <p className="text-xs text-[color:var(--panel-muted,#8a919c)] mt-2 max-w-xs leading-relaxed">Bu oyuncunun aktif bir IP kaydı bulunamadı. Multi-account analizi için yeterli veri yok.</p>
             </div>
         );
     }
@@ -35,7 +35,7 @@ export function NetworkMap({ loginIp, clientId }: NetworkMapProps) {
 
     if (isLoading) {
         return (
-            <div className="flex h-[500px] items-center justify-center flex-col gap-6 bg-[rgba(242,244,248,0.20)] rounded-xl border border-white/5">
+            <div className="flex h-[500px] items-center justify-center flex-col gap-6 bg-[rgba(242,244,248,0.20)] rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
                 <div className="relative">
                     <motion.div
                         animate={{ rotate: 360 }}
@@ -52,7 +52,7 @@ export function NetworkMap({ loginIp, clientId }: NetworkMapProps) {
                 </div>
                 <div className="space-y-2 text-center">
                     <p className="text-blue-400 text-xs font-semibold tracking-[0.4em] uppercase">Ağ Taraması Yapılıyor</p>
-                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{loginIp} analiz ediliyor...</p>
+                    <p className="text-[10px] text-[color:var(--panel-muted,#8a919c)] font-bold uppercase tracking-widest">{loginIp} analiz ediliyor...</p>
                 </div>
             </div>
         );
@@ -85,7 +85,7 @@ export function NetworkMap({ loginIp, clientId }: NetworkMapProps) {
                         </div>
                         Multi-Account Haritası
                     </h3>
-                    <p className="text-xs text-slate-500 font-bold uppercase tracking-widest ml-12">Dijital Parmak İzi ve IP Analizi</p>
+                    <p className="text-xs text-[color:var(--panel-muted,#8a919c)] font-bold uppercase tracking-widest ml-12">Dijital Parmak İzi ve IP Analizi</p>
                 </div>
                 {isMultiAccountRisk && (
                     <motion.div
@@ -98,14 +98,14 @@ export function NetworkMap({ loginIp, clientId }: NetworkMapProps) {
                 )}
             </div>
 
-            <div className="relative w-full h-[600px] border border-white/5 bg-[#070b14] rounded-xl overflow-hidden flex items-center justify-center group shadow-2xl">
+            <div className="relative w-full h-[600px] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] rounded-xl overflow-hidden flex items-center justify-center group shadow-2xl">
                 {/* Visual Enhancers */}
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-500/5 via-transparent to-transparent opacity-50" />
                 <div className="absolute inset-0 opacity-[0.05]" style={{ backgroundImage: 'radial-gradient(circle at center, #ffffff 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
 
                 {/* Orbit Rings */}
-                <div className="absolute w-[320px] h-[320px] border border-white/5 rounded-full" />
-                <div className="absolute w-[440px] h-[440px] border border-white/[0.02] rounded-full" />
+                <div className="absolute w-[320px] h-[320px] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-full" />
+                <div className="absolute w-[440px] h-[440px] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-full" />
 
                 {/* Central IP Node */}
                 <motion.div
@@ -134,7 +134,7 @@ export function NetworkMap({ loginIp, clientId }: NetworkMapProps) {
                         <p className="text-[10px] text-white/40 font-bold uppercase tracking-[0.2em] mt-1">Giriş IP</p>
 
                         {/* Hover Tooltip for Central Node */}
-                        <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 px-3 py-1 bg-slate-900 border border-white/10 rounded-lg text-[10px] font-bold text-slate-400 whitespace-nowrap opacity-0 group-hover/center:opacity-100 transition-opacity">
+                        <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 px-3 py-1 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-lg text-[10px] font-bold text-[color:var(--panel-muted,#8a919c)] whitespace-nowrap opacity-0 group-hover/center:opacity-100 transition-opacity">
                             Analiz Edilen Bağlantı Noktası
                         </div>
                     </div>
@@ -199,7 +199,7 @@ export function NetworkMap({ loginIp, clientId }: NetworkMapProps) {
                                     "hover:shadow-[0_0_30px_rgba(139,92,246,0.3)] hover:-translate-y-1",
                                     isCurrentClient
                                         ? 'border-amber-500/50 bg-amber-950/60 shadow-[0_0_20px_rgba(245,158,11,0.1)] ring-4 ring-amber-500/10'
-                                        : 'border-white/10 bg-[rgba(242,244,248,0.80)] hover:bg-[rgba(242,244,248,0.90)] hover:border-blue-500/50'
+                                        : 'border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.80)] hover:bg-[rgba(242,244,248,0.90)] hover:border-blue-500/50'
                                 )}
                                 onClick={() => {
                                     if (!isCurrentClient) {
@@ -210,24 +210,24 @@ export function NetworkMap({ loginIp, clientId }: NetworkMapProps) {
                             >
                                 <div className={cn(
                                     "mb-2 p-1.5 rounded-lg transition-colors",
-                                    isCurrentClient ? 'bg-amber-500/20 text-amber-400' : 'bg-white/5 text-slate-400 group-hover/node:bg-blue-500/20 group-hover/node:text-blue-400'
+                                    isCurrentClient ? 'bg-amber-500/20 text-amber-400' : 'bg-white/5 text-[color:var(--panel-muted,#8a919c)] group-hover/node:bg-blue-500/20 group-hover/node:text-blue-400'
                                 )}>
                                     <UserCircle2 size={24} />
                                 </div>
 
                                 {isCurrentClient && (
-                                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-amber-500 text-slate-950 text-[8px] font-semibold px-2 py-0.5 rounded-full uppercase shadow-lg whitespace-nowrap">
+                                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[color:var(--panel-warning,#ff9f0a)] text-[#050609] text-[8px] font-semibold px-2 py-0.5 rounded-full uppercase shadow-lg whitespace-nowrap">
                                         Aktif Profil
                                     </div>
                                 )}
 
                                 <span className={cn(
                                     "text-[11px] font-semibold mt-1 leading-tight text-center px-1 max-w-full truncate",
-                                    isCurrentClient ? 'text-amber-200' : 'text-slate-200 group-hover/node:text-white'
+                                    isCurrentClient ? 'text-amber-200' : 'text-[color:var(--panel-text-dim,#c8cdd5)] group-hover/node:text-white'
                                 )}>
                                     {String(client.ClientLogin || client.Login || client.FirstName || 'İsimsiz')}
                                 </span>
-                                <span className="text-[9px] font-mono text-slate-500 mt-1">#{client.Id}</span>
+                                <span className="text-[9px] font-mono text-[color:var(--panel-muted,#8a919c)] mt-1">#{client.Id}</span>
 
                                 {!isCurrentClient && (
                                     <div className="absolute top-2 right-2 opacity-0 group-hover/node:opacity-100 transition-opacity">
@@ -251,26 +251,26 @@ export function NetworkMap({ loginIp, clientId }: NetworkMapProps) {
                                 "flex items-center justify-between p-5 rounded-xl border transition-all duration-300",
                                 isMatch
                                     ? "bg-amber-500/5 border-amber-500/20 shadow-lg shadow-amber-500/5"
-                                    : "bg-[rgba(242,244,248,0.40)] border-white/5 hover:border-white/10"
+                                    : "bg-[rgba(242,244,248,0.40)] border-[color:var(--panel-border,rgba(242,244,248,0.1))] hover:border-[color:var(--panel-border,rgba(242,244,248,0.1))]"
                             )}
                         >
                             <div className="flex items-center gap-4">
                                 <div className={cn(
                                     "p-2.5 rounded-xl",
-                                    isMatch ? "bg-amber-500/10 text-amber-400" : "bg-[rgba(242,244,248,0.60)] text-slate-500"
+                                    isMatch ? "bg-amber-500/10 text-amber-400" : "bg-[rgba(242,244,248,0.60)] text-[color:var(--panel-muted,#8a919c)]"
                                 )}>
                                     <Monitor size={18} />
                                 </div>
                                 <div className="flex flex-col text-left">
                                     <div className="flex items-center gap-2">
-                                        <span className="font-semibold text-sm text-slate-200">
+                                        <span className="font-semibold text-sm text-[color:var(--panel-text-dim,#c8cdd5)]">
                                             {client.FirstName || 'İsimsiz'} {client.LastName || ''}
                                         </span>
                                         {isMatch && (
-                                            <span className="bg-amber-500 text-slate-950 text-[8px] px-1.5 py-0.5 rounded font-semibold uppercase tracking-tighter">İnceleniyor</span>
+                                            <span className="bg-[color:var(--panel-warning,#ff9f0a)] text-[#050609] text-[8px] px-1.5 py-0.5 rounded font-semibold uppercase tracking-tighter">İnceleniyor</span>
                                         )}
                                     </div>
-                                    <span className="text-xs font-mono text-slate-500 mt-0.5 tracking-tight">
+                                    <span className="text-xs font-mono text-[color:var(--panel-muted,#8a919c)] mt-0.5 tracking-tight">
                                         #{String(client.Id)} • {String(client.ClientLogin || client.Login || 'N/A')}
                                     </span>
                                 </div>

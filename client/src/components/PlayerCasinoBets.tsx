@@ -22,7 +22,7 @@ function TypeBadge({ value }: { value: unknown }) {
         ? 'border-emerald-400/20 bg-emerald-400/10 text-emerald-300'
         : lower.includes('bahis')
             ? 'border-blue-400/20 bg-blue-400/10 text-blue-300'
-            : 'border-slate-600/40 bg-[rgba(242,244,248,0.20)] text-slate-300';
+            : 'border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.20)] text-[color:var(--panel-text-dim,#c8cdd5)]';
     return (
         <span className={`inline-flex items-center rounded-md border px-2 py-1 text-[10px] font-bold ${tone}`}>
             {label}
@@ -37,7 +37,7 @@ function StateBadge({ value }: { value: unknown }) {
         ? 'border-emerald-400/20 bg-emerald-400/10 text-emerald-300'
         : /red|hata|fail|iptal/.test(lower)
             ? 'border-rose-400/20 bg-rose-400/10 text-rose-300'
-            : 'border-slate-600/40 bg-[rgba(242,244,248,0.20)] text-slate-300';
+            : 'border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.20)] text-[color:var(--panel-text-dim,#c8cdd5)]';
     return (
         <span className={`inline-flex items-center rounded-md border px-2 py-1 text-[10px] font-bold ${tone}`}>
             {label}
@@ -96,7 +96,7 @@ export function PlayerCasinoBets({ clientId }: PlayerCasinoBetsProps) {
     return (
         <div className="space-y-4 pt-6">
             <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-                <h3 className="text-lg font-bold text-slate-200 flex items-center gap-2">
+                <h3 className="text-lg font-bold text-[color:var(--panel-text-dim,#c8cdd5)] flex items-center gap-2">
                     <Dices size={18} className="text-blue-400" /> Casino Geçmişi ({totalCount})
                 </h3>
                 <DateRangeBar
@@ -108,24 +108,24 @@ export function PlayerCasinoBets({ clientId }: PlayerCasinoBetsProps) {
             </div>
 
             {bets.length === 0 ? (
-                <div className="rounded-xl border border-white/5 bg-[rgba(242,244,248,0.40)] p-8 text-center flex flex-col items-center justify-center gap-2 text-slate-500">
+                <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.40)] p-8 text-center flex flex-col items-center justify-center gap-2 text-[color:var(--panel-muted,#8a919c)]">
                     <Dices size={32} className="opacity-20" />
                     <span>Oynanmış casino eli bulunmuyor.</span>
                 </div>
             ) : (
-                <div className="rounded-xl border border-white/10 bg-[rgba(242,244,248,0.40)] overflow-x-auto">
+                <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.40)] overflow-x-auto">
                     <table className="w-full text-left text-sm">
-                        <thead className="bg-slate-900 border-b border-white/10">
+                        <thead className="bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
                             <tr>
-                                <th className="p-4 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Oyun Adı</th>
-                                <th className="p-4 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Sağlayıcı</th>
-                                <th className="p-4 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Oyun Türü</th>
-                                <th className="p-4 text-[10px] font-semibold uppercase tracking-widest text-slate-500">İşlem Türü</th>
-                                <th className="p-4 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Durum</th>
-                                <th className="p-4 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Tarih</th>
-                                <th className="p-4 text-[10px] font-semibold uppercase tracking-widest text-slate-500 text-right">Tutar</th>
-                                <th className="p-4 text-[10px] font-semibold uppercase tracking-widest text-slate-500 text-right">Kazanç</th>
-                                <th className="p-4 text-[10px] font-semibold uppercase tracking-widest text-slate-500">İşlem No</th>
+                                <th className="p-4 text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">Oyun Adı</th>
+                                <th className="p-4 text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">Sağlayıcı</th>
+                                <th className="p-4 text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">Oyun Türü</th>
+                                <th className="p-4 text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">İşlem Türü</th>
+                                <th className="p-4 text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">Durum</th>
+                                <th className="p-4 text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">Tarih</th>
+                                <th className="p-4 text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)] text-right">Tutar</th>
+                                <th className="p-4 text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)] text-right">Kazanç</th>
+                                <th className="p-4 text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">İşlem No</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
@@ -142,12 +142,12 @@ export function PlayerCasinoBets({ clientId }: PlayerCasinoBetsProps) {
                                             {gameName}
                                         </td>
                                         <td className="p-4">
-                                            <span className="font-mono text-xs text-slate-400 px-2 py-1 bg-white/5 rounded">
+                                            <span className="font-mono text-xs text-[color:var(--panel-muted,#8a919c)] px-2 py-1 bg-white/5 rounded">
                                                 {providerName}
                                             </span>
                                         </td>
                                         <td className="p-4">
-                                            <span className="font-mono text-[10px] uppercase text-slate-500">{bet.GameType || '—'}</span>
+                                            <span className="font-mono text-[10px] uppercase text-[color:var(--panel-muted,#8a919c)]">{bet.GameType || '—'}</span>
                                         </td>
                                         <td className="p-4">
                                             <TypeBadge value={bet.TypeName} />
@@ -156,23 +156,23 @@ export function PlayerCasinoBets({ clientId }: PlayerCasinoBetsProps) {
                                             <StateBadge value={bet.StateName} />
                                         </td>
                                         <td className="p-4">
-                                            <div className="flex items-center gap-2 text-slate-300">
-                                                <Calendar size={12} className="text-slate-500" />
+                                            <div className="flex items-center gap-2 text-[color:var(--panel-text-dim,#c8cdd5)]">
+                                                <Calendar size={12} className="text-[color:var(--panel-muted,#8a919c)]" />
                                                 {bet.CreatedLocal || bet.DateLocal ? formatDateTimeDisplay(bet.CreatedLocal || bet.DateLocal) : '—'}
                                             </div>
                                         </td>
                                         <td className="p-4 text-right">
-                                            <span className="font-mono font-medium text-slate-300 px-2 py-1 rounded">
+                                            <span className="font-mono font-medium text-[color:var(--panel-text-dim,#c8cdd5)] px-2 py-1 rounded">
                                                 {formatNumber(bet.Amount ?? bet.BetAmount ?? 0)} {bet.CurrencyId ?? 'TRY'}
                                             </span>
                                         </td>
                                         <td className="p-4 text-right">
-                                            <span className={`font-mono font-bold ${isWon ? 'text-emerald-400' : 'text-slate-500'}`}>
+                                            <span className={`font-mono font-bold ${isWon ? 'text-emerald-400' : 'text-[color:var(--panel-muted,#8a919c)]'}`}>
                                                 {isWon ? `+${formatNumber(winAmount)}` : '0.00'}
                                             </span>
                                         </td>
                                         <td className="p-4">
-                                            <span className="font-mono text-[10px] text-slate-600" title={String(documentId ?? '')}>
+                                            <span className="font-mono text-[10px] text-[color:var(--panel-faint,#5c6470)]" title={String(documentId ?? '')}>
                                                 {String(documentId ?? '—')}
                                             </span>
                                         </td>
@@ -187,7 +187,7 @@ export function PlayerCasinoBets({ clientId }: PlayerCasinoBetsProps) {
             {totalCount > 0 && (
                 <div className="flex items-center justify-between mt-4">
                     <div className="flex items-center gap-2">
-                        <select className="bg-slate-900 border border-white/10 text-slate-300 text-sm rounded-lg px-2 py-1 outline-none"
+                        <select className="bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] text-[color:var(--panel-text-dim,#c8cdd5)] text-sm rounded-lg px-2 py-1 outline-none"
                             value={rowsPerPage} onChange={(e) => { setRowsPerPage(Number(e.target.value)); setPage(0); }}>
                             {[10, 20, 50, 100].map(val => (
                                 <option key={val} value={val}>{val} satır</option>
@@ -195,9 +195,9 @@ export function PlayerCasinoBets({ clientId }: PlayerCasinoBetsProps) {
                         </select>
                     </div>
                     <div className="flex items-center gap-4">
-                        <button className="text-slate-400 disabled:opacity-30 hover:text-white transition-colors" disabled={page === 0} onClick={() => setPage(page - 1)}>Önceki</button>
-                        <span className="text-slate-200 text-sm font-mono">{page + 1} / {Math.ceil(totalCount / rowsPerPage) || 1}</span>
-                        <button className="text-slate-400 disabled:opacity-30 hover:text-white transition-colors" disabled={(page + 1) * rowsPerPage >= totalCount} onClick={() => setPage(page + 1)}>Sonraki</button>
+                        <button className="text-[color:var(--panel-muted,#8a919c)] disabled:opacity-30 hover:text-white transition-colors" disabled={page === 0} onClick={() => setPage(page - 1)}>Önceki</button>
+                        <span className="text-[color:var(--panel-text-dim,#c8cdd5)] text-sm font-mono">{page + 1} / {Math.ceil(totalCount / rowsPerPage) || 1}</span>
+                        <button className="text-[color:var(--panel-muted,#8a919c)] disabled:opacity-30 hover:text-white transition-colors" disabled={(page + 1) * rowsPerPage >= totalCount} onClick={() => setPage(page + 1)}>Sonraki</button>
                     </div>
                 </div>
             )}

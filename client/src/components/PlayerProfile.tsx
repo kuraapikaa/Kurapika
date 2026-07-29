@@ -555,7 +555,7 @@ export function PlayerProfile() {
     };
 
     if (!id) return (
-        <div className="flex items-center justify-center py-20 text-slate-500 font-bold uppercase tracking-widest">
+        <div className="flex items-center justify-center py-20 text-[color:var(--panel-muted,#8a919c)] font-bold uppercase tracking-widest">
             Lütfen bir oyuncu seçin
         </div>
     );
@@ -606,7 +606,7 @@ export function PlayerProfile() {
                                     );
                                 })()}
                             </div>
-                            <p className="mt-1 text-xs font-semibold text-slate-500 uppercase tracking-wider">Müşteri ID: #{id}</p>
+                            <p className="mt-1 text-xs font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-wider">Müşteri ID: #{id}</p>
                         </div>
                     </div>
                     <Button
@@ -624,7 +624,7 @@ export function PlayerProfile() {
             {/* Tab Navigation - Radix Tabs */}
             <Tabs.Root value={activeTab} onValueChange={(v) => setActiveTab(v as ProfileTab)} className="mb-3">
                 <Tabs.List className={cn(
-                    'inline-flex flex-wrap gap-0.5 rounded-lg border border-white/[0.07] bg-[#090d13] p-0.5'
+                    'inline-flex flex-wrap gap-0.5 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-0.5'
                 )}>
                     {tabEntries.map(({ value, icon: Icon, label }) => (
                         <Tabs.Trigger
@@ -634,7 +634,7 @@ export function PlayerProfile() {
                                 'inline-flex h-8 items-center gap-1.5 rounded-md px-2.5 text-[9px] font-bold uppercase tracking-[0.06em] transition-colors',
                                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950',
                                 'data-[state=active]:bg-blue-400 data-[state=active]:text-white',
-                                'data-[state=inactive]:text-slate-500 data-[state=inactive]:hover:bg-white/5 data-[state=inactive]:hover:text-slate-300'
+                                'data-[state=inactive]:text-[color:var(--panel-muted,#8a919c)] data-[state=inactive]:hover:bg-white/5 data-[state=inactive]:hover:text-[color:var(--panel-text-dim,#c8cdd5)]'
                             )}
                         >
                             <Icon size={16} className="shrink-0" />
@@ -652,7 +652,7 @@ export function PlayerProfile() {
                                 <div className="h-8 w-8 animate-ping rounded-full bg-blue-500/20" />
                             </div>
                         </div>
-                        <p className="text-sm font-semibold text-slate-500 uppercase tracking-[0.4em] animate-pulse">Veriler Çekiliyor...</p>
+                        <p className="text-sm font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-[0.4em] animate-pulse">Veriler Çekiliyor...</p>
                     </div>
                 ) : kpiError || !kpi ? (
                     <div className="rounded-xl border border-rose-500/20 bg-rose-500/5 py-32 text-center text-rose-400">
@@ -728,7 +728,7 @@ export function PlayerProfile() {
                                                 title="Para Birimi"
                                                 value={kpi.CurrencyId ?? '—'}
                                                 icon={Wallet}
-                                                colorClass="bg-[rgba(242,244,248,0.10)] text-slate-400"
+                                                colorClass="bg-[rgba(242,244,248,0.10)] text-[color:var(--panel-muted,#8a919c)]"
                                             />
                                         </div>
                                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 mt-6">
@@ -793,7 +793,7 @@ export function PlayerProfile() {
                                     </div>
 
                                     <Card className="p-4">
-                                        <CardTitle className="mb-4 text-left text-slate-400">Hesap Özeti (tüm KPI alanları)</CardTitle>
+                                        <CardTitle className="mb-4 text-left text-[color:var(--panel-muted,#8a919c)]">Hesap Özeti (tüm KPI alanları)</CardTitle>
                                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
                                             <InfoTile label="KPI Id" value={String(kpi.Id ?? '—')} icon={User} />
                                             <InfoTile label="Oyuncu Id" value={String(kpi.ClientId ?? '—')} icon={User} />
@@ -862,20 +862,20 @@ export function PlayerProfile() {
 
 
                             {activeTab === 'notes' && (
-                                <section className="rounded-xl border border-white/5 bg-[rgba(242,244,248,0.40)] p-8 backdrop-blur-md text-left">
+                                <section className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.40)] p-8 backdrop-blur-md text-left">
                                     <div className="mb-8 flex items-center justify-between">
                                         <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-amber-400">Oyuncu Notları</h3>
                                         <MessageSquare className="text-amber-400" size={20} />
                                     </div>
 
                                     {isNotesLoading ? (
-                                        <div className="py-20 text-center animate-pulse text-slate-500 font-bold uppercase text-[10px] tracking-widest">Notlar Yükleniyor...</div>
+                                        <div className="py-20 text-center animate-pulse text-[color:var(--panel-muted,#8a919c)] font-bold uppercase text-[10px] tracking-widest">Notlar Yükleniyor...</div>
                                     ) : notes.length === 0 ? (
-                                        <div className="py-20 text-center text-slate-500 italic text-sm">Henüz bir not eklenmemiş.</div>
+                                        <div className="py-20 text-center text-[color:var(--panel-muted,#8a919c)] italic text-sm">Henüz bir not eklenmemiş.</div>
                                     ) : (
                                         <div className="space-y-4">
                                             {notes.map((note: any) => (
-                                                <div key={note.Id} className="rounded-xl bg-[rgba(242,244,248,0.60)] p-6 border border-white/5 hover:border-white/10 transition-all relative group">
+                                                <div key={note.Id} className="rounded-xl bg-[rgba(242,244,248,0.60)] p-6 border border-[color:var(--panel-border,rgba(242,244,248,0.1))] hover:border-[color:var(--panel-border,rgba(242,244,248,0.1))] transition-all relative group">
                                                     <div className="mb-2 flex items-center justify-between">
                                                         <div className="flex items-center gap-2">
                                                             <div className="rounded-xl bg-blue-500/10 p-2 text-blue-400">
@@ -883,14 +883,14 @@ export function PlayerProfile() {
                                                             </div>
                                                             <span className="text-xs font-semibold text-blue-400 uppercase tracking-widest">{note.CreatedBy}</span>
                                                         </div>
-                                                        <div className="flex items-center gap-2 text-slate-500">
+                                                        <div className="flex items-center gap-2 text-[color:var(--panel-muted,#8a919c)]">
                                                             <Clock size={14} />
                                                             <span className="text-[10px] font-bold">{formatDateTimeDisplay(note.CreatedLocal)}</span>
                                                         </div>
                                                     </div>
-                                                    <p className="text-base text-slate-300 leading-relaxed font-medium">{note.Note}</p>
+                                                    <p className="text-base text-[color:var(--panel-text-dim,#c8cdd5)] leading-relaxed font-medium">{note.Note}</p>
                                                     {note.TypeName && (
-                                                        <span className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity text-[9px] font-semibold bg-white/5 px-3 py-1 rounded text-slate-400 uppercase tracking-widest ring-1 ring-white/5">
+                                                        <span className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity text-[9px] font-semibold bg-white/5 px-3 py-1 rounded text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest ring-1 ring-white/5">
                                                             {note.TypeName}
                                                         </span>
                                                     )}
@@ -902,19 +902,19 @@ export function PlayerProfile() {
                             )}
 
                             {activeTab === 'bonuses' && (
-                                <section className="rounded-xl border border-white/5 bg-[rgba(242,244,248,0.40)] p-8 backdrop-blur-md text-left">
+                                <section className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.40)] p-8 backdrop-blur-md text-left">
                                     <div className="space-y-6">
                                         <div className="flex items-center justify-between">
                                             <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-cyan-400">Bonus Hareketleri</h3>
                                         </div>
 
-                                        <div className="flex flex-col md:flex-row items-end gap-3 p-4 rounded-xl bg-[rgba(242,244,248,0.40)] border border-white/5">
+                                        <div className="flex flex-col md:flex-row items-end gap-3 p-4 rounded-xl bg-[rgba(242,244,248,0.40)] border border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
                                             <div className="flex-1 w-full space-y-2">
-                                                <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest ml-1">Hızlı Bonus Tanımla</label>
+                                                <label className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest ml-1">Hızlı Bonus Tanımla</label>
                                                     <select
                                                         value={selectedQuickBonus}
                                                         onChange={(e) => setSelectedQuickBonus(e.target.value)}
-                                                        className="w-full h-10 bg-slate-900 border border-white/10 rounded-xl px-3 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-emerald-500/40 disabled:opacity-50"
+                                                        className="w-full h-10 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-3 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-emerald-500/40 disabled:opacity-50"
                                                     >
                                                         <option value="">{partnerBonusesList.length > 0 ? 'Bonus Seçin...' : 'Bonus Bulunamadı veya Yükleniyor...'}</option>
                                                         {partnerBonusesList.map((b: any) => (
@@ -923,13 +923,13 @@ export function PlayerProfile() {
                                                     </select>
                                             </div>
                                             <div className="w-full md:w-32 space-y-2">
-                                                <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest ml-1">Miktar</label>
+                                                <label className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest ml-1">Miktar</label>
                                                 <input
                                                     type="number"
                                                     value={quickBonusAmount}
                                                     onChange={(e) => setQuickBonusAmount(e.target.value)}
                                                     placeholder="0"
-                                                    className="w-full h-10 bg-slate-900 border border-white/10 rounded-xl px-3 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-emerald-500/40"
+                                                    className="w-full h-10 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-3 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-emerald-500/40"
                                                 />
                                             </div>
                                             <Button
@@ -942,20 +942,20 @@ export function PlayerProfile() {
                                             </Button>
                                         </div>
 
-                                        <div className="grid grid-cols-1 gap-3 rounded-xl border border-white/5 bg-[rgba(242,244,248,0.40)] p-4 md:grid-cols-[180px_140px_1fr_auto] md:items-end">
+                                        <div className="grid grid-cols-1 gap-3 rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.40)] p-4 md:grid-cols-[180px_140px_1fr_auto] md:items-end">
                                             <div className="space-y-2">
-                                                <label className="ml-1 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Correction Type</label>
+                                                <label className="ml-1 text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">Correction Type</label>
                                                 <select
                                                     value={correctionType}
                                                     onChange={(e) => setCorrectionType(e.target.value as 'crediting' | 'debiting')}
-                                                    className="h-10 w-full rounded-xl border border-white/10 bg-slate-900 px-3 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-cyan-500/40"
+                                                    className="h-10 w-full rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] px-3 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-cyan-500/40"
                                                 >
                                                     <option value="crediting">Düzeltme Üst · Crediting</option>
                                                     <option value="debiting">Düzeltme Alt · Debiting</option>
                                                 </select>
                                             </div>
                                             <div className="space-y-2">
-                                                <label className="ml-1 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Amount (TRY)</label>
+                                                <label className="ml-1 text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">Amount (TRY)</label>
                                                 <input
                                                     type="number"
                                                     min="0.01"
@@ -963,18 +963,18 @@ export function PlayerProfile() {
                                                     value={correctionAmount}
                                                     onChange={(e) => setCorrectionAmount(e.target.value)}
                                                     placeholder="0.00"
-                                                    className="h-10 w-full rounded-xl border border-white/10 bg-slate-900 px-3 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-cyan-500/40"
+                                                    className="h-10 w-full rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] px-3 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-cyan-500/40"
                                                 />
                                             </div>
                                             <div className="space-y-2">
-                                                <label className="ml-1 text-[10px] font-semibold uppercase tracking-widest text-slate-500">İşlem Notu</label>
+                                                <label className="ml-1 text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">İşlem Notu</label>
                                                 <input
                                                     type="text"
                                                     maxLength={50}
                                                     value={correctionNote}
                                                     onChange={(e) => setCorrectionNote(e.target.value)}
                                                     placeholder="Zorunlu denetim notu (maks. 50)"
-                                                    className="h-10 w-full rounded-xl border border-white/10 bg-slate-900 px-3 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-cyan-500/40"
+                                                    className="h-10 w-full rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] px-3 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-cyan-500/40"
                                                 />
                                             </div>
                                             <Button
@@ -990,9 +990,9 @@ export function PlayerProfile() {
                                             </Button>
                                         </div>
 
-                                        <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                                        <div className="flex items-center justify-between pt-4 border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
                                             <div className="flex items-center gap-2">
-                                                <h4 className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Mevcut Bonus Kayıtları</h4>
+                                                <h4 className="text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">Mevcut Bonus Kayıtları</h4>
                                                 <Button
                                                     variant="primary"
                                                     size="sm"
@@ -1006,9 +1006,9 @@ export function PlayerProfile() {
 
                                             <div className="relative" ref={bonusDropdownRef}>
                                                 <div className="flex flex-col gap-1.5 min-w-[280px]">
-                                                    <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest ml-1">Tarih Seçici</label>
+                                                    <label className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest ml-1">Tarih Seçici</label>
                                                     <div className="flex">
-                                                        <div className="flex h-10 flex-1 items-center gap-2 rounded-l-xl bg-white/5 border border-white/10 px-4 text-xs font-bold text-slate-300">
+                                                        <div className="flex h-10 flex-1 items-center gap-2 rounded-l-xl bg-white/5 border border-[color:var(--panel-border,rgba(242,244,248,0.1))] px-4 text-xs font-bold text-[color:var(--panel-text-dim,#c8cdd5)]">
                                                             {appliedBonusStart && appliedBonusEnd
                                                                 ? `${ymdToDDMMYY(appliedBonusStart)} 00:00 / ${ymdToDDMMYY(ymdAddDays(appliedBonusEnd, 1))} 00:00`
                                                                 : 'Tüm Zamanlar'
@@ -1025,7 +1025,7 @@ export function PlayerProfile() {
 
                                                 {isBonusDateOpen && (
                                                     <div
-                                                        className="absolute right-0 top-full z-[100] mt-2 w-full rounded-xl border border-white/10 bg-slate-900 p-2 shadow-2xl animate-in fade-in slide-in-from-top-2"
+                                                        className="absolute right-0 top-full z-[100] mt-2 w-full rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-2 shadow-2xl animate-in fade-in slide-in-from-top-2"
                                                         onClick={(e) => e.stopPropagation()}
                                                     >
                                                         {[
@@ -1042,14 +1042,14 @@ export function PlayerProfile() {
                                                                 className={`w-full px-4 py-2.5 rounded-xl text-left text-xs font-bold transition-all ${(btn.id === 'all' && !appliedBonusStart) ||
                                                                     (btn.id === 'today' && appliedBonusStart === todayYMD && appliedBonusEnd === todayYMD)
                                                                     ? 'bg-cyan-500 text-white'
-                                                                    : 'text-slate-400 hover:bg-white/5 hover:text-white'
+                                                                    : 'text-[color:var(--panel-muted,#8a919c)] hover:bg-white/5 hover:text-white'
                                                                     }`}
                                                             >
                                                                 {btn.label}
                                                             </button>
                                                         ))}
-                                                        <div className="mt-2 border-t border-white/5 pt-2 flex flex-col gap-2 p-2">
-                                                            <span className="text-[9px] font-semibold text-slate-500 uppercase tracking-widest">Özel Tarih</span>
+                                                        <div className="mt-2 border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))] pt-2 flex flex-col gap-2 p-2">
+                                                            <span className="text-[9px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">Özel Tarih</span>
                                                             <div className="grid grid-cols-2 gap-2">
                                                                 <input
                                                                     type="date"
@@ -1057,7 +1057,7 @@ export function PlayerProfile() {
                                                                     onChange={(e) => setBonusStart(e.target.value)}
                                                                     min="2000-01-01"
                                                                     max={bonusEnd || defaultBonusEnd}
-                                                                    className="bg-white/5 border border-white/10 rounded-lg p-2 text-[10px] text-white outline-none focus:ring-2 focus:ring-cyan-500/40 [color-scheme:dark]"
+                                                                    className="bg-white/5 border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-lg p-2 text-[10px] text-white outline-none focus:ring-2 focus:ring-cyan-500/40 [color-scheme:dark]"
                                                                 />
                                                                 <input
                                                                     type="date"
@@ -1065,7 +1065,7 @@ export function PlayerProfile() {
                                                                     onChange={(e) => setBonusEnd(e.target.value)}
                                                                     min={bonusStart || defaultBonusStart}
                                                                     max={defaultBonusEnd}
-                                                                    className="bg-white/5 border border-white/10 rounded-lg p-2 text-[10px] text-white outline-none focus:ring-2 focus:ring-cyan-500/40 [color-scheme:dark]"
+                                                                    className="bg-white/5 border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-lg p-2 text-[10px] text-white outline-none focus:ring-2 focus:ring-cyan-500/40 [color-scheme:dark]"
                                                                 />
                                                             </div>
                                                             <button
@@ -1085,23 +1085,23 @@ export function PlayerProfile() {
                                         </div>
 
                                         {isBonusesLoading ? (
-                                            <div className="py-24 text-center rounded-xl bg-[rgba(242,244,248,0.20)] border border-white/5">
-                                                <div className="inline-flex items-center gap-3 text-slate-400">
+                                            <div className="py-24 text-center rounded-xl bg-[rgba(242,244,248,0.20)] border border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
+                                                <div className="inline-flex items-center gap-3 text-[color:var(--panel-muted,#8a919c)]">
                                                     <div className="h-6 w-6 rounded-full border-2 border-cyan-500/40 border-t-cyan-400 animate-spin" />
                                                     <span className="text-xs font-bold uppercase tracking-widest">Bonuslar yükleniyor</span>
                                                 </div>
                                             </div>
                                         ) : bonuses.length === 0 ? (
-                                            <div className="py-24 text-center rounded-xl bg-[rgba(242,244,248,0.10)] border border-white/5">
-                                                <Gift className="mx-auto text-slate-600 mb-3" size={32} />
-                                                <p className="text-sm text-slate-500 font-medium">Katılım sağlanan bir bonus bulunamadı.</p>
+                                            <div className="py-24 text-center rounded-xl bg-[rgba(242,244,248,0.10)] border border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
+                                                <Gift className="mx-auto text-[color:var(--panel-faint,#5c6470)] mb-3" size={32} />
+                                                <p className="text-sm text-[color:var(--panel-muted,#8a919c)] font-medium">Katılım sağlanan bir bonus bulunamadı.</p>
                                             </div>
                                         ) : (
-                                            <div className="rounded-xl border border-white/10 bg-[rgba(242,244,248,0.30)] overflow-hidden shadow-inner">
+                                            <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.30)] overflow-hidden shadow-inner">
                                                 <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
                                                     <table className="w-full text-left min-w-[1200px]">
                                                         <thead>
-                                                            <tr className="bg-[rgba(242,244,248,0.60)] text-[10px] font-semibold uppercase tracking-wider text-slate-400 whitespace-nowrap border-b border-white/10">
+                                                            <tr className="bg-[rgba(242,244,248,0.60)] text-[10px] font-semibold uppercase tracking-wider text-[color:var(--panel-muted,#8a919c)] whitespace-nowrap border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
                                                                 <th className="py-3.5 pl-5 pr-3 font-medium">ID</th>
                                                                 <th className="py-3.5 px-3 font-medium">Bonus Adı</th>
                                                                 <th className="py-3.5 px-3 font-medium">Oluşturulma</th>
@@ -1131,40 +1131,40 @@ export function PlayerProfile() {
                                                                 const rowBg = idx % 2 === 0 ? 'bg-transparent' : 'bg-white/[0.02]';
                                                                 return (
                                                                     <tr key={bonus.Id} className={`group hover:bg-white/[0.04] transition-colors ${rowBg}`}>
-                                                                        <td className="py-3.5 pl-5 pr-3 text-xs font-mono text-slate-500">{bonus.Id}</td>
+                                                                        <td className="py-3.5 pl-5 pr-3 text-xs font-mono text-[color:var(--panel-muted,#8a919c)]">{bonus.Id}</td>
                                                                         <td className="py-3.5 px-3 max-w-[200px]">
                                                                             <p className="text-sm font-bold text-white truncate group-hover:text-cyan-300/90 transition-colors">{bonus.Name}</p>
-                                                                            {(bonus.Description ?? '').trim() && <p className="text-[10px] text-slate-500 truncate mt-0.5">{bonus.Description}</p>}
+                                                                            {(bonus.Description ?? '').trim() && <p className="text-[10px] text-[color:var(--panel-muted,#8a919c)] truncate mt-0.5">{bonus.Description}</p>}
                                                                             {bonus.IsTest && <span className="inline-block mt-1 rounded-md bg-amber-500/20 px-1.5 py-0.5 text-[9px] font-bold text-amber-400">Test</span>}
                                                                         </td>
-                                                                        <td className="py-3.5 px-3 text-xs text-slate-400 whitespace-nowrap">{formatDateTimeWithSeconds(bonus.CreatedLocal)}</td>
-                                                                        <td className="py-3.5 px-3"><span className="inline-flex rounded-md bg-[rgba(242,244,248,0.50)] px-2 py-0.5 text-[10px] font-medium text-slate-300">{getBonusTypeLabel(bonus.BonusType)}</span></td>
-                                                                        <td className="py-3.5 px-3 text-xs text-slate-400">{konum}</td>
-                                                                        <td className="py-3.5 px-3 text-xs font-medium text-slate-400">{bonus.ClientCurrency ?? 'TRY'}</td>
+                                                                        <td className="py-3.5 px-3 text-xs text-[color:var(--panel-muted,#8a919c)] whitespace-nowrap">{formatDateTimeWithSeconds(bonus.CreatedLocal)}</td>
+                                                                        <td className="py-3.5 px-3"><span className="inline-flex rounded-md bg-[rgba(242,244,248,0.50)] px-2 py-0.5 text-[10px] font-medium text-[color:var(--panel-text-dim,#c8cdd5)]">{getBonusTypeLabel(bonus.BonusType)}</span></td>
+                                                                        <td className="py-3.5 px-3 text-xs text-[color:var(--panel-muted,#8a919c)]">{konum}</td>
+                                                                        <td className="py-3.5 px-3 text-xs font-medium text-[color:var(--panel-muted,#8a919c)]">{bonus.ClientCurrency ?? 'TRY'}</td>
                                                                         <td className="py-3.5 px-3 text-sm font-bold text-emerald-400 tabular-nums text-right">{formatNumber(bonus.Amount ?? 0)}</td>
-                                                                        <td className="py-3.5 px-3 text-xs text-slate-400 tabular-nums text-right">{formatNumber(bonus.RealAmount ?? 0)}</td>
-                                                                        <td className="py-3.5 px-3 text-xs text-slate-400 tabular-nums text-right">{formatNumber(bonus.PaidAmount ?? 0)}</td>
-                                                                        <td className="py-3.5 px-3 text-xs text-slate-400 tabular-nums text-right">{formatNumber(bonus.TotalPaidAmount ?? 0)}</td>
-                                                                        <td className="py-3.5 px-3 text-[11px] text-slate-400"><span className="text-slate-500">Çevrilen</span> {formatNumber(bonus.WageredAmount ?? 0)} · <span className="text-slate-500">Kalan</span> {formatNumber(bonus.ToWagerAmount ?? 0)}</td>
+                                                                        <td className="py-3.5 px-3 text-xs text-[color:var(--panel-muted,#8a919c)] tabular-nums text-right">{formatNumber(bonus.RealAmount ?? 0)}</td>
+                                                                        <td className="py-3.5 px-3 text-xs text-[color:var(--panel-muted,#8a919c)] tabular-nums text-right">{formatNumber(bonus.PaidAmount ?? 0)}</td>
+                                                                        <td className="py-3.5 px-3 text-xs text-[color:var(--panel-muted,#8a919c)] tabular-nums text-right">{formatNumber(bonus.TotalPaidAmount ?? 0)}</td>
+                                                                        <td className="py-3.5 px-3 text-[11px] text-[color:var(--panel-muted,#8a919c)]"><span className="text-[color:var(--panel-muted,#8a919c)]">Çevrilen</span> {formatNumber(bonus.WageredAmount ?? 0)} · <span className="text-[color:var(--panel-muted,#8a919c)]">Kalan</span> {formatNumber(bonus.ToWagerAmount ?? 0)}</td>
                                                                         <td className="py-3.5 px-3">
-                                                                            {showExpiredStatus ? <span className="inline-flex rounded-full bg-[rgba(242,244,248,0.40)] px-2.5 py-0.5 text-[10px] font-bold text-slate-400">Süresi dolmuş</span> : <span className="inline-flex rounded-full bg-[rgba(242,244,248,0.50)] px-2.5 py-0.5 text-[10px] font-medium text-slate-300">{getStatusText(bonus.ResultType)}</span>}
+                                                                            {showExpiredStatus ? <span className="inline-flex rounded-full bg-[rgba(242,244,248,0.40)] px-2.5 py-0.5 text-[10px] font-bold text-[color:var(--panel-muted,#8a919c)]">Süresi dolmuş</span> : <span className="inline-flex rounded-full bg-[rgba(242,244,248,0.50)] px-2.5 py-0.5 text-[10px] font-medium text-[color:var(--panel-text-dim,#c8cdd5)]">{getStatusText(bonus.ResultType)}</span>}
                                                                         </td>
-                                                                        <td className="py-3.5 px-3 text-xs text-slate-500 whitespace-nowrap">{bonus.ResultDateLocal ? formatDateTimeWithSeconds(bonus.ResultDateLocal) : '—'}</td>
-                                                                        <td className="py-3.5 px-3 text-xs text-slate-500 whitespace-nowrap">{bonus.AcceptanceDateLocal ? formatDateTimeWithSeconds(bonus.AcceptanceDateLocal) : '—'}</td>
-                                                                        <td className="py-3.5 px-3 text-xs text-slate-500 whitespace-nowrap">{bonus.StartDateLocal ? formatDateTimeDisplay(bonus.StartDateLocal) : '—'}</td>
-                                                                        <td className="py-3.5 px-3 text-xs text-slate-500 whitespace-nowrap">
+                                                                        <td className="py-3.5 px-3 text-xs text-[color:var(--panel-muted,#8a919c)] whitespace-nowrap">{bonus.ResultDateLocal ? formatDateTimeWithSeconds(bonus.ResultDateLocal) : '—'}</td>
+                                                                        <td className="py-3.5 px-3 text-xs text-[color:var(--panel-muted,#8a919c)] whitespace-nowrap">{bonus.AcceptanceDateLocal ? formatDateTimeWithSeconds(bonus.AcceptanceDateLocal) : '—'}</td>
+                                                                        <td className="py-3.5 px-3 text-xs text-[color:var(--panel-muted,#8a919c)] whitespace-nowrap">{bonus.StartDateLocal ? formatDateTimeDisplay(bonus.StartDateLocal) : '—'}</td>
+                                                                        <td className="py-3.5 px-3 text-xs text-[color:var(--panel-muted,#8a919c)] whitespace-nowrap">
                                                                             {bonus.ClientBonusExpirationDateLocal ? formatDateTimeWithSeconds(bonus.ClientBonusExpirationDateLocal) : '—'}
                                                                             {isExpired && isNotCompleted && <span className="block text-[10px] text-rose-400/80 mt-0.5">süresi dolmuş</span>}
                                                                         </td>
-                                                                        <td className="py-3.5 px-3 text-xs text-slate-400">{bonus.CreatedByUserName ?? '—'}</td>
+                                                                        <td className="py-3.5 px-3 text-xs text-[color:var(--panel-muted,#8a919c)]">{bonus.CreatedByUserName ?? '—'}</td>
                                                                         <td className="py-3.5 pr-5 pl-3">
                                                                             <div className="flex items-center gap-2">
                                                                                 {showExpiredStatus ? (
-                                                                                    <span className="inline-flex items-center gap-1.5 rounded-lg bg-[rgba(242,244,248,0.30)] border border-slate-500/20 px-2.5 py-1.5 text-[10px] font-bold text-slate-400">
+                                                                                    <span className="inline-flex items-center gap-1.5 rounded-lg bg-[rgba(242,244,248,0.30)] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] px-2.5 py-1.5 text-[10px] font-bold text-[color:var(--panel-muted,#8a919c)]">
                                                                                         <Clock size={12} /> Süresi dolmuş
                                                                                     </span>
                                                                                 ) : (
-                                                                                    <span className="inline-flex items-center gap-1.5 rounded-lg bg-[rgba(242,244,248,0.40)] border border-white/5 px-2.5 py-1.5 text-[10px] font-bold text-slate-300">
+                                                                                    <span className="inline-flex items-center gap-1.5 rounded-lg bg-[rgba(242,244,248,0.40)] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] px-2.5 py-1.5 text-[10px] font-bold text-[color:var(--panel-text-dim,#c8cdd5)]">
                                                                                         {getStatusIcon(bonus.ResultType)}
                                                                                         {getStatusText(bonus.ResultType)}
                                                                                     </span>
@@ -1185,14 +1185,14 @@ export function PlayerProfile() {
                             )}
 
                             {activeTab === 'transactions' && (
-                                <section className="rounded-xl border border-white/5 bg-[rgba(242,244,248,0.40)] p-8 backdrop-blur-md text-left">
+                                <section className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.40)] p-8 backdrop-blur-md text-left">
                                     <div className="mb-6 flex items-center justify-between">
                                         <div className="flex min-w-0 items-center gap-2.5">
                                             <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-blue-400">İşlem Hareketleri</h3>
                                             <History className="text-blue-400" size={20} />
                                         </div>
-                                        <div className="flex items-center gap-3 bg-[rgba(242,244,248,0.40)] px-4 py-2 rounded-xl border border-white/5 ring-1 ring-white/5">
-                                            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">SATIR SAYISI:</span>
+                                        <div className="flex items-center gap-3 bg-[rgba(242,244,248,0.40)] px-4 py-2 rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] ring-1 ring-white/5">
+                                            <span className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">SATIR SAYISI:</span>
                                             <select
                                                 value={rowsPerPage}
                                                 onChange={(e) => {
@@ -1201,18 +1201,18 @@ export function PlayerProfile() {
                                                     setPage(1);
                                                     setJumpPage('1');
                                                 }}
-                                                className="h-8 rounded-lg bg-white/5 border border-white/10 px-2 text-xs font-bold text-slate-300 outline-none hover:border-white/20 transition-all focus:ring-1 focus:ring-blue-500/30"
+                                                className="h-8 rounded-lg bg-white/5 border border-[color:var(--panel-border,rgba(242,244,248,0.1))] px-2 text-xs font-bold text-[color:var(--panel-text-dim,#c8cdd5)] outline-none hover:border-[color:var(--panel-border,rgba(242,244,248,0.1))] transition-all focus:ring-1 focus:ring-blue-500/30"
                                             >
                                                 {ROWS_PER_PAGE_OPTIONS.map(opt => (
-                                                    <option key={opt} value={opt} className="bg-slate-900">{opt}</option>
+                                                    <option key={opt} value={opt} className="bg-[color:var(--panel-surface,rgba(242,244,248,0.028))]">{opt}</option>
                                                 ))}
                                             </select>
                                         </div>
                                     </div>
 
-                                    <div className="mb-8 flex flex-wrap items-end gap-6 rounded-xl border border-white/5 bg-[rgba(242,244,248,0.40)] p-6">
+                                    <div className="mb-8 flex flex-wrap items-end gap-6 rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.40)] p-6">
                                         <div className="flex flex-col gap-3">
-                                            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Hızlı Tarih Seçimi</span>
+                                            <span className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">Hızlı Tarih Seçimi</span>
                                             <div className="flex flex-wrap gap-2">
                                                 {[
                                                     { id: 'today', label: 'Bugün' },
@@ -1226,7 +1226,7 @@ export function PlayerProfile() {
                                                         onClick={() => handleQuickDateRange(btn.id as any)}
                                                         className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${(btn.id === 'today' && appliedTxStart === todayYMD && appliedTxEnd === todayYMD)
                                                             ? 'bg-cyan-500 text-white border-cyan-400 shadow-lg shadow-cyan-500/20'
-                                                            : 'bg-white/5 text-slate-400 border-white/5 hover:border-white/10 hover:bg-white/10 hover:text-white'
+                                                            : 'bg-white/5 text-[color:var(--panel-muted,#8a919c)] border-[color:var(--panel-border,rgba(242,244,248,0.1))] hover:border-[color:var(--panel-border,rgba(242,244,248,0.1))] hover:bg-white/10 hover:text-white'
                                                             }`}
                                                     >
                                                         {btn.label}
@@ -1237,37 +1237,37 @@ export function PlayerProfile() {
 
                                         <div className="flex items-center gap-2">
                                             <div className="flex flex-col gap-2">
-                                                <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Özel Aralık</span>
+                                                <span className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">Özel Aralık</span>
                                                 <div className="flex items-center gap-2">
                                                     <input
                                                         type="date"
                                                         value={txFilterStart}
                                                         onChange={(e) => setTxFilterStart(e.target.value)}
-                                                        className="h-9 rounded-lg bg-white/5 border border-white/10 px-3 text-xs font-bold text-slate-300 outline-none focus:ring-1 focus:ring-blue-500/30 [color-scheme:dark]"
+                                                        className="h-9 rounded-lg bg-white/5 border border-[color:var(--panel-border,rgba(242,244,248,0.1))] px-3 text-xs font-bold text-[color:var(--panel-text-dim,#c8cdd5)] outline-none focus:ring-1 focus:ring-blue-500/30 [color-scheme:dark]"
                                                     />
-                                                    <span className="text-slate-500">/</span>
+                                                    <span className="text-[color:var(--panel-muted,#8a919c)]">/</span>
                                                     <input
                                                         type="date"
                                                         value={txFilterEnd}
                                                         onChange={(e) => setTxFilterEnd(e.target.value)}
-                                                        className="h-9 rounded-lg bg-white/5 border border-white/10 px-3 text-xs font-bold text-slate-300 outline-none focus:ring-1 focus:ring-blue-500/30 [color-scheme:dark]"
+                                                        className="h-9 rounded-lg bg-white/5 border border-[color:var(--panel-border,rgba(242,244,248,0.1))] px-3 text-xs font-bold text-[color:var(--panel-text-dim,#c8cdd5)] outline-none focus:ring-1 focus:ring-blue-500/30 [color-scheme:dark]"
                                                     />
                                                 </div>
                                             </div>
                                         </div>
 
                                         <div className="relative" ref={txTypeDropdownRef}>
-                                            <span className="mr-2 text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Tür</span>
+                                            <span className="mr-2 text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">Tür</span>
                                             <button
                                                 type="button"
                                                 onClick={() => setTxTypeDropdownOpen((o) => !o)}
-                                                className="flex items-center gap-2 h-9 min-w-[200px] rounded-lg bg-white/5 border border-white/10 px-3 text-left text-xs font-bold text-slate-300 hover:border-white/20 transition-all"
+                                                className="flex items-center gap-2 h-9 min-w-[200px] rounded-lg bg-white/5 border border-[color:var(--panel-border,rgba(242,244,248,0.1))] px-3 text-left text-xs font-bold text-[color:var(--panel-text-dim,#c8cdd5)] hover:border-[color:var(--panel-border,rgba(242,244,248,0.1))] transition-all"
                                             >
                                                 {txFilterTypeIds.length === 0 ? 'Tümü' : `${txFilterTypeIds.length} tür seçili`}
                                                 <ChevronDown size={14} className="ml-auto shrink-0" />
                                             </button>
                                             {txTypeDropdownOpen && (
-                                                <div className="absolute left-0 top-full z-20 mt-1 max-h-[320px] w-[320px] overflow-y-auto rounded-xl border border-white/10 bg-slate-900 shadow-xl">
+                                                <div className="absolute left-0 top-full z-20 mt-1 max-h-[320px] w-[320px] overflow-y-auto rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] shadow-xl">
                                                     <div className="p-2">
                                                         {transactionTypeOptions.map((t) => {
                                                             const tid = t.id;
@@ -1277,9 +1277,9 @@ export function PlayerProfile() {
                                                                         type="checkbox"
                                                                         checked={txFilterTypeIds.includes(tid)}
                                                                         onChange={() => toggleTxTypeId(tid)}
-                                                                        className="h-4 w-4 rounded border-white/20 bg-white/5 text-blue-500 focus:ring-blue-500/50"
+                                                                        className="h-4 w-4 rounded border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/5 text-blue-500 focus:ring-blue-500/50"
                                                                     />
-                                                                    <span className="text-xs font-medium text-slate-300">{t.name}</span>
+                                                                    <span className="text-xs font-medium text-[color:var(--panel-text-dim,#c8cdd5)]">{t.name}</span>
                                                                 </label>
                                                             );
                                                         })}
@@ -1310,9 +1310,9 @@ export function PlayerProfile() {
                                     </div>
 
                                     {isTransactionsLoading ? (
-                                        <div className="py-20 text-center animate-pulse text-slate-500 font-bold uppercase text-[10px] tracking-widest">İşlemler Yükleniyor...</div>
+                                        <div className="py-20 text-center animate-pulse text-[color:var(--panel-muted,#8a919c)] font-bold uppercase text-[10px] tracking-widest">İşlemler Yükleniyor...</div>
                                     ) : transactions.length === 0 ? (
-                                        <div className="py-20 text-center text-slate-500 italic text-sm">Henüz bir işlem hareketi bulunamadı.</div>
+                                        <div className="py-20 text-center text-[color:var(--panel-muted,#8a919c)] italic text-sm">Henüz bir işlem hareketi bulunamadı.</div>
                                     ) : (
                                         (() => {
                                             // Çekim Talebi Reddedilmiştir'den hemen sonraki (listedeki alt satır = kronolojide önceki talep) Çekim Talebi = reddedilmiş talebin DocumentId'leri
@@ -1331,7 +1331,7 @@ export function PlayerProfile() {
                                                 <div className="overflow-x-auto">
                                                     <table className="w-full text-left">
                                                         <thead>
-                                                            <tr className="border-b border-white/5 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                                                            <tr className="border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] text-[10px] font-semibold uppercase tracking-[0.2em] text-[color:var(--panel-muted,#8a919c)]">
                                                                 <th className="pb-4 pl-4">İşlem Türü / Ref</th>
                                                                 <th className="pb-4">Miktar</th>
                                                                 <th className="pb-4">Bakiye</th>
@@ -1355,11 +1355,11 @@ export function PlayerProfile() {
                                                                                     </span>
                                                                                 )}
                                                                             </div>
-                                                                            <p className="mt-1 text-[10px] text-slate-500 font-bold uppercase tracking-tighter">
+                                                                            <p className="mt-1 text-[10px] text-[color:var(--panel-muted,#8a919c)] font-bold uppercase tracking-tighter">
                                                                                 #{tx.ReferenceNo ?? tx.DocumentId}
-                                                                                {tx.BetId && <span className="ml-2 text-slate-600">Bet ID: {tx.BetId}</span>}
+                                                                                {tx.BetId && <span className="ml-2 text-[color:var(--panel-faint,#5c6470)]">Bet ID: {tx.BetId}</span>}
                                                                             </p>
-                                                                            {tx.Note && <p className="mt-1 text-[10px] text-slate-500 italic line-clamp-1 max-w-xs">{tx.Note}</p>}
+                                                                            {tx.Note && <p className="mt-1 text-[10px] text-[color:var(--panel-muted,#8a919c)] italic line-clamp-1 max-w-xs">{tx.Note}</p>}
                                                                         </div>
                                                                     </td>
                                                                     <td className="py-6">
@@ -1368,15 +1368,15 @@ export function PlayerProfile() {
                                                                         </span>
                                                                     </td>
                                                                     <td className="py-6">
-                                                                        <span className="text-sm font-bold text-slate-300">
+                                                                        <span className="text-sm font-bold text-[color:var(--panel-text-dim,#c8cdd5)]">
                                                                             {tx.Balance == null ? '—' : formatNumber(tx.Balance)} {tx.Balance != null && <span className="text-[10px] opacity-50">{tx.CurrencyId}</span>}
                                                                         </span>
                                                                     </td>
                                                                     <td className="py-6">
-                                                                        <span className="text-[11px] font-bold text-slate-400">{formatDateTimeWithSeconds(tx.CreatedLocal)}</span>
+                                                                        <span className="text-[11px] font-bold text-[color:var(--panel-muted,#8a919c)]">{formatDateTimeWithSeconds(tx.CreatedLocal)}</span>
                                                                     </td>
                                                                     <td className="py-6">
-                                                                        <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 bg-white/5 px-2 py-1 rounded-md">
+                                                                        <span className="text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)] bg-white/5 px-2 py-1 rounded-md">
                                                                             {tx.UserName}
                                                                         </span>
                                                                     </td>
@@ -1408,8 +1408,8 @@ export function PlayerProfile() {
                                     }
 
                                     {transactions.length > 0 && (
-                                        <div className="mt-8 flex flex-col items-center justify-between gap-6 border-t border-white/5 pt-8 sm:flex-row">
-                                            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-[0.2em]">
+                                        <div className="mt-8 flex flex-col items-center justify-between gap-6 border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))] pt-8 sm:flex-row">
+                                            <p className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-[0.2em]">
                                                 Toplam {formatNumber(totalCount)} işlemden {(page - 1) * rowsPerPage + 1}-{Math.min(page * rowsPerPage, totalCount)} arası gösteriliyor
                                             </p>
 
@@ -1417,7 +1417,7 @@ export function PlayerProfile() {
                                                 <button
                                                     onClick={() => handlePageChange(1)}
                                                     disabled={page === 1}
-                                                    className="h-8 w-8 flex items-center justify-center rounded-lg bg-white/5 text-slate-500 hover:text-white disabled:opacity-20 transition-all"
+                                                    className="h-8 w-8 flex items-center justify-center rounded-lg bg-white/5 text-[color:var(--panel-muted,#8a919c)] hover:text-white disabled:opacity-20 transition-all"
                                                     title="İlk Sayfa"
                                                 >
                                                     <ChevronsLeft size={16} />
@@ -1425,7 +1425,7 @@ export function PlayerProfile() {
                                                 <button
                                                     onClick={() => handlePageChange(page - 1)}
                                                     disabled={page === 1}
-                                                    className="h-8 w-8 flex items-center justify-center rounded-lg bg-white/5 text-slate-500 hover:text-white disabled:opacity-20 transition-all"
+                                                    className="h-8 w-8 flex items-center justify-center rounded-lg bg-white/5 text-[color:var(--panel-muted,#8a919c)] hover:text-white disabled:opacity-20 transition-all"
                                                     title="Önceki Sayfa"
                                                 >
                                                     <ChevronLeft size={16} />
@@ -1439,14 +1439,14 @@ export function PlayerProfile() {
                                                         onBlur={() => setJumpPage(page.toString())}
                                                         className="w-8 bg-transparent text-center text-sm font-semibold text-white outline-none"
                                                     />
-                                                    <span className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest">/</span>
-                                                    <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">{totalPages}</span>
+                                                    <span className="text-[10px] font-semibold text-[color:var(--panel-faint,#5c6470)] uppercase tracking-widest">/</span>
+                                                    <span className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">{totalPages}</span>
                                                 </form>
 
                                                 <button
                                                     onClick={() => handlePageChange(page + 1)}
                                                     disabled={page === totalPages}
-                                                    className="h-8 w-8 flex items-center justify-center rounded-lg bg-white/5 text-slate-500 hover:text-white disabled:opacity-20 transition-all"
+                                                    className="h-8 w-8 flex items-center justify-center rounded-lg bg-white/5 text-[color:var(--panel-muted,#8a919c)] hover:text-white disabled:opacity-20 transition-all"
                                                     title="Sonraki Sayfa"
                                                 >
                                                     <ChevronLeft size={16} className="rotate-180" />
@@ -1454,7 +1454,7 @@ export function PlayerProfile() {
                                                 <button
                                                     onClick={() => handlePageChange(totalPages)}
                                                     disabled={page === totalPages}
-                                                    className="h-8 w-8 flex items-center justify-center rounded-lg bg-white/5 text-slate-500 hover:text-white disabled:opacity-20 transition-all"
+                                                    className="h-8 w-8 flex items-center justify-center rounded-lg bg-white/5 text-[color:var(--panel-muted,#8a919c)] hover:text-white disabled:opacity-20 transition-all"
                                                     title="Son Sayfa"
                                                 >
                                                     <ChevronsLeft size={16} className="rotate-180" />
@@ -1467,25 +1467,25 @@ export function PlayerProfile() {
 
                             {
                                 activeTab === 'detailed-report' && (
-                                    <section className="rounded-xl border border-white/5 bg-[rgba(242,244,248,0.40)] p-8 backdrop-blur-md text-left">
+                                    <section className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.40)] p-8 backdrop-blur-md text-left">
                                         <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                             <div className="flex min-w-0 items-center gap-2.5">
                                                 <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-blue-400">Detaylı Oyuncu Raporu</h3>
                                                 <BarChart3 className="text-blue-400" size={20} />
                                             </div>
 
-                                            <div className="flex flex-wrap items-center gap-4 bg-[rgba(242,244,248,0.40)] p-4 rounded-xl border border-white/5">
+                                            <div className="flex flex-wrap items-center gap-4 bg-[rgba(242,244,248,0.40)] p-4 rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Tarih</span>
+                                                    <span className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">Tarih</span>
                                                     <button
                                                         onClick={() => handleDetailedReportQuickDate('today')}
-                                                        className={`px-3 py-1.5 rounded-lg border text-[10px] font-semibold transition-all uppercase tracking-widest ${detStart === todayYMD && detEnd === todayYMD ? 'bg-blue-500 text-white border-blue-400' : 'bg-white/5 text-slate-400 border-white/10 hover:bg-white/10 hover:text-white'}`}
+                                                        className={`px-3 py-1.5 rounded-lg border text-[10px] font-semibold transition-all uppercase tracking-widest ${detStart === todayYMD && detEnd === todayYMD ? 'bg-blue-500 text-white border-blue-400' : 'bg-white/5 text-[color:var(--panel-muted,#8a919c)] border-[color:var(--panel-border,rgba(242,244,248,0.1))] hover:bg-white/10 hover:text-white'}`}
                                                     >
                                                         Bugün
                                                     </button>
                                                     <button
                                                         onClick={() => handleDetailedReportQuickDate('yesterday')}
-                                                        className={`px-3 py-1.5 rounded-lg border text-[10px] font-semibold transition-all uppercase tracking-widest ${detStart === detEnd && detStart === yesterdayYMD ? 'bg-blue-500 text-white border-blue-400' : 'bg-white/5 text-slate-400 border-white/10 hover:bg-white/10 hover:text-white'}`}
+                                                        className={`px-3 py-1.5 rounded-lg border text-[10px] font-semibold transition-all uppercase tracking-widest ${detStart === detEnd && detStart === yesterdayYMD ? 'bg-blue-500 text-white border-blue-400' : 'bg-white/5 text-[color:var(--panel-muted,#8a919c)] border-[color:var(--panel-border,rgba(242,244,248,0.1))] hover:bg-white/10 hover:text-white'}`}
                                                     >
                                                         Dün
                                                     </button>
@@ -1498,14 +1498,14 @@ export function PlayerProfile() {
                                                         onChange={(e) => setDetStart(e.target.value)}
                                                         className="bg-transparent text-xs font-semibold text-white outline-none [color-scheme:dark]"
                                                     />
-                                                    <span className="text-slate-600 font-bold">/</span>
+                                                    <span className="text-[color:var(--panel-faint,#5c6470)] font-bold">/</span>
                                                     <input
                                                         type="date"
                                                         value={detEnd}
                                                         onChange={(e) => setDetEnd(e.target.value)}
                                                         className="bg-transparent text-xs font-semibold text-white outline-none [color-scheme:dark]"
                                                     />
-                                                    <span className="text-[10px] font-bold text-slate-500 tabular-nums">
+                                                    <span className="text-[10px] font-bold text-[color:var(--panel-muted,#8a919c)] tabular-nums">
                                                         {ymdToDDMMYY(detStart)} / {ymdToDDMMYY(detEnd)}
                                                     </span>
                                                 </div>
@@ -1523,9 +1523,9 @@ export function PlayerProfile() {
                                         </div>
 
                                         {isDetailedReportLoading ? (
-                                            <div className="py-20 text-center animate-pulse text-slate-500 font-bold uppercase text-[10px] tracking-widest">Rapor Hazırlanıyor...</div>
+                                            <div className="py-20 text-center animate-pulse text-[color:var(--panel-muted,#8a919c)] font-bold uppercase text-[10px] tracking-widest">Rapor Hazırlanıyor...</div>
                                         ) : !detailedReportData?.Data || detailedReportData.Data.length === 0 ? (
-                                            <div className="py-20 text-center text-slate-500 italic text-sm">Bu oyuncu için detaylı bir rapor bulunamadı.</div>
+                                            <div className="py-20 text-center text-[color:var(--panel-muted,#8a919c)] italic text-sm">Bu oyuncu için detaylı bir rapor bulunamadı.</div>
                                         ) : (
                                             <div className="space-y-12">
                                                 {detailedReportData.Data.map((report: any, idx: number) => (
@@ -1603,7 +1603,7 @@ export function PlayerProfile() {
                                                         </section>
 
                                                         <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
-                                                            <div className="rounded-xl border border-white/5 bg-[rgba(242,244,248,0.40)] p-8 text-left backdrop-blur-md">
+                                                            <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.40)] p-8 text-left backdrop-blur-md">
                                                                 <div className="mb-8 flex items-center justify-between">
                                                                     <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-blue-400">Sportbook Analizi</h3>
                                                                     <TrendingUp className="text-blue-400" size={20} />
@@ -1619,7 +1619,7 @@ export function PlayerProfile() {
                                                                 </div>
                                                             </div>
 
-                                                            <div className="rounded-xl border border-white/5 bg-[rgba(242,244,248,0.40)] p-8 text-left backdrop-blur-md">
+                                                            <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.40)] p-8 text-left backdrop-blur-md">
                                                                 <div className="mb-8 flex items-center justify-between">
                                                                     <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-blue-400">Casino Analizi</h3>
                                                                     <Gamepad2 className="text-blue-400" size={20} />
@@ -1636,8 +1636,8 @@ export function PlayerProfile() {
                                                             </div>
                                                         </div>
 
-                                                        <section className="rounded-xl border border-white/5 bg-[rgba(242,244,248,0.40)] p-10">
-                                                            <h4 className="mb-10 text-center text-xs font-semibold uppercase tracking-[0.5em] text-slate-500">Dönem Sonu ve Bonus Kazanımları</h4>
+                                                        <section className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.40)] p-10">
+                                                            <h4 className="mb-10 text-center text-xs font-semibold uppercase tracking-[0.5em] text-[color:var(--panel-muted,#8a919c)]">Dönem Sonu ve Bonus Kazanımları</h4>
                                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
                                                                 <InfoTile label="Real Para Toplam Kazanç" value={`${formatNumber(report.RealMoneyWonAmount)} TRY`} icon={Trophy} isSuccess={true} />
                                                                 <InfoTile label="Bonus Toplam Kazanç" value={`${formatNumber(report.BonusWonAmount)} TRY`} icon={Gift} />
@@ -1645,50 +1645,50 @@ export function PlayerProfile() {
                                                             </div>
                                                         </section>
 
-                                                        <div className="rounded-xl border border-white/5 bg-[rgba(242,244,248,0.40)] p-10 backdrop-blur-md">
+                                                        <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.40)] p-10 backdrop-blur-md">
                                                             <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-4">
                                                                 <div className="min-w-0 text-left">
-                                                                    <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-3">Dönem Başlangıç Bakiyesi</p>
+                                                                    <p className="text-[10px] font-semibold text-[color:var(--panel-faint,#5c6470)] uppercase tracking-widest mb-3">Dönem Başlangıç Bakiyesi</p>
                                                                     <div className="flex items-center gap-2">
                                                                         <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 ring-1 ring-blue-500/20">
                                                                             <Wallet size={20} />
                                                                         </div>
-                                                                        <p className="text-xl font-semibold text-white">{formatNumber(report.PeriodStartBalance)} <span className="text-[10px] text-slate-500">TRY</span></p>
+                                                                        <p className="text-xl font-semibold text-white">{formatNumber(report.PeriodStartBalance)} <span className="text-[10px] text-[color:var(--panel-muted,#8a919c)]">TRY</span></p>
                                                                     </div>
-                                                                    <p className="mt-2 text-[9px] text-slate-500 italic">Casino: {formatNumber(report.CasinoPeriodStartBalance)}</p>
+                                                                    <p className="mt-2 text-[9px] text-[color:var(--panel-muted,#8a919c)] italic">Casino: {formatNumber(report.CasinoPeriodStartBalance)}</p>
                                                                 </div>
 
                                                                 <div className="min-w-0 text-left">
-                                                                    <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-3">Dönem Bitiş Bakiyesi</p>
+                                                                    <p className="text-[10px] font-semibold text-[color:var(--panel-faint,#5c6470)] uppercase tracking-widest mb-3">Dönem Bitiş Bakiyesi</p>
                                                                     <div className="flex items-center gap-2">
                                                                         <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 ring-1 ring-emerald-500/20">
                                                                             <CheckCircle2 size={20} />
                                                                         </div>
-                                                                        <p className="text-xl font-semibold text-white">{formatNumber(report.PeriodEndBalance)} <span className="text-[10px] text-slate-500">TRY</span></p>
+                                                                        <p className="text-xl font-semibold text-white">{formatNumber(report.PeriodEndBalance)} <span className="text-[10px] text-[color:var(--panel-muted,#8a919c)]">TRY</span></p>
                                                                     </div>
-                                                                    <p className="mt-2 text-[9px] text-slate-500 italic">Casino: {formatNumber(report.CasinoPeriodEndBalance)}</p>
+                                                                    <p className="mt-2 text-[9px] text-[color:var(--panel-muted,#8a919c)] italic">Casino: {formatNumber(report.CasinoPeriodEndBalance)}</p>
                                                                 </div>
 
                                                                 <div className="min-w-0 text-left">
-                                                                    <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-3">Kayıt Bilgileri</p>
+                                                                    <p className="text-[10px] font-semibold text-[color:var(--panel-faint,#5c6470)] uppercase tracking-widest mb-3">Kayıt Bilgileri</p>
                                                                     <div className="flex items-center gap-2">
                                                                         <div className="h-10 w-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-400 ring-1 ring-amber-500/20">
                                                                             <Calendar size={20} />
                                                                         </div>
                                                                         <p className="text-sm font-semibold text-white">{formatDateTimeDisplay(report.RegistrationDateLocal)}</p>
                                                                     </div>
-                                                                    <p className="mt-2 text-[9px] text-slate-500">BTag: {report.BTag || 'Yok'}</p>
+                                                                    <p className="mt-2 text-[9px] text-[color:var(--panel-muted,#8a919c)]">BTag: {report.BTag || 'Yok'}</p>
                                                                 </div>
 
                                                                 <div className="min-w-0 text-left">
-                                                                    <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-3">Hesap Detayı</p>
+                                                                    <p className="text-[10px] font-semibold text-[color:var(--panel-faint,#5c6470)] uppercase tracking-widest mb-3">Hesap Detayı</p>
                                                                     <div className="flex items-center gap-2">
                                                                         <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 ring-1 ring-blue-500/20">
                                                                             <Users size={20} />
                                                                         </div>
                                                                         <p className="text-sm font-semibold text-white">{report.IsVerified ? 'ONAYLI HESAP' : 'ONAYSIZ'}</p>
                                                                     </div>
-                                                                    <p className="mt-2 text-[9px] text-slate-500">Affilate ID: {report.AffilateId || 'Mevcut Değil'}</p>
+                                                                    <p className="mt-2 text-[9px] text-[color:var(--panel-muted,#8a919c)]">Affilate ID: {report.AffilateId || 'Mevcut Değil'}</p>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -1700,7 +1700,7 @@ export function PlayerProfile() {
                                 )}
 
                             {activeTab === 'ip-addresses' && (
-                                <section className="rounded-xl border border-white/5 bg-[rgba(242,244,248,0.40)] p-8 backdrop-blur-md text-left">
+                                <section className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.40)] p-8 backdrop-blur-md text-left">
                                     <NetworkMap loginIp={loginIP || null} clientId={id!} />
                                 </section>
                             )}
@@ -1720,12 +1720,12 @@ function StatBox({ title, value, subValue, icon: Icon, colorClass }: any) {
                     <Icon size={16} />
                 </div>
                 {subValue && (
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider bg-white/5 px-2.5 py-0.5 rounded-full">
+                    <span className="text-[10px] font-bold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-wider bg-white/5 px-2.5 py-0.5 rounded-full">
                         {subValue}
                     </span>
                 )}
             </div>
-            <p className="mb-1 text-[9px] font-bold uppercase tracking-[0.12em] text-slate-500">{title}</p>
+            <p className="mb-1 text-[9px] font-bold uppercase tracking-[0.12em] text-[color:var(--panel-muted,#8a919c)]">{title}</p>
             <p className="text-lg font-bold tracking-[-0.025em] text-white">{value}</p>
         </Card>
     );
@@ -1740,13 +1740,13 @@ function DetailRow({ label, value, unit, icon: Icon, color }: any) {
     };
     return (
         <div className={cn(
-            'flex min-h-9 items-center justify-between rounded-lg border border-white/[0.05] bg-black/15 px-2.5 py-2 transition-colors hover:border-white/10',
+            'flex min-h-9 items-center justify-between rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/15 px-2.5 py-2 transition-colors hover:border-[color:var(--panel-border,rgba(242,244,248,0.1))]',
         )}>
             <div className="flex items-center gap-2">
                 <div className={cn('flex h-7 w-7 items-center justify-center rounded-md', colorMap[color] ?? colorMap.indigo)}>
                     <Icon size={14} />
                 </div>
-                <span className="text-[10px] font-semibold text-slate-400">{label}</span>
+                <span className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)]">{label}</span>
             </div>
             <span className={cn(
                 'text-xs font-bold',
@@ -1754,7 +1754,7 @@ function DetailRow({ label, value, unit, icon: Icon, color }: any) {
                 color === 'rose' && 'text-rose-400',
                 !['emerald', 'rose'].includes(color) && 'text-white'
             )}>
-                {value} {unit && <span className="text-[10px] text-slate-500 font-bold ml-1">{unit}</span>}
+                {value} {unit && <span className="text-[10px] text-[color:var(--panel-muted,#8a919c)] font-bold ml-1">{unit}</span>}
             </span>
         </div>
     );
@@ -1763,11 +1763,11 @@ function DetailRow({ label, value, unit, icon: Icon, color }: any) {
 function InfoTile({ label, value, icon: Icon, isSuccess }: any) {
     return (
         <div className="flex min-w-0 items-center gap-2.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/[0.035] text-slate-500 ring-1 ring-white/[0.05]">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/[0.035] text-[color:var(--panel-muted,#8a919c)] ring-1 ring-white/[0.05]">
                 <Icon size={15} />
             </div>
             <div className="min-w-0 text-left">
-                <p className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider">{label}</p>
+                <p className="text-[9px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-wider">{label}</p>
                 <p className={cn(
                     'mt-0.5 truncate text-xs font-semibold tracking-tight',
                     (isSuccess || value === 'ONAYLI HESAP') ? 'text-emerald-400' : 'text-white'
