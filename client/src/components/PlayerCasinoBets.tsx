@@ -22,7 +22,7 @@ function TypeBadge({ value }: { value: unknown }) {
         ? 'border-emerald-400/20 bg-emerald-400/10 text-emerald-300'
         : lower.includes('bahis')
             ? 'border-blue-400/20 bg-blue-400/10 text-blue-300'
-            : 'border-slate-600/40 bg-slate-700/20 text-slate-300';
+            : 'border-slate-600/40 bg-[rgba(242,244,248,0.20)] text-slate-300';
     return (
         <span className={`inline-flex items-center rounded-md border px-2 py-1 text-[10px] font-bold ${tone}`}>
             {label}
@@ -37,7 +37,7 @@ function StateBadge({ value }: { value: unknown }) {
         ? 'border-emerald-400/20 bg-emerald-400/10 text-emerald-300'
         : /red|hata|fail|iptal/.test(lower)
             ? 'border-rose-400/20 bg-rose-400/10 text-rose-300'
-            : 'border-slate-600/40 bg-slate-700/20 text-slate-300';
+            : 'border-slate-600/40 bg-[rgba(242,244,248,0.20)] text-slate-300';
     return (
         <span className={`inline-flex items-center rounded-md border px-2 py-1 text-[10px] font-bold ${tone}`}>
             {label}
@@ -108,12 +108,12 @@ export function PlayerCasinoBets({ clientId }: PlayerCasinoBetsProps) {
             </div>
 
             {bets.length === 0 ? (
-                <div className="rounded-xl border border-white/5 bg-slate-900/40 p-8 text-center flex flex-col items-center justify-center gap-2 text-slate-500">
+                <div className="rounded-xl border border-white/5 bg-[rgba(242,244,248,0.40)] p-8 text-center flex flex-col items-center justify-center gap-2 text-slate-500">
                     <Dices size={32} className="opacity-20" />
                     <span>Oynanmış casino eli bulunmuyor.</span>
                 </div>
             ) : (
-                <div className="rounded-xl border border-white/10 bg-slate-950/40 overflow-x-auto">
+                <div className="rounded-xl border border-white/10 bg-[rgba(242,244,248,0.40)] overflow-x-auto">
                     <table className="w-full text-left text-sm">
                         <thead className="bg-slate-900 border-b border-white/10">
                             <tr>

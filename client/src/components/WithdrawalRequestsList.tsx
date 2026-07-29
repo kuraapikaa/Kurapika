@@ -31,7 +31,7 @@ function StatusBadge({ value }: { value: unknown }) {
     paid: 'border-emerald-400/20 bg-emerald-400/10 text-emerald-300',
     rejected: 'border-rose-400/20 bg-rose-400/10 text-rose-300',
     pending: 'border-amber-300/20 bg-amber-300/10 text-amber-200',
-    neutral: 'border-slate-600/40 bg-slate-700/20 text-slate-300',
+    neutral: 'border-slate-600/40 bg-[rgba(242,244,248,0.20)] text-slate-300',
   };
   const Icon = tone === 'paid' ? CheckCircle2 : tone === 'rejected' ? XCircle : Clock3;
   return (

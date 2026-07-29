@@ -109,7 +109,7 @@ export function DepositsList({ data, isLoading, error }: DepositsListProps) {
                     </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-4">
-                    <div className="premium-card flex items-center gap-6 rounded-xl px-6 py-3 border-white/5 bg-zinc-950/40 shadow-inner">
+                    <div className="premium-card flex items-center gap-6 rounded-xl px-6 py-3 border-white/5 bg-[rgba(242,244,248,0.40)] shadow-inner">
                         <div className="flex flex-col">
                             <span className="text-[9px] font-semibold text-zinc-500 uppercase tracking-widest">Toplam İşlem</span>
                             <span className="text-sm font-semibold text-white tabular-nums">{formatNumber(count)}</span>
@@ -130,12 +130,12 @@ export function DepositsList({ data, isLoading, error }: DepositsListProps) {
             </header>
 
             {isLoading ? (
-                <div className="flex flex-1 flex-col items-center justify-center gap-4 rounded-xl border border-white/5 bg-slate-900/40 min-h-[400px]">
+                <div className="flex flex-1 flex-col items-center justify-center gap-4 rounded-xl border border-white/5 bg-[rgba(242,244,248,0.40)] min-h-[400px]">
                     <div className="h-12 w-12 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent" />
                     <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Yatırım verileri senkronize ediliyor...</p>
                 </div>
             ) : (
-                <Card className="premium-card flex-1 overflow-hidden flex flex-col p-0 bg-zinc-950/20 border-white/[0.05]">
+                <Card className="premium-card flex-1 overflow-hidden flex flex-col p-0 bg-[rgba(242,244,248,0.20)] border-white/[0.05]">
                     <div className="overflow-auto scrollbar-hide relative h-full">
                         <table className="w-full text-sm border-separate border-spacing-0">
                             <thead className="sticky top-0 z-20 bg-black/60 backdrop-blur-3xl border-b border-white/5">

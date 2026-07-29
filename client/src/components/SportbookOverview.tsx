@@ -13,7 +13,7 @@ interface SportbookOverviewProps {
 function typeBadge(isLive: boolean | null) {
   if (isLive === true) return <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-400 border border-emerald-500/20"><Radio size={10} /> Live</span>;
   if (isLive === false) return <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-blue-400 border border-blue-500/20">Pre-match</span>;
-  return <span className="inline-flex items-center gap-1 rounded-full bg-slate-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 border border-slate-500/20">Total</span>;
+  return <span className="inline-flex items-center gap-1 rounded-full bg-[rgba(242,244,248,0.10)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[color:var(--panel-muted,#8a919c)] border border-[color:var(--panel-border,rgba(242,244,248,0.1))]">Total</span>;
 }
 
 export function SportbookOverview({ data, isLoading, error }: SportbookOverviewProps) {
@@ -36,19 +36,19 @@ export function SportbookOverview({ data, isLoading, error }: SportbookOverviewP
       )}
 
       {isLoading && (
-        <div className="flex h-32 flex-col items-center justify-center gap-3 rounded-xl border border-white/10 bg-slate-900/40">
+        <div className="flex h-32 flex-col items-center justify-center gap-3 rounded-xl border border-white/10 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))]">
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
-          <div className="text-xs font-medium text-slate-500">Spor kitabı verileri işleniyor…</div>
+          <div className="text-xs font-medium text-[color:var(--panel-muted,#8a919c)]">Spor kitabı verileri işleniyor…</div>
         </div>
       )}
 
       {!error && !isLoading && (
         <CardContent className="p-0 space-y-6">
-          <div className="overflow-hidden rounded-xl border border-white/10 bg-slate-900/40">
+          <div className="overflow-hidden rounded-xl border border-white/10 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))]">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-white/5">
-                  <tr className="text-left text-[10px] uppercase tracking-widest text-slate-400">
+                  <tr className="text-left text-[10px] uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">
                     <th className="px-4 py-4 font-extrabold">Tür</th>
                     <th className="px-4 py-4 text-right font-extrabold">Ciro</th>
                     <th className="px-4 py-4 text-right font-extrabold">Kazanç</th>
@@ -60,7 +60,7 @@ export function SportbookOverview({ data, isLoading, error }: SportbookOverviewP
                 <tbody className="divide-y divide-white/5">
                   {details.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="p-8 text-center text-slate-500">Veri yok</td>
+                      <td colSpan={6} className="p-8 text-center text-[color:var(--panel-muted,#8a919c)]">Veri yok</td>
                     </tr>
                   ) : (
                     details.map((row, i) => (
@@ -69,9 +69,9 @@ export function SportbookOverview({ data, isLoading, error }: SportbookOverviewP
                         className="group transition-all duration-300 hover:bg-white/[0.02]"
                       >
                         <td className="px-4 py-4">{typeBadge(row.IsLive)}</td>
-                        <td className="px-4 py-4 text-right font-medium tabular-nums text-slate-300">{formatNumber(row.Turnover)}</td>
-                        <td className="px-4 py-4 text-right font-medium tabular-nums text-slate-400">{formatNumber(row.WinningAmount)}</td>
-                        <td className="px-4 py-4 text-right font-medium tabular-nums text-slate-400">{formatNumber(row.NumberOfBets)}</td>
+                        <td className="px-4 py-4 text-right font-medium tabular-nums text-[color:var(--panel-text-dim,#c8cdd5)]">{formatNumber(row.Turnover)}</td>
+                        <td className="px-4 py-4 text-right font-medium tabular-nums text-[color:var(--panel-muted,#8a919c)]">{formatNumber(row.WinningAmount)}</td>
+                        <td className="px-4 py-4 text-right font-medium tabular-nums text-[color:var(--panel-muted,#8a919c)]">{formatNumber(row.NumberOfBets)}</td>
                         <td className="px-4 py-4 text-right font-bold tabular-nums text-white">{formatNumber(row.GGR)}</td>
                         <td className="px-4 py-4 text-right">
                           <span className={`rounded-md px-2 py-0.5 text-xs font-bold ${row.Profitness >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
@@ -91,13 +91,13 @@ export function SportbookOverview({ data, isLoading, error }: SportbookOverviewP
               {(['Single', 'Multiple', 'System', 'Chain'] as const).map((key) => (
                 <div
                   key={key}
-                  className="rounded-xl border border-white/5 bg-slate-900/20 p-4 transition-all duration-300 hover:bg-slate-900/40 hover:border-white/10"
+                  className="rounded-xl border border-white/5 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-4 transition-all duration-300 hover:bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] hover:border-white/10"
                 >
-                  <div className="mb-1 flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                  <div className="mb-1 flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-[color:var(--panel-muted,#8a919c)]">
                     <Layers size={12} className="text-blue-500/50" />
                     {key}
                   </div>
-                  <div className="text-lg font-bold tabular-nums text-slate-200">{formatNumber(counts[key])}</div>
+                  <div className="text-lg font-bold tabular-nums text-[color:var(--panel-text-dim,#c8cdd5)]">{formatNumber(counts[key])}</div>
                 </div>
               ))}
             </div>

@@ -95,7 +95,7 @@ export function LoyaltySettings() {
             </div>
 
             {/* Ratio Config */}
-            <div className="p-8 bg-zinc-950/40 border border-white/5 rounded-xl">
+            <div className="p-8 bg-[rgba(242,244,248,0.40)] border border-white/5 rounded-xl">
                 <div className="flex items-center gap-4 mb-6">
                     <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500">
                         <RefreshCcw size={24} />
@@ -118,7 +118,7 @@ export function LoyaltySettings() {
                    <div className="pt-8 text-zinc-600 font-semibold">/</div>
                    <div className="flex-1 space-y-2">
                         <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest px-1">KAZANILAN PUAN</label>
-                        <div className="w-full bg-zinc-900/50 border border-white/5 rounded-xl px-3 py-2.5 text-xl font-semibold text-amber-500 flex items-center gap-3">
+                        <div className="w-full bg-[rgba(242,244,248,0.50)] border border-white/5 rounded-xl px-3 py-2.5 text-xl font-semibold text-amber-500 flex items-center gap-3">
                             <Coins size={24} /> 1
                         </div>
                    </div>
@@ -144,7 +144,7 @@ export function LoyaltySettings() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {market.map((item, idx) => (
-                        <div key={item.id} className="p-6 bg-zinc-950/40 border border-white/5 rounded-xl space-y-4 group hover:border-amber-500/20 transition-all">
+                        <div key={item.id} className="p-6 bg-[rgba(242,244,248,0.40)] border border-white/5 rounded-xl space-y-4 group hover:border-amber-500/20 transition-all">
                              <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                    <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500">
@@ -181,7 +181,7 @@ export function LoyaltySettings() {
                                     <select 
                                         value={item.platformBonusId} 
                                         onChange={e => { const newM = [...market]; newM[idx].platformBonusId = Number(e.target.value); setMarket(newM); }} 
-                                        className="w-full bg-zinc-900/80 border border-white/10 rounded-xl px-3 py-2 text-[10px] font-semibold text-white outline-none focus:border-amber-500/50 appearance-none cursor-pointer pr-4 bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%23fbbf24%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22m6%208%204%204%204-4%22%2F%3E%3C%2Fsvg%3E')] bg-[position:right_0.5rem_center] bg-[length:1.2em_1.2em] bg-no-repeat"
+                                        className="w-full bg-[rgba(242,244,248,0.80)] border border-white/10 rounded-xl px-3 py-2 text-[10px] font-semibold text-white outline-none focus:border-amber-500/50 appearance-none cursor-pointer pr-4 bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%23fbbf24%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22m6%208%204%204%204-4%22%2F%3E%3C%2Fsvg%3E')] bg-[position:right_0.5rem_center] bg-[length:1.2em_1.2em] bg-no-repeat"
                                     >
                                         <option value="0" className="bg-zinc-900 text-zinc-500">Manuel ID Girişi / Yok</option>
                                         {bonuses.map((b: any) => (
@@ -196,7 +196,7 @@ export function LoyaltySettings() {
                                     <select 
                                         value={item.rewardType} 
                                         onChange={e => { const newM = [...market]; newM[idx].rewardType = e.target.value as any; setMarket(newM); }} 
-                                        className="w-full bg-zinc-900/80 border border-white/10 rounded-xl px-3 py-2 text-[10px] font-semibold text-white outline-none focus:border-amber-500/50 appearance-none cursor-pointer pr-4 bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%23fbbf24%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22m6%208%204%204%204-4%22%2F%3E%3C%2Fsvg%3E')] bg-[position:right_0.5rem_center] bg-[length:1.2em_1.2em] bg-no-repeat"
+                                        className="w-full bg-[rgba(242,244,248,0.80)] border border-white/10 rounded-xl px-3 py-2 text-[10px] font-semibold text-white outline-none focus:border-amber-500/50 appearance-none cursor-pointer pr-4 bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%23fbbf24%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22m6%208%204%204%204-4%22%2F%3E%3C%2Fsvg%3E')] bg-[position:right_0.5rem_center] bg-[length:1.2em_1.2em] bg-no-repeat"
                                     >
                                         <option value="freespin" className="bg-zinc-900 text-white">Freespin</option>
                                         <option value="cash" className="bg-zinc-900 text-white">Nakit Para</option>

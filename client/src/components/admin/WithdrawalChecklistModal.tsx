@@ -274,7 +274,7 @@ export function WithdrawalChecklistModal({
       aria-label={inline ? undefined : 'Detaylı analiz raporu'}
     >
       {/* Header: kompakt */}
-      <div className="flex items-center justify-between gap-3 px-4 py-3 bg-slate-900/90 border-b border-white/10">
+      <div className="flex items-center justify-between gap-3 px-4 py-3 bg-[rgba(242,244,248,0.90)] border-b border-white/10">
         <div className="flex items-center gap-3 min-w-0">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-500/20 text-blue-400">
             <ShieldCheck size={20} />
@@ -336,7 +336,7 @@ export function WithdrawalChecklistModal({
             <h4 className="text-xs font-semibold uppercase tracking-wide text-amber-400/90 flex items-center gap-2 mb-2"><AlertCircle size={14} /> Üye notları</h4>
             <div className="space-y-2 max-h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10">
               {account.notes.map((note, i) => (
-                <div key={note.id || i} className="p-2.5 rounded-lg bg-slate-900/50 border border-white/5">
+                <div key={note.id || i} className="p-2.5 rounded-lg bg-[rgba(242,244,248,0.50)] border border-white/5">
                   <p className="text-sm text-slate-200 leading-snug">{note.note}</p>
                   <span className="text-xs text-slate-500">{note.createdLocal}</span>
                 </div>
@@ -346,7 +346,7 @@ export function WithdrawalChecklistModal({
         )}
 
         {account.lastDepositBonuses && account.lastDepositBonuses.length > 0 && (
-          <div className="rounded-xl border border-white/5 bg-slate-950/40 p-3">
+          <div className="rounded-xl border border-white/5 bg-[rgba(242,244,248,0.40)] p-3">
             <h4 className="text-xs font-semibold uppercase tracking-wide text-cyan-400 flex items-center gap-2 mb-2"><Gift size={14} /> Kullanılan bonuslar ({account.lastDepositBonuses.length})</h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {account.lastDepositBonuses.map((bonus, i) => (
@@ -355,7 +355,7 @@ export function WithdrawalChecklistModal({
                     <span className="text-sm font-bold text-white truncate">{bonus.Name}</span>
                     <div className="flex items-center gap-1.5 shrink-0">
                       {bonus.ClientBonusExpirationDateLocal && new Date(bonus.ClientBonusExpirationDateLocal).getTime() < Date.now() && bonus.ToWagerAmount > 0 && (
-                        <span className="rounded bg-slate-600/30 px-1.5 py-0.5 text-[9px] font-bold text-slate-400 border border-slate-500/30">Süresi dolmuş</span>
+                        <span className="rounded bg-[rgba(242,244,248,0.30)] px-1.5 py-0.5 text-[9px] font-bold text-slate-400 border border-slate-500/30">Süresi dolmuş</span>
                       )}
                       {bonus.ToWagerAmount > 0 ? (
                         <span className="text-xs font-semibold text-amber-500 tabular-nums">{formatNumber(bonus.ToWagerAmount)} TRY kalan</span>
@@ -386,7 +386,7 @@ export function WithdrawalChecklistModal({
         )}
 
         {account.profileTransactionsByType && (
-          <div className="rounded-xl border border-white/5 bg-slate-950/40 p-3">
+          <div className="rounded-xl border border-white/5 bg-[rgba(242,244,248,0.40)] p-3">
             <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400 flex items-center gap-2 mb-2"><Activity size={14} /> Hacim (son 3 gün)</h4>
             <div className="flex flex-wrap gap-2">
               {Object.entries(account.profileTransactionsByType).map(([name, data]) => (
@@ -433,7 +433,7 @@ export function WithdrawalChecklistModal({
         {riskAnalysis && <RiskRuleBlock title="Sistem Güvenlik Kontrolü" result={riskAnalysis} />}
       </div>
 
-      <div className="flex items-center justify-between gap-3 px-4 py-3 bg-slate-950/80 border-t border-white/10">
+      <div className="flex items-center justify-between gap-3 px-4 py-3 bg-[rgba(242,244,248,0.80)] border-t border-white/10">
         <button onClick={onClose} className="rounded-lg border border-white/10 px-4 py-2.5 text-xs font-bold uppercase text-slate-400 hover:bg-white/5 hover:text-white">
           Kapat
         </button>
@@ -450,7 +450,7 @@ export function WithdrawalChecklistModal({
 
   return inline ? content : (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-300"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[rgba(242,244,248,0.80)] backdrop-blur-md animate-in fade-in duration-300"
       onClick={onClose}
     >
       <div ref={modalContainerRef} onClick={(e) => e.stopPropagation()} onKeyDown={handleKeyDown}>

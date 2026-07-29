@@ -41,7 +41,7 @@ export function LiveRadar() {
                     </div>
                 </div>
 
-                <div className="flex items-center gap-4 bg-slate-900/50 p-2 border border-white/5 rounded-xl">
+                <div className="flex items-center gap-4 bg-[rgba(242,244,248,0.50)] p-2 border border-white/5 rounded-xl">
                     <div className="flex items-center gap-2 px-3 border-r border-white/10">
                         <span className="text-xs uppercase font-bold text-slate-500">Min. Tutar</span>
                         <select className="bg-slate-950 text-slate-300 border border-white/10 rounded-lg text-sm px-2 py-1 outline-none"
@@ -72,7 +72,7 @@ export function LiveRadar() {
                     </div>
                 </div>
             ) : radarBets.length === 0 ? (
-                <div className="rounded-xl border border-white/5 bg-slate-900/30 p-24 flex flex-col items-center justify-center gap-4">
+                <div className="rounded-xl border border-white/5 bg-[rgba(242,244,248,0.30)] p-24 flex flex-col items-center justify-center gap-4">
                     {siteBetsQuery.isLoading ? (
                         <>
                             <Loader2 className="animate-spin text-rose-500" size={48} />
@@ -99,7 +99,7 @@ export function LiveRadar() {
                                     animate={{ opacity: 1, y: 0, scale: 1 }}
                                     exit={{ opacity: 0, scale: 0.8 }}
                                     transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-                                    className={`relative rounded-xl border p-5 overflow-hidden shadow-2xl ${isHighStake ? 'border-amber-500/50 bg-amber-950/20 shadow-amber-900/10' : 'border-white/10 bg-slate-900/60 shadow-black/50'
+                                    className={`relative rounded-xl border p-5 overflow-hidden shadow-2xl ${isHighStake ? 'border-amber-500/50 bg-amber-950/20 shadow-amber-900/10' : 'border-white/10 bg-[rgba(242,244,248,0.60)] shadow-black/50'
                                         }`}
                                 >
                                     {isHighStake && (

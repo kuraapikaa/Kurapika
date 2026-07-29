@@ -139,7 +139,7 @@ export function TransactionsList({ dateRange }: TransactionsListProps) {
                 </div>
 
                 {/* Rows Per Page Selector (Top) */}
-                <div className="flex items-center gap-3 bg-slate-900/40 px-4 py-2 rounded-xl border border-white/5 ring-1 ring-white/5">
+                <div className="flex items-center gap-3 bg-[rgba(242,244,248,0.40)] px-4 py-2 rounded-xl border border-white/5 ring-1 ring-white/5">
                     <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">SATIR SAYISI:</span>
                     <select
                         value={rowsPerPage}
@@ -161,7 +161,7 @@ export function TransactionsList({ dateRange }: TransactionsListProps) {
 
 
             {/* Filter Section */}
-            <div className="rounded-xl border border-white/5 bg-slate-900/40 backdrop-blur-md overflow-hidden transition-all">
+            <div className="rounded-xl border border-white/5 bg-[rgba(242,244,248,0.40)] backdrop-blur-md overflow-hidden transition-all">
                 <button
                     onClick={() => setIsFilterOpen(!isFilterOpen)}
                     className="flex w-full items-center justify-between px-3 py-2.5 text-left hover:bg-white/5 transition-colors"
@@ -242,7 +242,7 @@ export function TransactionsList({ dateRange }: TransactionsListProps) {
             </div>
 
             {/* Table Section */}
-            <div className="rounded-xl border border-white/5 bg-slate-900/40 p-4 backdrop-blur-md overflow-hidden">
+            <div className="rounded-xl border border-white/5 bg-[rgba(242,244,248,0.40)] p-4 backdrop-blur-md overflow-hidden">
                 {isLoading ? (
                     <div className="flex flex-col items-center justify-center py-32 gap-6">
                         <Loader2 className="h-12 w-12 animate-spin text-blue-500" />
@@ -254,7 +254,7 @@ export function TransactionsList({ dateRange }: TransactionsListProps) {
                     <div className="overflow-x-auto overflow-y-auto max-h-[700px] scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
                         <table className="w-full text-left">
                             <thead>
-                                <tr className="border-b border-white/5 sticky top-0 bg-slate-900/90 backdrop-blur-md z-10">
+                                <tr className="border-b border-white/5 sticky top-0 bg-[rgba(242,244,248,0.90)] backdrop-blur-md z-10">
                                     <th className="pb-4 pl-6 pt-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Oyuncu Info</th>
                                     <th className="pb-4 pt-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">İşlem Detayı</th>
                                     <th className="pb-4 pt-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Miktar</th>
@@ -268,7 +268,7 @@ export function TransactionsList({ dateRange }: TransactionsListProps) {
                                     <tr key={tx.Id} className="group hover:bg-white/[0.02] transition-colors">
                                         <td className="py-6 pl-6">
                                             <div className="flex items-center gap-4">
-                                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-950/60 text-slate-400 group-hover:bg-blue-500 group-hover:text-white transition-all ring-1 ring-white/5 shadow-inner">
+                                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[rgba(242,244,248,0.60)] text-slate-400 group-hover:bg-blue-500 group-hover:text-white transition-all ring-1 ring-white/5 shadow-inner">
                                                     <User size={18} />
                                                 </div>
                                                 <div className="text-left">
@@ -424,7 +424,7 @@ function FilterInput({ label, value, onChange, disabled, icon: Icon }: FilterInp
                     value={value}
                     onChange={(e) => onChange?.(e.target.value)}
                     disabled={disabled}
-                    className={`h-10 w-full rounded-xl border border-white/5 bg-slate-950/40 ${Icon ? 'pl-9' : 'px-3'} py-2 text-xs font-medium text-white transition-all focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20 outline-none disabled:opacity-50`}
+                    className={`h-10 w-full rounded-xl border border-white/5 bg-[rgba(242,244,248,0.40)] ${Icon ? 'pl-9' : 'px-3'} py-2 text-xs font-medium text-white transition-all focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20 outline-none disabled:opacity-50`}
                 />
             </div>
         </div>
@@ -445,7 +445,7 @@ function FilterSelect({ label, value, onChange, options }: FilterSelectProps) {
             <select
                 value={value}
                 onChange={(e) => onChange?.(e.target.value)}
-                className="h-10 w-full rounded-xl border border-white/5 bg-slate-950/40 px-3 py-2 text-xs font-medium text-white transition-all focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20 outline-none appearance-none"
+                className="h-10 w-full rounded-xl border border-white/5 bg-[rgba(242,244,248,0.40)] px-3 py-2 text-xs font-medium text-white transition-all focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20 outline-none appearance-none"
             >
                 {options.map((opt: any) => (
                     <option key={opt.value} value={opt.value} className="bg-slate-900">{opt.label}</option>

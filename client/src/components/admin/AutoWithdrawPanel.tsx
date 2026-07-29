@@ -56,7 +56,7 @@ function StatusBadge({ stateName }: { stateName?: string | null }) {
       </span>
     );
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-500/15 px-2.5 py-1 text-[10px] font-bold text-slate-400 ring-1 ring-slate-500/20">
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-[rgba(242,244,248,0.15)] px-2.5 py-1 text-[10px] font-bold text-slate-400 ring-1 ring-slate-500/20">
       {stateName || '—'}
     </span>
   );
@@ -255,7 +255,7 @@ export function AutoWithdrawPanel() {
 
       {/* Loading overlay */}
       {loadingClientId !== null && (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-5 bg-slate-950/90 backdrop-blur-md">
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-5 bg-[rgba(242,244,248,0.90)] backdrop-blur-md">
           <div className="relative">
             <div className="absolute inset-0 animate-ping rounded-full bg-blue-500/20" />
             <Loader2 size={56} className="relative animate-spin text-blue-400" />
@@ -267,7 +267,7 @@ export function AutoWithdrawPanel() {
 
       {/* Table card - hidden when analysis is open */}
       {!modalData && (
-        <div className="overflow-hidden rounded-xl border border-white/5 bg-slate-900/40 shadow-xl transition-shadow hover:shadow-2xl hover:shadow-blue-500/5">
+        <div className="overflow-hidden rounded-xl border border-white/5 bg-[rgba(242,244,248,0.40)] shadow-xl transition-shadow hover:shadow-2xl hover:shadow-blue-500/5">
           <div className="flex flex-col border-b border-white/5 bg-white/5 sm:flex-row sm:items-center sm:justify-between px-3 py-2.5 gap-4">
             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-400">
               <Wallet size={16} className="text-blue-400" />
@@ -285,7 +285,7 @@ export function AutoWithdrawPanel() {
                     setSearchTerm(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="h-9 w-48 rounded-xl border border-white/10 bg-slate-950/50 pl-9 pr-3 text-xs text-white placeholder:text-slate-600 focus:border-blue-500/50 focus:outline-none focus:ring-1 focus:ring-blue-500/50"
+                  className="h-9 w-48 rounded-xl border border-white/10 bg-[rgba(242,244,248,0.50)] pl-9 pr-3 text-xs text-white placeholder:text-slate-600 focus:border-blue-500/50 focus:outline-none focus:ring-1 focus:ring-blue-500/50"
                 />
               </div>
 
@@ -297,7 +297,7 @@ export function AutoWithdrawPanel() {
                     setStatusFilter(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="h-9 rounded-xl border border-white/10 bg-slate-950/50 pl-3 pr-8 text-xs font-bold text-slate-300 focus:border-blue-500/50 focus:outline-none focus:ring-1 focus:ring-blue-500/50 appearance-none"
+                  className="h-9 rounded-xl border border-white/10 bg-[rgba(242,244,248,0.50)] pl-3 pr-8 text-xs font-bold text-slate-300 focus:border-blue-500/50 focus:outline-none focus:ring-1 focus:ring-blue-500/50 appearance-none"
                 >
                   <option value="all">Tüm Durumlar</option>
                   <option value="pending">Bekleyenler</option>
@@ -342,7 +342,7 @@ export function AutoWithdrawPanel() {
             </div>
           ) : filteredRequests.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-4 py-20">
-              <div className="flex h-20 w-20 items-center justify-center rounded-xl bg-slate-800/50 text-slate-500">
+              <div className="flex h-20 w-20 items-center justify-center rounded-xl bg-[rgba(242,244,248,0.50)] text-slate-500">
                 <Inbox size={40} />
               </div>
               <p className="font-bold text-slate-400">Aramanıza veya filtrenize uygun talep bulunamadı.</p>
@@ -410,7 +410,7 @@ export function AutoWithdrawPanel() {
 
               {/* Sayfalama */}
               {totalPages > 1 && (
-                <div className="flex items-center justify-between border-t border-white/5 bg-slate-900/50 px-3 py-2.5">
+                <div className="flex items-center justify-between border-t border-white/5 bg-[rgba(242,244,248,0.50)] px-3 py-2.5">
                   <span className="text-xs font-medium text-slate-400">
                     Sayfa {currentPage} / {totalPages}
                   </span>

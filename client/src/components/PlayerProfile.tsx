@@ -728,7 +728,7 @@ export function PlayerProfile() {
                                                 title="Para Birimi"
                                                 value={kpi.CurrencyId ?? '—'}
                                                 icon={Wallet}
-                                                colorClass="bg-slate-500/10 text-slate-400"
+                                                colorClass="bg-[rgba(242,244,248,0.10)] text-slate-400"
                                             />
                                         </div>
                                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 mt-6">
@@ -862,7 +862,7 @@ export function PlayerProfile() {
 
 
                             {activeTab === 'notes' && (
-                                <section className="rounded-xl border border-white/5 bg-slate-900/40 p-8 backdrop-blur-md text-left">
+                                <section className="rounded-xl border border-white/5 bg-[rgba(242,244,248,0.40)] p-8 backdrop-blur-md text-left">
                                     <div className="mb-8 flex items-center justify-between">
                                         <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-amber-400">Oyuncu Notları</h3>
                                         <MessageSquare className="text-amber-400" size={20} />
@@ -875,7 +875,7 @@ export function PlayerProfile() {
                                     ) : (
                                         <div className="space-y-4">
                                             {notes.map((note: any) => (
-                                                <div key={note.Id} className="rounded-xl bg-slate-950/60 p-6 border border-white/5 hover:border-white/10 transition-all relative group">
+                                                <div key={note.Id} className="rounded-xl bg-[rgba(242,244,248,0.60)] p-6 border border-white/5 hover:border-white/10 transition-all relative group">
                                                     <div className="mb-2 flex items-center justify-between">
                                                         <div className="flex items-center gap-2">
                                                             <div className="rounded-xl bg-blue-500/10 p-2 text-blue-400">
@@ -902,13 +902,13 @@ export function PlayerProfile() {
                             )}
 
                             {activeTab === 'bonuses' && (
-                                <section className="rounded-xl border border-white/5 bg-slate-900/40 p-8 backdrop-blur-md text-left">
+                                <section className="rounded-xl border border-white/5 bg-[rgba(242,244,248,0.40)] p-8 backdrop-blur-md text-left">
                                     <div className="space-y-6">
                                         <div className="flex items-center justify-between">
                                             <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-cyan-400">Bonus Hareketleri</h3>
                                         </div>
 
-                                        <div className="flex flex-col md:flex-row items-end gap-3 p-4 rounded-xl bg-slate-950/40 border border-white/5">
+                                        <div className="flex flex-col md:flex-row items-end gap-3 p-4 rounded-xl bg-[rgba(242,244,248,0.40)] border border-white/5">
                                             <div className="flex-1 w-full space-y-2">
                                                 <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest ml-1">Hızlı Bonus Tanımla</label>
                                                     <select
@@ -942,7 +942,7 @@ export function PlayerProfile() {
                                             </Button>
                                         </div>
 
-                                        <div className="grid grid-cols-1 gap-3 rounded-xl border border-white/5 bg-slate-950/40 p-4 md:grid-cols-[180px_140px_1fr_auto] md:items-end">
+                                        <div className="grid grid-cols-1 gap-3 rounded-xl border border-white/5 bg-[rgba(242,244,248,0.40)] p-4 md:grid-cols-[180px_140px_1fr_auto] md:items-end">
                                             <div className="space-y-2">
                                                 <label className="ml-1 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Correction Type</label>
                                                 <select
@@ -1085,23 +1085,23 @@ export function PlayerProfile() {
                                         </div>
 
                                         {isBonusesLoading ? (
-                                            <div className="py-24 text-center rounded-xl bg-slate-800/20 border border-white/5">
+                                            <div className="py-24 text-center rounded-xl bg-[rgba(242,244,248,0.20)] border border-white/5">
                                                 <div className="inline-flex items-center gap-3 text-slate-400">
                                                     <div className="h-6 w-6 rounded-full border-2 border-cyan-500/40 border-t-cyan-400 animate-spin" />
                                                     <span className="text-xs font-bold uppercase tracking-widest">Bonuslar yükleniyor</span>
                                                 </div>
                                             </div>
                                         ) : bonuses.length === 0 ? (
-                                            <div className="py-24 text-center rounded-xl bg-slate-800/10 border border-white/5">
+                                            <div className="py-24 text-center rounded-xl bg-[rgba(242,244,248,0.10)] border border-white/5">
                                                 <Gift className="mx-auto text-slate-600 mb-3" size={32} />
                                                 <p className="text-sm text-slate-500 font-medium">Katılım sağlanan bir bonus bulunamadı.</p>
                                             </div>
                                         ) : (
-                                            <div className="rounded-xl border border-white/10 bg-slate-900/30 overflow-hidden shadow-inner">
+                                            <div className="rounded-xl border border-white/10 bg-[rgba(242,244,248,0.30)] overflow-hidden shadow-inner">
                                                 <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
                                                     <table className="w-full text-left min-w-[1200px]">
                                                         <thead>
-                                                            <tr className="bg-slate-800/60 text-[10px] font-semibold uppercase tracking-wider text-slate-400 whitespace-nowrap border-b border-white/10">
+                                                            <tr className="bg-[rgba(242,244,248,0.60)] text-[10px] font-semibold uppercase tracking-wider text-slate-400 whitespace-nowrap border-b border-white/10">
                                                                 <th className="py-3.5 pl-5 pr-3 font-medium">ID</th>
                                                                 <th className="py-3.5 px-3 font-medium">Bonus Adı</th>
                                                                 <th className="py-3.5 px-3 font-medium">Oluşturulma</th>
@@ -1138,7 +1138,7 @@ export function PlayerProfile() {
                                                                             {bonus.IsTest && <span className="inline-block mt-1 rounded-md bg-amber-500/20 px-1.5 py-0.5 text-[9px] font-bold text-amber-400">Test</span>}
                                                                         </td>
                                                                         <td className="py-3.5 px-3 text-xs text-slate-400 whitespace-nowrap">{formatDateTimeWithSeconds(bonus.CreatedLocal)}</td>
-                                                                        <td className="py-3.5 px-3"><span className="inline-flex rounded-md bg-slate-700/50 px-2 py-0.5 text-[10px] font-medium text-slate-300">{getBonusTypeLabel(bonus.BonusType)}</span></td>
+                                                                        <td className="py-3.5 px-3"><span className="inline-flex rounded-md bg-[rgba(242,244,248,0.50)] px-2 py-0.5 text-[10px] font-medium text-slate-300">{getBonusTypeLabel(bonus.BonusType)}</span></td>
                                                                         <td className="py-3.5 px-3 text-xs text-slate-400">{konum}</td>
                                                                         <td className="py-3.5 px-3 text-xs font-medium text-slate-400">{bonus.ClientCurrency ?? 'TRY'}</td>
                                                                         <td className="py-3.5 px-3 text-sm font-bold text-emerald-400 tabular-nums text-right">{formatNumber(bonus.Amount ?? 0)}</td>
@@ -1147,7 +1147,7 @@ export function PlayerProfile() {
                                                                         <td className="py-3.5 px-3 text-xs text-slate-400 tabular-nums text-right">{formatNumber(bonus.TotalPaidAmount ?? 0)}</td>
                                                                         <td className="py-3.5 px-3 text-[11px] text-slate-400"><span className="text-slate-500">Çevrilen</span> {formatNumber(bonus.WageredAmount ?? 0)} · <span className="text-slate-500">Kalan</span> {formatNumber(bonus.ToWagerAmount ?? 0)}</td>
                                                                         <td className="py-3.5 px-3">
-                                                                            {showExpiredStatus ? <span className="inline-flex rounded-full bg-slate-600/40 px-2.5 py-0.5 text-[10px] font-bold text-slate-400">Süresi dolmuş</span> : <span className="inline-flex rounded-full bg-slate-700/50 px-2.5 py-0.5 text-[10px] font-medium text-slate-300">{getStatusText(bonus.ResultType)}</span>}
+                                                                            {showExpiredStatus ? <span className="inline-flex rounded-full bg-[rgba(242,244,248,0.40)] px-2.5 py-0.5 text-[10px] font-bold text-slate-400">Süresi dolmuş</span> : <span className="inline-flex rounded-full bg-[rgba(242,244,248,0.50)] px-2.5 py-0.5 text-[10px] font-medium text-slate-300">{getStatusText(bonus.ResultType)}</span>}
                                                                         </td>
                                                                         <td className="py-3.5 px-3 text-xs text-slate-500 whitespace-nowrap">{bonus.ResultDateLocal ? formatDateTimeWithSeconds(bonus.ResultDateLocal) : '—'}</td>
                                                                         <td className="py-3.5 px-3 text-xs text-slate-500 whitespace-nowrap">{bonus.AcceptanceDateLocal ? formatDateTimeWithSeconds(bonus.AcceptanceDateLocal) : '—'}</td>
@@ -1160,11 +1160,11 @@ export function PlayerProfile() {
                                                                         <td className="py-3.5 pr-5 pl-3">
                                                                             <div className="flex items-center gap-2">
                                                                                 {showExpiredStatus ? (
-                                                                                    <span className="inline-flex items-center gap-1.5 rounded-lg bg-slate-600/30 border border-slate-500/20 px-2.5 py-1.5 text-[10px] font-bold text-slate-400">
+                                                                                    <span className="inline-flex items-center gap-1.5 rounded-lg bg-[rgba(242,244,248,0.30)] border border-slate-500/20 px-2.5 py-1.5 text-[10px] font-bold text-slate-400">
                                                                                         <Clock size={12} /> Süresi dolmuş
                                                                                     </span>
                                                                                 ) : (
-                                                                                    <span className="inline-flex items-center gap-1.5 rounded-lg bg-slate-700/40 border border-white/5 px-2.5 py-1.5 text-[10px] font-bold text-slate-300">
+                                                                                    <span className="inline-flex items-center gap-1.5 rounded-lg bg-[rgba(242,244,248,0.40)] border border-white/5 px-2.5 py-1.5 text-[10px] font-bold text-slate-300">
                                                                                         {getStatusIcon(bonus.ResultType)}
                                                                                         {getStatusText(bonus.ResultType)}
                                                                                     </span>
@@ -1185,13 +1185,13 @@ export function PlayerProfile() {
                             )}
 
                             {activeTab === 'transactions' && (
-                                <section className="rounded-xl border border-white/5 bg-slate-900/40 p-8 backdrop-blur-md text-left">
+                                <section className="rounded-xl border border-white/5 bg-[rgba(242,244,248,0.40)] p-8 backdrop-blur-md text-left">
                                     <div className="mb-6 flex items-center justify-between">
                                         <div className="flex min-w-0 items-center gap-2.5">
                                             <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-blue-400">İşlem Hareketleri</h3>
                                             <History className="text-blue-400" size={20} />
                                         </div>
-                                        <div className="flex items-center gap-3 bg-slate-950/40 px-4 py-2 rounded-xl border border-white/5 ring-1 ring-white/5">
+                                        <div className="flex items-center gap-3 bg-[rgba(242,244,248,0.40)] px-4 py-2 rounded-xl border border-white/5 ring-1 ring-white/5">
                                             <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">SATIR SAYISI:</span>
                                             <select
                                                 value={rowsPerPage}
@@ -1210,7 +1210,7 @@ export function PlayerProfile() {
                                         </div>
                                     </div>
 
-                                    <div className="mb-8 flex flex-wrap items-end gap-6 rounded-xl border border-white/5 bg-slate-950/40 p-6">
+                                    <div className="mb-8 flex flex-wrap items-end gap-6 rounded-xl border border-white/5 bg-[rgba(242,244,248,0.40)] p-6">
                                         <div className="flex flex-col gap-3">
                                             <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Hızlı Tarih Seçimi</span>
                                             <div className="flex flex-wrap gap-2">
@@ -1467,14 +1467,14 @@ export function PlayerProfile() {
 
                             {
                                 activeTab === 'detailed-report' && (
-                                    <section className="rounded-xl border border-white/5 bg-slate-900/40 p-8 backdrop-blur-md text-left">
+                                    <section className="rounded-xl border border-white/5 bg-[rgba(242,244,248,0.40)] p-8 backdrop-blur-md text-left">
                                         <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                             <div className="flex min-w-0 items-center gap-2.5">
                                                 <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-blue-400">Detaylı Oyuncu Raporu</h3>
                                                 <BarChart3 className="text-blue-400" size={20} />
                                             </div>
 
-                                            <div className="flex flex-wrap items-center gap-4 bg-slate-950/40 p-4 rounded-xl border border-white/5">
+                                            <div className="flex flex-wrap items-center gap-4 bg-[rgba(242,244,248,0.40)] p-4 rounded-xl border border-white/5">
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Tarih</span>
                                                     <button
@@ -1603,7 +1603,7 @@ export function PlayerProfile() {
                                                         </section>
 
                                                         <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
-                                                            <div className="rounded-xl border border-white/5 bg-slate-900/40 p-8 text-left backdrop-blur-md">
+                                                            <div className="rounded-xl border border-white/5 bg-[rgba(242,244,248,0.40)] p-8 text-left backdrop-blur-md">
                                                                 <div className="mb-8 flex items-center justify-between">
                                                                     <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-blue-400">Sportbook Analizi</h3>
                                                                     <TrendingUp className="text-blue-400" size={20} />
@@ -1619,7 +1619,7 @@ export function PlayerProfile() {
                                                                 </div>
                                                             </div>
 
-                                                            <div className="rounded-xl border border-white/5 bg-slate-900/40 p-8 text-left backdrop-blur-md">
+                                                            <div className="rounded-xl border border-white/5 bg-[rgba(242,244,248,0.40)] p-8 text-left backdrop-blur-md">
                                                                 <div className="mb-8 flex items-center justify-between">
                                                                     <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-blue-400">Casino Analizi</h3>
                                                                     <Gamepad2 className="text-blue-400" size={20} />
@@ -1636,7 +1636,7 @@ export function PlayerProfile() {
                                                             </div>
                                                         </div>
 
-                                                        <section className="rounded-xl border border-white/5 bg-slate-950/40 p-10">
+                                                        <section className="rounded-xl border border-white/5 bg-[rgba(242,244,248,0.40)] p-10">
                                                             <h4 className="mb-10 text-center text-xs font-semibold uppercase tracking-[0.5em] text-slate-500">Dönem Sonu ve Bonus Kazanımları</h4>
                                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
                                                                 <InfoTile label="Real Para Toplam Kazanç" value={`${formatNumber(report.RealMoneyWonAmount)} TRY`} icon={Trophy} isSuccess={true} />
@@ -1645,7 +1645,7 @@ export function PlayerProfile() {
                                                             </div>
                                                         </section>
 
-                                                        <div className="rounded-xl border border-white/5 bg-slate-900/40 p-10 backdrop-blur-md">
+                                                        <div className="rounded-xl border border-white/5 bg-[rgba(242,244,248,0.40)] p-10 backdrop-blur-md">
                                                             <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-4">
                                                                 <div className="min-w-0 text-left">
                                                                     <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-3">Dönem Başlangıç Bakiyesi</p>
@@ -1700,7 +1700,7 @@ export function PlayerProfile() {
                                 )}
 
                             {activeTab === 'ip-addresses' && (
-                                <section className="rounded-xl border border-white/5 bg-slate-900/40 p-8 backdrop-blur-md text-left">
+                                <section className="rounded-xl border border-white/5 bg-[rgba(242,244,248,0.40)] p-8 backdrop-blur-md text-left">
                                     <NetworkMap loginIp={loginIP || null} clientId={id!} />
                                 </section>
                             )}

@@ -383,7 +383,7 @@ export function AllPlayersList({
       </header>
 
       {isLoading ? (
-        <div className="flex h-96 flex-col items-center justify-center gap-4 rounded-xl border border-white/5 bg-slate-900/40">
+        <div className="flex h-96 flex-col items-center justify-center gap-4 rounded-xl border border-white/5 bg-[rgba(242,244,248,0.40)]">
           <div className="h-12 w-12 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" />
           <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Veritabanı taranıyor...</p>
         </div>

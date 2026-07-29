@@ -83,7 +83,7 @@ export function ClientBonusReport() {
         <div className="space-y-6 animate-in fade-in duration-500 flex flex-col min-h-0 h-full">
             {/* Header Cards */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:grid-cols-3 shrink-0">
-                <div className="rounded-xl border border-white/5 bg-slate-900/40 p-5 backdrop-blur-sm relative overflow-hidden group">
+                <div className="rounded-xl border border-white/5 bg-[rgba(242,244,248,0.40)] p-5 backdrop-blur-sm relative overflow-hidden group">
                     <div className="absolute top-0 right-0 p-3 opacity-20 group-hover:opacity-40 transition-opacity">
                         <Gift size={24} className="text-amber-400" />
                     </div>
@@ -92,7 +92,7 @@ export function ClientBonusReport() {
                         {formatNumber(totalBonusAmount)} <span className="text-sm font-normal text-slate-500">TRY</span>
                     </p>
                 </div>
-                <div className="rounded-xl border border-white/5 bg-slate-900/40 p-5 backdrop-blur-sm relative overflow-hidden group">
+                <div className="rounded-xl border border-white/5 bg-[rgba(242,244,248,0.40)] p-5 backdrop-blur-sm relative overflow-hidden group">
                     <div className="absolute top-0 right-0 p-3 opacity-20 group-hover:opacity-40 transition-opacity">
                         <Search size={24} className="text-blue-400" />
                     </div>
@@ -115,7 +115,7 @@ export function ClientBonusReport() {
             {/* Dashboard Analiz Kartları */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* En Çok Kullanılan Bonuslar */}
-                <div className="rounded-xl border border-white/5 bg-slate-900/40 p-5 shadow-lg">
+                <div className="rounded-xl border border-white/5 bg-[rgba(242,244,248,0.40)] p-5 shadow-lg">
                     <h3 className="text-xs font-semibold uppercase tracking-widest text-slate-400 flex items-center gap-2 mb-4">
                         <BarChart3 size={16} className="text-blue-400" />
                         En Çok Alınanlar
@@ -136,7 +136,7 @@ export function ClientBonusReport() {
                 </div>
 
                 {/* En Çok Kazandıran (Maliyetli) Bonuslar */}
-                <div className="rounded-xl border border-white/5 bg-slate-900/40 p-5 shadow-lg">
+                <div className="rounded-xl border border-white/5 bg-[rgba(242,244,248,0.40)] p-5 shadow-lg">
                     <h3 className="text-xs font-semibold uppercase tracking-widest text-slate-400 flex items-center gap-2 mb-4">
                         <Trophy size={16} className="text-emerald-400" />
                         En Çok Kazandıranlar
@@ -162,7 +162,7 @@ export function ClientBonusReport() {
                 </div>
 
                 {/* En Pahalı (Yüksek Mevla) Bonuslar */}
-                <div className="rounded-xl border border-white/5 bg-slate-900/40 p-5 shadow-lg">
+                <div className="rounded-xl border border-white/5 bg-[rgba(242,244,248,0.40)] p-5 shadow-lg">
                     <h3 className="text-xs font-semibold uppercase tracking-widest text-slate-400 flex items-center gap-2 mb-4">
                         <Flame size={16} className="text-rose-400" />
                         En Yüksek Hacimliler
@@ -184,7 +184,7 @@ export function ClientBonusReport() {
             </div>
 
             {/* Table Section */}
-            <div className="rounded-xl border border-white/5 bg-slate-900/40 shadow-xl overflow-hidden flex flex-col flex-1 min-h-0">
+            <div className="rounded-xl border border-white/5 bg-[rgba(242,244,248,0.40)] shadow-xl overflow-hidden flex flex-col flex-1 min-h-0">
                 <div className="border-b border-white/5 bg-white/5 px-3 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
                     <h3 className="text-sm font-semibold uppercase tracking-widest text-slate-400 flex items-center gap-2">
                         <Gift size={18} className="text-amber-400" />
@@ -200,14 +200,14 @@ export function ClientBonusReport() {
                                 setSearchTerm(e.target.value);
                                 setCurrentPage(1);
                             }}
-                            className="h-10 w-full sm:w-64 rounded-xl border border-white/10 bg-slate-900/50 pl-10 pr-4 text-sm text-white placeholder:text-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            className="h-10 w-full sm:w-64 rounded-xl border border-white/10 bg-[rgba(242,244,248,0.50)] pl-10 pr-4 text-sm text-white placeholder:text-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                         />
                     </div>
                 </div>
 
                 <div className="overflow-auto flex-1 h-[600px]">
                     <table className="w-full text-sm text-left relative">
-                        <thead className="sticky top-0 z-10 bg-slate-900/95 backdrop-blur-sm">
+                        <thead className="sticky top-0 z-10 bg-[rgba(242,244,248,0.95)] backdrop-blur-sm">
                             <tr className="border-b border-white/5 text-[10px] font-semibold uppercase tracking-widest text-slate-500">
                                 <th className="px-3 py-2.5 whitespace-nowrap">Oyuncu</th>
                                 <th className="px-3 py-2.5 whitespace-nowrap">Bonus Türü</th>
@@ -272,7 +272,7 @@ export function ClientBonusReport() {
                                                     {item.ResultType === 0 && <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-500">Aktif/Bekliyor</span>}
                                                     {item.ResultType === 1 && <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-500">Kazanıldı</span>}
                                                     {item.ResultType === 2 && <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-500">Kaybedildi</span>}
-                                                    {item.ResultType === 3 && <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-500/20 text-slate-500">İptal Edildi</span>}
+                                                    {item.ResultType === 3 && <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[rgba(242,244,248,0.20)] text-slate-500">İptal Edildi</span>}
                                                     <span className="text-[9px] text-slate-500 uppercase mt-1">Accept: {item.AcceptanceType}</span>
                                                 </div>
                                             </td>
@@ -290,7 +290,7 @@ export function ClientBonusReport() {
                     </table>
                 </div>
                 {/* Pagination Controls */}
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-white/5 bg-slate-900/95 px-3 py-2.5">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-white/5 bg-[rgba(242,244,248,0.95)] px-3 py-2.5">
                     <div className="flex items-center gap-2 text-sm text-slate-400">
                         <span>Gösterilen: </span>
                         <select
@@ -299,7 +299,7 @@ export function ClientBonusReport() {
                                 setRowsPerPage(Number(e.target.value));
                                 setCurrentPage(1);
                             }}
-                            className="rounded-lg border border-white/10 bg-slate-900/50 px-2 py-1 text-white focus:border-blue-500 focus:outline-none"
+                            className="rounded-lg border border-white/10 bg-[rgba(242,244,248,0.50)] px-2 py-1 text-white focus:border-blue-500 focus:outline-none"
                         >
                             {[20, 50, 100, 250, 500].map((pageSize) => (
                                 <option key={pageSize} value={pageSize}>
