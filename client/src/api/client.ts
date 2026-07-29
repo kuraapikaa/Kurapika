@@ -36,6 +36,24 @@ async function parseJsonResponse(res: Response): Promise<Record<string, unknown>
   }
 }
 
+/**
+ * Sunucunun hata metnini bulur.
+ *
+ * `message` alani eksikti: oyun uclari (cark, kazi-kazan, gunluk gorev...)
+ * hatayi `{ ok: false, message: "..." }` bicminde donuyor. Okunmadigi icin
+ * "Gunluk cark hakkinizi kullandiniz" gibi aciklamalar dusuyor ve yerine
+ * ham `res.statusText` ("Too Many Requests") geciyordu; arayuz de bunu
+ * yakalayip "Oturumunuz suresi dolmus olabilir" diye gosteriyordu.
+ */
+function hataMesaji(json: Record<string, unknown>, res: Response): string {
+  return (
+    (json.ErrorDescription as string) ||
+    (json.AlertMessage as string) ||
+    (json.message as string) ||
+    res.statusText
+  );
+}
+
 async function get<T>(path: string, params?: Record<string, string>): Promise<T> {
   const url = params ? `${API_BASE}${path}?${new URLSearchParams(params)}` : `${API_BASE}${path}`;
   const res = await fetch(url, {
@@ -44,8 +62,7 @@ async function get<T>(path: string, params?: Record<string, string>): Promise<T>
   });
   const json = await parseJsonResponse(res);
   if (!res.ok) {
-    const msg = (json.AlertMessage as string) || res.statusText;
-    throw new ApiError(msg, res.status);
+    throw new ApiError(hataMesaji(json, res), res.status);
   }
   return json as T;
 }
@@ -72,11 +89,7 @@ async function post<T>(path: string, body: Record<string, unknown>): Promise<T> 
   });
   const json = await parseJsonResponse(res);
   if (!res.ok) {
-    const msg =
-      (json.ErrorDescription as string) ||
-      (json.AlertMessage as string) ||
-      res.statusText;
-    throw new ApiError(msg, res.status);
+    throw new ApiError(hataMesaji(json, res), res.status);
   }
   return json as T;
 }

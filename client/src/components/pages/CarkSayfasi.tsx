@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, Loader2, Trophy, Gift, AlertCircle, Ticket } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import { gamesApi, bonusPanelApi } from '../../api/client';
+import { gamesApi, bonusPanelApi, ApiError } from '../../api/client';
 import { useQuery } from '@tanstack/react-query';
 import { lobbyExtraText } from '../../lib/lobbyContent';
 import { useLobbyPageTheme, hexToRgba } from '../../lib/lobbyTheme';
@@ -124,7 +124,17 @@ export function CarkSayfasi() {
       }, 5100);
     } catch (err) {
       setSpinning(false);
-      setSpinError(lobbyExtraText(pageContent, 'sessionError', 'Döndürme sırasında bir hata oluştu. Oturumunuz süresi dolmuş olabilir.'));
+      // Sunucu sebebi zaten yazıyor ("Günlük çark hakkınızı kullandınız",
+      // "Çark olasılıkları henüz etkinleştirilmemiş" ...). Her hatayı oturum
+      // hatasına indirgemek oyuncuyu da bizi de yanlış yönlendiriyordu;
+      // oturum metnini yalnızca gerçekten yetkisizken gösteriyoruz.
+      const yetkisiz = err instanceof ApiError && err.status === 401;
+      const sunucuMesaji = err instanceof ApiError ? err.message : '';
+      setSpinError(
+        yetkisiz || !sunucuMesaji
+          ? lobbyExtraText(pageContent, 'sessionError', 'Döndürme sırasında bir hata oluştu. Oturumunuz süresi dolmuş olabilir.')
+          : sunucuMesaji
+      );
     }
   };
 
