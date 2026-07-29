@@ -31,6 +31,7 @@ import { fetchGamesConfigCached, readCachedGamesConfig } from '../../lib/lobbyCo
 import { useOtomatikOturum } from '../../lib/useParentUsername';
 import { cn } from '../../lib/utils';
 import { normalizeLobbyPalette } from '../../lib/lobbyTheme';
+import { sadakatIlerlemesi } from '../../lib/sadakatIlerlemesi';
 
 type LobbyTabId = 'games' | 'tournaments' | 'support';
 
@@ -705,6 +706,8 @@ export function PlayerLobby() {
           </section>
         )}
 
+        {activeUser && <LobbyWelcome theme={lobbyTheme} username={activeUser} loyalty={loyalty} />}
+
         <LobbyBanner theme={lobbyTheme} />
 
         <div className="flex min-w-0 flex-col gap-3.5 md:gap-4">
@@ -987,6 +990,123 @@ function SupportTab({ config }: { config: LobbyTabsConfig['support'] }) {
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * Giris yapmis oyuncunun karsilama blogu (mockup: "Hos geldin" + bakiye/sadakat).
+ *
+ * Selamlama saate gore degisiyor; sabit bir "Hos geldin" yerine gunun saatini
+ * kullanmak ekrani canli tutuyor ve mockup'in davranisi da bu.
+ *
+ * Sadakat ilerlemesi gercek veriden hesaplaniyor. Sunucudaki formul
+ * level = floor(xp/1000)+1, yani seviye basina 1000 XP: ilerleme xp%1000,
+ * kalan 1000-(xp%1000). Mockup'taki %62 / 1.900 XP degerleri temsiliydi.
+ */
+function LobbyWelcome({ theme, username, loyalty }: { theme: LobbyTheme; username: string; loyalty: any }) {
+  const saat = new Date().getHours();
+  const selam = saat < 6 ? 'İyi geceler' : saat < 12 ? 'Günaydın' : saat < 18 ? 'İyi günler' : 'İyi akşamlar';
+
+  const { seviye, yuzde, kalan } = sadakatIlerlemesi(loyalty?.xp, loyalty?.level);
+
+  return (
+    <section className="flex flex-wrap items-stretch gap-3.5 md:gap-4">
+      <div
+        className="flex min-w-[280px] flex-[2] flex-col justify-center rounded-[20px] border p-6 md:p-7"
+        style={{
+          borderColor: hexToRgba(theme.primaryColor, 0.22),
+          background: `linear-gradient(120deg, ${hexToRgba(theme.primaryColor, 0.1)}, ${hexToRgba(theme.surfaceColor, 0.7)} 50%, ${hexToRgba(theme.backgroundColor, 0.4)})`,
+        }}
+      >
+        <p
+          className="text-[11px] font-bold uppercase leading-none tracking-[0.2em]"
+          style={{ color: hexToRgba(theme.primaryColor, 0.85) }}
+        >
+          {selam}
+        </p>
+        <h1
+          className="mt-2.5 text-[24px] font-extrabold leading-[1.08] tracking-[-0.02em] md:text-[30px]"
+          style={{ color: theme.textColor }}
+        >
+          {username}, bugün seni ne bekliyor?
+        </h1>
+        <div className="mt-4 flex flex-wrap gap-2.5">
+          <Link
+            to="/bonus-talep"
+            className="inline-flex h-11 items-center gap-2 rounded-xl px-5 text-[13px] font-extrabold tracking-[0.03em] transition active:scale-[0.98]"
+            style={{
+              background: `linear-gradient(120deg, ${theme.primaryColor}, ${theme.secondaryColor})`,
+              color: '#1a1508',
+            }}
+          >
+            Bonus talep et
+            <ChevronRight size={15} />
+          </Link>
+          <Link
+            to="/cark"
+            className="inline-flex h-11 items-center gap-2 rounded-xl border px-5 text-[13px] font-bold transition active:scale-[0.98]"
+            style={{
+              borderColor: hexToRgba(theme.textColor, 0.14),
+              backgroundColor: hexToRgba(theme.textColor, 0.05),
+              color: theme.textColor,
+            }}
+          >
+            Çarkı çevir
+          </Link>
+        </div>
+      </div>
+
+      <div
+        className="flex min-w-[260px] flex-1 flex-col justify-center gap-4 rounded-[20px] border p-5 md:p-6"
+        style={{
+          borderColor: hexToRgba(theme.textColor, 0.08),
+          backgroundColor: hexToRgba(theme.textColor, 0.03),
+        }}
+      >
+        <div className="flex items-baseline justify-between gap-3">
+          <span
+            className="text-[11px] font-bold uppercase tracking-[0.16em]"
+            style={{ color: theme.mutedTextColor }}
+          >
+            Bakiye
+          </span>
+          <span
+            className="text-[22px] font-extrabold tabular-nums tracking-[-0.02em] md:text-[24px]"
+            style={{ color: theme.accentColor }}
+          >
+            ₺{Number(loyalty?.balance ?? 0).toLocaleString('tr-TR')}
+          </span>
+        </div>
+        <div>
+          <div className="flex items-baseline justify-between gap-3">
+            <span
+              className="text-[11px] font-bold uppercase tracking-[0.16em]"
+              style={{ color: theme.mutedTextColor }}
+            >
+              Sadakat · Seviye {seviye}
+            </span>
+            <span className="text-[12px] font-bold tabular-nums" style={{ color: theme.primaryColor }}>
+              %{yuzde}
+            </span>
+          </div>
+          <div
+            className="mt-2 h-1.5 w-full overflow-hidden rounded-full"
+            style={{ backgroundColor: hexToRgba(theme.textColor, 0.08) }}
+          >
+            <div
+              className="h-full rounded-full transition-[width] duration-500"
+              style={{
+                width: `${yuzde}%`,
+                background: `linear-gradient(90deg, ${theme.secondaryColor}, ${theme.primaryColor})`,
+              }}
+            />
+          </div>
+          <p className="mt-2 text-[12px] font-medium" style={{ color: theme.mutedTextColor }}>
+            Seviye {seviye + 1} için {kalan.toLocaleString('tr-TR')} XP kaldı
+          </p>
+        </div>
+      </div>
+    </section>
   );
 }
 
