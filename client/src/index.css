@@ -110,15 +110,15 @@
 
 @layer components {
   .app-shell {
-    @apply relative flex min-h-screen min-h-[100dvh] overflow-x-hidden bg-[#070b11] font-sans text-slate-200;
+    @apply relative flex min-h-screen min-h-[100dvh] overflow-x-hidden bg-[#050609] font-sans text-[#f2f4f8];
   }
 
   .app-backdrop {
     @apply pointer-events-none fixed inset-0 z-0 overflow-hidden select-none;
     background:
-      radial-gradient(circle at 82% 0%, rgba(34, 211, 238, 0.055), transparent 28%),
-      radial-gradient(circle at 8% 100%, rgba(20, 184, 166, 0.035), transparent 34%),
-      linear-gradient(180deg, #070b11 0%, #080d14 52%, #060a10 100%);
+      radial-gradient(ellipse 1000px 600px at 17% -60px, rgba(10, 132, 255, 0.14), transparent 70%),
+      radial-gradient(ellipse 840px 560px at 88% 200px, rgba(191, 90, 242, 0.09), transparent 70%),
+      #050609;
   }
 
   .premium-sidebar {
@@ -949,18 +949,29 @@
 
 /* ─── Kompakt panel: mavi + teal, macOS vibrancy camı ─────────────────────── */
 :root {
-  --panel-bg: #060910;
-  --panel-sidebar: rgba(9, 13, 22, 0.72);
-  --panel-surface: rgba(16, 24, 38, 0.6);
-  --panel-surface-2: rgba(22, 33, 51, 0.72);
-  --panel-border: rgba(148, 180, 255, 0.1);
-  --panel-border-strong: rgba(56, 189, 248, 0.32);
-  --panel-text: #e7eefb;
-  --panel-muted: #7c8aa3;
-  --panel-accent: #3b82f6;
-  --panel-accent-teal: #2dd4bf;
-  --panel-accent-soft: rgba(59, 130, 246, 0.14);
-  --panel-blur: blur(28px) saturate(165%);
+  /* Yonetim paneli paleti — tasarim dosyasindan (Admin Panel.html).
+     Lobiden bilerek ayri: lobi oyuncuya bakan marka yuzeyi (sicak siyah +
+     altin), burasi bir calisma araci (soguk, sistem yerlisi, yuksek
+     okunabilirlik). Ikisini tek palete zorlamak ikisini de zayiflatirdi. */
+  --panel-bg: #050609;
+  --panel-sidebar: rgba(8, 10, 14, 0.82);
+  --panel-surface: rgba(242, 244, 248, 0.028);
+  --panel-surface-2: rgba(242, 244, 248, 0.05);
+  --panel-border: rgba(242, 244, 248, 0.1);
+  --panel-border-strong: rgba(10, 132, 255, 0.34);
+  --panel-text: #f2f4f8;
+  --panel-muted: #8a919c;
+  --panel-accent: #0a84ff;
+  --panel-accent-teal: #64d2ff;
+  --panel-accent-soft: rgba(10, 132, 255, 0.14);
+  --panel-blur: blur(28px) saturate(150%);
+  /* Durum renkleri: anlamlari sabit, veri gosteriminde de bunlar kullanilir. */
+  --panel-success: #30d158;
+  --panel-warning: #ff9f0a;
+  --panel-danger: #ff453a;
+  --panel-special: #bf5af2;
+  --panel-text-dim: #c8cdd5;
+  --panel-faint: #5c6470;
 }
 
 .app-shell {
@@ -972,8 +983,8 @@
 
 .app-shell .app-backdrop {
   background:
-    radial-gradient(circle at 85% -8%, rgba(45, 212, 191, 0.08), transparent 32%),
-    radial-gradient(circle at 4% 92%, rgba(59, 130, 246, 0.1), transparent 36%),
+    radial-gradient(ellipse 1000px 600px at 17% -60px, rgba(10, 132, 255, 0.14), transparent 70%),
+    radial-gradient(ellipse 840px 560px at 88% 200px, rgba(191, 90, 242, 0.09), transparent 70%),
     var(--panel-bg) !important;
 }
 
