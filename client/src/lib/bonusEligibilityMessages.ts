@@ -89,6 +89,11 @@ export function friendlyBonusEligibilityMessage(item: BonusEligibilityItem): Fri
         : { title: 'Talep süresi', message: 'Bu bonusun talep süresi dolmuş. Yeni bir uygun yatırımın ardından tekrar deneyebilirsiniz.' };
     case 'requires-phone-verified':
       return { title: 'Telefon onayı gerekiyor', message: 'Bu bonustan yararlanmak için hesabınızdaki telefon numaranızı onaylamanız gerekiyor.' };
+    case 'requires-telegram-member':
+      return {
+        title: 'Telegram kanal üyeliği',
+        message: 'Bu bonus için Telegram hesabınızı bağlayıp kanala katılmanız gerekiyor.',
+      };
     case 'requires-email-verified':
       return { title: 'E-posta onayı gerekiyor', message: 'Bu bonustan yararlanmak için hesabınızdaki e-posta adresinizi onaylamanız gerekiyor.' };
     case 'no-open-bets':

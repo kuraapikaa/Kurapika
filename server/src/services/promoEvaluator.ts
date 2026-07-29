@@ -7,6 +7,7 @@ import { parseDateToTime } from './accountSnapshotService.js';
 import type { PromoSpec, RulesConfig } from './rulesService.js';
 import type { AccountSnapshot, ChecklistItem, PromoChecklist } from './withdrawalEngine.js';
 import type { BCBonus, TransactionTypeSummary } from '../types/betconstruct.js';
+import { telegramUyeligiKontrolEt } from './telegramEligibility.js';
 
 /** Profil işlemlerinde yatırım olarak kabul edilen doküman türleri. */
 const DEPOSIT_TYPE_KEYS = ['Yatırım', 'Deposit', 'Yatırım Talebi Ödemesi'];
@@ -278,7 +279,7 @@ export async function evaluateForAccount(
   account: AccountSnapshot,
   promo: NormalizedPromo,
   specs: RulesConfig = defaultEmptySpecs,
-  _tenantKey: string = 'default'
+  tenantKey: string = 'default'
 ): Promise<PromoChecklist> {
   const items: ChecklistItem[] = [];
   const spec = getSpecForPromo(specs, promo);
@@ -558,6 +559,24 @@ export async function evaluateForAccount(
         label: 'Telefon Numarası Onayı Zorunlu',
         ok: isPhoneVerified,
         reason: isPhoneVerified ? 'UYGUN: Telefon numarası onaylı' : 'RED: Telefon numarası onaylı değil',
+      });
+    }
+
+    // 5.c.2a Telegram Kanal Üyeliği
+    if (spec.requiresTelegramMember) {
+      // Kanal kimliği oyun ayarlarında (Telegram Bonusu bölümü) tutuluyor.
+      const { readGameSettings } = await import('../routes/games.js');
+      const gameSettings: any = await readGameSettings(tenantKey);
+      const sonuc = await telegramUyeligiKontrolEt({
+        tenantKey,
+        login: String((account as any).username ?? (account as any).ClientLogin ?? ''),
+        chatId: gameSettings?.telegramBonus?.chatId,
+      });
+      items.push({
+        id: 'requires-telegram-member',
+        label: 'Telegram Kanal Üyeliği Zorunlu',
+        ok: sonuc.ok,
+        reason: sonuc.reason,
       });
     }
 

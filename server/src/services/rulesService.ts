@@ -72,6 +72,8 @@ export type PromoSpec = {
     checkSingleInvestmentUsage?: boolean;
     checkSameDayUsage?: boolean;
     requiresPhoneVerified?: boolean;
+    /** Bonusu yalnizca Telegram kanalina uye oyuncular alabilir (canli sorgu). */
+    requiresTelegramMember?: boolean;
     requiresEmailVerified?: boolean;
     checkIPDuplicate?: boolean;
     allowedProviders?: string[];
