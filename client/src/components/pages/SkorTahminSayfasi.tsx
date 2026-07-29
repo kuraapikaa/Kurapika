@@ -155,7 +155,7 @@ export function SkorTahminSayfasi() {
       toolbar={
         <div className="flex flex-wrap items-center gap-2">
           {activeUser && (
-            <span className="inline-flex items-center gap-1.5 rounded-lg border border-white/[0.08] bg-white/[0.05] px-2.5 py-1.5 text-[10px] font-black text-white">
+            <span className="inline-flex items-center gap-1.5 rounded-lg border border-[rgba(243,236,221,0.08)] bg-[rgba(243,236,221,0.05)] px-2.5 py-1.5 text-[10px] font-black text-[color:var(--lobby-text,#f3ecdd)]">
               <User size={12} style={{ color: palette.accentColor }} />
               {activeUser}
             </span>
@@ -170,7 +170,7 @@ export function SkorTahminSayfasi() {
           >
             {openMatches.length} {lobbyExtraText(pageContent, 'openStatus', 'Tahmine açık')}
           </span>
-          <span className="rounded-lg border border-white/[0.06] bg-black/25 px-2.5 py-1.5 text-[10px] font-black text-zinc-500">
+          <span className="rounded-lg border border-[rgba(243,236,221,0.06)] bg-black/25 px-2.5 py-1.5 text-[10px] font-black text-[color:var(--lobby-muted,#8f8674)]">
             {matches.length} {lobbyExtraText(pageContent, 'matchesTitle', 'Tahmin maçları')}
           </span>
         </div>
@@ -187,12 +187,12 @@ export function SkorTahminSayfasi() {
           submitLabel={pageContent.submitButton}
           busy={checking}
           icon={checking ? <Loader2 size={17} className="animate-spin" /> : <User size={17} />}
-          message={<p className="text-[11px] font-medium text-zinc-600">{pageContent.formDescription}</p>}
+          message={<p className="text-[11px] font-medium text-[color:var(--lobby-muted,#8f8674)]">{pageContent.formDescription}</p>}
         />
       )}
 
       {message && (
-        <p className="rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-2 text-[11px] font-bold text-zinc-300">
+        <p className="rounded-xl border border-[rgba(243,236,221,0.08)] bg-[rgba(243,236,221,0.04)] px-3 py-2 text-[11px] font-bold text-[color:var(--lobby-text,#f3ecdd)]">
           {message}
         </p>
       )}
@@ -223,15 +223,15 @@ export function SkorTahminSayfasi() {
                     initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: Math.min(index * 0.025, 0.2) }}
-                    className="flex flex-col gap-2.5 px-3.5 py-2.5 transition hover:bg-white/[0.02] md:flex-row md:items-center md:justify-between md:gap-3 md:px-4"
+                    className="flex flex-col gap-2.5 px-3.5 py-2.5 transition hover:bg-[rgba(243,236,221,0.02)] md:flex-row md:items-center md:justify-between md:gap-3 md:px-4"
                   >
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.12em]">
-                        <span className="rounded-lg bg-white/[0.06] px-1.5 py-1 text-zinc-500">{match.league}</span>
+                        <span className="rounded-lg bg-[rgba(243,236,221,0.06)] px-1.5 py-1 text-[color:var(--lobby-muted,#8f8674)]">{match.league}</span>
                         <span
                           className={cn(
                             'rounded-lg px-1.5 py-1',
-                            open ? '' : match.status === 'finished' ? 'bg-emerald-300/10 text-emerald-300' : 'bg-white/[0.04] text-zinc-600'
+                            open ? '' : match.status === 'finished' ? 'bg-emerald-300/10 text-emerald-300' : 'bg-[rgba(243,236,221,0.04)] text-[color:var(--lobby-muted,#8f8674)]'
                           )}
                           style={open ? { backgroundColor: hexToRgba(palette.accentColor, 0.12), color: palette.accentColor } : undefined}
                         >
@@ -242,7 +242,7 @@ export function SkorTahminSayfasi() {
                               : lobbyExtraText(pageContent, 'closedStatus', 'Kapalı')}
                         </span>
                         {finished && (
-                          <span className="rounded-lg bg-white/[0.06] px-1.5 py-1 tabular-nums text-white">
+                          <span className="rounded-lg bg-[rgba(243,236,221,0.06)] px-1.5 py-1 tabular-nums text-[color:var(--lobby-text,#f3ecdd)]">
                             {match.homeScore} - {match.awayScore}
                           </span>
                         )}
@@ -250,13 +250,13 @@ export function SkorTahminSayfasi() {
 
                       <div className="mt-1.5 flex items-center gap-2">
                         <TeamBadge logoUrl={resolveTeamLogoUrl(match.homeLogoUrl)} alt={match.homeTeam} />
-                        <h3 className="truncate text-[12px] font-black leading-tight text-white md:text-[13px]">
+                        <h3 className="truncate text-[12px] font-black leading-tight text-[color:var(--lobby-text,#f3ecdd)] md:text-[13px]">
                           {match.homeTeam} - {match.awayTeam}
                         </h3>
                         <TeamBadge logoUrl={resolveTeamLogoUrl(match.awayLogoUrl)} alt={match.awayTeam} />
                       </div>
 
-                      <p className="mt-1 flex items-center gap-1.5 text-[11px] font-semibold text-zinc-600">
+                      <p className="mt-1 flex items-center gap-1.5 text-[11px] font-semibold text-[color:var(--lobby-muted,#8f8674)]">
                         <CalendarClock size={12} /> {formatMatchDate(match.startsAt, dateFallback)}
                       </p>
                     </div>
@@ -268,7 +268,7 @@ export function SkorTahminSayfasi() {
                         disabled={!activeUser || !open}
                         onChange={(value) => setScores({ ...scores, [match.id]: { ...current, home: value } })}
                       />
-                      <span className="text-[11px] font-black text-zinc-700">:</span>
+                      <span className="text-[11px] font-black text-[color:var(--lobby-muted,#8f8674)]">:</span>
                       <ScoreInput
                         value={current.away}
                         palette={palette}
@@ -280,7 +280,7 @@ export function SkorTahminSayfasi() {
                         disabled={!activeUser || !open || savingMatchId === match.id}
                         onClick={() => submitPrediction(match)}
                         aria-label={lobbyExtraText(pageContent, 'submitAria', 'Tahmini gönder')}
-                        className="ml-1 flex h-10 w-10 items-center justify-center rounded-xl text-white transition active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40"
+                        className="ml-1 flex h-10 w-10 items-center justify-center rounded-xl text-[color:var(--lobby-text,#f3ecdd)] transition active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40"
                         style={{
                           background: `linear-gradient(90deg, ${palette.primaryColor}, ${palette.secondaryColor})`,
                           boxShadow: `0 8px 22px ${hexToRgba(palette.primaryColor, 0.26)}`,
@@ -295,8 +295,8 @@ export function SkorTahminSayfasi() {
             </ul>
           ) : (
             <div className="px-4 py-10 text-center">
-              <p className="text-sm font-black text-white">{pageContent.emptyTitle}</p>
-              <p className="mt-1 text-[12px] font-medium text-zinc-500">{pageContent.emptyDescription}</p>
+              <p className="text-sm font-black text-[color:var(--lobby-text,#f3ecdd)]">{pageContent.emptyTitle}</p>
+              <p className="mt-1 text-[12px] font-medium text-[color:var(--lobby-muted,#8f8674)]">{pageContent.emptyDescription}</p>
             </div>
           )}
         </LobbyCard>
@@ -312,7 +312,7 @@ export function SkorTahminSayfasi() {
               <p className="text-[9px] font-black uppercase tracking-[0.16em]" style={{ color: palette.accentColor }}>
                 {monthlyPlayer.title || lobbyExtraText(pageContent, 'monthlyPlayerTitle', 'Ayın oyuncusu')}
               </p>
-              <p className="mt-1.5 text-[13px] font-black leading-tight tracking-[-0.02em] text-white">
+              <p className="mt-1.5 text-[13px] font-black leading-tight tracking-[-0.02em] text-[color:var(--lobby-text,#f3ecdd)]">
                 {monthlyPlayer.mainText || league?.prize || lobbyExtraText(pageContent, 'prizePoolLabel', 'Ödül havuzu')}
               </p>
               <p className="mt-1.5 text-[11px] font-semibold leading-4" style={{ color: palette.mutedTextColor }}>
@@ -323,10 +323,10 @@ export function SkorTahminSayfasi() {
 
           <LobbyCard padded={false}>
             <div className="flex items-center justify-between gap-2 px-3.5 pb-2.5 pt-3.5 md:px-4">
-              <h2 className="truncate text-[13px] font-black tracking-[-0.02em] text-white">
+              <h2 className="truncate text-[13px] font-black tracking-[-0.02em] text-[color:var(--lobby-text,#f3ecdd)]">
                 {lobbyExtraText(pageContent, 'leaderboardTitle', 'Skor tablosu')}
               </h2>
-              <div className="flex shrink-0 rounded-xl border border-white/[0.08] bg-black/25 p-1">
+              <div className="flex shrink-0 rounded-xl border border-[rgba(243,236,221,0.08)] bg-black/25 p-1">
                 {(['weekly', 'monthly'] as const).map((period) => {
                   const isActive = boardPeriod === period;
                   return (
@@ -336,7 +336,7 @@ export function SkorTahminSayfasi() {
                       onClick={() => setBoardPeriod(period)}
                       className={cn(
                         'rounded-lg px-2.5 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] transition',
-                        isActive ? 'text-white' : 'text-zinc-500 hover:text-zinc-300'
+                        isActive ? 'text-[color:var(--lobby-text,#f3ecdd)]' : 'text-[color:var(--lobby-muted,#8f8674)] hover:text-[color:var(--lobby-text,#f3ecdd)]'
                       )}
                       style={
                         isActive
@@ -370,27 +370,27 @@ export function SkorTahminSayfasi() {
               {leaderboard.length ? (
                 <table className="w-full border-collapse text-left">
                   <thead>
-                    <tr className="border-y border-white/[0.05] bg-white/[0.02]">
-                      <th className="sticky top-0 px-3.5 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-zinc-500 md:px-4">#</th>
-                      <th className="sticky top-0 px-2 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-zinc-500">
+                    <tr className="border-y border-[rgba(243,236,221,0.05)] bg-[rgba(243,236,221,0.02)]">
+                      <th className="sticky top-0 px-3.5 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-[color:var(--lobby-muted,#8f8674)] md:px-4">#</th>
+                      <th className="sticky top-0 px-2 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-[color:var(--lobby-muted,#8f8674)]">
                         {lobbyExtraText(pageContent, 'playerColumn', 'Oyuncu')}
                       </th>
-                      <th className="sticky top-0 px-3.5 py-1.5 text-right text-[9px] font-black uppercase tracking-[0.12em] text-zinc-500 md:px-4">
+                      <th className="sticky top-0 px-3.5 py-1.5 text-right text-[9px] font-black uppercase tracking-[0.12em] text-[color:var(--lobby-muted,#8f8674)] md:px-4">
                         {lobbyExtraText(pageContent, 'pointsColumn', 'Puan')}
                       </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/[0.04]">
                     {leaderboard.slice(0, 10).map((item: any, index: number) => (
-                      <tr key={item.username} className="transition hover:bg-white/[0.02]">
+                      <tr key={item.username} className="transition hover:bg-[rgba(243,236,221,0.02)]">
                         <td className="px-3.5 py-2 md:px-4">
                           {index < 3 ? (
                             <Medal size={14} style={{ color: index === 0 ? palette.accentColor : index === 1 ? '#a1a1aa' : '#b45309' }} />
                           ) : (
-                            <span className="text-[11px] font-black tabular-nums text-zinc-600">{index + 1}</span>
+                            <span className="text-[11px] font-black tabular-nums text-[color:var(--lobby-muted,#8f8674)]">{index + 1}</span>
                           )}
                         </td>
-                        <td className="px-2 py-2 text-[12px] font-black text-white">{maskUsername(item.username)}</td>
+                        <td className="px-2 py-2 text-[12px] font-black text-[color:var(--lobby-text,#f3ecdd)]">{maskUsername(item.username)}</td>
                         <td className="px-3.5 py-2 text-right text-[12px] font-black tabular-nums md:px-4" style={{ color: palette.accentColor }}>
                           {item.points}P
                         </td>
@@ -399,7 +399,7 @@ export function SkorTahminSayfasi() {
                   </tbody>
                 </table>
               ) : (
-                <p className="px-4 py-8 text-center text-[11px] font-bold text-zinc-600">
+                <p className="px-4 py-8 text-center text-[11px] font-bold text-[color:var(--lobby-muted,#8f8674)]">
                   {lobbyExtraText(pageContent, 'leaderboardEmpty', 'İlk tahmini bekliyor.')}
                 </p>
               )}
@@ -418,7 +418,7 @@ function TeamBadge({ logoUrl, alt }: { logoUrl: string | null; alt: string }) {
     <img
       src={logoUrl}
       alt={alt}
-      className="h-6 w-6 shrink-0 rounded-full border border-white/10 bg-black/30 object-contain"
+      className="h-6 w-6 shrink-0 rounded-full border border-[rgba(243,236,221,0.10)] bg-black/30 object-contain"
       onError={(event) => {
         const target = event.currentTarget as HTMLImageElement;
         target.style.display = 'none';
@@ -446,7 +446,7 @@ function ScoreInput({
       value={value}
       disabled={disabled}
       onChange={(event) => onChange(event.target.value)}
-      className="h-10 w-12 rounded-xl border border-white/[0.08] bg-black/35 text-center text-[13px] font-black text-white outline-none transition focus:border-[color:var(--lobby-primary)] disabled:text-zinc-700"
+      className="h-10 w-12 rounded-xl border border-[rgba(243,236,221,0.08)] bg-black/35 text-center text-[13px] font-black text-[color:var(--lobby-text,#f3ecdd)] outline-none transition focus:border-[color:var(--lobby-primary,#e7c574)] disabled:text-[color:var(--lobby-muted,#8f8674)]"
       style={{ caretColor: palette.accentColor }}
     />
   );

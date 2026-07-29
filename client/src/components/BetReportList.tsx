@@ -137,7 +137,7 @@ export function BetReportList({
           isWon ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 neon-glow-emerald" :
             isLost ? "bg-rose-500/10 text-rose-500 border-rose-500/20" :
               isPending ? "bg-amber-500/10 text-amber-500 border-amber-500/20" :
-                "bg-zinc-500/10 text-zinc-500 border-zinc-500/20"
+                "bg-[rgba(242,244,248,0.10)] text-zinc-500 border-zinc-500/20"
         )}>
           {v}
         </span>
@@ -176,7 +176,7 @@ export function BetReportList({
 
   return (
     <div className="flex flex-col gap-6 h-full">
-      <Card className="flex-1 flex flex-col overflow-hidden bg-zinc-950/20 border-white/[0.05] p-0">
+      <Card className="flex-1 flex flex-col overflow-hidden bg-[rgba(242,244,248,0.20)] border-white/[0.05] p-0">
         {showHeader && (
           <div className="flex shrink-0 items-center justify-between border-b border-white/[0.05] bg-black/40 px-8 py-5 backdrop-blur-3xl">
             <div className="flex items-center gap-3">
@@ -284,7 +284,7 @@ export function BetReportList({
                                         const isWon = /WON|KAZAN/i.test(s.StateName);
                                         const isLost = /LOST|KAYIP/i.test(s.StateName);
                                         return (
-                                          <div key={sIdx} className="rounded-xl bg-zinc-950/40 border border-white/5 p-5">
+                                          <div key={sIdx} className="rounded-xl bg-[rgba(242,244,248,0.40)] border border-white/5 p-5">
                                             <div className="flex items-start justify-between gap-4">
                                               <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2 mb-1">
@@ -312,7 +312,7 @@ export function BetReportList({
                                                   "px-2 py-0.5 rounded text-[9px] font-semibold uppercase tracking-widest border",
                                                   isWon ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" :
                                                     isLost ? "bg-rose-500/10 text-rose-500 border-rose-500/20" :
-                                                      "bg-zinc-500/10 text-zinc-500 border-zinc-500/20"
+                                                      "bg-[rgba(242,244,248,0.10)] text-zinc-500 border-zinc-500/20"
                                                 )}>{s.StateName}</span>
                                               </div>
                                             </div>

@@ -72,7 +72,7 @@ export function AdminTournamentSettings() {
 
         <div className="grid grid-cols-1 gap-6">
           {/* Daily */}
-          <div className="p-6 rounded-xl bg-zinc-900/40 border border-white/5 space-y-4">
+          <div className="p-6 rounded-xl bg-[rgba(242,244,248,0.40)] border border-white/5 space-y-4">
             <h3 className="text-lg font-semibold text-white flex items-center justify-between">
               Günlük Turnuva
               <div className="px-3 py-1 rounded-full bg-amber-500/10 text-amber-500 text-[10px] uppercase font-semibold">24 Saat</div>
@@ -90,7 +90,7 @@ export function AdminTournamentSettings() {
           </div>
 
           {/* Weekly */}
-          <div className="p-6 rounded-xl bg-zinc-900/40 border border-white/5 space-y-4">
+          <div className="p-6 rounded-xl bg-[rgba(242,244,248,0.40)] border border-white/5 space-y-4">
             <h3 className="text-lg font-semibold text-white flex items-center justify-between">
               Haftalık Turnuva
               <div className="px-3 py-1 rounded-full bg-blue-500/10 text-blue-500 text-[10px] uppercase font-semibold">7 Gün</div>
@@ -108,7 +108,7 @@ export function AdminTournamentSettings() {
           </div>
 
           {/* Monthly */}
-          <div className="p-6 rounded-xl bg-zinc-900/40 border border-white/5 space-y-4">
+          <div className="p-6 rounded-xl bg-[rgba(242,244,248,0.40)] border border-white/5 space-y-4">
             <h3 className="text-lg font-semibold text-white flex items-center justify-between">
               Aylık Turnuva
               <div className="px-3 py-1 rounded-full bg-blue-500/10 text-blue-500 text-[10px] uppercase font-semibold">30 Gün</div>

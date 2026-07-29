@@ -22,7 +22,7 @@ export function TelegramBonusManager({ config, bonusOptions, onUpdate }: Telegra
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-col gap-3 rounded-lg border border-white/10 bg-zinc-950/70 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 rounded-lg border border-white/10 bg-[rgba(242,244,248,0.70)] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-sky-500/10 text-sky-400">
             <Send size={20} />
@@ -56,7 +56,7 @@ export function TelegramBonusManager({ config, bonusOptions, onUpdate }: Telegra
         </label>
       </div>
 
-      <div className="grid grid-cols-1 gap-5 rounded-lg border border-white/10 bg-zinc-950/70 p-5 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-5 rounded-lg border border-white/10 bg-[rgba(242,244,248,0.70)] p-5 md:grid-cols-2">
         <div className="space-y-2">
           <label className="block text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Kanal/Grup Kullanıcı Adı</label>
           <input

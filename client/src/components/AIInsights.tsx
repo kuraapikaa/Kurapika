@@ -23,7 +23,7 @@ export function AIInsights() {
         return (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-pulse mt-8">
                 {[1, 2].map(i => (
-                    <div key={i} className="h-48 rounded-xl bg-zinc-900/50 border border-white/5" />
+                    <div key={i} className="h-48 rounded-xl bg-[rgba(242,244,248,0.50)] border border-white/5" />
                 ))}
             </div>
         );
@@ -68,7 +68,7 @@ export function AIInsights() {
                             transition={{ delay: i * 0.1 }}
                         >
                             <Card className={cn(
-                                "relative overflow-hidden p-6 border-white/5 bg-zinc-900/60 backdrop-blur-2xl group hover:scale-[1.01] transition-all duration-500 shadow-2xl",
+                                "relative overflow-hidden p-6 border-white/5 bg-[rgba(242,244,248,0.60)] backdrop-blur-2xl group hover:scale-[1.01] transition-all duration-500 shadow-2xl",
                                 insight.type === 'critical' ? "border-rose-500/20 shadow-rose-500/5" :
                                     insight.type === 'warning' ? "border-amber-500/20 shadow-amber-500/5" : "border-blue-500/20 shadow-blue-500/5"
                             )}>
@@ -166,7 +166,7 @@ export function AIInsights() {
                         </motion.div>
                     ))}
 
-                    <Card className="relative overflow-hidden p-6 bg-zinc-900/20 border-dashed border-white/10 flex flex-col items-center justify-center text-center space-y-4 py-10 group">
+                    <Card className="relative overflow-hidden p-6 bg-[rgba(242,244,248,0.20)] border-dashed border-white/10 flex flex-col items-center justify-center text-center space-y-4 py-10 group">
                         {/* Scanning Line Animation */}
                         <motion.div
                             animate={{ top: ['0%', '100%', '0%'] }}

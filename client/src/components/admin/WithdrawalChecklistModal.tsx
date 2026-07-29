@@ -117,9 +117,9 @@ function RuleBlock({
               {item.ok ? <CheckCircle2 size={10} /> : <AlertTriangle size={10} />}
             </span>
             <div className="flex flex-col min-w-0">
-              <span className={item.ok ? 'text-slate-300' : 'text-amber-200'}>{item.label}</span>
+              <span className={item.ok ? 'text-[color:var(--panel-text-dim,#c8cdd5)]' : 'text-amber-200'}>{item.label}</span>
               {item.reason != null && item.reason !== '' && (
-                <span className="text-slate-500 mt-0.5 leading-relaxed">— {item.reason}</span>
+                <span className="text-[color:var(--panel-muted,#8a919c)] mt-0.5 leading-relaxed">— {item.reason}</span>
               )}
             </div>
           </li>
@@ -157,7 +157,7 @@ function RiskRuleBlock({ title, result }: { title: string; result: RuleSetResult
       <ul className="space-y-1.5">
         {result.items.map((item) => {
           const sev = item.severity ?? 'medium';
-          const failColor = item.ok ? 'text-slate-300' : sev === 'high' ? 'text-rose-200' : 'text-amber-200';
+          const failColor = item.ok ? 'text-[color:var(--panel-text-dim,#c8cdd5)]' : sev === 'high' ? 'text-rose-200' : 'text-amber-200';
           return (
             <li key={item.id} className="flex items-start gap-2 text-xs">
               <span className={cn("mt-0.5 shrink-0", item.ok ? 'text-emerald-400' : sev === 'high' ? 'text-rose-400' : 'text-amber-400')}>
@@ -165,7 +165,7 @@ function RiskRuleBlock({ title, result }: { title: string; result: RuleSetResult
               </span>
               <div className="flex flex-col min-w-0">
                 <span className={failColor}>{item.label}</span>
-                {item.reason && <span className="text-slate-500 mt-0.5 leading-relaxed">— {item.reason}</span>}
+                {item.reason && <span className="text-[color:var(--panel-muted,#8a919c)] mt-0.5 leading-relaxed">— {item.reason}</span>}
               </div>
             </li>
           );
@@ -266,7 +266,7 @@ export function WithdrawalChecklistModal({
 
   const content = (
     <div
-      className={`relative flex w-full max-w-[95vw] flex-col overflow-hidden bg-slate-900 border border-white/10 rounded-xl shadow-2xl ${inline ? 'max-h-[85vh] animate-in fade-in duration-200' : 'max-h-[90vh] animate-in zoom-in-95 duration-300'
+      className={`relative flex w-full max-w-[95vw] flex-col overflow-hidden bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl shadow-2xl ${inline ? 'max-h-[85vh] animate-in fade-in duration-200' : 'max-h-[90vh] animate-in zoom-in-95 duration-300'
         }`}
       onClick={inline ? undefined : (e) => e.stopPropagation()}
       role={inline ? 'region' : 'dialog'}
@@ -274,17 +274,17 @@ export function WithdrawalChecklistModal({
       aria-label={inline ? undefined : 'Detaylı analiz raporu'}
     >
       {/* Header: kompakt */}
-      <div className="flex items-center justify-between gap-3 px-4 py-3 bg-slate-900/90 border-b border-white/10">
+      <div className="flex items-center justify-between gap-3 px-4 py-3 bg-[rgba(242,244,248,0.90)] border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
         <div className="flex items-center gap-3 min-w-0">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-500/20 text-blue-400">
             <ShieldCheck size={20} />
           </div>
           <div className="min-w-0">
             <h3 className="text-base font-semibold text-white truncate">Otomatik Çekim Kontrolü</h3>
-            <p className="text-xs text-slate-400">ID: <span className="tabular-nums text-blue-400">{account.id ?? account.ClientId ?? '—'}</span></p>
+            <p className="text-xs text-[color:var(--panel-muted,#8a919c)]">ID: <span className="tabular-nums text-blue-400">{account.id ?? account.ClientId ?? '—'}</span></p>
           </div>
         </div>
-        <button onClick={onClose} className="shrink-0 rounded-lg p-2 text-slate-400 hover:bg-white/10 hover:text-white" aria-label="Kapat">
+        <button onClick={onClose} className="shrink-0 rounded-lg p-2 text-[color:var(--panel-muted,#8a919c)] hover:bg-white/10 hover:text-white" aria-label="Kapat">
           <X size={20} />
         </button>
       </div>
@@ -292,22 +292,22 @@ export function WithdrawalChecklistModal({
       <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-white/10">
         {/* Özet: tek satır */}
         <div className="flex flex-wrap items-stretch gap-3">
-          <div className="flex-1 min-w-[140px] rounded-xl border border-white/5 bg-white/[0.02] p-3">
-            <span className="text-xs font-semibold text-slate-500 uppercase block mb-0.5">Oyuncu</span>
+          <div className="flex-1 min-w-[140px] rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.02] p-3">
+            <span className="text-xs font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase block mb-0.5">Oyuncu</span>
             <p className="text-base font-semibold text-white truncate">{account.ClientLogin || '—'}</p>
-            <p className="text-xs text-slate-500 truncate">{account.ClientName || '—'}</p>
+            <p className="text-xs text-[color:var(--panel-muted,#8a919c)] truncate">{account.ClientName || '—'}</p>
             {account.isFirstWithdrawal && <span className="mt-1.5 inline-block rounded-full bg-amber-500/20 px-2.5 py-1 text-xs font-bold text-amber-400">İlk çekim</span>}
           </div>
-          <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3 min-w-[100px]">
-            <span className="text-xs font-semibold text-slate-500 uppercase block mb-0.5">Bakiye</span>
-            <p className="text-lg font-semibold text-emerald-400 tabular-nums">{formatNumber(account.balance)} <span className="text-xs text-slate-500">TRY</span></p>
+          <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.02] p-3 min-w-[100px]">
+            <span className="text-xs font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase block mb-0.5">Bakiye</span>
+            <p className="text-lg font-semibold text-emerald-400 tabular-nums">{formatNumber(account.balance)} <span className="text-xs text-[color:var(--panel-muted,#8a919c)]">TRY</span></p>
           </div>
-          <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3 min-w-[160px]">
-            <span className="text-xs font-semibold text-slate-500 uppercase block mb-0.5">Baz yatırım</span>
+          <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.02] p-3 min-w-[160px]">
+            <span className="text-xs font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase block mb-0.5">Baz yatırım</span>
             {account.lastDeposit ? (
               <>
                 <p className="text-lg font-semibold text-white tabular-nums">{formatNumber(account.lastDeposit.amount)} TRY</p>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-xs text-[color:var(--panel-muted,#8a919c)] mt-0.5">
                   {(() => {
                     const raw = account.lastDeposit.dateLocal ?? '';
                     if (!raw) return '—';
@@ -316,18 +316,18 @@ export function WithdrawalChecklistModal({
                   })()}
                 </p>
               </>
-            ) : <p className="text-base text-slate-500">—</p>}
+            ) : <p className="text-base text-[color:var(--panel-muted,#8a919c)]">—</p>}
           </div>
-          <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3 min-w-[160px]">
-            <span className="text-xs font-semibold text-slate-500 uppercase block mb-0.5">En yüksek kazanç (Round)</span>
+          <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.02] p-3 min-w-[160px]">
+            <span className="text-xs font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase block mb-0.5">En yüksek kazanç (Round)</span>
             {highestWin ? (
               <>
                 <p className="text-lg font-semibold text-emerald-400 tabular-nums">{formatNumber(highestWin.Amount)} TRY</p>
-                <p className="text-[10px] text-slate-500 mt-0.5 truncate max-w-[140px]">
+                <p className="text-[10px] text-[color:var(--panel-muted,#8a919c)] mt-0.5 truncate max-w-[140px]">
                   {highestWin.Game || 'Casino / Slot'}
                 </p>
               </>
-            ) : <p className="text-base text-slate-500">—</p>}
+            ) : <p className="text-base text-[color:var(--panel-muted,#8a919c)]">—</p>}
           </div>
         </div>
 
@@ -336,9 +336,9 @@ export function WithdrawalChecklistModal({
             <h4 className="text-xs font-semibold uppercase tracking-wide text-amber-400/90 flex items-center gap-2 mb-2"><AlertCircle size={14} /> Üye notları</h4>
             <div className="space-y-2 max-h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10">
               {account.notes.map((note, i) => (
-                <div key={note.id || i} className="p-2.5 rounded-lg bg-slate-900/50 border border-white/5">
-                  <p className="text-sm text-slate-200 leading-snug">{note.note}</p>
-                  <span className="text-xs text-slate-500">{note.createdLocal}</span>
+                <div key={note.id || i} className="p-2.5 rounded-lg bg-[rgba(242,244,248,0.50)] border border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
+                  <p className="text-sm text-[color:var(--panel-text-dim,#c8cdd5)] leading-snug">{note.note}</p>
+                  <span className="text-xs text-[color:var(--panel-muted,#8a919c)]">{note.createdLocal}</span>
                 </div>
               ))}
             </div>
@@ -346,16 +346,16 @@ export function WithdrawalChecklistModal({
         )}
 
         {account.lastDepositBonuses && account.lastDepositBonuses.length > 0 && (
-          <div className="rounded-xl border border-white/5 bg-slate-950/40 p-3">
+          <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.40)] p-3">
             <h4 className="text-xs font-semibold uppercase tracking-wide text-cyan-400 flex items-center gap-2 mb-2"><Gift size={14} /> Kullanılan bonuslar ({account.lastDepositBonuses.length})</h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {account.lastDepositBonuses.map((bonus, i) => (
-                <div key={i} className="p-2.5 rounded-lg bg-white/[0.02] border border-white/5">
+                <div key={i} className="p-2.5 rounded-lg bg-white/[0.02] border border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
                   <div className="flex items-center justify-between gap-2 mb-1.5">
                     <span className="text-sm font-bold text-white truncate">{bonus.Name}</span>
                     <div className="flex items-center gap-1.5 shrink-0">
                       {bonus.ClientBonusExpirationDateLocal && new Date(bonus.ClientBonusExpirationDateLocal).getTime() < Date.now() && bonus.ToWagerAmount > 0 && (
-                        <span className="rounded bg-slate-600/30 px-1.5 py-0.5 text-[9px] font-bold text-slate-400 border border-slate-500/30">Süresi dolmuş</span>
+                        <span className="rounded bg-[rgba(242,244,248,0.30)] px-1.5 py-0.5 text-[9px] font-bold text-[color:var(--panel-muted,#8a919c)] border border-[color:var(--panel-border,rgba(242,244,248,0.1))]">Süresi dolmuş</span>
                       )}
                       {bonus.ToWagerAmount > 0 ? (
                         <span className="text-xs font-semibold text-amber-500 tabular-nums">{formatNumber(bonus.ToWagerAmount)} TRY kalan</span>
@@ -364,12 +364,12 @@ export function WithdrawalChecklistModal({
                       )}
                     </div>
                   </div>
-                  <div className="flex gap-3 text-xs text-slate-500">
+                  <div className="flex gap-3 text-xs text-[color:var(--panel-muted,#8a919c)]">
                     <span>Bonus: {formatNumber(bonus.Amount)}</span>
                     <span>Oynanan: {formatNumber(bonus.WageredAmount || 0)}</span>
                     <span className="text-emerald-400">Kazanç: {formatNumber(bonus.WinAmount || 0)}</span>
                   </div>
-                  <p className="text-xs text-slate-500 mt-0.5">
+                  <p className="text-xs text-[color:var(--panel-muted,#8a919c)] mt-0.5">
                     {bonus.CreatedLocal ? new Date(bonus.CreatedLocal).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—'}
                     {bonus.ClientBonusExpirationDateLocal && (
                       <>
@@ -386,12 +386,12 @@ export function WithdrawalChecklistModal({
         )}
 
         {account.profileTransactionsByType && (
-          <div className="rounded-xl border border-white/5 bg-slate-950/40 p-3">
-            <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400 flex items-center gap-2 mb-2"><Activity size={14} /> Hacim (son 3 gün)</h4>
+          <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.40)] p-3">
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-[color:var(--panel-muted,#8a919c)] flex items-center gap-2 mb-2"><Activity size={14} /> Hacim (son 3 gün)</h4>
             <div className="flex flex-wrap gap-2">
               {Object.entries(account.profileTransactionsByType).map(([name, data]) => (
-                <span key={name} className="px-2.5 py-1.5 rounded-lg bg-white/[0.03] border border-white/5 text-xs">
-                  <span className="text-slate-500 truncate max-w-[120px] inline-block align-bottom">{name}</span>
+                <span key={name} className="px-2.5 py-1.5 rounded-lg bg-white/[0.03] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] text-xs">
+                  <span className="text-[color:var(--panel-muted,#8a919c)] truncate max-w-[120px] inline-block align-bottom">{name}</span>
                   <span className="ml-1.5 font-semibold text-white tabular-nums">{data.count}</span>
                 </span>
               ))}
@@ -413,16 +413,16 @@ export function WithdrawalChecklistModal({
           const otherPromos = checklists.filter(p => !activeBonusNames.some(name => p.promoTitle.toLowerCase().includes(name) || name.includes(p.promoTitle.toLowerCase()))).slice(0, 2);
           return (
             <div className="space-y-3">
-              <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Promosyon kontrolleri</h4>
+              <h4 className="text-xs font-semibold uppercase tracking-wide text-[color:var(--panel-muted,#8a919c)]">Promosyon kontrolleri</h4>
               {activePromos.length === 0 ? (
-                <p className="text-xs text-slate-500 italic">Aktif bonus eşleşmesi yok.</p>
+                <p className="text-xs text-[color:var(--panel-muted,#8a919c)] italic">Aktif bonus eşleşmesi yok.</p>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {activePromos.map(promo => (
                     <RuleBlock key={promo.promoId} title={promo.promoTitle} result={promo} icon={Zap} colorClass="text-amber-400" />
                   ))}
                   {otherPromos.map(promo => (
-                    <RuleBlock key={promo.promoId} title={promo.promoTitle} result={promo} icon={Activity} colorClass="text-slate-400" />
+                    <RuleBlock key={promo.promoId} title={promo.promoTitle} result={promo} icon={Activity} colorClass="text-[color:var(--panel-muted,#8a919c)]" />
                   ))}
                 </div>
               )}
@@ -433,8 +433,8 @@ export function WithdrawalChecklistModal({
         {riskAnalysis && <RiskRuleBlock title="Sistem Güvenlik Kontrolü" result={riskAnalysis} />}
       </div>
 
-      <div className="flex items-center justify-between gap-3 px-4 py-3 bg-slate-950/80 border-t border-white/10">
-        <button onClick={onClose} className="rounded-lg border border-white/10 px-4 py-2.5 text-xs font-bold uppercase text-slate-400 hover:bg-white/5 hover:text-white">
+      <div className="flex items-center justify-between gap-3 px-4 py-3 bg-[rgba(242,244,248,0.80)] border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
+        <button onClick={onClose} className="rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] px-4 py-2.5 text-xs font-bold uppercase text-[color:var(--panel-muted,#8a919c)] hover:bg-white/5 hover:text-white">
           Kapat
         </button>
         <button
@@ -450,7 +450,7 @@ export function WithdrawalChecklistModal({
 
   return inline ? content : (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-300"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[rgba(242,244,248,0.80)] backdrop-blur-md animate-in fade-in duration-300"
       onClick={onClose}
     >
       <div ref={modalContainerRef} onClick={(e) => e.stopPropagation()} onKeyDown={handleKeyDown}>

@@ -326,7 +326,7 @@ export function AdminForms() {
             </button>
           </div>
 
-          <div className="bg-zinc-900/50 border border-white/5 rounded-xl overflow-hidden">
+          <div className="bg-[rgba(242,244,248,0.50)] border border-white/5 rounded-xl overflow-hidden">
             {activeTab === 'call' && (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm text-zinc-400">
@@ -496,7 +496,7 @@ export function AdminForms() {
 
       {/* Settings tab */}
       {activeTab === 'settings' && (
-        <div className="bg-zinc-900/50 border border-white/5 rounded-xl p-6 space-y-8">
+        <div className="bg-[rgba(242,244,248,0.50)] border border-white/5 rounded-xl p-6 space-y-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Beni Ara settings */}
             <div className="space-y-5">

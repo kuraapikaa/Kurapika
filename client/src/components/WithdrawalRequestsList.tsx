@@ -31,7 +31,7 @@ function StatusBadge({ value }: { value: unknown }) {
     paid: 'border-emerald-400/20 bg-emerald-400/10 text-emerald-300',
     rejected: 'border-rose-400/20 bg-rose-400/10 text-rose-300',
     pending: 'border-amber-300/20 bg-amber-300/10 text-amber-200',
-    neutral: 'border-slate-600/40 bg-slate-700/20 text-slate-300',
+    neutral: 'border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.20)] text-[color:var(--panel-text-dim,#c8cdd5)]',
   };
   const Icon = tone === 'paid' ? CheckCircle2 : tone === 'rejected' ? XCircle : Clock3;
   return (
@@ -45,11 +45,11 @@ function StatusBadge({ value }: { value: unknown }) {
 function SummaryCard({ label, count, amount, tone }: { label: string; count: number; amount: number; tone: StatusTone }) {
   const accent = tone === 'paid' ? 'text-emerald-300' : tone === 'rejected' ? 'text-rose-300' : tone === 'pending' ? 'text-amber-200' : 'text-blue-300';
   return (
-    <Card className="rounded-xl border-slate-700/60 bg-[#0d1119] p-4 shadow-none">
-      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">{label}</p>
+    <Card className="rounded-xl border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-4 shadow-none">
+      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[color:var(--panel-muted,#8a919c)]">{label}</p>
       <div className="mt-2 flex items-end justify-between gap-3">
         <p className={`text-xl font-bold tabular-nums ${accent}`}>{formatNumber(amount)} <span className="text-xs">TRY</span></p>
-        <span className="rounded-md bg-white/[0.04] px-2 py-1 text-xs font-semibold text-slate-300">{count}</span>
+        <span className="rounded-md bg-white/[0.04] px-2 py-1 text-xs font-semibold text-[color:var(--panel-text-dim,#c8cdd5)]">{count}</span>
       </div>
     </Card>
   );
@@ -103,19 +103,19 @@ export function WithdrawalRequestsList({ data, isLoading, error, onRetry }: With
 
   return (
     <section className="flex h-full min-h-0 flex-col gap-4">
-      <header className="flex flex-col gap-4 rounded-xl border border-slate-700/60 bg-[#0d1119] p-5 shadow-none sm:flex-row sm:items-center sm:justify-between">
+      <header className="flex flex-col gap-4 rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-5 shadow-none sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-blue-400/20 bg-blue-400/10 text-blue-300">
             <Banknote size={19} />
           </span>
           <div>
             <h2 className="text-lg font-semibold text-white">Çekim talepleri</h2>
-            <p className="mt-0.5 text-xs text-slate-500">Lynon ödeme hareketleri · seçili tarih aralığı</p>
+            <p className="mt-0.5 text-xs text-[color:var(--panel-muted,#8a919c)]">Lynon ödeme hareketleri · seçili tarih aralığı</p>
           </div>
         </div>
         <div className="text-left sm:text-right">
-          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Genel toplam</p>
-          <p className="mt-1 text-lg font-bold tabular-nums text-white">{formatNumber(totalAmount)} TRY <span className="ml-2 text-xs text-slate-500">· {requests.length} talep</span></p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[color:var(--panel-muted,#8a919c)]">Genel toplam</p>
+          <p className="mt-1 text-lg font-bold tabular-nums text-white">{formatNumber(totalAmount)} TRY <span className="ml-2 text-xs text-[color:var(--panel-muted,#8a919c)]">· {requests.length} talep</span></p>
         </div>
       </header>
 
@@ -125,24 +125,24 @@ export function WithdrawalRequestsList({ data, isLoading, error, onRetry }: With
         <SummaryCard label="Reddedilen" count={rejected.length} amount={amountOf(rejected)} tone="rejected" />
       </div>
 
-      <Card className="min-h-0 flex-1 overflow-hidden rounded-xl border-slate-700/60 bg-[#0d1119] p-0 shadow-none">
+      <Card className="min-h-0 flex-1 overflow-hidden rounded-xl border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-0 shadow-none">
         {isLoading ? (
           <div className="flex min-h-[320px] items-center justify-center">
-            <div className="flex items-center gap-3 text-sm text-slate-400">
+            <div className="flex items-center gap-3 text-sm text-[color:var(--panel-muted,#8a919c)]">
               <span className="h-5 w-5 animate-spin rounded-full border-2 border-blue-300/25 border-t-blue-300" />
               Lynon çekim talepleri yükleniyor…
             </div>
           </div>
         ) : requests.length === 0 ? (
           <div className="flex min-h-[320px] flex-col items-center justify-center px-6 text-center">
-            <Banknote size={34} className="text-slate-700" />
-            <p className="mt-4 font-medium text-slate-300">Seçilen tarih aralığında çekim talebi yok.</p>
-            <p className="mt-1 text-xs text-slate-600">Üstteki tarih filtresini genişleterek tekrar deneyebilirsiniz.</p>
+            <Banknote size={34} className="text-[color:var(--panel-faint,#5c6470)]" />
+            <p className="mt-4 font-medium text-[color:var(--panel-text-dim,#c8cdd5)]">Seçilen tarih aralığında çekim talebi yok.</p>
+            <p className="mt-1 text-xs text-[color:var(--panel-faint,#5c6470)]">Üstteki tarih filtresini genişleterek tekrar deneyebilirsiniz.</p>
           </div>
         ) : (
           <div className="h-full overflow-auto">
             <table className="w-full min-w-[980px] text-left text-xs">
-              <thead className="sticky top-0 z-10 bg-[#090d14] text-[10px] uppercase tracking-[0.12em] text-slate-500">
+              <thead className="sticky top-0 z-10 bg-[color:var(--panel-surface-2,rgba(242,244,248,0.05))] text-[10px] uppercase tracking-[0.12em] text-[color:var(--panel-muted,#8a919c)]">
                 <tr>
                   <th className="px-4 py-3">Kullanıcı</th>
                   <th className="px-4 py-3">Tutar</th>
@@ -161,7 +161,7 @@ export function WithdrawalRequestsList({ data, isLoading, error, onRetry }: With
                   const isPending = statusTone(row.StateName || row.State) === 'pending';
                   const isRejectingThis = rejectMutation.isPending && rejectMutation.variables?.id === row.Id;
                   return (
-                    <tr key={String(row.Id)} className="border-t border-slate-800/80 hover:bg-blue-400/[0.025]">
+                    <tr key={String(row.Id)} className="border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))] hover:bg-blue-400/[0.025]">
                       <td className="px-4 py-3">
                         <button
                           type="button"
@@ -170,14 +170,14 @@ export function WithdrawalRequestsList({ data, isLoading, error, onRetry }: With
                         >
                           {row.ClientLogin || `#${row.ClientId}`}
                         </button>
-                        {row.ClientName ? <span className="mt-0.5 block text-[10px] text-slate-600">{row.ClientName}</span> : null}
+                        {row.ClientName ? <span className="mt-0.5 block text-[10px] text-[color:var(--panel-faint,#5c6470)]">{row.ClientName}</span> : null}
                       </td>
                       <td className="px-4 py-3 font-semibold tabular-nums text-white">{formatNumber(Number(row.Amount || 0))} {row.CurrencyId || 'TRY'}</td>
                       <td className="px-4 py-3"><StatusBadge value={row.StateName || row.State} /></td>
-                      <td className="px-4 py-3 whitespace-nowrap tabular-nums text-slate-400">{row.RequestTimeLocal || row.RequestTime ? formatDateTimeWithSeconds(String(row.RequestTimeLocal || row.RequestTime)) : '—'}</td>
-                      <td className="px-4 py-3 text-slate-400">{row.PaymentSystemName || '—'}</td>
-                      <td className="max-w-[210px] truncate px-4 py-3 font-mono text-[10px] text-slate-500" title={reference}>{reference}</td>
-                      <td className="max-w-[260px] truncate px-4 py-3 text-slate-500" title={note}>{note}</td>
+                      <td className="px-4 py-3 whitespace-nowrap tabular-nums text-[color:var(--panel-muted,#8a919c)]">{row.RequestTimeLocal || row.RequestTime ? formatDateTimeWithSeconds(String(row.RequestTimeLocal || row.RequestTime)) : '—'}</td>
+                      <td className="px-4 py-3 text-[color:var(--panel-muted,#8a919c)]">{row.PaymentSystemName || '—'}</td>
+                      <td className="max-w-[210px] truncate px-4 py-3 font-mono text-[10px] text-[color:var(--panel-muted,#8a919c)]" title={reference}>{reference}</td>
+                      <td className="max-w-[260px] truncate px-4 py-3 text-[color:var(--panel-muted,#8a919c)]" title={note}>{note}</td>
                       <td className="px-4 py-3">
                         {isPending ? (
                           <button
@@ -190,7 +190,7 @@ export function WithdrawalRequestsList({ data, isLoading, error, onRetry }: With
                             Reddet
                           </button>
                         ) : (
-                          <span className="text-slate-700">—</span>
+                          <span className="text-[color:var(--panel-faint,#5c6470)]">—</span>
                         )}
                       </td>
                     </tr>

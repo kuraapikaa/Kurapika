@@ -109,7 +109,7 @@ export function MillionaireShowcasePage() {
   const socialLinks = config.socialLinks.filter((link) => link.url);
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-[#05060a] pb-20 font-sans text-zinc-100 selection:bg-amber-300/25">
+    <div className="relative min-h-screen overflow-x-hidden bg-[#0e0c09] pb-20 font-lobby text-[color:var(--lobby-text,#f3ecdd)] selection:bg-amber-300/25">
       <div className="pointer-events-none fixed inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_14%_0%,rgba(251,191,36,.18),transparent_34%),radial-gradient(circle_at_85%_18%,rgba(20,184,166,.12),transparent_34%),linear-gradient(180deg,#05060a,#080911_55%,#05060a)]" />
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.018)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.018)_1px,transparent_1px)] bg-[size:54px_54px] opacity-45" />
@@ -117,11 +117,11 @@ export function MillionaireShowcasePage() {
 
       <main className="relative z-10 mx-auto flex w-full max-w-[1320px] flex-col gap-5 px-3 py-4 sm:px-5 md:px-8 md:py-7">
         <header className="flex items-center justify-between gap-3">
-          <Link to="/lobi" className="inline-flex h-11 items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.045] px-4 text-xs font-black uppercase tracking-[0.12em] text-zinc-300">
+          <Link to="/lobi" className="inline-flex h-11 items-center gap-2 rounded-xl border border-[rgba(243,236,221,0.10)] bg-[rgba(243,236,221,0.045)] px-4 text-xs font-black uppercase tracking-[0.12em] text-[color:var(--lobby-text,#f3ecdd)]">
             <ArrowLeft size={16} />
             {lobbyExtraText(pageContent, 'backButton', pageContent.secondaryButton)}
           </Link>
-          <div className="inline-flex items-center gap-2 rounded-2xl border border-amber-200/15 bg-amber-200/10 px-4 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-amber-100">
+          <div className="inline-flex items-center gap-2 rounded-xl border border-amber-200/15 bg-[color:var(--lobby-primary,#e7c574)]/10 px-4 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-amber-100">
             <Crown size={14} />
             {pageContent.label}
           </div>
@@ -132,10 +132,10 @@ export function MillionaireShowcasePage() {
             <Loader2 className="animate-spin text-amber-200" size={34} />
           </div>
         ) : !config.isActive || records.length === 0 || !featured ? (
-          <section className="flex min-h-[60vh] flex-col items-center justify-center rounded-[2rem] border border-white/10 bg-white/[0.035] p-8 text-center">
-            <Crown className="mb-4 text-zinc-600" size={42} />
-            <h1 className="text-3xl font-black tracking-[-0.05em] text-white">{pageContent.emptyTitle}</h1>
-            <p className="mt-2 max-w-md text-sm font-semibold leading-6 text-zinc-500">
+          <section className="flex min-h-[60vh] flex-col items-center justify-center rounded-[2rem] border border-[rgba(243,236,221,0.10)] bg-[rgba(243,236,221,0.035)] p-8 text-center">
+            <Crown className="mb-4 text-[color:var(--lobby-muted,#8f8674)]" size={42} />
+            <h1 className="text-3xl font-black tracking-[-0.05em] text-[color:var(--lobby-text,#f3ecdd)]">{pageContent.emptyTitle}</h1>
+            <p className="mt-2 max-w-md text-sm font-semibold leading-6 text-[color:var(--lobby-muted,#8f8674)]">
               {pageContent.emptyDescription}
             </p>
           </section>
@@ -143,17 +143,17 @@ export function MillionaireShowcasePage() {
           <motion.section
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            className="overflow-hidden rounded-[2rem] border border-amber-200/15 bg-[#07080d] shadow-[0_24px_80px_rgba(0,0,0,.36)]"
+            className="overflow-hidden rounded-[2rem] border border-amber-200/15 bg-[#07080d]"
           >
             {config.showTicker && (
               <div className="border-b border-amber-200/10 bg-amber-300/[0.06] py-2">
                 <div className="millionaire-marquee flex items-center gap-6 whitespace-nowrap px-5">
                   {[...records, ...records].map((record, index) => (
-                    <div key={`${record.id}-${index}`} className="inline-flex items-center gap-2 text-xs font-black text-zinc-400">
+                    <div key={`${record.id}-${index}`} className="inline-flex items-center gap-2 text-xs font-black text-[color:var(--lobby-muted,#8f8674)]">
                       <span className="h-2 w-2 rounded-full bg-amber-300 shadow-[0_0_12px_rgba(252,211,77,.75)]" />
-                      <span className="text-white">{record.player || 'Oyuncu'}</span>
+                      <span className="text-[color:var(--lobby-text,#f3ecdd)]">{record.player || 'Oyuncu'}</span>
                       <span className="text-amber-200">{record.amount}</span>
-                      <span className="rounded-md bg-black/30 px-2 py-1 text-[10px] uppercase tracking-[0.12em] text-zinc-500">{record.game || record.title}</span>
+                      <span className="rounded-md bg-black/30 px-2 py-1 text-[10px] uppercase tracking-[0.12em] text-[color:var(--lobby-muted,#8f8674)]">{record.game || record.title}</span>
                     </div>
                   ))}
                 </div>
@@ -164,14 +164,14 @@ export function MillionaireShowcasePage() {
               <div className="relative overflow-hidden bg-[linear-gradient(135deg,#15100a_0%,#090a10_48%,#05060a_100%)] p-5 sm:p-6 md:p-8">
                 <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-200/60 to-transparent" />
                 <div className="relative z-10 max-w-3xl">
-                  <div className="inline-flex items-center gap-2 rounded-full border border-amber-200/20 bg-amber-200/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.18em] text-amber-100">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-amber-200/20 bg-[color:var(--lobby-primary,#e7c574)]/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.18em] text-amber-100">
                     <Crown size={13} />
                     {config.eyebrow || pageContent.eyebrow}
                   </div>
-                  <h1 className="mt-4 max-w-2xl text-3xl font-black sm:text-4xl leading-[0.95] tracking-[-0.06em] text-white md:text-6xl">
+                  <h1 className="mt-4 max-w-2xl text-3xl font-black sm:text-4xl leading-[0.95] tracking-[-0.06em] text-[color:var(--lobby-text,#f3ecdd)] md:text-6xl">
                     {config.title || pageContent.title}
                   </h1>
-                  <p className="mt-5 max-w-2xl text-sm font-semibold leading-6 text-zinc-400 md:text-base md:leading-7">
+                  <p className="mt-5 max-w-2xl text-sm font-semibold leading-6 text-[color:var(--lobby-muted,#8f8674)] md:text-base md:leading-7">
                     {config.description || pageContent.subtitle}
                   </p>
 
@@ -186,31 +186,31 @@ export function MillionaireShowcasePage() {
                       <button
                         type="button"
                         onClick={() => setActiveVideo(featured)}
-                        className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-amber-200 px-5 text-xs font-black uppercase tracking-[0.14em] text-zinc-950 shadow-[0_18px_45px_rgba(252,211,77,.16)] transition active:scale-[0.98]"
+                        className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[color:var(--lobby-primary,#e7c574)] px-5 text-xs font-black uppercase tracking-[0.14em] text-[#171204] shadow-[0_18px_45px_rgba(252,211,77,.16)] transition active:scale-[0.98]"
                       >
                         <Play size={16} className="fill-current" />
                         {config.ctaLabel || pageContent.primaryButton}
                       </button>
                     ) : (
-                      <span className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.045] px-5 text-xs font-black uppercase tracking-[0.14em] text-zinc-500">
+                      <span className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-[rgba(243,236,221,0.10)] bg-[rgba(243,236,221,0.045)] px-5 text-xs font-black uppercase tracking-[0.14em] text-[color:var(--lobby-muted,#8f8674)]">
                         <Film size={16} />
                         Video URL bekleniyor
                       </span>
                     )}
-                    <span className="text-xs font-semibold leading-5 text-zinc-600">{config.disclaimer}</span>
+                    <span className="text-xs font-semibold leading-5 text-[color:var(--lobby-muted,#8f8674)]">{config.disclaimer}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="border-t border-white/10 bg-black/25 p-4 lg:border-l lg:border-t-0 md:p-5">
-                <div className="h-full rounded-[1.5rem] border border-white/10 bg-white/[0.035] p-3">
+              <div className="border-t border-[rgba(243,236,221,0.10)] bg-black/25 p-4 lg:border-l lg:border-t-0 md:p-5">
+                <div className="h-full rounded-[1.5rem] border border-[rgba(243,236,221,0.10)] bg-[rgba(243,236,221,0.035)] p-3">
                   <ShowcaseVisual record={featured} large />
-                  <div className="mt-4 rounded-2xl border border-white/10 bg-black/30 p-4">
-                    <p className="text-[10px] font-black uppercase tracking-[0.16em] text-zinc-600">Rekor kayıt</p>
+                  <div className="mt-4 rounded-xl border border-[rgba(243,236,221,0.10)] bg-black/30 p-4">
+                    <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[color:var(--lobby-muted,#8f8674)]">Rekor kayıt</p>
                     <div className="mt-2 flex items-end justify-between gap-3">
                       <div className="min-w-0">
-                        <h3 className="truncate text-lg font-black text-white">{featured.title}</h3>
-                        <p className="mt-1 truncate text-xs font-bold text-zinc-500">{featured.player} · {featured.game}</p>
+                        <h3 className="truncate text-lg font-black text-[color:var(--lobby-text,#f3ecdd)]">{featured.title}</h3>
+                        <p className="mt-1 truncate text-xs font-bold text-[color:var(--lobby-muted,#8f8674)]">{featured.player} · {featured.game}</p>
                       </div>
                       <p className="shrink-0 text-2xl font-black tracking-[-0.04em] text-amber-100">{featured.amount}</p>
                     </div>
@@ -219,7 +219,7 @@ export function MillionaireShowcasePage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-3 border-t border-white/10 bg-[#06070b] p-3 sm:grid-cols-2 sm:p-4 lg:grid-cols-4 md:p-5">
+            <div className="grid grid-cols-1 gap-3 border-t border-[rgba(243,236,221,0.10)] bg-[#06070b] p-3 sm:grid-cols-2 sm:p-4 lg:grid-cols-4 md:p-5">
               {records.map((record) => (
                 <ShowcaseRecordCard
                   key={record.id}
@@ -231,14 +231,14 @@ export function MillionaireShowcasePage() {
             </div>
 
             {(config.showSocial && socialLinks.length > 0) && (
-              <div className="flex flex-wrap items-center gap-2 border-t border-white/10 bg-black/20 px-4 py-3 md:px-5">
+              <div className="flex flex-wrap items-center gap-2 border-t border-[rgba(243,236,221,0.10)] bg-black/20 px-4 py-3 md:px-5">
                 {socialLinks.map((link) => (
                   <a
                     key={link.id}
                     href={link.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-[10px] font-black uppercase tracking-[0.12em] text-zinc-300"
+                    className="inline-flex items-center gap-2 rounded-full border border-[rgba(243,236,221,0.10)] bg-[rgba(243,236,221,0.04)] px-3 py-2 text-[10px] font-black uppercase tracking-[0.12em] text-[color:var(--lobby-text,#f3ecdd)]"
                   >
                     {link.label}
                     <ExternalLink size={12} />
@@ -251,18 +251,18 @@ export function MillionaireShowcasePage() {
       </main>
 
       {activeVideo?.videoUrl && (
-        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/80 p-4 backdrop-blur-xl" role="dialog" aria-modal="true">
-          <div className="w-full max-w-4xl overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#080a10] shadow-[0_24px_80px_rgba(0,0,0,.55)]">
-            <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3">
+        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/80 p-4" role="dialog" aria-modal="true">
+          <div className="w-full max-w-4xl overflow-hidden rounded-[1.5rem] border border-[rgba(243,236,221,0.10)] bg-[#080a10]">
+            <div className="flex items-center justify-between gap-3 border-b border-[rgba(243,236,221,0.10)] px-4 py-3">
               <div className="min-w-0">
-                <p className="truncate text-sm font-black text-white">{activeVideo.title}</p>
-                <p className="truncate text-xs font-bold text-zinc-500">{activeVideo.player} · {activeVideo.amount}</p>
+                <p className="truncate text-sm font-black text-[color:var(--lobby-text,#f3ecdd)]">{activeVideo.title}</p>
+                <p className="truncate text-xs font-bold text-[color:var(--lobby-muted,#8f8674)]">{activeVideo.player} · {activeVideo.amount}</p>
               </div>
               <button
                 type="button"
                 onClick={() => setActiveVideo(null)}
                 aria-label="Videoyu kapat"
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-zinc-300"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[rgba(243,236,221,0.10)] bg-[rgba(243,236,221,0.04)] text-[color:var(--lobby-text,#f3ecdd)]"
               >
                 <X size={18} />
               </button>
@@ -306,21 +306,21 @@ function ShowcaseVisual({ record, large = false }: { record: MillionaireRecord; 
 
   return (
     <div className={cn(
-      'relative overflow-hidden rounded-[1.25rem] border border-white/10 bg-[#0b0d13]',
+      'relative overflow-hidden rounded-[1.25rem] border border-[rgba(243,236,221,0.10)] bg-[#0b0d13]',
       large ? 'aspect-[4/5] md:aspect-[3/4]' : 'aspect-[4/5]'
     )}>
       {image ? (
         <img src={image} alt={record.title} className="absolute inset-0 h-full w-full object-cover" />
       ) : (
         <div className="flex flex-col items-center justify-center bg-[linear-gradient(135deg,rgba(251,191,36,.18),rgba(20,184,166,.10)_46%,rgba(168,85,247,.12))] p-8 text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-amber-200/20 bg-black/35 text-amber-200 shadow-[0_16px_45px_rgba(0,0,0,.28)]">
+          <div className="flex h-16 w-16 items-center justify-center rounded-xl border border-amber-200/20 bg-black/35 text-amber-200">
             <Trophy size={32} />
           </div>
-          <p className="mt-4 max-w-[14rem] text-sm font-black uppercase tracking-[0.08em] text-white">{record.title}</p>
+          <p className="mt-4 max-w-[14rem] text-sm font-black uppercase tracking-[0.08em] text-[color:var(--lobby-text,#f3ecdd)]">{record.title}</p>
         </div>
       )}
       {record.videoUrl && (
-        <div className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-amber-200 text-zinc-950 shadow-[0_12px_30px_rgba(0,0,0,.35)]">
+        <div className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-[color:var(--lobby-primary,#e7c574)] text-[#171204]">
           <Play size={16} className="fill-current" />
         </div>
       )}
@@ -330,9 +330,9 @@ function ShowcaseVisual({ record, large = false }: { record: MillionaireRecord; 
 
 function ShowcaseStat({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
-      <p className="text-[9px] font-black uppercase tracking-[0.16em] text-zinc-600">{label}</p>
-      <p className="mt-1 truncate text-xl font-black tracking-[-0.04em] text-white md:text-2xl">{value}</p>
+    <div className="rounded-xl border border-[rgba(243,236,221,0.10)] bg-black/25 p-4">
+      <p className="text-[9px] font-black uppercase tracking-[0.16em] text-[color:var(--lobby-muted,#8f8674)]">{label}</p>
+      <p className="mt-1 truncate text-xl font-black tracking-[-0.04em] text-[color:var(--lobby-text,#f3ecdd)] md:text-2xl">{value}</p>
     </div>
   );
 }
@@ -347,12 +347,12 @@ function ShowcaseRecordCard({
   onPlay: () => void;
 }) {
   return (
-    <div className="group overflow-hidden rounded-[1.35rem] border border-white/[0.075] bg-white/[0.035] p-3">
+    <div className="group overflow-hidden rounded-[1.35rem] border border-[rgba(243,236,221,0.075)] bg-[rgba(243,236,221,0.035)] p-3">
       <ShowcaseVisual record={record} />
       <div className="mt-3 space-y-3">
         <div className="min-w-0">
-          <h3 className="truncate text-sm font-black text-white">{record.title}</h3>
-          <p className="mt-1 truncate text-[11px] font-bold text-zinc-500">{record.player} · {record.game}</p>
+          <h3 className="truncate text-sm font-black text-[color:var(--lobby-text,#f3ecdd)]">{record.title}</h3>
+          <p className="mt-1 truncate text-[11px] font-bold text-[color:var(--lobby-muted,#8f8674)]">{record.player} · {record.game}</p>
         </div>
         <div className="flex items-center justify-between gap-3">
           <p className="truncate text-xl font-black tracking-[-0.04em] text-amber-100">{record.amount}</p>
@@ -360,13 +360,13 @@ function ShowcaseRecordCard({
             <button
               type="button"
               onClick={onPlay}
-              className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-white px-3 text-[10px] font-black uppercase tracking-[0.1em] text-black transition active:scale-[0.98]"
+              className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-[color:var(--lobby-primary,#e7c574)] px-3 text-[10px] font-black uppercase tracking-[0.1em] text-[#171204] transition active:scale-[0.98]"
             >
               <Play size={12} className="fill-current" />
               {ctaLabel}
             </button>
           ) : (
-            <span className="inline-flex h-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-black/25 px-3 text-[10px] font-black uppercase tracking-[0.1em] text-zinc-600">
+            <span className="inline-flex h-9 shrink-0 items-center justify-center rounded-xl border border-[rgba(243,236,221,0.10)] bg-black/25 px-3 text-[10px] font-black uppercase tracking-[0.1em] text-[color:var(--lobby-muted,#8f8674)]">
               Video yok
             </span>
           )}

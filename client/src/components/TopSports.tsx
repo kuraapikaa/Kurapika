@@ -21,11 +21,11 @@ export function TopSports({ data, isLoading, error }: TopSportsProps) {
           </div>
           <CardTitle className="text-white font-bold text-base mb-0">En İyi Sporlar (Ciro)</CardTitle>
         </div>
-        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Canlı Performans</span>
+        <span className="text-[10px] font-bold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-wider">Canlı Performans</span>
       </CardHeader>
 
       <CardContent className="p-0">
-        <div className="overflow-hidden rounded-xl border border-white/10 bg-slate-900/40">
+        <div className="overflow-hidden rounded-xl border border-white/10 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))]">
           {error && (
             <div className="p-8 text-center text-rose-400">
               <div className="mb-2 font-bold italic opacity-50">Hata</div>
@@ -35,14 +35,14 @@ export function TopSports({ data, isLoading, error }: TopSportsProps) {
           {isLoading && (
             <div className="flex h-48 flex-col items-center justify-center gap-3">
               <div className="h-8 w-8 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
-              <div className="text-sm font-medium text-slate-500">Veriler yükleniyor...</div>
+              <div className="text-sm font-medium text-[color:var(--panel-muted,#8a919c)]">Veriler yükleniyor...</div>
             </div>
           )}
           {!error && !isLoading && (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-white/5">
-                  <tr className="text-left text-[10px] uppercase tracking-[0.2em] text-slate-500">
+                  <tr className="text-left text-[10px] uppercase tracking-[0.2em] text-[color:var(--panel-muted,#8a919c)]">
                     <th className="px-5 py-4 font-extrabold">Spor Branşı</th>
                     <th className="px-5 py-4 text-right font-extrabold">Ciro</th>
                     <th className="px-5 py-4 text-right font-extrabold">Kazanç</th>
@@ -52,7 +52,7 @@ export function TopSports({ data, isLoading, error }: TopSportsProps) {
                 <tbody className="divide-y divide-white/5">
                   {rows.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="p-8 text-center text-slate-500">
+                      <td colSpan={4} className="p-8 text-center text-[color:var(--panel-muted,#8a919c)]">
                         Gösterilecek veri bulunamadı.
                       </td>
                     </tr>
@@ -64,13 +64,13 @@ export function TopSports({ data, isLoading, error }: TopSportsProps) {
                       >
                         <td className="px-5 py-4">
                           <div className="flex items-center gap-3">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-800 text-[10px] font-bold text-slate-400 group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[color:var(--panel-surface-2,rgba(242,244,248,0.05))] text-[10px] font-bold text-[color:var(--panel-muted,#8a919c)] group-hover:bg-blue-500 group-hover:text-white transition-colors">
                               {i + 1}
                             </div>
-                            <span className="font-semibold text-slate-200 group-hover:text-white">{r.Name}</span>
+                            <span className="font-semibold text-[color:var(--panel-text-dim,#c8cdd5)] group-hover:text-white">{r.Name}</span>
                           </div>
                         </td>
-                        <td className="px-5 py-4 text-right tabular-nums text-slate-300 font-medium">
+                        <td className="px-5 py-4 text-right tabular-nums text-[color:var(--panel-text-dim,#c8cdd5)] font-medium">
                           {formatNumber(r.Turnover)}
                         </td>
                         <td className="px-5 py-4 text-right tabular-nums text-rose-400/80">

@@ -64,13 +64,13 @@ export function DepositsList({ data, isLoading, error }: DepositsListProps) {
     ];
 
     function formatCell(key: string, val: unknown, row: any): React.ReactNode {
-        if (val == null) return <span className="text-slate-600">–</span>;
+        if (val == null) return <span className="text-[color:var(--panel-faint,#5c6470)]">–</span>;
         if (key === 'CreatedLocal')
             return <span className="tabular-nums opacity-80 text-left">{formatDateTimeDisplay(String(val))}</span>;
         if (key === 'Amount' && typeof val === 'number')
             return <span className="font-bold text-white tabular-nums">{formatNumber(val)}</span>;
 
-        if (key === 'ClientId') return <span className="text-[10px] font-bold text-slate-500">#{String(val)}</span>;
+        if (key === 'ClientId') return <span className="text-[10px] font-bold text-[color:var(--panel-muted,#8a919c)]">#{String(val)}</span>;
         if (key === 'ClientLogin') {
             const clientId = row.ClientId;
             const clientLogin = row.ClientLogin;
@@ -104,45 +104,45 @@ export function DepositsList({ data, isLoading, error }: DepositsListProps) {
                         <h2 className="text-2xl font-semibold text-white tracking-tighter uppercase antialiased">Yatırım İşlemleri</h2>
                         <div className="flex items-center gap-2 mt-0.5">
                             <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                            <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.2em]">Finansal Giriş & Bakiye Hareketleri</p>
+                            <p className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-[0.2em]">Finansal Giriş & Bakiye Hareketleri</p>
                         </div>
                     </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-4">
-                    <div className="premium-card flex items-center gap-6 rounded-xl px-6 py-3 border-white/5 bg-zinc-950/40 shadow-inner">
+                    <div className="premium-card flex items-center gap-6 rounded-xl px-6 py-3 border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.40)] shadow-inner">
                         <div className="flex flex-col">
-                            <span className="text-[9px] font-semibold text-zinc-500 uppercase tracking-widest">Toplam İşlem</span>
+                            <span className="text-[9px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">Toplam İşlem</span>
                             <span className="text-sm font-semibold text-white tabular-nums">{formatNumber(count)}</span>
                         </div>
                         <div className="h-8 w-px bg-white/5" />
                         <div className="flex flex-col">
-                            <span className="text-[9px] font-semibold text-zinc-500 uppercase tracking-widest">Toplam Tutar</span>
+                            <span className="text-[9px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">Toplam Tutar</span>
                             <div className="flex items-baseline gap-1.5">
                                 <span className="text-sm font-semibold text-emerald-400 tabular-nums neon-glow-emerald">{formatNumber(totalAmount)}</span>
                                 <span className="text-[9px] font-bold text-emerald-600/60 tracking-tighter">TRY</span>
                             </div>
                         </div>
                     </div>
-                    <Button variant="secondary" size="sm" className="rounded-xl border-white/5 bg-white/5 hover:bg-white/10 uppercase font-semibold text-[10px] tracking-widest gap-2">
+                    <Button variant="secondary" size="sm" className="rounded-xl border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/5 hover:bg-white/10 uppercase font-semibold text-[10px] tracking-widest gap-2">
                         <Download size={14} /> DIŞA AKTAR
                     </Button>
                 </div>
             </header>
 
             {isLoading ? (
-                <div className="flex flex-1 flex-col items-center justify-center gap-4 rounded-xl border border-white/5 bg-slate-900/40 min-h-[400px]">
+                <div className="flex flex-1 flex-col items-center justify-center gap-4 rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.40)] min-h-[400px]">
                     <div className="h-12 w-12 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent" />
-                    <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Yatırım verileri senkronize ediliyor...</p>
+                    <p className="text-sm font-bold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">Yatırım verileri senkronize ediliyor...</p>
                 </div>
             ) : (
-                <Card className="premium-card flex-1 overflow-hidden flex flex-col p-0 bg-zinc-950/20 border-white/[0.05]">
+                <Card className="premium-card flex-1 overflow-hidden flex flex-col p-0 bg-[rgba(242,244,248,0.20)] border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
                     <div className="overflow-auto scrollbar-hide relative h-full">
                         <table className="w-full text-sm border-separate border-spacing-0">
-                            <thead className="sticky top-0 z-20 bg-black/60 backdrop-blur-3xl border-b border-white/5">
+                            <thead className="sticky top-0 z-20 bg-black/60 backdrop-blur-3xl border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
                                 <tr>
                                     {allKeys.map((key, idx) => (
                                         <th key={key} className={cn(
-                                            "px-3 py-2.5 font-semibold text-[10px] uppercase tracking-[0.15em] text-zinc-500 text-left whitespace-nowrap border-b border-white/[0.04]",
+                                            "px-3 py-2.5 font-semibold text-[10px] uppercase tracking-[0.15em] text-[color:var(--panel-muted,#8a919c)] text-left whitespace-nowrap border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]",
                                             idx === 0 && "pl-8"
                                         )}>
                                             {columnLabels[key] ?? key}
@@ -155,10 +155,10 @@ export function DepositsList({ data, isLoading, error }: DepositsListProps) {
                                     <tr>
                                         <td colSpan={allKeys.length} className="p-24 text-center">
                                             <div className="relative inline-block">
-                                                <div className="absolute inset-0 bg-zinc-500 rounded-full blur-[40px] opacity-10" />
-                                                <Wallet size={48} className="relative mx-auto mb-6 text-zinc-800" />
+                                                <div className="absolute inset-0 bg-[color:var(--panel-muted,#8a919c)] rounded-full blur-[40px] opacity-10" />
+                                                <Wallet size={48} className="relative mx-auto mb-6 text-[color:var(--panel-faint,#5c6470)]" />
                                             </div>
-                                            <p className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest">Şu an için yatırım kaydı bulunamadı.</p>
+                                            <p className="text-[11px] font-bold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">Şu an için yatırım kaydı bulunamadı.</p>
                                         </td>
                                     </tr>
                                 ) : (
@@ -173,8 +173,8 @@ export function DepositsList({ data, isLoading, error }: DepositsListProps) {
                                             >
                                                 {allKeys.map((key, colIdx) => (
                                                     <td key={key} className={cn(
-                                                        "px-3 py-2.5 whitespace-nowrap text-zinc-400 group-hover:text-white transition-colors border-b border-white/[0.02]",
-                                                        colIdx === 0 && "pl-8 font-semibold text-zinc-500"
+                                                        "px-3 py-2.5 whitespace-nowrap text-[color:var(--panel-muted,#8a919c)] group-hover:text-white transition-colors border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]",
+                                                        colIdx === 0 && "pl-8 font-semibold text-[color:var(--panel-muted,#8a919c)]"
                                                     )}>
                                                         {formatCell(key, (row as any)[key], row)}
                                                     </td>

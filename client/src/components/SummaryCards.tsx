@@ -16,7 +16,7 @@ interface SummaryCardsProps {
 type Accent = 'neutral' | 'emerald' | 'sky';
 
 const ACCENT_CHIP: Record<Accent, string> = {
-  neutral: 'border-white/[0.08] bg-white/[0.04] text-slate-300',
+  neutral: 'border-white/[0.08] bg-white/[0.04] text-[color:var(--panel-text-dim,#c8cdd5)]',
   emerald: 'border-emerald-400/20 bg-emerald-400/[0.08] text-emerald-300',
   sky: 'border-sky-400/20 bg-sky-400/[0.08] text-sky-300',
 };
@@ -40,14 +40,14 @@ function MetricCard({
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay }}>
       <AdminCard className="flex min-h-[112px] flex-col justify-between p-4 transition-colors hover:border-white/[0.12]">
         <div className="flex items-start justify-between gap-3">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">{label}</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[color:var(--panel-muted,#8a919c)]">{label}</p>
           <span className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border', ACCENT_CHIP[accent])}>
             {icon}
           </span>
         </div>
         <div className="mt-4">
           <p className="text-[22px] font-semibold leading-none tracking-[-0.03em] tabular-nums text-white">{value}</p>
-          {meta && <p className="mt-2 text-[11px] font-medium text-slate-500">{meta}</p>}
+          {meta && <p className="mt-2 text-[11px] font-medium text-[color:var(--panel-muted,#8a919c)]">{meta}</p>}
         </div>
       </AdminCard>
     </motion.div>
@@ -129,7 +129,7 @@ export function SummaryCards({ data, isLoading, error, onRetry }: SummaryCardsPr
                 {item.icon}
               </span>
               <div className="min-w-0">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">{item.label}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[color:var(--panel-muted,#8a919c)]">{item.label}</p>
                 <p className="mt-1 text-[17px] font-semibold leading-none tracking-[-0.02em] tabular-nums text-white">
                   {formatNumber(item.value)}
                 </p>

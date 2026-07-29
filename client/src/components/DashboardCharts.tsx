@@ -19,8 +19,8 @@ export function DashboardCharts({ data }: DashboardChartsProps) {
     const casinoGgr = casinoTurnover - casinoWinning;
 
     const pieData = [
-        { name: 'Spor', value: Math.max(0, sportGgr), color: '#6366f1', glow: 'rgba(99, 102, 241, 0.5)' },
-        { name: 'Casino', value: Math.max(0, casinoGgr), color: '#10b981', glow: 'rgba(16, 185, 129, 0.5)' },
+        { name: 'Spor', value: Math.max(0, sportGgr), color: '#0a84ff', glow: 'rgba(10, 132, 255, 0.5)' },
+        { name: 'Casino', value: Math.max(0, casinoGgr), color: '#30d158', glow: 'rgba(48, 209, 88, 0.5)' },
     ];
 
     const barData = [
@@ -42,13 +42,13 @@ export function DashboardCharts({ data }: DashboardChartsProps) {
         if (active && payload && payload.length) {
             return (
                 <div className="bg-black/80 backdrop-blur-xl border border-white/10 p-4 rounded-xl shadow-2xl">
-                    <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest mb-2">{label}</p>
+                    <p className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest mb-2">{label}</p>
                     <div className="space-y-1.5">
                         {payload.map((item: any, idx: number) => (
                             <div key={idx} className="flex items-center justify-between gap-4">
                                 <div className="flex items-center gap-2">
                                     <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
-                                    <span className="text-[11px] font-bold text-zinc-300">{item.name}:</span>
+                                    <span className="text-[11px] font-bold text-[color:var(--panel-text-dim,#c8cdd5)]">{item.name}:</span>
                                 </div>
                                 <span className="text-[11px] font-semibold text-white">{formatNumber(item.value)}</span>
                             </div>
@@ -67,7 +67,7 @@ export function DashboardCharts({ data }: DashboardChartsProps) {
                 <div className="flex items-center justify-between mb-8 relative z-10">
                     <div>
                         <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-white">GGR Dağılımı</h3>
-                        <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-1">Dikey Bazlı Kâr Oranı</p>
+                        <p className="text-[10px] font-bold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest mt-1">Dikey Bazlı Kâr Oranı</p>
                     </div>
                     <div className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/5">
                         <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
@@ -78,12 +78,12 @@ export function DashboardCharts({ data }: DashboardChartsProps) {
                         <PieChart>
                             <defs>
                                 <linearGradient id="gradientSpor" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stopColor="#818cf8" />
-                                    <stop offset="100%" stopColor="#6366f1" />
+                                    <stop offset="0%" stopColor="#64d2ff" />
+                                    <stop offset="100%" stopColor="#0a84ff" />
                                 </linearGradient>
                                 <linearGradient id="gradientCasino" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stopColor="#34d399" />
-                                    <stop offset="100%" stopColor="#10b981" />
+                                    <stop offset="0%" stopColor="#5ee27a" />
+                                    <stop offset="100%" stopColor="#30d158" />
                                 </linearGradient>
                             </defs>
                             <Pie
@@ -104,13 +104,13 @@ export function DashboardCharts({ data }: DashboardChartsProps) {
                                 verticalAlign="bottom"
                                 height={36}
                                 iconType="circle"
-                                formatter={(val) => <span className="text-[10px] font-semibold uppercase tracking-widest text-zinc-400 ml-1">{val}</span>}
+                                formatter={(val) => <span className="text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)] ml-1">{val}</span>}
                             />
                         </PieChart>
                     </ResponsiveContainer>
                     {/* Centered Total */}
                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none mt-[-36px]">
-                        <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">Toplam GGR</span>
+                        <span className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">Toplam GGR</span>
                         <span className="text-xl font-semibold text-white tracking-tighter">{formatNumber(sportGgr + casinoGgr)}</span>
                     </div>
                 </div>
@@ -121,7 +121,7 @@ export function DashboardCharts({ data }: DashboardChartsProps) {
                 <div className="flex items-center justify-between mb-8 relative z-10">
                     <div>
                         <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-white">Finansal Karşılaştırma</h3>
-                        <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-1">Ciro ve Net Kazanç Analizi</p>
+                        <p className="text-[10px] font-bold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest mt-1">Ciro ve Net Kazanç Analizi</p>
                     </div>
                     <div className="flex gap-1">
                         {[1, 2, 3].map(i => <div key={i} className="w-1 h-4 bg-white/10 rounded-full" />)}
@@ -132,25 +132,25 @@ export function DashboardCharts({ data }: DashboardChartsProps) {
                         <BarChart data={barData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
                             <defs>
                                 <linearGradient id="barGradient1" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stopColor="#6366f1" stopOpacity={0.8} />
-                                    <stop offset="100%" stopColor="#6366f1" stopOpacity={0.2} />
+                                    <stop offset="0%" stopColor="#0a84ff" stopOpacity={0.8} />
+                                    <stop offset="100%" stopColor="#0a84ff" stopOpacity={0.2} />
                                 </linearGradient>
                                 <linearGradient id="barGradient2" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stopColor="#10b981" stopOpacity={0.8} />
-                                    <stop offset="100%" stopColor="#10b981" stopOpacity={0.2} />
+                                    <stop offset="0%" stopColor="#30d158" stopOpacity={0.8} />
+                                    <stop offset="100%" stopColor="#30d158" stopOpacity={0.2} />
                                 </linearGradient>
                             </defs>
                             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
                             <XAxis
                                 dataKey="name"
-                                stroke="#52525b"
+                                stroke="#5c6470"
                                 fontSize={10}
                                 tickLine={false}
                                 axisLine={false}
                                 tick={{ fontWeight: 900, letterSpacing: '0.1em' }}
                             />
                             <YAxis
-                                stroke="#52525b"
+                                stroke="#5c6470"
                                 fontSize={9}
                                 tickLine={false}
                                 axisLine={false}
@@ -158,7 +158,7 @@ export function DashboardCharts({ data }: DashboardChartsProps) {
                                 tick={{ fontWeight: 700 }}
                             />
                             <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.02)' }} />
-                            <Legend iconType="circle" formatter={(val) => <span className="text-[10px] font-semibold uppercase tracking-widest text-zinc-400 ml-1">{val}</span>} />
+                            <Legend iconType="circle" formatter={(val) => <span className="text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)] ml-1">{val}</span>} />
                             <Bar dataKey="Turnover" fill="url(#barGradient1)" radius={[10, 10, 0, 0]} name="Ciro" barSize={40} />
                             <Bar dataKey="GGR" fill="url(#barGradient2)" radius={[10, 10, 0, 0]} name="Net GGR" barSize={40} />
                         </BarChart>

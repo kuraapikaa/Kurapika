@@ -21,20 +21,20 @@ function PlayersTable({
   kpiLoadingMap: Record<number, boolean>;
 }) {
   return (
-    <Card className="premium-card overflow-hidden p-0 bg-white/[0.025] border-white/[0.05]">
-      <div className="flex items-center justify-between border-b border-white/[0.05] bg-black/40 px-4 py-2.5 backdrop-blur-3xl">
+    <Card className="premium-card overflow-hidden p-0 bg-white/[0.025] border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
+      <div className="flex items-center justify-between border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/40 px-4 py-2.5 backdrop-blur-3xl">
         <div className="flex items-center gap-3">
           <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
-          <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-[0.2em] antialiased">Oyuncu Portföyü & Analiz</span>
+          <span className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-[0.2em] antialiased">Oyuncu Portföyü & Analiz</span>
         </div>
         <div className="flex items-center gap-6">
           <div className="flex flex-col items-end">
-            <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-tighter">Sistem Kaydı</span>
+            <span className="text-[9px] font-bold text-[color:var(--panel-faint,#5c6470)] uppercase tracking-tighter">Sistem Kaydı</span>
             <span className="text-xs font-semibold text-white tabular-nums">{formatNumber(totalCount)}</span>
           </div>
           <div className="w-px h-6 bg-white/5" />
           <div className="flex flex-col items-end">
-            <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-tighter">Aktif Görünüm</span>
+            <span className="text-[9px] font-bold text-[color:var(--panel-faint,#5c6470)] uppercase tracking-tighter">Aktif Görünüm</span>
             <span className="text-xs font-semibold text-blue-400 tabular-nums">{rows.length}</span>
           </div>
         </div>
@@ -42,16 +42,16 @@ function PlayersTable({
       <div className="overflow-auto scrollbar-hide">
         <table className="w-full text-sm border-separate border-spacing-0">
           <thead>
-            <tr className="text-left text-[10px] uppercase tracking-[0.2em] text-zinc-500 border-b border-white/5 bg-black/20">
-              <th className="px-3 py-2.5 font-semibold pl-4 border-b border-white/[0.04]">Oyuncu / ID</th>
-              <th className="px-3 py-2.5 font-semibold border-b border-white/[0.04]">Kategori</th>
-              <th className="px-3 py-2.5 font-semibold border-b border-white/[0.04]">İletişim</th>
-              <th className="px-3 py-2.5 font-semibold border-b border-white/[0.04]">BTag</th>
-              <th className="px-3 py-2.5 font-semibold border-b border-white/[0.04]">Partner & Konum</th>
-              <th className="px-3 py-2.5 text-right font-semibold border-b border-white/[0.04]">P / L Analizi</th>
-              <th className="px-3 py-2.5 text-right font-semibold border-b border-white/[0.04]">Cüzdan</th>
-              <th className="px-3 py-2.5 font-semibold border-b border-white/[0.04]">Tarihçe</th>
-              <th className="px-3 py-2.5 text-center font-semibold pr-4 border-b border-white/[0.04]">Durum</th>
+            <tr className="text-left text-[10px] uppercase tracking-[0.2em] text-[color:var(--panel-muted,#8a919c)] border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20">
+              <th className="px-3 py-2.5 font-semibold pl-4 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">Oyuncu / ID</th>
+              <th className="px-3 py-2.5 font-semibold border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">Kategori</th>
+              <th className="px-3 py-2.5 font-semibold border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">İletişim</th>
+              <th className="px-3 py-2.5 font-semibold border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">BTag</th>
+              <th className="px-3 py-2.5 font-semibold border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">Partner & Konum</th>
+              <th className="px-3 py-2.5 text-right font-semibold border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">P / L Analizi</th>
+              <th className="px-3 py-2.5 text-right font-semibold border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">Cüzdan</th>
+              <th className="px-3 py-2.5 font-semibold border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">Tarihçe</th>
+              <th className="px-3 py-2.5 text-center font-semibold pr-4 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">Durum</th>
             </tr>
           </thead>
           <tbody className="relative z-10">
@@ -60,9 +60,9 @@ function PlayersTable({
                 <td colSpan={9} className="p-32 text-center">
                   <div className="relative inline-block">
                     <div className="absolute inset-0 bg-blue-500 rounded-full blur-[50px] opacity-10" />
-                    <Users size={56} className="relative mx-auto mb-8 text-zinc-800" />
+                    <Users size={56} className="relative mx-auto mb-8 text-[color:var(--panel-faint,#5c6470)]" />
                   </div>
-                  <p className="text-[11px] font-bold text-zinc-500 uppercase tracking-[0.2em]">Filtrelere uygun kullanıcı analizi bulunamadı.</p>
+                  <p className="text-[11px] font-bold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-[0.2em]">Filtrelere uygun kullanıcı analizi bulunamadı.</p>
                 </td>
               </tr>
             ) : (
@@ -113,11 +113,11 @@ function PlayersTable({
                       transition={{ delay: Math.min(idx * 0.02, 0.4) }}
                       className="group transition-all duration-300 hover:bg-blue-500/[0.02]"
                     >
-                      <td className="px-3 py-2.5 pl-4 border-b border-white/[0.02]">
+                      <td className="px-3 py-2.5 pl-4 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
                         <div className="flex items-center gap-4">
                           <div className="relative">
                             <div className="absolute inset-0 bg-blue-500 rounded-xl blur-lg opacity-0 group-hover:opacity-20 transition-opacity" />
-                            <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-zinc-900 border border-white/5 font-semibold text-[11px] text-zinc-500 group-hover:border-blue-500/30 group-hover:text-blue-400 transition-all shadow-inner">
+                            <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] font-semibold text-[11px] text-[color:var(--panel-muted,#8a919c)] group-hover:border-blue-500/30 group-hover:text-blue-400 transition-all shadow-inner">
                               {row.FirstName?.[0]}{row.LastName?.[0] || row.FirstName?.[1] || '?'}
                             </div>
                           </div>
@@ -131,56 +131,56 @@ function PlayersTable({
                             >
                               {row.Login}
                             </button>
-                            <span className="text-[10px] text-zinc-600 font-bold uppercase tracking-tighter">ID: {row.Id}</span>
+                            <span className="text-[10px] text-[color:var(--panel-faint,#5c6470)] font-bold uppercase tracking-tighter">ID: {row.Id}</span>
                           </div>
                         </div>
                       </td>
-                      <td className="px-3 py-2.5 border-b border-white/[0.02]">
+                      <td className="px-3 py-2.5 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
                         <span
-                          className="inline-flex rounded-lg px-2.5 py-1 text-[9px] font-semibold uppercase tracking-widest border border-white/[0.05]"
+                          className="inline-flex rounded-lg px-2.5 py-1 text-[9px] font-semibold uppercase tracking-widest border border-[color:var(--panel-border,rgba(242,244,248,0.1))]"
                           style={{ backgroundColor: `${category.colorBg}22`, color: category.colorText, borderColor: `${category.colorText}33` }}
                           title={category.label}
                         >
                           {category.label}
                         </span>
                       </td>
-                      <td className="px-3 py-2.5 border-b border-white/[0.02]">
+                      <td className="px-3 py-2.5 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
                         <div className="flex flex-col gap-1.5 text-[10px]">
-                          <div className="flex items-center gap-2 text-zinc-500 hover:text-blue-400 transition-colors group/mail">
-                            <Mail size={12} className="text-zinc-700 group-hover/mail:text-blue-500" />
+                          <div className="flex items-center gap-2 text-[color:var(--panel-muted,#8a919c)] hover:text-blue-400 transition-colors group/mail">
+                            <Mail size={12} className="text-[color:var(--panel-faint,#5c6470)] group-hover/mail:text-blue-500" />
                             <span className="truncate max-w-[140px] font-medium">{row.Email || 'E-posta yok'}</span>
                           </div>
-                          <div className="flex items-center gap-2 text-zinc-500">
-                            <Phone size={12} className="text-zinc-700" />
+                          <div className="flex items-center gap-2 text-[color:var(--panel-muted,#8a919c)]">
+                            <Phone size={12} className="text-[color:var(--panel-faint,#5c6470)]" />
                             <span className="font-bold tabular-nums">{row.MobilePhone || row.Phone || 'Telefon yok'}</span>
                           </div>
                         </div>
                       </td>
-                      <td className="px-3 py-2.5 border-b border-white/[0.02]">
+                      <td className="px-3 py-2.5 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
                         {row.BTag ? (
                           <span className="rounded-lg bg-blue-500/10 px-2.5 py-1 text-[10px] font-semibold text-blue-400 border border-blue-500/20 neon-glow-indigo uppercase tracking-widest">
                             {row.BTag}
                           </span>
                         ) : (
-                          <span className="text-[9px] font-semibold text-zinc-700 uppercase italic tracking-tighter">BTag Yok</span>
+                          <span className="text-[9px] font-semibold text-[color:var(--panel-faint,#5c6470)] uppercase italic tracking-tighter">BTag Yok</span>
                         )}
                       </td>
-                      <td className="px-3 py-2.5 border-b border-white/[0.02]">
+                      <td className="px-3 py-2.5 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
                         <div className="flex flex-col gap-1 text-[10px]">
-                          <span className="font-semibold text-zinc-300 uppercase tracking-tight">{row.PartnerName || 'Bilinmiyor'}</span>
-                          <div className="flex items-center gap-1.5 text-zinc-600">
+                          <span className="font-semibold text-[color:var(--panel-text-dim,#c8cdd5)] uppercase tracking-tight">{row.PartnerName || 'Bilinmiyor'}</span>
+                          <div className="flex items-center gap-1.5 text-[color:var(--panel-faint,#5c6470)]">
                             <MapPin size={10} />
                             <span className="font-medium">{row.City || 'N/A'}</span>
                           </div>
                         </div>
                       </td>
-                      <td className="px-3 py-2.5 text-right relative border-b border-white/[0.02]">
+                      <td className="px-3 py-2.5 text-right relative border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
                         {isKpiLoading && (
                           <div className="absolute right-4 top-4 h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
                         )}
                         <div className="flex flex-col items-end gap-1">
                           <div className="flex items-baseline gap-2">
-                            <span className="text-[9px] text-zinc-600 font-semibold uppercase">NET:</span>
+                            <span className="text-[9px] text-[color:var(--panel-faint,#5c6470)] font-semibold uppercase">NET:</span>
                             <span className={cn(
                               "text-xs font-semibold tabular-nums tracking-tighter",
                               netPL >= 0 ? "text-blue-400 neon-glow-indigo" : "text-rose-400"
@@ -194,30 +194,30 @@ function PlayersTable({
                           </div>
                         </div>
                       </td>
-                      <td className="px-3 py-2.5 text-right border-b border-white/[0.02]">
+                      <td className="px-3 py-2.5 text-right border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
                         <div className="flex flex-col items-end">
                           <div className="flex items-baseline gap-1.5">
                             <span className="text-sm font-semibold text-white tabular-nums tracking-tighter">
                               {formatNumber(currentBalance)}
                             </span>
-                            <span className="text-[9px] font-semibold text-zinc-600 uppercase">{row.CurrencyId}</span>
+                            <span className="text-[9px] font-semibold text-[color:var(--panel-faint,#5c6470)] uppercase">{row.CurrencyId}</span>
                           </div>
-                          <span className="text-[8px] font-semibold text-zinc-600 uppercase tracking-widest mt-0.5">Mevcut Varlık</span>
+                          <span className="text-[8px] font-semibold text-[color:var(--panel-faint,#5c6470)] uppercase tracking-widest mt-0.5">Mevcut Varlık</span>
                         </div>
                       </td>
-                      <td className="px-3 py-2.5 border-b border-white/[0.02]">
+                      <td className="px-3 py-2.5 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
                         <div className="flex flex-col gap-1.5 text-[9px]">
                           <div className="flex items-center justify-between gap-6">
-                            <span className="text-zinc-700 font-semibold uppercase tracking-tighter">KAYIT:</span>
-                            <span className="font-bold tabular-nums text-zinc-400">{formatDateDisplay(row.CreatedLocalDate)}</span>
+                            <span className="text-[color:var(--panel-faint,#5c6470)] font-semibold uppercase tracking-tighter">KAYIT:</span>
+                            <span className="font-bold tabular-nums text-[color:var(--panel-muted,#8a919c)]">{formatDateDisplay(row.CreatedLocalDate)}</span>
                           </div>
                           <div className="flex items-center justify-between gap-6">
-                            <span className="text-zinc-700 font-semibold uppercase tracking-tighter">GİRİŞ:</span>
-                            <span className="font-bold tabular-nums text-zinc-500">{formatDateDisplay(row.LastLoginLocalDate)}</span>
+                            <span className="text-[color:var(--panel-faint,#5c6470)] font-semibold uppercase tracking-tighter">GİRİŞ:</span>
+                            <span className="font-bold tabular-nums text-[color:var(--panel-muted,#8a919c)]">{formatDateDisplay(row.LastLoginLocalDate)}</span>
                           </div>
                         </div>
                       </td>
-                      <td className="px-3 py-2.5 text-center pr-4 border-b border-white/[0.02]">
+                      <td className="px-3 py-2.5 text-center pr-4 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
                         <div className="flex flex-col items-center gap-2">
                           {row.IsLocked ? (
                             <div className="inline-flex items-center gap-1.5 rounded-lg bg-rose-500/10 px-2.5 py-1 text-[9px] font-semibold text-rose-500 border border-rose-500/20 uppercase tracking-widest">
@@ -228,7 +228,7 @@ function PlayersTable({
                               <ShieldCheck size={10} strokeWidth={3} /> AKTİF
                             </div>
                           )}
-                          <span className="text-[8px] font-semibold text-zinc-700 uppercase tracking-tighter">{row.Status || 'DOĞRULANDI'}</span>
+                          <span className="text-[8px] font-semibold text-[color:var(--panel-faint,#5c6470)] uppercase tracking-tighter">{row.Status || 'DOĞRULANDI'}</span>
                         </div>
                       </td>
                     </motion.tr>
@@ -331,14 +331,14 @@ export function AllPlayersList({
       <header className="flex flex-col gap-8">
         <div className="flex flex-wrap items-center justify-between gap-6 px-1">
           <div className="flex items-center gap-4">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.04] text-slate-300">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.04] text-[color:var(--panel-text-dim,#c8cdd5)]">
               <Users size={18} />
             </div>
             <div>
               <h2 className="text-2xl font-semibold text-white tracking-tighter uppercase antialiased">Oyuncu Yönetimi</h2>
               <div className="flex items-center gap-2 mt-0.5">
                 <div className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
-                <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.2em]">Merkezi Üye Arama & CRM Analizi</p>
+                <p className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-[0.2em]">Merkezi Üye Arama & CRM Analizi</p>
               </div>
             </div>
           </div>
@@ -351,31 +351,31 @@ export function AllPlayersList({
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
           <div className="lg:col-span-6 relative group">
-                        <div className="relative flex h-10 items-center gap-2.5 rounded-xl border border-white/[0.07] bg-black/25 px-3">
-              <Search className="text-zinc-500" size={20} />
+                        <div className="relative flex h-10 items-center gap-2.5 rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/25 px-3">
+              <Search className="text-[color:var(--panel-muted,#8a919c)]" size={20} />
               <input
                 type="text"
                 placeholder="KULLANICI ADI VEYA OYUNCU ID İLE ARA..."
                 value={searchTerm}
                 onChange={(e) => onSearchChange(e.target.value)}
-                className="flex-1 bg-transparent text-xs font-semibold text-white outline-none placeholder:text-zinc-700 tracking-widest uppercase"
+                className="flex-1 bg-transparent text-xs font-semibold text-white outline-none placeholder:text-[color:var(--panel-faint,#5c6470)] tracking-widest uppercase"
               />
             </div>
           </div>
           <div className="lg:col-span-3 relative group">
-                        <div className="relative flex h-10 items-center gap-2.5 rounded-xl border border-white/[0.07] bg-black/25 px-3">
-              <Filter className="text-zinc-500" size={20} />
+                        <div className="relative flex h-10 items-center gap-2.5 rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/25 px-3">
+              <Filter className="text-[color:var(--panel-muted,#8a919c)]" size={20} />
               <input
                 type="text"
                 placeholder="BTAG FİLTRESİ..."
                 value={btagTerm}
                 onChange={(e) => onBTagChange(e.target.value)}
-                className="flex-1 bg-transparent text-xs font-semibold text-white outline-none placeholder:text-zinc-700 tracking-widest uppercase"
+                className="flex-1 bg-transparent text-xs font-semibold text-white outline-none placeholder:text-[color:var(--panel-faint,#5c6470)] tracking-widest uppercase"
               />
             </div>
           </div>
           <div className="lg:col-span-3">
-            <button className="w-full h-10 flex items-center justify-center gap-2 rounded-xl border border-white/[0.07] bg-white/[0.03] hover:bg-white/[0.07] text-[10px] font-semibold text-zinc-400 hover:text-white transition-all uppercase tracking-widest">
+            <button className="w-full h-10 flex items-center justify-center gap-2 rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.03] hover:bg-white/[0.07] text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] hover:text-white transition-all uppercase tracking-widest">
               <Filter size={16} /> GELİŞMİŞ FİLTRELEME
             </button>
           </div>
@@ -383,9 +383,9 @@ export function AllPlayersList({
       </header>
 
       {isLoading ? (
-        <div className="flex h-96 flex-col items-center justify-center gap-4 rounded-xl border border-white/5 bg-slate-900/40">
+        <div className="flex h-96 flex-col items-center justify-center gap-4 rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.40)]">
           <div className="h-12 w-12 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" />
-          <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Veritabanı taranıyor...</p>
+          <p className="text-sm font-bold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">Veritabanı taranıyor...</p>
         </div>
       ) : (
         <>
@@ -401,14 +401,14 @@ export function AllPlayersList({
 
           {totalPages > 1 && (
             <div className="flex items-center justify-between gap-6 py-8 px-2">
-              <div className="text-[10px] font-semibold text-zinc-700 uppercase tracking-widest">
+              <div className="text-[10px] font-semibold text-[color:var(--panel-faint,#5c6470)] uppercase tracking-widest">
                 Sayfa {currentPage} / {totalPages}
               </div>
               <div className="flex items-center gap-2.5">
                 <button
                   onClick={() => onPageChange(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
-                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/[0.04] bg-white/[0.02] text-zinc-500 hover:text-white hover:bg-white/10 disabled:opacity-20 disabled:pointer-events-none transition-all"
+                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.02] text-[color:var(--panel-muted,#8a919c)] hover:text-white hover:bg-white/10 disabled:opacity-20 disabled:pointer-events-none transition-all"
                 >
                   <ChevronLeft size={18} strokeWidth={3} />
                 </button>
@@ -423,13 +423,13 @@ export function AllPlayersList({
                           "flex h-10 min-w-[40px] px-3 items-center justify-center rounded-xl text-[11px] font-semibold transition-all border",
                           currentPage === p
                             ? "bg-blue-500 border-blue-400 text-white shadow-[0_0_20px_rgba(59,130,246,0.2)]"
-                            : "border-white/[0.04] bg-white/[0.01] text-zinc-500 hover:bg-white/5 hover:text-zinc-300"
+                            : "border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.01] text-[color:var(--panel-muted,#8a919c)] hover:bg-white/5 hover:text-[color:var(--panel-text-dim,#c8cdd5)]"
                         )}
                       >
                         {p}
                       </button>
                     ) : (
-                      <span key={i} className="px-1 text-zinc-700 font-extrabold">...</span>
+                      <span key={i} className="px-1 text-[color:var(--panel-faint,#5c6470)] font-extrabold">...</span>
                     )
                   ))}
                 </div>
@@ -437,7 +437,7 @@ export function AllPlayersList({
                 <button
                   onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
-                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/[0.04] bg-white/[0.02] text-zinc-500 hover:text-white hover:bg-white/10 disabled:opacity-20 disabled:pointer-events-none transition-all"
+                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.02] text-[color:var(--panel-muted,#8a919c)] hover:text-white hover:bg-white/10 disabled:opacity-20 disabled:pointer-events-none transition-all"
                 >
                   <ChevronRight size={18} strokeWidth={3} />
                 </button>

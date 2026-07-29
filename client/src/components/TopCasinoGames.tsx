@@ -29,7 +29,7 @@ export function TopCasinoGames({ data, isLoading, error }: TopCasinoGamesProps) 
       </CardHeader>
 
       <CardContent className="p-0">
-      <div className="overflow-hidden rounded-xl border border-white/10 bg-slate-900/40">
+      <div className="overflow-hidden rounded-xl border border-white/10 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))]">
         {error && (
           <div className="p-8 text-center text-rose-400">
             <div className="mb-2 font-bold italic opacity-50">Hata</div>
@@ -39,14 +39,14 @@ export function TopCasinoGames({ data, isLoading, error }: TopCasinoGamesProps) 
         {isLoading && (
           <div className="flex h-48 flex-col items-center justify-center gap-3">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
-            <div className="text-sm font-medium text-slate-500">Oyun verileri çekiliyor...</div>
+            <div className="text-sm font-medium text-[color:var(--panel-muted,#8a919c)]">Oyun verileri çekiliyor...</div>
           </div>
         )}
         {!error && !isLoading && (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-white/5">
-                <tr className="text-left text-[10px] uppercase tracking-[0.2em] text-slate-400">
+                <tr className="text-left text-[10px] uppercase tracking-[0.2em] text-[color:var(--panel-muted,#8a919c)]">
                   <th className="px-5 py-4 font-extrabold">Oyun Adı</th>
                   <th className="px-5 py-4 text-right font-extrabold">Ciro</th>
                   <th className="px-5 py-4 text-right font-extrabold">Kazanç</th>
@@ -56,7 +56,7 @@ export function TopCasinoGames({ data, isLoading, error }: TopCasinoGamesProps) 
               <tbody className="divide-y divide-white/5">
                 {rows.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="p-8 text-center text-slate-500">
+                    <td colSpan={4} className="p-8 text-center text-[color:var(--panel-muted,#8a919c)]">
                       Hiçbir oyun verisi bulunamadı.
                     </td>
                   </tr>
@@ -69,13 +69,13 @@ export function TopCasinoGames({ data, isLoading, error }: TopCasinoGamesProps) 
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
                           <div className="h-2 w-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(168,85,247,0.5)] opacity-0 group-hover:opacity-100 transition-opacity" />
-                          <span className="font-semibold text-slate-200 group-hover:text-blue-300 transition-colors">{r.Name}</span>
+                          <span className="font-semibold text-[color:var(--panel-text-dim,#c8cdd5)] group-hover:text-blue-300 transition-colors">{r.Name}</span>
                         </div>
                       </td>
-                      <td className="px-5 py-4 text-right tabular-nums text-slate-300">
+                      <td className="px-5 py-4 text-right tabular-nums text-[color:var(--panel-text-dim,#c8cdd5)]">
                         {formatNumber(r.Turnover)}
                       </td>
-                      <td className="px-5 py-4 text-right tabular-nums text-slate-400">
+                      <td className="px-5 py-4 text-right tabular-nums text-[color:var(--panel-muted,#8a919c)]">
                         {formatNumber(r.WinningAmount)}
                       </td>
                       <td className="px-5 py-4 text-right">

@@ -62,7 +62,7 @@ export function AuditLogPage() {
         ) : (
           <div className="overflow-x-auto max-h-[70vh] overflow-y-auto">
             <table className="w-full text-sm text-left">
-              <thead className="bg-slate-900/60 text-[10px] font-bold uppercase tracking-wider text-slate-500 border-b border-white/5 sticky top-0">
+              <thead className="bg-[rgba(242,244,248,0.60)] text-[10px] font-bold uppercase tracking-wider text-slate-500 border-b border-white/5 sticky top-0">
                 <tr>
                   <th className="px-4 py-3">Tarih</th>
                   <th className="px-4 py-3">Kullanıcı</th>

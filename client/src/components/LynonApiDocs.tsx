@@ -505,7 +505,7 @@ export function LynonApiDocs() {
                   <div className="overflow-x-auto rounded-xl border border-slate-800 bg-black/30">
                     <table className="w-full text-left text-xs border-collapse">
                       <thead>
-                        <tr className="border-b border-slate-800 text-slate-400 bg-slate-900/50">
+                        <tr className="border-b border-slate-800 text-slate-400 bg-[rgba(242,244,248,0.50)]">
                           <th className="p-2.5 font-semibold">Adı</th>
                           <th className="p-2.5 font-semibold">Tip</th>
                           <th className="p-2.5 font-semibold">Zorunlu</th>

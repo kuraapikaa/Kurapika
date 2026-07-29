@@ -15,6 +15,8 @@ export default {
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
         mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
+        // Lobi ve alt sayfalarin gorsel dili; admin ekranlari Inter'de kaliyor.
+        lobby: ['Archivo', 'Inter', 'system-ui', 'sans-serif'],
       },
       colors: {
         slate: colors.slate,

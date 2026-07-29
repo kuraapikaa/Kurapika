@@ -55,7 +55,7 @@ export function BeniAraSayfasi() {
     }
   };
 
-  const fieldCls = 'h-11 w-full rounded-xl border border-white/[0.07] bg-black/30 px-3 text-[13px] font-bold text-white outline-none transition placeholder:text-zinc-700 focus:border-[color:var(--lobby-primary)]/60';
+  const fieldCls = 'h-11 w-full rounded-xl border border-[rgba(243,236,221,0.07)] bg-black/30 px-3 text-[13px] font-bold text-[color:var(--lobby-text,#f3ecdd)] outline-none transition placeholder:text-[color:var(--lobby-muted,#8f8674)] focus:border-[color:var(--lobby-primary,#e7c574)]/60';
 
   return (
     <LobbyPageShell
@@ -82,15 +82,15 @@ export function BeniAraSayfasi() {
       <LobbyCard className="mx-auto w-full max-w-xl">
         {settingsLoading ? (
           <div className="flex justify-center py-10">
-            <Loader2 className="animate-spin text-zinc-600" size={22} />
+            <Loader2 className="animate-spin text-[color:var(--lobby-muted,#8f8674)]" size={22} />
           </div>
         ) : !settings.callActive ? (
           <div className="space-y-2 py-8 text-center">
             <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl border border-rose-400/20 bg-rose-400/10 text-rose-300">
               <AlertCircle size={20} />
             </span>
-            <h2 className="text-sm font-black text-white">{pageContent.unavailableTitle}</h2>
-            <p className="text-[12px] font-medium text-zinc-500">{pageContent.unavailableDescription}</p>
+            <h2 className="text-sm font-black text-[color:var(--lobby-text,#f3ecdd)]">{pageContent.unavailableTitle}</h2>
+            <p className="text-[12px] font-medium text-[color:var(--lobby-muted,#8f8674)]">{pageContent.unavailableDescription}</p>
           </div>
         ) : (
           <AnimatePresence mode="wait">
@@ -99,12 +99,12 @@ export function BeniAraSayfasi() {
                 <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl border border-emerald-400/20 bg-emerald-400/10 text-emerald-300">
                   <CheckCircle2 size={20} />
                 </span>
-                <h2 className="text-sm font-black text-white">{pageContent.successTitle}</h2>
+                <h2 className="text-sm font-black text-[color:var(--lobby-text,#f3ecdd)]">{pageContent.successTitle}</h2>
                 <p className="text-[12px] font-semibold text-emerald-300">{msg}</p>
                 <button
                   type="button"
                   onClick={() => setStatus('idle')}
-                  className="mt-2 rounded-xl border border-white/10 bg-white/[0.05] px-4 py-2 text-[11px] font-black uppercase tracking-[0.12em] text-zinc-300 transition hover:bg-white/10 hover:text-white"
+                  className="mt-2 rounded-xl border border-[rgba(243,236,221,0.10)] bg-[rgba(243,236,221,0.05)] px-4 py-2 text-[11px] font-black uppercase tracking-[0.12em] text-[color:var(--lobby-text,#f3ecdd)] transition hover:bg-[rgba(243,236,221,0.10)] hover:text-[color:var(--lobby-text,#f3ecdd)]"
                 >
                   {pageContent.successButton}
                 </button>
@@ -113,7 +113,7 @@ export function BeniAraSayfasi() {
               <motion.form key="form" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} onSubmit={submit} className="space-y-3">
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div>
-                    <label htmlFor="beni-ara-username" className="mb-1.5 flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.16em] text-zinc-500">
+                    <label htmlFor="beni-ara-username" className="mb-1.5 flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.16em] text-[color:var(--lobby-muted,#8f8674)]">
                       <User size={12} aria-hidden="true" /> {pageContent.usernameLabel}
                     </label>
                     <input
@@ -128,7 +128,7 @@ export function BeniAraSayfasi() {
                     />
                   </div>
                   <div>
-                    <label htmlFor="beni-ara-phone" className="mb-1.5 flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.16em] text-zinc-500">
+                    <label htmlFor="beni-ara-phone" className="mb-1.5 flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.16em] text-[color:var(--lobby-muted,#8f8674)]">
                       <Phone size={12} aria-hidden="true" /> {lobbyExtraText(pageContent, 'phoneLabel', 'Telefon numarası')}
                     </label>
                     <input
@@ -145,7 +145,7 @@ export function BeniAraSayfasi() {
                 </div>
 
                 <div>
-                  <label htmlFor="beni-ara-reason" className="mb-1.5 flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.16em] text-zinc-500">
+                  <label htmlFor="beni-ara-reason" className="mb-1.5 flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.16em] text-[color:var(--lobby-muted,#8f8674)]">
                     <MessageSquare size={12} aria-hidden="true" /> {lobbyExtraText(pageContent, 'reasonLabel', 'Aranma sebebi')}
                   </label>
                   <select
@@ -166,7 +166,7 @@ export function BeniAraSayfasi() {
 
                 <button
                   disabled={status === 'loading'}
-                  className="flex h-11 w-full items-center justify-center gap-2 rounded-xl text-[11px] font-black uppercase tracking-[0.16em] text-white transition active:scale-[0.99] disabled:opacity-60"
+                  className="flex h-11 w-full items-center justify-center gap-2 rounded-xl text-[11px] font-black uppercase tracking-[0.16em] text-[color:var(--lobby-text,#f3ecdd)] transition active:scale-[0.99] disabled:opacity-60"
                   style={{
                     background: `linear-gradient(90deg, ${palette.primaryColor}, ${palette.secondaryColor})`,
                     boxShadow: `0 8px 22px ${hexToRgba(palette.primaryColor, 0.26)}`,

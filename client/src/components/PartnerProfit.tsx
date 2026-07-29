@@ -49,11 +49,11 @@ export function PartnerProfit({ data, isLoading, error }: PartnerProfitProps) {
             <div
               key={label}
               className={cn(
-                'group flex flex-col justify-between rounded-xl border border-white/10 bg-slate-900/40 p-4 transition-all hover:border-white/20 hover:bg-slate-900/60'
+                'group flex flex-col justify-between rounded-xl border border-white/10 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-4 transition-all hover:border-white/20 hover:bg-[color:var(--panel-surface,rgba(242,244,248,0.028))]'
               )}
             >
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{label}</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[color:var(--panel-muted,#8a919c)]">{label}</span>
                 <div className={cn('rounded-lg p-1.5', bg, color)}>{icon}</div>
               </div>
               <div className={cn('mt-3 text-lg font-bold tabular-nums', color)}>

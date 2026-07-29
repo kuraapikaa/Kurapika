@@ -50,7 +50,7 @@ export function GlobalNotifications() {
                             });
 
                             toast.custom(() => (
-                                <div className="flex items-start gap-3 p-4 bg-zinc-900/90 border border-emerald-500/20 backdrop-blur-xl rounded-xl shadow-2xl animate-in fade-in slide-in-from-right-8 pointer-events-auto w-80">
+                                <div className="flex items-start gap-3 p-4 bg-[rgba(242,244,248,0.90)] border border-emerald-500/20 backdrop-blur-xl rounded-xl shadow-2xl animate-in fade-in slide-in-from-right-8 pointer-events-auto w-80">
                                     <div className="p-2 bg-emerald-500/10 rounded-full shrink-0">
                                         <ArrowUpFromLine size={20} className="text-emerald-400" />
                                     </div>
@@ -96,7 +96,7 @@ export function GlobalNotifications() {
                             });
 
                             toast.custom(() => (
-                                <div className="flex items-start gap-3 p-4 bg-zinc-900/90 border border-amber-500/20 backdrop-blur-xl rounded-xl shadow-2xl animate-in fade-in slide-in-from-right-8 pointer-events-auto w-80">
+                                <div className="flex items-start gap-3 p-4 bg-[rgba(242,244,248,0.90)] border border-amber-500/20 backdrop-blur-xl rounded-xl shadow-2xl animate-in fade-in slide-in-from-right-8 pointer-events-auto w-80">
                                     <div className="p-2 bg-amber-500/10 rounded-full shrink-0">
                                         <ArrowDownToLine size={20} className="text-amber-400" />
                                     </div>
