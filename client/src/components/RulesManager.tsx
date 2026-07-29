@@ -1021,7 +1021,7 @@ export function RulesManager() {
                                                                 value={editValue?.principalWagerMult ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, principalWagerMult: Number(e.target.value) })}
                                                                 className="w-full h-12 bg-zinc-950 border border-white/10 rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
-                                                                placeholder="1 (Default)"
+                                                                placeholder="0 (çevrim şartı yok)"
                                                             />
                                                         </div>
                                                         <div className="space-y-2">
