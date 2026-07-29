@@ -131,22 +131,22 @@ export function MillionaireShowcaseManager({
 
   return (
     <div className="space-y-5">
-      <section className="overflow-hidden rounded-xl border border-white/10 bg-[#080d13]/95">
+      <section className="overflow-hidden rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))]">
         <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_390px]">
           <div className="space-y-5 p-5 md:p-6">
             <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
               <div>
-                <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-amber-300/20 bg-amber-300/10 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-200">
+                <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-amber-300/20 bg-[color:var(--panel-warning,#ff9f0a)]/10 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-200">
                   <Crown size={13} />
                   Lobi vitrini
                 </div>
                 <h2 className="text-2xl font-semibold tracking-[-0.04em] text-white md:text-3xl">Büyük Kazanç Vitrini</h2>
-                <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-zinc-500">
+                <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-[color:var(--panel-muted,#8a919c)]">
                   Lobide görünecek kazanç alanını, kayıtları ve video bağlantılarını buradan yönetin.
                 </p>
               </div>
 
-              <label className="flex w-fit cursor-pointer items-center gap-3 rounded-lg border border-white/10 bg-black/30 px-4 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-300">
+              <label className="flex w-fit cursor-pointer items-center gap-3 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/30 px-4 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--panel-text-dim,#c8cdd5)]">
                 <input
                   type="checkbox"
                   checked={safeConfig.isActive}
@@ -187,31 +187,31 @@ export function MillionaireShowcaseManager({
             </div>
           </div>
 
-          <div className="border-t border-white/10 bg-black/20 p-5 lg:border-l lg:border-t-0 md:p-6">
-            <div className="rounded-xl border border-white/10 bg-[#05080d] p-4">
+          <div className="border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20 p-5 lg:border-l lg:border-t-0 md:p-6">
+            <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-4">
               <div className="mb-4 flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-600">Canlı önizleme</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[color:var(--panel-faint,#5c6470)]">Canlı önizleme</p>
                   <h3 className="text-lg font-semibold text-white">Lobi kartı</h3>
                 </div>
                 <Eye size={18} className="text-amber-300" />
               </div>
 
               <div className="overflow-hidden rounded-xl border border-amber-300/15 bg-gradient-to-br from-[#18120a] via-[#090b10] to-[#05070b] p-4">
-                <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-amber-300/20 bg-amber-300/10 px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-amber-200">
+                <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-amber-300/20 bg-[color:var(--panel-warning,#ff9f0a)]/10 px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-amber-200">
                   <Sparkles size={12} />
                   {safeConfig.eyebrow}
                 </div>
                 <h4 className="text-3xl font-semibold leading-none tracking-[-0.05em] text-white">{safeConfig.title}</h4>
-                <p className="mt-3 line-clamp-3 text-sm font-medium leading-6 text-zinc-400">{safeConfig.description}</p>
+                <p className="mt-3 line-clamp-3 text-sm font-medium leading-6 text-[color:var(--panel-muted,#8a919c)]">{safeConfig.description}</p>
 
                 {featuredRecord && (
-                  <div className="mt-6 rounded-lg border border-white/10 bg-white/[0.04] p-4">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-500">Öne çıkan kayıt</p>
+                  <div className="mt-6 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.04] p-4">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[color:var(--panel-muted,#8a919c)]">Öne çıkan kayıt</p>
                     <div className="mt-2 flex items-end justify-between gap-3">
                       <div className="min-w-0">
                         <p className="truncate text-base font-semibold text-white">{featuredRecord.title}</p>
-                        <p className="mt-1 text-xs font-bold text-zinc-500">{featuredRecord.player} · {featuredRecord.game}</p>
+                        <p className="mt-1 text-xs font-bold text-[color:var(--panel-muted,#8a919c)]">{featuredRecord.player} · {featuredRecord.game}</p>
                       </div>
                       <p className="shrink-0 text-2xl font-semibold text-amber-200">{featuredRecord.amount}</p>
                     </div>
@@ -223,16 +223,16 @@ export function MillionaireShowcaseManager({
         </div>
       </section>
 
-      <section className="rounded-xl border border-white/10 bg-[#080d13]/95">
-        <div className="flex flex-col gap-3 border-b border-white/10 p-5 md:flex-row md:items-center md:justify-between md:p-6">
+      <section className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))]">
+        <div className="flex flex-col gap-3 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] p-5 md:flex-row md:items-center md:justify-between md:p-6">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-600">İçerik</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--panel-faint,#5c6470)]">İçerik</p>
             <h3 className="text-xl font-semibold text-white">Kazanç kayıtları</h3>
           </div>
           <button
             type="button"
             onClick={addRecord}
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-amber-300 px-4 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-950 transition hover:bg-amber-200"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-[color:var(--panel-warning,#ff9f0a)] px-4 text-xs font-semibold uppercase tracking-[0.12em] text-[#050609] transition hover:bg-[color:var(--panel-warning,#ff9f0a)]"
           >
             <Plus size={16} />
             Kayıt ekle
@@ -251,24 +251,24 @@ export function MillionaireShowcaseManager({
           ))}
 
           {safeConfig.records.length === 0 && (
-            <div className="xl:col-span-2 rounded-xl border border-dashed border-white/10 bg-black/25 p-10 text-center">
-              <Trophy className="mx-auto mb-3 text-zinc-700" size={34} />
-              <p className="text-sm font-bold text-zinc-500">Henüz kazanç kaydı eklenmedi.</p>
+            <div className="xl:col-span-2 rounded-xl border border-dashed border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/25 p-10 text-center">
+              <Trophy className="mx-auto mb-3 text-[color:var(--panel-faint,#5c6470)]" size={34} />
+              <p className="text-sm font-bold text-[color:var(--panel-muted,#8a919c)]">Henüz kazanç kaydı eklenmedi.</p>
             </div>
           )}
         </div>
       </section>
 
-      <section className="rounded-xl border border-white/10 bg-[#080d13]/95 p-5 md:p-6">
+      <section className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-5 md:p-6">
         <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-600">Bağlantılar</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--panel-faint,#5c6470)]">Bağlantılar</p>
             <h3 className="text-xl font-semibold text-white">Sosyal linkler</h3>
           </div>
           <button
             type="button"
             onClick={addSocial}
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-4 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:bg-white/[0.07]"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.04] px-4 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:bg-white/[0.07]"
           >
             <Plus size={15} />
             Link ekle
@@ -277,7 +277,7 @@ export function MillionaireShowcaseManager({
 
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
           {safeConfig.socialLinks.map((link) => (
-            <div key={link.id} className="grid grid-cols-1 gap-3 rounded-lg border border-white/10 bg-black/25 p-4 md:grid-cols-[180px_minmax(0,1fr)_42px]">
+            <div key={link.id} className="grid grid-cols-1 gap-3 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/25 p-4 md:grid-cols-[180px_minmax(0,1fr)_42px]">
               <Field label="Etiket" value={link.label} onChange={(value) => updateSocial(link.id, { label: value })} />
               <Field label="URL" value={link.url} onChange={(value) => updateSocial(link.id, { url: value })} />
               <button
@@ -292,9 +292,9 @@ export function MillionaireShowcaseManager({
           ))}
 
           {safeConfig.socialLinks.length === 0 && (
-            <div className="lg:col-span-2 rounded-lg border border-dashed border-white/10 bg-black/20 p-8 text-center">
-              <Link2 className="mx-auto mb-3 text-zinc-700" size={28} />
-              <p className="text-sm font-bold text-zinc-500">Sosyal link eklenmedi.</p>
+            <div className="lg:col-span-2 rounded-lg border border-dashed border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20 p-8 text-center">
+              <Link2 className="mx-auto mb-3 text-[color:var(--panel-faint,#5c6470)]" size={28} />
+              <p className="text-sm font-bold text-[color:var(--panel-muted,#8a919c)]">Sosyal link eklenmedi.</p>
             </div>
           )}
         </div>
@@ -315,20 +315,20 @@ function RecordEditor({
   onRemove: () => void;
 }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-black/25 p-4">
+    <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/25 p-4">
       <div className="mb-4 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className={cn(
             'flex h-10 w-10 items-center justify-center rounded-lg border text-xs font-semibold',
             record.featured
-              ? 'border-amber-300/30 bg-amber-300/15 text-amber-200'
-              : 'border-white/10 bg-white/[0.04] text-zinc-500'
+              ? 'border-amber-300/30 bg-[color:var(--panel-warning,#ff9f0a)]/15 text-amber-200'
+              : 'border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.04] text-[color:var(--panel-muted,#8a919c)]'
           )}>
             #{index + 1}
           </div>
           <div>
             <p className="text-sm font-semibold text-white">Kazanç kartı</p>
-            <p className="text-xs font-semibold text-zinc-600">Görsel, poster ve video URL alanları</p>
+            <p className="text-xs font-semibold text-[color:var(--panel-faint,#5c6470)]">Görsel, poster ve video URL alanları</p>
           </div>
         </div>
         <button
@@ -351,7 +351,7 @@ function RecordEditor({
         <Field label="Video URL" value={record.videoUrl || ''} onChange={(value) => onUpdate({ videoUrl: value })} className="md:col-span-2" />
       </div>
 
-      <label className="mt-4 flex cursor-pointer items-center gap-3 rounded-lg border border-white/10 bg-white/[0.035] px-4 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-300">
+      <label className="mt-4 flex cursor-pointer items-center gap-3 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.035] px-4 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--panel-text-dim,#c8cdd5)]">
         <input
           type="checkbox"
           checked={Boolean(record.featured)}
@@ -366,19 +366,19 @@ function RecordEditor({
 
 function StatCard({ label, value, icon: Icon, tone }: { label: string; value: string | number; icon: typeof Trophy; tone: 'amber' | 'emerald' | 'sky' }) {
   const toneClass = {
-    amber: 'border-amber-300/15 bg-amber-300/10 text-amber-200',
+    amber: 'border-amber-300/15 bg-[color:var(--panel-warning,#ff9f0a)]/10 text-amber-200',
     emerald: 'border-emerald-300/15 bg-emerald-300/10 text-emerald-200',
     sky: 'border-sky-300/15 bg-sky-300/10 text-sky-200'
   }[tone];
 
   return (
-    <div className="rounded-lg border border-white/10 bg-black/25 p-4">
+    <div className="rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/25 p-4">
       <div className="flex items-center gap-3">
         <div className={cn('flex h-10 w-10 items-center justify-center rounded-lg border', toneClass)}>
           <Icon size={18} />
         </div>
         <div className="min-w-0">
-          <p className="truncate text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-600">{label}</p>
+          <p className="truncate text-[10px] font-semibold uppercase tracking-[0.14em] text-[color:var(--panel-faint,#5c6470)]">{label}</p>
           <p className="truncate text-xl font-semibold text-white">{value}</p>
         </div>
       </div>
@@ -398,7 +398,7 @@ function ToggleCard({
   onChange: (checked: boolean) => void;
 }) {
   return (
-    <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-white/10 bg-black/25 p-4">
+    <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/25 p-4">
       <input
         type="checkbox"
         checked={checked}
@@ -407,7 +407,7 @@ function ToggleCard({
       />
       <span>
         <span className="block text-sm font-semibold text-white">{title}</span>
-        <span className="mt-1 block text-xs font-medium leading-5 text-zinc-500">{description}</span>
+        <span className="mt-1 block text-xs font-medium leading-5 text-[color:var(--panel-muted,#8a919c)]">{description}</span>
       </span>
     </label>
   );
@@ -426,12 +426,12 @@ function Field({
 }) {
   return (
     <div className={className}>
-      <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-600">{label}</label>
+      <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.14em] text-[color:var(--panel-faint,#5c6470)]">{label}</label>
       <input
         type="text"
         value={value || ''}
         onChange={(event) => onChange(event.target.value)}
-        className="h-11 w-full rounded-lg border border-white/10 bg-black/30 px-3 text-sm font-bold text-white outline-none transition focus:border-amber-300/45"
+        className="h-11 w-full rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/30 px-3 text-sm font-bold text-white outline-none transition focus:border-amber-300/45"
       />
     </div>
   );
@@ -450,12 +450,12 @@ function TextArea({
 }) {
   return (
     <div className={className}>
-      <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-600">{label}</label>
+      <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.14em] text-[color:var(--panel-faint,#5c6470)]">{label}</label>
       <textarea
         value={value || ''}
         onChange={(event) => onChange(event.target.value)}
         rows={4}
-        className="min-h-28 w-full resize-y rounded-lg border border-white/10 bg-black/30 px-3 py-3 text-sm font-bold leading-6 text-white outline-none transition focus:border-amber-300/45"
+        className="min-h-28 w-full resize-y rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/30 px-3 py-3 text-sm font-bold leading-6 text-white outline-none transition focus:border-amber-300/45"
       />
     </div>
   );

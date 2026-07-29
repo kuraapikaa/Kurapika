@@ -42,12 +42,12 @@ function NoteModal({
   const [note, setNote] = useState(currentNote);
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-      <div className="w-full max-w-md bg-[#0e1421] border border-white/10 rounded-xl overflow-hidden shadow-2xl">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
+      <div className="w-full max-w-md bg-[#0e1421] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl overflow-hidden shadow-2xl">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
           <h3 className="text-sm font-semibold text-white flex items-center gap-2">
             <StickyNote size={16} className="text-amber-400" /> Admin Notu
           </h3>
-          <button onClick={onClose} className="text-zinc-500 hover:text-white transition-colors">
+          <button onClick={onClose} className="text-[color:var(--panel-muted,#8a919c)] hover:text-white transition-colors">
             <X size={18} />
           </button>
         </div>
@@ -57,16 +57,16 @@ function NoteModal({
             onChange={e => setNote(e.target.value)}
             rows={4}
             placeholder="Bu talep için not ekleyin..."
-            className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-500/40 resize-none"
+            className="w-full bg-black/40 border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-500/40 resize-none"
           />
           <div className="flex gap-2 justify-end">
-            <button onClick={onClose} className="px-4 py-2 rounded-lg bg-white/5 text-zinc-400 hover:text-white text-sm font-bold transition-colors">
+            <button onClick={onClose} className="px-4 py-2 rounded-lg bg-white/5 text-[color:var(--panel-muted,#8a919c)] hover:text-white text-sm font-bold transition-colors">
               İptal
             </button>
             <button
               onClick={() => onSave(note)}
               disabled={isSaving}
-              className="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-black text-sm font-semibold flex items-center gap-2 transition-colors disabled:opacity-50"
+              className="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-[#050609] text-sm font-semibold flex items-center gap-2 transition-colors disabled:opacity-50"
             >
               {isSaving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
               Kaydet
@@ -231,27 +231,27 @@ export function AdminForms() {
       {/* Stats overview */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatCard label="Beni Ara · Bekliyor" value={callStats.pending} color="border-sky-500/20 bg-sky-500/5" />
-        <StatCard label="Beni Ara · Toplam" value={callStats.total} sub={`Bugün: ${callStats.today}`} color="border-white/5 bg-white/[0.02]" />
+        <StatCard label="Beni Ara · Toplam" value={callStats.total} sub={`Bugün: ${callStats.today}`} color="border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.02]" />
         <StatCard label="Ortaklık · Bekliyor" value={partnershipStats.pending} color="border-blue-500/20 bg-blue-500/5" />
-        <StatCard label="Ortaklık · Toplam" value={partnershipStats.total} sub={`Bugün: ${partnershipStats.today}`} color="border-white/5 bg-white/[0.02]" />
+        <StatCard label="Ortaklık · Toplam" value={partnershipStats.total} sub={`Bugün: ${partnershipStats.today}`} color="border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.02]" />
       </div>
 
       {/* Tab nav */}
       <div className="flex flex-wrap gap-2">
         <button
           onClick={() => { setActiveTab('call'); setStatusFilter('all'); setSearchTerm(''); }}
-          className={cn('px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-all', activeTab === 'call' ? 'bg-sky-500 text-black' : 'bg-white/5 text-zinc-400 hover:text-white')}
+          className={cn('px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-all', activeTab === 'call' ? 'bg-sky-500 text-[#050609]' : 'bg-white/5 text-[color:var(--panel-muted,#8a919c)] hover:text-white')}
         >
           <Phone size={15} /> Beni Ara
           {callStats.pending > 0 && (
-            <span className={cn('rounded-full text-xs font-semibold px-1.5 py-0.5 min-w-[20px] text-center', activeTab === 'call' ? 'bg-black/30 text-black' : 'bg-sky-500/20 text-sky-400')}>
+            <span className={cn('rounded-full text-xs font-semibold px-1.5 py-0.5 min-w-[20px] text-center', activeTab === 'call' ? 'bg-black/30 text-[#050609]' : 'bg-sky-500/20 text-sky-400')}>
               {callStats.pending}
             </span>
           )}
         </button>
         <button
           onClick={() => { setActiveTab('partnership'); setStatusFilter('all'); setSearchTerm(''); }}
-          className={cn('px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-all', activeTab === 'partnership' ? 'bg-blue-500 text-white' : 'bg-white/5 text-zinc-400 hover:text-white')}
+          className={cn('px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-all', activeTab === 'partnership' ? 'bg-blue-500 text-white' : 'bg-white/5 text-[color:var(--panel-muted,#8a919c)] hover:text-white')}
         >
           <Handshake size={15} /> Ortaklık
           {partnershipStats.pending > 0 && (
@@ -262,7 +262,7 @@ export function AdminForms() {
         </button>
         <button
           onClick={() => setActiveTab('settings')}
-          className={cn('px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-all', activeTab === 'settings' ? 'bg-zinc-100 text-black' : 'bg-white/5 text-zinc-400 hover:text-white')}
+          className={cn('px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-all', activeTab === 'settings' ? 'bg-[color:var(--panel-text,#f2f4f8)] text-[#050609]' : 'bg-white/5 text-[color:var(--panel-muted,#8a919c)] hover:text-white')}
         >
           <Settings size={15} /> Form Ayarları
         </button>
@@ -275,21 +275,21 @@ export function AdminForms() {
           <div className="flex flex-wrap gap-2 items-center justify-between">
             <div className="flex gap-2 flex-wrap">
               <div className="relative">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--panel-muted,#8a919c)]" />
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={e => setSearchTerm(e.target.value)}
                   placeholder="Ara..."
-                  className="bg-white/5 border border-white/10 rounded-lg pl-8 pr-4 py-2 text-sm text-white focus:outline-none focus:border-white/20 w-48"
+                  className="bg-white/5 border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-lg pl-8 pr-4 py-2 text-sm text-white focus:outline-none focus:border-[color:var(--panel-border,rgba(242,244,248,0.1))] w-48"
                 />
               </div>
-              <div className="flex gap-1 bg-white/5 border border-white/10 rounded-lg p-1">
+              <div className="flex gap-1 bg-white/5 border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-lg p-1">
                 {(['all', 'pending', 'completed'] as const).map(s => (
                   <button
                     key={s}
                     onClick={() => setStatusFilter(s)}
-                    className={cn('px-3 py-1 rounded-md text-xs font-bold transition-all', statusFilter === s ? 'bg-white/10 text-white' : 'text-zinc-500 hover:text-white')}
+                    className={cn('px-3 py-1 rounded-md text-xs font-bold transition-all', statusFilter === s ? 'bg-white/10 text-white' : 'text-[color:var(--panel-muted,#8a919c)] hover:text-white')}
                   >
                     {s === 'all' ? 'Tümü' : s === 'pending' ? 'Bekliyor' : 'Tamamlandı'}
                   </button>
@@ -320,17 +320,17 @@ export function AdminForms() {
                   ]);
                 }
               }}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-zinc-400 hover:text-white text-xs font-bold transition-colors"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-[color:var(--panel-border,rgba(242,244,248,0.1))] text-[color:var(--panel-muted,#8a919c)] hover:text-white text-xs font-bold transition-colors"
             >
               <Download size={14} /> CSV İndir
             </button>
           </div>
 
-          <div className="bg-[rgba(242,244,248,0.50)] border border-white/5 rounded-xl overflow-hidden">
+          <div className="bg-[rgba(242,244,248,0.50)] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl overflow-hidden">
             {activeTab === 'call' && (
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm text-zinc-400">
-                  <thead className="bg-black/20 text-xs uppercase font-semibold text-zinc-500">
+                <table className="w-full text-left text-sm text-[color:var(--panel-muted,#8a919c)]">
+                  <thead className="bg-black/20 text-xs uppercase font-semibold text-[color:var(--panel-muted,#8a919c)]">
                     <tr>
                       <th className="px-5 py-4">Tarih</th>
                       <th className="px-5 py-4">Kullanıcı</th>
@@ -344,18 +344,18 @@ export function AdminForms() {
                   <tbody className="divide-y divide-white/[0.04]">
                     {filteredCalls.map((r: any) => (
                       <tr key={r.id} className="hover:bg-white/[0.02] transition-colors">
-                        <td className="px-5 py-3.5 whitespace-nowrap text-xs text-zinc-500">
+                        <td className="px-5 py-3.5 whitespace-nowrap text-xs text-[color:var(--panel-muted,#8a919c)]">
                           {new Date(r.createdAt).toLocaleString('tr-TR')}
                         </td>
                         <td className="px-5 py-3.5 font-bold text-white">{r.username}</td>
                         <td className="px-5 py-3.5 text-sky-400 font-medium">{r.phone}</td>
-                        <td className="px-5 py-3.5 text-zinc-300 max-w-[160px] truncate" title={r.reason}>{r.reason}</td>
+                        <td className="px-5 py-3.5 text-[color:var(--panel-text-dim,#c8cdd5)] max-w-[160px] truncate" title={r.reason}>{r.reason}</td>
                         <td className="px-5 py-3.5">
                           <button
                             onClick={() => setNoteModal({ collection: 'call', id: r.id, note: r.note || '', status: r.status })}
                             className={cn(
                               'flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-colors',
-                              r.note ? 'bg-amber-500/15 text-amber-400 hover:bg-amber-500/25' : 'bg-white/5 text-zinc-600 hover:text-zinc-300 hover:bg-white/10'
+                              r.note ? 'bg-amber-500/15 text-amber-400 hover:bg-amber-500/25' : 'bg-white/5 text-[color:var(--panel-faint,#5c6470)] hover:text-[color:var(--panel-text-dim,#c8cdd5)] hover:bg-white/10'
                             )}
                             title={r.note || 'Not ekle'}
                           >
@@ -377,14 +377,14 @@ export function AdminForms() {
                               <button
                                 onClick={() => handleMarkCompleted('call', r.id)}
                                 disabled={updateMutation.isPending}
-                                className="bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-black px-3 py-1.5 rounded-lg text-xs font-bold transition-colors whitespace-nowrap"
+                                className="bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-[#050609] px-3 py-1.5 rounded-lg text-xs font-bold transition-colors whitespace-nowrap"
                               >
                                 İlgilenildi
                               </button>
                             )}
                             <button
                               onClick={() => setConfirmDelete({ collection: 'call', id: r.id })}
-                              className="p-1.5 rounded-lg text-zinc-600 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                              className="p-1.5 rounded-lg text-[color:var(--panel-faint,#5c6470)] hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
                               title="Sil"
                             >
                               <Trash2 size={14} />
@@ -395,7 +395,7 @@ export function AdminForms() {
                     ))}
                     {filteredCalls.length === 0 && (
                       <tr>
-                        <td colSpan={7} className="text-center py-12 text-zinc-600">
+                        <td colSpan={7} className="text-center py-12 text-[color:var(--panel-faint,#5c6470)]">
                           <FileText size={32} className="mx-auto mb-2 opacity-30" />
                           Kayıt bulunamadı
                         </td>
@@ -408,8 +408,8 @@ export function AdminForms() {
 
             {activeTab === 'partnership' && (
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm text-zinc-400">
-                  <thead className="bg-black/20 text-xs uppercase font-semibold text-zinc-500">
+                <table className="w-full text-left text-sm text-[color:var(--panel-muted,#8a919c)]">
+                  <thead className="bg-black/20 text-xs uppercase font-semibold text-[color:var(--panel-muted,#8a919c)]">
                     <tr>
                       <th className="px-5 py-4">Tarih</th>
                       <th className="px-5 py-4">Tür & İletişim</th>
@@ -423,7 +423,7 @@ export function AdminForms() {
                   <tbody className="divide-y divide-white/[0.04]">
                     {filteredPartnerships.map((r: any) => (
                       <tr key={r.id} className="hover:bg-white/[0.02] transition-colors">
-                        <td className="px-5 py-3.5 whitespace-nowrap text-xs text-zinc-500">
+                        <td className="px-5 py-3.5 whitespace-nowrap text-xs text-[color:var(--panel-muted,#8a919c)]">
                           {new Date(r.createdAt).toLocaleString('tr-TR')}
                         </td>
                         <td className="px-5 py-3.5">
@@ -432,15 +432,15 @@ export function AdminForms() {
                         </td>
                         <td className="px-5 py-3.5">
                           <a href={r.channelUrl} target="_blank" rel="noreferrer" className="text-sky-400 hover:underline text-xs max-w-[140px] truncate block">{r.channelUrl}</a>
-                          {r.audienceSize && <div className="text-xs text-zinc-500 mt-0.5">Kitle: {r.audienceSize}</div>}
+                          {r.audienceSize && <div className="text-xs text-[color:var(--panel-muted,#8a919c)] mt-0.5">Kitle: {r.audienceSize}</div>}
                         </td>
-                        <td className="px-5 py-3.5 max-w-[140px] truncate text-xs" title={r.message}>{r.message || <span className="text-zinc-600">—</span>}</td>
+                        <td className="px-5 py-3.5 max-w-[140px] truncate text-xs" title={r.message}>{r.message || <span className="text-[color:var(--panel-faint,#5c6470)]">—</span>}</td>
                         <td className="px-5 py-3.5">
                           <button
                             onClick={() => setNoteModal({ collection: 'partnership', id: r.id, note: r.note || '', status: r.status })}
                             className={cn(
                               'flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-colors',
-                              r.note ? 'bg-amber-500/15 text-amber-400 hover:bg-amber-500/25' : 'bg-white/5 text-zinc-600 hover:text-zinc-300 hover:bg-white/10'
+                              r.note ? 'bg-amber-500/15 text-amber-400 hover:bg-amber-500/25' : 'bg-white/5 text-[color:var(--panel-faint,#5c6470)] hover:text-[color:var(--panel-text-dim,#c8cdd5)] hover:bg-white/10'
                             )}
                             title={r.note || 'Not ekle'}
                           >
@@ -462,14 +462,14 @@ export function AdminForms() {
                               <button
                                 onClick={() => handleMarkCompleted('partnership', r.id)}
                                 disabled={updateMutation.isPending}
-                                className="bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-black px-3 py-1.5 rounded-lg text-xs font-bold transition-colors whitespace-nowrap"
+                                className="bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-[#050609] px-3 py-1.5 rounded-lg text-xs font-bold transition-colors whitespace-nowrap"
                               >
                                 Dönüş Yapıldı
                               </button>
                             )}
                             <button
                               onClick={() => setConfirmDelete({ collection: 'partnership', id: r.id })}
-                              className="p-1.5 rounded-lg text-zinc-600 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                              className="p-1.5 rounded-lg text-[color:var(--panel-faint,#5c6470)] hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
                               title="Sil"
                             >
                               <Trash2 size={14} />
@@ -480,7 +480,7 @@ export function AdminForms() {
                     ))}
                     {filteredPartnerships.length === 0 && (
                       <tr>
-                        <td colSpan={7} className="text-center py-12 text-zinc-600">
+                        <td colSpan={7} className="text-center py-12 text-[color:var(--panel-faint,#5c6470)]">
                           <FileText size={32} className="mx-auto mb-2 opacity-30" />
                           Kayıt bulunamadı
                         </td>
@@ -496,11 +496,11 @@ export function AdminForms() {
 
       {/* Settings tab */}
       {activeTab === 'settings' && (
-        <div className="bg-[rgba(242,244,248,0.50)] border border-white/5 rounded-xl p-6 space-y-8">
+        <div className="bg-[rgba(242,244,248,0.50)] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl p-6 space-y-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Beni Ara settings */}
             <div className="space-y-5">
-              <div className="flex items-center justify-between pb-3 border-b border-white/[0.06]">
+              <div className="flex items-center justify-between pb-3 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
                 <h3 className="text-base font-semibold text-white flex items-center gap-2">
                   <Phone size={17} className="text-sky-400" /> Beni Ara Formu
                 </h3>
@@ -517,56 +517,56 @@ export function AdminForms() {
                       callActive ? 'translate-x-5' : 'translate-x-0'
                     )} />
                   </div>
-                  <span className="text-sm font-bold text-zinc-400">{callActive ? 'Aktif' : 'Pasif'}</span>
+                  <span className="text-sm font-bold text-[color:var(--panel-muted,#8a919c)]">{callActive ? 'Aktif' : 'Pasif'}</span>
                 </label>
               </div>
 
               <div className="space-y-3">
-                <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                <p className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest flex items-center gap-2">
                   <Type size={11} /> Form İçeriği
                 </p>
                 <div>
-                  <label className="text-xs text-zinc-500 mb-1 block">Başlık</label>
+                  <label className="text-xs text-[color:var(--panel-muted,#8a919c)] mb-1 block">Başlık</label>
                   <input
                     type="text"
                     value={callTitle}
                     onChange={e => setCallTitle(e.target.value)}
-                    className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500/40"
+                    className="w-full bg-black/50 border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500/40"
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-zinc-500 mb-1 block">Açıklama</label>
+                  <label className="text-xs text-[color:var(--panel-muted,#8a919c)] mb-1 block">Açıklama</label>
                   <textarea
                     value={callDescription}
                     onChange={e => setCallDescription(e.target.value)}
                     rows={2}
-                    className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500/40 resize-none"
+                    className="w-full bg-black/50 border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500/40 resize-none"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs text-zinc-500 mb-1 block">Buton Yazısı</label>
+                    <label className="text-xs text-[color:var(--panel-muted,#8a919c)] mb-1 block">Buton Yazısı</label>
                     <input
                       type="text"
                       value={callButtonText}
                       onChange={e => setCallButtonText(e.target.value)}
-                      className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500/40"
+                      className="w-full bg-black/50 border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500/40"
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-zinc-500 mb-1 block">Başarı Mesajı</label>
+                    <label className="text-xs text-[color:var(--panel-muted,#8a919c)] mb-1 block">Başarı Mesajı</label>
                     <input
                       type="text"
                       value={callSuccessMessage}
                       onChange={e => setCallSuccessMessage(e.target.value)}
-                      className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500/40"
+                      className="w-full bg-black/50 border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500/40"
                     />
                   </div>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest block">
+                <label className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest block">
                   Aranma Sebepleri Seçenekleri
                 </label>
                 {callReasons.map((reason, idx) => (
@@ -579,7 +579,7 @@ export function AdminForms() {
                         a[idx] = e.target.value;
                         setCallReasons(a);
                       }}
-                      className="flex-1 bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500/40"
+                      className="flex-1 bg-black/50 border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500/40"
                     />
                     <button
                       onClick={() => setCallReasons(callReasons.filter((_, i) => i !== idx))}
@@ -591,7 +591,7 @@ export function AdminForms() {
                 ))}
                 <button
                   onClick={() => setCallReasons([...callReasons, ''])}
-                  className="w-full py-2 border border-dashed border-white/10 text-zinc-400 hover:text-white hover:border-white/30 rounded-lg flex items-center justify-center gap-2 text-sm font-bold transition-all"
+                  className="w-full py-2 border border-dashed border-[color:var(--panel-border,rgba(242,244,248,0.1))] text-[color:var(--panel-muted,#8a919c)] hover:text-white hover:border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-lg flex items-center justify-center gap-2 text-sm font-bold transition-all"
                 >
                   <Plus size={15} /> Seçenek Ekle
                 </button>
@@ -600,7 +600,7 @@ export function AdminForms() {
 
             {/* Ortaklık settings */}
             <div className="space-y-5">
-              <div className="flex items-center justify-between pb-3 border-b border-white/[0.06]">
+              <div className="flex items-center justify-between pb-3 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
                 <h3 className="text-base font-semibold text-white flex items-center gap-2">
                   <Handshake size={17} className="text-blue-400" /> Ortaklık Formu
                 </h3>
@@ -617,56 +617,56 @@ export function AdminForms() {
                       partnershipActive ? 'translate-x-5' : 'translate-x-0'
                     )} />
                   </div>
-                  <span className="text-sm font-bold text-zinc-400">{partnershipActive ? 'Aktif' : 'Pasif'}</span>
+                  <span className="text-sm font-bold text-[color:var(--panel-muted,#8a919c)]">{partnershipActive ? 'Aktif' : 'Pasif'}</span>
                 </label>
               </div>
 
               <div className="space-y-3">
-                <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                <p className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest flex items-center gap-2">
                   <Type size={11} /> Form İçeriği
                 </p>
                 <div>
-                  <label className="text-xs text-zinc-500 mb-1 block">Başlık</label>
+                  <label className="text-xs text-[color:var(--panel-muted,#8a919c)] mb-1 block">Başlık</label>
                   <input
                     type="text"
                     value={partnershipTitle}
                     onChange={e => setPartnershipTitle(e.target.value)}
-                    className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500/40"
+                    className="w-full bg-black/50 border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500/40"
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-zinc-500 mb-1 block">Açıklama</label>
+                  <label className="text-xs text-[color:var(--panel-muted,#8a919c)] mb-1 block">Açıklama</label>
                   <textarea
                     value={partnershipDescription}
                     onChange={e => setPartnershipDescription(e.target.value)}
                     rows={2}
-                    className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500/40 resize-none"
+                    className="w-full bg-black/50 border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500/40 resize-none"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs text-zinc-500 mb-1 block">Buton Yazısı</label>
+                    <label className="text-xs text-[color:var(--panel-muted,#8a919c)] mb-1 block">Buton Yazısı</label>
                     <input
                       type="text"
                       value={partnershipButtonText}
                       onChange={e => setPartnershipButtonText(e.target.value)}
-                      className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500/40"
+                      className="w-full bg-black/50 border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500/40"
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-zinc-500 mb-1 block">Başarı Mesajı</label>
+                    <label className="text-xs text-[color:var(--panel-muted,#8a919c)] mb-1 block">Başarı Mesajı</label>
                     <input
                       type="text"
                       value={partnershipSuccessMessage}
                       onChange={e => setPartnershipSuccessMessage(e.target.value)}
-                      className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500/40"
+                      className="w-full bg-black/50 border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500/40"
                     />
                   </div>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest block">
+                <label className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest block">
                   Başvuru Türleri
                 </label>
                 {partnershipTypes.map((type, idx) => (
@@ -679,7 +679,7 @@ export function AdminForms() {
                         a[idx] = e.target.value;
                         setPartnershipTypes(a);
                       }}
-                      className="flex-1 bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500/40"
+                      className="flex-1 bg-black/50 border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500/40"
                     />
                     <button
                       onClick={() => setPartnershipTypes(partnershipTypes.filter((_, i) => i !== idx))}
@@ -691,7 +691,7 @@ export function AdminForms() {
                 ))}
                 <button
                   onClick={() => setPartnershipTypes([...partnershipTypes, ''])}
-                  className="w-full py-2 border border-dashed border-white/10 text-zinc-400 hover:text-white hover:border-white/30 rounded-lg flex items-center justify-center gap-2 text-sm font-bold transition-all"
+                  className="w-full py-2 border border-dashed border-[color:var(--panel-border,rgba(242,244,248,0.1))] text-[color:var(--panel-muted,#8a919c)] hover:text-white hover:border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-lg flex items-center justify-center gap-2 text-sm font-bold transition-all"
                 >
                   <Plus size={15} /> Tür Ekle
                 </button>
@@ -699,11 +699,11 @@ export function AdminForms() {
             </div>
           </div>
 
-          <div className="pt-5 border-t border-white/[0.06] flex justify-end">
+          <div className="pt-5 border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))] flex justify-end">
             <button
               onClick={handleSaveSettings}
               disabled={updateSettingsMutation.isPending}
-              className="bg-emerald-500 hover:bg-emerald-400 text-black px-6 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all disabled:opacity-50"
+              className="bg-emerald-500 hover:bg-emerald-400 text-[#050609] px-6 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all disabled:opacity-50"
             >
               {updateSettingsMutation.isPending ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
               Ayarları Kaydet
@@ -725,7 +725,7 @@ export function AdminForms() {
       {/* Delete confirm */}
       {confirmDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="w-full max-w-sm bg-[#0e1421] border border-white/10 rounded-xl overflow-hidden shadow-2xl">
+          <div className="w-full max-w-sm bg-[#0e1421] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl overflow-hidden shadow-2xl">
             <div className="p-6 space-y-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-rose-500/10 flex items-center justify-center">
@@ -733,13 +733,13 @@ export function AdminForms() {
                 </div>
                 <div>
                   <h3 className="text-sm font-semibold text-white">Kaydı Sil</h3>
-                  <p className="text-xs text-zinc-500 mt-0.5">Bu işlem geri alınamaz.</p>
+                  <p className="text-xs text-[color:var(--panel-muted,#8a919c)] mt-0.5">Bu işlem geri alınamaz.</p>
                 </div>
               </div>
               <div className="flex gap-2">
                 <button
                   onClick={() => setConfirmDelete(null)}
-                  className="flex-1 py-2 rounded-lg bg-white/5 text-zinc-400 hover:text-white text-sm font-bold transition-colors"
+                  className="flex-1 py-2 rounded-lg bg-white/5 text-[color:var(--panel-muted,#8a919c)] hover:text-white text-sm font-bold transition-colors"
                 >
                   İptal
                 </button>

@@ -148,7 +148,7 @@ export function EngagementManager({
             onActiveChange={(isActive) => updateDaily({ isActive })}
           />
 
-          <div className="rounded-xl border border-white/10 bg-[#080d13] p-4">
+          <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-4">
             <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_1.4fr_140px]">
               <TextField label="Başlık" value={daily.title} onChange={(title) => updateDaily({ title })} />
               <TextField label="Açıklama" value={daily.description} onChange={(description) => updateDaily({ description })} />
@@ -156,26 +156,26 @@ export function EngagementManager({
             </div>
           </div>
 
-          <div className="rounded-xl border border-white/10 bg-[#080d13]">
-            <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-4">
+          <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))]">
+            <div className="flex items-center justify-between gap-3 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] px-4 py-4">
               <div>
                 <h3 className="text-sm font-semibold text-white">Görevler</h3>
-                <p className="mt-1 text-xs font-medium text-slate-500">Metrik, hedef ve ödül eşleşmelerini düzenleyin.</p>
+                <p className="mt-1 text-xs font-medium text-[color:var(--panel-muted,#8a919c)]">Metrik, hedef ve ödül eşleşmelerini düzenleyin.</p>
               </div>
-              <button type="button" onClick={addTask} className="inline-flex h-10 items-center gap-2 rounded-lg bg-cyan-300 px-4 text-xs font-semibold uppercase tracking-widest text-zinc-950">
+              <button type="button" onClick={addTask} className="inline-flex h-10 items-center gap-2 rounded-lg bg-[color:var(--panel-info,#64d2ff)] px-4 text-xs font-semibold uppercase tracking-widest text-[#050609]">
                 <Plus size={15} />
                 Görev Ekle
               </button>
             </div>
             <div className="space-y-3 p-4">
               {daily.tasks.map((task: any) => (
-                <div key={task.id} className="rounded-xl border border-white/[0.08] bg-black/20 p-4">
+                <div key={task.id} className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20 p-4">
                   <div className="mb-4 flex items-center justify-between gap-3">
-                    <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-slate-400">
+                    <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">
                       <input type="checkbox" checked={task.active !== false} onChange={(event) => updateTask(task.id, { active: event.target.checked })} />
                       Aktif
                     </label>
-                    <button type="button" onClick={() => updateDaily({ tasks: daily.tasks.filter((item: any) => item.id !== task.id) })} className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-600 hover:bg-rose-500/10 hover:text-rose-400" aria-label="Görevi sil">
+                    <button type="button" onClick={() => updateDaily({ tasks: daily.tasks.filter((item: any) => item.id !== task.id) })} className="flex h-9 w-9 items-center justify-center rounded-lg text-[color:var(--panel-faint,#5c6470)] hover:bg-rose-500/10 hover:text-rose-400" aria-label="Görevi sil">
                       <Trash2 size={15} />
                     </button>
                   </div>
@@ -204,14 +204,14 @@ export function EngagementManager({
             onActiveChange={(isActive) => updatePass({ isActive })}
           />
 
-          <div className="rounded-xl border border-white/10 bg-[#080d13] p-4">
+          <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-4">
             <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 xl:grid-cols-4">
               <TextField label="Sezon ID" value={pass.seasonId} onChange={(seasonId) => updatePass({ seasonId })} />
               <TextField label="Başlık" value={pass.title} onChange={(title) => updatePass({ title })} />
               <DateField label="Başlangıç" value={pass.startsAt} onChange={(startsAt) => updatePass({ startsAt })} />
               <DateField label="Bitiş" value={pass.endsAt} onChange={(endsAt) => updatePass({ endsAt })} />
               <TextField className="xl:col-span-3" label="Açıklama" value={pass.description} onChange={(description) => updatePass({ description })} />
-              <label className="flex h-[66px] items-center gap-3 rounded-lg border border-white/10 bg-black/25 px-3 text-xs font-semibold uppercase tracking-widest text-slate-400">
+              <label className="flex h-[66px] items-center gap-3 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/25 px-3 text-xs font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">
                 <input type="checkbox" checked={pass.premiumEnabled === true} onChange={(event) => updatePass({ premiumEnabled: event.target.checked })} />
                 Premium hat
               </label>
@@ -225,13 +225,13 @@ export function EngagementManager({
             icon={BadgeCheck}
           >
             {pass.xpRules.map((rule: any) => (
-              <div key={rule.id} className="rounded-xl border border-white/[0.08] bg-black/20 p-4">
+              <div key={rule.id} className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20 p-4">
                 <div className="mb-4 flex items-center justify-between gap-3">
-                  <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-slate-400">
+                  <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">
                     <input type="checkbox" checked={rule.active !== false} onChange={(event) => updateRule(rule.id, { active: event.target.checked })} />
                     Aktif
                   </label>
-                  <button type="button" onClick={() => updatePass({ xpRules: pass.xpRules.filter((item: any) => item.id !== rule.id) })} className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-600 hover:bg-rose-500/10 hover:text-rose-400" aria-label="Kuralı sil">
+                  <button type="button" onClick={() => updatePass({ xpRules: pass.xpRules.filter((item: any) => item.id !== rule.id) })} className="flex h-9 w-9 items-center justify-center rounded-lg text-[color:var(--panel-faint,#5c6470)] hover:bg-rose-500/10 hover:text-rose-400" aria-label="Kuralı sil">
                     <Trash2 size={15} />
                   </button>
                 </div>
@@ -253,16 +253,16 @@ export function EngagementManager({
             icon={Gift}
           >
             {pass.levels.map((level: any) => (
-              <div key={level.level} className="rounded-xl border border-white/[0.08] bg-black/20 p-4">
+              <div key={level.level} className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20 p-4">
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-300 text-sm font-semibold text-zinc-950">{level.level}</div>
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[color:var(--panel-info,#64d2ff)] text-sm font-semibold text-[#050609]">{level.level}</div>
                     <div>
                       <div className="text-sm font-semibold text-white">Seviye {level.level}</div>
-                      <div className="text-xs font-bold text-slate-600">{level.requiredXp || 0} XP</div>
+                      <div className="text-xs font-bold text-[color:var(--panel-faint,#5c6470)]">{level.requiredXp || 0} XP</div>
                     </div>
                   </div>
-                  <button type="button" onClick={() => updatePass({ levels: pass.levels.filter((item: any) => item.level !== level.level) })} className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-600 hover:bg-rose-500/10 hover:text-rose-400" aria-label="Seviyeyi sil">
+                  <button type="button" onClick={() => updatePass({ levels: pass.levels.filter((item: any) => item.level !== level.level) })} className="flex h-9 w-9 items-center justify-center rounded-lg text-[color:var(--panel-faint,#5c6470)] hover:bg-rose-500/10 hover:text-rose-400" aria-label="Seviyeyi sil">
                     <Trash2 size={15} />
                   </button>
                 </div>
@@ -287,8 +287,8 @@ export function EngagementManager({
 function CampaignSelect({ label, value, options, onChange }: { label: string; value: string; options: any[]; onChange: (value: string) => void }) {
   return (
     <div className="min-w-0">
-      <label className="mb-2 block text-[10px] font-semibold uppercase tracking-widest text-slate-500">{label}</label>
-      <select value={value} onChange={(event) => onChange(event.target.value)} className="h-11 w-full rounded-lg border border-white/10 bg-black/25 px-3 text-sm font-bold text-white outline-none focus:border-[#5eead4]/50">
+      <label className="mb-2 block text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">{label}</label>
+      <select value={value} onChange={(event) => onChange(event.target.value)} className="h-11 w-full rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/25 px-3 text-sm font-bold text-white outline-none focus:border-[color:var(--panel-info,#64d2ff)]/50">
         <option value="">Canlı Lynon kampanyası seçin</option>
         {options.filter((option: any) => !option.isSpecial).map((option: any) => <option key={option.id} value={option.id}>{option.display}</option>)}
       </select>
@@ -297,18 +297,18 @@ function CampaignSelect({ label, value, options, onChange }: { label: string; va
 }
 function HeaderCard({ icon: Icon, title, desc, active, onActiveChange }: { icon: any; title: string; desc: string; active: boolean; onActiveChange: (value: boolean) => void }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-[#080d13] p-4">
+    <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-cyan-300/10 text-cyan-300">
+          <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-[color:var(--panel-info,#64d2ff)]/10 text-cyan-300">
             <Icon size={20} />
           </span>
           <div>
             <h2 className="text-lg font-semibold text-white">{title}</h2>
-            <p className="mt-1 text-xs font-medium text-slate-500">{desc}</p>
+            <p className="mt-1 text-xs font-medium text-[color:var(--panel-muted,#8a919c)]">{desc}</p>
           </div>
         </div>
-        <label className={cn('inline-flex h-10 items-center gap-2 rounded-lg border px-3 text-xs font-semibold uppercase tracking-widest', active ? 'border-emerald-300/20 bg-emerald-300/10 text-emerald-300' : 'border-white/10 bg-white/[0.03] text-slate-500')}>
+        <label className={cn('inline-flex h-10 items-center gap-2 rounded-lg border px-3 text-xs font-semibold uppercase tracking-widest', active ? 'border-emerald-300/20 bg-emerald-300/10 text-emerald-300' : 'border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.03] text-[color:var(--panel-muted,#8a919c)]')}>
           <input type="checkbox" checked={active} onChange={(event) => onActiveChange(event.target.checked)} />
           {active ? 'Aktif' : 'Pasif'}
         </label>
@@ -319,13 +319,13 @@ function HeaderCard({ icon: Icon, title, desc, active, onActiveChange }: { icon:
 
 function ConfigList({ title, action, icon: Icon, onAdd, children }: { title: string; action: string; icon: any; onAdd: () => void; children: ReactNode }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-[#080d13]">
-      <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-4">
+    <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))]">
+      <div className="flex items-center justify-between gap-3 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] px-4 py-4">
         <div className="flex items-center gap-3">
           <Icon size={18} className="text-cyan-300" />
           <h3 className="text-sm font-semibold text-white">{title}</h3>
         </div>
-        <button type="button" onClick={onAdd} className="inline-flex h-10 items-center gap-2 rounded-lg bg-cyan-300 px-4 text-xs font-semibold uppercase tracking-widest text-zinc-950">
+        <button type="button" onClick={onAdd} className="inline-flex h-10 items-center gap-2 rounded-lg bg-[color:var(--panel-info,#64d2ff)] px-4 text-xs font-semibold uppercase tracking-widest text-[#050609]">
           <Plus size={15} />
           {action}
         </button>
@@ -342,13 +342,13 @@ function fieldClass(extra?: string) {
 function TextField({ label, value, onChange, className, list }: { label: string; value: string; onChange: (value: string) => void; className?: string; list?: string }) {
   return (
     <label className={fieldClass(className)}>
-      <span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-widest text-slate-500">{label}</span>
+      <span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">{label}</span>
       <input
         type="text"
         list={list}
         value={value ?? ''}
         onChange={(event) => onChange(event.target.value)}
-        className="h-10 w-full rounded-lg border border-white/10 bg-[#060a10] px-3 text-sm font-bold text-white outline-none transition focus:border-cyan-300/50"
+        className="h-10 w-full rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] px-3 text-sm font-bold text-white outline-none transition focus:border-cyan-300/50"
       />
     </label>
   );
@@ -357,12 +357,12 @@ function TextField({ label, value, onChange, className, list }: { label: string;
 function NumberField({ label, value, onChange }: { label: string; value: number; onChange: (value: number) => void }) {
   return (
     <label className="min-w-0">
-      <span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-widest text-slate-500">{label}</span>
+      <span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">{label}</span>
       <input
         type="number"
         value={value ?? 0}
         onChange={(event) => onChange(Number(event.target.value))}
-        className="h-10 w-full rounded-lg border border-white/10 bg-[#060a10] px-3 text-sm font-semibold text-white outline-none transition focus:border-cyan-300/50"
+        className="h-10 w-full rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] px-3 text-sm font-semibold text-white outline-none transition focus:border-cyan-300/50"
       />
     </label>
   );
@@ -371,12 +371,12 @@ function NumberField({ label, value, onChange }: { label: string; value: number;
 function DateField({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
   return (
     <label className="min-w-0">
-      <span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-widest text-slate-500">{label}</span>
+      <span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">{label}</span>
       <input
         type="datetime-local"
         value={toDateTimeLocal(value)}
         onChange={(event) => onChange(fromDateTimeLocal(event.target.value))}
-        className="h-10 w-full rounded-lg border border-white/10 bg-[#060a10] px-3 text-sm font-semibold text-white outline-none transition focus:border-cyan-300/50"
+        className="h-10 w-full rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] px-3 text-sm font-semibold text-white outline-none transition focus:border-cyan-300/50"
       />
     </label>
   );
@@ -385,11 +385,11 @@ function DateField({ label, value, onChange }: { label: string; value: string; o
 function SelectField({ label, value, options, onChange }: { label: string; value: string; options: Array<{ id: string; label: string }>; onChange: (value: string) => void }) {
   return (
     <label className="min-w-0">
-      <span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-widest text-slate-500">{label}</span>
+      <span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">{label}</span>
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="h-10 w-full rounded-lg border border-white/10 bg-[#060a10] px-3 text-sm font-semibold text-white outline-none transition focus:border-cyan-300/50"
+        className="h-10 w-full rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] px-3 text-sm font-semibold text-white outline-none transition focus:border-cyan-300/50"
       >
         {options.map((option) => (
           <option key={option.id} value={option.id}>{option.label}</option>

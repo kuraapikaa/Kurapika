@@ -64,7 +64,7 @@ function StatusBadge({ stateName }: { stateName?: string | null }) {
 
 const STAT_TONE = {
   success: 'border-emerald-400/20 bg-emerald-400/[0.08] text-emerald-300',
-  warning: 'border-amber-300/20 bg-amber-300/[0.08] text-amber-200',
+  warning: 'border-amber-300/20 bg-[color:var(--panel-warning,#ff9f0a)]/[0.08] text-amber-200',
   danger: 'border-rose-400/20 bg-rose-400/[0.08] text-rose-300',
   neutral: 'border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.04] text-[color:var(--panel-text-dim,#c8cdd5)]',
 } as const;

@@ -11,17 +11,17 @@ function isBonusActive(row: BonusListItem): boolean {
 
 function BonusTable({ rows, emptyMessage, status }: { rows: BonusListItem[]; emptyMessage: string; status: 'active' | 'inactive' }) {
   return (
-    <Card className="premium-card overflow-hidden p-0 bg-[rgba(242,244,248,0.20)] border-white/[0.05]">
+    <Card className="premium-card overflow-hidden p-0 bg-[rgba(242,244,248,0.20)] border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
       <div className="overflow-auto scrollbar-hide">
         <table className="w-full text-sm border-separate border-spacing-0">
           <thead>
-            <tr className="bg-black/40 backdrop-blur-3xl border-b border-white/5">
-              <th className="px-3 py-2.5 font-semibold text-[10px] uppercase tracking-[0.2em] text-zinc-500 text-left whitespace-nowrap border-b border-white/[0.04] pl-4">ID / EXT ID / Partner</th>
-              <th className="px-3 py-2.5 font-semibold text-[10px] uppercase tracking-[0.2em] text-zinc-500 text-left whitespace-nowrap border-b border-white/[0.04]">Bonus Adı</th>
-              <th className="px-3 py-2.5 font-semibold text-[10px] uppercase tracking-[0.2em] text-zinc-500 text-left whitespace-nowrap border-b border-white/[0.04]">Tür</th>
-              <th className="px-3 py-2.5 font-semibold text-[10px] uppercase tracking-[0.2em] text-zinc-500 text-left whitespace-nowrap border-b border-white/[0.04]">Zaman Çizelgesi</th>
-              <th className="px-3 py-2.5 font-semibold text-[10px] uppercase tracking-[0.2em] text-zinc-500 text-left whitespace-nowrap border-b border-white/[0.04]">Parametreler</th>
-              <th className="px-3 py-2.5 font-semibold text-[10px] uppercase tracking-[0.2em] text-zinc-500 text-right whitespace-nowrap border-b border-white/[0.04] pr-4">Durum</th>
+            <tr className="bg-black/40 backdrop-blur-3xl border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
+              <th className="px-3 py-2.5 font-semibold text-[10px] uppercase tracking-[0.2em] text-[color:var(--panel-muted,#8a919c)] text-left whitespace-nowrap border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] pl-4">ID / EXT ID / Partner</th>
+              <th className="px-3 py-2.5 font-semibold text-[10px] uppercase tracking-[0.2em] text-[color:var(--panel-muted,#8a919c)] text-left whitespace-nowrap border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">Bonus Adı</th>
+              <th className="px-3 py-2.5 font-semibold text-[10px] uppercase tracking-[0.2em] text-[color:var(--panel-muted,#8a919c)] text-left whitespace-nowrap border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">Tür</th>
+              <th className="px-3 py-2.5 font-semibold text-[10px] uppercase tracking-[0.2em] text-[color:var(--panel-muted,#8a919c)] text-left whitespace-nowrap border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">Zaman Çizelgesi</th>
+              <th className="px-3 py-2.5 font-semibold text-[10px] uppercase tracking-[0.2em] text-[color:var(--panel-muted,#8a919c)] text-left whitespace-nowrap border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">Parametreler</th>
+              <th className="px-3 py-2.5 font-semibold text-[10px] uppercase tracking-[0.2em] text-[color:var(--panel-muted,#8a919c)] text-right whitespace-nowrap border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] pr-4">Durum</th>
             </tr>
           </thead>
           <tbody className="relative z-10">
@@ -29,10 +29,10 @@ function BonusTable({ rows, emptyMessage, status }: { rows: BonusListItem[]; emp
               <tr>
                 <td colSpan={6} className="p-24 text-center">
                   <div className="relative inline-block">
-                    <div className="absolute inset-0 bg-zinc-500 rounded-full blur-[40px] opacity-10" />
-                    <Gift size={48} className="relative mx-auto mb-6 text-zinc-800" />
+                    <div className="absolute inset-0 bg-[color:var(--panel-muted,#8a919c)] rounded-full blur-[40px] opacity-10" />
+                    <Gift size={48} className="relative mx-auto mb-6 text-[color:var(--panel-faint,#5c6470)]" />
                   </div>
-                  <p className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest">{emptyMessage}</p>
+                  <p className="text-[11px] font-bold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">{emptyMessage}</p>
                 </td>
               </tr>
             ) : (
@@ -45,62 +45,62 @@ function BonusTable({ rows, emptyMessage, status }: { rows: BonusListItem[]; emp
                     transition={{ delay: Math.min(idx * 0.03, 0.4) }}
                     className="group transition-all duration-300 hover:bg-white/[0.02]"
                   >
-                    <td className="px-3 py-2.5 pl-4 border-b border-white/[0.02]">
+                    <td className="px-3 py-2.5 pl-4 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
                       <div className="flex flex-col">
-                        <span className="text-[10px] font-semibold text-zinc-600 tracking-wider">#{row.Id}</span>
+                        <span className="text-[10px] font-semibold text-[color:var(--panel-faint,#5c6470)] tracking-wider">#{row.Id}</span>
                         <span className="text-[10px] font-bold text-emerald-500/80 uppercase tracking-tighter">EXT: #{row.ExternalId}</span>
                         <span className="text-[10px] font-bold text-blue-400/60 uppercase tracking-tighter truncate max-w-[120px]">{row.Partner?.Name ?? 'Global'}</span>
                       </div>
                     </td>
-                    <td className="px-3 py-2.5 border-b border-white/[0.02]">
+                    <td className="px-3 py-2.5 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
                       <div className="flex flex-col gap-0.5">
                         <span className="font-semibold text-white uppercase tracking-tight antialiased group-hover:text-blue-300 transition-colors">{row.Name}</span>
                         {row.Description && (
-                          <span className="text-[10px] font-medium text-zinc-500 line-clamp-1 max-w-[240px]" title={row.Description}>
+                          <span className="text-[10px] font-medium text-[color:var(--panel-muted,#8a919c)] line-clamp-1 max-w-[240px]" title={row.Description}>
                             {row.Description}
                           </span>
                         )}
                       </div>
                     </td>
-                    <td className="px-3 py-2.5 border-b border-white/[0.02]">
-                      <span className="inline-flex rounded-lg bg-white/5 border border-white/5 px-2.5 py-1 text-[10px] font-semibold text-zinc-400 group-hover:bg-white/10 transition-all uppercase tracking-widest">
+                    <td className="px-3 py-2.5 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
+                      <span className="inline-flex rounded-lg bg-white/5 border border-[color:var(--panel-border,rgba(242,244,248,0.1))] px-2.5 py-1 text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] group-hover:bg-white/10 transition-all uppercase tracking-widest">
                         {row.Type?.Name ?? 'Genel'}
                       </span>
                     </td>
-                    <td className="px-3 py-2.5 border-b border-white/[0.02]">
+                    <td className="px-3 py-2.5 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
                       <div className="flex flex-col gap-1.5">
                         <div className="flex items-center gap-2">
                           <div className="p-1 rounded-md bg-white/5">
-                            <Calendar size={10} className="text-zinc-500" />
+                            <Calendar size={10} className="text-[color:var(--panel-muted,#8a919c)]" />
                           </div>
-                          <span className="text-[10px] font-bold text-zinc-400 tabular-nums uppercase">{formatDateDisplay(row.BeginDate)} – {formatDateDisplay(row.EndDate)}</span>
+                          <span className="text-[10px] font-bold text-[color:var(--panel-muted,#8a919c)] tabular-nums uppercase">{formatDateDisplay(row.BeginDate)} – {formatDateDisplay(row.EndDate)}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <div className="p-1 rounded-md bg-white/5">
-                            <Clock size={10} className="text-zinc-500" />
+                            <Clock size={10} className="text-[color:var(--panel-muted,#8a919c)]" />
                           </div>
-                          <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-tighter">Süre: {formatNumber(row.ExpirationDays)} gün</span>
+                          <span className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-tighter">Süre: {formatNumber(row.ExpirationDays)} gün</span>
                         </div>
                       </div>
                     </td>
-                    <td className="px-3 py-2.5 border-b border-white/[0.02]">
+                    <td className="px-3 py-2.5 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
                       <div className="text-[10px]">
                         {row.FreeSpinDefinition ? (
                           <div className="flex items-center gap-3">
                             <span className="rounded-lg bg-blue-500/10 border border-blue-500/20 px-2 py-1 text-blue-400 font-semibold uppercase tracking-widest neon-glow-indigo">FreeSpin</span>
-                            <span className="font-semibold text-zinc-300 tabular-nums">{row.FreeSpinDefinition.FreeSpinsMinCount} &mdash; {row.FreeSpinDefinition.FreeSpinsMaxCount}</span>
+                            <span className="font-semibold text-[color:var(--panel-text-dim,#c8cdd5)] tabular-nums">{row.FreeSpinDefinition.FreeSpinsMinCount} &mdash; {row.FreeSpinDefinition.FreeSpinsMaxCount}</span>
                           </div>
                         ) : row.DepositDefinition ? (
                           <div className="flex items-center gap-3">
-                            <span className="rounded-lg bg-orange-500/10 border border-orange-500/20 px-2 py-1 text-orange-400 font-semibold uppercase tracking-widest">Yatırım</span>
-                            <span className="font-semibold text-zinc-300 tabular-nums">ÇEVRİM: {row.DepositDefinition.BonusWFactor ?? '–'}x</span>
+                            <span className="rounded-lg bg-[color:var(--panel-warning,#ff9f0a)]/10 border border-orange-500/20 px-2 py-1 text-orange-400 font-semibold uppercase tracking-widest">Yatırım</span>
+                            <span className="font-semibold text-[color:var(--panel-text-dim,#c8cdd5)] tabular-nums">ÇEVRİM: {row.DepositDefinition.BonusWFactor ?? '–'}x</span>
                           </div>
                         ) : (
-                          <span className="text-zinc-600 font-bold uppercase tracking-widest italic">Standart Analiz</span>
+                          <span className="text-[color:var(--panel-faint,#5c6470)] font-bold uppercase tracking-widest italic">Standart Analiz</span>
                         )}
                       </div>
                     </td>
-                    <td className="px-3 py-2.5 text-right pr-4 border-b border-white/[0.02]">
+                    <td className="px-3 py-2.5 text-right pr-4 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
                       {status === 'active' ? (
                         <div className="inline-flex items-center gap-2 rounded-lg bg-emerald-500/10 px-3 py-1.5 text-[10px] font-semibold text-emerald-400 border border-emerald-500/20 neon-glow-emerald">
                           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -149,7 +149,7 @@ export function BonusList({ data, isLoading, error }: BonusListProps) {
             <h2 className="text-2xl font-semibold text-white tracking-tighter uppercase antialiased">Promosyon Merkezi</h2>
             <div className="flex items-center gap-2 mt-0.5">
               <div className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
-              <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.2em]">Toplam {activeList.length} Aktif Kampanya & Kod</p>
+              <p className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-[0.2em]">Toplam {activeList.length} Aktif Kampanya & Kod</p>
             </div>
           </div>
         </div>
@@ -164,7 +164,7 @@ export function BonusList({ data, isLoading, error }: BonusListProps) {
       {isLoading && (
         <Card className="flex h-64 flex-col items-center justify-center gap-4">
           <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" />
-          <p className="text-sm font-semibold text-slate-500">Promosyon verileri yükleniyor…</p>
+          <p className="text-sm font-semibold text-[color:var(--panel-muted,#8a919c)]">Promosyon verileri yükleniyor…</p>
         </Card>
       )}
 
@@ -173,15 +173,15 @@ export function BonusList({ data, isLoading, error }: BonusListProps) {
           <div className="space-y-6">
             <div className="flex items-center gap-4 px-2">
               <div className="h-8 w-1 rounded-full bg-emerald-500 neon-glow-emerald shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
-              <h3 className="text-lg font-semibold text-white uppercase tracking-widest">Aktif Kampanyalar <span className="ml-3 text-xs font-semibold text-zinc-600">[{activeList.length}]</span></h3>
+              <h3 className="text-lg font-semibold text-white uppercase tracking-widest">Aktif Kampanyalar <span className="ml-3 text-xs font-semibold text-[color:var(--panel-faint,#5c6470)]">[{activeList.length}]</span></h3>
             </div>
             <BonusTable rows={activeList} status="active" emptyMessage="Görünüşe göre şu an aktif bir promosyon yok." />
           </div>
 
           <div className="space-y-6">
             <div className="flex items-center gap-4 px-2">
-              <div className="h-8 w-1 rounded-full bg-zinc-700" />
-              <h3 className="text-lg font-semibold text-zinc-500 uppercase tracking-widest">Arşivlenen Teklifler <span className="ml-3 text-xs font-semibold text-zinc-700">[{inactiveList.length}]</span></h3>
+              <div className="h-8 w-1 rounded-full bg-[color:var(--panel-surface-2,rgba(242,244,248,0.05))]" />
+              <h3 className="text-lg font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">Arşivlenen Teklifler <span className="ml-3 text-xs font-semibold text-[color:var(--panel-faint,#5c6470)]">[{inactiveList.length}]</span></h3>
             </div>
             <div className="opacity-60 grayscale hover:grayscale-0 transition-all duration-700">
               <BonusTable rows={inactiveList} status="inactive" emptyMessage="Geçmiş kampanya verisi temizlendi veya bulunamadı." />

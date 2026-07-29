@@ -45,12 +45,12 @@ export function LiveAlerts() {
                         <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-white">Sistem Uyarıları</h3>
                         <div className="flex items-center gap-2 mt-0.5">
                             <span className="flex h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse" />
-                            <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Anlık Takip</p>
+                            <p className="text-[10px] font-bold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">Anlık Takip</p>
                         </div>
                     </div>
                 </div>
-                <div className="px-2 py-1 rounded-full bg-white/5 border border-white/10">
-                    <span className="text-[9px] font-semibold text-zinc-500 uppercase tracking-tighter">Sistem Durumu: KRİTİK</span>
+                <div className="px-2 py-1 rounded-full bg-white/5 border border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
+                    <span className="text-[9px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-tighter">Sistem Durumu: KRİTİK</span>
                 </div>
             </div>
 
@@ -60,10 +60,10 @@ export function LiveAlerts() {
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            className="premium-card p-8 text-center border-dashed border-white/5"
+                            className="premium-card p-8 text-center border-dashed border-[color:var(--panel-border,rgba(242,244,248,0.1))]"
                         >
-                            <ShieldAlert size={32} className="mx-auto text-zinc-800 mb-3" />
-                            <p className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest">Analiz edilecek veri bekleniyor...</p>
+                            <ShieldAlert size={32} className="mx-auto text-[color:var(--panel-faint,#5c6470)] mb-3" />
+                            <p className="text-[11px] font-bold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">Analiz edilecek veri bekleniyor...</p>
                         </motion.div>
                     ) : (
                         anomalies.slice(0, 10).map((alert: any, i: number) => (
@@ -83,35 +83,35 @@ export function LiveAlerts() {
                                 <div className="flex items-start justify-between">
                                     <div className="flex items-center gap-3">
                                         <div className={cn(
-                                            "rounded-lg p-2 border border-white/5 shadow-inner",
+                                            "rounded-lg p-2 border border-[color:var(--panel-border,rgba(242,244,248,0.1))] shadow-inner",
                                             alert.severity === 'high' ? "bg-rose-500/10 text-rose-400 neon-glow-rose" : "bg-amber-500/10 text-amber-400"
                                         )}>
                                             {alert.severity === 'high' ? <ShieldAlert size={14} /> : <AlertTriangle size={14} />}
                                         </div>
                                         <div className="flex flex-col">
                                             <span className="text-[11px] font-semibold text-white uppercase tracking-wider">{alert.clientLogin || 'Bilinmiyor'}</span>
-                                            <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-tighter">{alert.type?.replace(/_/g, ' ')}</span>
+                                            <span className="text-[9px] font-bold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-tighter">{alert.type?.replace(/_/g, ' ')}</span>
                                         </div>
                                     </div>
                                     {alert.clientId && (
                                         <Link
                                             to={`/oyuncu/${alert.clientId}/${alert.clientLogin}`}
-                                            className="h-8 w-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-zinc-500 hover:text-white transition-all border border-white/5"
+                                            className="h-8 w-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-[color:var(--panel-muted,#8a919c)] hover:text-white transition-all border border-[color:var(--panel-border,rgba(242,244,248,0.1))]"
                                         >
                                             <ExternalLink size={14} />
                                         </Link>
                                     )}
                                 </div>
 
-                                <p className="mt-3 text-[11px] leading-relaxed text-zinc-300 font-medium tracking-tight">
+                                <p className="mt-3 text-[11px] leading-relaxed text-[color:var(--panel-text-dim,#c8cdd5)] font-medium tracking-tight">
                                     {alert.message}
                                 </p>
 
-                                <div className="mt-3 pt-3 border-t border-white/[0.05] flex items-center justify-between">
-                                    <span className="text-[8px] font-semibold text-zinc-500 uppercase tracking-[0.1em]">{alert.date}</span>
+                                <div className="mt-3 pt-3 border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))] flex items-center justify-between">
+                                    <span className="text-[8px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-[0.1em]">{alert.date}</span>
                                     <div className="flex items-center gap-1.5">
                                         <div className={cn("w-1.5 h-1.5 rounded-full", alert.severity === 'high' ? "bg-rose-500" : "bg-amber-500")} />
-                                        <span className="text-[8px] font-semibold uppercase text-zinc-400">{alert.severity === 'high' ? 'TEHLİKELİ' : 'DİKKAT'}</span>
+                                        <span className="text-[8px] font-semibold uppercase text-[color:var(--panel-muted,#8a919c)]">{alert.severity === 'high' ? 'TEHLİKELİ' : 'DİKKAT'}</span>
                                     </div>
                                 </div>
                             </motion.div>

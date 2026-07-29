@@ -703,12 +703,12 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
                   onClick={() => applyPreset(preset)}
                   className={cn(
                     'rounded-lg border p-3 text-left transition',
-                    active ? 'border-cyan-300/45 bg-cyan-300/[0.08]' : 'border-white/[0.08] bg-white/[0.035] hover:border-white/15'
+                    active ? 'border-cyan-300/45 bg-[color:var(--panel-info,#64d2ff)]/[0.08]' : 'border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.035] hover:border-[color:var(--panel-border,rgba(242,244,248,0.1))]'
                   )}
                 >
                   <span className="mb-3 flex h-9 items-center gap-1">
                     {[preset.primaryColor, preset.secondaryColor, preset.accentColor].map((color) => (
-                      <span key={color} className="h-7 flex-1 rounded-md border border-white/10" style={{ backgroundColor: color }} />
+                      <span key={color} className="h-7 flex-1 rounded-md border border-[color:var(--panel-border,rgba(242,244,248,0.1))]" style={{ backgroundColor: color }} />
                     ))}
                   </span>
                   <span className="block text-xs font-semibold uppercase tracking-[0.12em] text-white">{preset.label}</span>
@@ -738,8 +738,8 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
               placeholder="https://.../lobi-arkaplan.jpg"
               onChange={(backgroundImageUrl) => updateTheme({ backgroundImageUrl })}
             />
-            <div className="rounded-lg border border-white/[0.07] bg-black/20 p-3">
-              <label className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-500">
+            <div className="rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20 p-3">
+              <label className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[color:var(--panel-muted,#8a919c)]">
                 <SlidersHorizontal size={14} />
                 Koyuluk
               </label>
@@ -751,7 +751,7 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
                 onChange={(event) => updateTheme({ backgroundOverlay: clampOverlay(event.target.value) })}
                 className="mt-4 w-full accent-cyan-300"
               />
-              <div className="mt-2 flex items-center justify-between text-xs font-semibold text-zinc-400">
+              <div className="mt-2 flex items-center justify-between text-xs font-semibold text-[color:var(--panel-muted,#8a919c)]">
                 <span>0</span>
                 <span className="rounded-md bg-white/10 px-2 py-1 text-white">{theme.backgroundOverlay}%</span>
                 <span>95</span>
@@ -762,10 +762,10 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
 
         <Panel title="Yatay Banner" icon={MonitorSmartphone}>
           <div className="space-y-4">
-            <label className="flex items-center justify-between gap-4 rounded-lg border border-white/[0.07] bg-white/[0.035] p-4">
+            <label className="flex items-center justify-between gap-4 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.035] p-4">
               <span>
                 <span className="block text-sm font-semibold text-white">Banner aktif</span>
-                <span className="mt-1 block text-xs font-medium text-zinc-500">Lobinin üst bölümünde geniş kampanya görseli gösterilir.</span>
+                <span className="mt-1 block text-xs font-medium text-[color:var(--panel-muted,#8a919c)]">Lobinin üst bölümünde geniş kampanya görseli gösterilir.</span>
               </span>
               <input
                 type="checkbox"
@@ -798,22 +798,22 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
 
         <Panel title="Hızlı Erişim Kartları" icon={ListChecks}>
           <div className="space-y-2">
-            <div className="flex flex-col gap-3 rounded-lg border border-white/[0.07] bg-white/[0.035] p-3 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-col gap-3 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.035] p-3 md:flex-row md:items-center md:justify-between">
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-white">Lobi kartları</p>
-                <p className="mt-0.5 truncate text-xs font-medium text-zinc-500">Başlık, açıklama, link, ikon ve renk tek satırda düzenlenir.</p>
+                <p className="mt-0.5 truncate text-xs font-medium text-[color:var(--panel-muted,#8a919c)]">Başlık, açıklama, link, ikon ve renk tek satırda düzenlenir.</p>
               </div>
               <button
                 type="button"
                 onClick={addQuickAccess}
-                className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-lg bg-cyan-300 px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-950 transition hover:bg-cyan-200"
+                className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-lg bg-[color:var(--panel-info,#64d2ff)] px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#050609] transition hover:bg-[color:var(--panel-info,#64d2ff)]"
               >
                 <Plus size={14} />
                 Kart ekle
               </button>
             </div>
 
-            <div className="hidden grid-cols-[34px_40px_minmax(120px,1fr)_minmax(140px,1.2fr)_minmax(120px,1fr)_118px_76px_108px] gap-2 px-2 text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-600 xl:grid">
+            <div className="hidden grid-cols-[34px_40px_minmax(120px,1fr)_minmax(140px,1.2fr)_minmax(120px,1fr)_118px_76px_108px] gap-2 px-2 text-[9px] font-semibold uppercase tracking-[0.14em] text-[color:var(--panel-faint,#5c6470)] xl:grid">
               <span>Aktif</span>
               <span>İkon</span>
               <span>Başlık</span>
@@ -830,7 +830,7 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
               return (
                 <div
                   key={item.id}
-                  className="grid grid-cols-[34px_40px_1fr] items-center gap-2 rounded-lg border border-white/[0.08] bg-black/20 p-2 xl:grid-cols-[34px_40px_minmax(120px,1fr)_minmax(140px,1.2fr)_minmax(120px,1fr)_118px_76px_108px]"
+                  className="grid grid-cols-[34px_40px_1fr] items-center gap-2 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20 p-2 xl:grid-cols-[34px_40px_minmax(120px,1fr)_minmax(140px,1.2fr)_minmax(120px,1fr)_118px_76px_108px]"
                 >
                   <CompactToggle checked={item.enabled} onChange={(enabled) => updateQuickAccess(index, { enabled })} label={`${item.label} aktif`} />
                   <span
@@ -861,9 +861,9 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
 
         <Panel title="Sayfa İçerikleri" icon={MonitorSmartphone}>
           <div className="space-y-3">
-            <div className="rounded-lg border border-white/[0.07] bg-white/[0.035] p-3">
+            <div className="rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.035] p-3">
               <p className="text-sm font-semibold text-white">Lobi elemanlarının açtığı sayfalar</p>
-              <p className="mt-0.5 text-xs font-medium text-zinc-500">Başlık, açıklama, buton, boş durum, form ve sayfaya özel metinler buradan düzenlenir.</p>
+              <p className="mt-0.5 text-xs font-medium text-[color:var(--panel-muted,#8a919c)]">Başlık, açıklama, buton, boş durum, form ve sayfaya özel metinler buradan düzenlenir.</p>
             </div>
 
             {LOBBY_PAGE_ORDER.map((pageId) => {
@@ -873,22 +873,22 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
               const dedicatedOwner = DEDICATED_CONTENT_OWNER[pageId];
 
               return (
-                <details key={pageId} open={pageId === 'bonus'} className="group rounded-xl border border-white/[0.08] bg-black/20">
+                <details key={pageId} open={pageId === 'bonus'} className="group rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20">
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-3 marker:hidden">
                     <span className="min-w-0">
                       <span className="block truncate text-sm font-semibold text-white">{page.label}</span>
-                      <span className="mt-0.5 block truncate text-xs font-medium text-zinc-500">
+                      <span className="mt-0.5 block truncate text-xs font-medium text-[color:var(--panel-muted,#8a919c)]">
                         {quickAccessItem ? `Kart: ${quickAccessItem.label} · ${page.path}` : page.path}
                       </span>
                     </span>
-                    <span className="rounded-lg border border-white/[0.08] bg-white/[0.04] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-400 group-open:text-cyan-300">
+                    <span className="rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.04] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[color:var(--panel-muted,#8a919c)] group-open:text-cyan-300">
                       Düzenle
                     </span>
                   </summary>
 
-                  <div className="space-y-4 border-t border-white/[0.07] p-3">
+                  <div className="space-y-4 border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))] p-3">
                     {dedicatedOwner && (
-                      <div className="rounded-lg border border-amber-300/15 bg-amber-300/[0.07] p-3 text-xs font-semibold leading-5 text-amber-100/80">
+                      <div className="rounded-lg border border-amber-300/15 bg-[color:var(--panel-warning,#ff9f0a)]/[0.07] p-3 text-xs font-semibold leading-5 text-amber-100/80">
                         {dedicatedOwner} Buradaki alanlar ortak/fallback metinler ve lobi bağlantı düzeni için kullanılır.
                       </div>
                     )}
@@ -925,8 +925,8 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
                     </div>
 
                     {extraFields.length > 0 && (
-                      <div className="rounded-lg border border-white/[0.07] bg-white/[0.025] p-3">
-                        <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-500">Sayfaya özel elementler</p>
+                      <div className="rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.025] p-3">
+                        <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-[color:var(--panel-muted,#8a919c)]">Sayfaya özel elementler</p>
                         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                           {extraFields.map((field) => {
                             const value = page.extra[field.key];
@@ -980,8 +980,8 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
               </div>
 
               <div className="mt-4 flex items-center justify-between gap-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">Turnuva kartları</p>
-                <button type="button" onClick={addTournamentCard} className="inline-flex h-9 items-center gap-2 rounded-lg bg-cyan-300 px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-950">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--panel-muted,#8a919c)]">Turnuva kartları</p>
+                <button type="button" onClick={addTournamentCard} className="inline-flex h-9 items-center gap-2 rounded-lg bg-[color:var(--panel-info,#64d2ff)] px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#050609]">
                   <Plus size={14} />
                   Kart ekle
                 </button>
@@ -992,7 +992,7 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
                   const Icon = getQuickAccessIcon(item.icon);
 
                   return (
-                    <div key={item.id} className="rounded-lg border border-white/[0.08] bg-black/20 p-3">
+                    <div key={item.id} className="rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20 p-3">
                       <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                         <div className="flex min-w-0 items-center gap-3">
                           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border" style={{ borderColor: hexToRgba(item.accentColor, 0.3), backgroundColor: hexToRgba(item.accentColor, 0.13), color: item.accentColor }}>
@@ -1000,7 +1000,7 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
                           </span>
                           <div className="min-w-0">
                             <p className="truncate text-sm font-semibold text-white">{item.label}</p>
-                            <p className="truncate text-xs text-zinc-500">{item.period} · {item.to}</p>
+                            <p className="truncate text-xs text-[color:var(--panel-muted,#8a919c)]">{item.period} · {item.to}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -1038,8 +1038,8 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
               </div>
 
               <div className="mt-4 flex items-center justify-between gap-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">Destek kartları</p>
-                <button type="button" onClick={addSupportCard} className="inline-flex h-9 items-center gap-2 rounded-lg bg-cyan-300 px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-950">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--panel-muted,#8a919c)]">Destek kartları</p>
+                <button type="button" onClick={addSupportCard} className="inline-flex h-9 items-center gap-2 rounded-lg bg-[color:var(--panel-info,#64d2ff)] px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#050609]">
                   <Plus size={14} />
                   Kart ekle
                 </button>
@@ -1050,7 +1050,7 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
                   const Icon = getQuickAccessIcon(item.icon);
 
                   return (
-                    <div key={item.id} className="rounded-lg border border-white/[0.08] bg-black/20 p-3">
+                    <div key={item.id} className="rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20 p-3">
                       <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                         <div className="flex min-w-0 items-center gap-3">
                           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border" style={{ borderColor: hexToRgba(item.accentColor, 0.3), backgroundColor: hexToRgba(item.accentColor, 0.13), color: item.accentColor }}>
@@ -1058,7 +1058,7 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
                           </span>
                           <div className="min-w-0">
                             <p className="truncate text-sm font-semibold text-white">{item.title}</p>
-                            <p className="truncate text-xs text-zinc-500">{item.to}</p>
+                            <p className="truncate text-xs text-[color:var(--panel-muted,#8a919c)]">{item.to}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -1086,16 +1086,16 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
       </div>
 
       <aside className="space-y-4">
-        <div className="rounded-xl border border-white/10 bg-[#080d13]/95 p-4 shadow-[0_18px_60px_rgba(0,0,0,0.24)]">
+        <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-4 shadow-[0_18px_60px_rgba(0,0,0,0.24)]">
           <div className="mb-4 flex items-center justify-between">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-300/70">Canlı görünüm</p>
               <h3 className="text-lg font-semibold text-white">Lobi önizlemesi</h3>
             </div>
-            <MonitorSmartphone className="text-zinc-500" size={20} />
+            <MonitorSmartphone className="text-[color:var(--panel-muted,#8a919c)]" size={20} />
           </div>
-          <div className="overflow-hidden rounded-xl border border-white/10" style={pagePreviewStyle}>
-            <div className="border-b border-white/10 bg-black/45 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.16em]">
+          <div className="overflow-hidden rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))]" style={pagePreviewStyle}>
+            <div className="border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/45 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.16em]">
               <span style={{ color: theme.accentColor }}>Canlı</span>
             </div>
             <div className="space-y-3 p-4">
@@ -1117,7 +1117,7 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
               </div>
 
               {theme.banner.enabled && (
-                <div className="min-h-[96px] rounded-xl border border-white/10 p-4" style={bannerPreviewStyle}>
+                <div className="min-h-[96px] rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] p-4" style={bannerPreviewStyle}>
                   <p className="max-w-[260px] text-lg font-semibold leading-tight">{theme.banner.title || 'Banner başlığı'}</p>
                   <p className="mt-1 max-w-[240px] text-xs font-semibold" style={{ color: theme.textColor }}>{theme.banner.subtitle || 'Banner açıklaması'}</p>
                 </div>
@@ -1128,7 +1128,7 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
                   const Icon = getQuickAccessIcon(item.icon);
 
                   return (
-                    <div key={item.id} className="rounded-xl border border-white/10 bg-white/[0.045] p-3 text-center">
+                    <div key={item.id} className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.045] p-3 text-center">
                       <div
                         className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg border"
                         style={{
@@ -1198,7 +1198,7 @@ function IconButton({
         compact ? 'h-8 w-8' : 'h-9 w-9',
         danger
           ? 'border-rose-300/15 bg-rose-400/10 text-rose-300 hover:bg-rose-400/15'
-          : 'border-white/[0.08] bg-white/[0.035] text-zinc-400 hover:text-white'
+          : 'border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.035] text-[color:var(--panel-muted,#8a919c)] hover:text-white'
       )}
     >
       <Icon size={15} />
@@ -1224,7 +1224,7 @@ function CompactTextInput({
       placeholder={placeholder}
       onChange={(event) => onChange(event.target.value)}
       className={cn(
-        'h-9 min-w-0 rounded-lg border border-white/[0.08] bg-black/25 px-2.5 text-xs font-bold text-white outline-none transition placeholder:text-zinc-700 focus:border-cyan-300/40',
+        'h-9 min-w-0 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/25 px-2.5 text-xs font-bold text-white outline-none transition placeholder:text-[color:var(--panel-faint,#5c6470)] focus:border-cyan-300/40',
         className
       )}
     />
@@ -1236,7 +1236,7 @@ function CompactSelect({ value, onChange }: { value: string; onChange: (value: s
     <select
       value={value}
       onChange={(event) => onChange(event.target.value)}
-      className="col-span-2 h-9 min-w-0 rounded-lg border border-white/[0.08] bg-black/25 px-2 text-xs font-bold text-white outline-none transition focus:border-cyan-300/40 xl:col-span-1"
+      className="col-span-2 h-9 min-w-0 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/25 px-2 text-xs font-bold text-white outline-none transition focus:border-cyan-300/40 xl:col-span-1"
     >
       {QUICK_ACCESS_ICON_OPTIONS.map((option) => (
         <option key={option.value} value={option.value}>{option.label}</option>
@@ -1249,7 +1249,7 @@ function CompactColorInput({ value, onChange }: { value: string; onChange: (valu
   const colorValue = isHexColor(value) ? value : '#000000';
 
   return (
-    <span className="flex h-9 min-w-0 items-center gap-1 rounded-lg border border-white/[0.08] bg-black/25 px-1.5">
+    <span className="flex h-9 min-w-0 items-center gap-1 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/25 px-1.5">
       <input
         type="color"
         value={colorValue}
@@ -1269,7 +1269,7 @@ function CompactColorInput({ value, onChange }: { value: string; onChange: (valu
 
 function CompactToggle({ checked, onChange, label }: { checked: boolean; onChange: (checked: boolean) => void; label: string }) {
   return (
-    <label className="flex h-9 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.035]" title={label}>
+    <label className="flex h-9 items-center justify-center rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.035]" title={label}>
       <input
         type="checkbox"
         checked={checked}
@@ -1301,11 +1301,11 @@ function TabBaseEditor({
   children?: ReactNode;
 }) {
   return (
-    <section className="rounded-xl border border-white/[0.08] bg-black/20 p-4">
+    <section className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20 p-4">
       <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
           <h4 className="text-sm font-semibold text-white">{title}</h4>
-          <p className="mt-1 text-xs font-medium text-zinc-500">Tab başlığı, alt etiketi ve içerik başlığı.</p>
+          <p className="mt-1 text-xs font-medium text-[color:var(--panel-muted,#8a919c)]">Tab başlığı, alt etiketi ve içerik başlığı.</p>
         </div>
         <TogglePill checked={value.enabled} onChange={(enabled) => onChange({ enabled })} />
       </div>
@@ -1322,7 +1322,7 @@ function TabBaseEditor({
 
 function TogglePill({ checked, onChange }: { checked: boolean; onChange: (checked: boolean) => void }) {
   return (
-    <label className="inline-flex h-9 items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.035] px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-300">
+    <label className="inline-flex h-9 items-center gap-2 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.035] px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-[color:var(--panel-text-dim,#c8cdd5)]">
       <input
         type="checkbox"
         checked={checked}
@@ -1337,11 +1337,11 @@ function TogglePill({ checked, onChange }: { checked: boolean; onChange: (checke
 function IconSelect({ value, onChange, label = 'İkon' }: { value: string; onChange: (value: string) => void; label?: string }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-500">{label}</span>
+      <span className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.16em] text-[color:var(--panel-muted,#8a919c)]">{label}</span>
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="h-11 w-full rounded-lg border border-white/[0.08] bg-black/25 px-3 text-sm font-bold text-white outline-none transition focus:border-cyan-300/40"
+        className="h-11 w-full rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/25 px-3 text-sm font-bold text-white outline-none transition focus:border-cyan-300/40"
       >
         {QUICK_ACCESS_ICON_OPTIONS.map((option) => (
           <option key={option.value} value={option.value}>{option.label}</option>
@@ -1353,9 +1353,9 @@ function IconSelect({ value, onChange, label = 'İkon' }: { value: string; onCha
 
 function Panel({ title, icon: Icon, children }: { title: string; icon: LucideIcon; children: ReactNode }) {
   return (
-    <section className="rounded-xl border border-white/10 bg-[#080d13]/95 p-4 shadow-[0_18px_60px_rgba(0,0,0,0.24)]">
+    <section className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-4 shadow-[0_18px_60px_rgba(0,0,0,0.24)]">
       <div className="mb-4 flex items-center gap-3">
-        <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-300 text-zinc-950">
+        <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[color:var(--panel-info,#64d2ff)] text-[#050609]">
           <Icon size={18} />
         </span>
         <h3 className="text-base font-semibold text-white">{title}</h3>
@@ -1373,14 +1373,14 @@ function PageAccentField({ value, fallback, onChange }: { value: string; fallbac
   const inherited = !isHexColor(value);
   const effective = inherited ? fallback : value;
   return (
-    <div className="rounded-lg border border-white/[0.07] bg-white/[0.035] p-3">
+    <div className="rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.035] p-3">
       <div className="mb-2 flex items-center justify-between gap-2">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-500">Vurgu rengi</span>
+        <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[color:var(--panel-muted,#8a919c)]">Vurgu rengi</span>
         {!inherited && (
           <button
             type="button"
             onClick={() => onChange('')}
-            className="rounded border border-white/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.1em] text-zinc-400 transition hover:text-white"
+            className="rounded border border-[color:var(--panel-border,rgba(242,244,248,0.1))] px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.1em] text-[color:var(--panel-muted,#8a919c)] transition hover:text-white"
           >
             Temadan devral
           </button>
@@ -1391,17 +1391,17 @@ function PageAccentField({ value, fallback, onChange }: { value: string; fallbac
           type="color"
           value={isHexColor(effective) ? effective : '#3b82f6'}
           onChange={(event) => onChange(event.target.value)}
-          className="h-10 w-12 shrink-0 cursor-pointer rounded-lg border border-white/10 bg-transparent p-1"
+          className="h-10 w-12 shrink-0 cursor-pointer rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-transparent p-1"
         />
         <input
           type="text"
           value={value}
           placeholder={`${fallback} (temadan)`}
           onChange={(event) => onChange(event.target.value)}
-          className="h-10 min-w-0 flex-1 rounded-lg border border-white/[0.08] bg-black/25 px-3 text-sm font-bold text-white outline-none placeholder:text-zinc-600 focus:border-cyan-300/40"
+          className="h-10 min-w-0 flex-1 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/25 px-3 text-sm font-bold text-white outline-none placeholder:text-[color:var(--panel-faint,#5c6470)] focus:border-cyan-300/40"
         />
       </div>
-      <p className="mt-1.5 text-[10px] font-medium text-zinc-600">
+      <p className="mt-1.5 text-[10px] font-medium text-[color:var(--panel-faint,#5c6470)]">
         {inherited ? 'Lobi temasının vurgu rengi kullanılıyor.' : 'Bu sayfa kendi vurgu rengini kullanıyor.'}
       </p>
     </div>
@@ -1411,20 +1411,20 @@ function PageAccentField({ value, fallback, onChange }: { value: string; fallbac
 function ColorField({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
   const colorValue = isHexColor(value) ? value : '#000000';
   return (
-    <label className="block rounded-lg border border-white/[0.07] bg-white/[0.035] p-3">
-      <span className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-500">{label}</span>
+    <label className="block rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.035] p-3">
+      <span className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.16em] text-[color:var(--panel-muted,#8a919c)]">{label}</span>
       <span className="flex items-center gap-2">
         <input
           type="color"
           value={colorValue}
           onChange={(event) => onChange(event.target.value)}
-          className="h-10 w-12 shrink-0 cursor-pointer rounded-lg border border-white/10 bg-transparent p-1"
+          className="h-10 w-12 shrink-0 cursor-pointer rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-transparent p-1"
         />
         <input
           type="text"
           value={value}
           onChange={(event) => onChange(event.target.value)}
-          className="h-10 min-w-0 flex-1 rounded-lg border border-white/[0.08] bg-black/25 px-3 text-sm font-bold text-white outline-none focus:border-cyan-300/40"
+          className="h-10 min-w-0 flex-1 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/25 px-3 text-sm font-bold text-white outline-none focus:border-cyan-300/40"
         />
       </span>
     </label>
@@ -1446,7 +1446,7 @@ function TextField({
 }) {
   return (
     <label className="block">
-      <span className="mb-2 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-500">
+      <span className="mb-2 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[color:var(--panel-muted,#8a919c)]">
         {Icon && <Icon size={13} />}
         {label}
       </span>
@@ -1456,8 +1456,8 @@ function TextField({
         placeholder={placeholder}
         onChange={(event) => onChange(event.target.value)}
         className={cn(
-          'h-11 w-full rounded-lg border border-white/[0.08] bg-black/25 px-3 text-sm font-bold text-white outline-none transition placeholder:text-zinc-700 focus:border-cyan-300/40',
-          !value && 'text-zinc-400'
+          'h-11 w-full rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/25 px-3 text-sm font-bold text-white outline-none transition placeholder:text-[color:var(--panel-faint,#5c6470)] focus:border-cyan-300/40',
+          !value && 'text-[color:var(--panel-muted,#8a919c)]'
         )}
       />
     </label>
@@ -1479,15 +1479,15 @@ function TextAreaField({
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-500">{label}</span>
+      <span className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.16em] text-[color:var(--panel-muted,#8a919c)]">{label}</span>
       <textarea
         value={value}
         placeholder={placeholder}
         rows={rows}
         onChange={(event) => onChange(event.target.value)}
         className={cn(
-          'w-full resize-none rounded-lg border border-white/[0.08] bg-black/25 px-3 py-2.5 text-sm font-bold text-white outline-none transition placeholder:text-zinc-700 focus:border-cyan-300/40',
-          !value && 'text-zinc-400'
+          'w-full resize-none rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/25 px-3 py-2.5 text-sm font-bold text-white outline-none transition placeholder:text-[color:var(--panel-faint,#5c6470)] focus:border-cyan-300/40',
+          !value && 'text-[color:var(--panel-muted,#8a919c)]'
         )}
       />
     </label>

@@ -15,7 +15,7 @@ export function FreeBetBonusList({ data, isLoading, error }: FreeBetBonusListPro
 
   return (
     <section className="mt-10">
-      <h2 className={cn('mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-blue-400 border-b border-white/10 pb-2')}>
+      <h2 className={cn('mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-blue-400 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] pb-2')}>
         Freebet bonusları ({count})
       </h2>
       {error && (
@@ -24,7 +24,7 @@ export function FreeBetBonusList({ data, isLoading, error }: FreeBetBonusListPro
         </Card>
       )}
       {isLoading && (
-        <Card className="flex h-24 items-center justify-center text-slate-500">
+        <Card className="flex h-24 items-center justify-center text-[color:var(--panel-muted,#8a919c)]">
           Yükleniyor…
         </Card>
       )}
@@ -33,7 +33,7 @@ export function FreeBetBonusList({ data, isLoading, error }: FreeBetBonusListPro
           <div className="overflow-x-auto">
           <table className="w-full text-sm min-w-[800px]">
             <thead>
-              <tr className="border-b border-white/10 bg-white/5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-500">
+              <tr className="border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/5 text-left text-[10px] font-bold uppercase tracking-wider text-[color:var(--panel-muted,#8a919c)]">
                 <th className="p-3">ID</th>
                 <th className="p-3">BonusId</th>
                 <th className="p-3">Ad</th>
@@ -49,7 +49,7 @@ export function FreeBetBonusList({ data, isLoading, error }: FreeBetBonusListPro
             <tbody>
               {list.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="p-8 text-center text-slate-500 italic">
+                  <td colSpan={10} className="p-8 text-center text-[color:var(--panel-muted,#8a919c)] italic">
                     Freebet bonusu yok
                   </td>
                 </tr>
@@ -57,10 +57,10 @@ export function FreeBetBonusList({ data, isLoading, error }: FreeBetBonusListPro
                 list.map((row: FreeBetBonusItem) => (
                   <tr
                     key={row.Id}
-                    className="border-b border-white/5 transition hover:bg-white/[0.03] last:border-0"
+                    className="border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] transition hover:bg-white/[0.03] last:border-0"
                   >
-                    <td className="p-3 tabular-nums text-slate-400">{row.Id}</td>
-                    <td className="p-3 tabular-nums text-slate-400">{row.BonusId}</td>
+                    <td className="p-3 tabular-nums text-[color:var(--panel-muted,#8a919c)]">{row.Id}</td>
+                    <td className="p-3 tabular-nums text-[color:var(--panel-muted,#8a919c)]">{row.BonusId}</td>
                     <td className="p-3 font-medium">{row.Name}</td>
                     <td className="max-w-[220px] truncate p-3 text-[#8b949e]" title={row.Description}>
                       {row.Description || '–'}

@@ -1001,23 +1001,23 @@
 }
 
 .app-shell .sidebar-section-label {
-  margin-bottom: 4px !important;
-  padding: 0 10px !important;
-  color: #56617a !important;
+  margin-bottom: 2px !important;
+  padding: 0 9px !important;
+  color: var(--panel-faint, #5c6470) !important;
   font-size: 8px !important;
   font-weight: 700 !important;
-  letter-spacing: 0.16em !important;
+  letter-spacing: 0.14em !important;
 }
 
 .app-shell .sidebar-link-icon {
-  width: 25px !important;
-  height: 25px !important;
-  border-radius: 8px !important;
+  width: 21px !important;
+  height: 21px !important;
+  border-radius: 7px !important;
 }
 
 .app-shell .sidebar-nav-group a {
-  min-height: 34px !important;
-  border-radius: 9px !important;
+  min-height: 29px !important;
+  border-radius: 8px !important;
   border: 1px solid transparent !important;
   transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease !important;
 }

@@ -45,7 +45,7 @@ export function AuditLogPage() {
             <FileText size={24} className="text-blue-500" />
             Audit kaydı
           </h1>
-          <p className="text-xs text-slate-500 mt-1">Giriş, lead ve temsilci işlemleri</p>
+          <p className="text-xs text-[color:var(--panel-muted,#8a919c)] mt-1">Giriş, lead ve temsilci işlemleri</p>
         </div>
         <Button variant="ghost" size="sm" onClick={() => refetch()} className="gap-2" disabled={isLoading}>
           <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''} /> Yenile
@@ -58,11 +58,11 @@ export function AuditLogPage() {
             <LoadingState label="Yükleniyor..." />
           </div>
         ) : entries.length === 0 ? (
-          <div className="py-20 text-center text-slate-500">Henüz kayıt yok.</div>
+          <div className="py-20 text-center text-[color:var(--panel-muted,#8a919c)]">Henüz kayıt yok.</div>
         ) : (
           <div className="overflow-x-auto max-h-[70vh] overflow-y-auto">
             <table className="w-full text-sm text-left">
-              <thead className="bg-[rgba(242,244,248,0.60)] text-[10px] font-bold uppercase tracking-wider text-slate-500 border-b border-white/5 sticky top-0">
+              <thead className="bg-[rgba(242,244,248,0.60)] text-[10px] font-bold uppercase tracking-wider text-[color:var(--panel-muted,#8a919c)] border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] sticky top-0">
                 <tr>
                   <th className="px-4 py-3">Tarih</th>
                   <th className="px-4 py-3">Kullanıcı</th>
@@ -75,12 +75,12 @@ export function AuditLogPage() {
               <tbody className="divide-y divide-white/5">
                 {entries.map((e, i) => (
                   <tr key={i} className="hover:bg-white/[0.02]">
-                    <td className="px-4 py-2 text-slate-500 whitespace-nowrap">{formatDateTimeWithSeconds(e.at)}</td>
+                    <td className="px-4 py-2 text-[color:var(--panel-muted,#8a919c)] whitespace-nowrap">{formatDateTimeWithSeconds(e.at)}</td>
                     <td className="px-4 py-2 text-white">{e.user}</td>
-                    <td className="px-4 py-2 text-slate-400">{e.role}</td>
+                    <td className="px-4 py-2 text-[color:var(--panel-muted,#8a919c)]">{e.role}</td>
                     <td className="px-4 py-2 text-emerald-400">{ACTION_LABELS[e.action] ?? e.action}</td>
-                    <td className="px-4 py-2 text-slate-400">{e.resource ?? '–'}</td>
-                    <td className="px-4 py-2 text-slate-500 max-w-xs truncate" title={e.detail}>{e.detail ?? '–'}</td>
+                    <td className="px-4 py-2 text-[color:var(--panel-muted,#8a919c)]">{e.resource ?? '–'}</td>
+                    <td className="px-4 py-2 text-[color:var(--panel-muted,#8a919c)] max-w-xs truncate" title={e.detail}>{e.detail ?? '–'}</td>
                   </tr>
                 ))}
               </tbody>

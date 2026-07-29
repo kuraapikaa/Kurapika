@@ -343,7 +343,7 @@ export function AllPlayersList({
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <button className="flex items-center gap-2 rounded-xl bg-blue-500 px-5 py-2.5 text-[10px] font-semibold text-white shadow-xl shadow-blue-500/20 hover:bg-blue-400 transition-all uppercase tracking-widest">
+            <button className="flex items-center gap-2 rounded-xl bg-blue-500 px-5 py-2.5 text-[10px] font-semibold text-white shadow-xl shadow-blue-500/20 hover:bg-[color:var(--panel-accent,#0a84ff)] transition-all uppercase tracking-widest">
               <ExternalLink size={14} strokeWidth={3} /> DIŞA AKTAR
             </button>
           </div>

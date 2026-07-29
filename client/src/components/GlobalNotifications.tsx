@@ -61,14 +61,14 @@ export function GlobalNotifications() {
                                                 {dep.CurrencyId}
                                             </span>
                                         </h4>
-                                        <p className="text-xs text-zinc-400 mt-1 truncate">
-                                            <span className="font-bold text-zinc-300">{dep.ClientId}</span> numaralı oyuncu
+                                        <p className="text-xs text-[color:var(--panel-muted,#8a919c)] mt-1 truncate">
+                                            <span className="font-bold text-[color:var(--panel-text-dim,#c8cdd5)]">{dep.ClientId}</span> numaralı oyuncu
                                         </p>
                                         <div className="mt-2 flex items-center justify-between">
                                             <span className="font-mono font-semibold text-emerald-400 text-lg">
                                                 + {formatNumber(dep.Amount)} ₺
                                             </span>
-                                            <span className="text-[10px] text-zinc-500 truncate max-w-[100px]" title={dep.PaymentSystemName || ""}>
+                                            <span className="text-[10px] text-[color:var(--panel-muted,#8a919c)] truncate max-w-[100px]" title={dep.PaymentSystemName || ""}>
                                                 {dep.PaymentSystemName || "Sistem"}
                                             </span>
                                         </div>
@@ -107,14 +107,14 @@ export function GlobalNotifications() {
                                                 {wth.CurrencyId}
                                             </span>
                                         </h4>
-                                        <p className="text-xs text-zinc-400 mt-1 truncate">
-                                            <span className="font-bold text-zinc-300">{wth.ClientId}</span> talep etti
+                                        <p className="text-xs text-[color:var(--panel-muted,#8a919c)] mt-1 truncate">
+                                            <span className="font-bold text-[color:var(--panel-text-dim,#c8cdd5)]">{wth.ClientId}</span> talep etti
                                         </p>
                                         <div className="mt-2 flex items-center justify-between">
                                             <span className="font-mono font-semibold text-amber-400 text-lg">
                                                 - {formatNumber(wth.Amount)} ₺
                                             </span>
-                                            <span className="text-[10px] text-zinc-500 truncate max-w-[100px]" title={wth.PaymentSystemName || ""}>
+                                            <span className="text-[10px] text-[color:var(--panel-muted,#8a919c)] truncate max-w-[100px]" title={wth.PaymentSystemName || ""}>
                                                 {wth.PaymentSystemName || "Sistem"}
                                             </span>
                                         </div>

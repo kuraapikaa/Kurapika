@@ -127,7 +127,7 @@ export function RegistrationStats({ dateRange }: RegistrationStatsProps) {
                 </div>
               )}
               <div className="registration-legend">
-                <span><i className="bg-blue-400" /> Kayıt</span>
+                <span><i className="bg-[color:var(--panel-accent,#0a84ff)]" /> Kayıt</span>
                 <span><i className="bg-emerald-300" /> İlk yatırım</span>
               </div>
             </div>

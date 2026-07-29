@@ -28,13 +28,13 @@ export function AIPlayerInsight({ data, ipData }: AIPlayerInsightProps) {
 
     // Persona Logic
     let persona = "Standart Oyuncu";
-    let personaColor = "text-slate-400";
-    let icon = <ShieldCheck size={18} className="text-slate-400" />;
+    let personaColor = "text-[color:var(--panel-muted,#8a919c)]";
+    let icon = <ShieldCheck size={18} className="text-[color:var(--panel-muted,#8a919c)]" />;
 
     if (data.DepositCount === 0 && data.DepositAmount === 0) {
         persona = "Yeni / Pasif Kayıt";
-        personaColor = "text-slate-500";
-        icon = <ShieldCheck size={18} className="text-slate-500" />;
+        personaColor = "text-[color:var(--panel-muted,#8a919c)]";
+        icon = <ShieldCheck size={18} className="text-[color:var(--panel-muted,#8a919c)]" />;
     } else if (data.DepositAmount > 100000) {
         persona = "VIP Balina";
         personaColor = "text-amber-400";
@@ -64,15 +64,15 @@ export function AIPlayerInsight({ data, ipData }: AIPlayerInsightProps) {
     const isNewPlayer = registrationDate ? (Date.now() - new Date(registrationDate).getTime()) <= 30 * 24 * 60 * 60 * 1000 : data.DepositCount === 0;
     const hasNoBonus = Number(data.BonusBalance ?? 0) <= 0 && Number(data.TotalSportBonusStakes ?? 0) + Number(data.TotalCasinoBonusStakes ?? 0) <= 0;
     const profileTags = [
-        isNewPlayer && { label: 'New Player', tone: 'border-sky-400/30 bg-sky-400/10 text-sky-200' },
-        hasNoBonus && { label: 'No Bonus User', tone: 'border-zinc-500/30 bg-[rgba(242,244,248,0.10)] text-zinc-300' },
+        isNewPlayer && { label: 'New Player', tone: 'border-sky-400/30 bg-[color:var(--panel-accent,#0a84ff)]/10 text-sky-200' },
+        hasNoBonus && { label: 'No Bonus User', tone: 'border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.10)] text-[color:var(--panel-text-dim,#c8cdd5)]' },
         hasNoBonus && Number(data.DepositAmount ?? 0) > 0 && { label: 'No Gift User', tone: 'border-amber-400/30 bg-amber-400/10 text-amber-200' },
         (isMultiAccount || isWinner) && { label: 'Risk Review', tone: 'border-orange-400/30 bg-orange-400/10 text-orange-200' },
-        Number(data.DepositAmount ?? 0) >= 100000 && { label: 'VIP', tone: 'border-[#3b82f6]/40 bg-[#3b82f6]/10 text-[#5eead4]' },
-        Number(data.DepositAmount ?? 0) >= 25000 && Number(data.DepositAmount ?? 0) < 100000 && { label: 'Before VIP', tone: 'border-[#3b82f6]/25 bg-[#3b82f6]/5 text-[#e8c660]' },
+        Number(data.DepositAmount ?? 0) >= 100000 && { label: 'VIP', tone: 'border-[color:var(--panel-border-strong,rgba(10,132,255,0.34))] bg-[rgba(10,132,255,0.1)] text-[color:var(--panel-info,#64d2ff)]' },
+        Number(data.DepositAmount ?? 0) >= 25000 && Number(data.DepositAmount ?? 0) < 100000 && { label: 'Before VIP', tone: 'border-[rgba(10,132,255,0.25)] bg-[rgba(10,132,255,0.05)] text-[color:var(--panel-warning,#ff9f0a)]' },
         Number(data.DepositAmount ?? 0) >= 100000 && (isMultiAccount || isWinner) && { label: 'High Value - High Risk', tone: 'border-rose-400/40 bg-rose-500/15 text-rose-200' },
         casinoVolume >= 25000 && casinoVolume > sportVolume * 2 && isWinner && { label: 'Risky Roulette', tone: 'border-teal-400/30 bg-teal-400/10 text-teal-200' },
-        sportVolume >= 25000 && isWinner && { label: 'Surebet', tone: 'border-blue-400/30 bg-blue-400/10 text-blue-200' },
+        sportVolume >= 25000 && isWinner && { label: 'Surebet', tone: 'border-blue-400/30 bg-[color:var(--panel-accent,#0a84ff)]/10 text-blue-200' },
         riskLevel !== 'DÜŞÜK' && { label: 'High Risk', tone: 'border-rose-400/30 bg-rose-500/10 text-rose-200' },
         isWinner && { label: 'Negative', tone: 'border-rose-400/25 bg-rose-500/10 text-rose-200' },
         (isMultiAccount || Number(data.WithdrawalAmount ?? 0) > Number(data.DepositAmount ?? 0) * 0.9) && { label: 'Review', tone: 'border-orange-400/25 bg-orange-400/10 text-orange-200' },
@@ -96,7 +96,7 @@ export function AIPlayerInsight({ data, ipData }: AIPlayerInsightProps) {
                         <span className={`px-3 py-1 text-[10px] font-semibold uppercase tracking-widest rounded-full border ${riskColor}`}>
                             Risk Seviyesi: {riskLevel}
                         </span>
-                        <div className={`flex items-center gap-1.5 px-3 py-1 text-[10px] font-semibold uppercase tracking-widest rounded-full border border-white/10 bg-black/20 ${personaColor}`}>
+                        <div className={`flex items-center gap-1.5 px-3 py-1 text-[10px] font-semibold uppercase tracking-widest rounded-full border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20 ${personaColor}`}>
                             {icon} {persona}
                         </div>
                     </div>
@@ -113,7 +113,7 @@ export function AIPlayerInsight({ data, ipData }: AIPlayerInsightProps) {
                     <p className="text-sm md:text-base text-blue-100/80 leading-relaxed font-medium">
                         {totalVolume > 0 ? (
                             <>
-                                Bu oyuncu sistemde ağırlıklı olarak <span className="font-bold text-white border-b border-white/20 pb-0.5">{preferredCategory}</span> kategorisinde işlem yapıyor.
+                                Bu oyuncu sistemde ağırlıklı olarak <span className="font-bold text-white border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] pb-0.5">{preferredCategory}</span> kategorisinde işlem yapıyor.
                                 Bugüne kadar toplam <span className="font-mono text-emerald-400 font-bold">{data.DepositCount} kez</span> yatırım yapmış.
                                 Bakiye performansı incelendiğinde şirkete karşı <span className={`font-mono font-bold ${isWinner ? 'text-rose-400' : 'text-emerald-400'}`}>
                                     {isWinner ? 'kârda' : 'zararda'}

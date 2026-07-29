@@ -78,7 +78,7 @@ export function ProviderReport() {
             <div className="flex h-[400px] items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
                     <Loader2 className="h-10 w-10 animate-spin text-blue-500" />
-                    <p className="text-sm font-bold uppercase tracking-widest text-slate-500">Rapor Hazırlanıyor...</p>
+                    <p className="text-sm font-bold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">Rapor Hazırlanıyor...</p>
                 </div>
             </div>
         );
@@ -89,7 +89,7 @@ export function ProviderReport() {
             <div className="rounded-xl border border-rose-500/20 bg-rose-500/5 p-12 text-center">
                 <AlertCircle size={48} className="mx-auto mb-4 text-rose-500/50" />
                 <h3 className="text-lg font-bold text-rose-400">Rapor Yüklenemedi</h3>
-                <p className="text-sm text-slate-500 mt-2">{data?.ErrorDescription || (error as Error)?.message}</p>
+                <p className="text-sm text-[color:var(--panel-muted,#8a919c)] mt-2">{data?.ErrorDescription || (error as Error)?.message}</p>
                 <button
                     onClick={() => refetch()}
                     className="mt-6 rounded-xl bg-rose-500/20 px-6 py-2 text-sm font-bold text-rose-300 ring-1 ring-rose-500/30 hover:bg-rose-500/30"
@@ -130,12 +130,12 @@ export function ProviderReport() {
                     </div>
                     <p className="text-[10px] font-semibold uppercase tracking-widest text-blue-400 mb-1">Tahmini Fatura</p>
                     <p className="text-xl font-semibold text-white tabular-nums">
-                        {formatNumber(estimatedInvoice)} <span className="text-xs font-normal text-slate-500">TRY</span>
+                        {formatNumber(estimatedInvoice)} <span className="text-xs font-normal text-[color:var(--panel-muted,#8a919c)]">TRY</span>
                     </p>
                     <div className="mt-3 flex items-center gap-2">
-                        <span className="text-[10px] font-bold text-slate-500 uppercase">Royalty:</span>
+                        <span className="text-[10px] font-bold text-[color:var(--panel-muted,#8a919c)] uppercase">Royalty:</span>
                         <select
-                            className="bg-slate-800 text-[10px] font-semibold text-blue-300 border border-white/5 rounded px-1 py-0.5 focus:ring-0 cursor-pointer"
+                            className="bg-[color:var(--panel-surface-2,rgba(242,244,248,0.05))] text-[10px] font-semibold text-blue-300 border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded px-1 py-0.5 focus:ring-0 cursor-pointer"
                             value={royaltyRate}
                             onChange={(e) => setRoyaltyRate(Number(e.target.value))}
                         >
@@ -157,13 +157,13 @@ export function ProviderReport() {
             </div>
 
             {/* Table Section */}
-            <div className="rounded-xl border border-white/5 bg-[rgba(242,244,248,0.40)] shadow-xl overflow-hidden">
-                <div className="border-b border-white/5 bg-white/5 px-3 py-2.5 flex items-center justify-between">
-                    <h3 className="text-sm font-semibold uppercase tracking-widest text-slate-400 flex items-center gap-2">
+            <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.40)] shadow-xl overflow-hidden">
+                <div className="border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/5 px-3 py-2.5 flex items-center justify-between">
+                    <h3 className="text-sm font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)] flex items-center gap-2">
                         <BarChart3 size={18} className="text-blue-400" />
                         Sağlayıcı Performansı (%{royaltyRate} Tahmini Maliyet)
                     </h3>
-                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                    <div className="text-[10px] font-bold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">
                         {providers.length} Sağlayıcı Listelendi
                     </div>
                 </div>
@@ -171,7 +171,7 @@ export function ProviderReport() {
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left">
                         <thead>
-                            <tr className="border-b border-white/5 text-[10px] font-semibold uppercase tracking-widest text-slate-500">
+                            <tr className="border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">
                                 <th className="px-3 py-2.5">Sağlayıcı</th>
                                 <th className="px-3 py-2.5 text-right">Ciro (Bet)</th>
                                 <th className="px-3 py-2.5 text-right">Ödenen (Win)</th>
@@ -190,30 +190,30 @@ export function ProviderReport() {
                                     <tr key={idx} className="group hover:bg-white/[0.02] transition-colors">
                                         <td className="px-3 py-2.5">
                                             <div className="flex flex-col">
-                                                <span className="font-bold text-slate-200 group-hover:text-blue-400 transition-colors">
+                                                <span className="font-bold text-[color:var(--panel-text-dim,#c8cdd5)] group-hover:text-blue-400 transition-colors">
                                                     {item.ProviderName}
                                                 </span>
-                                                <span className="text-[10px] text-slate-500 font-mono">{item.ProviderPrefix}</span>
+                                                <span className="text-[10px] text-[color:var(--panel-muted,#8a919c)] font-mono">{item.ProviderPrefix}</span>
                                             </div>
                                         </td>
-                                        <td className="px-3 py-2.5 text-right font-mono font-bold text-slate-300">
+                                        <td className="px-3 py-2.5 text-right font-mono font-bold text-[color:var(--panel-text-dim,#c8cdd5)]">
                                             {formatNumber(item.BetAmountByReportCurrency)}
                                         </td>
-                                        <td className="px-3 py-2.5 text-right font-mono font-bold text-slate-400">
+                                        <td className="px-3 py-2.5 text-right font-mono font-bold text-[color:var(--panel-muted,#8a919c)]">
                                             {formatNumber(item.WinAmountByReportCurrency)}
                                         </td>
                                         <td className={`px-3 py-2.5 text-right font-mono font-semibold ${isProfit ? 'text-emerald-400' : 'text-rose-400'}`}>
                                             {formatNumber(item.ProfitByReportCurrency)}
                                         </td>
-                                        <td className="px-3 py-2.5 text-right font-mono font-bold text-slate-500">
+                                        <td className="px-3 py-2.5 text-right font-mono font-bold text-[color:var(--panel-muted,#8a919c)]">
                                             {isProfit ? formatNumber(providerRoyalty) : '0.00'}
                                         </td>
                                         <td className="px-3 py-2.5 text-right">
                                             <div className="flex flex-col items-end">
-                                                <span className={`font-bold ${rtp > 97 ? 'text-amber-400' : 'text-slate-400'}`}>
+                                                <span className={`font-bold ${rtp > 97 ? 'text-amber-400' : 'text-[color:var(--panel-muted,#8a919c)]'}`}>
                                                     %{rtp.toFixed(2)}
                                                 </span>
-                                                <div className="h-1 w-16 bg-slate-800 rounded-full mt-1 overflow-hidden">
+                                                <div className="h-1 w-16 bg-[color:var(--panel-surface-2,rgba(242,244,248,0.05))] rounded-full mt-1 overflow-hidden">
                                                     <div
                                                         className={`h-full rounded-full ${rtp > 97 ? 'bg-amber-500' : 'bg-blue-500'}`}
                                                         style={{ width: `${Math.min(rtp, 100)}%` }}
@@ -234,7 +234,7 @@ export function ProviderReport() {
 
 function StatCard({ label, value, icon, trend }: { label: string; value: number; icon: React.ReactNode; trend: 'up' | 'down' | 'neutral' }) {
     return (
-        <div className="rounded-xl border border-white/5 bg-[rgba(242,244,248,0.50)] p-5 shadow-lg group hover:border-white/10 transition-all">
+        <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.50)] p-5 shadow-lg group hover:border-[color:var(--panel-border,rgba(242,244,248,0.1))] transition-all">
             <div className="flex items-center justify-between mb-3">
                 <div className="p-2 rounded-xl bg-white/5 group-hover:scale-110 transition-transform">
                     {icon}
@@ -245,9 +245,9 @@ function StatCard({ label, value, icon, trend }: { label: string; value: number;
                     </div>
                 )}
             </div>
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 mb-1">{label}</p>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)] mb-1">{label}</p>
             <p className="text-xl font-semibold text-white tabular-nums">
-                {formatNumber(value)} <span className="text-xs font-normal text-slate-500">TRY</span>
+                {formatNumber(value)} <span className="text-xs font-normal text-[color:var(--panel-muted,#8a919c)]">TRY</span>
             </p>
         </div>
     );

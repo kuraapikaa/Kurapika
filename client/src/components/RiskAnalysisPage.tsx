@@ -55,7 +55,7 @@ function RiskScoreBadge({ score, breakdown }: { score: number; breakdown?: Retur
     level === 'high'
       ? 'border-rose-400/25 bg-rose-400/10 text-rose-300'
       : level === 'medium'
-        ? 'border-amber-300/25 bg-amber-300/10 text-amber-200'
+        ? 'border-amber-300/25 bg-[color:var(--panel-warning,#ff9f0a)]/10 text-amber-200'
         : 'border-emerald-400/25 bg-emerald-400/10 text-emerald-300';
 
   return (
@@ -70,7 +70,7 @@ function RiskScoreBadge({ score, breakdown }: { score: number; breakdown?: Retur
 
       {breakdown && breakdown.checked > 0 && (
         <div className="min-w-0">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[color:var(--panel-muted,#8a919c)]">
             {breakdown.total}/{breakdown.checked} kontrol başarısız
           </p>
           <div className="mt-1 flex flex-wrap items-center gap-1">
@@ -230,24 +230,24 @@ export function RiskAnalysisPage() {
 
   return (
     <div className="animate-in space-y-6">
-      <div className="rounded-xl border border-white/10 bg-gradient-to-br from-slate-900/90 to-slate-900/70 p-6">
+      <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-gradient-to-br from-slate-900/90 to-slate-900/70 p-6">
         <h2 className="flex items-center gap-3 text-xl font-semibold text-white">
           <Shield size={28} className="text-blue-400" />
           Risk Analizi
         </h2>
-        <p className="mt-1 text-sm text-slate-400">
+        <p className="mt-1 text-sm text-[color:var(--panel-muted,#8a919c)]">
           Oyuncu kullanıcı adı ile arama yapın; geçmiş işlemler, yatırma/çekim oranı ve risk skoru hesaplanır.
         </p>
         <div className="mt-6 flex flex-wrap items-center gap-3">
           <div className="relative flex-1 min-w-[200px]">
-            <User className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500" />
+            <User className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-[color:var(--panel-muted,#8a919c)]" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               placeholder="Kullanıcı adı (Login)"
-              className="w-full rounded-xl border border-white/10 bg-[rgba(242,244,248,0.80)] py-3 pl-10 pr-4 text-white placeholder-slate-500 focus:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              className="w-full rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.80)] py-3 pl-10 pr-4 text-white placeholder-slate-500 focus:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
             />
           </div>
           <button
@@ -269,46 +269,46 @@ export function RiskAnalysisPage() {
       </div>
 
       {loading && (
-        <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-white/5 bg-[rgba(242,244,248,0.40)] py-16">
+        <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.40)] py-16">
           <Loader2 size={48} className="animate-spin text-blue-400" />
-          <p className="text-slate-400">Analiz yapılıyor...</p>
+          <p className="text-[color:var(--panel-muted,#8a919c)]">Analiz yapılıyor...</p>
         </div>
       )}
 
       {report && !loading && execReport && (
         <div className="space-y-6">
-          <div className="rounded-xl border border-white/5 bg-[rgba(242,244,248,0.40)] p-6 flex items-center justify-between gap-4 flex-wrap">
+          <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.40)] p-6 flex items-center justify-between gap-4 flex-wrap">
             <div>
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Analiz Edilen Oyuncu</p>
-              <p className="text-xl font-bold text-white mt-1">{report.login} <span className="text-slate-500 font-mono text-base ml-2">#{report.clientId}</span></p>
+              <p className="text-[10px] font-bold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">Analiz Edilen Oyuncu</p>
+              <p className="text-xl font-bold text-white mt-1">{report.login} <span className="text-[color:var(--panel-muted,#8a919c)] font-mono text-base ml-2">#{report.clientId}</span></p>
             </div>
             <div className="flex gap-6">
               <div>
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">Net Yatırım</p>
+                <p className="text-[10px] font-bold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest text-right">Net Yatırım</p>
                 <p className="text-lg font-mono font-bold text-emerald-400 text-right">{formatNumber(netDeposit)} TRY</p>
               </div>
               {depositWithdrawRatio != null && (
                 <div>
-                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">Ç/Y Oranı</p>
-                  <p className="text-lg font-mono font-bold text-slate-300 text-right">%{(depositWithdrawRatio).toFixed(1)}</p>
+                  <p className="text-[10px] font-bold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest text-right">Ç/Y Oranı</p>
+                  <p className="text-lg font-mono font-bold text-[color:var(--panel-text-dim,#c8cdd5)] text-right">%{(depositWithdrawRatio).toFixed(1)}</p>
                 </div>
               )}
             </div>
           </div>
 
-          <div className="rounded-xl border border-white/10 bg-[rgba(242,244,248,0.40)] p-1 bg-gradient-to-br from-blue-500/10 to-transparent">
+          <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.40)] p-1 bg-gradient-to-br from-blue-500/10 to-transparent">
             {/* 1. RİSK SKORU & SINIFLANDIRMA */}
             <div className="p-6">
-              <h3 className="text-xs font-semibold uppercase tracking-widest text-blue-400 mb-4 flex items-center gap-2 border-b border-white/5 pb-2">
+              <h3 className="text-xs font-semibold uppercase tracking-widest text-blue-400 mb-4 flex items-center gap-2 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] pb-2">
                 1. Risk Skoru & Sınıflandırma
               </h3>
               <div className="flex items-center gap-6 mt-4">
                 <div>
-                  <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Skor:</p>
+                  <p className="text-[10px] font-bold text-[color:var(--panel-muted,#8a919c)] uppercase mb-1">Skor:</p>
                   <RiskScoreBadge score={riskScore} breakdown={failedBySeverity(report.riskAnalysis)} />
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Etiket:</p>
+                  <p className="text-[10px] font-bold text-[color:var(--panel-muted,#8a919c)] uppercase mb-1">Etiket:</p>
                   <span className={`inline-flex items-center rounded-xl px-4 py-3 text-lg font-bold border ${riskScore >= 70 ? 'bg-rose-500/10 text-rose-400 border-rose-500/30' : riskScore >= 40 ? 'bg-amber-500/10 text-amber-400 border-amber-500/30' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'}`}>
                     {execReport.label}
                   </span>
@@ -317,26 +317,26 @@ export function RiskAnalysisPage() {
             </div>
 
             {/* 2. KRİTİK İNCELEME */}
-            <div className="p-6 border-t border-white/5">
-              <h3 className="text-xs font-semibold uppercase tracking-widest text-blue-400 mb-4 flex items-center gap-2 border-b border-white/5 pb-2">
+            <div className="p-6 border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
+              <h3 className="text-xs font-semibold uppercase tracking-widest text-blue-400 mb-4 flex items-center gap-2 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] pb-2">
                 2. Kritik İnceleme (Deep Dive)
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                <div className="rounded-xl bg-[rgba(242,244,248,0.50)] p-4 border border-white/5">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase mb-3">Matematiksel Kanıtlar:</p>
+                <div className="rounded-xl bg-[rgba(242,244,248,0.50)] p-4 border border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
+                  <p className="text-[10px] font-bold text-[color:var(--panel-muted,#8a919c)] uppercase mb-3">Matematiksel Kanıtlar:</p>
                   <ul className="space-y-2 text-sm">
                     {execReport.mathEvidences.map((item, idx) => (
-                      <li key={idx} className="flex gap-2 text-slate-300 items-start">
+                      <li key={idx} className="flex gap-2 text-[color:var(--panel-text-dim,#c8cdd5)] items-start">
                         <span className="text-blue-500 mt-0.5">•</span> <span>{item}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
-                <div className="rounded-xl bg-[rgba(242,244,248,0.50)] p-4 border border-white/5">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase mb-3">Davranışsal Anomaliler:</p>
+                <div className="rounded-xl bg-[rgba(242,244,248,0.50)] p-4 border border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
+                  <p className="text-[10px] font-bold text-[color:var(--panel-muted,#8a919c)] uppercase mb-3">Davranışsal Anomaliler:</p>
                   <ul className="space-y-2 text-sm">
                     {execReport.behavioralAnomalies.map((item, idx) => (
-                      <li key={idx} className="flex gap-2 text-slate-300 items-start">
+                      <li key={idx} className="flex gap-2 text-[color:var(--panel-text-dim,#c8cdd5)] items-start">
                         <span className="text-blue-500 mt-0.5">•</span> <span>{item}</span>
                       </li>
                     ))}
@@ -346,34 +346,34 @@ export function RiskAnalysisPage() {
             </div>
 
             {/* 3. KARAR VE AKSİYON */}
-            <div className="p-6 border-t border-white/5">
-              <h3 className="text-xs font-semibold uppercase tracking-widest text-blue-400 mb-4 flex items-center gap-2 border-b border-white/5 pb-2">
+            <div className="p-6 border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
+              <h3 className="text-xs font-semibold uppercase tracking-widest text-blue-400 mb-4 flex items-center gap-2 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] pb-2">
                 3. Karar Ve Aksiyon (Executive Summary)
               </h3>
-              <div className="space-y-4 mt-4 text-sm bg-[rgba(242,244,248,0.50)] p-5 rounded-xl border border-white/5">
+              <div className="space-y-4 mt-4 text-sm bg-[rgba(242,244,248,0.50)] p-5 rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
                 <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
-                  <span className="font-bold text-slate-400 uppercase text-[10px] w-32 shrink-0 pt-0.5">Hesap Durumu:</span>
+                  <span className="font-bold text-[color:var(--panel-muted,#8a919c)] uppercase text-[10px] w-32 shrink-0 pt-0.5">Hesap Durumu:</span>
                   <span className="text-white font-medium">{execReport.accountStatus}</span>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
-                  <span className="font-bold text-slate-400 uppercase text-[10px] w-32 shrink-0 pt-0.5">Limit Uygulaması:</span>
+                  <span className="font-bold text-[color:var(--panel-muted,#8a919c)] uppercase text-[10px] w-32 shrink-0 pt-0.5">Limit Uygulaması:</span>
                   <span className="text-white font-medium">{execReport.limitApp}</span>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
-                  <span className="font-bold text-slate-400 uppercase text-[10px] w-32 shrink-0 pt-0.5">Bonus Erişimi:</span>
+                  <span className="font-bold text-[color:var(--panel-muted,#8a919c)] uppercase text-[10px] w-32 shrink-0 pt-0.5">Bonus Erişimi:</span>
                   <span className="text-white font-medium">{execReport.bonusAccess}</span>
                 </div>
               </div>
             </div>
 
             {/* 4. ANALİST NOTU */}
-            <div className="p-6 border-t border-white/5 bg-blue-950/10 rounded-b-xl">
-              <h3 className="text-xs font-semibold uppercase tracking-widest text-blue-400 mb-4 flex items-center gap-2 border-b border-white/5 pb-2">
+            <div className="p-6 border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-blue-950/10 rounded-b-xl">
+              <h3 className="text-xs font-semibold uppercase tracking-widest text-blue-400 mb-4 flex items-center gap-2 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] pb-2">
                 4. Analist Notu
               </h3>
               <div className="mt-4 p-5 rounded-xl border border-blue-500/20 bg-blue-900/10 relative">
                 <div className="absolute top-0 left-0 w-1 h-full bg-blue-500 rounded-l-xl opacity-80" />
-                <p className="text-slate-300 text-sm italic leading-relaxed pl-2">
+                <p className="text-[color:var(--panel-text-dim,#c8cdd5)] text-sm italic leading-relaxed pl-2">
                   {execReport.analystNote}
                 </p>
               </div>
@@ -383,7 +383,7 @@ export function RiskAnalysisPage() {
       )}
 
       {!report && !loading && submitSearch && !error && (
-        <p className="text-center text-slate-500">Sonuç bulunamadı veya veri yüklenemedi.</p>
+        <p className="text-center text-[color:var(--panel-muted,#8a919c)]">Sonuç bulunamadı veya veri yüklenemedi.</p>
       )}
     </div>
   );

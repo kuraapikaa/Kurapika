@@ -137,7 +137,7 @@ function PhoneShell({ url, config }: { url: string; config: EmbedConfig }) {
         type="button"
         aria-label="Önizlemeyi yenile"
         onClick={() => setKey(k => k + 1)}
-        className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-zinc-400 hover:text-white text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+        className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-[color:var(--panel-border,rgba(242,244,248,0.1))] text-[color:var(--panel-muted,#8a919c)] hover:text-white text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
       >
         <RefreshCw size={12} aria-hidden="true" /> Önizlemeyi Yenile
       </button>
@@ -166,13 +166,13 @@ function DesktopBrowser({ url, config }: { url: string; config: EmbedConfig }) {
         {/* Tab row */}
         <div className="flex items-end px-3 pt-2.5 gap-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
           {/* Active tab */}
-          <div className="flex items-center gap-2 px-3.5 py-2 text-xs text-zinc-200 font-medium max-w-[200px] min-w-0 relative"
+          <div className="flex items-center gap-2 px-3.5 py-2 text-xs text-[color:var(--panel-text-dim,#c8cdd5)] font-medium max-w-[200px] min-w-0 relative"
             style={{ background: '#0e0e1c', borderRadius: '8px 8px 0 0', border: '1px solid rgba(255,255,255,0.06)', borderBottom: '1px solid #0e0e1c', marginBottom: -1 }}>
             <div className="w-3 h-3 rounded-sm flex-shrink-0" style={{ background: 'rgba(99,102,241,0.5)' }} />
             <span className="truncate">Gömülü İçerik</span>
-            <span className="ml-1 text-zinc-600 hover:text-white cursor-pointer flex-shrink-0">×</span>
+            <span className="ml-1 text-[color:var(--panel-faint,#5c6470)] hover:text-white cursor-pointer flex-shrink-0">×</span>
           </div>
-          <div className="mb-0.5 ml-1 flex h-6 w-6 items-center justify-center rounded-full text-sm text-zinc-600 hover:text-zinc-400 cursor-pointer">+</div>
+          <div className="mb-0.5 ml-1 flex h-6 w-6 items-center justify-center rounded-full text-sm text-[color:var(--panel-faint,#5c6470)] hover:text-[color:var(--panel-muted,#8a919c)] cursor-pointer">+</div>
         </div>
 
         {/* Controls row */}
@@ -184,7 +184,7 @@ function DesktopBrowser({ url, config }: { url: string; config: EmbedConfig }) {
             <div className="w-3 h-3 rounded-full cursor-pointer transition-brightness hover:brightness-125" style={{ background: '#28c840' }} />
           </div>
           {/* Nav */}
-          <div className="flex items-center text-zinc-600 flex-shrink-0">
+          <div className="flex items-center text-[color:var(--panel-faint,#5c6470)] flex-shrink-0">
             <button type="button" aria-label="Geri" className="p-1 hover:bg-white/5 rounded transition-colors"><ChevronLeft size={15} aria-hidden="true" /></button>
             <button type="button" aria-label="İleri" className="p-1 hover:bg-white/5 rounded transition-colors"><ChevronRight size={15} aria-hidden="true" /></button>
           </div>
@@ -197,13 +197,13 @@ function DesktopBrowser({ url, config }: { url: string; config: EmbedConfig }) {
               <path d="M2.5 5.5V4a3 3 0 0 1 6 0v1.5" stroke="#34d399" strokeWidth="1" strokeLinecap="round" />
             </svg>
             <span className="text-[11px] font-mono truncate flex-1" style={{ color: 'rgba(255,255,255,0.35)' }}>{url}</span>
-            <button type="button" aria-label="Yenile" onClick={() => setKey(k => k + 1)} className="flex-shrink-0 text-zinc-600 hover:text-white transition-colors">
+            <button type="button" aria-label="Yenile" onClick={() => setKey(k => k + 1)} className="flex-shrink-0 text-[color:var(--panel-faint,#5c6470)] hover:text-white transition-colors">
               <RefreshCw size={11} aria-hidden="true" />
             </button>
           </div>
           {/* Open in new tab */}
           <a href={url} target="_blank" rel="noreferrer"
-            className="flex-shrink-0 p-1.5 rounded-lg text-zinc-600 hover:text-white transition-colors hover:bg-white/5">
+            className="flex-shrink-0 p-1.5 rounded-lg text-[color:var(--panel-faint,#5c6470)] hover:text-white transition-colors hover:bg-white/5">
             <ExternalLink size={14} />
           </a>
         </div>
@@ -294,7 +294,7 @@ export function IFrameGenerator() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-white">iFrame Entegrasyon Merkezi</h1>
-          <p className="mt-0.5 text-sm text-zinc-500">Oyunları kendi platformunuza gömmek için hazır kod üreticisi</p>
+          <p className="mt-0.5 text-sm text-[color:var(--panel-muted,#8a919c)]">Oyunları kendi platformunuza gömmek için hazır kod üreticisi</p>
         </div>
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border"
           style={{ background: 'rgba(99,102,241,0.08)', borderColor: 'rgba(99,102,241,0.2)', color: '#818cf8' }}>
@@ -314,7 +314,7 @@ export function IFrameGenerator() {
             <div className="p-5 space-y-6">
               {/* Page selector */}
               <div>
-                <p className="text-[10px] uppercase tracking-widest font-semibold text-zinc-500 mb-2.5">Gömülecek Sayfa</p>
+                <p className="text-[10px] uppercase tracking-widest font-semibold text-[color:var(--panel-muted,#8a919c)] mb-2.5">Gömülecek Sayfa</p>
                 <div className="grid grid-cols-1 gap-1.5">
                   {PAGES.map(page => {
                     const Icon = page.icon;
@@ -329,7 +329,7 @@ export function IFrameGenerator() {
                           'flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/50',
                           active
                             ? 'text-white'
-                            : 'text-zinc-500 hover:text-zinc-300',
+                            : 'text-[color:var(--panel-muted,#8a919c)] hover:text-[color:var(--panel-text-dim,#c8cdd5)]',
                         )}
                         style={active ? {
                           background: 'rgba(99,102,241,0.12)',
@@ -339,7 +339,7 @@ export function IFrameGenerator() {
                           border: '1px solid rgba(255,255,255,0.04)',
                         }}
                       >
-                        <Icon size={15} className={active ? page.color : 'text-zinc-600'} aria-hidden="true" />
+                        <Icon size={15} className={active ? page.color : 'text-[color:var(--panel-faint,#5c6470)]'} aria-hidden="true" />
                         <span className="text-[13px] font-bold flex-1">{page.label}</span>
                         {page.badge && (
                           <span className="text-[9px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded-full"
@@ -358,10 +358,10 @@ export function IFrameGenerator() {
 
               {/* Size (only relevant for desktop) */}
               <div>
-                <p className="text-[10px] uppercase tracking-widest font-semibold text-zinc-500 mb-2.5">Boyutlar</p>
+                <p className="text-[10px] uppercase tracking-widest font-semibold text-[color:var(--panel-muted,#8a919c)] mb-2.5">Boyutlar</p>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label htmlFor="iframe-width" className="text-[10px] text-zinc-600 mb-1 block">Genişlik</label>
+                    <label htmlFor="iframe-width" className="text-[10px] text-[color:var(--panel-faint,#5c6470)] mb-1 block">Genişlik</label>
                     <input
                       id="iframe-width"
                       type="text"
@@ -373,7 +373,7 @@ export function IFrameGenerator() {
                     />
                   </div>
                   <div>
-                    <label htmlFor="iframe-height" className="text-[10px] text-zinc-600 mb-1 block">Yükseklik (px)</label>
+                    <label htmlFor="iframe-height" className="text-[10px] text-[color:var(--panel-faint,#5c6470)] mb-1 block">Yükseklik (px)</label>
                     <input
                       id="iframe-height"
                       type="number"
@@ -390,12 +390,12 @@ export function IFrameGenerator() {
 
               {/* Style */}
               <div>
-                <p className="text-[10px] uppercase tracking-widest font-semibold text-zinc-500 mb-2.5">Stil</p>
+                <p className="text-[10px] uppercase tracking-widest font-semibold text-[color:var(--panel-muted,#8a919c)] mb-2.5">Stil</p>
                 <div className="space-y-2.5">
                   {/* Border radius */}
                   <div className="flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-xl"
                     style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                    <label htmlFor="iframe-radius" className="text-[13px] font-medium text-zinc-300 shrink-0">Köşe yumuşatma</label>
+                    <label htmlFor="iframe-radius" className="text-[13px] font-medium text-[color:var(--panel-text-dim,#c8cdd5)] shrink-0">Köşe yumuşatma</label>
                     <div className="flex items-center gap-2">
                       <input
                         id="iframe-radius"
@@ -405,7 +405,7 @@ export function IFrameGenerator() {
                         aria-valuetext={`${config.borderRadius}px`}
                         className="w-16 sm:w-20 accent-blue-500"
                       />
-                      <span className="text-xs font-bold text-zinc-500 w-9 text-right" aria-hidden="true">{config.borderRadius}px</span>
+                      <span className="text-xs font-bold text-[color:var(--panel-muted,#8a919c)] w-9 text-right" aria-hidden="true">{config.borderRadius}px</span>
                     </div>
                   </div>
 
@@ -417,7 +417,7 @@ export function IFrameGenerator() {
                   ].map(item => (
                     <div key={item.key} className="flex items-center justify-between px-3.5 py-2.5 rounded-xl"
                       style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                      <span className="text-[13px] font-medium text-zinc-300">{item.label}</span>
+                      <span className="text-[13px] font-medium text-[color:var(--panel-text-dim,#c8cdd5)]">{item.label}</span>
                       <Toggle checked={config[item.key]} onChange={v => set({ [item.key]: v })} />
                     </div>
                   ))}
@@ -447,7 +447,7 @@ export function IFrameGenerator() {
                   type="button"
                   aria-pressed={device === 'desktop'}
                   onClick={() => setDevice('desktop')}
-                  className={cn('flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/50', device === 'desktop' ? 'text-white' : 'text-zinc-600 hover:text-zinc-400')}
+                  className={cn('flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/50', device === 'desktop' ? 'text-white' : 'text-[color:var(--panel-faint,#5c6470)] hover:text-[color:var(--panel-muted,#8a919c)]')}
                   style={device === 'desktop' ? { background: 'rgba(99,102,241,0.2)', boxShadow: 'inset 0 0 0 1px rgba(99,102,241,0.3)' } : {}}
                 >
                   <Monitor size={14} aria-hidden="true" />
@@ -457,7 +457,7 @@ export function IFrameGenerator() {
                   type="button"
                   aria-pressed={device === 'mobile'}
                   onClick={() => setDevice('mobile')}
-                  className={cn('flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/50', device === 'mobile' ? 'text-white' : 'text-zinc-600 hover:text-zinc-400')}
+                  className={cn('flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/50', device === 'mobile' ? 'text-white' : 'text-[color:var(--panel-faint,#5c6470)] hover:text-[color:var(--panel-muted,#8a919c)]')}
                   style={device === 'mobile' ? { background: 'rgba(99,102,241,0.2)', boxShadow: 'inset 0 0 0 1px rgba(99,102,241,0.3)' } : {}}
                 >
                   <Smartphone size={14} aria-hidden="true" />
@@ -510,8 +510,8 @@ export function IFrameGenerator() {
 
             {/* URL bar at bottom */}
             <div className="flex items-center gap-2 px-4 sm:px-5 py-3" style={{ borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.3)' }}>
-              <Globe size={13} className="text-zinc-600 flex-shrink-0" aria-hidden="true" />
-              <span className="flex-1 text-[11px] font-mono truncate text-zinc-500 min-w-0">{embedUrl}</span>
+              <Globe size={13} className="text-[color:var(--panel-faint,#5c6470)] flex-shrink-0" aria-hidden="true" />
+              <span className="flex-1 text-[11px] font-mono truncate text-[color:var(--panel-muted,#8a919c)] min-w-0">{embedUrl}</span>
               <button
                 type="button"
                 aria-label={copied === 'url' ? 'URL kopyalandı' : 'URL kopyala'}
@@ -524,7 +524,7 @@ export function IFrameGenerator() {
               </button>
               <a href={embedUrl} target="_blank" rel="noreferrer"
                 aria-label="Sayfayı yeni sekmede aç"
-                className="flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-zinc-500 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+                className="flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-[color:var(--panel-muted,#8a919c)] hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
                 style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)' }}>
                 <ExternalLink size={11} aria-hidden="true" />
                 <span className="hidden sm:inline">Aç</span>
@@ -560,7 +560,7 @@ export function IFrameGenerator() {
                 <div className="absolute left-0 top-0 bottom-0 w-10 flex flex-col items-end pr-2 pt-4 gap-[1px] pointer-events-none select-none"
                   style={{ background: 'rgba(0,0,0,0.2)', borderRight: '1px solid rgba(255,255,255,0.04)' }}>
                   {generatedCode.split('\n').map((_, i) => (
-                    <span key={i} className="text-[11px] font-mono leading-5 text-zinc-700">{i + 1}</span>
+                    <span key={i} className="text-[11px] font-mono leading-5 text-[color:var(--panel-faint,#5c6470)]">{i + 1}</span>
                   ))}
                 </div>
                 <textarea
