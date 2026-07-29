@@ -128,7 +128,7 @@ export function PredictionLeagueManager({
 
   return (
     <div className="space-y-6">
-      <section className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.45)] p-5 md:p-6">
+      <section className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-5 md:p-6">
         <div className="mb-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-300/70">Spor etkinliği</p>
@@ -204,7 +204,7 @@ export function PredictionLeagueManager({
         </div>
       </section>
 
-      <section className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.45)] p-5 md:p-6">
+      <section className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-5 md:p-6">
         <div className="mb-5 flex items-center justify-between gap-3">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--panel-faint,#5c6470)]">Fikstür</p>

@@ -88,7 +88,7 @@ export function ChurnPrevention() {
     return (
         <div className="animate-in space-y-6 pb-20">
             {/* Header */}
-            <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between bg-[rgba(242,244,248,0.40)] p-6 rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] backdrop-blur-md">
+            <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-6 rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] backdrop-blur-md">
                 <div className="flex items-center gap-3">
                     <div className="rounded-xl bg-rose-500/20 p-3 text-rose-400 shadow-xl shadow-rose-500/10">
                         <UserX size={28} />
@@ -127,7 +127,7 @@ export function ChurnPrevention() {
                                 setSearchTerm(e.target.value);
                                 setPage(1);
                             }}
-                            className="h-11 w-64 rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.60)] pl-11 pr-4 text-sm font-medium text-white transition-all focus:border-rose-500/50 focus:ring-1 focus:ring-rose-500/20 outline-none"
+                            className="h-11 w-64 rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] pl-11 pr-4 text-sm font-medium text-white transition-all focus:border-rose-500/50 focus:ring-1 focus:ring-rose-500/20 outline-none"
                         />
                     </div>
 
@@ -172,7 +172,7 @@ export function ChurnPrevention() {
             </div>
 
             {/* Table */}
-            <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.40)] backdrop-blur-md overflow-hidden shadow-2xl">
+            <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] backdrop-blur-md overflow-hidden shadow-2xl">
                 <div className="flex items-center justify-between px-8 py-6 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
                     <div className="flex items-center gap-3">
                         <Clock size={18} className="text-rose-400" />
@@ -315,7 +315,7 @@ export function ChurnPrevention() {
 
                 {/* Pagination */}
                 {totalPages > 1 && (
-                    <div className="flex items-center justify-between px-8 py-6 border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.20)]">
+                    <div className="flex items-center justify-between px-8 py-6 border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))]">
                         <p className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">
                             Sayfa {page} / {totalPages} · Toplam {totalCount} Kayıt
                         </p>

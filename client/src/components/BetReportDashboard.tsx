@@ -113,7 +113,7 @@ export function BetReportDashboard({
 
   if (isLoading) {
     return (
-      <div className="flex h-64 flex-col items-center justify-center gap-4 rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.40)]">
+      <div className="flex h-64 flex-col items-center justify-center gap-4 rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))]">
         <div className="h-12 w-12 animate-spin rounded-full border-4 border-cyan-500 border-t-transparent" />
         <p className="text-sm font-bold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">Bahis motoru analiz ediliyor...</p>
       </div>
@@ -131,7 +131,7 @@ export function BetReportDashboard({
             transition={{ delay: idx * 0.1 }}
           >
             <Card className={cn(
-              "group relative overflow-hidden p-6 border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.20)] backdrop-blur-3xl transition-all duration-500 hover:scale-[1.02] hover:bg-[rgba(242,244,248,0.40)]",
+              "group relative overflow-hidden p-6 border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] backdrop-blur-3xl transition-all duration-500 hover:scale-[1.02] hover:bg-[color:var(--panel-surface,rgba(242,244,248,0.028))]",
               card.borderClass
             )}>
               <div className={cn("absolute -right-4 -top-4 h-24 w-24 rounded-full blur-3xl opacity-0 group-hover:opacity-20 transition-opacity duration-700", `bg-${card.color}-500`)} />

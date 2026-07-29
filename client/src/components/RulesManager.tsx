@@ -387,7 +387,7 @@ export function RulesManager() {
                                 placeholder="Kural veya ID ara..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full h-14 bg-[rgba(242,244,248,0.40)] backdrop-blur-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl pl-12 pr-4 text-sm text-white placeholder:text-[color:var(--panel-faint,#5c6470)] focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/20 transition-all font-bold"
+                                className="w-full h-14 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] backdrop-blur-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl pl-12 pr-4 text-sm text-white placeholder:text-[color:var(--panel-faint,#5c6470)] focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/20 transition-all font-bold"
                             />
                         </div>
                     </div>
@@ -633,7 +633,7 @@ export function RulesManager() {
                                                     </div>
 
                                                     {editValue?.amountType === 'tiered' && (
-                                                        <div className="p-4 rounded-xl bg-[rgba(242,244,248,0.40)] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] space-y-4">
+                                                        <div className="p-4 rounded-xl bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] space-y-4">
                                                             <div className="flex items-center justify-between">
                                                                 <label className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest block pl-1">Barem Ayarları</label>
                                                                 <Button
@@ -687,7 +687,7 @@ export function RulesManager() {
                                                     )}
 
                                                     {editValue?.amountType === 'tieredRange' && (
-                                                        <div className="p-4 rounded-xl bg-[rgba(242,244,248,0.40)] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] space-y-4">
+                                                        <div className="p-4 rounded-xl bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] space-y-4">
                                                             <div className="flex items-center justify-between">
                                                                 <label className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest block pl-1">Yatırım Aralığı Ayarları</label>
                                                                 <Button
@@ -753,7 +753,7 @@ export function RulesManager() {
                                                     )}
 
                                                     {editValue?.amountType === 'tieredPercentage' && (
-                                                        <div className="p-4 rounded-xl bg-[rgba(242,244,248,0.40)] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] space-y-4">
+                                                        <div className="p-4 rounded-xl bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] space-y-4">
                                                             <div className="flex items-center justify-between">
                                                                 <div>
                                                                     <label className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest block pl-1">Yüzdeli Yatırım Baremi Aralığı</label>
@@ -1312,7 +1312,7 @@ export function RulesManager() {
                                                             </p>
                                                         </div>
                                                     )}
-                                                    <div className="space-y-1 p-3 rounded-xl bg-[rgba(242,244,248,0.50)] border border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
+                                                    <div className="space-y-1 p-3 rounded-xl bg-[color:var(--panel-surface-2,rgba(242,244,248,0.05))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
                                                         <p className="text-[9px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase">Kontroller</p>
                                                         <div className="flex gap-1.5 mt-1">
                                                             {spec.checkPendingWithdrawal && <div className="w-2 h-2 rounded-full bg-rose-500" title="Çekim Kontrolü" />}
@@ -1355,7 +1355,7 @@ export function RulesManager() {
                 </div>
 
                 <div className="lg:col-span-3 space-y-8">
-                    <Card className="p-8 border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.40)] backdrop-blur-xl shadow-2xl relative overflow-hidden group">
+                    <Card className="p-8 border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] backdrop-blur-xl shadow-2xl relative overflow-hidden group">
                         <div className="absolute top-0 right-0 -mr-16 -mt-16 h-40 w-40 rounded-full bg-emerald-500/5 blur-3xl group-hover:bg-emerald-500/10 transition-all duration-1000" />
                         <div className="relative z-10 flex flex-col items-center text-center space-y-6">
                             <div className="h-20 w-20 rounded-full border-4 border-dashed border-emerald-500/20 flex items-center justify-center bg-emerald-500/5">
@@ -1450,7 +1450,7 @@ function StatItem({ label, value, unit, color }: any) {
 
 function ToggleField({ label, description, value, onChange }: { label: string; description?: string; value: boolean | undefined; onChange: (v: boolean | undefined) => void }) {
     return (
-        <div className="group space-y-4 p-6 rounded-xl bg-[rgba(242,244,248,0.40)] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] hover:border-blue-500/20 transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/5">
+        <div className="group space-y-4 p-6 rounded-xl bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] hover:border-blue-500/20 transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/5">
             <div className="min-h-[48px]">
                 <p className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] group-hover:text-white uppercase tracking-[0.1em] transition-colors">{label}</p>
                 {description && <p className="text-[11px] text-[color:var(--panel-faint,#5c6470)] font-medium mt-2 leading-relaxed line-clamp-2">{description}</p>}
@@ -1640,7 +1640,7 @@ function PromoContentEditor({ externalId, promoTitle }: { externalId: number; pr
     });
 
     return (
-        <div className="space-y-6 p-8 rounded-xl bg-[rgba(242,244,248,0.40)] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] relative overflow-hidden group">
+        <div className="space-y-6 p-8 rounded-xl bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] relative overflow-hidden group">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500/50 via-blue-500/50 to-transparent opacity-30" />
 
             <div className="flex flex-col md:flex-row items-start justify-between gap-6 relative z-10">
@@ -1705,7 +1705,7 @@ function PromoContentEditor({ externalId, promoTitle }: { externalId: number; pr
 
                 <div className="space-y-3">
                     <label className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest block pl-1">CANLI ÖNİZLEME</label>
-                    <div className="relative rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.50)] p-6 h-full min-h-[400px] overflow-hidden group/preview">
+                    <div className="relative rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-6 h-full min-h-[400px] overflow-hidden group/preview">
                         <div className="absolute inset-0 bg-gradient-to-b from-blue-500/5 to-transparent opacity-0 group-hover/preview:opacity-100 transition-opacity" />
 
                         {image?.trim() ? (

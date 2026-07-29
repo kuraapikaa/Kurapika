@@ -362,7 +362,7 @@ export const SMSPanel: React.FC = () => {
                                             <div className="text-xs font-bold text-white tracking-widest uppercase">GÖNDERİCİ</div>
                                         </div>
                                     </div>
-                                    <div className="bg-[rgba(242,244,248,0.80)] rounded-xl rounded-tl-none p-4 text-xs text-[color:var(--panel-text-dim,#c8cdd5)] leading-relaxed border border-[color:var(--panel-border,rgba(242,244,248,0.1))] backdrop-blur-md">
+                                    <div className="bg-[color:var(--panel-surface-2,rgba(242,244,248,0.05))] rounded-xl rounded-tl-none p-4 text-xs text-[color:var(--panel-text-dim,#c8cdd5)] leading-relaxed border border-[color:var(--panel-border,rgba(242,244,248,0.1))] backdrop-blur-md">
                                         {message || "Mesaj önizlemesi burada görünecek..."}
                                     </div>
                                     <div className="mt-2 text-[10px] text-[color:var(--panel-faint,#5c6470)] font-medium">Şimdi • SMS</div>

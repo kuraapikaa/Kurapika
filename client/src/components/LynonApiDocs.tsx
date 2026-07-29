@@ -505,7 +505,7 @@ export function LynonApiDocs() {
                   <div className="overflow-x-auto rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/30">
                     <table className="w-full text-left text-xs border-collapse">
                       <thead>
-                        <tr className="border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] text-[color:var(--panel-muted,#8a919c)] bg-[rgba(242,244,248,0.50)]">
+                        <tr className="border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] text-[color:var(--panel-muted,#8a919c)] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))]">
                           <th className="p-2.5 font-semibold">Adı</th>
                           <th className="p-2.5 font-semibold">Tip</th>
                           <th className="p-2.5 font-semibold">Zorunlu</th>

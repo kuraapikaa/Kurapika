@@ -94,11 +94,11 @@ export function PlayerSportsBets({ clientId }: PlayerSportsBetsProps) {
             </div>
 
             {bets.length === 0 ? (
-                <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.40)] p-8 text-center text-[color:var(--panel-muted,#8a919c)]">
+                <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-8 text-center text-[color:var(--panel-muted,#8a919c)]">
                     Oynanmış spor bahsi bulunmuyor.
                 </div>
             ) : (
-                <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.40)] overflow-x-auto">
+                <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] overflow-x-auto">
                     <table className="w-full text-left text-sm">
                         <thead className="bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
                             <tr>
@@ -146,7 +146,7 @@ export function PlayerSportsBets({ clientId }: PlayerSportsBetsProps) {
                                                 <span className={`inline-flex px-2 py-1 text-[10px] font-bold uppercase tracking-widest rounded-md ${isWon ? 'bg-emerald-500/20 text-emerald-400' :
                                                     isLost ? 'bg-rose-500/20 text-rose-400' :
                                                         isReturned ? 'bg-amber-500/20 text-amber-400' :
-                                                            'bg-[rgba(242,244,248,0.20)] text-[color:var(--panel-muted,#8a919c)]'
+                                                            'bg-[rgba(242,244,248,0.08)] text-[color:var(--panel-muted,#8a919c)]'
                                                     }`}>
                                                     {bet.StateName ?? 'Unknown'}
                                                 </span>
@@ -158,7 +158,7 @@ export function PlayerSportsBets({ clientId }: PlayerSportsBetsProps) {
                                             </td>
                                         </tr>
                                         {isExpanded && (
-                                            <tr className="bg-[rgba(242,244,248,0.40)]">
+                                            <tr className="bg-[color:var(--panel-surface,rgba(242,244,248,0.028))]">
                                                 <td colSpan={6} className="p-4">
                                                     {betSelectionsQuery.isLoading && expandedBetId === bet.Id ? (
                                                         <div className="flex justify-center p-4"><Loader2 size={16} className="animate-spin text-[color:var(--panel-muted,#8a919c)]" /></div>

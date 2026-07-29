@@ -20,7 +20,7 @@ export function NetworkMap({ loginIp, clientId }: NetworkMapProps) {
 
     if (!loginIp) {
         return (
-            <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.20)] p-20 text-center flex flex-col items-center justify-center text-[color:var(--panel-muted,#8a919c)] backdrop-blur-sm">
+            <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-20 text-center flex flex-col items-center justify-center text-[color:var(--panel-muted,#8a919c)] backdrop-blur-sm">
                 <div className="relative mb-6">
                     <Globe size={64} className="opacity-10" />
                     <AlertTriangle size={24} className="absolute -bottom-2 -right-2 text-amber-500/50" />
@@ -35,7 +35,7 @@ export function NetworkMap({ loginIp, clientId }: NetworkMapProps) {
 
     if (isLoading) {
         return (
-            <div className="flex h-[500px] items-center justify-center flex-col gap-6 bg-[rgba(242,244,248,0.20)] rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
+            <div className="flex h-[500px] items-center justify-center flex-col gap-6 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
                 <div className="relative">
                     <motion.div
                         animate={{ rotate: 360 }}
@@ -199,7 +199,7 @@ export function NetworkMap({ loginIp, clientId }: NetworkMapProps) {
                                     "hover:shadow-[0_0_30px_rgba(139,92,246,0.3)] hover:-translate-y-1",
                                     isCurrentClient
                                         ? 'border-amber-500/50 bg-amber-950/60 shadow-[0_0_20px_rgba(245,158,11,0.1)] ring-4 ring-amber-500/10'
-                                        : 'border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.80)] hover:bg-[rgba(242,244,248,0.90)] hover:border-blue-500/50'
+                                        : 'border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] hover:bg-[color:var(--panel-surface-2,rgba(242,244,248,0.05))] hover:border-blue-500/50'
                                 )}
                                 onClick={() => {
                                     if (!isCurrentClient) {
@@ -251,13 +251,13 @@ export function NetworkMap({ loginIp, clientId }: NetworkMapProps) {
                                 "flex items-center justify-between p-5 rounded-xl border transition-all duration-300",
                                 isMatch
                                     ? "bg-amber-500/5 border-amber-500/20 shadow-lg shadow-amber-500/5"
-                                    : "bg-[rgba(242,244,248,0.40)] border-[color:var(--panel-border,rgba(242,244,248,0.1))] hover:border-[color:var(--panel-border,rgba(242,244,248,0.1))]"
+                                    : "bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border-[color:var(--panel-border,rgba(242,244,248,0.1))] hover:border-[color:var(--panel-border,rgba(242,244,248,0.1))]"
                             )}
                         >
                             <div className="flex items-center gap-4">
                                 <div className={cn(
                                     "p-2.5 rounded-xl",
-                                    isMatch ? "bg-amber-500/10 text-amber-400" : "bg-[rgba(242,244,248,0.60)] text-[color:var(--panel-muted,#8a919c)]"
+                                    isMatch ? "bg-amber-500/10 text-amber-400" : "bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] text-[color:var(--panel-muted,#8a919c)]"
                                 )}>
                                     <Monitor size={18} />
                                 </div>

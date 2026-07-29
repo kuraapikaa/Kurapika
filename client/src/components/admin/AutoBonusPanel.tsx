@@ -244,7 +244,7 @@ export function AutoBonusPanel({ variant = 'admin', prefilledLogin }: AutoBonusP
 
             {/* Search Section */}
             {!isPlayerPanel && (
-                <section className="bg-[rgba(242,244,248,0.50)] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl p-6 backdrop-blur-xl mb-6">
+                <section className="bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl p-6 backdrop-blur-xl mb-6">
                     <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4">
                         <div className="flex-1 relative">
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[color:var(--panel-muted,#8a919c)]" size={20} />
@@ -293,7 +293,7 @@ export function AutoBonusPanel({ variant = 'admin', prefilledLogin }: AutoBonusP
                         {!isPlayerPanel && (
                             <div className="lg:col-span-7 space-y-6">
                                 {/* Profile Overview */}
-                                <div className="bg-[rgba(242,244,248,0.50)] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl p-6 backdrop-blur-xl">
+                                <div className="bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl p-6 backdrop-blur-xl">
                                     <div className="flex items-center justify-between mb-6">
                                         <div className="flex items-center gap-4">
                                             <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-blue-500 to-blue-500 flex items-center justify-center text-white font-bold text-xl shadow-lg">
@@ -351,7 +351,7 @@ export function AutoBonusPanel({ variant = 'admin', prefilledLogin }: AutoBonusP
                                 {/* Checks */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {/* Risk Analizi */}
-                                    <div className="bg-[rgba(242,244,248,0.50)] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl p-5 backdrop-blur-xl">
+                                    <div className="bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl p-5 backdrop-blur-xl">
                                         <h4 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
                                             <ShieldCheck className="text-rose-400" size={16} />
                                             Risk Analizi
@@ -373,7 +373,7 @@ export function AutoBonusPanel({ variant = 'admin', prefilledLogin }: AutoBonusP
                                     </div>
 
                                     {/* Bonus Kontrolleri */}
-                                    <div className="bg-[rgba(242,244,248,0.50)] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl p-5 backdrop-blur-xl">
+                                    <div className="bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl p-5 backdrop-blur-xl">
                                         <h4 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
                                             <CheckCircle2 className="text-blue-400" size={16} />
                                             Bonus & Çekim Koşulları
@@ -402,7 +402,7 @@ export function AutoBonusPanel({ variant = 'admin', prefilledLogin }: AutoBonusP
                                 </div>
 
                                 {/* Transactions Highlight */}
-                                <div className="bg-[rgba(242,244,248,0.50)] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl p-5 backdrop-blur-xl">
+                                <div className="bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl p-5 backdrop-blur-xl">
                                     <h4 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
                                         <History className="text-[color:var(--panel-muted,#8a919c)]" size={16} />
                                         Son İşlemler
@@ -441,7 +441,7 @@ export function AutoBonusPanel({ variant = 'admin', prefilledLogin }: AutoBonusP
 
                         {/* Right Column: Bonus Selection & Action */}
                         <div className={isPlayerPanel ? "w-full max-w-[600px] space-y-6" : "lg:col-span-5 space-y-6"}>
-                            <div className="bg-[rgba(242,244,248,0.50)] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl p-6 backdrop-blur-xl sticky top-6">
+                            <div className="bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl p-6 backdrop-blur-xl sticky top-6">
                                 <h3 className="font-bold text-white mb-4 flex items-center gap-2">
                                     <Gift className="text-emerald-400" size={18} />
                                     {isPlayerPanel ? 'Bonus Listesinden Seçin' : 'Tanımlanacak Bonusu Seçin'}

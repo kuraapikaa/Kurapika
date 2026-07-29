@@ -31,7 +31,7 @@ function StatusBadge({ value }: { value: unknown }) {
     paid: 'border-emerald-400/20 bg-emerald-400/10 text-emerald-300',
     rejected: 'border-rose-400/20 bg-rose-400/10 text-rose-300',
     pending: 'border-amber-300/20 bg-[color:var(--panel-warning,#ff9f0a)]/10 text-amber-200',
-    neutral: 'border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.20)] text-[color:var(--panel-text-dim,#c8cdd5)]',
+    neutral: 'border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface-2,rgba(242,244,248,0.05))] text-[color:var(--panel-text-dim,#c8cdd5)]',
   };
   const Icon = tone === 'paid' ? CheckCircle2 : tone === 'rejected' ? XCircle : Clock3;
   return (

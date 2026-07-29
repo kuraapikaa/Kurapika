@@ -89,7 +89,7 @@ export function ScratchManager({ config, bonusOptions, onUpdate }: ScratchManage
         {statCards.map(stat => {
           const Icon = stat.icon;
           return (
-            <div key={stat.label} className="rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.70)] p-4">
+            <div key={stat.label} className="rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-4">
               <div className="flex items-center gap-3">
                 <div className={cn('flex h-9 w-9 items-center justify-center rounded-md bg-black/40', stat.tone)}>
                   <Icon size={17} />
@@ -106,7 +106,7 @@ export function ScratchManager({ config, bonusOptions, onUpdate }: ScratchManage
 
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="space-y-5">
-          <div className="flex flex-col gap-3 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.70)] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <div className="text-sm font-semibold text-white">Genel Kazanma Olasiligi</div>
               <p className="mt-0.5 text-xs font-medium text-[color:var(--panel-muted,#8a919c)]">Her oyunda bu oran kadar odul cekilisi yapilir.</p>
@@ -127,7 +127,7 @@ export function ScratchManager({ config, bonusOptions, onUpdate }: ScratchManage
             </label>
           </div>
 
-          <div className="flex flex-col gap-3 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.70)] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <div className="text-sm font-semibold text-white">Yatırım Şartı</div>
               <p className="mt-0.5 text-xs font-medium text-[color:var(--panel-muted,#8a919c)]">Oyuncunun kazı kazan oynayabilmesi için gereken minimum son yatırım tutarı. 0 = şartsız.</p>
@@ -147,7 +147,7 @@ export function ScratchManager({ config, bonusOptions, onUpdate }: ScratchManage
             </label>
           </div>
 
-          <section className="overflow-hidden rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.70)]">
+          <section className="overflow-hidden rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))]">
             <div className="flex flex-col gap-3 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-sm font-semibold text-white">Odul Havuzu</h2>
@@ -232,7 +232,7 @@ export function ScratchManager({ config, bonusOptions, onUpdate }: ScratchManage
             )}
           </section>
           {config.rewards.some(reward => reward.type === 'bonus' && reward.bonusId) && (
-            <section className="grid grid-cols-1 gap-3 rounded-lg border border-amber-300/15 bg-[rgba(242,244,248,0.70)] p-4 lg:grid-cols-2">
+            <section className="grid grid-cols-1 gap-3 rounded-lg border border-amber-300/15 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-4 lg:grid-cols-2">
               {config.rewards.filter(reward => reward.type === 'bonus' && reward.bonusId).map(reward => (
                 <LynonAssignmentValuesField
                   key={`assignment-${reward.id}`}
@@ -246,7 +246,7 @@ export function ScratchManager({ config, bonusOptions, onUpdate }: ScratchManage
         </div>
 
         <aside className="space-y-5">
-          <section className="rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.70)] p-5">
+          <section className="rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-5">
             <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-white">
               <BarChart3 size={15} className="text-amber-400" />
               Siklik Dagilimi
@@ -287,7 +287,7 @@ export function ScratchManager({ config, bonusOptions, onUpdate }: ScratchManage
             )}
           </section>
 
-          <section className="rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.70)] p-5">
+          <section className="rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-5">
             <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-white">
               <Info size={15} className="text-[color:var(--panel-muted,#8a919c)]" />
               Bilgi
@@ -306,7 +306,7 @@ export function ScratchManager({ config, bonusOptions, onUpdate }: ScratchManage
             </div>
           </section>
 
-          <section className="rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.70)] p-5">
+          <section className="rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-5">
             <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-white">
               <SlidersHorizontal size={15} className="text-[color:var(--panel-muted,#8a919c)]" />
               Durum

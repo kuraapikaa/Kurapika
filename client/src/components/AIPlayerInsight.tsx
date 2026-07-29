@@ -65,7 +65,7 @@ export function AIPlayerInsight({ data, ipData }: AIPlayerInsightProps) {
     const hasNoBonus = Number(data.BonusBalance ?? 0) <= 0 && Number(data.TotalSportBonusStakes ?? 0) + Number(data.TotalCasinoBonusStakes ?? 0) <= 0;
     const profileTags = [
         isNewPlayer && { label: 'New Player', tone: 'border-sky-400/30 bg-[color:var(--panel-accent,#0a84ff)]/10 text-sky-200' },
-        hasNoBonus && { label: 'No Bonus User', tone: 'border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.10)] text-[color:var(--panel-text-dim,#c8cdd5)]' },
+        hasNoBonus && { label: 'No Bonus User', tone: 'border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.08)] text-[color:var(--panel-text-dim,#c8cdd5)]' },
         hasNoBonus && Number(data.DepositAmount ?? 0) > 0 && { label: 'No Gift User', tone: 'border-amber-400/30 bg-amber-400/10 text-amber-200' },
         (isMultiAccount || isWinner) && { label: 'Risk Review', tone: 'border-orange-400/30 bg-orange-400/10 text-orange-200' },
         Number(data.DepositAmount ?? 0) >= 100000 && { label: 'VIP', tone: 'border-[color:var(--panel-border-strong,rgba(10,132,255,0.34))] bg-[rgba(10,132,255,0.1)] text-[color:var(--panel-info,#64d2ff)]' },
