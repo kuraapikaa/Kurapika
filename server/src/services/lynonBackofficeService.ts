@@ -2350,6 +2350,42 @@ export async function lynonPlayerActivity(login: string, from: Date, to: Date): 
   };
 }
 
+/** Detay ucunun yetkili olduğu, listede hiç dönmeyen doğrulama bayrakları. */
+const DOGRULAMA_BAYRAKLARI = ['IsPhoneVerified', 'IsEmailVerified', 'IsIdentityVerified', 'IsVerified'] as const;
+/** Detayda dolu ise bindirilen, boşsa liste değeri korunan alanlar. */
+const DETAY_NULLABLE_ALANLAR = ['VerificationStatus', 'LastLoginIp', 'LastLoginLocalDate'] as const;
+
+/**
+ * Liste satırının üzerine detay satırının doğrulama/son giriş alanlarını bindirir.
+ *
+ * Doğrulama bayrakları detaydan aynen alınır (detay yetkilidir); nullable alanlar
+ * yalnızca detayda dolu ise yazılır, böylece detay boş dönerse listedeki bilgi silinmez.
+ */
+export function dogrulamaAlanlariniBirlestir(listRow: AnyRecord, detailMapped: AnyRecord): AnyRecord {
+  const merged: AnyRecord = { ...listRow };
+  for (const alan of DOGRULAMA_BAYRAKLARI) merged[alan] = detailMapped[alan];
+  for (const alan of DETAY_NULLABLE_ALANLAR) {
+    if (detailMapped[alan] != null) merged[alan] = detailMapped[alan];
+  }
+  return merged;
+}
+
+/**
+ * Liste satırına, yalnızca detay ucunda dönen doğrulama/son giriş alanlarını ekler.
+ * Detay isteği düşerse liste satırı olduğu gibi korunur (uygunluk fail-closed kalır).
+ */
+async function mergeVerificationDetail(listRow: AnyRecord): Promise<AnyRecord> {
+  try {
+    const detail = recordOf(await lynonRequest(`/api/user/api/v1.0/userBackOffice/users/${listRow.Id}`));
+    const detailSiteId = numberFrom(detail.siteId ?? detail.SiteId, NaN);
+    // Farklı sitenin kaydı asla tenant sınırını geçmemeli; şüphedeyse liste satırında kal.
+    if (!Number.isFinite(detailSiteId) || detailSiteId !== Number(config.lynon.siteId)) return listRow;
+    return dogrulamaAlanlariniBirlestir(listRow, mapPlayer(detail));
+  } catch {
+    return listRow;
+  }
+}
+
 /**
  * Bonus talebi için Lynon'dan tek, doğrulanmış ve fail-closed hesap görünümü üretir.
  * Başarısız yatırım denemeleri uygunlukta yatırım sayılmaz; bekleyen çekimler ayrıca işaretlenir.
@@ -2364,6 +2400,12 @@ export async function lynonBuildBonusEligibilitySnapshot(input: { login?: string
       throw new LynonHttpError('Oyuncu aktif Lynon sitesinde bulunamadı.', 404, { playerId: input.playerId });
     }
     player = mapPlayer(detail);
+  } else if (player?.Id != null) {
+    // Oyuncu listesi ucu (`/userBackOffice`) doğrulama ve son giriş IP alanlarını
+    // döndürmez; bunlar yalnızca detay ucunda (`/userBackOffice/users/{id}`) var.
+    // Liste satırıyla yetinilirse telefonu onaylı üyede bile
+    // "RED: Telefon numarası onaylı değil" çıkar. Detayı çekip üzerine bindiriyoruz.
+    player = await mergeVerificationDetail(player);
   }
   if (!player?.Id) throw new LynonHttpError('Oyuncu aktif Lynon sitesinde bulunamadı.', 404, {});
 

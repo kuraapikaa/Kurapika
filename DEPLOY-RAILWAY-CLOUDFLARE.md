@@ -82,7 +82,7 @@ FRAME_ANCESTORS=https://narcosbahis.vip
 
 SESSION_SECRET=<en az 64 karakter — .env.production.NEW>
 SESSION_COOKIE_SECURE=true
-SESSION_COOKIE_SAMESITE=lax
+SESSION_COOKIE_SAMESITE=none
 SESSION_TTL_MS=86400000
 
 MASTER_USER=<...>
@@ -114,6 +114,12 @@ RATE_LIMIT_MAX=100
 
 > `SESSION_SECRET` 64 karakterden kısaysa uygulama açılışta hata verip durur.
 > `ENABLE_DOCS=false` — API dokümanını herkese açık bırakma.
+> `FRAME_ANCESTORS` dolu olduğunda panel ana sitede **iframe** içinde çalışır ve
+> tarayıcı için istekler cross-site sayılır. `SESSION_COOKIE_SAMESITE=lax`
+> bırakılırsa oturum çerezi hiç gönderilmez: kullanıcı adı doğrulaması başarılı
+> görünür ama çark/kazı-kazan "Önce kullanıcı adı doğrulaması yapmalısınız",
+> bonus talebi ise "Oturum süreniz dolmuş." döner. Bu senaryoda `none` + `Secure`
+> zorunludur (değişken boş bırakılırsa uygulama zaten `none`'a düşer).
 
 ### 1.5 Deploy'u doğrula
 
