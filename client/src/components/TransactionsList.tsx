@@ -134,13 +134,13 @@ export function TransactionsList({ dateRange }: TransactionsListProps) {
                     </div>
                     <div className="text-left">
                         <h2 className="text-xl font-semibold text-white tracking-tight">İşlem Geçmişi</h2>
-                        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Tüm finansal hareketler</p>
+                        <p className="text-xs font-bold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">Tüm finansal hareketler</p>
                     </div>
                 </div>
 
                 {/* Rows Per Page Selector (Top) */}
-                <div className="flex items-center gap-3 bg-[rgba(242,244,248,0.40)] px-4 py-2 rounded-xl border border-white/5 ring-1 ring-white/5">
-                    <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">SATIR SAYISI:</span>
+                <div className="flex items-center gap-3 bg-[rgba(242,244,248,0.40)] px-4 py-2 rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] ring-1 ring-white/5">
+                    <span className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">SATIR SAYISI:</span>
                     <select
                         value={rowsPerPage}
                         onChange={(e) => {
@@ -149,10 +149,10 @@ export function TransactionsList({ dateRange }: TransactionsListProps) {
                             setPage(1);
                             setJumpPage('1');
                         }}
-                        className="h-8 rounded-lg bg-white/5 border border-white/10 px-2 text-xs font-bold text-slate-300 outline-none hover:border-white/20 transition-all focus:ring-1 focus:ring-blue-500/30"
+                        className="h-8 rounded-lg bg-white/5 border border-[color:var(--panel-border,rgba(242,244,248,0.1))] px-2 text-xs font-bold text-[color:var(--panel-text-dim,#c8cdd5)] outline-none hover:border-[color:var(--panel-border,rgba(242,244,248,0.1))] transition-all focus:ring-1 focus:ring-blue-500/30"
                     >
                         {ROWS_PER_PAGE_OPTIONS.map(opt => (
-                            <option key={opt} value={opt} className="bg-slate-900">{opt}</option>
+                            <option key={opt} value={opt} className="bg-[color:var(--panel-surface,rgba(242,244,248,0.028))]">{opt}</option>
                         ))}
                     </select>
                 </div>
@@ -161,7 +161,7 @@ export function TransactionsList({ dateRange }: TransactionsListProps) {
 
 
             {/* Filter Section */}
-            <div className="rounded-xl border border-white/5 bg-[rgba(242,244,248,0.40)] backdrop-blur-md overflow-hidden transition-all">
+            <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.40)] backdrop-blur-md overflow-hidden transition-all">
                 <button
                     onClick={() => setIsFilterOpen(!isFilterOpen)}
                     className="flex w-full items-center justify-between px-3 py-2.5 text-left hover:bg-white/5 transition-colors"
@@ -170,11 +170,11 @@ export function TransactionsList({ dateRange }: TransactionsListProps) {
                         <Filter size={18} />
                         <span className="text-sm font-bold uppercase tracking-wider">Filtre</span>
                     </div>
-                    {isFilterOpen ? <ChevronUp size={20} className="text-slate-500" /> : <ChevronDown size={20} className="text-slate-500" />}
+                    {isFilterOpen ? <ChevronUp size={20} className="text-[color:var(--panel-muted,#8a919c)]" /> : <ChevronDown size={20} className="text-[color:var(--panel-muted,#8a919c)]" />}
                 </button>
 
                 {isFilterOpen && (
-                    <div className="p-6 border-t border-white/5 space-y-6">
+                    <div className="p-6 border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))] space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
                             {/* Row 1 */}
                             <FilterInput label="Tarih seçici" value={`${dateRange.startDate} / ${dateRange.endDate}`} disabled icon={Clock} />
@@ -221,10 +221,10 @@ export function TransactionsList({ dateRange }: TransactionsListProps) {
                             />
                         </div>
 
-                        <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
+                        <div className="flex justify-end gap-3 pt-4 border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
                             <button
                                 onClick={handleResetFilters}
-                                className="flex items-center gap-2 rounded-xl bg-slate-800 px-6 py-2.5 text-sm font-semibold text-slate-400 hover:bg-slate-700 hover:text-white transition-all ring-1 ring-white/5 uppercase tracking-widest"
+                                className="flex items-center gap-2 rounded-xl bg-[color:var(--panel-surface-2,rgba(242,244,248,0.05))] px-6 py-2.5 text-sm font-semibold text-[color:var(--panel-muted,#8a919c)] hover:bg-[color:var(--panel-surface-2,rgba(242,244,248,0.05))] hover:text-white transition-all ring-1 ring-white/5 uppercase tracking-widest"
                             >
                                 <RotateCcw size={16} />
                                 Sıfırla
@@ -242,25 +242,25 @@ export function TransactionsList({ dateRange }: TransactionsListProps) {
             </div>
 
             {/* Table Section */}
-            <div className="rounded-xl border border-white/5 bg-[rgba(242,244,248,0.40)] p-4 backdrop-blur-md overflow-hidden">
+            <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.40)] p-4 backdrop-blur-md overflow-hidden">
                 {isLoading ? (
                     <div className="flex flex-col items-center justify-center py-32 gap-6">
                         <Loader2 className="h-12 w-12 animate-spin text-blue-500" />
-                        <p className="text-sm font-semibold text-slate-500 uppercase tracking-[0.4em] animate-pulse">İşlemler Alınıyor...</p>
+                        <p className="text-sm font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-[0.4em] animate-pulse">İşlemler Alınıyor...</p>
                     </div>
                 ) : transactions.length === 0 ? (
-                    <div className="py-32 text-center text-slate-500 italic text-sm">Bu filtrelerle kayıtlı işlem bulunamadı.</div>
+                    <div className="py-32 text-center text-[color:var(--panel-muted,#8a919c)] italic text-sm">Bu filtrelerle kayıtlı işlem bulunamadı.</div>
                 ) : (
                     <div className="overflow-x-auto overflow-y-auto max-h-[700px] scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
                         <table className="w-full text-left">
                             <thead>
-                                <tr className="border-b border-white/5 sticky top-0 bg-[rgba(242,244,248,0.90)] backdrop-blur-md z-10">
-                                    <th className="pb-4 pl-6 pt-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Oyuncu Info</th>
-                                    <th className="pb-4 pt-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">İşlem Detayı</th>
-                                    <th className="pb-4 pt-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Miktar</th>
-                                    <th className="pb-4 pt-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Tarih</th>
-                                    <th className="pb-4 pt-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">İşlem Yapan</th>
-                                    <th className="pb-4 pt-2 pr-6 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400 text-right">Durum</th>
+                                <tr className="border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] sticky top-0 bg-[rgba(242,244,248,0.90)] backdrop-blur-md z-10">
+                                    <th className="pb-4 pl-6 pt-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[color:var(--panel-muted,#8a919c)]">Oyuncu Info</th>
+                                    <th className="pb-4 pt-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[color:var(--panel-muted,#8a919c)]">İşlem Detayı</th>
+                                    <th className="pb-4 pt-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[color:var(--panel-muted,#8a919c)]">Miktar</th>
+                                    <th className="pb-4 pt-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[color:var(--panel-muted,#8a919c)]">Tarih</th>
+                                    <th className="pb-4 pt-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[color:var(--panel-muted,#8a919c)]">İşlem Yapan</th>
+                                    <th className="pb-4 pt-2 pr-6 text-[10px] font-semibold uppercase tracking-[0.2em] text-[color:var(--panel-muted,#8a919c)] text-right">Durum</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/5">
@@ -268,12 +268,12 @@ export function TransactionsList({ dateRange }: TransactionsListProps) {
                                     <tr key={tx.Id} className="group hover:bg-white/[0.02] transition-colors">
                                         <td className="py-6 pl-6">
                                             <div className="flex items-center gap-4">
-                                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[rgba(242,244,248,0.60)] text-slate-400 group-hover:bg-blue-500 group-hover:text-white transition-all ring-1 ring-white/5 shadow-inner">
+                                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[rgba(242,244,248,0.60)] text-[color:var(--panel-muted,#8a919c)] group-hover:bg-blue-500 group-hover:text-white transition-all ring-1 ring-white/5 shadow-inner">
                                                     <User size={18} />
                                                 </div>
                                                 <div className="text-left">
                                                     <p className="text-sm font-semibold text-white tracking-tight">{tx.ClientLogin}</p>
-                                                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">ID: #{tx.ClientId}</p>
+                                                    <p className="text-[10px] font-bold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-tighter">ID: #{tx.ClientId}</p>
                                                 </div>
                                             </div>
                                         </td>
@@ -288,9 +288,9 @@ export function TransactionsList({ dateRange }: TransactionsListProps) {
                                                     )}
                                                 </div>
                                                 <div className="mt-1 flex items-center gap-2">
-                                                    <span className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">Ref: #{tx.Id}</span>
-                                                    {tx.Note && <span className="h-1 w-1 rounded-full bg-slate-700" />}
-                                                    {tx.Note && <p className="text-[10px] text-slate-500 line-clamp-1 italic max-w-xs">{tx.Note}</p>}
+                                                    <span className="text-[9px] font-bold text-[color:var(--panel-faint,#5c6470)] uppercase tracking-widest">Ref: #{tx.Id}</span>
+                                                    {tx.Note && <span className="h-1 w-1 rounded-full bg-[color:var(--panel-surface-2,rgba(242,244,248,0.05))]" />}
+                                                    {tx.Note && <p className="text-[10px] text-[color:var(--panel-muted,#8a919c)] line-clamp-1 italic max-w-xs">{tx.Note}</p>}
                                                 </div>
                                             </div>
                                         </td>
@@ -300,20 +300,20 @@ export function TransactionsList({ dateRange }: TransactionsListProps) {
                                                     {tx.Amount >= 0 ? '+' : ''}{formatNumber(tx.Amount)} {tx.CurrencyId}
                                                 </span>
                                                 {tx.ExchangedAmount !== tx.Amount && (
-                                                    <span className="text-[9px] text-slate-600 font-bold tracking-tighter uppercase">Baz: {formatNumber(tx.ExchangedAmount)} TRY</span>
+                                                    <span className="text-[9px] text-[color:var(--panel-faint,#5c6470)] font-bold tracking-tighter uppercase">Baz: {formatNumber(tx.ExchangedAmount)} TRY</span>
                                                 )}
                                             </div>
                                         </td>
                                         <td className="py-6">
-                                            <div className="flex items-center gap-2 text-slate-400 group-hover:text-white transition-colors">
+                                            <div className="flex items-center gap-2 text-[color:var(--panel-muted,#8a919c)] group-hover:text-white transition-colors">
                                                 <Clock size={14} className="opacity-50" />
                                                 <span className="text-xs font-bold">{formatDateTimeWithSeconds(tx.CreatedLocal)}</span>
                                             </div>
                                         </td>
                                         <td className="py-6">
                                             <div className="flex items-center gap-2 bg-white/5 py-1.5 px-3 rounded-lg w-fit ring-1 ring-white/5">
-                                                <FileText size={14} className="text-slate-500" />
-                                                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">{tx.UserName}</span>
+                                                <FileText size={14} className="text-[color:var(--panel-muted,#8a919c)]" />
+                                                <span className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">{tx.UserName}</span>
                                             </div>
                                         </td>
                                         <td className="py-6 pr-6 text-right">
@@ -346,8 +346,8 @@ export function TransactionsList({ dateRange }: TransactionsListProps) {
 
                 {/* Pagination */}
                 {!isLoading && transactions.length > 0 && (
-                    <div className="mt-6 border-t border-white/5 pt-6 flex flex-col sm:flex-row items-center justify-between px-6 gap-4">
-                        <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-[0.2em]">
+                    <div className="mt-6 border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))] pt-6 flex flex-col sm:flex-row items-center justify-between px-6 gap-4">
+                        <p className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-[0.2em]">
                             Toplam {formatNumber(totalCount)} işlemden {(page - 1) * rowsPerPage + 1}-{Math.min(page * rowsPerPage, totalCount)} arası gösteriliyor
                         </p>
 
@@ -355,7 +355,7 @@ export function TransactionsList({ dateRange }: TransactionsListProps) {
                             <button
                                 onClick={() => handlePageChange(1)}
                                 disabled={page === 1}
-                                className="h-8 w-8 flex items-center justify-center rounded-lg bg-white/5 text-slate-500 hover:text-white disabled:opacity-20 transition-all"
+                                className="h-8 w-8 flex items-center justify-center rounded-lg bg-white/5 text-[color:var(--panel-muted,#8a919c)] hover:text-white disabled:opacity-20 transition-all"
                                 title="İlk Sayfa"
                             >
                                 <ChevronsLeft size={16} />
@@ -363,7 +363,7 @@ export function TransactionsList({ dateRange }: TransactionsListProps) {
                             <button
                                 onClick={() => handlePageChange(page - 1)}
                                 disabled={page === 1}
-                                className="h-8 w-8 flex items-center justify-center rounded-lg bg-white/5 text-slate-500 hover:text-white disabled:opacity-20 transition-all"
+                                className="h-8 w-8 flex items-center justify-center rounded-lg bg-white/5 text-[color:var(--panel-muted,#8a919c)] hover:text-white disabled:opacity-20 transition-all"
                                 title="Önceki Sayfa"
                             >
                                 <ChevronLeft size={16} />
@@ -377,14 +377,14 @@ export function TransactionsList({ dateRange }: TransactionsListProps) {
                                     onBlur={() => setJumpPage(page.toString())}
                                     className="w-8 bg-transparent text-center text-sm font-semibold text-white outline-none"
                                 />
-                                <span className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest">/</span>
-                                <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">{totalPages}</span>
+                                <span className="text-[10px] font-semibold text-[color:var(--panel-faint,#5c6470)] uppercase tracking-widest">/</span>
+                                <span className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">{totalPages}</span>
                             </form>
 
                             <button
                                 onClick={() => handlePageChange(page + 1)}
                                 disabled={page === totalPages}
-                                className="h-8 w-8 flex items-center justify-center rounded-lg bg-white/5 text-slate-500 hover:text-white disabled:opacity-20 transition-all"
+                                className="h-8 w-8 flex items-center justify-center rounded-lg bg-white/5 text-[color:var(--panel-muted,#8a919c)] hover:text-white disabled:opacity-20 transition-all"
                                 title="Sonraki Sayfa"
                             >
                                 <ChevronLeft size={16} className="rotate-180" />
@@ -392,7 +392,7 @@ export function TransactionsList({ dateRange }: TransactionsListProps) {
                             <button
                                 onClick={() => handlePageChange(totalPages)}
                                 disabled={page === totalPages}
-                                className="h-8 w-8 flex items-center justify-center rounded-lg bg-white/5 text-slate-500 hover:text-white disabled:opacity-20 transition-all"
+                                className="h-8 w-8 flex items-center justify-center rounded-lg bg-white/5 text-[color:var(--panel-muted,#8a919c)] hover:text-white disabled:opacity-20 transition-all"
                                 title="Son Sayfa"
                             >
                                 <ChevronsLeft size={16} className="rotate-180" />
@@ -416,15 +416,15 @@ interface FilterInputProps {
 function FilterInput({ label, value, onChange, disabled, icon: Icon }: FilterInputProps) {
     return (
         <div className="space-y-1.5">
-            <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider pl-1">{label}</label>
+            <label className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-wider pl-1">{label}</label>
             <div className="relative">
-                {Icon && <Icon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />}
+                {Icon && <Icon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--panel-muted,#8a919c)]" />}
                 <input
                     type="text"
                     value={value}
                     onChange={(e) => onChange?.(e.target.value)}
                     disabled={disabled}
-                    className={`h-10 w-full rounded-xl border border-white/5 bg-[rgba(242,244,248,0.40)] ${Icon ? 'pl-9' : 'px-3'} py-2 text-xs font-medium text-white transition-all focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20 outline-none disabled:opacity-50`}
+                    className={`h-10 w-full rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.40)] ${Icon ? 'pl-9' : 'px-3'} py-2 text-xs font-medium text-white transition-all focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20 outline-none disabled:opacity-50`}
                 />
             </div>
         </div>
@@ -441,14 +441,14 @@ interface FilterSelectProps {
 function FilterSelect({ label, value, onChange, options }: FilterSelectProps) {
     return (
         <div className="space-y-1.5">
-            <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider pl-1">{label}</label>
+            <label className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-wider pl-1">{label}</label>
             <select
                 value={value}
                 onChange={(e) => onChange?.(e.target.value)}
-                className="h-10 w-full rounded-xl border border-white/5 bg-[rgba(242,244,248,0.40)] px-3 py-2 text-xs font-medium text-white transition-all focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20 outline-none appearance-none"
+                className="h-10 w-full rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.40)] px-3 py-2 text-xs font-medium text-white transition-all focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20 outline-none appearance-none"
             >
                 {options.map((opt: any) => (
-                    <option key={opt.value} value={opt.value} className="bg-slate-900">{opt.label}</option>
+                    <option key={opt.value} value={opt.value} className="bg-[color:var(--panel-surface,rgba(242,244,248,0.028))]">{opt.label}</option>
                 ))}
             </select>
         </div>

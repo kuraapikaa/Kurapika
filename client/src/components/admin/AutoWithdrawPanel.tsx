@@ -56,7 +56,7 @@ function StatusBadge({ stateName }: { stateName?: string | null }) {
       </span>
     );
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-[rgba(242,244,248,0.15)] px-2.5 py-1 text-[10px] font-bold text-slate-400 ring-1 ring-slate-500/20">
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-[rgba(242,244,248,0.15)] px-2.5 py-1 text-[10px] font-bold text-[color:var(--panel-muted,#8a919c)] ring-1 ring-slate-500/20">
       {stateName || '—'}
     </span>
   );
@@ -66,7 +66,7 @@ const STAT_TONE = {
   success: 'border-emerald-400/20 bg-emerald-400/[0.08] text-emerald-300',
   warning: 'border-amber-300/20 bg-amber-300/[0.08] text-amber-200',
   danger: 'border-rose-400/20 bg-rose-400/[0.08] text-rose-300',
-  neutral: 'border-white/[0.08] bg-white/[0.04] text-slate-300',
+  neutral: 'border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.04] text-[color:var(--panel-text-dim,#c8cdd5)]',
 } as const;
 
 function StatCard({ label, amount, count, tone, icon }: {
@@ -79,11 +79,11 @@ function StatCard({ label, amount, count, tone, icon }: {
         {icon}
       </span>
       <div className="min-w-0">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">{label}</p>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[color:var(--panel-muted,#8a919c)]">{label}</p>
         <p className="mt-1 truncate text-[17px] font-semibold leading-none tabular-nums text-white">
-          {formatNumber(amount)} <span className="text-[11px] font-medium text-slate-500">TRY</span>
+          {formatNumber(amount)} <span className="text-[11px] font-medium text-[color:var(--panel-muted,#8a919c)]">TRY</span>
         </p>
-        <p className="mt-1 text-[11px] text-slate-500">{count} işlem</p>
+        <p className="mt-1 text-[11px] text-[color:var(--panel-muted,#8a919c)]">{count} işlem</p>
       </div>
     </AdminCard>
   );
@@ -217,12 +217,12 @@ export function AutoWithdrawPanel() {
       <AdminCard className="p-4 md:p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex min-w-0 flex-1 items-start gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.04] text-slate-300">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.04] text-[color:var(--panel-text-dim,#c8cdd5)]">
               <Zap size={18} />
             </span>
             <div className="min-w-0">
               <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-white">Otomatik Çekim Kontrolü</h2>
-              <p className="mt-0.5 text-[12px] text-slate-500">Çekim talepleri · tarih aralığına göre</p>
+              <p className="mt-0.5 text-[12px] text-[color:var(--panel-muted,#8a919c)]">Çekim talepleri · tarih aralığına göre</p>
               <div className="mt-2 flex flex-wrap items-center gap-1.5">
                 <Chip tone="neutral">{dateLabel}</Chip>
                 {lastRun && (
@@ -237,7 +237,7 @@ export function AutoWithdrawPanel() {
             type="button"
             onClick={handleRefresh}
             disabled={withdrawalRequestsQuery.isLoading}
-            className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.04] px-3.5 text-[12px] font-semibold text-slate-200 transition-colors hover:bg-white/[0.08] disabled:opacity-50"
+            className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.04] px-3.5 text-[12px] font-semibold text-[color:var(--panel-text-dim,#c8cdd5)] transition-colors hover:bg-white/[0.08] disabled:opacity-50"
           >
             <RefreshCw size={15} className={withdrawalRequestsQuery.isFetching ? 'animate-spin' : ''} />
             Yenile
@@ -261,22 +261,22 @@ export function AutoWithdrawPanel() {
             <Loader2 size={56} className="relative animate-spin text-blue-400" />
           </div>
           <p className="text-xl font-bold text-white">Analiz yapılıyor...</p>
-          <p className="text-sm text-slate-400">Oyuncu #{loadingClientId}</p>
+          <p className="text-sm text-[color:var(--panel-muted,#8a919c)]">Oyuncu #{loadingClientId}</p>
         </div>
       )}
 
       {/* Table card - hidden when analysis is open */}
       {!modalData && (
-        <div className="overflow-hidden rounded-xl border border-white/5 bg-[rgba(242,244,248,0.40)] shadow-xl transition-shadow hover:shadow-2xl hover:shadow-blue-500/5">
-          <div className="flex flex-col border-b border-white/5 bg-white/5 sm:flex-row sm:items-center sm:justify-between px-3 py-2.5 gap-4">
-            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-400">
+        <div className="overflow-hidden rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.40)] shadow-xl transition-shadow hover:shadow-2xl hover:shadow-blue-500/5">
+          <div className="flex flex-col border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/5 sm:flex-row sm:items-center sm:justify-between px-3 py-2.5 gap-4">
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">
               <Wallet size={16} className="text-blue-400" />
               Çekim talepleri listesi
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
               <div className="relative">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--panel-muted,#8a919c)]" />
                 <input
                   type="text"
                   placeholder="ID veya Kullanıcı Adı..."
@@ -285,32 +285,32 @@ export function AutoWithdrawPanel() {
                     setSearchTerm(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="h-9 w-48 rounded-xl border border-white/10 bg-[rgba(242,244,248,0.50)] pl-9 pr-3 text-xs text-white placeholder:text-slate-600 focus:border-blue-500/50 focus:outline-none focus:ring-1 focus:ring-blue-500/50"
+                  className="h-9 w-48 rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.50)] pl-9 pr-3 text-xs text-white placeholder:text-[color:var(--panel-faint,#5c6470)] focus:border-blue-500/50 focus:outline-none focus:ring-1 focus:ring-blue-500/50"
                 />
               </div>
 
               <div className="relative flex items-center gap-2">
-                <Filter size={14} className="text-slate-500" />
+                <Filter size={14} className="text-[color:var(--panel-muted,#8a919c)]" />
                 <select
                   value={statusFilter}
                   onChange={(e) => {
                     setStatusFilter(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="h-9 rounded-xl border border-white/10 bg-[rgba(242,244,248,0.50)] pl-3 pr-8 text-xs font-bold text-slate-300 focus:border-blue-500/50 focus:outline-none focus:ring-1 focus:ring-blue-500/50 appearance-none"
+                  className="h-9 rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.50)] pl-3 pr-8 text-xs font-bold text-[color:var(--panel-text-dim,#c8cdd5)] focus:border-blue-500/50 focus:outline-none focus:ring-1 focus:ring-blue-500/50 appearance-none"
                 >
                   <option value="all">Tüm Durumlar</option>
                   <option value="pending">Bekleyenler</option>
                   <option value="paid">Ödenenler</option>
                   <option value="rejected">Reddedilenler</option>
                 </select>
-                <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500">
+                <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[color:var(--panel-muted,#8a919c)]">
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                 </div>
               </div>
 
-              <div className="text-[10px] font-bold text-slate-500 ml-2">
-                Gösterilen: <span className="text-slate-300">{filteredRequests.length}</span>
+              <div className="text-[10px] font-bold text-[color:var(--panel-muted,#8a919c)] ml-2">
+                Gösterilen: <span className="text-[color:var(--panel-text-dim,#c8cdd5)]">{filteredRequests.length}</span>
               </div>
             </div>
           </div>
@@ -342,18 +342,18 @@ export function AutoWithdrawPanel() {
             </div>
           ) : filteredRequests.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-4 py-20">
-              <div className="flex h-20 w-20 items-center justify-center rounded-xl bg-[rgba(242,244,248,0.50)] text-slate-500">
+              <div className="flex h-20 w-20 items-center justify-center rounded-xl bg-[rgba(242,244,248,0.50)] text-[color:var(--panel-muted,#8a919c)]">
                 <Inbox size={40} />
               </div>
-              <p className="font-bold text-slate-400">Aramanıza veya filtrenize uygun talep bulunamadı.</p>
-              <p className="text-xs text-slate-500">Arama metnini değiştirmeyi veya farklı bir aralık seçmeyi deneyin.</p>
+              <p className="font-bold text-[color:var(--panel-muted,#8a919c)]">Aramanıza veya filtrenize uygun talep bulunamadı.</p>
+              <p className="text-xs text-[color:var(--panel-muted,#8a919c)]">Arama metnini değiştirmeyi veya farklı bir aralık seçmeyi deneyin.</p>
             </div>
           ) : (
             <div className="flex flex-col">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-white/5 text-left text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
+                    <tr className="border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] text-left text-[10px] font-extrabold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">
                       <th className="px-5 py-4">Oyuncu / Talep</th>
                       <th className="px-5 py-4">Tutar</th>
                       <th className="px-5 py-4">Durum</th>
@@ -369,27 +369,27 @@ export function AutoWithdrawPanel() {
                         style={{ animationDelay: `${index * 30}ms` }}
                       >
                         <td className="px-5 py-4">
-                          <div className="font-bold text-slate-200">
+                          <div className="font-bold text-[color:var(--panel-text-dim,#c8cdd5)]">
                             #{row.ClientId}
                           </div>
                           {row.ClientLogin ? (
                             <Link
                               to={`/oyuncu/${row.ClientId}/${row.ClientLogin}`}
-                              className="text-xs text-slate-500 transition-colors hover:text-blue-400 block w-fit mt-0.5"
+                              className="text-xs text-[color:var(--panel-muted,#8a919c)] transition-colors hover:text-blue-400 block w-fit mt-0.5"
                             >
                               {row.ClientLogin}
                             </Link>
                           ) : (
-                            <div className="text-xs text-slate-500 mt-0.5">—</div>
+                            <div className="text-xs text-[color:var(--panel-muted,#8a919c)] mt-0.5">—</div>
                           )}
                         </td>
-                        <td className="px-5 py-4 font-mono text-base font-bold tabular-nums text-slate-300">
-                          {formatNumber(row.Amount)} <span className="text-xs font-normal text-slate-500">{row.CurrencyId || 'TRY'}</span>
+                        <td className="px-5 py-4 font-mono text-base font-bold tabular-nums text-[color:var(--panel-text-dim,#c8cdd5)]">
+                          {formatNumber(row.Amount)} <span className="text-xs font-normal text-[color:var(--panel-muted,#8a919c)]">{row.CurrencyId || 'TRY'}</span>
                         </td>
                         <td className="px-5 py-4">
                           <StatusBadge stateName={row.StateName} />
                         </td>
-                        <td className="px-5 py-4 text-xs tabular-nums text-slate-500">
+                        <td className="px-5 py-4 text-xs tabular-nums text-[color:var(--panel-muted,#8a919c)]">
                           {formatDateTimeWithSeconds(row.RequestTimeLocal ?? row.RequestTime ?? null)}
                         </td>
                         <td className="px-5 py-4 text-center">
@@ -410,22 +410,22 @@ export function AutoWithdrawPanel() {
 
               {/* Sayfalama */}
               {totalPages > 1 && (
-                <div className="flex items-center justify-between border-t border-white/5 bg-[rgba(242,244,248,0.50)] px-3 py-2.5">
-                  <span className="text-xs font-medium text-slate-400">
+                <div className="flex items-center justify-between border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.50)] px-3 py-2.5">
+                  <span className="text-xs font-medium text-[color:var(--panel-muted,#8a919c)]">
                     Sayfa {currentPage} / {totalPages}
                   </span>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                       disabled={currentPage === 1}
-                      className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/5 text-slate-400 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-50 disabled:hover:bg-white/5"
+                      className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/5 text-[color:var(--panel-muted,#8a919c)] transition-colors hover:bg-white/10 hover:text-white disabled:opacity-50 disabled:hover:bg-white/5"
                     >
                       <ChevronLeft size={16} />
                     </button>
                     <button
                       onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                       disabled={currentPage === totalPages}
-                      className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/5 text-slate-400 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-50 disabled:hover:bg-white/5"
+                      className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/5 text-[color:var(--panel-muted,#8a919c)] transition-colors hover:bg-white/10 hover:text-white disabled:opacity-50 disabled:hover:bg-white/5"
                     >
                       <ChevronRight size={16} />
                     </button>
@@ -443,7 +443,7 @@ export function AutoWithdrawPanel() {
             <button
               type="button"
               onClick={() => setModalData(null)}
-              className="flex items-center gap-2 rounded-xl border border-white/10 px-4 py-2 text-xs font-bold text-slate-400 transition-colors hover:bg-white/5 hover:text-white"
+              className="flex items-center gap-2 rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] px-4 py-2 text-xs font-bold text-[color:var(--panel-muted,#8a919c)] transition-colors hover:bg-white/5 hover:text-white"
             >
               ← Listeye dön
             </button>
