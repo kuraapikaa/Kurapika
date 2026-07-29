@@ -18,7 +18,7 @@ type Accent = 'neutral' | 'emerald' | 'sky';
 const ACCENT_CHIP: Record<Accent, string> = {
   neutral: 'border-white/[0.08] bg-white/[0.04] text-[color:var(--panel-text-dim,#c8cdd5)]',
   emerald: 'border-emerald-400/20 bg-emerald-400/[0.08] text-emerald-300',
-  sky: 'border-sky-400/20 bg-sky-400/[0.08] text-sky-300',
+  sky: 'border-sky-400/20 bg-[color:var(--panel-accent,#0a84ff)]/[0.08] text-sky-300',
 };
 
 function MetricCard({

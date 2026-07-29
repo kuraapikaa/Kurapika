@@ -582,7 +582,7 @@ export function PlayerProfile() {
             <Card className="mb-3 p-3.5">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center gap-2">
-                        <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-blue-400/20 bg-blue-400/[0.1] text-blue-300">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-blue-400/20 bg-[color:var(--panel-accent,#0a84ff)]/[0.1] text-blue-300">
                             <User size={20} />
                         </div>
                         <div className="min-w-0 text-left">
@@ -633,7 +633,7 @@ export function PlayerProfile() {
                             className={cn(
                                 'inline-flex h-8 items-center gap-1.5 rounded-md px-2.5 text-[9px] font-bold uppercase tracking-[0.06em] transition-colors',
                                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950',
-                                'data-[state=active]:bg-blue-400 data-[state=active]:text-white',
+                                'data-[state=active]:bg-[color:var(--panel-accent,#0a84ff)] data-[state=active]:text-white',
                                 'data-[state=inactive]:text-[color:var(--panel-muted,#8a919c)] data-[state=inactive]:hover:bg-white/5 data-[state=inactive]:hover:text-[color:var(--panel-text-dim,#c8cdd5)]'
                             )}
                         >

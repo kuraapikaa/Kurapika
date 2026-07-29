@@ -141,12 +141,12 @@ export function AdminGames({ initialTab }: AdminGamesProps = {}) {
 
   return (
     <div className="mx-auto w-full max-w-[1500px] space-y-5 p-4 pb-28 md:p-6">
-      <div className="rounded-xl border border-white/10 bg-[#080d13]/95 p-3 shadow-[0_18px_60px_rgba(0,0,0,0.24)]">
+      <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-3 shadow-[0_18px_60px_rgba(0,0,0,0.24)]">
         <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
           {singleTabMode && (
             <Link
               to="/admin/oyun-ayarlari"
-              className="inline-flex items-center gap-2 rounded-lg border border-white/[0.07] bg-white/[0.025] px-3 py-2 text-[11px] font-bold text-zinc-400 transition hover:border-white/15 hover:text-zinc-200"
+              className="inline-flex items-center gap-2 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.025] px-3 py-2 text-[11px] font-bold text-[color:var(--panel-muted,#8a919c)] transition hover:border-[color:var(--panel-border,rgba(242,244,248,0.1))] hover:text-[color:var(--panel-text-dim,#c8cdd5)]"
               title="Bu ayarlar, diğer tüm oyun modülleriyle birlikte 'Oyun Ayarları' altında tek bir yapılandırmada saklanır."
             >
               <LayoutGrid size={14} />
@@ -169,19 +169,19 @@ export function AdminGames({ initialTab }: AdminGamesProps = {}) {
                     className={cn(
                       'flex min-h-[74px] items-center gap-3 rounded-lg border px-4 text-left transition',
                       active
-                        ? 'border-[#5eead4]/35 bg-[#5eead4]/[0.08] text-white'
-                        : 'border-white/[0.07] bg-white/[0.025] text-zinc-500 hover:border-white/15 hover:bg-white/[0.045] hover:text-zinc-200'
+                        ? 'border-[color:var(--panel-info,#64d2ff)]/35 bg-[color:var(--panel-info,#64d2ff)]/[0.08] text-white'
+                        : 'border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.025] text-[color:var(--panel-muted,#8a919c)] hover:border-[color:var(--panel-border,rgba(242,244,248,0.1))] hover:bg-white/[0.045] hover:text-[color:var(--panel-text-dim,#c8cdd5)]'
                     )}
                   >
                     <span className={cn(
                       'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg',
-                      active ? 'bg-[#5eead4] text-black' : 'bg-black/35 text-zinc-500'
+                      active ? 'bg-[color:var(--panel-info,#64d2ff)] text-[#050609]' : 'bg-black/35 text-[color:var(--panel-muted,#8a919c)]'
                     )}>
                       <Icon size={18} />
                     </span>
                     <span className="min-w-0">
                       <span className="block text-sm font-semibold">{tab.label}</span>
-                      <span className="mt-0.5 block truncate text-[11px] font-semibold text-zinc-500">{tab.description}</span>
+                      <span className="mt-0.5 block truncate text-[11px] font-semibold text-[color:var(--panel-muted,#8a919c)]">{tab.description}</span>
                     </span>
                   </button>
                 );
@@ -193,7 +193,7 @@ export function AdminGames({ initialTab }: AdminGamesProps = {}) {
             type="button"
             onClick={() => saveMutation.mutate(config)}
             disabled={saveMutation.isPending}
-            className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-lg bg-[#3b82f6] px-5 text-xs font-semibold uppercase tracking-widest text-zinc-950 transition hover:bg-[#5eead4] disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-lg bg-[color:var(--panel-accent,#0a84ff)] px-5 text-xs font-semibold uppercase tracking-widest text-[#050609] transition hover:bg-[color:var(--panel-info,#64d2ff)] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {saveMutation.isPending ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
             Değişiklikleri Kaydet

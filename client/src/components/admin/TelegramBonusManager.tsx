@@ -22,20 +22,20 @@ export function TelegramBonusManager({ config, bonusOptions, onUpdate }: Telegra
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-col gap-3 rounded-lg border border-white/10 bg-[rgba(242,244,248,0.70)] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.70)] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-sky-500/10 text-sky-400">
             <Send size={20} />
           </div>
           <div>
             <div className="text-sm font-semibold text-white">Telegram Bonusu</div>
-            <p className="mt-0.5 text-xs font-medium text-zinc-500">
+            <p className="mt-0.5 text-xs font-medium text-[color:var(--panel-muted,#8a919c)]">
               Oyuncu Telegram hesabını bağlar, kanala/gruba katılır; bot API üzerinden gerçek zamanlı üyelik kontrolü yapılıp bonus otomatik tanımlanır.
             </p>
           </div>
         </div>
         <label className="inline-flex items-center gap-3">
-          <span className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Aktif</span>
+          <span className="text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">Aktif</span>
           <button
             type="button"
             role="switch"
@@ -56,33 +56,33 @@ export function TelegramBonusManager({ config, bonusOptions, onUpdate }: Telegra
         </label>
       </div>
 
-      <div className="grid grid-cols-1 gap-5 rounded-lg border border-white/10 bg-[rgba(242,244,248,0.70)] p-5 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-5 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.70)] p-5 md:grid-cols-2">
         <div className="space-y-2">
-          <label className="block text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Kanal/Grup Kullanıcı Adı</label>
+          <label className="block text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">Kanal/Grup Kullanıcı Adı</label>
           <input
             type="text"
             value={config.channelUsername}
             onChange={(e) => update({ channelUsername: e.target.value })}
             placeholder="@narcosbahis"
-            className="h-11 w-full rounded-md border border-white/10 bg-black/30 px-3 text-sm font-bold text-white outline-none transition focus:border-sky-500/60"
+            className="h-11 w-full rounded-md border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/30 px-3 text-sm font-bold text-white outline-none transition focus:border-sky-500/60"
           />
-          <p className="text-[10px] font-medium text-zinc-600">Yalnızca oyuncuya gösterilen etiket; doğrulama Chat ID üzerinden yapılır.</p>
+          <p className="text-[10px] font-medium text-[color:var(--panel-faint,#5c6470)]">Yalnızca oyuncuya gösterilen etiket; doğrulama Chat ID üzerinden yapılır.</p>
         </div>
 
         <div className="space-y-2">
-          <label className="block text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Chat ID</label>
+          <label className="block text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">Chat ID</label>
           <input
             type="text"
             value={config.chatId}
             onChange={(e) => update({ chatId: e.target.value })}
             placeholder="-1001234567890"
-            className="h-11 w-full rounded-md border border-white/10 bg-black/30 px-3 text-sm font-bold text-white outline-none transition focus:border-sky-500/60"
+            className="h-11 w-full rounded-md border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/30 px-3 text-sm font-bold text-white outline-none transition focus:border-sky-500/60"
           />
-          <p className="text-[10px] font-medium text-zinc-600">Bot'un getChatMember ile üyelik kontrolü yapacağı kanal/grup kimliği.</p>
+          <p className="text-[10px] font-medium text-[color:var(--panel-faint,#5c6470)]">Bot'un getChatMember ile üyelik kontrolü yapacağı kanal/grup kimliği.</p>
         </div>
 
         <div className="space-y-2">
-          <label className="block text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Bonus</label>
+          <label className="block text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">Bonus</label>
           <select
             value={config.bonusId ?? ''}
             onChange={(e) => {
@@ -90,7 +90,7 @@ export function TelegramBonusManager({ config, bonusOptions, onUpdate }: Telegra
               const opt = bonusOptions.find((o) => o.id === val);
               update({ bonusId: val || null, bonusLabel: opt ? opt.value : config.bonusLabel });
             }}
-            className="h-11 w-full rounded-md border border-white/10 bg-black/30 px-3 text-sm font-bold text-zinc-300 outline-none transition focus:border-sky-500/60"
+            className="h-11 w-full rounded-md border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/30 px-3 text-sm font-bold text-[color:var(--panel-text-dim,#c8cdd5)] outline-none transition focus:border-sky-500/60"
           >
             <option value="">Manuel</option>
             {bonusOptions.map((opt) => (
@@ -100,13 +100,13 @@ export function TelegramBonusManager({ config, bonusOptions, onUpdate }: Telegra
         </div>
 
         <div className="space-y-2">
-          <label className="block text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Tutar (TL)</label>
+          <label className="block text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">Tutar (TL)</label>
           <input
             type="number"
             min={0}
             value={config.amount}
             onChange={(e) => update({ amount: Number(e.target.value) })}
-            className="h-11 w-full rounded-md border border-white/10 bg-black/30 px-3 text-sm font-bold text-white outline-none transition focus:border-sky-500/60"
+            className="h-11 w-full rounded-md border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/30 px-3 text-sm font-bold text-white outline-none transition focus:border-sky-500/60"
           />
         </div>
       </div>

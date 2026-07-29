@@ -89,13 +89,13 @@ export function ScratchManager({ config, bonusOptions, onUpdate }: ScratchManage
         {statCards.map(stat => {
           const Icon = stat.icon;
           return (
-            <div key={stat.label} className="rounded-lg border border-white/10 bg-[rgba(242,244,248,0.70)] p-4">
+            <div key={stat.label} className="rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.70)] p-4">
               <div className="flex items-center gap-3">
                 <div className={cn('flex h-9 w-9 items-center justify-center rounded-md bg-black/40', stat.tone)}>
                   <Icon size={17} />
                 </div>
                 <div className="min-w-0">
-                  <div className="truncate text-[10px] font-semibold uppercase tracking-widest text-zinc-500">{stat.label}</div>
+                  <div className="truncate text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">{stat.label}</div>
                   <div className="text-xl font-semibold text-white">{stat.value}</div>
                 </div>
               </div>
@@ -106,13 +106,13 @@ export function ScratchManager({ config, bonusOptions, onUpdate }: ScratchManage
 
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="space-y-5">
-          <div className="flex flex-col gap-3 rounded-lg border border-white/10 bg-[rgba(242,244,248,0.70)] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.70)] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <div className="text-sm font-semibold text-white">Genel Kazanma Olasiligi</div>
-              <p className="mt-0.5 text-xs font-medium text-zinc-500">Her oyunda bu oran kadar odul cekilisi yapilir.</p>
+              <p className="mt-0.5 text-xs font-medium text-[color:var(--panel-muted,#8a919c)]">Her oyunda bu oran kadar odul cekilisi yapilir.</p>
             </div>
             <label className="flex items-center gap-3">
-              <span className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Oran</span>
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">Oran</span>
               <div className="relative">
                 <input
                   type="number"
@@ -120,42 +120,42 @@ export function ScratchManager({ config, bonusOptions, onUpdate }: ScratchManage
                   max={100}
                   value={config.baseWinProbability}
                   onChange={e => onUpdate({ ...config, baseWinProbability: Number(e.target.value) })}
-                  className="h-10 w-28 rounded-md border border-white/10 bg-black/30 px-3 pr-8 text-sm font-semibold text-amber-300 outline-none transition focus:border-amber-500/60"
+                  className="h-10 w-28 rounded-md border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/30 px-3 pr-8 text-sm font-semibold text-amber-300 outline-none transition focus:border-amber-500/60"
                 />
-                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-zinc-600">%</span>
+                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-[color:var(--panel-faint,#5c6470)]">%</span>
               </div>
             </label>
           </div>
 
-          <div className="flex flex-col gap-3 rounded-lg border border-white/10 bg-[rgba(242,244,248,0.70)] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.70)] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <div className="text-sm font-semibold text-white">Yatırım Şartı</div>
-              <p className="mt-0.5 text-xs font-medium text-zinc-500">Oyuncunun kazı kazan oynayabilmesi için gereken minimum son yatırım tutarı. 0 = şartsız.</p>
+              <p className="mt-0.5 text-xs font-medium text-[color:var(--panel-muted,#8a919c)]">Oyuncunun kazı kazan oynayabilmesi için gereken minimum son yatırım tutarı. 0 = şartsız.</p>
             </div>
             <label className="flex items-center gap-3">
-              <span className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Min. Yatırım</span>
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">Min. Yatırım</span>
               <div className="relative">
                 <input
                   type="number"
                   min={0}
                   value={config.minInvestment ?? 0}
                   onChange={e => onUpdate({ ...config, minInvestment: Number(e.target.value) })}
-                  className="h-10 w-32 rounded-md border border-white/10 bg-black/30 px-3 pr-8 text-sm font-semibold text-amber-300 outline-none transition focus:border-amber-500/60"
+                  className="h-10 w-32 rounded-md border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/30 px-3 pr-8 text-sm font-semibold text-amber-300 outline-none transition focus:border-amber-500/60"
                 />
-                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-zinc-600">TL</span>
+                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-[color:var(--panel-faint,#5c6470)]">TL</span>
               </div>
             </label>
           </div>
 
-          <section className="overflow-hidden rounded-lg border border-white/10 bg-[rgba(242,244,248,0.70)]">
-            <div className="flex flex-col gap-3 border-b border-white/10 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <section className="overflow-hidden rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.70)]">
+            <div className="flex flex-col gap-3 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-sm font-semibold text-white">Odul Havuzu</h2>
-                <p className="mt-0.5 text-xs font-medium text-zinc-500">Kazanildiginda uygulanacak oduller ve agirliklari.</p>
+                <p className="mt-0.5 text-xs font-medium text-[color:var(--panel-muted,#8a919c)]">Kazanildiginda uygulanacak oduller ve agirliklari.</p>
               </div>
               <button
                 onClick={handleAddReward}
-                className="inline-flex h-9 items-center gap-2 rounded-md bg-amber-500 px-4 text-[11px] font-semibold uppercase tracking-widest text-black transition hover:bg-amber-400"
+                className="inline-flex h-9 items-center gap-2 rounded-md bg-amber-500 px-4 text-[11px] font-semibold uppercase tracking-widest text-[#050609] transition hover:bg-amber-400"
               >
                 <Plus size={14} />
                 Odul Ekle
@@ -164,13 +164,13 @@ export function ScratchManager({ config, bonusOptions, onUpdate }: ScratchManage
 
             {config.rewards.length === 0 ? (
               <div className="flex flex-col items-center gap-3 py-12">
-                <Ticket size={28} className="text-zinc-700" />
-                <p className="text-sm font-bold text-zinc-600">Henuz odul eklenmedi.</p>
+                <Ticket size={28} className="text-[color:var(--panel-faint,#5c6470)]" />
+                <p className="text-sm font-bold text-[color:var(--panel-faint,#5c6470)]">Henuz odul eklenmedi.</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <div className="min-w-[660px]">
-                  <div className="grid grid-cols-[minmax(0,2fr)_100px_100px_minmax(140px,1fr)_44px] gap-3 border-b border-white/10 bg-black/20 px-5 py-2.5 text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
+                  <div className="grid grid-cols-[minmax(0,2fr)_100px_100px_minmax(140px,1fr)_44px] gap-3 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20 px-5 py-2.5 text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">
                     <span>Etiket</span>
                     <span>Tutar</span>
                     <span>Agirlik</span>
@@ -180,26 +180,26 @@ export function ScratchManager({ config, bonusOptions, onUpdate }: ScratchManage
                   {config.rewards.map((reward, idx) => (
                     <div
                       key={reward.id || idx}
-                      className="grid grid-cols-[minmax(0,2fr)_100px_100px_minmax(140px,1fr)_44px] items-center gap-3 border-b border-white/5 px-5 py-3 last:border-b-0"
+                      className="grid grid-cols-[minmax(0,2fr)_100px_100px_minmax(140px,1fr)_44px] items-center gap-3 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] px-5 py-3 last:border-b-0"
                     >
                       <input
                         type="text"
                         value={reward.label}
                         onChange={e => handleUpdate(reward.id, { label: e.target.value })}
-                        className="h-9 rounded-md border border-white/10 bg-black/30 px-3 text-xs font-bold text-white outline-none transition focus:border-amber-500/60"
+                        className="h-9 rounded-md border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/30 px-3 text-xs font-bold text-white outline-none transition focus:border-amber-500/60"
                         placeholder="Odul adi"
                       />
                       <input
                         type="number"
                         value={reward.amount}
                         onChange={e => handleUpdate(reward.id, { amount: Number(e.target.value) })}
-                        className="h-9 rounded-md border border-white/10 bg-black/30 px-3 text-xs font-semibold text-emerald-300 outline-none transition focus:border-amber-500/60"
+                        className="h-9 rounded-md border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/30 px-3 text-xs font-semibold text-emerald-300 outline-none transition focus:border-amber-500/60"
                       />
                       <input
                         type="number"
                         value={reward.probability}
                         onChange={e => handleUpdate(reward.id, { probability: Number(e.target.value) })}
-                        className="h-9 rounded-md border border-white/10 bg-black/30 px-3 text-xs font-semibold text-zinc-100 outline-none transition focus:border-amber-500/60"
+                        className="h-9 rounded-md border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/30 px-3 text-xs font-semibold text-[color:var(--panel-text,#f2f4f8)] outline-none transition focus:border-amber-500/60"
                       />
                       <select
                         value={reward.bonusId || ''}
@@ -211,7 +211,7 @@ export function ScratchManager({ config, bonusOptions, onUpdate }: ScratchManage
                             label: opt ? opt.value : reward.label
                           });
                         }}
-                        className="h-9 rounded-md border border-white/10 bg-black/30 px-2 text-[11px] font-bold text-zinc-300 outline-none transition focus:border-amber-500/60"
+                        className="h-9 rounded-md border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/30 px-2 text-[11px] font-bold text-[color:var(--panel-text-dim,#c8cdd5)] outline-none transition focus:border-amber-500/60"
                       >
                         <option value="">Manuel</option>
                         {bonusOptions.map(opt => (
@@ -220,7 +220,7 @@ export function ScratchManager({ config, bonusOptions, onUpdate }: ScratchManage
                       </select>
                       <button
                         onClick={() => handleRemove(reward.id)}
-                        className="flex h-9 w-9 items-center justify-center rounded-md text-zinc-600 transition hover:bg-rose-500/10 hover:text-rose-400"
+                        className="flex h-9 w-9 items-center justify-center rounded-md text-[color:var(--panel-faint,#5c6470)] transition hover:bg-rose-500/10 hover:text-rose-400"
                         aria-label="Odulu sil"
                       >
                         <Trash2 size={15} />
@@ -246,7 +246,7 @@ export function ScratchManager({ config, bonusOptions, onUpdate }: ScratchManage
         </div>
 
         <aside className="space-y-5">
-          <section className="rounded-lg border border-white/10 bg-[rgba(242,244,248,0.70)] p-5">
+          <section className="rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.70)] p-5">
             <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-white">
               <BarChart3 size={15} className="text-amber-400" />
               Siklik Dagilimi
@@ -281,15 +281,15 @@ export function ScratchManager({ config, bonusOptions, onUpdate }: ScratchManage
                 </ResponsiveContainer>
               </div>
             ) : (
-              <div className="flex h-52 items-center justify-center text-xs font-bold text-zinc-700">
+              <div className="flex h-52 items-center justify-center text-xs font-bold text-[color:var(--panel-faint,#5c6470)]">
                 Odul eklendikten sonra grafik gorunur
               </div>
             )}
           </section>
 
-          <section className="rounded-lg border border-white/10 bg-[rgba(242,244,248,0.70)] p-5">
+          <section className="rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.70)] p-5">
             <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-white">
-              <Info size={15} className="text-zinc-500" />
+              <Info size={15} className="text-[color:var(--panel-muted,#8a919c)]" />
               Bilgi
             </h2>
             <div className="space-y-3">
@@ -298,7 +298,7 @@ export function ScratchManager({ config, bonusOptions, onUpdate }: ScratchManage
                 { color: 'bg-blue-500', text: 'Kayip ihtimali "Genel Kazanma" uzerinden hesaplanir; havuzda bos odul eklemeye gerek yoktur.' },
                 { color: 'bg-emerald-500', text: 'Bonus ID secildiginde odul oyuncu hesabina aninda ve otomatik yuklenir.' }
               ].map((item, i) => (
-                <div key={i} className="flex gap-3 text-[11px] font-medium text-zinc-500">
+                <div key={i} className="flex gap-3 text-[11px] font-medium text-[color:var(--panel-muted,#8a919c)]">
                   <div className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${item.color}`} />
                   <span>{item.text}</span>
                 </div>
@@ -306,27 +306,27 @@ export function ScratchManager({ config, bonusOptions, onUpdate }: ScratchManage
             </div>
           </section>
 
-          <section className="rounded-lg border border-white/10 bg-[rgba(242,244,248,0.70)] p-5">
+          <section className="rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.70)] p-5">
             <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-white">
-              <SlidersHorizontal size={15} className="text-zinc-500" />
+              <SlidersHorizontal size={15} className="text-[color:var(--panel-muted,#8a919c)]" />
               Durum
             </h2>
             <div className="space-y-3">
-              <div className="flex items-start gap-3 rounded-lg border border-white/5 bg-black/20 p-3">
+              <div className="flex items-start gap-3 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20 p-3">
                 <ShieldCheck size={15} className="mt-0.5 shrink-0 text-amber-400" />
                 <div>
                   <div className="text-xs font-semibold text-white">Simulasyon Tahmini</div>
-                  <div className="mt-1 text-[11px] font-medium text-zinc-500">
+                  <div className="mt-1 text-[11px] font-medium text-[color:var(--panel-muted,#8a919c)]">
                     Her <span className="text-white">100</span> oyunda yaklasik{' '}
                     <span className="text-amber-400">{stats.winProb}</span> oyuncu kazanir. Dagitim yukaridaki agirliklara gore yapilir.
                   </div>
                 </div>
               </div>
-              <div className="flex items-start gap-3 rounded-lg border border-white/5 bg-black/20 p-3">
+              <div className="flex items-start gap-3 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20 p-3">
                 <ShieldCheck size={15} className="mt-0.5 shrink-0 text-emerald-400" />
                 <div>
                   <div className="text-xs font-semibold text-white">Kayit kontrollu</div>
-                  <div className="mt-1 text-[11px] font-medium text-zinc-500">Degisiklikler kaydet butonu ile yayina alinir.</div>
+                  <div className="mt-1 text-[11px] font-medium text-[color:var(--panel-muted,#8a919c)]">Degisiklikler kaydet butonu ile yayina alinir.</div>
                 </div>
               </div>
             </div>

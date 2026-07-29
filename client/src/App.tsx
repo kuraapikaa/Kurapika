@@ -149,7 +149,7 @@ const adminDateLabel = new Intl.DateTimeFormat('tr-TR', {
 }).format(new Date());
 
 const tabStyle = (isActive: boolean) =>
-  `group relative flex min-h-9 items-center gap-2 rounded-lg px-2.5 py-1.5 text-[12px] font-semibold transition-colors duration-150 touch-manipulation ${
+  `group relative flex min-h-8 items-center gap-2 rounded-lg px-2 py-1 text-[11.5px] font-semibold transition-colors duration-150 touch-manipulation ${
     isActive ? 'text-white' : 'text-slate-500 hover:bg-white/[0.04] hover:text-slate-200'
   }`;
 
@@ -697,13 +697,13 @@ export default function App() {
           />
 
           <aside
-            style={{ ['--nav-w' as any]: navCollapsed ? '64px' : '224px' }}
+            style={{ ['--nav-w' as any]: navCollapsed ? '56px' : '200px' }}
             className={cn(
-              "premium-sidebar fixed left-0 top-0 z-50 flex h-full w-[228px] flex-col transition-[transform,width] duration-200 ease-out md:w-[var(--nav-w)] md:translate-x-0",
+              "premium-sidebar fixed left-0 top-0 z-50 flex h-full w-[204px] flex-col transition-[transform,width] duration-200 ease-out md:w-[var(--nav-w)] md:translate-x-0",
               sidebarOpen ? "translate-x-0" : "-translate-x-full"
             )}
           >
-            <div className="sidebar-brand flex h-16 shrink-0 items-center justify-between gap-3 border-b border-white/[0.06] px-3">
+            <div className="sidebar-brand flex h-[52px] shrink-0 items-center justify-between gap-3 border-b border-white/[0.06] px-3">
               <div className="flex min-w-0 flex-1 items-center gap-2.5">
                 <span className="grid h-8 w-8 shrink-0 grid-cols-2 gap-1 rounded-lg border border-blue-300/20 bg-blue-300/[0.09] p-2">
                   <i className="rounded-[2px] bg-blue-300" /><i className="rounded-[2px] bg-blue-300" />
@@ -748,8 +748,8 @@ export default function App() {
                 </div>
               </div>
             )}
-            <nav className="flex-1 overflow-y-auto px-2 py-2.5" aria-label="Menü">
-              <div ref={sidebarNavRef} className="space-y-3.5" onKeyDown={handleSidebarKeyDown} role="menu">
+            <nav className="flex-1 overflow-y-auto px-1.5 py-1.5" aria-label="Menü">
+              <div ref={sidebarNavRef} className="space-y-2" onKeyDown={handleSidebarKeyDown} role="menu">
                 {filteredNavGroups.length === 0 && (
                   <p className="px-2 py-4 text-center text-[11px] text-slate-600">Eşleşen menü yok.</p>
                 )}

@@ -34,17 +34,17 @@ export function LiveRadar() {
                         <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-rose-500 rounded-full animate-ping"></span>
                     </div>
                     <div>
-                        <h2 className="text-xl font-semibold uppercase tracking-widest text-slate-100 flex items-center gap-2">
+                        <h2 className="text-xl font-semibold uppercase tracking-widest text-[color:var(--panel-text,#f2f4f8)] flex items-center gap-2">
                             Canlı Radar <span className="font-mono text-rose-500 text-sm">{radarBets.length > 0 ? `(${radarBets.length})` : ''}</span>
                         </h2>
-                        <p className="text-sm text-slate-500 font-medium">Site genelindeki yüksek tutarlı son bahislerin gerçek zamanlı akışı</p>
+                        <p className="text-sm text-[color:var(--panel-muted,#8a919c)] font-medium">Site genelindeki yüksek tutarlı son bahislerin gerçek zamanlı akışı</p>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-4 bg-[rgba(242,244,248,0.50)] p-2 border border-white/5 rounded-xl">
-                    <div className="flex items-center gap-2 px-3 border-r border-white/10">
-                        <span className="text-xs uppercase font-bold text-slate-500">Min. Tutar</span>
-                        <select className="bg-slate-950 text-slate-300 border border-white/10 rounded-lg text-sm px-2 py-1 outline-none"
+                <div className="flex items-center gap-4 bg-[rgba(242,244,248,0.50)] p-2 border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl">
+                    <div className="flex items-center gap-2 px-3 border-r border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
+                        <span className="text-xs uppercase font-bold text-[color:var(--panel-muted,#8a919c)]">Min. Tutar</span>
+                        <select className="bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] text-[color:var(--panel-text-dim,#c8cdd5)] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-lg text-sm px-2 py-1 outline-none"
                             value={minStake} onChange={(e) => setMinStake(Number(e.target.value))}>
                             <option value={10}>10 TRY</option>
                             <option value={100}>100 TRY</option>
@@ -55,8 +55,8 @@ export function LiveRadar() {
                         </select>
                     </div>
                     <div className="flex items-center gap-2 pr-2">
-                        <span className="text-xs uppercase font-bold text-slate-500">Oto. Yenileme</span>
-                        <div className={`w-10 h-5 rounded-full relative cursor-pointer transition-colors ${autoRefresh ? 'bg-rose-500' : 'bg-slate-700'}`} onClick={() => setAutoRefresh(!autoRefresh)}>
+                        <span className="text-xs uppercase font-bold text-[color:var(--panel-muted,#8a919c)]">Oto. Yenileme</span>
+                        <div className={`w-10 h-5 rounded-full relative cursor-pointer transition-colors ${autoRefresh ? 'bg-rose-500' : 'bg-[color:var(--panel-surface-2,rgba(242,244,248,0.05))]'}`} onClick={() => setAutoRefresh(!autoRefresh)}>
                             <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${autoRefresh ? 'translate-x-5' : 'translate-x-0'}`} />
                         </div>
                     </div>
@@ -72,17 +72,17 @@ export function LiveRadar() {
                     </div>
                 </div>
             ) : radarBets.length === 0 ? (
-                <div className="rounded-xl border border-white/5 bg-[rgba(242,244,248,0.30)] p-24 flex flex-col items-center justify-center gap-4">
+                <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.30)] p-24 flex flex-col items-center justify-center gap-4">
                     {siteBetsQuery.isLoading ? (
                         <>
                             <Loader2 className="animate-spin text-rose-500" size={48} />
-                            <p className="text-slate-500 uppercase tracking-widest font-bold">Frekans Taranıyor...</p>
+                            <p className="text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest font-bold">Frekans Taranıyor...</p>
                         </>
                     ) : (
                         <>
-                            <Radar className="text-slate-700 mx-auto opacity-50" size={64} />
-                            <p className="text-slate-500 uppercase tracking-widest font-bold text-center">Belirlenen limitte bahis yok</p>
-                            <p className="text-slate-600 text-sm">Alt limiti düşürebilirsiniz.</p>
+                            <Radar className="text-[color:var(--panel-faint,#5c6470)] mx-auto opacity-50" size={64} />
+                            <p className="text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest font-bold text-center">Belirlenen limitte bahis yok</p>
+                            <p className="text-[color:var(--panel-faint,#5c6470)] text-sm">Alt limiti düşürebilirsiniz.</p>
                         </>
                     )}
                 </div>
@@ -99,7 +99,7 @@ export function LiveRadar() {
                                     animate={{ opacity: 1, y: 0, scale: 1 }}
                                     exit={{ opacity: 0, scale: 0.8 }}
                                     transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-                                    className={`relative rounded-xl border p-5 overflow-hidden shadow-2xl ${isHighStake ? 'border-amber-500/50 bg-amber-950/20 shadow-amber-900/10' : 'border-white/10 bg-[rgba(242,244,248,0.60)] shadow-black/50'
+                                    className={`relative rounded-xl border p-5 overflow-hidden shadow-2xl ${isHighStake ? 'border-amber-500/50 bg-amber-950/20 shadow-amber-900/10' : 'border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.60)] shadow-black/50'
                                         }`}
                                 >
                                     {isHighStake && (
@@ -111,10 +111,10 @@ export function LiveRadar() {
                                     )}
                                     <div className="flex justify-between items-start mb-4">
                                         <div>
-                                            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 mb-0.5">Oyuncu</p>
+                                            <p className="text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)] mb-0.5">Oyuncu</p>
                                             <p className="text-sm font-bold text-white flex items-center gap-2">
                                                 {bet.ClientFirstName ?? '-'} {bet.ClientLastName?.slice(0, 1) ?? ''}.
-                                                <a href={`/#/oyuncu/${bet.ClientId}/${bet.ClientLogin || bet.ClientFirstName || 'Oyuncu'}`} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-blue-400 transition-colors font-mono text-xs">
+                                                <a href={`/#/oyuncu/${bet.ClientId}/${bet.ClientLogin || bet.ClientFirstName || 'Oyuncu'}`} target="_blank" rel="noreferrer" className="text-[color:var(--panel-muted,#8a919c)] hover:text-blue-400 transition-colors font-mono text-xs">
                                                     #{bet.ClientId}
                                                 </a>
                                             </p>
@@ -124,24 +124,24 @@ export function LiveRadar() {
                                         )}
                                     </div>
 
-                                    <div className="flex justify-between items-end mb-4 bg-black/20 rounded-xl p-3 border border-white/5">
+                                    <div className="flex justify-between items-end mb-4 bg-black/20 rounded-xl p-3 border border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
                                         <div>
-                                            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 mb-1">Tutar</p>
-                                            <p className={`font-mono text-xl font-semibold ${isHighStake ? 'text-amber-400' : 'text-slate-200'}`}>
+                                            <p className="text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)] mb-1">Tutar</p>
+                                            <p className={`font-mono text-xl font-semibold ${isHighStake ? 'text-amber-400' : 'text-[color:var(--panel-text-dim,#c8cdd5)]'}`}>
                                                 {formatNumber(bet.Amount)} <span className="text-sm">TRY</span>
                                             </p>
                                         </div>
                                         <div className="text-right">
-                                            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 mb-1">Total Oran</p>
+                                            <p className="text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)] mb-1">Total Oran</p>
                                             <p className="font-bold text-blue-300">@{Number(bet.Price ?? 0).toFixed(2)}</p>
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center justify-between border-t border-white/5 pt-3">
-                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                                    <div className="flex items-center justify-between border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))] pt-3">
+                                        <p className="text-[10px] font-bold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">
                                             Kupon: <span className="font-mono">{bet.Id}</span>
                                         </p>
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                        <p className="text-[10px] font-bold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">
                                             {formatDateTimeDisplay(bet.CreatedLocal)}
                                         </p>
                                     </div>

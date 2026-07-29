@@ -55,7 +55,7 @@ function LynonDateField({
       <button
         type="button"
         onClick={openPicker}
-        className="flex h-8 w-full items-center justify-between gap-2 rounded-md border border-transparent bg-[#080c12] px-2 text-left text-[11px] font-semibold text-slate-200 transition hover:border-blue-400/30 hover:bg-[#0f151f] focus:outline-none focus:ring-2 focus:ring-blue-400/25"
+        className="flex h-8 w-full items-center justify-between gap-2 rounded-md border border-transparent bg-[#080c12] px-2 text-left text-[11px] font-semibold text-[color:var(--panel-text-dim,#c8cdd5)] transition hover:border-blue-400/30 hover:bg-[#0f151f] focus:outline-none focus:ring-2 focus:ring-blue-400/25"
         aria-label={label}
       >
         <span>{formatLynonDate(value)}</span>
@@ -74,15 +74,15 @@ export function DateRangeBar({ range, onRangeChange, onRefresh, isLoading }: Dat
   };
 
   return (
-    <div className="flex h-9 shrink-0 flex-nowrap items-center gap-1 rounded-lg border border-white/[0.07] bg-[#0c1119] p-0.5">
-      <div className="hidden shrink-0 items-center gap-1.5 px-1.5 text-slate-500 2xl:flex" title="Lynon tarih aralığı">
+    <div className="flex h-9 shrink-0 flex-nowrap items-center gap-1 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[#0c1119] p-0.5">
+      <div className="hidden shrink-0 items-center gap-1.5 px-1.5 text-[color:var(--panel-muted,#8a919c)] 2xl:flex" title="Lynon tarih aralığı">
         <Calendar size={14} className="text-blue-300" />
         <span className="whitespace-nowrap text-[9px] font-bold uppercase tracking-wider">Tarih aralığı</span>
       </div>
 
-      <div className="flex h-8 shrink-0 items-center gap-0.5 rounded-md border border-white/[0.05] bg-black/20 p-0">
+      <div className="flex h-8 shrink-0 items-center gap-0.5 rounded-md border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20 p-0">
         <LynonDateField value={range.startDate} label="Başlangıç tarihi" max={range.endDate} onChange={changeStart} />
-        <ChevronRight size={14} className="shrink-0 text-slate-500" />
+        <ChevronRight size={14} className="shrink-0 text-[color:var(--panel-muted,#8a919c)]" />
         <LynonDateField value={range.endDate} label="Bitiş tarihi" min={range.startDate} onChange={changeEnd} />
       </div>
 
@@ -91,7 +91,7 @@ export function DateRangeBar({ range, onRangeChange, onRefresh, isLoading }: Dat
           type="button"
           onClick={onRefresh}
           disabled={isLoading}
-          className="inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md bg-blue-400 px-2.5 text-[10px] font-bold text-white transition hover:bg-blue-300 disabled:cursor-wait disabled:opacity-70"
+          className="inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md bg-[color:var(--panel-accent,#0a84ff)] px-2.5 text-[10px] font-bold text-white transition hover:bg-[color:var(--panel-accent-deep,#0060df)] disabled:cursor-wait disabled:opacity-70"
         >
           <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
           {isLoading ? 'Bekleyin…' : 'Yenile'}

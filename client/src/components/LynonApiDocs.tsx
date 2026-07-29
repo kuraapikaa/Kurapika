@@ -325,23 +325,23 @@ export function LynonApiDocs() {
   return (
     <div className="space-y-6">
       {/* Header Banner */}
-      <div className="relative overflow-hidden rounded-xl border border-[#3b82f6]/30 bg-gradient-to-r from-[#0b132b] via-[#0f172a] to-[#121c33] p-6 shadow-[0_10px_35px_rgba(0,0,0,0.4)]">
+      <div className="relative overflow-hidden rounded-xl border border-[color:var(--panel-accent,#0a84ff)]/30 bg-gradient-to-r from-[#0b132b] via-[#0f172a] to-[#121c33] p-6 shadow-[0_10px_35px_rgba(0,0,0,0.4)]">
         <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-10 pointer-events-none">
-          <Database size={220} className="text-[#3b82f6]" />
+          <Database size={220} className="text-[color:var(--panel-accent,#0a84ff)]" />
         </div>
         <div className="relative z-10 flex flex-wrap items-center justify-between gap-4">
           <div className="space-y-1">
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#3b82f6]/40 bg-[#3b82f6]/10 px-3 py-1 text-[11px] font-bold text-[#fbbf24]">
+            <div className="inline-flex items-center gap-2 rounded-full border border-[color:var(--panel-accent,#0a84ff)]/40 bg-[color:var(--panel-accent,#0a84ff)]/10 px-3 py-1 text-[11px] font-bold text-[#fbbf24]">
               <Sparkles size={13} /> LYNON BACKOFFICE V2 API CATALOG
             </div>
             <h1 className="text-2xl font-extrabold text-white tracking-tight">Lynon API & Endpoint Dökümantasyonu</h1>
-            <p className="text-xs text-slate-400 max-w-2xl">
+            <p className="text-xs text-[color:var(--panel-muted,#8a919c)] max-w-2xl">
               Narcosbahis / Lynon Backoffice ekosisteminde kullanılan tüm mikroservis uçları, kampanya motoru metodları, oyuncu CRM servisleri ve Proxy rotalarının canlı kataloğu.
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <div className="rounded-xl border border-white/10 bg-black/40 px-4 py-2.5 text-center">
-              <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Toplam Uç</span>
+            <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/40 px-4 py-2.5 text-center">
+              <span className="block text-[10px] font-bold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-wider">Toplam Uç</span>
               <span className="text-lg font-semibold text-[#fbbf24]">{LYNON_ENDPOINTS_DATA.length}</span>
             </div>
             <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-2.5 text-center">
@@ -370,14 +370,14 @@ export function LynonApiDocs() {
               onClick={() => setSelectedCategory(cat.id)}
               className={`flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-semibold transition-all ${
                 selectedCategory === cat.id
-                  ? 'bg-gradient-to-r from-[#3b82f6] to-[#e5a93c] text-slate-950 font-bold shadow-[0_0_15px_rgba(212,175,55,0.3)]'
-                  : 'bg-[#0f172a] text-slate-300 hover:bg-[#162238] border border-slate-800'
+                  ? 'bg-gradient-to-r from-[color:var(--panel-accent,#0a84ff)] to-[color:var(--panel-special,#bf5af2)] text-[#050609] font-bold shadow-[0_0_15px_rgba(212,175,55,0.3)]'
+                  : 'bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] text-[color:var(--panel-text-dim,#c8cdd5)] hover:bg-[#162238] border border-[color:var(--panel-border,rgba(242,244,248,0.1))]'
               }`}
             >
               {cat.label}
               <span
                 className={`rounded-md px-1.5 py-0.5 text-[10px] ${
-                  selectedCategory === cat.id ? 'bg-black/20 text-slate-950' : 'bg-slate-800 text-slate-400'
+                  selectedCategory === cat.id ? 'bg-black/20 text-[#050609]' : 'bg-[color:var(--panel-surface-2,rgba(242,244,248,0.05))] text-[color:var(--panel-muted,#8a919c)]'
                 }`}
               >
                 {cat.count}
@@ -387,13 +387,13 @@ export function LynonApiDocs() {
         </div>
 
         <div className="relative min-w-[260px]">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--panel-muted,#8a919c)]" />
           <input
             type="text"
             placeholder="Endpoint veya metot ara..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-xl border border-slate-800 bg-[#0f172a] py-2 pl-9 pr-4 text-xs text-white placeholder-slate-500 focus:border-[#3b82f6] focus:outline-none"
+            className="w-full rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] py-2 pl-9 pr-4 text-xs text-white placeholder-slate-500 focus:border-[color:var(--panel-accent,#0a84ff)] focus:outline-none"
           />
         </div>
       </div>
@@ -413,8 +413,8 @@ export function LynonApiDocs() {
                 }}
                 className={`cursor-pointer rounded-xl border p-3.5 transition-all ${
                   isSelected
-                    ? 'border-[#3b82f6] bg-[#131f37] shadow-[0_0_18px_rgba(212,175,55,0.15)]'
-                    : 'border-slate-800/80 bg-[#0e1726] hover:border-slate-700 hover:bg-[#111c30]'
+                    ? 'border-[color:var(--panel-accent,#0a84ff)] bg-[#131f37] shadow-[0_0_18px_rgba(212,175,55,0.15)]'
+                    : 'border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[#0e1726] hover:border-[color:var(--panel-border,rgba(242,244,248,0.1))] hover:bg-[#111c30]'
                 }`}
               >
                 <div className="flex items-center justify-between gap-2 mb-1.5">
@@ -431,10 +431,10 @@ export function LynonApiDocs() {
                   >
                     {ep.method}
                   </span>
-                  <span className="text-[10px] text-slate-500 font-mono tracking-wider">{ep.category.toUpperCase()}</span>
+                  <span className="text-[10px] text-[color:var(--panel-muted,#8a919c)] font-mono tracking-wider">{ep.category.toUpperCase()}</span>
                 </div>
                 <h4 className="text-xs font-bold text-white mb-1 truncate">{ep.title}</h4>
-                <p className="text-[11px] font-mono text-slate-400 truncate">{ep.endpoint}</p>
+                <p className="text-[11px] font-mono text-[color:var(--panel-muted,#8a919c)] truncate">{ep.endpoint}</p>
               </div>
             );
           })}
@@ -443,9 +443,9 @@ export function LynonApiDocs() {
         {/* Right Column: Endpoint Inspector & Live Runner */}
         <div className="lg:col-span-7">
           {activeEndpoint ? (
-            <Card className="border-[#3b82f6]/30 bg-[#0e1726] p-6 space-y-6">
+            <Card className="border-[color:var(--panel-accent,#0a84ff)]/30 bg-[#0e1726] p-6 space-y-6">
               {/* Endpoint Header */}
-              <div className="flex items-start justify-between gap-4 pb-4 border-b border-slate-800">
+              <div className="flex items-start justify-between gap-4 pb-4 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <span
@@ -464,12 +464,12 @@ export function LynonApiDocs() {
                     <h3 className="text-base font-extrabold text-white">{activeEndpoint.title}</h3>
                   </div>
                   <div className="flex items-center gap-2">
-                    <code className="rounded-lg bg-black/50 border border-slate-800 px-3 py-1.5 text-xs text-[#fbbf24] font-mono select-all">
+                    <code className="rounded-lg bg-black/50 border border-[color:var(--panel-border,rgba(242,244,248,0.1))] px-3 py-1.5 text-xs text-[#fbbf24] font-mono select-all">
                       {activeEndpoint.endpoint}
                     </code>
                     <button
                       onClick={() => handleCopy(activeEndpoint.endpoint, activeEndpoint.id)}
-                      className="rounded-lg border border-slate-700 bg-slate-800 p-2 text-slate-300 hover:text-white transition-colors"
+                      className="rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface-2,rgba(242,244,248,0.05))] p-2 text-[color:var(--panel-text-dim,#c8cdd5)] hover:text-white transition-colors"
                       title="Endpoint Yolunu Kopyala"
                     >
                       {copiedId === activeEndpoint.id ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
@@ -480,7 +480,7 @@ export function LynonApiDocs() {
                 <Button
                   onClick={() => handleRunTest(activeEndpoint)}
                   disabled={isTesting}
-                  className="bg-gradient-to-r from-[#3b82f6] to-[#e5a93c] text-slate-950 font-bold hover:brightness-110 shadow-[0_0_15px_rgba(212,175,55,0.25)] flex items-center gap-2"
+                  className="bg-gradient-to-r from-[color:var(--panel-accent,#0a84ff)] to-[color:var(--panel-special,#bf5af2)] text-[#050609] font-bold hover:brightness-110 shadow-[0_0_15px_rgba(212,175,55,0.25)] flex items-center gap-2"
                 >
                   {isTesting ? <RefreshCw size={14} className="animate-spin" /> : <Play size={14} />} Test Et
                 </Button>
@@ -488,8 +488,8 @@ export function LynonApiDocs() {
 
               {/* Description & Notes */}
               <div className="space-y-2">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Açıklama</h4>
-                <p className="text-xs text-slate-300 leading-relaxed">{activeEndpoint.description}</p>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-[color:var(--panel-muted,#8a919c)]">Açıklama</h4>
+                <p className="text-xs text-[color:var(--panel-text-dim,#c8cdd5)] leading-relaxed">{activeEndpoint.description}</p>
                 {activeEndpoint.note && (
                   <div className="rounded-xl border border-sky-500/20 bg-sky-500/10 p-3 text-xs text-sky-300 flex items-start gap-2">
                     <ShieldCheck size={16} className="shrink-0 mt-0.5" />
@@ -501,18 +501,18 @@ export function LynonApiDocs() {
               {/* URL Parameters if any */}
               {activeEndpoint.parameters && activeEndpoint.parameters.length > 0 && (
                 <div className="space-y-2">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Parametreler</h4>
-                  <div className="overflow-x-auto rounded-xl border border-slate-800 bg-black/30">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-[color:var(--panel-muted,#8a919c)]">Parametreler</h4>
+                  <div className="overflow-x-auto rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/30">
                     <table className="w-full text-left text-xs border-collapse">
                       <thead>
-                        <tr className="border-b border-slate-800 text-slate-400 bg-[rgba(242,244,248,0.50)]">
+                        <tr className="border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] text-[color:var(--panel-muted,#8a919c)] bg-[rgba(242,244,248,0.50)]">
                           <th className="p-2.5 font-semibold">Adı</th>
                           <th className="p-2.5 font-semibold">Tip</th>
                           <th className="p-2.5 font-semibold">Zorunlu</th>
                           <th className="p-2.5 font-semibold">Açıklama</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-800/50 text-slate-300 font-mono">
+                      <tbody className="divide-y divide-slate-800/50 text-[color:var(--panel-text-dim,#c8cdd5)] font-mono">
                         {activeEndpoint.parameters.map((p) => (
                           <tr key={p.name}>
                             <td className="p-2.5 text-[#fbbf24] font-bold">{p.name}</td>
@@ -521,10 +521,10 @@ export function LynonApiDocs() {
                               {p.required ? (
                                 <span className="text-rose-400 font-bold">Evet</span>
                               ) : (
-                                <span className="text-slate-500">Hayır</span>
+                                <span className="text-[color:var(--panel-muted,#8a919c)]">Hayır</span>
                               )}
                             </td>
-                            <td className="p-2.5 font-sans text-slate-400">{p.description}</td>
+                            <td className="p-2.5 font-sans text-[color:var(--panel-muted,#8a919c)]">{p.description}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -536,8 +536,8 @@ export function LynonApiDocs() {
               {/* Sample Request Body */}
               {activeEndpoint.requestBody && (
                 <div className="space-y-2">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Örnek İstek Gövdesi (JSON Payload)</h4>
-                  <pre className="rounded-xl border border-slate-800 bg-black/60 p-4 text-xs font-mono text-emerald-400 overflow-x-auto">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-[color:var(--panel-muted,#8a919c)]">Örnek İstek Gövdesi (JSON Payload)</h4>
+                  <pre className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/60 p-4 text-xs font-mono text-emerald-400 overflow-x-auto">
                     {activeEndpoint.requestBody}
                   </pre>
                 </div>
@@ -546,7 +546,7 @@ export function LynonApiDocs() {
               {/* cURL Code Snippet */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">cURL Örneği</h4>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-[color:var(--panel-muted,#8a919c)]">cURL Örneği</h4>
                   <button
                     onClick={() =>
                       handleCopy(
@@ -559,7 +559,7 @@ export function LynonApiDocs() {
                     <Copy size={12} /> cURL Kopyala
                   </button>
                 </div>
-                <pre className="rounded-xl border border-slate-800 bg-black/60 p-3 text-xs font-mono text-slate-300 overflow-x-auto">
+                <pre className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/60 p-3 text-xs font-mono text-[color:var(--panel-text-dim,#c8cdd5)] overflow-x-auto">
                   {`curl -X ${activeEndpoint.method} "http://127.0.0.1:5000${activeEndpoint.endpoint}" \\
   -H "Content-Type: application/json"`}
                 </pre>
@@ -567,7 +567,7 @@ export function LynonApiDocs() {
 
               {/* Test Response Console */}
               {testResponse && (
-                <div className="space-y-2 pt-2 border-t border-slate-800">
+                <div className="space-y-2 pt-2 border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
                     <Check size={14} /> Yanıt Konsolu (Live Response)
                   </h4>
@@ -578,7 +578,7 @@ export function LynonApiDocs() {
               )}
             </Card>
           ) : (
-            <div className="flex h-64 items-center justify-center rounded-xl border border-dashed border-slate-800 text-slate-500 text-xs">
+            <div className="flex h-64 items-center justify-center rounded-xl border border-dashed border-[color:var(--panel-border,rgba(242,244,248,0.1))] text-[color:var(--panel-muted,#8a919c)] text-xs">
               Detaylarını incelemek istediğiniz endpoint'i soldaki listeden seçin.
             </div>
           )}

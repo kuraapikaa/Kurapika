@@ -88,14 +88,14 @@ export function ChurnPrevention() {
     return (
         <div className="animate-in space-y-6 pb-20">
             {/* Header */}
-            <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between bg-[rgba(242,244,248,0.40)] p-6 rounded-xl border border-white/5 backdrop-blur-md">
+            <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between bg-[rgba(242,244,248,0.40)] p-6 rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] backdrop-blur-md">
                 <div className="flex items-center gap-3">
                     <div className="rounded-xl bg-rose-500/20 p-3 text-rose-400 shadow-xl shadow-rose-500/10">
                         <UserX size={28} />
                     </div>
                     <div>
                         <h2 className="text-2xl font-semibold text-white tracking-tight">Kayıp Hatırlatıcı (Churn)</h2>
-                        <p className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mt-1">İnaktif Oyuncu Takip Paneli</p>
+                        <p className="text-xs font-bold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-[0.2em] mt-1">İnaktif Oyuncu Takip Paneli</p>
                     </div>
                 </div>
 
@@ -110,7 +110,7 @@ export function ChurnPrevention() {
                             "flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-semibold transition-all border",
                             showVipOnly
                                 ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white border-amber-400 shadow-lg shadow-amber-500/20"
-                                : "bg-white/5 text-slate-400 border-white/10 hover:text-white"
+                                : "bg-white/5 text-[color:var(--panel-muted,#8a919c)] border-[color:var(--panel-border,rgba(242,244,248,0.1))] hover:text-white"
                         )}
                     >
                         <Crown size={16} /> VIP ADAYLARI
@@ -118,7 +118,7 @@ export function ChurnPrevention() {
 
                     {/* Search Bar */}
                     <div className="relative">
-                        <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
+                        <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-[color:var(--panel-muted,#8a919c)]" />
                         <input
                             type="text"
                             placeholder="Kullanıcı adı ara..."
@@ -127,12 +127,12 @@ export function ChurnPrevention() {
                                 setSearchTerm(e.target.value);
                                 setPage(1);
                             }}
-                            className="h-11 w-64 rounded-xl border border-white/10 bg-[rgba(242,244,248,0.60)] pl-11 pr-4 text-sm font-medium text-white transition-all focus:border-rose-500/50 focus:ring-1 focus:ring-rose-500/20 outline-none"
+                            className="h-11 w-64 rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.60)] pl-11 pr-4 text-sm font-medium text-white transition-all focus:border-rose-500/50 focus:ring-1 focus:ring-rose-500/20 outline-none"
                         />
                     </div>
 
-                    <div className="flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 p-1.5">
-                        <span className="pl-3 text-[10px] font-semibold text-slate-500 uppercase">Süre:</span>
+                    <div className="flex items-center gap-2 rounded-xl bg-white/5 border border-[color:var(--panel-border,rgba(242,244,248,0.1))] p-1.5">
+                        <span className="pl-3 text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase">Süre:</span>
                         <div className="flex gap-1">
                             {[3, 7, 15, 30].map((days) => (
                                 <button
@@ -145,7 +145,7 @@ export function ChurnPrevention() {
                                         "px-4 py-2 rounded-xl text-[10px] font-semibold transition-all",
                                         inactivityDays === days
                                             ? "bg-rose-600 text-white shadow-lg shadow-rose-600/20"
-                                            : "text-slate-400 hover:text-white hover:bg-white/5"
+                                            : "text-[color:var(--panel-muted,#8a919c)] hover:text-white hover:bg-white/5"
                                     )}
                                 >
                                     {days}G+
@@ -163,7 +163,7 @@ export function ChurnPrevention() {
                 </div>
                 <div>
                     <h4 className="text-sm font-bold text-blue-300">Stratejik Bilgi</h4>
-                    <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                    <p className="text-xs text-[color:var(--panel-muted,#8a919c)] mt-1 leading-relaxed">
                         En son <strong>{inactivityDays} gün önce</strong> giriş yapmış oyuncular listelenmektedir.
                         Geri kazanım için VIP adaylarını ve yüksek bakiyeli oyuncuları önceliklendirin.
                         <span className="block mt-1 opacity-70 italic font-medium">Not: VIP filtresi mevcut sayfadaki {rowsPerPage} oyuncu arasından tarama yapar.</span>
@@ -172,14 +172,14 @@ export function ChurnPrevention() {
             </div>
 
             {/* Table */}
-            <div className="rounded-xl border border-white/5 bg-[rgba(242,244,248,0.40)] backdrop-blur-md overflow-hidden shadow-2xl">
-                <div className="flex items-center justify-between px-8 py-6 border-b border-white/5">
+            <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.40)] backdrop-blur-md overflow-hidden shadow-2xl">
+                <div className="flex items-center justify-between px-8 py-6 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
                     <div className="flex items-center gap-3">
                         <Clock size={18} className="text-rose-400" />
                         <h3 className="text-sm font-semibold text-white uppercase tracking-wider">İnaktif Oyuncu Listesi</h3>
                     </div>
-                    {isFetching && <Loader2 className="h-4 w-4 animate-spin text-slate-500" />}
-                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                    {isFetching && <Loader2 className="h-4 w-4 animate-spin text-[color:var(--panel-muted,#8a919c)]" />}
+                    <div className="text-[10px] font-bold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">
                         GÖSTERİLEN: {processedPlayers.length} / TOPLAM {totalCount}
                     </div>
                 </div>
@@ -187,7 +187,7 @@ export function ChurnPrevention() {
                 <div className="overflow-x-auto min-h-[400px]">
                     <table className="w-full text-left">
                         <thead>
-                            <tr className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400 border-b border-white/5 opacity-70">
+                            <tr className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[color:var(--panel-muted,#8a919c)] border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] opacity-70">
                                 <th className="px-8 py-5">Oyuncu / ID</th>
                                 <th className="px-8 py-5">Son Giriş</th>
                                 <th className="px-8 py-5">Kayıt Tarihi</th>
@@ -201,17 +201,17 @@ export function ChurnPrevention() {
                                 <tr>
                                     <td colSpan={6} className="py-20 text-center">
                                         <Loader2 className="mx-auto h-8 w-8 animate-spin text-rose-500 opacity-50" />
-                                        <p className="mt-2 text-xs font-bold text-slate-500 uppercase tracking-widest">Taranıyor...</p>
+                                        <p className="mt-2 text-xs font-bold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">Taranıyor...</p>
                                     </td>
                                 </tr>
                             ) : processedPlayers.length === 0 ? (
                                 <tr>
                                     <td colSpan={6} className="py-20 text-center">
                                         <div className="flex flex-col items-center gap-3">
-                                            <div className="p-4 rounded-full bg-slate-800 text-slate-500">
+                                            <div className="p-4 rounded-full bg-[color:var(--panel-surface-2,rgba(242,244,248,0.05))] text-[color:var(--panel-muted,#8a919c)]">
                                                 <UserX size={32} />
                                             </div>
-                                            <p className="text-slate-500 italic text-sm">
+                                            <p className="text-[color:var(--panel-muted,#8a919c)] italic text-sm">
                                                 {showVipOnly
                                                     ? `Taranan bu sayfadaki ${rowsPerPage} oyuncu arasında kriterlere uygun VIP adayı bulunamadı. Lütfen sonraki sayfalara göz atın (Toplam inaktif havuzu: ${totalCount}).`
                                                     : "Seçili kriterde inaktif oyuncu bulunamadı."}
@@ -243,7 +243,7 @@ export function ChurnPrevention() {
                                                             </span>
                                                         )}
                                                     </div>
-                                                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">
+                                                    <span className="text-[10px] font-bold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-tighter">
                                                         ID: #{player.Id} · {player.FirstName || ''} {player.LastName || ''}
                                                     </span>
                                                 </div>
@@ -256,13 +256,13 @@ export function ChurnPrevention() {
                                                     )}>
                                                         {formatDateDisplay(player.LastLoginLocalDate)}
                                                     </span>
-                                                    <span className="text-[10px] text-slate-500 uppercase">
+                                                    <span className="text-[10px] text-[color:var(--panel-muted,#8a919c)] uppercase">
                                                         {calculateInactivity(player.LastLoginLocalDate)} GÜNDÜR YOK
                                                     </span>
                                                 </div>
                                             </td>
                                             <td className="px-8 py-5">
-                                                <span className="text-xs font-medium text-slate-400">
+                                                <span className="text-xs font-medium text-[color:var(--panel-muted,#8a919c)]">
                                                     {formatDateDisplay(player.CreatedLocalDate)}
                                                 </span>
                                             </td>
@@ -270,7 +270,7 @@ export function ChurnPrevention() {
                                                 <div className="flex flex-col items-end">
                                                     <span className={cn(
                                                         "text-sm font-semibold tabular-nums",
-                                                        isHighBalance ? "text-emerald-400" : (player.Balance || 0) > 10 ? "text-white" : "text-slate-600"
+                                                        isHighBalance ? "text-emerald-400" : (player.Balance || 0) > 10 ? "text-white" : "text-[color:var(--panel-faint,#5c6470)]"
                                                     )}>
                                                         {formatNumber(player.Balance || 0)} {player.CurrencyId}
                                                     </span>
@@ -283,12 +283,12 @@ export function ChurnPrevention() {
                                                 <div className="flex flex-col items-end">
                                                     <span className={cn(
                                                         "text-sm font-semibold tabular-nums",
-                                                        isVipCandidate ? "text-amber-500" : "text-slate-300"
+                                                        isVipCandidate ? "text-amber-500" : "text-[color:var(--panel-text-dim,#c8cdd5)]"
                                                     )}>
                                                         {formatNumber(totalDep)}
                                                     </span>
                                                     {kpi && (
-                                                        <span className="text-[9px] font-bold text-slate-500 uppercase">P/L: {formatNumber(kpi.ProfitAndLose)}</span>
+                                                        <span className="text-[9px] font-bold text-[color:var(--panel-muted,#8a919c)] uppercase">P/L: {formatNumber(kpi.ProfitAndLose)}</span>
                                                     )}
                                                 </div>
                                             </td>
@@ -299,7 +299,7 @@ export function ChurnPrevention() {
                                                         "inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-[10px] font-semibold transition-all uppercase tracking-widest",
                                                         isVipCandidate
                                                             ? "bg-amber-600 text-white border-amber-500 hover:bg-amber-500"
-                                                            : "bg-white/5 border-white/10 text-slate-300 hover:bg-rose-500 hover:text-white hover:border-rose-500"
+                                                            : "bg-white/5 border-[color:var(--panel-border,rgba(242,244,248,0.1))] text-[color:var(--panel-text-dim,#c8cdd5)] hover:bg-rose-500 hover:text-white hover:border-rose-500"
                                                     )}
                                                 >
                                                     İncele <ArrowRight size={12} />
@@ -315,22 +315,22 @@ export function ChurnPrevention() {
 
                 {/* Pagination */}
                 {totalPages > 1 && (
-                    <div className="flex items-center justify-between px-8 py-6 border-t border-white/5 bg-[rgba(242,244,248,0.20)]">
-                        <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">
+                    <div className="flex items-center justify-between px-8 py-6 border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.20)]">
+                        <p className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">
                             Sayfa {page} / {totalPages} · Toplam {totalCount} Kayıt
                         </p>
                         <div className="flex items-center gap-2">
                             <button
                                 onClick={() => setPage(p => Math.max(1, p - 1))}
                                 disabled={page === 1}
-                                className="h-10 w-10 flex items-center justify-center rounded-xl bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white disabled:opacity-20 transition-all border border-white/5"
+                                className="h-10 w-10 flex items-center justify-center rounded-xl bg-white/5 text-[color:var(--panel-muted,#8a919c)] hover:bg-white/10 hover:text-white disabled:opacity-20 transition-all border border-[color:var(--panel-border,rgba(242,244,248,0.1))]"
                             >
                                 <ChevronLeft size={18} />
                             </button>
                             <button
                                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                                 disabled={page === totalPages}
-                                className="h-10 w-10 flex items-center justify-center rounded-xl bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white disabled:opacity-20 transition-all border border-white/5"
+                                className="h-10 w-10 flex items-center justify-center rounded-xl bg-white/5 text-[color:var(--panel-muted,#8a919c)] hover:bg-white/10 hover:text-white disabled:opacity-20 transition-all border border-[color:var(--panel-border,rgba(242,244,248,0.1))]"
                             >
                                 <ChevronRight size={18} />
                             </button>

@@ -140,8 +140,8 @@ export function VIPSettings() {
   return (
     <div className="mx-auto w-full max-w-[1200px] space-y-5 p-4 pb-28 md:p-6">
       {/* Toolbar */}
-      <div className="flex flex-col gap-3 rounded-xl border border-white/10 bg-[#080d13]/95 p-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex gap-1 rounded-xl border border-white/[0.07] bg-black/30 p-1">
+      <div className="flex flex-col gap-3 rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex gap-1 rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/30 p-1">
           {([['settings', Crown, 'Ayarlar'], ['applications', Users, 'Başvurular']] as const).map(([id, Icon, label]) => (
             <button
               key={id}
@@ -149,7 +149,7 @@ export function VIPSettings() {
               onClick={() => setActiveTab(id)}
               className={cn(
                 'flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold uppercase tracking-wider transition',
-                activeTab === id ? 'bg-cyan-400 text-black' : 'text-zinc-500 hover:text-white'
+                activeTab === id ? 'bg-cyan-400 text-[#050609]' : 'text-[color:var(--panel-muted,#8a919c)] hover:text-white'
               )}
             >
               <Icon size={14} />
@@ -165,7 +165,7 @@ export function VIPSettings() {
             type="button"
             onClick={() => saveMutation.mutate()}
             disabled={saveMutation.isPending}
-            className="inline-flex h-10 items-center gap-2 rounded-lg bg-cyan-300 px-5 text-xs font-semibold uppercase tracking-widest text-zinc-950 transition hover:bg-cyan-200 disabled:opacity-60"
+            className="inline-flex h-10 items-center gap-2 rounded-lg bg-[color:var(--panel-info,#64d2ff)] px-5 text-xs font-semibold uppercase tracking-widest text-[#050609] transition hover:bg-[color:var(--panel-info,#64d2ff)] disabled:opacity-60"
           >
             {saveMutation.isPending ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
             Kaydet
@@ -194,7 +194,7 @@ export function VIPSettings() {
           <Section title="İstatistikler">
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
               {config.stats.map((stat) => (
-                <div key={stat.id} className="space-y-2 rounded-xl border border-white/[0.07] bg-black/20 p-3">
+                <div key={stat.id} className="space-y-2 rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20 p-3">
                   <Field label="Değer" value={stat.value} onChange={(v) => setConfig({ ...config, stats: config.stats.map((s) => s.id === stat.id ? { ...s, value: v } : s) })} />
                   <Field label="Etiket" value={stat.label} onChange={(v) => setConfig({ ...config, stats: config.stats.map((s) => s.id === stat.id ? { ...s, label: v } : s) })} />
                 </div>
@@ -206,7 +206,7 @@ export function VIPSettings() {
           <Section title="VIP Seviyeleri">
             <div className="space-y-2">
               {config.tiers.map((tier) => (
-                <div key={tier.id} className="overflow-hidden rounded-xl border border-white/[0.07] bg-black/20">
+                <div key={tier.id} className="overflow-hidden rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20">
                   <button
                     type="button"
                     onClick={() => setExpandedTier(expandedTier === tier.id ? null : tier.id)}
@@ -216,15 +216,15 @@ export function VIPSettings() {
                       <span className="text-xl">{tier.badge}</span>
                       <div className="text-left">
                         <p className="text-sm font-semibold text-white">{tier.label}</p>
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-600">{tier.sublabel}</p>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-[color:var(--panel-faint,#5c6470)]">{tier.sublabel}</p>
                         <p className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-cyan-300/80">Min. yatırım: {tier.minDeposit || 'Belirtilmedi'}</p>
                       </div>
-                      {tier.popular && <span className="rounded-full bg-amber-300/20 px-2 py-0.5 text-[9px] font-semibold text-amber-300">Popüler</span>}
+                      {tier.popular && <span className="rounded-full bg-[color:var(--panel-warning,#ff9f0a)]/20 px-2 py-0.5 text-[9px] font-semibold text-amber-300">Popüler</span>}
                     </div>
-                    {expandedTier === tier.id ? <ChevronUp size={16} className="text-zinc-500" /> : <ChevronDown size={16} className="text-zinc-500" />}
+                    {expandedTier === tier.id ? <ChevronUp size={16} className="text-[color:var(--panel-muted,#8a919c)]" /> : <ChevronDown size={16} className="text-[color:var(--panel-muted,#8a919c)]" />}
                   </button>
                   {expandedTier === tier.id && (
-                    <div className="border-t border-white/[0.06] p-4 space-y-3">
+                    <div className="border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))] p-4 space-y-3">
                       <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
                         <Field label="Emoji/Badge" value={tier.badge} onChange={(v) => updateTier(tier.id, 'badge', v)} />
                         <Field label="İsim" value={tier.label} onChange={(v) => updateTier(tier.id, 'label', v)} />
@@ -235,7 +235,7 @@ export function VIPSettings() {
                         </div>
                       </div>
                       <div>
-                        <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-zinc-600">Avantajlar</p>
+                        <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-[color:var(--panel-faint,#5c6470)]">Avantajlar</p>
                         <div className="space-y-2">
                           {tier.perks.map((perk, pi) => (
                             <div key={pi} className="flex gap-2">
@@ -246,7 +246,7 @@ export function VIPSettings() {
                                   perks[pi] = e.target.value;
                                   updateTier(tier.id, 'perks', perks);
                                 }}
-                                className="flex-1 h-9 rounded-lg border border-white/[0.07] bg-black/30 px-3 text-xs font-bold text-white outline-none placeholder:text-zinc-700 focus:border-cyan-400/40"
+                                className="flex-1 h-9 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/30 px-3 text-xs font-bold text-white outline-none placeholder:text-[color:var(--panel-faint,#5c6470)] focus:border-cyan-400/40"
                               />
                               <button
                                 type="button"
@@ -260,7 +260,7 @@ export function VIPSettings() {
                           <button
                             type="button"
                             onClick={() => updateTier(tier.id, 'perks', [...tier.perks, ''])}
-                            className="flex h-9 items-center gap-2 rounded-lg border border-white/[0.06] bg-white/[0.03] px-3 text-xs font-semibold text-zinc-400 hover:text-white"
+                            className="flex h-9 items-center gap-2 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.03] px-3 text-xs font-semibold text-[color:var(--panel-muted,#8a919c)] hover:text-white"
                           >
                             <Plus size={13} /> Avantaj ekle
                           </button>
@@ -277,7 +277,7 @@ export function VIPSettings() {
           <Section title="SSS (Sık Sorulan Sorular)">
             <div className="space-y-2">
               {config.faq.map((item) => (
-                <div key={item.id} className="overflow-hidden rounded-xl border border-white/[0.07] bg-black/20">
+                <div key={item.id} className="overflow-hidden rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20">
                   <div className="flex w-full items-center justify-between gap-3 px-4 py-3">
                     <button
                       type="button"
@@ -297,14 +297,14 @@ export function VIPSettings() {
                       <button
                         type="button"
                         onClick={() => setExpandedFaq(expandedFaq === item.id ? null : item.id)}
-                        className="flex h-7 w-7 items-center justify-center rounded-lg text-zinc-500 hover:bg-white/[0.04] hover:text-white"
+                        className="flex h-7 w-7 items-center justify-center rounded-lg text-[color:var(--panel-muted,#8a919c)] hover:bg-white/[0.04] hover:text-white"
                       >
                         {expandedFaq === item.id ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
                       </button>
                     </div>
                   </div>
                   {expandedFaq === item.id && (
-                    <div className="border-t border-white/[0.06] p-3 space-y-2">
+                    <div className="border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))] p-3 space-y-2">
                       <Field label="Soru" value={item.q} onChange={(v) => setConfig({ ...config, faq: config.faq.map((f) => f.id === item.id ? { ...f, q: v } : f) })} />
                       <Field label="Cevap" value={item.a} onChange={(v) => setConfig({ ...config, faq: config.faq.map((f) => f.id === item.id ? { ...f, a: v } : f) })} multiline />
                     </div>
@@ -314,7 +314,7 @@ export function VIPSettings() {
               <button
                 type="button"
                 onClick={() => setConfig({ ...config, faq: [...config.faq, { id: `f${Date.now()}`, q: '', a: '' }] })}
-                className="flex h-9 items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 text-xs font-semibold text-zinc-400 hover:text-white"
+                className="flex h-9 items-center gap-2 rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.03] px-4 text-xs font-semibold text-[color:var(--panel-muted,#8a919c)] hover:text-white"
               >
                 <Plus size={13} /> Soru ekle
               </button>
@@ -337,33 +337,33 @@ export function VIPSettings() {
           {formsQuery.isLoading ? (
             <div className="flex h-40 items-center justify-center"><Loader2 className="animate-spin text-white/40" size={24} /></div>
           ) : vipApps.length === 0 ? (
-            <div className="flex h-40 flex-col items-center justify-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02]">
-              <Crown className="text-zinc-700" size={28} />
-              <p className="text-sm font-bold text-zinc-600">Henüz VIP başvurusu yok</p>
+            <div className="flex h-40 flex-col items-center justify-center gap-2 rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.02]">
+              <Crown className="text-[color:var(--panel-faint,#5c6470)]" size={28} />
+              <p className="text-sm font-bold text-[color:var(--panel-faint,#5c6470)]">Henüz VIP başvurusu yok</p>
             </div>
           ) : (
-            <div className="overflow-hidden rounded-xl border border-white/[0.07]">
+            <div className="overflow-hidden rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="border-b border-white/[0.07] bg-black/30">
+                  <tr className="border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/30">
                     {['Kullanıcı', 'Ad Soyad', 'E-posta', 'Telefon', 'Tarih', 'Durum', ''].map((h) => (
-                      <th key={h} className="px-3 py-2.5 text-left font-semibold uppercase tracking-wider text-zinc-600">{h}</th>
+                      <th key={h} className="px-3 py-2.5 text-left font-semibold uppercase tracking-wider text-[color:var(--panel-faint,#5c6470)]">{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {vipApps.map((app) => (
-                    <tr key={app.id} className="border-b border-white/[0.05] hover:bg-white/[0.02]">
+                    <tr key={app.id} className="border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] hover:bg-white/[0.02]">
                       <td className="px-3 py-2.5 font-semibold text-white">{app.username}</td>
-                      <td className="px-3 py-2.5 text-zinc-400">{app.name || '—'}</td>
-                      <td className="px-3 py-2.5 text-zinc-400">{app.email || '—'}</td>
-                      <td className="px-3 py-2.5 text-zinc-400">{app.phone || '—'}</td>
-                      <td className="px-3 py-2.5 text-zinc-600">{new Date(app.createdAt).toLocaleDateString('tr-TR')}</td>
+                      <td className="px-3 py-2.5 text-[color:var(--panel-muted,#8a919c)]">{app.name || '—'}</td>
+                      <td className="px-3 py-2.5 text-[color:var(--panel-muted,#8a919c)]">{app.email || '—'}</td>
+                      <td className="px-3 py-2.5 text-[color:var(--panel-muted,#8a919c)]">{app.phone || '—'}</td>
+                      <td className="px-3 py-2.5 text-[color:var(--panel-faint,#5c6470)]">{new Date(app.createdAt).toLocaleDateString('tr-TR')}</td>
                       <td className="px-3 py-2.5">
                         <select
                           value={app.status}
                           onChange={(e) => updateStatus.mutate({ id: app.id, status: e.target.value })}
-                          className="rounded-lg border border-white/[0.07] bg-black/30 px-2 py-1 text-xs font-bold text-white outline-none"
+                          className="rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/30 px-2 py-1 text-xs font-bold text-white outline-none"
                         >
                           <option value="pending">Bekliyor</option>
                           <option value="approved">Onaylandı</option>
@@ -397,8 +397,8 @@ export function VIPSettings() {
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-white/[0.07] bg-[#080d13]/90 p-4 md:p-5">
-      <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-500">{title}</p>
+    <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-4 md:p-5">
+      <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-[color:var(--panel-muted,#8a919c)]">{title}</p>
       {children}
     </div>
   );
@@ -406,24 +406,24 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function Toggle({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
   return (
-    <label className="flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-white/[0.06] bg-black/20 px-3 py-2.5">
-      <span className="text-xs font-bold text-zinc-300">{label}</span>
+    <label className="flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20 px-3 py-2.5">
+      <span className="text-xs font-bold text-[color:var(--panel-text-dim,#c8cdd5)]">{label}</span>
       <button
         type="button"
         onClick={() => onChange(!value)}
-        className={cn('flex h-6 w-11 items-center rounded-full border transition', value ? 'border-cyan-400/40 bg-cyan-400/20' : 'border-white/10 bg-white/5')}
+        className={cn('flex h-6 w-11 items-center rounded-full border transition', value ? 'border-cyan-400/40 bg-cyan-400/20' : 'border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/5')}
       >
-        <span className={cn('h-4 w-4 rounded-full transition-transform', value ? 'translate-x-5 bg-cyan-300' : 'translate-x-0.5 bg-zinc-600')} />
+        <span className={cn('h-4 w-4 rounded-full transition-transform', value ? 'translate-x-5 bg-[color:var(--panel-info,#64d2ff)]' : 'translate-x-0.5 bg-[color:var(--panel-faint,#5c6470)]')} />
       </button>
     </label>
   );
 }
 
 function Field({ label, value, onChange, className, multiline }: { label: string; value: string; onChange: (v: string) => void; className?: string; multiline?: boolean }) {
-  const base = 'w-full rounded-lg border border-white/[0.07] bg-black/30 px-3 text-xs font-bold text-white outline-none placeholder:text-zinc-700 focus:border-cyan-400/40';
+  const base = 'w-full rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/30 px-3 text-xs font-bold text-white outline-none placeholder:text-[color:var(--panel-faint,#5c6470)] focus:border-cyan-400/40';
   return (
     <div className={cn('space-y-1', className)}>
-      <p className="text-[9px] font-semibold uppercase tracking-wider text-zinc-600">{label}</p>
+      <p className="text-[9px] font-semibold uppercase tracking-wider text-[color:var(--panel-faint,#5c6470)]">{label}</p>
       {multiline ? (
         <textarea value={value} onChange={(e) => onChange(e.target.value)} rows={3} className={cn(base, 'py-2 resize-none')} />
       ) : (

@@ -30,7 +30,7 @@ function StatusBadge({ value }: { value: unknown }) {
   const styles: Record<StatusTone, string> = {
     paid: 'border-emerald-400/20 bg-emerald-400/10 text-emerald-300',
     rejected: 'border-rose-400/20 bg-rose-400/10 text-rose-300',
-    pending: 'border-amber-300/20 bg-amber-300/10 text-amber-200',
+    pending: 'border-amber-300/20 bg-[color:var(--panel-warning,#ff9f0a)]/10 text-amber-200',
     neutral: 'border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.20)] text-[color:var(--panel-text-dim,#c8cdd5)]',
   };
   const Icon = tone === 'paid' ? CheckCircle2 : tone === 'rejected' ? XCircle : Clock3;
@@ -105,7 +105,7 @@ export function WithdrawalRequestsList({ data, isLoading, error, onRetry }: With
     <section className="flex h-full min-h-0 flex-col gap-4">
       <header className="flex flex-col gap-4 rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-5 shadow-none sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-blue-400/20 bg-blue-400/10 text-blue-300">
+          <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-blue-400/20 bg-[color:var(--panel-accent,#0a84ff)]/10 text-blue-300">
             <Banknote size={19} />
           </span>
           <div>
@@ -161,7 +161,7 @@ export function WithdrawalRequestsList({ data, isLoading, error, onRetry }: With
                   const isPending = statusTone(row.StateName || row.State) === 'pending';
                   const isRejectingThis = rejectMutation.isPending && rejectMutation.variables?.id === row.Id;
                   return (
-                    <tr key={String(row.Id)} className="border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))] hover:bg-blue-400/[0.025]">
+                    <tr key={String(row.Id)} className="border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))] hover:bg-[color:var(--panel-accent,#0a84ff)]/[0.025]">
                       <td className="px-4 py-3">
                         <button
                           type="button"

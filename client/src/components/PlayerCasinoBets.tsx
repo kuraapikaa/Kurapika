@@ -21,7 +21,7 @@ function TypeBadge({ value }: { value: unknown }) {
     const tone = lower.includes('kazanç')
         ? 'border-emerald-400/20 bg-emerald-400/10 text-emerald-300'
         : lower.includes('bahis')
-            ? 'border-blue-400/20 bg-blue-400/10 text-blue-300'
+            ? 'border-blue-400/20 bg-[color:var(--panel-accent,#0a84ff)]/10 text-blue-300'
             : 'border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.20)] text-[color:var(--panel-text-dim,#c8cdd5)]';
     return (
         <span className={`inline-flex items-center rounded-md border px-2 py-1 text-[10px] font-bold ${tone}`}>

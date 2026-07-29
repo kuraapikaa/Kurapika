@@ -235,7 +235,7 @@ export function AutoBonusPanel({ variant = 'admin', prefilledLogin }: AutoBonusP
                     </div>
                     {isPlayerPanel ? 'Bonus Talep' : 'Otomatik Bonus Paneli'}
                 </h2>
-                <p className="text-zinc-400 text-sm">
+                <p className="text-[color:var(--panel-muted,#8a919c)] text-sm">
                     {isPlayerPanel
                         ? 'Kullanıcı adınızı yazıp listeden bonus seçin; bonus kurallarına göre talep edebilirsiniz.'
                         : 'Oyuncu kontrollerini sağlayın ve sistem üzerinden hızlıca bonus tanımlayın.'}
@@ -244,14 +244,14 @@ export function AutoBonusPanel({ variant = 'admin', prefilledLogin }: AutoBonusP
 
             {/* Search Section */}
             {!isPlayerPanel && (
-                <section className="bg-[rgba(242,244,248,0.50)] border border-white/5 rounded-xl p-6 backdrop-blur-xl mb-6">
+                <section className="bg-[rgba(242,244,248,0.50)] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl p-6 backdrop-blur-xl mb-6">
                     <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4">
                         <div className="flex-1 relative">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={20} />
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[color:var(--panel-muted,#8a919c)]" size={20} />
                             <input
                                 type="text"
                                 placeholder="Oyuncu Kullanıcı Adı veya ID"
-                                className="w-full bg-black/40 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all font-medium"
+                                className="w-full bg-black/40 border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl pl-12 pr-4 py-3 text-white placeholder:text-[color:var(--panel-faint,#5c6470)] focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all font-medium"
                                 value={login}
                                 onChange={(e) => setLogin(e.target.value)}
                             />
@@ -293,7 +293,7 @@ export function AutoBonusPanel({ variant = 'admin', prefilledLogin }: AutoBonusP
                         {!isPlayerPanel && (
                             <div className="lg:col-span-7 space-y-6">
                                 {/* Profile Overview */}
-                                <div className="bg-[rgba(242,244,248,0.50)] border border-white/5 rounded-xl p-6 backdrop-blur-xl">
+                                <div className="bg-[rgba(242,244,248,0.50)] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl p-6 backdrop-blur-xl">
                                     <div className="flex items-center justify-between mb-6">
                                         <div className="flex items-center gap-4">
                                             <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-blue-500 to-blue-500 flex items-center justify-center text-white font-bold text-xl shadow-lg">
@@ -301,44 +301,44 @@ export function AutoBonusPanel({ variant = 'admin', prefilledLogin }: AutoBonusP
                                             </div>
                                             <div>
                                                 <h3 className="text-lg font-bold text-white leading-tight">{account?.ClientLogin}</h3>
-                                                <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider">ID: {account?.id}</p>
+                                                <p className="text-[color:var(--panel-muted,#8a919c)] text-xs font-medium uppercase tracking-wider">ID: {account?.id}</p>
                                             </div>
                                         </div>
                                         <div className="text-right">
                                             <div className="text-2xl font-semibold text-emerald-400">
                                                 {account?.balance?.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' })}
                                             </div>
-                                            <p className="text-zinc-500 text-xs font-medium">Güncel Bakiye</p>
+                                            <p className="text-[color:var(--panel-muted,#8a919c)] text-xs font-medium">Güncel Bakiye</p>
                                         </div>
                                     </div>
 
                                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                                        <div className="p-3 rounded-xl bg-black/30 border border-white/5">
-                                            <p className="text-zinc-500 text-[10px] uppercase font-bold mb-1 flex items-center gap-1.5">
+                                        <div className="p-3 rounded-xl bg-black/30 border border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
+                                            <p className="text-[color:var(--panel-muted,#8a919c)] text-[10px] uppercase font-bold mb-1 flex items-center gap-1.5">
                                                 <Wallet size={12} className="text-blue-400" /> Son Yatırım
                                             </p>
                                             <p className="text-white font-bold text-sm">
                                                 {account?.lastDeposit?.amount?.toLocaleString('tr-TR')} TL
                                             </p>
                                         </div>
-                                        <div className="p-3 rounded-xl bg-black/30 border border-white/5">
-                                            <p className="text-zinc-500 text-[10px] uppercase font-bold mb-1 flex items-center gap-1.5">
+                                        <div className="p-3 rounded-xl bg-black/30 border border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
+                                            <p className="text-[color:var(--panel-muted,#8a919c)] text-[10px] uppercase font-bold mb-1 flex items-center gap-1.5">
                                                 <Clock size={12} className="text-amber-400" /> Hesap Yaşı
                                             </p>
                                             <p className="text-white font-bold text-sm">
                                                 {account?.accountAgeDays} Gün
                                             </p>
                                         </div>
-                                        <div className="p-3 rounded-xl bg-black/30 border border-white/5">
-                                            <p className="text-zinc-500 text-[10px] uppercase font-bold mb-1 flex items-center gap-1.5">
+                                        <div className="p-3 rounded-xl bg-black/30 border border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
+                                            <p className="text-[color:var(--panel-muted,#8a919c)] text-[10px] uppercase font-bold mb-1 flex items-center gap-1.5">
                                                 <TrendingUp size={12} className="text-emerald-400" /> Toplam Yatırım
                                             </p>
                                             <p className="text-white font-bold text-sm">
                                                 {account?.totalDeposits?.toLocaleString('tr-TR')} TL
                                             </p>
                                         </div>
-                                        <div className="p-3 rounded-xl bg-black/30 border border-white/5">
-                                            <p className="text-zinc-500 text-[10px] uppercase font-bold mb-1 flex items-center gap-1.5">
+                                        <div className="p-3 rounded-xl bg-black/30 border border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
+                                            <p className="text-[color:var(--panel-muted,#8a919c)] text-[10px] uppercase font-bold mb-1 flex items-center gap-1.5">
                                                 <Gift size={12} className="text-rose-400" /> Aktif Bonuslar
                                             </p>
                                             <p className="text-white font-bold text-sm">
@@ -351,7 +351,7 @@ export function AutoBonusPanel({ variant = 'admin', prefilledLogin }: AutoBonusP
                                 {/* Checks */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {/* Risk Analizi */}
-                                    <div className="bg-[rgba(242,244,248,0.50)] border border-white/5 rounded-xl p-5 backdrop-blur-xl">
+                                    <div className="bg-[rgba(242,244,248,0.50)] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl p-5 backdrop-blur-xl">
                                         <h4 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
                                             <ShieldCheck className="text-rose-400" size={16} />
                                             Risk Analizi
@@ -361,19 +361,19 @@ export function AutoBonusPanel({ variant = 'admin', prefilledLogin }: AutoBonusP
                                                 <div key={idx} className="flex items-start gap-3">
                                                     {item.ok ? <CheckCircle2 size={14} className="text-emerald-500 mt-1 shrink-0" /> : <AlertTriangle size={14} className="text-amber-500 mt-1 shrink-0" />}
                                                     <div className="flex-1">
-                                                        <p className={`text-xs font-medium ${item.ok ? 'text-zinc-300' : 'text-amber-300'}`}>{item.label}</p>
-                                                        {(item.reason || item.desc) && <p className="text-[10px] text-zinc-500 mt-0.5">{item.reason || item.desc}</p>}
+                                                        <p className={`text-xs font-medium ${item.ok ? 'text-[color:var(--panel-text-dim,#c8cdd5)]' : 'text-amber-300'}`}>{item.label}</p>
+                                                        {(item.reason || item.desc) && <p className="text-[10px] text-[color:var(--panel-muted,#8a919c)] mt-0.5">{item.reason || item.desc}</p>}
                                                     </div>
                                                 </div>
                                             ))}
                                             {(!riskAnalysis || riskAnalysis.items.length === 0) && (
-                                                <p className="text-xs text-zinc-600 italic">Analiz verisi yok.</p>
+                                                <p className="text-xs text-[color:var(--panel-faint,#5c6470)] italic">Analiz verisi yok.</p>
                                             )}
                                         </div>
                                     </div>
 
                                     {/* Bonus Kontrolleri */}
-                                    <div className="bg-[rgba(242,244,248,0.50)] border border-white/5 rounded-xl p-5 backdrop-blur-xl">
+                                    <div className="bg-[rgba(242,244,248,0.50)] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl p-5 backdrop-blur-xl">
                                         <h4 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
                                             <CheckCircle2 className="text-blue-400" size={16} />
                                             Bonus & Çekim Koşulları
@@ -383,18 +383,18 @@ export function AutoBonusPanel({ variant = 'admin', prefilledLogin }: AutoBonusP
                                                 <div key={idx} className="flex flex-col gap-1">
                                                     <div className="flex items-start gap-3">
                                                         {item.ok ? <CheckCircle2 size={14} className="text-emerald-500 mt-1 shrink-0" /> : <XCircle size={14} className="text-rose-500 mt-1 shrink-0" />}
-                                                        <p className={`text-xs font-medium ${item.ok ? 'text-zinc-300' : 'text-rose-400'}`}>{item.label}</p>
+                                                        <p className={`text-xs font-medium ${item.ok ? 'text-[color:var(--panel-text-dim,#c8cdd5)]' : 'text-rose-400'}`}>{item.label}</p>
                                                     </div>
-                                                    {(item.reason || item.desc) && <p className="text-[9px] text-zinc-500 ml-7">{item.reason || item.desc}</p>}
+                                                    {(item.reason || item.desc) && <p className="text-[9px] text-[color:var(--panel-muted,#8a919c)] ml-7">{item.reason || item.desc}</p>}
                                                 </div>
                                             ))}
                                             {bonusRules?.items.map((item: any, idx: number) => (
                                                 <div key={`b-${idx}`} className="flex flex-col gap-1">
                                                     <div className="flex items-start gap-3">
                                                         {item.ok ? <CheckCircle2 size={14} className="text-emerald-500 mt-1 shrink-0" /> : <AlertTriangle size={14} className="text-amber-500 mt-1 shrink-0" />}
-                                                        <p className={`text-xs font-medium ${item.ok ? 'text-zinc-300' : 'text-amber-400'}`}>{item.label}</p>
+                                                        <p className={`text-xs font-medium ${item.ok ? 'text-[color:var(--panel-text-dim,#c8cdd5)]' : 'text-amber-400'}`}>{item.label}</p>
                                                     </div>
-                                                    {(item.reason || item.desc) && <p className="text-[9px] text-zinc-500 ml-7">{item.reason || item.desc}</p>}
+                                                    {(item.reason || item.desc) && <p className="text-[9px] text-[color:var(--panel-muted,#8a919c)] ml-7">{item.reason || item.desc}</p>}
                                                 </div>
                                             ))}
                                         </div>
@@ -402,14 +402,14 @@ export function AutoBonusPanel({ variant = 'admin', prefilledLogin }: AutoBonusP
                                 </div>
 
                                 {/* Transactions Highlight */}
-                                <div className="bg-[rgba(242,244,248,0.50)] border border-white/5 rounded-xl p-5 backdrop-blur-xl">
+                                <div className="bg-[rgba(242,244,248,0.50)] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl p-5 backdrop-blur-xl">
                                     <h4 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
-                                        <History className="text-zinc-400" size={16} />
+                                        <History className="text-[color:var(--panel-muted,#8a919c)]" size={16} />
                                         Son İşlemler
                                     </h4>
                                     <div className="overflow-x-auto">
                                         <table className="w-full text-[11px]">
-                                            <thead className="text-zinc-600 border-b border-white/5">
+                                            <thead className="text-[color:var(--panel-faint,#5c6470)] border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
                                                 <tr>
                                                     <th className="text-left py-2 font-bold uppercase tracking-wider">İşlem</th>
                                                     <th className="text-right py-2 font-bold uppercase tracking-wider">Tutar</th>
@@ -418,16 +418,16 @@ export function AutoBonusPanel({ variant = 'admin', prefilledLogin }: AutoBonusP
                                             </thead>
                                             <tbody className="divide-y divide-white/5 font-medium">
                                                 {account?.profileTransactions?.slice(0, 5).map((tx: any, idx: number) => (
-                                                    <tr key={idx} className="text-zinc-400">
+                                                    <tr key={idx} className="text-[color:var(--panel-muted,#8a919c)]">
                                                         <td className="py-2.5">
-                                                            <span className={tx.Amount > 0 ? 'text-emerald-400' : 'text-zinc-300'}>
+                                                            <span className={tx.Amount > 0 ? 'text-emerald-400' : 'text-[color:var(--panel-text-dim,#c8cdd5)]'}>
                                                                 {tx.DocumentTypeName}
                                                             </span>
                                                         </td>
-                                                        <td className="py-2.5 text-right font-bold text-zinc-100">
+                                                        <td className="py-2.5 text-right font-bold text-[color:var(--panel-text,#f2f4f8)]">
                                                             {Number(tx.Amount).toLocaleString('tr-TR')} TL
                                                         </td>
-                                                        <td className="py-2.5 text-right text-zinc-500 text-[10px]">
+                                                        <td className="py-2.5 text-right text-[color:var(--panel-muted,#8a919c)] text-[10px]">
                                                             {tx.CreatedLocal}
                                                         </td>
                                                     </tr>
@@ -441,7 +441,7 @@ export function AutoBonusPanel({ variant = 'admin', prefilledLogin }: AutoBonusP
 
                         {/* Right Column: Bonus Selection & Action */}
                         <div className={isPlayerPanel ? "w-full max-w-[600px] space-y-6" : "lg:col-span-5 space-y-6"}>
-                            <div className="bg-[rgba(242,244,248,0.50)] border border-white/5 rounded-xl p-6 backdrop-blur-xl sticky top-6">
+                            <div className="bg-[rgba(242,244,248,0.50)] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl p-6 backdrop-blur-xl sticky top-6">
                                 <h3 className="font-bold text-white mb-4 flex items-center gap-2">
                                     <Gift className="text-emerald-400" size={18} />
                                     {isPlayerPanel ? 'Bonus Listesinden Seçin' : 'Tanımlanacak Bonusu Seçin'}
@@ -460,22 +460,22 @@ export function AutoBonusPanel({ variant = 'admin', prefilledLogin }: AutoBonusP
                                                 }}
                                                 className={`w-full text-left p-3 rounded-xl border transition-all relative overflow-hidden group ${isSelected
                                                     ? 'bg-emerald-500/10 border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.15)]'
-                                                    : 'bg-black/30 border-white/5 hover:border-white/20 hover:bg-white/[0.02]'
+                                                    : 'bg-black/30 border-[color:var(--panel-border,rgba(242,244,248,0.1))] hover:border-[color:var(--panel-border,rgba(242,244,248,0.1))] hover:bg-white/[0.02]'
                                                     } ${!canCharge ? 'opacity-75' : ''}`}
                                             >
                                                 <div className="relative z-10 flex gap-4 items-center">
                                                     {bonus.image ? (
-                                                        <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0 border border-white/10">
+                                                        <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0 border border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
                                                             <img src={bonus.image} alt="" className="w-full h-full object-cover" />
                                                         </div>
                                                     ) : (
                                                         <BonusPlaceholder size={64} tone="emerald" className="shrink-0 rounded-lg" />
                                                     )}
                                                     <div className="flex-1 min-w-0">
-                                                        <p className={`font-bold text-sm truncate ${isSelected ? 'text-emerald-400' : 'text-zinc-200'}`}>
+                                                        <p className={`font-bold text-sm truncate ${isSelected ? 'text-emerald-400' : 'text-[color:var(--panel-text-dim,#c8cdd5)]'}`}>
                                                             {bonus.title}
                                                         </p>
-                                                        <p className="text-[10px] text-zinc-500 mt-1 flex items-center gap-2">
+                                                        <p className="text-[10px] text-[color:var(--panel-muted,#8a919c)] mt-1 flex items-center gap-2">
                                                             {bonus.isFreebet && <span className="text-amber-400 font-semibold">Freebet</span>}
                                                             {bonus.platformBonusDefinitionId != null && (
                                                                 <span className="text-blue-300/80 font-bold">
@@ -488,7 +488,7 @@ export function AutoBonusPanel({ variant = 'admin', prefilledLogin }: AutoBonusP
                                                     </div>
                                                     {isSelected && (
                                                         <div className="bg-emerald-500 rounded-full p-1 shrink-0 shadow-lg shadow-emerald-500/20">
-                                                            <Check size={14} className="text-black" strokeWidth={3} />
+                                                            <Check size={14} className="text-[#050609]" strokeWidth={3} />
                                                         </div>
                                                     )}
                                                 </div>
@@ -497,14 +497,14 @@ export function AutoBonusPanel({ variant = 'admin', prefilledLogin }: AutoBonusP
                                     })}
 
                                     {richBonuses.length === 0 && !promosRes && (
-                                        <div className="py-12 flex flex-col items-center justify-center text-zinc-600">
+                                        <div className="py-12 flex flex-col items-center justify-center text-[color:var(--panel-faint,#5c6470)]">
                                             <LoadingState compact />
                                             <p className="text-xs font-medium">Bonus listesi yükleniyor (promotions-data.json)...</p>
                                         </div>
                                     )}
                                 </div>
 
-                                <div className="space-y-4 pt-4 border-t border-white/5">
+                                <div className="space-y-4 pt-4 border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
                                     {(selectedBonusId != null || selectedPromoTitle) && specificBonusCheck && (
                                         <motion.div
                                             initial={{ opacity: 0, height: 0 }}
@@ -529,11 +529,11 @@ export function AutoBonusPanel({ variant = 'admin', prefilledLogin }: AutoBonusP
                                                             <XCircle size={14} className="text-rose-500 mt-0.5 shrink-0" />
                                                         )}
                                                         <div className="flex-1 min-w-0">
-                                                            <p className={`text-[11px] font-bold ${item.ok ? 'text-zinc-300' : 'text-rose-400'}`}>
+                                                            <p className={`text-[11px] font-bold ${item.ok ? 'text-[color:var(--panel-text-dim,#c8cdd5)]' : 'text-rose-400'}`}>
                                                                 {item.label}
                                                             </p>
                                                             {item.reason && (
-                                                                <p className="text-[10px] text-zinc-500 mt-0.5 leading-relaxed">
+                                                                <p className="text-[10px] text-[color:var(--panel-muted,#8a919c)] mt-0.5 leading-relaxed">
                                                                     {item.reason}
                                                                 </p>
                                                             )}
@@ -590,7 +590,7 @@ export function AutoBonusPanel({ variant = 'admin', prefilledLogin }: AutoBonusP
 
                                     <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/10 flex gap-3">
                                         <Info size={16} className="text-blue-400 shrink-0 mt-0.5" />
-                                        <p className="text-[10px] text-zinc-500 leading-relaxed font-medium">
+                                        <p className="text-[10px] text-[color:var(--panel-muted,#8a919c)] leading-relaxed font-medium">
                                             Seçtiğiniz bonusun kurallarını ve oyuncunun risk durumunu yukarıdaki panellerden kontrol edebilirsiniz.
                                         </p>
                                     </div>
@@ -608,11 +608,11 @@ export function AutoBonusPanel({ variant = 'admin', prefilledLogin }: AutoBonusP
                     animate={{ opacity: 1 }}
                     className="flex flex-col items-center justify-center py-24 text-center"
                 >
-                    <div className="w-20 h-20 rounded-xl bg-zinc-900 border border-white/5 flex items-center justify-center mb-6 shadow-2xl">
-                        <User className="text-zinc-700" size={40} />
+                    <div className="w-20 h-20 rounded-xl bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] flex items-center justify-center mb-6 shadow-2xl">
+                        <User className="text-[color:var(--panel-faint,#5c6470)]" size={40} />
                     </div>
-                    <h3 className="text-lg font-bold text-zinc-300">Oyuncu Sorgulayın</h3>
-                    <p className="text-zinc-600 max-w-xs mt-2 text-sm">
+                    <h3 className="text-lg font-bold text-[color:var(--panel-text-dim,#c8cdd5)]">Oyuncu Sorgulayın</h3>
+                    <p className="text-[color:var(--panel-faint,#5c6470)] max-w-xs mt-2 text-sm">
                         Kontrolleri sağlayıp otomatik bonus eklemek için kullanıcı adı girerek sorgulamayı başlatın.
                     </p>
                 </motion.div>
@@ -620,7 +620,7 @@ export function AutoBonusPanel({ variant = 'admin', prefilledLogin }: AutoBonusP
 
             {/* Player Loading State Default (Since search is immediate) */}
             {!searchResult && isPlayerPanel && !error && (
-                <div className="py-24 flex flex-col items-center justify-center text-zinc-600">
+                <div className="py-24 flex flex-col items-center justify-center text-[color:var(--panel-faint,#5c6470)]">
                     <LoadingState compact />
                     <p className="text-sm font-medium mt-4">Kullanıcı bilgileriniz ve uygun bonuslar aranıyor...</p>
                 </div>
