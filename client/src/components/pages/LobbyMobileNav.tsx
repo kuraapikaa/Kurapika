@@ -32,7 +32,7 @@ export function LobbyMobileNav({ active }: { active?: PublicPage }) {
                   'flex min-h-[44px] w-full flex-col items-center justify-center gap-0.5 rounded-xl px-1 text-[7px] font-black uppercase tracking-[-0.01em] transition active:scale-[0.98] min-[390px]:text-[8px] sm:min-h-[52px] sm:flex-row sm:gap-2 sm:px-2 sm:text-[10px] sm:tracking-[0.04em]',
                   isActive
                     ? 'bg-gradient-to-br from-blue-500 to-teal-400 text-white shadow-[0_10px_26px_rgba(59,130,246,.28)]'
-                    : 'text-zinc-400 hover:bg-blue-400/10 hover:text-teal-200'
+                    : 'text-[color:var(--lobby-muted)] hover:bg-[rgba(231,197,116,0.1)] hover:text-[color:var(--lobby-text)]'
                 )}
               >
                 <Icon size={15} className="shrink-0 sm:h-[17px] sm:w-[17px]" />
