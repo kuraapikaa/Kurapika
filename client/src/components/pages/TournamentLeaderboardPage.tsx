@@ -122,7 +122,7 @@ export function TournamentLeaderboardPage({ period }: { period: TournamentPeriod
             backgroundColor: hexToRgba(palette.accentColor, 0.1),
           }}
         >
-          <p className="text-[9px] font-black uppercase tracking-[0.16em] text-zinc-500">{prizePoolTitle}</p>
+          <p className="text-[9px] font-black uppercase tracking-[0.16em] text-[color:var(--lobby-muted,#8f8674)]">{prizePoolTitle}</p>
           <p
             className="mt-0.5 text-2xl font-black leading-none tracking-[-0.04em] tabular-nums"
             style={{ color: palette.accentColor }}
@@ -145,7 +145,7 @@ export function TournamentLeaderboardPage({ period }: { period: TournamentPeriod
               <Zap size={12} />
               {periodLabel} {lobbyExtraText(pageContent, 'tournamentSuffix', 'TURNUVA')}
             </span>
-            <span className="rounded-lg border border-white/[0.08] bg-white/[0.05] px-2.5 py-1.5 text-[10px] font-black text-white">
+            <span className="rounded-lg border border-[rgba(243,236,221,0.08)] bg-[rgba(243,236,221,0.05)] px-2.5 py-1.5 text-[10px] font-black text-[color:var(--lobby-text,#f3ecdd)]">
               {lobbyExtraText(pageContent, 'liveLabel', 'Anlık (BC Link)')}
             </span>
             {isActive === false ? (
@@ -165,11 +165,11 @@ export function TournamentLeaderboardPage({ period }: { period: TournamentPeriod
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
         <LobbyCard padded={false}>
           <div className="flex items-baseline justify-between gap-3 px-3.5 pb-2.5 pt-3.5 md:px-4">
-            <h2 className="flex min-w-0 items-center gap-2 truncate text-[13px] font-black tracking-[-0.02em] text-white">
+            <h2 className="flex min-w-0 items-center gap-2 truncate text-[13px] font-black tracking-[-0.02em] text-[color:var(--lobby-text,#f3ecdd)]">
               <Trophy size={14} style={{ color: palette.accentColor }} />
               {lobbyExtraText(pageContent, 'leaderboardTitle', 'Sıralama')}
             </h2>
-            <span className="shrink-0 text-[9px] font-black uppercase tracking-[0.12em] text-zinc-600">
+            <span className="shrink-0 text-[9px] font-black uppercase tracking-[0.12em] text-[color:var(--lobby-muted,#8f8674)]">
               {lobbyExtraText(pageContent, 'updateLabel', 'GÜNCELLEME')}
             </span>
           </div>
@@ -177,17 +177,17 @@ export function TournamentLeaderboardPage({ period }: { period: TournamentPeriod
           <div className="overflow-x-auto">
             <table className="w-full min-w-[380px] border-collapse text-left">
               <thead>
-                <tr className="border-y border-white/[0.05] bg-white/[0.02]">
-                  <th className="sticky top-0 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-zinc-500 md:px-4">
+                <tr className="border-y border-[rgba(243,236,221,0.05)] bg-[rgba(243,236,221,0.02)]">
+                  <th className="sticky top-0 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-[color:var(--lobby-muted,#8f8674)] md:px-4">
                     {lobbyExtraText(pageContent, 'rankColumn', 'Sıra')}
                   </th>
-                  <th className="sticky top-0 px-2 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-zinc-500">
+                  <th className="sticky top-0 px-2 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-[color:var(--lobby-muted,#8f8674)]">
                     {lobbyExtraText(pageContent, 'playerColumn', 'Oyuncu')}
                   </th>
-                  <th className="sticky top-0 px-2 py-1.5 text-right text-[9px] font-black uppercase tracking-[0.12em] text-zinc-500">
+                  <th className="sticky top-0 px-2 py-1.5 text-right text-[9px] font-black uppercase tracking-[0.12em] text-[color:var(--lobby-muted,#8f8674)]">
                     {lobbyExtraText(pageContent, 'betColumn', 'Bahis')}
                   </th>
-                  <th className="sticky top-0 px-3 py-1.5 text-right text-[9px] font-black uppercase tracking-[0.12em] text-zinc-500 md:px-4">
+                  <th className="sticky top-0 px-3 py-1.5 text-right text-[9px] font-black uppercase tracking-[0.12em] text-[color:var(--lobby-muted,#8f8674)] md:px-4">
                     {lobbyExtraText(pageContent, 'winColumn', 'Kazanç')}
                   </th>
                 </tr>
@@ -197,12 +197,12 @@ export function TournamentLeaderboardPage({ period }: { period: TournamentPeriod
                   <tr>
                     <td colSpan={4} className="px-4 py-12 text-center">
                       <Loader2 className="mx-auto animate-spin" size={22} style={{ color: palette.accentColor }} />
-                      <p className="mt-2 text-[11px] font-bold text-zinc-600">{pageContent.loadingText}</p>
+                      <p className="mt-2 text-[11px] font-bold text-[color:var(--lobby-muted,#8f8674)]">{pageContent.loadingText}</p>
                     </td>
                   </tr>
                 ) : data.length ? (
                   data.map((player, index) => (
-                    <tr key={player.PlayerId} className="transition hover:bg-white/[0.02]">
+                    <tr key={player.PlayerId} className="transition hover:bg-[rgba(243,236,221,0.02)]">
                       <td className="px-3 py-2 md:px-4">
                         {index < 3 ? (
                           <Medal
@@ -211,13 +211,13 @@ export function TournamentLeaderboardPage({ period }: { period: TournamentPeriod
                             style={{ color: index === 0 ? palette.accentColor : index === 1 ? '#a1a1aa' : '#b45309' }}
                           />
                         ) : (
-                          <span className="text-[11px] font-black tabular-nums text-zinc-600">{index + 1}</span>
+                          <span className="text-[11px] font-black tabular-nums text-[color:var(--lobby-muted,#8f8674)]">{index + 1}</span>
                         )}
                       </td>
-                      <td className="px-2 py-2 text-[12px] font-black uppercase text-white">
+                      <td className="px-2 py-2 text-[12px] font-black uppercase text-[color:var(--lobby-text,#f3ecdd)]">
                         {player.UserName?.slice(0, 3)}***{player.UserName?.slice(-2)}
                       </td>
-                      <td className="px-2 py-2 text-right text-[12px] font-black tabular-nums text-zinc-400">
+                      <td className="px-2 py-2 text-right text-[12px] font-black tabular-nums text-[color:var(--lobby-muted,#8f8674)]">
                         ₺{player.BetAmount.toLocaleString('tr-TR')}
                       </td>
                       <td className="px-3 py-2 text-right text-[12px] font-black tabular-nums text-emerald-400 md:px-4">
@@ -228,8 +228,8 @@ export function TournamentLeaderboardPage({ period }: { period: TournamentPeriod
                 ) : (
                   <tr>
                     <td colSpan={4} className="px-4 py-12 text-center">
-                      <p className="text-sm font-black text-white">{pageContent.emptyTitle}</p>
-                      <p className="mt-1 text-[12px] font-medium text-zinc-500">{pageContent.emptyDescription}</p>
+                      <p className="text-sm font-black text-[color:var(--lobby-text,#f3ecdd)]">{pageContent.emptyTitle}</p>
+                      <p className="mt-1 text-[12px] font-medium text-[color:var(--lobby-muted,#8f8674)]">{pageContent.emptyDescription}</p>
                     </td>
                   </tr>
                 )}

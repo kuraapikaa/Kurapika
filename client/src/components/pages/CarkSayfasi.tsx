@@ -49,7 +49,7 @@ export function CarkSayfasi() {
   const config = configRes ?? readCachedGamesConfig();
 
   const wheelSlices = config?.data?.wheel || [
-    { id: 1, label: 'Pas', color: 'bg-zinc-800', isLoss: true }
+    { id: 1, label: 'Pas', color: 'bg-[rgba(243,236,221,0.03)]', isLoss: true }
   ];
   const wheelAppearance = {
     rimColor: '#27272a',
@@ -164,7 +164,7 @@ export function CarkSayfasi() {
       toolbar={
         playerChecked ? (
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-lg border border-white/[0.08] bg-white/[0.05] px-2.5 py-1.5 text-[10px] font-black text-white">
+            <span className="inline-flex items-center gap-1.5 rounded-lg border border-[rgba(243,236,221,0.08)] bg-[rgba(243,236,221,0.05)] px-2.5 py-1.5 text-[10px] font-black text-[color:var(--lobby-text,#f3ecdd)]">
               <User size={12} style={{ color: palette.accentColor }} />
               {username}
             </span>
@@ -199,8 +199,8 @@ export function CarkSayfasi() {
                 <p className="rounded-xl border border-rose-300/15 bg-rose-400/10 px-3 py-1.5 text-[11px] font-bold text-rose-200">{errorMsg}</p>
               ) : (
                 <div>
-                  <p className="text-[11px] font-black text-zinc-400">{pageContent.formTitle}</p>
-                  <p className="mt-0.5 text-[11px] font-medium text-zinc-600">{pageContent.formDescription}</p>
+                  <p className="text-[11px] font-black text-[color:var(--lobby-muted,#8f8674)]">{pageContent.formTitle}</p>
+                  <p className="mt-0.5 text-[11px] font-medium text-[color:var(--lobby-muted,#8f8674)]">{pageContent.formDescription}</p>
                 </div>
               )
             }
@@ -229,18 +229,18 @@ export function CarkSayfasi() {
                     <div className="flex items-center gap-2.5">
                       <span
                         className={cn(
-                          'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-black/25',
-                          isLoss && 'text-zinc-500'
+                          'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[rgba(243,236,221,0.10)] bg-black/25',
+                          isLoss && 'text-[color:var(--lobby-muted,#8f8674)]'
                         )}
                         style={isLoss ? undefined : { color: palette.accentColor }}
                       >
                         <Trophy size={17} />
                       </span>
                       <div className="min-w-0 flex-1">
-                        <h2 className="truncate text-[13px] font-black tracking-[-0.02em] text-white">
+                        <h2 className="truncate text-[13px] font-black tracking-[-0.02em] text-[color:var(--lobby-text,#f3ecdd)]">
                           {isLoss ? pageContent.emptyTitle : pageContent.successTitle}
                         </h2>
-                        <p className="mt-0.5 truncate text-[11px] font-bold text-zinc-500" style={isLoss ? undefined : { color: palette.accentColor }}>
+                        <p className="mt-0.5 truncate text-[11px] font-bold text-[color:var(--lobby-muted,#8f8674)]" style={isLoss ? undefined : { color: palette.accentColor }}>
                           {isLoss ? pageContent.emptyDescription : result}
                         </p>
                       </div>
@@ -267,7 +267,7 @@ export function CarkSayfasi() {
                     <button
                       type="button"
                       onClick={() => { setResult(null); }}
-                      className="mt-2.5 flex h-10 w-full items-center justify-center rounded-xl border border-white/10 bg-white/[0.05] text-[11px] font-black uppercase tracking-[0.16em] text-zinc-200 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+                      className="mt-2.5 flex h-10 w-full items-center justify-center rounded-xl border border-[rgba(243,236,221,0.10)] bg-[rgba(243,236,221,0.05)] text-[11px] font-black uppercase tracking-[0.16em] text-[color:var(--lobby-text,#f3ecdd)] transition hover:bg-[rgba(243,236,221,0.10)] hover:text-[color:var(--lobby-text,#f3ecdd)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
                     >
                       {pageContent.successButton}
                     </button>
@@ -286,7 +286,7 @@ export function CarkSayfasi() {
 
                     <label
                       htmlFor="cark-code"
-                      className="mb-1.5 flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.16em] text-zinc-500"
+                      className="mb-1.5 flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.16em] text-[color:var(--lobby-muted,#8f8674)]"
                     >
                       <Ticket size={12} aria-hidden="true" />
                       {lobbyExtraText(pageContent, 'codeLabel', 'Çark kodu')}
@@ -298,7 +298,7 @@ export function CarkSayfasi() {
                         placeholder={lobbyExtraText(pageContent, 'codePlaceholder', 'Varsa Çark Kodunuz')}
                         value={wheelCode}
                         onChange={e => setWheelCode(e.target.value.toUpperCase())}
-                        className="h-10 w-full rounded-xl border border-white/[0.07] bg-black/30 px-3 pr-9 text-center text-[13px] font-black tracking-[0.14em] text-white outline-none transition placeholder:tracking-normal placeholder:text-zinc-700 focus:border-[color:var(--lobby-primary)]/60"
+                        className="h-10 w-full rounded-xl border border-[rgba(243,236,221,0.07)] bg-black/30 px-3 pr-9 text-center text-[13px] font-black tracking-[0.14em] text-[color:var(--lobby-text,#f3ecdd)] outline-none transition placeholder:tracking-normal placeholder:text-[color:var(--lobby-muted,#8f8674)] focus:border-[color:var(--lobby-primary,#e7c574)]/60"
                       />
                       {wheelCode && (
                         <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" style={{ color: palette.accentColor }}>
@@ -318,7 +318,7 @@ export function CarkSayfasi() {
                       onClick={spin}
                       disabled={spinning}
                       aria-label={spinning ? lobbyExtraText(pageContent, 'spinningAria', 'Çark dönüyor') : lobbyExtraText(pageContent, 'spinAria', 'Çarkı çevir')}
-                      className="mt-2.5 flex h-11 w-full items-center justify-center gap-2 rounded-xl text-[12px] font-black uppercase tracking-[0.16em] text-white transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+                      className="mt-2.5 flex h-11 w-full items-center justify-center gap-2 rounded-xl text-[12px] font-black uppercase tracking-[0.16em] text-[color:var(--lobby-text,#f3ecdd)] transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
                       style={{
                         background: `linear-gradient(90deg, ${palette.primaryColor}, ${palette.secondaryColor})`,
                         boxShadow: `0 8px 22px ${hexToRgba(palette.primaryColor, 0.26)}`,
@@ -327,7 +327,7 @@ export function CarkSayfasi() {
                       {spinning ? <Loader2 className="animate-spin" size={16} aria-hidden="true" /> : pageContent.primaryButton}
                     </button>
 
-                    <p className="mt-2 text-[11px] font-medium leading-4 text-zinc-600">
+                    <p className="mt-2 text-[11px] font-medium leading-4 text-[color:var(--lobby-muted,#8f8674)]">
                       {spinning ? pageContent.loadingText : pageContent.formDescription}
                     </p>
                   </LobbyCard>

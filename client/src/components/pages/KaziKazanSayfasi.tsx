@@ -164,7 +164,7 @@ export function KaziKazanSayfasi() {
       toolbar={
         playerChecked ? (
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-lg border border-white/[0.08] bg-white/[0.05] px-2.5 py-1.5 text-[10px] font-black text-white">
+            <span className="inline-flex items-center gap-1.5 rounded-lg border border-[rgba(243,236,221,0.08)] bg-[rgba(243,236,221,0.05)] px-2.5 py-1.5 text-[10px] font-black text-[color:var(--lobby-text,#f3ecdd)]">
               <User size={12} style={{ color: palette.accentColor }} />
               {username}
             </span>
@@ -199,8 +199,8 @@ export function KaziKazanSayfasi() {
                 <p className="rounded-xl border border-rose-300/15 bg-rose-400/10 px-3 py-1.5 text-[11px] font-bold text-rose-200">{errorMsg}</p>
               ) : (
                 <div>
-                  <p className="text-[11px] font-black text-zinc-400">{pageContent.formTitle}</p>
-                  <p className="mt-0.5 text-[11px] font-medium text-zinc-600">{pageContent.formDescription}</p>
+                  <p className="text-[11px] font-black text-[color:var(--lobby-muted,#8f8674)]">{pageContent.formTitle}</p>
+                  <p className="mt-0.5 text-[11px] font-medium text-[color:var(--lobby-muted,#8f8674)]">{pageContent.formDescription}</p>
                 </div>
               )
             }
@@ -229,7 +229,7 @@ export function KaziKazanSayfasi() {
                   aria-pressed={cell.revealed}
                   onClick={() => scratch(i)}
                   onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && scratch(i)}
-                  className="relative flex h-full w-full cursor-pointer select-none items-center justify-center overflow-hidden rounded-xl border border-white/[0.07] bg-black/35 text-[26px] shadow-[inset_0_1px_rgba(255,255,255,.06)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--lobby-primary)] sm:text-[32px]"
+                  className="relative flex h-full w-full cursor-pointer select-none items-center justify-center overflow-hidden rounded-xl border border-[rgba(243,236,221,0.07)] bg-black/35 text-[26px] shadow-[inset_0_1px_rgba(255,255,255,.06)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--lobby-primary,#e7c574)] sm:text-[32px]"
                 >
                    {/* Hidden symbol */}
                    <span className={cn("transition-opacity duration-500", cell.revealed ? "opacity-100" : "opacity-0")} aria-hidden={!cell.revealed}>
@@ -239,7 +239,7 @@ export function KaziKazanSayfasi() {
                    {/* Cover layer */}
                    <div
                      className={cn(
-                       "absolute inset-0 flex items-center justify-center text-white/45 transition-opacity duration-500",
+                       "absolute inset-0 flex items-center justify-center text-[color:var(--lobby-text,#f3ecdd)]/45 transition-opacity duration-500",
                        cell.revealed ? "opacity-0 pointer-events-none" : "opacity-100"
                      )}
                      style={{ background: `linear-gradient(135deg, ${palette.primaryColor}, ${palette.secondaryColor})` }}
@@ -252,7 +252,7 @@ export function KaziKazanSayfasi() {
             </div>
 
             {!finished && (
-              <p className="mt-2.5 text-center text-[11px] font-medium text-zinc-500">
+              <p className="mt-2.5 text-center text-[11px] font-medium text-[color:var(--lobby-muted,#8f8674)]">
                 {renderLobbyTemplate(lobbyExtraText(pageContent, 'progressTemplate', 'Bütün kareleri kazıyın ({count}/9)'), { count: scratchedCount })}
               </p>
             )}
@@ -272,19 +272,19 @@ export function KaziKazanSayfasi() {
                     <div className="flex items-center gap-2.5">
                       <span
                         className={cn(
-                          'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-black/25',
-                          isLoss && 'text-zinc-500'
+                          'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[rgba(243,236,221,0.10)] bg-black/25',
+                          isLoss && 'text-[color:var(--lobby-muted,#8f8674)]'
                         )}
                         style={isLoss ? undefined : { color: palette.accentColor }}
                       >
                         <Trophy size={17} />
                       </span>
                       <div className="min-w-0 flex-1">
-                        <h2 className="truncate text-[13px] font-black tracking-[-0.02em] text-white">
+                        <h2 className="truncate text-[13px] font-black tracking-[-0.02em] text-[color:var(--lobby-text,#f3ecdd)]">
                           {isLoss ? pageContent.emptyTitle : pageContent.successTitle}
                         </h2>
                         <p
-                          className="mt-0.5 truncate text-[11px] font-bold text-zinc-500"
+                          className="mt-0.5 truncate text-[11px] font-bold text-[color:var(--lobby-muted,#8f8674)]"
                           style={isLoss ? undefined : { color: palette.accentColor }}
                         >
                           {isLoss ? pageContent.emptyDescription : result?.replace('Kazandınız! ', '')}
@@ -313,7 +313,7 @@ export function KaziKazanSayfasi() {
                     <button
                       type="button"
                       onClick={initGame}
-                      className="mt-2.5 flex h-11 w-full items-center justify-center gap-2 rounded-xl text-[11px] font-black uppercase tracking-[0.16em] text-white transition active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+                      className="mt-2.5 flex h-11 w-full items-center justify-center gap-2 rounded-xl text-[11px] font-black uppercase tracking-[0.16em] text-[color:var(--lobby-text,#f3ecdd)] transition active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
                       style={{
                         background: `linear-gradient(90deg, ${palette.primaryColor}, ${palette.secondaryColor})`,
                         boxShadow: `0 8px 22px ${hexToRgba(palette.primaryColor, 0.26)}`,
@@ -333,12 +333,12 @@ export function KaziKazanSayfasi() {
                 >
                   <LobbyCard>
                     <LobbySectionTitle title={lobbyExtraText(pageContent, 'howToTitle', 'Nasıl oynanır?')} />
-                    <p className="text-[12px] font-medium leading-5 text-zinc-500">
+                    <p className="text-[12px] font-medium leading-5 text-[color:var(--lobby-muted,#8f8674)]">
                       {grid.length === 0 ? pageContent.loadingText : pageContent.subtitle}
                     </p>
                     <div className="mt-2.5">
                       <div className="mb-1.5 flex items-center justify-between text-[10px] font-black">
-                        <span className="text-[9px] font-black uppercase tracking-[0.16em] text-zinc-500">
+                        <span className="text-[9px] font-black uppercase tracking-[0.16em] text-[color:var(--lobby-muted,#8f8674)]">
                           {lobbyExtraText(pageContent, 'progressLabel', 'İlerleme')}
                         </span>
                         <span className="tabular-nums" style={{ color: palette.accentColor }}>{scratchedCount}/9</span>

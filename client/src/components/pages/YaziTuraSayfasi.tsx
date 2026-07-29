@@ -32,12 +32,12 @@ export function YaziTuraSayfasi() {
   };
 
   return (
-    <div className="min-h-screen bg-[#05060a] text-white p-4 md:p-8 flex flex-col items-center">
+    <div className="min-h-screen bg-[#0e0c09] text-[color:var(--lobby-text,#f3ecdd)] p-4 md:p-8 flex flex-col items-center">
       <div className="w-full max-w-4xl flex items-center justify-between mb-8">
-        <Link to="/lobi" className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors font-bold">
+        <Link to="/lobi" className="flex items-center gap-2 text-[color:var(--lobby-muted,#8f8674)] hover:text-[color:var(--lobby-text,#f3ecdd)] transition-colors font-bold">
           <ArrowLeft size={20} /> Lobiye Dön
         </Link>
-        <div className="flex items-center gap-3 bg-blue-500/10 px-4 py-2 rounded-2xl border border-blue-500/20">
+        <div className="flex items-center gap-3 bg-blue-500/10 px-4 py-2 rounded-xl border border-blue-500/20">
           <CircleDollarSign className="text-blue-400" />
           <span className="font-black">YAZI - TURA</span>
         </div>
@@ -66,18 +66,18 @@ export function YaziTuraSayfasi() {
         </div>
 
         {/* Controls */}
-        <div className="w-full space-y-8 bg-zinc-900/40 p-8 rounded-[3rem] border border-white/5 backdrop-blur-xl">
+        <div className="w-full space-y-8 bg-[rgba(243,236,221,0.03)] p-8 rounded-[3rem] border border-[rgba(243,236,221,0.05)] backdrop-blur-xl">
           <div className="text-center">
-             <h3 className="text-zinc-500 font-black uppercase tracking-widest text-sm mb-4">Seçimini Yap</h3>
+             <h3 className="text-[color:var(--lobby-muted,#8f8674)] font-black uppercase tracking-widest text-sm mb-4">Seçimini Yap</h3>
              <div className="flex gap-4 justify-center">
                 {['YAZI', 'TURA'].map((item) => (
                   <button
                     key={item}
                     onClick={() => !flipping && setChoice(item as any)}
-                    className={`flex-1 py-4 rounded-2xl font-black transition-all border ${
+                    className={`flex-1 py-4 rounded-xl font-black transition-all border ${
                       choice === item 
-                        ? 'bg-blue-600 border-blue-400 text-white shadow-[0_0_20px_rgba(168,85,247,0.4)]' 
-                        : 'bg-black/40 border-white/5 text-zinc-500 hover:text-white hover:border-white/10'
+                        ? 'bg-blue-600 border-blue-400 text-[color:var(--lobby-text,#f3ecdd)] shadow-[0_0_20px_rgba(168,85,247,0.4)]' 
+                        : 'bg-black/40 border-[rgba(243,236,221,0.05)] text-[color:var(--lobby-muted,#8f8674)] hover:text-[color:var(--lobby-text,#f3ecdd)] hover:border-[rgba(243,236,221,0.10)]'
                     }`}
                   >
                     {item}
@@ -89,7 +89,7 @@ export function YaziTuraSayfasi() {
           <button
             onClick={flipCoin}
             disabled={!choice || flipping}
-            className="w-full py-6 bg-gradient-to-r from-blue-600 to-blue-600 rounded-2xl font-black text-xl shadow-xl transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:hover:scale-100 flex items-center justify-center gap-3"
+            className="w-full py-6 bg-gradient-to-r from-blue-600 to-blue-600 rounded-xl font-black text-xl shadow-xl transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:hover:scale-100 flex items-center justify-center gap-3"
           >
             {flipping ? <RotateCcw className="animate-spin" /> : 'PARAYI AT!'}
           </button>
@@ -100,7 +100,7 @@ export function YaziTuraSayfasi() {
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className={`p-6 rounded-2xl flex items-center justify-center gap-4 border ${
+                className={`p-6 rounded-xl flex items-center justify-center gap-4 border ${
                   gameState === 'won' 
                     ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500' 
                     : 'bg-rose-500/10 border-rose-500/20 text-rose-500'

@@ -165,7 +165,7 @@ export default function TurnuvaSayfasi() {
     }, [data, mockupsPool]);
 
     return (
-        <div className="min-h-screen bg-[#05060a] text-zinc-200 font-sans relative overflow-hidden flex flex-col items-center">
+        <div className="narcos-lobby min-h-screen bg-[#0e0c09] text-[color:var(--lobby-text,#f3ecdd)] font-lobby relative overflow-hidden flex flex-col items-center">
 
             {/* Background elements */}
             <div className="fixed inset-0 pointer-events-none">
@@ -174,22 +174,22 @@ export default function TurnuvaSayfasi() {
             </div>
 
             {/* Header Navigation */}
-            <div className="w-full bg-[#0c121e] border-b border-white/5 px-4 md:px-8 py-4 flex flex-wrap items-center justify-between gap-4 sticky top-0 z-50">
+            <div className="w-full bg-[#0c121e] border-b border-[rgba(243,236,221,0.05)] px-4 md:px-8 py-4 flex flex-wrap items-center justify-between gap-4 sticky top-0 z-50">
                 <div className="flex items-center gap-6 overflow-x-auto no-scrollbar w-full md:w-auto">
-                    <Link to="/lobi" className="flex items-center gap-2 text-sm font-bold text-zinc-400 hover:text-white transition-colors whitespace-nowrap">
+                    <Link to="/lobi" className="flex items-center gap-2 text-sm font-bold text-[color:var(--lobby-muted,#8f8674)] hover:text-[color:var(--lobby-text,#f3ecdd)] transition-colors whitespace-nowrap">
                         <ArrowLeft size={16} /> {pageContent.secondaryButton}
                     </Link>
-                    <Link to="/turnuva/gunluk" className={cn("flex items-center gap-2 text-sm font-bold transition-colors whitespace-nowrap", type === 'gunluk' ? "text-white" : "text-zinc-500 hover:text-zinc-300")}>
+                    <Link to="/turnuva/gunluk" className={cn("flex items-center gap-2 text-sm font-bold transition-colors whitespace-nowrap", type === 'gunluk' ? "text-[color:var(--lobby-text,#f3ecdd)]" : "text-[color:var(--lobby-muted,#8f8674)] hover:text-[color:var(--lobby-text,#f3ecdd)]")}>
                         <Zap size={16} /> {lobbyExtraText(pageContent, 'dailyLabel', 'Günlük')}
                     </Link>
-                    <Link to="/turnuva/haftalik" className={cn("flex items-center gap-2 text-sm font-bold transition-colors whitespace-nowrap", type === 'haftalik' ? "text-white" : "text-zinc-500 hover:text-zinc-300")}>
+                    <Link to="/turnuva/haftalik" className={cn("flex items-center gap-2 text-sm font-bold transition-colors whitespace-nowrap", type === 'haftalik' ? "text-[color:var(--lobby-text,#f3ecdd)]" : "text-[color:var(--lobby-muted,#8f8674)] hover:text-[color:var(--lobby-text,#f3ecdd)]")}>
                         <TrendingUp size={16} /> {lobbyExtraText(pageContent, 'weeklyLabel', 'Haftalık')}
                     </Link>
-                    <Link to="/turnuva/aylik" className={cn("flex items-center gap-2 text-sm font-bold transition-colors whitespace-nowrap", type === 'aylik' ? "text-white" : "text-zinc-500 hover:text-zinc-300")}>
+                    <Link to="/turnuva/aylik" className={cn("flex items-center gap-2 text-sm font-bold transition-colors whitespace-nowrap", type === 'aylik' ? "text-[color:var(--lobby-text,#f3ecdd)]" : "text-[color:var(--lobby-muted,#8f8674)] hover:text-[color:var(--lobby-text,#f3ecdd)]")}>
                         <Trophy size={16} /> {lobbyExtraText(pageContent, 'monthlyLabel', 'Aylık')}
                     </Link>
-                    <div className="w-px h-4 bg-white/10 mx-2 hidden md:block" />
-                    <Link to="/bonus-talep" className="flex items-center gap-2 text-sm font-bold text-zinc-400 hover:text-white transition-colors whitespace-nowrap">
+                    <div className="w-px h-4 bg-[rgba(243,236,221,0.10)] mx-2 hidden md:block" />
+                    <Link to="/bonus-talep" className="flex items-center gap-2 text-sm font-bold text-[color:var(--lobby-muted,#8f8674)] hover:text-[color:var(--lobby-text,#f3ecdd)] transition-colors whitespace-nowrap">
                         <Gift size={16} /> {pageContent.primaryButton}
                     </Link>
                 </div>
@@ -202,33 +202,33 @@ export default function TurnuvaSayfasi() {
                     key={type}
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="relative w-full rounded-[3rem] p-8 md:p-14 overflow-hidden border border-white/5 mb-10"
+                    className="relative w-full rounded-[3rem] p-8 md:p-14 overflow-hidden border border-[rgba(243,236,221,0.05)] mb-10"
                 >
-                    <div className={cn("absolute inset-0 bg-gradient-to-br opacity-40 z-0", tournamentConfig.color.includes('purple') ? 'from-blue-900/40 via-zinc-950 to-zinc-950' : tournamentConfig.color.includes('amber') ? 'from-amber-900/20 via-zinc-950 to-zinc-950' : 'from-blue-900/20 via-zinc-950 to-zinc-950')} />
+                    <div className={cn("absolute inset-0 bg-gradient-to-br opacity-40 z-0", tournamentConfig.color.includes('purple') ? 'from-blue-900/40 via-[#0e0c09] to-[#0e0c09]' : tournamentConfig.color.includes('amber') ? 'from-amber-900/20 via-[#0e0c09] to-[#0e0c09]' : 'from-blue-900/20 via-[#0e0c09] to-[#0e0c09]')} />
                     <div className="absolute right-0 top-0 w-full h-full opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
 
                     <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-10">
                         <div className="max-w-xl text-center md:text-left">
-                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 text-zinc-200 text-[10px] font-black uppercase tracking-widest mb-6 border border-white/5">
-                                <tournamentConfig.icon size={14} className="text-white" />
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[rgba(243,236,221,0.05)] text-[color:var(--lobby-text,#f3ecdd)] text-[10px] font-black uppercase tracking-widest mb-6 border border-[rgba(243,236,221,0.05)]">
+                                <tournamentConfig.icon size={14} className="text-[color:var(--lobby-text,#f3ecdd)]" />
                                 {tournamentConfig.title} {lobbyExtraText(pageContent, 'tournamentSuffix', 'TURNUVA')}
                             </div>
-                            <h1 className="text-5xl md:text-8xl font-black text-white mb-6 leading-tight tracking-tighter uppercase">
+                            <h1 className="text-5xl md:text-8xl font-black text-[color:var(--lobby-text,#f3ecdd)] mb-6 leading-tight tracking-tighter uppercase">
                                 <span className={cn("text-transparent bg-clip-text bg-gradient-to-r", tournamentConfig.color)}>
                                     {tournamentConfig.prize}
                                 </span> <br />
                                 {lobbyExtraText(pageContent, 'prizePoolTitle', 'ÖDÜL HAVUZU')}
                             </h1>
-                            <p className="text-lg text-zinc-400 font-medium leading-relaxed max-w-sm">
+                            <p className="text-lg text-[color:var(--lobby-muted,#8f8674)] font-medium leading-relaxed max-w-sm">
                                 {renderLobbyTemplate(pageContent.subtitle, { period: tournamentConfig.title.toLowerCase() })}
                             </p>
                         </div>
 
                         <div className="relative group">
                             <div className={cn("absolute inset-0 blur-[60px] rounded-full animate-pulse transition-all duration-1000", tournamentConfig.bgGlow.replace('10', '40'))} />
-                            <div className="relative w-48 h-48 md:w-64 md:h-64 rounded-[3.5rem] bg-zinc-950/40 backdrop-blur-3xl border border-white/10 flex items-center justify-center shadow-2xl rotate-6 group-hover:rotate-0 transition-all duration-700">
+                            <div className="relative w-48 h-48 md:w-64 md:h-64 rounded-[3.5rem] bg-[rgba(243,236,221,0.03)] border border-[rgba(243,236,221,0.10)] flex items-center justify-center shadow-2xl rotate-6 group-hover:rotate-0 transition-all duration-700">
                                 <tournamentConfig.icon size={120} className={cn("transition-all duration-700", tournamentConfig.color.includes('amber') ? 'text-amber-400' : tournamentConfig.color.includes('purple') ? 'text-blue-400' : 'text-blue-400')} />
-                                <div className="absolute -bottom-2 -right-2 w-16 h-16 rounded-2xl bg-zinc-900 border border-white/10 flex items-center justify-center">
+                                <div className="absolute -bottom-2 -right-2 w-16 h-16 rounded-xl bg-[rgba(243,236,221,0.03)] border border-[rgba(243,236,221,0.10)] flex items-center justify-center">
                                     <Star size={32} className="text-amber-400 fill-amber-400 animate-spin-slow" />
                                 </div>
                             </div>
@@ -238,28 +238,28 @@ export default function TurnuvaSayfasi() {
 
                 {/* Leaderboard Section */}
                 <div className="flex items-center justify-between px-2 mb-6">
-                    <h2 className="text-xl font-black text-white flex items-center gap-3">
+                    <h2 className="text-xl font-black text-[color:var(--lobby-text,#f3ecdd)] flex items-center gap-3">
                         <div className={cn("w-2 h-8 rounded-full bg-gradient-to-b", tournamentConfig.color)} />
                         {pageContent.title}
                     </h2>
                     <div className="flex items-center gap-6">
                         <div className="flex flex-col items-end">
-                            <span className="text-[10px] font-black text-zinc-600 uppercase">{lobbyExtraText(pageContent, 'updateLabel', 'GÜNCELLEME')}</span>
-                            <span className="text-xs font-bold text-zinc-400">{lobbyExtraText(pageContent, 'liveLabel', 'Anlık (BC Link)')}</span>
+                            <span className="text-[10px] font-black text-[color:var(--lobby-muted,#8f8674)] uppercase">{lobbyExtraText(pageContent, 'updateLabel', 'GÜNCELLEME')}</span>
+                            <span className="text-xs font-bold text-[color:var(--lobby-muted,#8f8674)]">{lobbyExtraText(pageContent, 'liveLabel', 'Anlık (BC Link)')}</span>
                         </div>
                     </div>
                 </div>
 
-                <div className="w-full bg-zinc-950/40 backdrop-blur-xl border border-white/5 rounded-[2.5rem] overflow-hidden">
+                <div className="w-full bg-[rgba(243,236,221,0.03)] border border-[rgba(243,236,221,0.05)] rounded-[2.5rem] overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
                             <thead>
-                                <tr className="border-b border-white/5 bg-white/5">
-                                    <th className="px-3 md:px-8 py-4 md:py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">SIRA</th>
-                                    <th className="px-3 md:px-8 py-4 md:py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">OYUNCU</th>
-                                    <th className="px-3 md:px-8 py-4 md:py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest text-right">BAHİS</th>
-                                    <th className="px-3 md:px-8 py-4 md:py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest text-right hidden sm:table-cell">KAZANÇ</th>
-                                    <th className="px-3 md:px-8 py-4 md:py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest text-right hidden md:table-cell">SKOR</th>
+                                <tr className="border-b border-[rgba(243,236,221,0.05)] bg-[rgba(243,236,221,0.05)]">
+                                    <th className="px-3 md:px-8 py-4 md:py-6 text-[10px] font-black text-[color:var(--lobby-muted,#8f8674)] uppercase tracking-widest">SIRA</th>
+                                    <th className="px-3 md:px-8 py-4 md:py-6 text-[10px] font-black text-[color:var(--lobby-muted,#8f8674)] uppercase tracking-widest">OYUNCU</th>
+                                    <th className="px-3 md:px-8 py-4 md:py-6 text-[10px] font-black text-[color:var(--lobby-muted,#8f8674)] uppercase tracking-widest text-right">BAHİS</th>
+                                    <th className="px-3 md:px-8 py-4 md:py-6 text-[10px] font-black text-[color:var(--lobby-muted,#8f8674)] uppercase tracking-widest text-right hidden sm:table-cell">KAZANÇ</th>
+                                    <th className="px-3 md:px-8 py-4 md:py-6 text-[10px] font-black text-[color:var(--lobby-muted,#8f8674)] uppercase tracking-widest text-right hidden md:table-cell">SKOR</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/5">
@@ -270,7 +270,7 @@ export default function TurnuvaSayfasi() {
                                             animate={{ opacity: 1 }}
                                             exit={{ opacity: 0 }}
                                         >
-                                            <td colSpan={5} className="px-4 py-32 text-center text-zinc-600 animate-pulse font-bold uppercase tracking-widest">
+                                            <td colSpan={5} className="px-4 py-32 text-center text-[color:var(--lobby-muted,#8f8674)] animate-pulse font-bold uppercase tracking-widest">
                                                 {pageContent.loadingText}
                                             </td>
                                         </motion.tr>
@@ -282,29 +282,29 @@ export default function TurnuvaSayfasi() {
                                                 initial={{ opacity: 0, y: 10 }}
                                                 animate={{ opacity: 1, y: 0 }}
                                                 transition={{ delay: index * 0.03 }}
-                                                className="group hover:bg-white/[0.02] transition-colors"
+                                                className="group hover:bg-[rgba(243,236,221,0.02)] transition-colors"
                                             >
                                                 <td className="px-3 md:px-8 py-4 md:py-5">
                                                     <div className="flex items-center gap-2">
                                                         {index === 0 && <Medal className="text-amber-400" size={20} aria-label="Birinci" />}
-                                                        {index === 1 && <Medal className="text-zinc-400" size={20} aria-label="İkinci" />}
+                                                        {index === 1 && <Medal className="text-[color:var(--lobby-muted,#8f8674)]" size={20} aria-label="İkinci" />}
                                                         {index === 2 && <Medal className="text-amber-700" size={20} aria-label="Üçüncü" />}
-                                                        {index > 2 && <span className="w-6 text-center text-sm font-black text-zinc-600">#{index + 1}</span>}
+                                                        {index > 2 && <span className="w-6 text-center text-sm font-black text-[color:var(--lobby-muted,#8f8674)]">#{index + 1}</span>}
                                                     </div>
                                                 </td>
                                                 <td className="px-3 md:px-8 py-4 md:py-5">
-                                                    <span className="text-sm font-black text-white group-hover:text-blue-400 transition-colors uppercase">
+                                                    <span className="text-sm font-black text-[color:var(--lobby-text,#f3ecdd)] group-hover:text-blue-400 transition-colors uppercase">
                                                         {maskUsername(player.UserName)}
                                                     </span>
                                                 </td>
-                                                <td className="px-3 md:px-8 py-4 md:py-5 text-right font-black text-zinc-400">
+                                                <td className="px-3 md:px-8 py-4 md:py-5 text-right font-black text-[color:var(--lobby-muted,#8f8674)]">
                                                     ₺{player.BetAmount.toLocaleString('tr-TR')}
                                                 </td>
                                                 <td className="px-3 md:px-8 py-4 md:py-5 text-right font-black text-emerald-500 hidden sm:table-cell">
                                                     ₺{player.WinAmount.toLocaleString('tr-TR')}
                                                 </td>
                                                 <td className="px-3 md:px-8 py-4 md:py-5 text-right hidden md:table-cell">
-                                                    <div className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-white/5 border border-white/5 text-[10px] font-black text-zinc-400">
+                                                    <div className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-[rgba(243,236,221,0.05)] border border-[rgba(243,236,221,0.05)] text-[10px] font-black text-[color:var(--lobby-muted,#8f8674)]">
                                                         {Math.floor(player.BetAmount / 100)} PUAN
                                                     </div>
                                                 </td>
@@ -312,7 +312,7 @@ export default function TurnuvaSayfasi() {
                                         ))
                                     ) : (
                                         <tr>
-                                            <td colSpan={5} className="px-4 py-20 text-center text-zinc-600 font-bold uppercase tracking-widest">{pageContent.emptyTitle}</td>
+                                            <td colSpan={5} className="px-4 py-20 text-center text-[color:var(--lobby-muted,#8f8674)] font-bold uppercase tracking-widest">{pageContent.emptyTitle}</td>
                                         </tr>
                                     )}
                                 </AnimatePresence>

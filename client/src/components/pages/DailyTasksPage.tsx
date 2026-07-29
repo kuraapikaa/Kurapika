@@ -109,7 +109,7 @@ export function DailyTasksPage() {
           )}
           <Link
             to="/bonus-talep"
-            className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-white px-3 text-[10px] font-black uppercase tracking-[0.12em] text-black transition active:scale-[0.98]"
+            className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-[color:var(--lobby-primary,#e7c574)] px-3 text-[10px] font-black uppercase tracking-[0.12em] text-[#171204] transition active:scale-[0.98]"
           >
             {pageContent.primaryButton}
             <ArrowRight size={13} />
@@ -119,7 +119,7 @@ export function DailyTasksPage() {
       toolbar={
         activeUser ? (
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-lg border border-white/[0.08] bg-white/[0.05] px-2.5 py-1.5 text-[10px] font-black text-white">
+            <span className="inline-flex items-center gap-1.5 rounded-lg border border-[rgba(243,236,221,0.08)] bg-[rgba(243,236,221,0.05)] px-2.5 py-1.5 text-[10px] font-black text-[color:var(--lobby-text,#f3ecdd)]">
               <User size={12} style={{ color: palette.accentColor }} />
               {activeUser}
             </span>
@@ -138,7 +138,7 @@ export function DailyTasksPage() {
                 {readyCount} ödül hazır
               </span>
             )}
-            <span className="rounded-lg border border-white/[0.06] bg-black/25 px-2.5 py-1.5 text-[10px] font-black text-zinc-500">
+            <span className="rounded-lg border border-[rgba(243,236,221,0.06)] bg-black/25 px-2.5 py-1.5 text-[10px] font-black text-[color:var(--lobby-muted,#8f8674)]">
               {tasks.length} görev
             </span>
           </div>
@@ -161,7 +161,7 @@ export function DailyTasksPage() {
               loginError ? (
                 <p className="rounded-xl border border-rose-300/15 bg-rose-400/10 px-3 py-1.5 text-[11px] font-bold text-rose-200">{loginError}</p>
               ) : (
-                <p className="text-[11px] font-medium text-zinc-600">{pageContent.formDescription}</p>
+                <p className="text-[11px] font-medium text-[color:var(--lobby-muted,#8f8674)]">{pageContent.formDescription}</p>
               )
             }
           />
@@ -178,8 +178,8 @@ export function DailyTasksPage() {
         </LobbyCard>
       ) : tasks.length === 0 ? (
         <LobbyCard className="py-10 text-center">
-          <p className="text-sm font-black text-white">{pageContent.emptyTitle}</p>
-          <p className="mt-1 text-[12px] font-medium text-zinc-500">{pageContent.emptyDescription}</p>
+          <p className="text-sm font-black text-[color:var(--lobby-text,#f3ecdd)]">{pageContent.emptyTitle}</p>
+          <p className="mt-1 text-[12px] font-medium text-[color:var(--lobby-muted,#8f8674)]">{pageContent.emptyDescription}</p>
         </LobbyCard>
       ) : (
         <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
@@ -228,28 +228,28 @@ function TaskCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: Math.min(index * 0.03, 0.24) }}
       className={cn(
-        'flex flex-col rounded-2xl border p-3 backdrop-blur-2xl transition',
+        'flex flex-col rounded-xl border p-3 transition',
         task.claimed
           ? 'border-emerald-300/20 bg-emerald-300/[0.07]'
           : canClaim
-            ? 'border-white/15 bg-white/[0.06]'
-            : 'border-white/[0.075] bg-white/[0.032]'
+            ? 'border-[rgba(243,236,221,0.15)] bg-[rgba(243,236,221,0.06)]'
+            : 'border-[rgba(243,236,221,0.075)] bg-[rgba(243,236,221,0.032)]'
       )}
       style={canClaim ? { borderColor: hexToRgba(palette.accentColor, 0.28) } : undefined}
     >
       <div className="flex items-start gap-2.5">
         <span
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-black/25"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[rgba(243,236,221,0.10)] bg-black/25"
           style={{ color: task.claimed ? '#6ee7b7' : palette.accentColor }}
         >
           {task.claimed ? <CheckCircle2 size={17} /> : task.completed ? <Gift size={17} /> : <Lock size={16} />}
         </span>
         <div className="min-w-0 flex-1">
-          <h2 className="truncate text-[13px] font-black leading-tight text-white">{task.title}</h2>
-          <p className="mt-1 line-clamp-2 text-[11px] font-medium leading-4 text-zinc-500">{task.description}</p>
+          <h2 className="truncate text-[13px] font-black leading-tight text-[color:var(--lobby-text,#f3ecdd)]">{task.title}</h2>
+          <p className="mt-1 line-clamp-2 text-[11px] font-medium leading-4 text-[color:var(--lobby-muted,#8f8674)]">{task.description}</p>
         </div>
         {task.metricLabel && (
-          <span className="shrink-0 rounded border border-white/10 bg-black/25 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.08em] text-zinc-500">
+          <span className="shrink-0 rounded border border-[rgba(243,236,221,0.10)] bg-black/25 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.08em] text-[color:var(--lobby-muted,#8f8674)]">
             {task.metricLabel}
           </span>
         )}
@@ -257,7 +257,7 @@ function TaskCard({
 
       <div className="mt-3">
         <div className="mb-1.5 flex items-center justify-between text-[10px] font-black">
-          <span className="tabular-nums text-zinc-500">
+          <span className="tabular-nums text-[color:var(--lobby-muted,#8f8674)]">
             {formatValue(task.value)} / {formatValue(task.target)}
           </span>
           <span className="tabular-nums" style={{ color: palette.accentColor }}>{task.progress}%</span>
@@ -273,10 +273,10 @@ function TaskCard({
         </div>
       </div>
 
-      <div className="mt-3 flex items-center justify-between gap-2 rounded-xl border border-white/[0.06] bg-black/20 px-2.5 py-2">
+      <div className="mt-3 flex items-center justify-between gap-2 rounded-xl border border-[rgba(243,236,221,0.06)] bg-black/20 px-2.5 py-2">
         <div className="min-w-0">
-          <p className="text-[9px] font-black uppercase tracking-[0.12em] text-zinc-600">Ödül</p>
-          <p className="mt-0.5 truncate text-[11px] font-black text-white">{task.rewardLabel || 'XP ödülü'}</p>
+          <p className="text-[9px] font-black uppercase tracking-[0.12em] text-[color:var(--lobby-muted,#8f8674)]">Ödül</p>
+          <p className="mt-0.5 truncate text-[11px] font-black text-[color:var(--lobby-text,#f3ecdd)]">{task.rewardLabel || 'XP ödülü'}</p>
         </div>
         <span className="shrink-0 rounded bg-amber-300/10 px-2 py-1 text-[11px] font-black tabular-nums text-amber-200">
           {task.xp || 0} XP

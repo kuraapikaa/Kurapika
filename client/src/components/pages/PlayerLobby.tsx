@@ -625,14 +625,14 @@ export function PlayerLobby() {
                 >
                   <User size={13} />
                 </span>
-                <span className="truncate text-[11px] font-black uppercase tracking-tight text-[color:var(--lobby-text)]">{activeUser}</span>
-                <span className="h-3 w-px bg-white/10" />
+                <span className="truncate text-[11px] font-black uppercase tracking-tight text-[color:var(--lobby-text,#f3ecdd)]">{activeUser}</span>
+                <span className="h-3 w-px bg-[rgba(243,236,221,0.10)]" />
                 <span className="whitespace-nowrap text-[11px] font-black tabular-nums text-emerald-300">
                   ₺{loyalty?.balance?.toLocaleString('tr-TR') || '0'}
                 </span>
                 {loyalty && (
                   <>
-                    <span className="h-3 w-px bg-white/10" />
+                    <span className="h-3 w-px bg-[rgba(243,236,221,0.10)]" />
                     <span className="whitespace-nowrap text-[11px] font-black tabular-nums text-amber-300">LVL {loyalty.level}</span>
                   </>
                 )}
@@ -641,7 +641,7 @@ export function PlayerLobby() {
             <button
               type="button"
               aria-label="Bildirimler"
-              className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-[rgba(243,236,221,0.08)] bg-[rgba(243,236,221,0.045)] text-[color:var(--lobby-muted)] transition hover:text-[color:var(--lobby-text)] md:h-9 md:w-9"
+              className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-[rgba(243,236,221,0.08)] bg-[rgba(243,236,221,0.045)] text-[color:var(--lobby-muted,#8f8674)] transition hover:text-[color:var(--lobby-text,#f3ecdd)] md:h-9 md:w-9"
             >
               <Bell size={16} />
               <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full" style={{ backgroundColor: lobbyTheme.accentColor }} />
@@ -665,11 +665,11 @@ export function PlayerLobby() {
           <section className="rounded-xl border border-[rgba(243,236,221,0.08)] bg-[rgba(243,236,221,0.04)] p-2.5 md:p-3">
             <div className="flex flex-col gap-2 md:flex-row md:items-center">
               <div className="flex min-w-0 flex-1 items-center gap-2.5 rounded-xl border border-[rgba(243,236,221,0.06)] bg-black/25 px-3 py-2">
-                <span className="shrink-0 text-[color:var(--lobby-muted)]">
+                <span className="shrink-0 text-[color:var(--lobby-muted,#8f8674)]">
                   {checking ? <Loader2 size={17} className="animate-spin" style={{ color: lobbyTheme.primaryColor }} /> : <User size={17} />}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <label htmlFor="lobby-username" className="block text-[9px] font-black uppercase leading-none tracking-[0.16em] text-[color:var(--lobby-muted)]">
+                  <label htmlFor="lobby-username" className="block text-[9px] font-black uppercase leading-none tracking-[0.16em] text-[color:var(--lobby-muted,#8f8674)]">
                     Oyuncu doğrulama
                   </label>
                   <input
@@ -678,7 +678,7 @@ export function PlayerLobby() {
                     value={username}
                     onChange={(event) => setUsername(event.target.value)}
                     onKeyDown={(event) => event.key === 'Enter' && handleCheck()}
-                    className="mt-1 w-full border-0 bg-transparent p-0 text-sm font-black leading-none text-[color:var(--lobby-text)] outline-none placeholder:text-[color:var(--lobby-muted)] focus:ring-0"
+                    className="mt-1 w-full border-0 bg-transparent p-0 text-sm font-black leading-none text-[color:var(--lobby-text,#f3ecdd)] outline-none placeholder:text-[color:var(--lobby-muted,#8f8674)] focus:ring-0"
                     placeholder="Kullanıcı adınız"
                   />
                 </div>
@@ -687,7 +687,7 @@ export function PlayerLobby() {
                 type="button"
                 onClick={handleCheck}
                 disabled={!username.trim() || checking}
-                className="flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl px-5 text-[11px] font-black uppercase tracking-[0.16em] text-[color:var(--lobby-text)] transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-55"
+                className="flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl px-5 text-[11px] font-black uppercase tracking-[0.16em] text-[color:var(--lobby-text,#f3ecdd)] transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-55"
                 style={{
                   background: `linear-gradient(90deg, ${lobbyTheme.primaryColor}, ${lobbyTheme.secondaryColor})`,
                   boxShadow: `0 8px 22px ${hexToRgba(lobbyTheme.primaryColor, 0.26)}`
@@ -732,19 +732,19 @@ export function PlayerLobby() {
                     <Star size={10} className="fill-current" />
                     Öne çıkan
                   </span>
-                  <h1 className="mt-2.5 max-w-[26ch] text-2xl font-black leading-[1.02] tracking-[-0.045em] text-[color:var(--lobby-text)] sm:text-[28px] md:text-[32px]">
+                  <h1 className="mt-2.5 max-w-[26ch] text-2xl font-black leading-[1.02] tracking-[-0.045em] text-[color:var(--lobby-text,#f3ecdd)] sm:text-[28px] md:text-[32px]">
                     Bonusunu seç, talebini hızlıca gönder.
                   </h1>
                   <div className="mt-3.5 flex flex-wrap gap-2">
                     <Link
                       to="/bonus-talep"
-                      className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-white px-4 text-[12px] font-black text-black transition active:scale-[0.98]"
+                      className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-[color:var(--lobby-primary,#e7c574)] px-4 text-[12px] font-black text-[#171204] transition active:scale-[0.98]"
                     >
                       Bonus talep et <ChevronRight size={15} />
                     </Link>
                     <Link
                       to="/cark"
-                      className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border bg-[rgba(243,236,221,0.06)] px-4 text-[12px] font-black text-[color:var(--lobby-text)] transition hover:bg-white/[0.1] active:scale-[0.98]"
+                      className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border bg-[rgba(243,236,221,0.06)] px-4 text-[12px] font-black text-[color:var(--lobby-text,#f3ecdd)] transition hover:bg-[rgba(243,236,221,0.1)] active:scale-[0.98]"
                       style={{ borderColor: hexToRgba(lobbyTheme.primaryColor, 0.22) }}
                     >
                       Çarkı çevir <Zap size={15} />
@@ -788,8 +788,8 @@ export function PlayerLobby() {
                       className={cn(
                         'flex min-w-0 items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-[10px] font-black uppercase tracking-[0.06em] transition sm:text-[11px]',
                         isActive
-                          ? 'bg-white text-black shadow-[0_6px_18px_rgba(255,255,255,.1)]'
-                          : 'text-[color:var(--lobby-muted)] hover:bg-[rgba(243,236,221,0.055)] hover:text-[color:var(--lobby-text)]'
+                          ? 'bg-[color:var(--lobby-primary,#e7c574)] text-[#171204] shadow-[0_6px_18px_rgba(255,255,255,.1)]'
+                          : 'text-[color:var(--lobby-muted,#8f8674)] hover:bg-[rgba(243,236,221,0.055)] hover:text-[color:var(--lobby-text,#f3ecdd)]'
                       )}
                     >
                       <Icon size={14} className="shrink-0" />
@@ -875,10 +875,10 @@ function GamesTab({ items, config }: { items: LobbyQuickAccessItem[]; config: Lo
                 <Icon size={17} />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="line-clamp-2 block text-[12px] font-black leading-tight text-[color:var(--lobby-text)] sm:line-clamp-1">{item.label}</span>
-                <span className="mt-1 hidden truncate text-[10px] font-semibold leading-none text-[color:var(--lobby-muted)] sm:block">{item.desc}</span>
+                <span className="line-clamp-2 block text-[12px] font-black leading-tight text-[color:var(--lobby-text,#f3ecdd)] sm:line-clamp-1">{item.label}</span>
+                <span className="mt-1 hidden truncate text-[10px] font-semibold leading-none text-[color:var(--lobby-muted,#8f8674)] sm:block">{item.desc}</span>
               </span>
-              <ChevronRight size={14} className="hidden shrink-0 text-[color:var(--lobby-muted)] transition group-hover:translate-x-0.5 group-hover:text-[color:var(--lobby-muted)] sm:block" />
+              <ChevronRight size={14} className="hidden shrink-0 text-[color:var(--lobby-muted,#8f8674)] transition group-hover:translate-x-0.5 group-hover:text-[color:var(--lobby-muted,#8f8674)] sm:block" />
             </Link>
           );
         })}
@@ -919,8 +919,8 @@ function TournamentsTab({ cards, config }: { cards: TournamentLobbyCard[]; confi
               className={cn(
                 'group flex min-w-0 items-center gap-2 rounded-xl border p-2 text-left transition active:scale-[0.98]',
                 selected
-                  ? 'border-[rgba(231,197,116,0.4)] bg-[color:var(--lobby-primary)] text-[#171204]'
-                  : 'border-[rgba(243,236,221,0.07)] bg-[rgba(243,236,221,0.035)] text-[color:var(--lobby-muted)] hover:border-[rgba(243,236,221,0.16)] hover:bg-[rgba(243,236,221,0.07)] hover:text-[color:var(--lobby-text)]'
+                  ? 'border-[rgba(231,197,116,0.4)] bg-[color:var(--lobby-primary,#e7c574)] text-[#171204]'
+                  : 'border-[rgba(243,236,221,0.07)] bg-[rgba(243,236,221,0.035)] text-[color:var(--lobby-muted,#8f8674)] hover:border-[rgba(243,236,221,0.16)] hover:bg-[rgba(243,236,221,0.07)] hover:text-[color:var(--lobby-text,#f3ecdd)]'
               )}
             >
               <span
@@ -934,7 +934,7 @@ function TournamentsTab({ cards, config }: { cards: TournamentLobbyCard[]; confi
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-[11px] font-black uppercase leading-none tracking-[0.04em]">{card.label}</span>
-                <span className={cn('mt-1 block truncate text-[9px] font-black uppercase leading-none tracking-[0.1em]', selected ? 'text-black/45' : 'text-[color:var(--lobby-muted)]')}>
+                <span className={cn('mt-1 block truncate text-[9px] font-black uppercase leading-none tracking-[0.1em]', selected ? 'text-[#171204]/45' : 'text-[color:var(--lobby-muted,#8f8674)]')}>
                   {card.period}
                 </span>
               </span>
@@ -961,11 +961,11 @@ function SupportTab({ config }: { config: LobbyTabsConfig['support'] }) {
     <div className="space-y-2.5">
       <SectionTitle title={config.sectionTitle} action={config.actionText} />
       <div className="relative">
-        <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--lobby-muted)]" />
+        <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--lobby-muted,#8f8674)]" />
         <input
           type="text"
           placeholder={config.searchPlaceholder}
-          className="h-10 w-full rounded-xl border border-[rgba(243,236,221,0.06)] bg-black/30 pl-9 pr-3 text-[12px] font-bold text-[color:var(--lobby-text)] outline-none transition placeholder:text-[color:var(--lobby-muted)] focus:border-[color:var(--lobby-primary)]/60"
+          className="h-10 w-full rounded-xl border border-[rgba(243,236,221,0.06)] bg-black/30 pl-9 pr-3 text-[12px] font-bold text-[color:var(--lobby-text,#f3ecdd)] outline-none transition placeholder:text-[color:var(--lobby-muted,#8f8674)] focus:border-[color:var(--lobby-primary,#e7c574)]/60"
         />
       </div>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
@@ -982,8 +982,8 @@ function SupportTab({ config }: { config: LobbyTabsConfig['support'] }) {
       >
         <CheckCircle2 className="mt-0.5 shrink-0" style={{ color: config.infoAccentColor }} size={17} />
         <div className="min-w-0">
-          <p className="text-[12px] font-black leading-tight text-[color:var(--lobby-text)]">{config.infoTitle}</p>
-          <p className="mt-1 text-[11px] font-medium leading-4 text-[color:var(--lobby-muted)]">{config.infoDescription}</p>
+          <p className="text-[12px] font-black leading-tight text-[color:var(--lobby-text,#f3ecdd)]">{config.infoTitle}</p>
+          <p className="mt-1 text-[11px] font-medium leading-4 text-[color:var(--lobby-muted,#8f8674)]">{config.infoDescription}</p>
         </div>
       </div>
     </div>
@@ -1017,18 +1017,18 @@ function LobbyBanner({ theme }: { theme: LobbyTheme }) {
       <div className="absolute inset-0 bg-gradient-to-r from-black/35 via-transparent to-transparent" />
       <div className="relative z-10 max-w-[620px]">
         {banner.title && (
-          <h2 className="max-w-full text-lg font-black leading-[1.05] tracking-[-0.035em] text-[color:var(--lobby-text)] sm:text-2xl md:text-[26px]">
+          <h2 className="max-w-full text-lg font-black leading-[1.05] tracking-[-0.035em] text-[color:var(--lobby-text,#f3ecdd)] sm:text-2xl md:text-[26px]">
             {banner.title}
           </h2>
         )}
         {banner.subtitle && (
-          <p className="mt-1 max-w-[520px] text-[11px] font-bold leading-4 text-[color:var(--lobby-text)]/75 sm:text-xs md:text-[13px]">
+          <p className="mt-1 max-w-[520px] text-[11px] font-bold leading-4 text-[color:var(--lobby-text,#f3ecdd)]/75 sm:text-xs md:text-[13px]">
             {banner.subtitle}
           </p>
         )}
         {banner.ctaLabel && (
           <span
-            className="mt-2.5 inline-flex h-8 items-center justify-center gap-1.5 rounded-lg px-3 text-[10px] font-black uppercase tracking-[0.12em] text-black transition group-hover:translate-x-0.5"
+            className="mt-2.5 inline-flex h-8 items-center justify-center gap-1.5 rounded-lg px-3 text-[10px] font-black uppercase tracking-[0.12em] text-[#171204] transition group-hover:translate-x-0.5"
             style={{ backgroundColor: theme.accentColor }}
           >
             {banner.ctaLabel}
@@ -1055,7 +1055,7 @@ function LiveTicker({ winners, theme }: { winners: Array<{ user: string; win: st
   return (
     <div className="relative z-20 flex h-7 w-full items-center overflow-hidden border-b border-[rgba(243,236,221,0.07)] bg-black/70 backdrop-blur-xl md:h-8">
       <div
-        className="z-10 flex h-full shrink-0 items-center gap-1.5 px-2.5 text-[9px] font-black uppercase tracking-[0.14em] text-[color:var(--lobby-text)] shadow-[8px_0_20px_rgba(0,0,0,.5)] md:px-4"
+        className="z-10 flex h-full shrink-0 items-center gap-1.5 px-2.5 text-[9px] font-black uppercase tracking-[0.14em] text-[color:var(--lobby-text,#f3ecdd)] shadow-[8px_0_20px_rgba(0,0,0,.5)] md:px-4"
         style={{ background: `linear-gradient(90deg, ${theme.primaryColor}, ${theme.secondaryColor})` }}
       >
         <Activity size={10} className="animate-pulse" />
@@ -1063,11 +1063,11 @@ function LiveTicker({ winners, theme }: { winners: Array<{ user: string; win: st
       </div>
       <div className="lobby-marquee flex items-center gap-5 whitespace-nowrap px-4">
         {[...winners, ...winners].map((winner, index) => (
-          <div key={`${winner.user}-${index}`} className="flex items-center gap-1.5 text-[11px] font-bold text-[color:var(--lobby-muted)]">
-            <span className="text-[color:var(--lobby-text)]">{winner.user}</span>
+          <div key={`${winner.user}-${index}`} className="flex items-center gap-1.5 text-[11px] font-bold text-[color:var(--lobby-muted,#8f8674)]">
+            <span className="text-[color:var(--lobby-text,#f3ecdd)]">{winner.user}</span>
             <span style={{ color: theme.accentColor }}>{winner.win}</span>
-            <span className="rounded bg-white/5 px-1.5 py-0.5 text-[9px] text-[color:var(--lobby-muted)]">{winner.game}</span>
-            <span className="text-[9px] text-[color:var(--lobby-muted)]">{winner.time}</span>
+            <span className="rounded bg-[rgba(243,236,221,0.05)] px-1.5 py-0.5 text-[9px] text-[color:var(--lobby-muted,#8f8674)]">{winner.game}</span>
+            <span className="text-[9px] text-[color:var(--lobby-muted,#8f8674)]">{winner.time}</span>
           </div>
         ))}
       </div>
@@ -1111,18 +1111,18 @@ function TournamentCard({
             <Icon size={17} />
           </div>
           <div className="min-w-0">
-            <p className="text-[9px] font-black uppercase leading-none tracking-[0.12em] text-[color:var(--lobby-muted)]">{card.period}</p>
-            <p className="mt-1 truncate text-[12px] font-black uppercase leading-none text-[color:var(--lobby-text)]">{card.label}</p>
+            <p className="text-[9px] font-black uppercase leading-none tracking-[0.12em] text-[color:var(--lobby-muted,#8f8674)]">{card.period}</p>
+            <p className="mt-1 truncate text-[12px] font-black uppercase leading-none text-[color:var(--lobby-text,#f3ecdd)]">{card.label}</p>
           </div>
         </div>
-        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-[rgba(243,236,221,0.06)] bg-[rgba(243,236,221,0.045)] text-[color:var(--lobby-muted)] transition group-hover:translate-x-0.5 group-hover:text-[color:var(--lobby-text)]">
+        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-[rgba(243,236,221,0.06)] bg-[rgba(243,236,221,0.045)] text-[color:var(--lobby-muted,#8f8674)] transition group-hover:translate-x-0.5 group-hover:text-[color:var(--lobby-text,#f3ecdd)]">
           <ChevronRight size={14} />
         </div>
       </div>
       <div className="mt-3">
-        <p className="text-[9px] font-black uppercase tracking-[0.14em] text-[color:var(--lobby-muted)]">{rankHint}</p>
-        <p className="mt-0.5 truncate text-2xl font-black tracking-[-0.045em] text-[color:var(--lobby-text)] md:text-[28px]">{card.prize}{prizeSuffix}</p>
-        <p className="mt-1.5 line-clamp-2 text-[11px] font-semibold leading-4 text-[color:var(--lobby-muted)]">{description}</p>
+        <p className="text-[9px] font-black uppercase tracking-[0.14em] text-[color:var(--lobby-muted,#8f8674)]">{rankHint}</p>
+        <p className="mt-0.5 truncate text-2xl font-black tracking-[-0.045em] text-[color:var(--lobby-text,#f3ecdd)] md:text-[28px]">{card.prize}{prizeSuffix}</p>
+        <p className="mt-1.5 line-clamp-2 text-[11px] font-semibold leading-4 text-[color:var(--lobby-muted,#8f8674)]">{description}</p>
       </div>
     </Link>
   );
@@ -1131,8 +1131,8 @@ function TournamentCard({
 function SectionTitle({ title, action }: { title: string; action?: string }) {
   return (
     <div className="flex items-baseline justify-between gap-3 px-0.5">
-      <h2 className="truncate text-[13px] font-black tracking-[-0.02em] text-[color:var(--lobby-text)] md:text-sm">{title}</h2>
-      {action && <span className="shrink-0 text-[9px] font-black uppercase tracking-[0.12em] text-[color:var(--lobby-muted)]">{action}</span>}
+      <h2 className="truncate text-[13px] font-black tracking-[-0.02em] text-[color:var(--lobby-text,#f3ecdd)] md:text-sm">{title}</h2>
+      {action && <span className="shrink-0 text-[9px] font-black uppercase tracking-[0.12em] text-[color:var(--lobby-muted,#8f8674)]">{action}</span>}
     </div>
   );
 }
@@ -1157,10 +1157,10 @@ function FeatureCard({ card }: { card: LobbySupportCardConfig }) {
         <Icon size={17} />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-[13px] font-black leading-tight tracking-[-0.015em] text-[color:var(--lobby-text)]">{card.title}</span>
-        <span className="mt-1 block text-[11px] font-medium leading-4 text-[color:var(--lobby-muted)]">{card.desc}</span>
+        <span className="block text-[13px] font-black leading-tight tracking-[-0.015em] text-[color:var(--lobby-text,#f3ecdd)]">{card.title}</span>
+        <span className="mt-1 block text-[11px] font-medium leading-4 text-[color:var(--lobby-muted,#8f8674)]">{card.desc}</span>
       </span>
-      <ChevronRight size={14} className="mt-0.5 shrink-0 text-[color:var(--lobby-muted)] transition group-hover:translate-x-0.5 group-hover:text-[color:var(--lobby-muted)]" />
+      <ChevronRight size={14} className="mt-0.5 shrink-0 text-[color:var(--lobby-muted,#8f8674)] transition group-hover:translate-x-0.5 group-hover:text-[color:var(--lobby-muted,#8f8674)]" />
     </Link>
   );
 }
@@ -1169,7 +1169,7 @@ function BottomNav({ to, icon: Icon, label, active = false, accentColor = '#e7c5
   return (
     <Link
       to={to}
-      className={cn('flex flex-col items-center justify-center gap-0.5 rounded-xl px-2 py-1.5 text-[9px] font-black uppercase tracking-[0.06em] transition', active ? '' : 'text-[color:var(--lobby-muted)]')}
+      className={cn('flex flex-col items-center justify-center gap-0.5 rounded-xl px-2 py-1.5 text-[9px] font-black uppercase tracking-[0.06em] transition', active ? '' : 'text-[color:var(--lobby-muted,#8f8674)]')}
       style={active ? { backgroundColor: hexToRgba(accentColor, 0.16), color: accentColor } : undefined}
     >
       <Icon size={17} />
@@ -1185,8 +1185,8 @@ const VIP_TIERS = [
     label: 'Prestij',
     sublabel: 'Başlangıç',
     minDeposit: '10.000 TL',
-    color: 'from-[rgba(243,236,221,0.2)] border-[rgba(243,236,221,0.25)] text-[color:var(--lobby-text)]',
-    iconColor: 'bg-[rgba(243,236,221,0.1)] border-[rgba(243,236,221,0.2)] text-[color:var(--lobby-text)]',
+    color: 'from-[rgba(243,236,221,0.2)] border-[rgba(243,236,221,0.25)] text-[color:var(--lobby-text,#f3ecdd)]',
+    iconColor: 'bg-[rgba(243,236,221,0.1)] border-[rgba(243,236,221,0.2)] text-[color:var(--lobby-text,#f3ecdd)]',
     popular: false,
     perks: [
       '7/24 Kişisel VIP Asistanı',
@@ -1320,8 +1320,8 @@ export function VIPTab() {
           <Crown size={12} />
           {eyebrow}
         </div>
-        <h2 className="mt-3 text-2xl font-black tracking-[-0.05em] text-[color:var(--lobby-text)] md:text-3xl">{title}</h2>
-        <p className="mt-2 text-sm font-medium leading-6 text-[color:var(--lobby-muted)]">{description}</p>
+        <h2 className="mt-3 text-2xl font-black tracking-[-0.05em] text-[color:var(--lobby-text,#f3ecdd)] md:text-3xl">{title}</h2>
+        <p className="mt-2 text-sm font-medium leading-6 text-[color:var(--lobby-muted,#8f8674)]">{description}</p>
       </div>
 
       {/* İstatistikler */}
@@ -1329,8 +1329,8 @@ export function VIPTab() {
       <div className="grid grid-cols-4 gap-2">
         {stats.map((stat: any) => (
           <div key={stat.label} className="rounded-[1.25rem] border border-[rgba(243,236,221,0.07)] bg-[rgba(243,236,221,0.035)] p-3 text-center">
-            <p className="text-lg font-black tracking-[-0.04em] text-[color:var(--lobby-text)] md:text-2xl">{stat.value}</p>
-            <p className="mt-0.5 text-[9px] font-black uppercase tracking-[0.12em] text-[color:var(--lobby-muted)]">{stat.label}</p>
+            <p className="text-lg font-black tracking-[-0.04em] text-[color:var(--lobby-text,#f3ecdd)] md:text-2xl">{stat.value}</p>
+            <p className="mt-0.5 text-[9px] font-black uppercase tracking-[0.12em] text-[color:var(--lobby-muted,#8f8674)]">{stat.label}</p>
           </div>
         ))}
       </div>
@@ -1348,7 +1348,7 @@ export function VIPTab() {
             )}
           >
             {tier.popular && (
-              <div className="absolute right-3 top-3 rounded-full bg-amber-300 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.12em] text-black">
+              <div className="absolute right-3 top-3 rounded-full bg-amber-300 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.12em] text-[#171204]">
                 Popüler
               </div>
             )}
@@ -1357,17 +1357,17 @@ export function VIPTab() {
                 {tier.badge}
               </div>
               <div>
-                <p className="text-base font-black tracking-[-0.03em] text-[color:var(--lobby-text)]">{tier.label}</p>
+                <p className="text-base font-black tracking-[-0.03em] text-[color:var(--lobby-text,#f3ecdd)]">{tier.label}</p>
                 <p className="text-[10px] font-black uppercase tracking-[0.14em] opacity-50">{tier.sublabel}</p>
               </div>
             </div>
             <div className="mt-4 rounded-xl border border-[rgba(243,236,221,0.06)] bg-black/20 px-3 py-2">
-              <p className="text-[8px] font-black uppercase tracking-[0.14em] text-[color:var(--lobby-muted)]">Minimum yatırım</p>
-              <p className="mt-0.5 text-xs font-black text-[color:var(--lobby-text)]">{tier.minDeposit || 'Belirtilmedi'}</p>
+              <p className="text-[8px] font-black uppercase tracking-[0.14em] text-[color:var(--lobby-muted,#8f8674)]">Minimum yatırım</p>
+              <p className="mt-0.5 text-xs font-black text-[color:var(--lobby-text,#f3ecdd)]">{tier.minDeposit || 'Belirtilmedi'}</p>
             </div>
             <ul className="mt-4 space-y-2">
               {(tier.perks || []).map((perk: string) => (
-                <li key={perk} className="flex items-start gap-2 text-xs font-semibold leading-5 text-[color:var(--lobby-text)]">
+                <li key={perk} className="flex items-start gap-2 text-xs font-semibold leading-5 text-[color:var(--lobby-text,#f3ecdd)]">
                   <Check size={13} className="mt-0.5 shrink-0 opacity-70" />
                   {perk}
                 </li>
@@ -1380,7 +1380,7 @@ export function VIPTab() {
       {/* SSS */}
       {showFaq && faq.length > 0 && (
       <div className="space-y-2">
-        <p className="px-1 text-[10px] font-black uppercase tracking-[0.18em] text-[color:var(--lobby-muted)]">Sık sorulan sorular</p>
+        <p className="px-1 text-[10px] font-black uppercase tracking-[0.18em] text-[color:var(--lobby-muted,#8f8674)]">Sık sorulan sorular</p>
         {faq.map((item: any, i: number) => (
           <div key={i} className="overflow-hidden rounded-[1.25rem] border border-[rgba(243,236,221,0.07)] bg-[rgba(243,236,221,0.035)]">
             <button
@@ -1388,10 +1388,10 @@ export function VIPTab() {
               onClick={() => setOpenFaq(openFaq === i ? null : i)}
               className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left"
             >
-              <span className="text-sm font-black text-[color:var(--lobby-text)]">{item.q}</span>
+              <span className="text-sm font-black text-[color:var(--lobby-text,#f3ecdd)]">{item.q}</span>
               <ChevronDown
                 size={16}
-                className={cn('shrink-0 text-[color:var(--lobby-muted)] transition-transform duration-200', openFaq === i && 'rotate-180')}
+                className={cn('shrink-0 text-[color:var(--lobby-muted,#8f8674)] transition-transform duration-200', openFaq === i && 'rotate-180')}
               />
             </button>
             <AnimatePresence>
@@ -1403,7 +1403,7 @@ export function VIPTab() {
                   transition={{ duration: 0.18 }}
                   className="overflow-hidden"
                 >
-                  <p className="border-t border-[rgba(243,236,221,0.06)] px-4 py-3 text-xs font-medium leading-6 text-[color:var(--lobby-muted)]">{item.a}</p>
+                  <p className="border-t border-[rgba(243,236,221,0.06)] px-4 py-3 text-xs font-medium leading-6 text-[color:var(--lobby-muted,#8f8674)]">{item.a}</p>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -1420,15 +1420,15 @@ export function VIPTab() {
             <Crown size={20} />
           </div>
           <div>
-            <p className="text-base font-black text-[color:var(--lobby-text)]">{formTitle}</p>
-            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[color:var(--lobby-muted)]">Ekibimiz size ulaşacak</p>
+            <p className="text-base font-black text-[color:var(--lobby-text,#f3ecdd)]">{formTitle}</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[color:var(--lobby-muted,#8f8674)]">Ekibimiz size ulaşacak</p>
           </div>
         </div>
         {sent ? (
           <div className="flex flex-col items-center gap-3 py-6 text-center">
             <CheckCircle2 size={36} className="text-emerald-400" />
-            <p className="text-base font-black text-[color:var(--lobby-text)]">Başvurunuz alındı!</p>
-            <p className="text-xs font-medium text-[color:var(--lobby-muted)]">{formSuccessMessage}</p>
+            <p className="text-base font-black text-[color:var(--lobby-text,#f3ecdd)]">Başvurunuz alındı!</p>
+            <p className="text-xs font-medium text-[color:var(--lobby-muted,#8f8674)]">{formSuccessMessage}</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-3">
@@ -1438,7 +1438,7 @@ export function VIPTab() {
                 placeholder="Kullanıcı adı *"
                 value={form.username}
                 onChange={(e) => setForm({ ...form, username: e.target.value })}
-                className="h-12 w-full rounded-xl border border-[rgba(243,236,221,0.07)] bg-black/30 px-4 text-sm font-bold text-[color:var(--lobby-text)] outline-none placeholder:text-[color:var(--lobby-muted)] focus:border-[color:var(--lobby-primary)]/60"
+                className="h-12 w-full rounded-xl border border-[rgba(243,236,221,0.07)] bg-black/30 px-4 text-sm font-bold text-[color:var(--lobby-text,#f3ecdd)] outline-none placeholder:text-[color:var(--lobby-muted,#8f8674)] focus:border-[color:var(--lobby-primary,#e7c574)]/60"
                 required
               />
               <input
@@ -1446,21 +1446,21 @@ export function VIPTab() {
                 placeholder="Ad Soyad"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
-                className="h-12 w-full rounded-xl border border-[rgba(243,236,221,0.07)] bg-black/30 px-4 text-sm font-bold text-[color:var(--lobby-text)] outline-none placeholder:text-[color:var(--lobby-muted)] focus:border-[color:var(--lobby-primary)]/60"
+                className="h-12 w-full rounded-xl border border-[rgba(243,236,221,0.07)] bg-black/30 px-4 text-sm font-bold text-[color:var(--lobby-text,#f3ecdd)] outline-none placeholder:text-[color:var(--lobby-muted,#8f8674)] focus:border-[color:var(--lobby-primary,#e7c574)]/60"
               />
               <input
                 type="email"
                 placeholder="E-posta"
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
-                className="h-12 w-full rounded-xl border border-[rgba(243,236,221,0.07)] bg-black/30 px-4 text-sm font-bold text-[color:var(--lobby-text)] outline-none placeholder:text-[color:var(--lobby-muted)] focus:border-[color:var(--lobby-primary)]/60"
+                className="h-12 w-full rounded-xl border border-[rgba(243,236,221,0.07)] bg-black/30 px-4 text-sm font-bold text-[color:var(--lobby-text,#f3ecdd)] outline-none placeholder:text-[color:var(--lobby-muted,#8f8674)] focus:border-[color:var(--lobby-primary,#e7c574)]/60"
               />
               <input
                 type="tel"
                 placeholder="Telefon"
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                className="h-12 w-full rounded-xl border border-[rgba(243,236,221,0.07)] bg-black/30 px-4 text-sm font-bold text-[color:var(--lobby-text)] outline-none placeholder:text-[color:var(--lobby-muted)] focus:border-[color:var(--lobby-primary)]/60"
+                className="h-12 w-full rounded-xl border border-[rgba(243,236,221,0.07)] bg-black/30 px-4 text-sm font-bold text-[color:var(--lobby-text,#f3ecdd)] outline-none placeholder:text-[color:var(--lobby-muted,#8f8674)] focus:border-[color:var(--lobby-primary,#e7c574)]/60"
               />
             </div>
             <button

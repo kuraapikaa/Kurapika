@@ -72,13 +72,13 @@ function TelegramBonusCard({ username }: { username: string }) {
   if (!data?.enabled) return null;
 
   return (
-    <div className="flex flex-col gap-2.5 rounded-2xl border border-white/[0.08] bg-white/[0.04] p-3 sm:flex-row sm:items-center sm:justify-between md:p-3.5">
+    <div className="flex flex-col gap-2.5 rounded-xl border border-[rgba(243,236,221,0.08)] bg-[rgba(243,236,221,0.04)] p-3 sm:flex-row sm:items-center sm:justify-between md:p-3.5">
       <div className="flex items-center gap-2.5">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[color:var(--lobby-primary)]/15 text-[color:var(--lobby-accent)]">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[color:var(--lobby-primary,#e7c574)]/15 text-[color:var(--lobby-accent,#5fd6a7)]">
           <Send size={17} />
         </div>
         <div className="min-w-0">
-          <h3 className="text-[13px] font-black text-white">Telegram Bonusu</h3>
+          <h3 className="text-[13px] font-black text-[color:var(--lobby-text,#f3ecdd)]">Telegram Bonusu</h3>
           <p className="text-[11px] font-medium leading-4 text-slate-400">
             {data.claimed
               ? 'Bonusunuzu aldınız, teşekkürler!'
@@ -98,7 +98,7 @@ function TelegramBonusCard({ username }: { username: string }) {
             href={data.linkUrl || '#'}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-[color:var(--lobby-primary)] px-3.5 text-[10px] font-black uppercase tracking-[0.1em] text-white transition hover:opacity-90"
+            className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-[color:var(--lobby-primary,#e7c574)] px-3.5 text-[10px] font-black uppercase tracking-[0.1em] text-[color:var(--lobby-text,#f3ecdd)] transition hover:opacity-90"
           >
             <Send size={13} /> Hesabı Bağla
           </a>
@@ -107,7 +107,7 @@ function TelegramBonusCard({ username }: { username: string }) {
             type="button"
             onClick={() => verifyMutation.mutate()}
             disabled={verifyMutation.isPending}
-            className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-[color:var(--lobby-primary)] px-3.5 text-[10px] font-black uppercase tracking-[0.1em] text-white transition hover:opacity-90 disabled:opacity-60"
+            className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-[color:var(--lobby-primary,#e7c574)] px-3.5 text-[10px] font-black uppercase tracking-[0.1em] text-[color:var(--lobby-text,#f3ecdd)] transition hover:opacity-90 disabled:opacity-60"
           >
             {verifyMutation.isPending ? <Loader2 size={13} className="animate-spin" /> : <ShieldCheck size={13} />}
             Doğrula ve Bonusu Al
@@ -369,7 +369,7 @@ export function BonusTalepSayfasi() {
                 onClick={() => setSelectedCategory(cat)}
                 className={cn(
                   'h-8 rounded-lg border px-3 text-[10px] font-black uppercase leading-none tracking-[0.06em] transition',
-                  isActive ? 'text-white' : 'border-white/[0.07] bg-white/[0.04] text-zinc-400 hover:bg-white/[0.08] hover:text-white'
+                  isActive ? 'text-[color:var(--lobby-text,#f3ecdd)]' : 'border-[rgba(243,236,221,0.07)] bg-[rgba(243,236,221,0.04)] text-[color:var(--lobby-muted,#8f8674)] hover:bg-[rgba(243,236,221,0.08)] hover:text-[color:var(--lobby-text,#f3ecdd)]'
                 )}
                 style={isActive ? {
                   borderColor: hexToRgba(palette.accentColor, 0.35),
@@ -389,16 +389,16 @@ export function BonusTalepSayfasi() {
       {promosLoading && (
         <LobbyCard className="flex min-h-[180px] flex-col items-center justify-center gap-2">
           <Loader2 className="animate-spin" size={24} style={{ color: palette.accentColor }} />
-          <span className="text-[11px] font-bold text-zinc-500">{pageContent.loadingText}</span>
+          <span className="text-[11px] font-bold text-[color:var(--lobby-muted,#8f8674)]">{pageContent.loadingText}</span>
         </LobbyCard>
       )}
 
       {!promosLoading && filteredBonuses.length === 0 && (
         <LobbyCard className="py-12 text-center">
           <Gift className="mx-auto mb-2 opacity-20" size={32} />
-          <p className="text-sm font-black text-zinc-300">{pageContent.emptyTitle}</p>
+          <p className="text-sm font-black text-[color:var(--lobby-text,#f3ecdd)]">{pageContent.emptyTitle}</p>
           {pageContent.emptyDescription && (
-            <p className="mt-1 text-[12px] font-medium text-zinc-500">{pageContent.emptyDescription}</p>
+            <p className="mt-1 text-[12px] font-medium text-[color:var(--lobby-muted,#8f8674)]">{pageContent.emptyDescription}</p>
           )}
         </LobbyCard>
       )}
@@ -420,7 +420,7 @@ export function BonusTalepSayfasi() {
           return (
             <article
               key={bonus.promoTitle}
-              className="group flex flex-col overflow-hidden rounded-2xl border border-white/[0.075] bg-white/[0.032] shadow-[0_10px_32px_rgba(0,0,0,.2)] backdrop-blur-2xl transition hover:border-white/15"
+              className="group flex flex-col overflow-hidden rounded-xl border border-[rgba(243,236,221,0.075)] bg-[rgba(243,236,221,0.032)] transition hover:border-[rgba(243,236,221,0.15)]"
             >
               <div
                 className="relative h-[108px] w-full overflow-hidden"
@@ -447,7 +447,7 @@ export function BonusTalepSayfasi() {
                 </div>
 
                 <span
-                  className="absolute left-2.5 top-2.5 z-10 rounded border px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.08em] backdrop-blur-sm"
+                  className="absolute left-2.5 top-2.5 z-10 rounded border px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.08em]"
                   style={{
                     borderColor: hexToRgba(palette.accentColor, 0.3),
                     backgroundColor: hexToRgba(palette.accentColor, 0.14),
@@ -466,22 +466,22 @@ export function BonusTalepSayfasi() {
                       {bigNum}
                     </span>
                   )}
-                  <span className="mt-0.5 line-clamp-2 block max-w-[130px] text-[11px] font-black uppercase leading-tight text-white drop-shadow">
+                  <span className="mt-0.5 line-clamp-2 block max-w-[130px] text-[11px] font-black uppercase leading-tight text-[color:var(--lobby-text,#f3ecdd)] drop-shadow">
                     {bonus.promoTitle.replace(bigNum, '').trim()}
                   </span>
                 </div>
               </div>
 
               <div className="flex flex-1 flex-col p-3">
-                <h3 className="line-clamp-2 text-[12px] font-black leading-tight text-white">{bonus.promoTitle}</h3>
-                <p className="mt-1 line-clamp-2 flex-1 text-[11px] font-medium leading-4 text-zinc-500">{cardDescription}</p>
+                <h3 className="line-clamp-2 text-[12px] font-black leading-tight text-[color:var(--lobby-text,#f3ecdd)]">{bonus.promoTitle}</h3>
+                <p className="mt-1 line-clamp-2 flex-1 text-[11px] font-medium leading-4 text-[color:var(--lobby-muted,#8f8674)]">{cardDescription}</p>
 
                 <div className="mt-3 flex gap-1.5">
                   <button
                     type="button"
                     onClick={() => handleOpenDetails(bonus)}
                     aria-label={`${bonus.promoTitle} ${lobbyExtraText(pageContent, 'detailTitleSuffix', 'detaylarını görüntüle')}`}
-                    className="h-9 flex-1 rounded-xl border border-white/[0.08] bg-white/[0.04] text-[10px] font-black uppercase tracking-[0.08em] text-zinc-400 transition hover:bg-white/[0.09] hover:text-white"
+                    className="h-9 flex-1 rounded-xl border border-[rgba(243,236,221,0.08)] bg-[rgba(243,236,221,0.04)] text-[10px] font-black uppercase tracking-[0.08em] text-[color:var(--lobby-muted,#8f8674)] transition hover:bg-[rgba(243,236,221,0.09)] hover:text-[color:var(--lobby-text,#f3ecdd)]"
                   >
                     {pageContent.secondaryButton}
                   </button>
@@ -494,7 +494,7 @@ export function BonusTalepSayfasi() {
                       : `${bonus.promoTitle} ${lobbyExtraText(pageContent, 'requestAriaSuffix', 'talep et')}`}
                     className={cn(
                       'flex h-9 flex-1 items-center justify-center gap-1 rounded-xl text-[10px] font-black uppercase tracking-[0.08em] transition',
-                      isClosed && 'cursor-not-allowed bg-white/[0.04] text-zinc-600'
+                      isClosed && 'cursor-not-allowed bg-[rgba(243,236,221,0.04)] text-[color:var(--lobby-muted,#8f8674)]'
                     )}
                     style={isClosed ? undefined : {
                       background: `linear-gradient(90deg, ${palette.primaryColor}, ${palette.secondaryColor})`,
@@ -520,7 +520,7 @@ export function BonusTalepSayfasi() {
                initial={{ opacity: 0 }}
                animate={{ opacity: 1 }}
                exit={{ opacity: 0 }}
-               className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+               className="absolute inset-0 bg-black/80"
                onClick={closeModal}
             />
 
@@ -531,51 +531,51 @@ export function BonusTalepSayfasi() {
                initial={{ opacity: 0, scale: 0.9, y: 20 }}
                animate={{ opacity: 1, scale: 1, y: 0 }}
                exit={{ opacity: 0, scale: 0.95, y: -20 }}
-               className="relative z-10 max-h-[92dvh] w-full max-w-md overflow-hidden overflow-y-auto rounded-t-2xl border border-white/10 bg-[#0d1119] shadow-2xl sm:rounded-2xl"
+               className="relative z-10 max-h-[92dvh] w-full max-w-md overflow-hidden overflow-y-auto rounded-t-2xl border border-[rgba(243,236,221,0.10)] bg-[#0d1119] shadow-2xl sm:rounded-xl"
             >
                {submitSuccess ? (
                   <div className="p-5 text-center">
                      <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl border border-emerald-400/20 bg-emerald-400/10">
                         <CheckCircle2 size={22} className="text-emerald-400" />
                      </div>
-                     <h2 className="mb-1.5 text-base font-black text-white">{pageContent.successTitle}</h2>
+                     <h2 className="mb-1.5 text-base font-black text-[color:var(--lobby-text,#f3ecdd)]">{pageContent.successTitle}</h2>
                      <p className="mb-4 text-[12px] font-bold text-emerald-300">{submitSuccess}</p>
 
                      <button
                         onClick={closeModal}
-                        className="h-10 w-full rounded-xl border border-white/10 bg-white/[0.05] text-[11px] font-black uppercase tracking-[0.12em] text-white transition hover:bg-white/10"
+                        className="h-10 w-full rounded-xl border border-[rgba(243,236,221,0.10)] bg-[rgba(243,236,221,0.05)] text-[11px] font-black uppercase tracking-[0.12em] text-[color:var(--lobby-text,#f3ecdd)] transition hover:bg-[rgba(243,236,221,0.10)]"
                      >
                         {pageContent.successButton}
                      </button>
                   </div>
                ) : (
                   <>
-                     <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-white/5 bg-[#0d1119]/95 p-3.5 backdrop-blur-xl">
-                        <h3 className="min-w-0 truncate text-[13px] font-black text-white" id="bonus-modal-title">{renderLobbyTemplate(pageContent.formTitle, { bonus: selectedBonus.promoTitle })}</h3>
-                        <button type="button" onClick={closeModal} aria-label={lobbyExtraText(pageContent, 'modalCloseLabel', 'Modalı kapat')} className="text-zinc-500 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 rounded-lg p-1">
+                     <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-[rgba(243,236,221,0.05)] bg-[#0d1119]/95 p-3.5">
+                        <h3 className="min-w-0 truncate text-[13px] font-black text-[color:var(--lobby-text,#f3ecdd)]" id="bonus-modal-title">{renderLobbyTemplate(pageContent.formTitle, { bonus: selectedBonus.promoTitle })}</h3>
+                        <button type="button" onClick={closeModal} aria-label={lobbyExtraText(pageContent, 'modalCloseLabel', 'Modalı kapat')} className="text-[color:var(--lobby-muted,#8f8674)] hover:text-[color:var(--lobby-text,#f3ecdd)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 rounded-lg p-1">
                            <X size={20} aria-hidden="true" />
                         </button>
                      </div>
 
                      <div className="space-y-3.5 p-3.5">
                         {pageContent.formDescription && (
-                           <p className="text-sm font-medium leading-6 text-zinc-500">{pageContent.formDescription}</p>
+                           <p className="text-sm font-medium leading-6 text-[color:var(--lobby-muted,#8f8674)]">{pageContent.formDescription}</p>
                         )}
                         {/* Kullanıcı adı artık elle yazılmıyor: oturum ana siteden
                             (postMessage ile) veya panel oturumundan geliyor. */}
                         <div>
-                           <span className="flex items-center gap-2 text-xs font-black text-zinc-500 uppercase tracking-widest mb-2">
+                           <span className="flex items-center gap-2 text-xs font-black text-[color:var(--lobby-muted,#8f8674)] uppercase tracking-widest mb-2">
                               <User size={14} aria-hidden="true" /> {pageContent.usernameLabel}
                            </span>
                            {username ? (
                               <div
                                  data-testid="bonus-modal-username"
-                                 className="flex h-11 w-full items-center rounded-xl border border-white/[0.07] bg-black/30 px-3 text-[13px] font-bold text-white"
+                                 className="flex h-11 w-full items-center rounded-xl border border-[rgba(243,236,221,0.07)] bg-black/30 px-3 text-[13px] font-bold text-[color:var(--lobby-text,#f3ecdd)]"
                               >
                                  {username}
                               </div>
                            ) : kimlikBekleniyor ? (
-                              <div className="flex h-11 w-full items-center gap-2 rounded-xl border border-white/[0.07] bg-black/30 px-3 text-[13px] font-bold text-zinc-500">
+                              <div className="flex h-11 w-full items-center gap-2 rounded-xl border border-[rgba(243,236,221,0.07)] bg-black/30 px-3 text-[13px] font-bold text-[color:var(--lobby-muted,#8f8674)]">
                                  <Loader2 className="animate-spin" size={16} />
                                  {lobbyExtraText(pageContent, 'identityLoadingText', 'Hesabınız alınıyor...')}
                               </div>
@@ -594,7 +594,7 @@ export function BonusTalepSayfasi() {
                         {/* Status Area */}
                         {debouncedUsername ? (
                            playerLoading ? (
-                              <div className="flex items-center justify-center gap-2 rounded-xl border border-white/[0.07] bg-white/[0.04] py-4 text-[12px] font-bold text-[color:var(--lobby-accent)]">
+                              <div className="flex items-center justify-center gap-2 rounded-xl border border-[rgba(243,236,221,0.07)] bg-[rgba(243,236,221,0.04)] py-4 text-[12px] font-bold text-[color:var(--lobby-accent,#5fd6a7)]">
                                  <Loader2 className="animate-spin" size={18} /> {lobbyExtraText(pageContent, 'checkingText', 'Hesap kontrol ediliyor...')}
                               </div>
                            ) : playerData?.error ? (
@@ -604,8 +604,8 @@ export function BonusTalepSayfasi() {
                               </div>
                            ) : playerData?.account ? (
                               <div className="space-y-4">
-                                 <div className="flex flex-col gap-1 p-4 bg-black/40 rounded-xl border border-white/5">
-                                    <div className="flex items-center justify-between text-zinc-400 text-xs font-bold uppercase">
+                                 <div className="flex flex-col gap-1 p-4 bg-black/40 rounded-xl border border-[rgba(243,236,221,0.05)]">
+                                    <div className="flex items-center justify-between text-[color:var(--lobby-muted,#8f8674)] text-xs font-bold uppercase">
                                        <span>{lobbyExtraText(pageContent, 'accountStatusLabel', 'Hesap Durumu')}</span>
                                        <span>{lobbyExtraText(pageContent, 'balanceLabel', 'Bakiye')}</span>
                                     </div>
@@ -613,7 +613,7 @@ export function BonusTalepSayfasi() {
                                        <span className="flex items-center gap-1.5 text-emerald-400 font-bold text-sm">
                                           <ShieldCheck size={16} /> {lobbyExtraText(pageContent, 'verifiedText', 'Doğrulandı')}
                                        </span>
-                                       <span className="font-black text-white">{playerData.account.balance?.toLocaleString('tr-TR')} ₺</span>
+                                       <span className="font-black text-[color:var(--lobby-text,#f3ecdd)]">{playerData.account.balance?.toLocaleString('tr-TR')} ₺</span>
                                     </div>
                                  </div>
 
@@ -638,11 +638,11 @@ export function BonusTalepSayfasi() {
                                              {playerData.specificBonusCheck.items.filter((item: any) => !item.ok).map((item: any) => {
                                                 const friendly = friendlyBonusEligibilityMessage(item);
                                                 return (
-                                                   <div key={item.id} className="flex items-start gap-3 rounded-xl border border-white/[0.06] bg-black/25 p-3">
+                                                   <div key={item.id} className="flex items-start gap-3 rounded-xl border border-[rgba(243,236,221,0.06)] bg-black/25 p-3">
                                                       <div className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-300" />
                                                       <div className="flex flex-col gap-1">
-                                                         <span className="text-[11px] font-bold text-white">{friendly.title}</span>
-                                                         <span className="text-[11px] font-medium leading-5 text-zinc-400">{friendly.message}</span>
+                                                         <span className="text-[11px] font-bold text-[color:var(--lobby-text,#f3ecdd)]">{friendly.title}</span>
+                                                         <span className="text-[11px] font-medium leading-5 text-[color:var(--lobby-muted,#8f8674)]">{friendly.message}</span>
                                                       </div>
                                                    </div>
                                                 );
@@ -661,7 +661,7 @@ export function BonusTalepSayfasi() {
                                  <button
                                     onClick={handleSubmit}
                                     disabled={submitting || (playerData.specificBonusCheck && !playerData.specificBonusCheck.overallOk)}
-                                    className="flex h-11 w-full items-center justify-center gap-2 rounded-xl text-[11px] font-black uppercase tracking-[0.14em] text-white transition active:scale-[0.99] disabled:opacity-50 disabled:grayscale"
+                                    className="flex h-11 w-full items-center justify-center gap-2 rounded-xl text-[11px] font-black uppercase tracking-[0.14em] text-[color:var(--lobby-text,#f3ecdd)] transition active:scale-[0.99] disabled:opacity-50 disabled:grayscale"
                                     style={{ background: `linear-gradient(90deg, ${palette.primaryColor}, ${palette.secondaryColor})`, boxShadow: `0 8px 22px ${hexToRgba(palette.primaryColor, 0.26)}` }}
                                  >
                                     {submitting ? <Loader2 className="animate-spin" size={18} /> : <Sparkles size={18} />}
@@ -674,7 +674,7 @@ export function BonusTalepSayfasi() {
                               </div>
                            ) : null
                         ) : (
-                           <div className="flex items-center justify-center gap-2 text-zinc-500 text-sm font-bold py-6 px-4 text-center bg-black/20 rounded-xl border border-white/5">
+                           <div className="flex items-center justify-center gap-2 text-[color:var(--lobby-muted,#8f8674)] text-sm font-bold py-6 px-4 text-center bg-black/20 rounded-xl border border-[rgba(243,236,221,0.05)]">
                               {lobbyExtraText(pageContent, 'usernamePrompt', 'Onaylamak için kullanıcı adınızı yazın.')}
                            </div>
                         )}
@@ -694,7 +694,7 @@ export function BonusTalepSayfasi() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/80"
               onClick={closeModal}
             />
 
@@ -705,17 +705,17 @@ export function BonusTalepSayfasi() {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -20 }}
-              className="relative z-10 max-h-[92dvh] w-full max-w-2xl overflow-hidden overflow-y-auto rounded-t-2xl border border-white/10 bg-[#0d1119] shadow-2xl sm:rounded-2xl"
+              className="relative z-10 max-h-[92dvh] w-full max-w-2xl overflow-hidden overflow-y-auto rounded-t-2xl border border-[rgba(243,236,221,0.10)] bg-[#0d1119] shadow-2xl sm:rounded-xl"
             >
-              <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-white/5 bg-[#0d1119]/95 p-3.5 backdrop-blur-xl">
+              <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-[rgba(243,236,221,0.05)] bg-[#0d1119]/95 p-3.5">
                 <div className="min-w-0 space-y-1">
-                  <h3 className="truncate text-base sm:text-lg font-black text-white" id="bonus-detail-title">{selectedBonus.promoTitle}</h3>
-                  <p className="text-[10px] text-zinc-500 font-bold">
+                  <h3 className="truncate text-base sm:text-lg font-black text-[color:var(--lobby-text,#f3ecdd)]" id="bonus-detail-title">{selectedBonus.promoTitle}</h3>
+                  <p className="text-[10px] text-[color:var(--lobby-muted,#8f8674)] font-bold">
                     {selectedBonus.platformBonusDefinitionId ? `Platform ID: ${selectedBonus.platformBonusDefinitionId}` : ''}
                     {selectedBonus.backofficeName ? ` • Backoffice: ${selectedBonus.backofficeName}` : ''}
                   </p>
                 </div>
-                <button type="button" onClick={closeModal} aria-label={lobbyExtraText(pageContent, 'detailCloseLabel', 'Detayları kapat')} className="text-zinc-500 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 rounded-lg p-1">
+                <button type="button" onClick={closeModal} aria-label={lobbyExtraText(pageContent, 'detailCloseLabel', 'Detayları kapat')} className="text-[color:var(--lobby-muted,#8f8674)] hover:text-[color:var(--lobby-text,#f3ecdd)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 rounded-lg p-1">
                   <X size={20} aria-hidden="true" />
                 </button>
               </div>
@@ -723,7 +723,7 @@ export function BonusTalepSayfasi() {
               <div className="p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6">
                   <div className="lg:col-span-1 flex items-center justify-center">
                     {selectedBonus.image ? (
-                      <div className="relative w-full h-56 rounded-3xl overflow-hidden border border-white/10 group bg-black/40 flex items-center justify-center">
+                      <div className="relative w-full h-56 rounded-[20px] overflow-hidden border border-[rgba(243,236,221,0.10)] group bg-black/40 flex items-center justify-center">
                         <img
                           src={selectedBonus.image}
                           alt=""
@@ -743,7 +743,7 @@ export function BonusTalepSayfasi() {
                         </div>
                       </div>
                     ) : (
-                      <div className="w-full h-56 rounded-3xl bg-black/40 border border-white/10 flex items-center justify-center overflow-hidden">
+                      <div className="w-full h-56 rounded-[20px] bg-black/40 border border-[rgba(243,236,221,0.10)] flex items-center justify-center overflow-hidden">
                         <BonusPlaceholder
                            size={180}
                            tone={'amber'}
@@ -756,27 +756,27 @@ export function BonusTalepSayfasi() {
                 <div className="lg:col-span-2 space-y-4">
                   <div className="flex flex-wrap gap-2">
                     {(selectedBonus.tags ?? []).map((t) => (
-                      <span key={t} className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-white/5 border border-white/10 text-zinc-300">
+                      <span key={t} className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-[rgba(243,236,221,0.05)] border border-[rgba(243,236,221,0.10)] text-[color:var(--lobby-text,#f3ecdd)]">
                         {t}
                       </span>
                     ))}
                   </div>
 
                   {selectedBonus.detailHtml ? (
-                    <div className="prose prose-invert prose-sm max-w-none text-zinc-200">
+                    <div className="prose prose-invert prose-sm max-w-none text-[color:var(--lobby-text,#f3ecdd)]">
                       <div dangerouslySetInnerHTML={{ __html: selectedBonus.detailHtml }} />
                     </div>
                   ) : selectedBonus.rules?.conditions?.length ? (
                     <div className="space-y-2">
-                      <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">{lobbyExtraText(pageContent, 'conditionsTitle', 'Koşullar')}</p>
-                      <ul className="list-disc pl-5 text-sm text-zinc-300 space-y-1">
+                      <p className="text-[10px] font-black text-[color:var(--lobby-muted,#8f8674)] uppercase tracking-widest">{lobbyExtraText(pageContent, 'conditionsTitle', 'Koşullar')}</p>
+                      <ul className="list-disc pl-5 text-sm text-[color:var(--lobby-text,#f3ecdd)] space-y-1">
                         {selectedBonus.rules.conditions.map((c: string, idx: number) => (
                           <li key={idx}>{c}</li>
                         ))}
                       </ul>
                     </div>
                   ) : (
-                    <p className="text-sm text-zinc-500 font-medium">{lobbyExtraText(pageContent, 'detailEmptyText', 'Detay bulunamadı.')}</p>
+                    <p className="text-sm text-[color:var(--lobby-muted,#8f8674)] font-medium">{lobbyExtraText(pageContent, 'detailEmptyText', 'Detay bulunamadı.')}</p>
                   )}
                 </div>
               </div>

@@ -135,12 +135,12 @@ export function LobbyCard({
 export function LobbySectionTitle({ title, action }: { title: string; action?: ReactNode }) {
   return (
     <div className="mb-3 flex items-baseline justify-between gap-3">
-      <h2 className="truncate text-[13px] font-extrabold tracking-[-0.015em] text-[color:var(--lobby-text)]">
+      <h2 className="truncate text-[13px] font-extrabold tracking-[-0.015em] text-[color:var(--lobby-text,#f3ecdd)]">
         {title}
       </h2>
       {action && (
         <span
-          className="shrink-0 text-[9px] font-extrabold uppercase text-[color:var(--lobby-muted)]"
+          className="shrink-0 text-[9px] font-extrabold uppercase text-[color:var(--lobby-muted,#8f8674)]"
           style={{ letterSpacing: LOBBY_TOKENS.tracking.tight }}
         >
           {action}

@@ -75,7 +75,7 @@ export function BattlePassPage() {
   const endsAtLabel = useMemo(() => data?.endsAt ? new Date(data.endsAt).toLocaleDateString('tr-TR') : '', [data?.endsAt]);
 
   return (
-    <div className="min-h-screen bg-[#05070c] pb-24 text-white">
+    <div className="min-h-screen bg-[#05070c] pb-24 text-[color:var(--lobby-text,#f3ecdd)]">
       <LobbyMobileNav active="missions" />
       <main className="mx-auto w-full max-w-6xl px-4 py-5 md:px-8 md:py-8">
         <header className="mb-5 overflow-hidden rounded-[1.8rem] border border-amber-300/15 bg-gradient-to-br from-amber-950/45 via-[#0b0d13] to-[#05070c] p-5 md:p-8">
@@ -88,7 +88,7 @@ export function BattlePassPage() {
               <h1 className="text-3xl font-black tracking-[-0.06em] md:text-5xl">{data?.title || pageContent.title}</h1>
               <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-slate-400">{data?.description || pageContent.subtitle}</p>
             </div>
-            <Link to="/gorevler" className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-white px-4 text-xs font-black uppercase tracking-widest text-black">
+            <Link to="/gorevler" className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[color:var(--lobby-primary,#e7c574)] px-4 text-xs font-black uppercase tracking-widest text-[#171204]">
               {pageContent.primaryButton}
               <ArrowRight size={16} />
             </Link>
@@ -107,19 +107,19 @@ export function BattlePassPage() {
         ) : (
           <div className="space-y-5">
             <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1.4fr_180px]">
-              <div className="rounded-[1.4rem] border border-white/[0.08] bg-white/[0.035] p-4">
+              <div className="rounded-[1.4rem] border border-[rgba(243,236,221,0.08)] bg-[rgba(243,236,221,0.035)] p-4">
                 <div className="flex items-center gap-3">
                   <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-300/10 text-amber-300">
                     <User size={21} />
                   </div>
                   <div className="min-w-0">
                     <p className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-500">Aktif oyuncu</p>
-                    <p className="truncate text-sm font-black text-white">{activeUser}</p>
+                    <p className="truncate text-sm font-black text-[color:var(--lobby-text,#f3ecdd)]">{activeUser}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="rounded-[1.4rem] border border-white/[0.08] bg-white/[0.035] p-4">
+              <div className="rounded-[1.4rem] border border-[rgba(243,236,221,0.08)] bg-[rgba(243,236,221,0.035)] p-4">
                 <div className="mb-2 flex items-center justify-between text-xs font-black">
                   <span className="text-slate-500">Toplam XP</span>
                   <span className="text-amber-200">{Number(xp.total || 0).toLocaleString('tr-TR')} XP</span>
@@ -146,7 +146,7 @@ export function BattlePassPage() {
               <ErrorBlock message={(passQuery.error as any)?.message || pageContent.unavailableTitle} />
             ) : (
               <div className="space-y-4">
-                <div className="rounded-[1.4rem] border border-white/[0.08] bg-white/[0.035] p-4">
+                <div className="rounded-[1.4rem] border border-[rgba(243,236,221,0.08)] bg-[rgba(243,236,221,0.035)] p-4">
                   <div className="flex flex-wrap items-center gap-3">
                     <Badge icon={Trophy} label={`Seviye ${data?.currentLevel || 0}`} />
                     <Badge icon={Star} label={`${Number(xp.total || 0).toLocaleString('tr-TR')} XP`} />
@@ -163,16 +163,16 @@ export function BattlePassPage() {
                       transition={{ delay: index * 0.035 }}
                       className={cn(
                         'rounded-[1.5rem] border p-4',
-                        level.unlocked ? 'border-amber-300/25 bg-amber-300/10' : 'border-white/[0.08] bg-white/[0.035]'
+                        level.unlocked ? 'border-amber-300/25 bg-amber-300/10' : 'border-[rgba(243,236,221,0.08)] bg-[rgba(243,236,221,0.035)]'
                       )}
                     >
                       <div className="mb-4 flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3">
-                          <div className={cn('flex h-12 w-12 items-center justify-center rounded-2xl border text-lg font-black', level.unlocked ? 'border-amber-300/25 bg-amber-300/15 text-amber-200' : 'border-white/10 bg-black/25 text-slate-500')}>
+                          <div className={cn('flex h-12 w-12 items-center justify-center rounded-xl border text-lg font-black', level.unlocked ? 'border-amber-300/25 bg-amber-300/15 text-amber-200' : 'border-[rgba(243,236,221,0.10)] bg-black/25 text-slate-500')}>
                             {level.unlocked ? level.level : <Lock size={20} />}
                           </div>
                           <div>
-                            <h2 className="text-lg font-black tracking-[-0.035em] text-white">Seviye {level.level}</h2>
+                            <h2 className="text-lg font-black tracking-[-0.035em] text-[color:var(--lobby-text,#f3ecdd)]">Seviye {level.level}</h2>
                             <p className="text-xs font-black uppercase tracking-widest text-slate-600">{Number(level.requiredXp || 0).toLocaleString('tr-TR')} XP</p>
                           </div>
                         </div>
@@ -214,17 +214,17 @@ export function BattlePassPage() {
 
 function RewardCard({ title, label, claimed, disabled, claimedLabel, claimLabel, premium = false, onClaim }: { title: string; label: string; claimed: boolean; disabled: boolean; claimedLabel: string; claimLabel: string; premium?: boolean; onClaim: () => void }) {
   return (
-    <div className={cn('rounded-2xl border p-3', premium ? 'border-blue-300/15 bg-blue-400/10' : 'border-white/[0.08] bg-black/20')}>
+    <div className={cn('rounded-xl border p-3', premium ? 'border-blue-300/15 bg-blue-400/10' : 'border-[rgba(243,236,221,0.08)] bg-black/20')}>
       <div className="mb-3 flex items-center gap-2">
         <Gift size={16} className={premium ? 'text-blue-200' : 'text-amber-200'} />
         <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">{title}</span>
       </div>
-      <p className="min-h-[36px] text-sm font-black text-white">{label || 'XP ödülü'}</p>
+      <p className="min-h-[36px] text-sm font-black text-[color:var(--lobby-text,#f3ecdd)]">{label || 'XP ödülü'}</p>
       <button
         type="button"
         disabled={disabled}
         onClick={onClaim}
-        className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-white text-[10px] font-black uppercase tracking-widest text-black disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-slate-600"
+        className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-[color:var(--lobby-primary,#e7c574)] text-[10px] font-black uppercase tracking-widest text-[#171204] disabled:cursor-not-allowed disabled:bg-[rgba(243,236,221,0.10)] disabled:text-slate-600"
       >
         <Zap size={14} />
         {claimed ? claimedLabel : claimLabel}
@@ -235,7 +235,7 @@ function RewardCard({ title, label, claimed, disabled, claimedLabel, claimLabel,
 
 function Badge({ icon: Icon, label }: { icon: any; label: string }) {
   return (
-    <span className="inline-flex h-9 items-center gap-2 rounded-xl border border-white/10 bg-black/25 px-3 text-xs font-black text-slate-300">
+    <span className="inline-flex h-9 items-center gap-2 rounded-xl border border-[rgba(243,236,221,0.10)] bg-black/25 px-3 text-xs font-black text-slate-300">
       <Icon size={15} className="text-amber-300" />
       {label}
     </span>
@@ -244,13 +244,13 @@ function Badge({ icon: Icon, label }: { icon: any; label: string }) {
 
 function LoginCard({ username, checking, error, content, onUsernameChange, onLogin }: { username: string; checking: boolean; error: string; content: LobbyPageContent; onUsernameChange: (value: string) => void; onLogin: () => void }) {
   return (
-    <section className="mx-auto max-w-md rounded-[1.5rem] border border-white/[0.08] bg-white/[0.04] p-5">
+    <section className="mx-auto max-w-md rounded-[1.5rem] border border-[rgba(243,236,221,0.08)] bg-[rgba(243,236,221,0.04)] p-5">
       <div className="mb-4 flex items-center gap-3">
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-300/10 text-amber-300">
+        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-300/10 text-amber-300">
           {checking ? <Loader2 size={22} className="animate-spin" /> : <User size={22} />}
         </div>
         <div>
-          <h2 className="text-lg font-black text-white">{content.formTitle}</h2>
+          <h2 className="text-lg font-black text-[color:var(--lobby-text,#f3ecdd)]">{content.formTitle}</h2>
           <p className="text-xs font-medium text-slate-500">{content.formDescription}</p>
         </div>
       </div>
@@ -259,10 +259,10 @@ function LoginCard({ username, checking, error, content, onUsernameChange, onLog
         onChange={(event) => onUsernameChange(event.target.value)}
         onKeyDown={(event) => event.key === 'Enter' && onLogin()}
         placeholder={content.usernamePlaceholder}
-        className="h-12 w-full rounded-xl border border-white/10 bg-black/30 px-4 text-sm font-bold text-white outline-none placeholder:text-slate-700 focus:border-amber-300/50"
+        className="h-12 w-full rounded-xl border border-[rgba(243,236,221,0.10)] bg-black/30 px-4 text-sm font-bold text-[color:var(--lobby-text,#f3ecdd)] outline-none placeholder:text-slate-700 focus:border-amber-300/50"
       />
       {error && <div className="mt-3 rounded-xl border border-rose-300/15 bg-rose-400/10 px-3 py-2 text-xs font-bold text-rose-200">{error}</div>}
-      <button type="button" disabled={!username.trim() || checking} onClick={onLogin} className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-amber-300 text-xs font-black uppercase tracking-widest text-black disabled:cursor-not-allowed disabled:opacity-60">
+      <button type="button" disabled={!username.trim() || checking} onClick={onLogin} className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-amber-300 text-xs font-black uppercase tracking-widest text-[#171204] disabled:cursor-not-allowed disabled:opacity-60">
         {checking ? <Loader2 size={16} className="animate-spin" /> : <Zap size={16} />}
         {content.submitButton}
       </button>
@@ -272,7 +272,7 @@ function LoginCard({ username, checking, error, content, onUsernameChange, onLog
 
 function LoadingBlock() {
   return (
-    <div className="flex min-h-[260px] items-center justify-center rounded-[1.5rem] border border-white/[0.08] bg-white/[0.035]">
+    <div className="flex min-h-[260px] items-center justify-center rounded-[1.5rem] border border-[rgba(243,236,221,0.08)] bg-[rgba(243,236,221,0.035)]">
       <Loader2 className="animate-spin text-amber-300" size={30} />
     </div>
   );
