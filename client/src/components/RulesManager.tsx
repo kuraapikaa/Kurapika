@@ -45,6 +45,7 @@ interface PromoSpec {
     checkWheelCodeUsed?: boolean;
     checkSameDayUsage?: boolean;
     requiresPhoneVerified?: boolean;
+    requiresTelegramMember?: boolean;
     requiresEmailVerified?: boolean;
     checkIPDuplicate?: boolean;
     allowedProviders?: string[];
@@ -958,6 +959,12 @@ export function RulesManager() {
                                                             description="Yalnızca telefon numarası onaylı kullanıcılar bu bonustan yararlanabilir."
                                                             value={editValue?.requiresPhoneVerified}
                                                             onChange={(v) => setEditValue({ ...editValue, requiresPhoneVerified: v })}
+                                                        />
+                                                        <ToggleField
+                                                            label="Telegram Kanal Üyeliği Zorunlu"
+                                                            description="Bonus verilmeden önce oyuncunun Telegram kanalına üyeliği canlı sorgulanır. Hesabını bağlamamış veya kanaldan ayrılmış oyuncu alamaz."
+                                                            value={editValue?.requiresTelegramMember}
+                                                            onChange={(v) => setEditValue({ ...editValue, requiresTelegramMember: v })}
                                                         />
                                                         <ToggleField
                                                             label="E-posta Onayı Zorunlu"

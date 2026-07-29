@@ -9,6 +9,7 @@ import { resolveTenantKeyForRequest, safeTenantKey } from '../lib/tenant.js';
 import { readStoredDocument, writeStoredDocument } from '../lib/documentStore.js';
 import { isLynonConfigured, lynonAssignCampaignToPlayer, lynonBuildBonusEligibilitySnapshot, lynonCreditPlayerMainAccount, lynonFindPlayerByLogin, lynonPlayerActivity } from '../services/lynonBackofficeService.js';
 import { getChatMember, isTelegramConfigured, sendTelegramMessage } from '../services/telegramService.js';
+import { ensureTelegramLinkDir, getLinkedTelegramUserId, linkTelegramAccount } from '../services/telegramLinkService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -20,7 +21,6 @@ const TENANT_WHEEL_CLAIMS_DIR = path.join(__dirname, '..', 'data', 'wheel-claims
 const TENANT_PREDICTIONS_DIR = path.join(__dirname, '..', 'data', 'prediction-entries');
 const TENANT_PREDICTION_SETTLEMENTS_DIR = path.join(__dirname, '..', 'data', 'prediction-settlements');
 const TENANT_ENGAGEMENT_DIR = path.join(__dirname, '..', 'data', 'engagement');
-const TENANT_TELEGRAM_LINKS_DIR = path.join(__dirname, '..', 'data', 'telegram-links');
 const TENANT_TELEGRAM_CLAIMS_DIR = path.join(__dirname, '..', 'data', 'telegram-claims');
 const TURKEY_UTC_OFFSET_MS = 3 * 60 * 60 * 1000;
 const PLAYER_ACTIVITY_CACHE_TTL_MS = 2 * 60 * 1000;
@@ -667,43 +667,10 @@ function ensureTenantDirs() {
   fs.mkdirSync(TENANT_PREDICTIONS_DIR, { recursive: true });
   fs.mkdirSync(TENANT_PREDICTION_SETTLEMENTS_DIR, { recursive: true });
   fs.mkdirSync(TENANT_ENGAGEMENT_DIR, { recursive: true });
-  fs.mkdirSync(TENANT_TELEGRAM_LINKS_DIR, { recursive: true });
+  ensureTelegramLinkDir();
   fs.mkdirSync(TENANT_TELEGRAM_CLAIMS_DIR, { recursive: true });
 }
 
-function telegramLinksPath(tenantKey: string) {
-  return path.join(TENANT_TELEGRAM_LINKS_DIR, `${tenantKey}.json`);
-}
-
-async function readTelegramLinks(tenantKey: string): Promise<any[]> {
-  const data = await readStoredDocument<any[]>({
-    tenantKey: safeTenantKey(tenantKey),
-    namespace: 'telegram-links',
-    filePath: telegramLinksPath(tenantKey),
-    fallback: () => [],
-  });
-  return Array.isArray(data) ? data : [];
-}
-
-async function writeTelegramLinks(links: any[], tenantKey: string): Promise<void> {
-  await writeStoredDocument(
-    { tenantKey: safeTenantKey(tenantKey), namespace: 'telegram-links', filePath: telegramLinksPath(tenantKey) },
-    links,
-  );
-}
-
-async function linkTelegramAccount(tenantKey: string, login: string, telegramUserId: number, telegramUsername?: string | null): Promise<void> {
-  const links = await readTelegramLinks(tenantKey);
-  const filtered = links.filter((l: any) => String(l.login).toLocaleLowerCase('tr-TR') !== login.toLocaleLowerCase('tr-TR'));
-  filtered.push({ login, telegramUserId, telegramUsername: telegramUsername ?? null, linkedAt: new Date().toISOString() });
-  await writeTelegramLinks(filtered, tenantKey);
-}
-
-async function getLinkedTelegramUserId(tenantKey: string, login: string): Promise<number | null> {
-  const links = await readTelegramLinks(tenantKey);
-  const found = links.find((l: any) => String(l.login).toLocaleLowerCase('tr-TR') === login.toLocaleLowerCase('tr-TR'));
-  return found?.telegramUserId ?? null;
-}
 
 function telegramClaimsPath(tenantKey: string) {
   return path.join(TENANT_TELEGRAM_CLAIMS_DIR, `${tenantKey}.json`);
@@ -811,7 +778,7 @@ function mergeGameSettings(settings: any) {
   };
 }
 
-async function readGameSettings(tenantKey = 'default') {
+export async function readGameSettings(tenantKey = 'default') {
   const key = safeTenantKey(tenantKey);
   const data = await readStoredDocument<any>({
     tenantKey: key,
