@@ -247,7 +247,7 @@ export function RiskAnalysisPage() {
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               placeholder="Kullanıcı adı (Login)"
-              className="w-full rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.80)] py-3 pl-10 pr-4 text-white placeholder-slate-500 focus:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              className="w-full rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface-2,rgba(242,244,248,0.05))] py-3 pl-10 pr-4 text-white placeholder-slate-500 focus:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
             />
           </div>
           <button
@@ -269,7 +269,7 @@ export function RiskAnalysisPage() {
       </div>
 
       {loading && (
-        <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.40)] py-16">
+        <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] py-16">
           <Loader2 size={48} className="animate-spin text-blue-400" />
           <p className="text-[color:var(--panel-muted,#8a919c)]">Analiz yapılıyor...</p>
         </div>
@@ -277,7 +277,7 @@ export function RiskAnalysisPage() {
 
       {report && !loading && execReport && (
         <div className="space-y-6">
-          <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.40)] p-6 flex items-center justify-between gap-4 flex-wrap">
+          <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-6 flex items-center justify-between gap-4 flex-wrap">
             <div>
               <p className="text-[10px] font-bold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">Analiz Edilen Oyuncu</p>
               <p className="text-xl font-bold text-white mt-1">{report.login} <span className="text-[color:var(--panel-muted,#8a919c)] font-mono text-base ml-2">#{report.clientId}</span></p>
@@ -296,7 +296,7 @@ export function RiskAnalysisPage() {
             </div>
           </div>
 
-          <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.40)] p-1 bg-gradient-to-br from-blue-500/10 to-transparent">
+          <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-1 bg-gradient-to-br from-blue-500/10 to-transparent">
             {/* 1. RİSK SKORU & SINIFLANDIRMA */}
             <div className="p-6">
               <h3 className="text-xs font-semibold uppercase tracking-widest text-blue-400 mb-4 flex items-center gap-2 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] pb-2">
@@ -322,7 +322,7 @@ export function RiskAnalysisPage() {
                 2. Kritik İnceleme (Deep Dive)
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                <div className="rounded-xl bg-[rgba(242,244,248,0.50)] p-4 border border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
+                <div className="rounded-xl bg-[color:var(--panel-surface-2,rgba(242,244,248,0.05))] p-4 border border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
                   <p className="text-[10px] font-bold text-[color:var(--panel-muted,#8a919c)] uppercase mb-3">Matematiksel Kanıtlar:</p>
                   <ul className="space-y-2 text-sm">
                     {execReport.mathEvidences.map((item, idx) => (
@@ -332,7 +332,7 @@ export function RiskAnalysisPage() {
                     ))}
                   </ul>
                 </div>
-                <div className="rounded-xl bg-[rgba(242,244,248,0.50)] p-4 border border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
+                <div className="rounded-xl bg-[color:var(--panel-surface-2,rgba(242,244,248,0.05))] p-4 border border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
                   <p className="text-[10px] font-bold text-[color:var(--panel-muted,#8a919c)] uppercase mb-3">Davranışsal Anomaliler:</p>
                   <ul className="space-y-2 text-sm">
                     {execReport.behavioralAnomalies.map((item, idx) => (
@@ -350,7 +350,7 @@ export function RiskAnalysisPage() {
               <h3 className="text-xs font-semibold uppercase tracking-widest text-blue-400 mb-4 flex items-center gap-2 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] pb-2">
                 3. Karar Ve Aksiyon (Executive Summary)
               </h3>
-              <div className="space-y-4 mt-4 text-sm bg-[rgba(242,244,248,0.50)] p-5 rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
+              <div className="space-y-4 mt-4 text-sm bg-[color:var(--panel-surface-2,rgba(242,244,248,0.05))] p-5 rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
                 <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
                   <span className="font-bold text-[color:var(--panel-muted,#8a919c)] uppercase text-[10px] w-32 shrink-0 pt-0.5">Hesap Durumu:</span>
                   <span className="text-white font-medium">{execReport.accountStatus}</span>

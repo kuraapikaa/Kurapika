@@ -13,7 +13,7 @@ interface SportbookOverviewProps {
 function typeBadge(isLive: boolean | null) {
   if (isLive === true) return <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-400 border border-emerald-500/20"><Radio size={10} /> Live</span>;
   if (isLive === false) return <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-blue-400 border border-blue-500/20">Pre-match</span>;
-  return <span className="inline-flex items-center gap-1 rounded-full bg-[rgba(242,244,248,0.10)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[color:var(--panel-muted,#8a919c)] border border-[color:var(--panel-border,rgba(242,244,248,0.1))]">Total</span>;
+  return <span className="inline-flex items-center gap-1 rounded-full bg-[rgba(242,244,248,0.08)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[color:var(--panel-muted,#8a919c)] border border-[color:var(--panel-border,rgba(242,244,248,0.1))]">Total</span>;
 }
 
 export function SportbookOverview({ data, isLoading, error }: SportbookOverviewProps) {

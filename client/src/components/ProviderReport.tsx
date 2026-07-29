@@ -157,7 +157,7 @@ export function ProviderReport() {
             </div>
 
             {/* Table Section */}
-            <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.40)] shadow-xl overflow-hidden">
+            <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] shadow-xl overflow-hidden">
                 <div className="border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/5 px-3 py-2.5 flex items-center justify-between">
                     <h3 className="text-sm font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)] flex items-center gap-2">
                         <BarChart3 size={18} className="text-blue-400" />
@@ -234,7 +234,7 @@ export function ProviderReport() {
 
 function StatCard({ label, value, icon, trend }: { label: string; value: number; icon: React.ReactNode; trend: 'up' | 'down' | 'neutral' }) {
     return (
-        <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.50)] p-5 shadow-lg group hover:border-[color:var(--panel-border,rgba(242,244,248,0.1))] transition-all">
+        <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-5 shadow-lg group hover:border-[color:var(--panel-border,rgba(242,244,248,0.1))] transition-all">
             <div className="flex items-center justify-between mb-3">
                 <div className="p-2 rounded-xl bg-white/5 group-hover:scale-110 transition-transform">
                     {icon}

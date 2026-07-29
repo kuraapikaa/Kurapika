@@ -72,7 +72,7 @@ export function IntelligenceCenter() {
                         </div>
                     </div>
 
-                    <div className="flex bg-[rgba(242,244,248,0.50)] p-1.5 rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] backdrop-blur-xl">
+                    <div className="flex bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-1.5 rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] backdrop-blur-xl">
                         <button
                             onClick={() => setActiveView('clusters')}
                             className={cn(
@@ -100,28 +100,28 @@ export function IntelligenceCenter() {
 
                 {/* Statistics Bar */}
                 <div className="lg:col-span-12 grid grid-cols-1 md:grid-cols-4 gap-6">
-                    <Card className="p-6 bg-[rgba(242,244,248,0.50)] border-[color:var(--panel-border,rgba(242,244,248,0.1))] flex items-center gap-5">
+                    <Card className="p-6 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border-[color:var(--panel-border,rgba(242,244,248,0.1))] flex items-center gap-5">
                         <div className="h-14 w-14 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400"><Users size={24} /></div>
                         <div>
                             <p className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">Tespit Edilen Kümeler</p>
                             <p className="text-2xl font-semibold text-white">{clustersData?.clusters?.length || 0}</p>
                         </div>
                     </Card>
-                    <Card className="p-6 bg-[rgba(242,244,248,0.50)] border-[color:var(--panel-border,rgba(242,244,248,0.1))] flex items-center gap-5">
+                    <Card className="p-6 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border-[color:var(--panel-border,rgba(242,244,248,0.1))] flex items-center gap-5">
                         <div className="h-14 w-14 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-400"><ShieldAlert size={24} /></div>
                         <div>
                             <p className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">Kritik Riskli Oyuncular</p>
                             <p className="text-2xl font-semibold text-white">12</p>
                         </div>
                     </Card>
-                    <Card className="p-6 bg-[rgba(242,244,248,0.50)] border-[color:var(--panel-border,rgba(242,244,248,0.1))] flex items-center gap-5">
+                    <Card className="p-6 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border-[color:var(--panel-border,rgba(242,244,248,0.1))] flex items-center gap-5">
                         <div className="h-14 w-14 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-400"><Activity size={24} /></div>
                         <div>
                             <p className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">Günlük Analiz Hacmi</p>
                             <p className="text-2xl font-semibold text-white">~1.2k</p>
                         </div>
                     </Card>
-                    <Card className="p-6 bg-[rgba(242,244,248,0.50)] border-[color:var(--panel-border,rgba(242,244,248,0.1))] flex items-center gap-5">
+                    <Card className="p-6 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border-[color:var(--panel-border,rgba(242,244,248,0.1))] flex items-center gap-5">
                         <div className="h-14 w-14 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400"><Zap size={24} /></div>
                         <div>
                             <p className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">Sistem Analiz Verimliliği</p>
@@ -150,7 +150,7 @@ export function IntelligenceCenter() {
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                     {clustersData?.clusters?.map((cluster: any) => (
-                                        <Card key={cluster.id} className="relative overflow-hidden p-8 border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.80)] backdrop-blur-md hover:border-blue-500/30 transition-all group">
+                                        <Card key={cluster.id} className="relative overflow-hidden p-8 border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] backdrop-blur-md hover:border-blue-500/30 transition-all group">
                                             <div className="absolute top-0 right-0 p-3">
                                                 <div className={cn(
                                                     "px-2 py-1 rounded-lg text-[9px] font-semibold uppercase tracking-wider",
@@ -192,7 +192,7 @@ export function IntelligenceCenter() {
                                     ))}
 
                                     {(!clustersData?.clusters || clustersData.clusters.length === 0) && (
-                                        <div className="col-span-full py-32 text-center rounded-xl bg-[rgba(242,244,248,0.30)] border border-dashed border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
+                                        <div className="col-span-full py-32 text-center rounded-xl bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-dashed border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
                                             <ShieldCheck className="mx-auto text-emerald-500/30 mb-6" size={64} />
                                             <p className="text-lg font-semibold text-[color:var(--panel-muted,#8a919c)]">Çakışan hesap kümesi bulunmadı.</p>
                                             <p className="text-sm text-[color:var(--panel-faint,#5c6470)] font-bold mt-2 uppercase tracking-widest">Tüm ağ temiz görünüyor.</p>

@@ -22,7 +22,7 @@ function TypeBadge({ value }: { value: unknown }) {
         ? 'border-emerald-400/20 bg-emerald-400/10 text-emerald-300'
         : lower.includes('bahis')
             ? 'border-blue-400/20 bg-[color:var(--panel-accent,#0a84ff)]/10 text-blue-300'
-            : 'border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.20)] text-[color:var(--panel-text-dim,#c8cdd5)]';
+            : 'border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface-2,rgba(242,244,248,0.05))] text-[color:var(--panel-text-dim,#c8cdd5)]';
     return (
         <span className={`inline-flex items-center rounded-md border px-2 py-1 text-[10px] font-bold ${tone}`}>
             {label}
@@ -37,7 +37,7 @@ function StateBadge({ value }: { value: unknown }) {
         ? 'border-emerald-400/20 bg-emerald-400/10 text-emerald-300'
         : /red|hata|fail|iptal/.test(lower)
             ? 'border-rose-400/20 bg-rose-400/10 text-rose-300'
-            : 'border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.20)] text-[color:var(--panel-text-dim,#c8cdd5)]';
+            : 'border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface-2,rgba(242,244,248,0.05))] text-[color:var(--panel-text-dim,#c8cdd5)]';
     return (
         <span className={`inline-flex items-center rounded-md border px-2 py-1 text-[10px] font-bold ${tone}`}>
             {label}
@@ -108,12 +108,12 @@ export function PlayerCasinoBets({ clientId }: PlayerCasinoBetsProps) {
             </div>
 
             {bets.length === 0 ? (
-                <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.40)] p-8 text-center flex flex-col items-center justify-center gap-2 text-[color:var(--panel-muted,#8a919c)]">
+                <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-8 text-center flex flex-col items-center justify-center gap-2 text-[color:var(--panel-muted,#8a919c)]">
                     <Dices size={32} className="opacity-20" />
                     <span>Oynanmış casino eli bulunmuyor.</span>
                 </div>
             ) : (
-                <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.40)] overflow-x-auto">
+                <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] overflow-x-auto">
                     <table className="w-full text-left text-sm">
                         <thead className="bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
                             <tr>

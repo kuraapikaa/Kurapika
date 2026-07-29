@@ -11,7 +11,7 @@ function isBonusActive(row: BonusListItem): boolean {
 
 function BonusTable({ rows, emptyMessage, status }: { rows: BonusListItem[]; emptyMessage: string; status: 'active' | 'inactive' }) {
   return (
-    <Card className="premium-card overflow-hidden p-0 bg-[rgba(242,244,248,0.20)] border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
+    <Card className="premium-card overflow-hidden p-0 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
       <div className="overflow-auto scrollbar-hide">
         <table className="w-full text-sm border-separate border-spacing-0">
           <thead>
