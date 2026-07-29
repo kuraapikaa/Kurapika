@@ -38,6 +38,27 @@ export function parseSessionSameSite(gomulebilir = false): 'lax' | 'strict' | 'n
 }
 
 /**
+ * CHIPS (Partitioned çerez).
+ *
+ * SameSite=None tek başına yetmiyor: Chrome üçüncü taraf çerezleri engellediğinde
+ * gömülü paneldeki isteklerde `cookie` başlığı hiç gönderilmiyor ve tarayıcı
+ * `Sec-Fetch-Storage-Access: none` diyor. Oturum kuruluyor ama sonraki her istek
+ * 401 dönüyordu.
+ *
+ * `Partitioned` ile çerez üst seviye siteye göre bölümlenir; her gömen alan adı
+ * (narcosbahis481.com, tacobahis334.com ...) kendi oturumunu tutar ve tarayıcı
+ * üçüncü taraf engeline takılmadan gönderir. Panele doğrudan girildiğinde de
+ * kendi bölümünde çalışır. `Partitioned` yalnızca Secure + SameSite=None çerezde
+ * geçerlidir; koşul sağlanmazsa eklemiyoruz.
+ */
+export function parseSessionPartitioned(sameSite: string, secure: boolean | 'auto'): boolean {
+  const value = String(process.env.SESSION_COOKIE_PARTITIONED || '').trim().toLowerCase();
+  if (value === 'false' || value === '0' || value === 'no' || value === 'off') return false;
+  if (value === 'true' || value === '1' || value === 'yes' || value === 'on') return true;
+  return sameSite === 'none' && secure === true;
+}
+
+/**
  * Fastify uygulama instance'ını oluşturur ve temel pluginleri kaydeder.
  * Ana index.ts'den ayrılarak test edilebilirlik ve modülerlik sağlar.
  */
@@ -161,25 +182,39 @@ export async function buildApp() {
     throw new Error('SECURITY: Production session store için Redis bağlantısı zorunludur.');
   }
 
+  const cookieSecure = parseSessionCookieSecure(gomulebilir);
+  const cookieSameSite = parseSessionSameSite(gomulebilir);
+  const cookiePartitioned = parseSessionPartitioned(cookieSameSite, cookieSecure);
+
   await app.register(fastifySession, {
     secret: sessionSecret,
     saveUninitialized: false,
     ...(sessionStore ? { store: sessionStore as any } : {}),
     cookie: {
-      secure: parseSessionCookieSecure(gomulebilir),
+      secure: cookieSecure,
       httpOnly: true,
-      sameSite: parseSessionSameSite(gomulebilir),
+      sameSite: cookieSameSite,
       path: '/',
       maxAge: sessionTtlMs,
+      ...(cookiePartitioned ? { partitioned: true } : {}),
     },
   });
 
-  if (gomulebilir && parseSessionSameSite(gomulebilir) !== 'none') {
+  if (gomulebilir && cookieSameSite !== 'none') {
     app.log.warn(
       '[session] FRAME_ANCESTORS tanımlı ama SESSION_COOKIE_SAMESITE=none değil. ' +
       'Panel iframe içinde çalışırken oturum çerezi gönderilmez; giriş sonrası tüm istekler 401 döner.'
     );
   }
+  if (gomulebilir && cookieSameSite === 'none' && !cookiePartitioned) {
+    app.log.warn(
+      '[session] Oturum çerezi Partitioned değil. Chrome üçüncü taraf çerezleri engellediğinde ' +
+      'gömülü panelde çerez hiç gönderilmez (Sec-Fetch-Storage-Access: none) ve tüm istekler 401 döner.'
+    );
+  }
+  app.log.info(
+    `[session] cerez: sameSite=${cookieSameSite} secure=${cookieSecure} partitioned=${cookiePartitioned} gomulu=${gomulebilir}`
+  );
 
   // ─── Global Error Handler ─────────────────────────────────────────────────
   registerGlobalErrorHandler(app);

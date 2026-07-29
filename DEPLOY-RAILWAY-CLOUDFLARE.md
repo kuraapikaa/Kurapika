@@ -83,6 +83,7 @@ FRAME_ANCESTORS=https://narcosbahis.vip
 SESSION_SECRET=<en az 64 karakter — .env.production.NEW>
 SESSION_COOKIE_SECURE=true
 SESSION_COOKIE_SAMESITE=none
+SESSION_COOKIE_PARTITIONED=true
 SESSION_TTL_MS=86400000
 
 MASTER_USER=<...>
@@ -120,6 +121,17 @@ RATE_LIMIT_MAX=100
 > görünür ama çark/kazı-kazan "Önce kullanıcı adı doğrulaması yapmalısınız",
 > bonus talebi ise "Oturum süreniz dolmuş." döner. Bu senaryoda `none` + `Secure`
 > zorunludur (değişken boş bırakılırsa uygulama zaten `none`'a düşer).
+>
+> **`SameSite=none` tek başına yetmez.** Chrome üçüncü taraf çerezleri
+> engellediğinde gömülü panelde çerez hiç gönderilmez — istekte `cookie` başlığı
+> olmaz ve tarayıcı `Sec-Fetch-Storage-Access: none` der. Belirti `lax` ile
+> birebir aynıdır, bu yüzden karıştırması kolaydır. Çözüm `Partitioned` (CHIPS):
+> çerez üst seviye siteye göre bölümlenir, her gömen alan adı kendi oturumunu
+> tutar. Açılış logunda doğrulayın:
+>
+> ```
+> [session] cerez: sameSite=none secure=true partitioned=true gomulu=true
+> ```
 
 ### 1.5 Deploy'u doğrula
 
