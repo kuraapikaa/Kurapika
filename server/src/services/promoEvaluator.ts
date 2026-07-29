@@ -366,7 +366,11 @@ export async function evaluateForAccount(
 
   // 2. Çevrim Şartı (Anapara + Bonus)
   const lastDepAmount = depositBasis(account, spec);
-  const principalMult = spec?.principalWagerMult ?? 1;
+  // Alan boşsa çevrim şartı YOKTUR. Önceden varsayılan 1 idi: Kural Merkezi'nde
+  // "Çevrim & Ödeme Kuralları" boş görünen bonusta (ör. 1885) sunucu gizlice 1x
+  // anapara çevrimi arıyor, oyuncu "Çevrim henüz tamamlanmadı" uyarısı alıyordu.
+  // withdrawalEngine aynı alanı zaten "boşsa etkisiz" diye okuyor; artık tutarlı.
+  const principalMult = spec?.principalWagerMult ?? 0;
   const bonusMult = spec?.bonusWagerMult ?? 0;
 
   const activeBonus = (account.bonuses as BCBonus[])?.find(b =>
