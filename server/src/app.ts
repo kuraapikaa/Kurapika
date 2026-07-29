@@ -15,17 +15,26 @@ const { cors: corsConfig } = config;
 const isProduction = process.env.NODE_ENV === 'production';
 const sessionTtlMs = Number(process.env.SESSION_TTL_MS) || 1000 * 60 * 60 * 8;
 
-function parseSessionCookieSecure(): boolean | 'auto' {
+export function parseSessionCookieSecure(gomulebilir = false): boolean | 'auto' {
   const value = String(process.env.SESSION_COOKIE_SECURE || '').trim().toLowerCase();
   if (value === 'true' || value === '1' || value === 'yes' || value === 'on') return true;
   if (value === 'false' || value === '0' || value === 'no' || value === 'off') return false;
-  return 'auto';
+  // SameSite=None çerezi Secure olmadan tarayıcı tarafından tümüyle reddedilir.
+  return gomulebilir ? true : 'auto';
 }
 
-function parseSessionSameSite(): 'lax' | 'strict' | 'none' {
+/**
+ * Panel ana sitede iframe olarak gömülü çalıştığında (FRAME_ANCESTORS dolu),
+ * istekler tarayıcı için "cross-site" sayılır ve SameSite=Lax çerez HİÇ
+ * gönderilmez. Bu durumda /api/bonus-panel/login başarılı dönse bile sonraki
+ * her istek oturumsuz kalır: çark/kazı-kazan "Önce kullanıcı adı doğrulaması
+ * yapmalısınız", bonus talebi ise "Oturum süreniz dolmuş." hatası verir.
+ * Gömme açıkken varsayılanı 'none' yapıyoruz; ENV ile açıkça ezilebilir.
+ */
+export function parseSessionSameSite(gomulebilir = false): 'lax' | 'strict' | 'none' {
   const value = String(process.env.SESSION_COOKIE_SAMESITE || '').trim().toLowerCase();
-  if (value === 'strict' || value === 'none') return value;
-  return 'lax';
+  if (value === 'strict' || value === 'lax' || value === 'none') return value;
+  return gomulebilir ? 'none' : 'lax';
 }
 
 /**
@@ -157,13 +166,20 @@ export async function buildApp() {
     saveUninitialized: false,
     ...(sessionStore ? { store: sessionStore as any } : {}),
     cookie: {
-      secure: parseSessionCookieSecure(),
+      secure: parseSessionCookieSecure(gomulebilir),
       httpOnly: true,
-      sameSite: parseSessionSameSite(),
+      sameSite: parseSessionSameSite(gomulebilir),
       path: '/',
       maxAge: sessionTtlMs,
     },
   });
+
+  if (gomulebilir && parseSessionSameSite(gomulebilir) !== 'none') {
+    app.log.warn(
+      '[session] FRAME_ANCESTORS tanımlı ama SESSION_COOKIE_SAMESITE=none değil. ' +
+      'Panel iframe içinde çalışırken oturum çerezi gönderilmez; giriş sonrası tüm istekler 401 döner.'
+    );
+  }
 
   // ─── Global Error Handler ─────────────────────────────────────────────────
   registerGlobalErrorHandler(app);

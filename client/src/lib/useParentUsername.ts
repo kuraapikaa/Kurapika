@@ -15,14 +15,19 @@ import { bonusPanelApi } from '../api/client';
  */
 
 // Yalnızca bu origin'lerden gelen mesajlar dikkate alınır.
+// DİKKAT: panelin gömüldüğü her ana site burada da yer almalı. Sunucudaki
+// FRAME_ANCESTORS gömmeye izin verir ama bu liste kimlik mesajını kabul eder;
+// biri eksik kalırsa oyuncu adı hiç gelmez ve oyunlar "Önce kullanıcı adı
+// doğrulaması yapmalısınız" hatası verir.
 const IZINLI_ORIGINLER = [
   /^https:\/\/(?:[a-z0-9-]+\.)?narcosbahis\.com$/i,
   /^https:\/\/(?:[a-z0-9-]+\.)?narcosbahis\d*\.com$/i,
+  /^https:\/\/(?:[a-z0-9-]+\.)?narcosbahis\d*\.vip$/i,
   /^https:\/\/(?:[a-z0-9-]+\.)?narcosgir\.com$/i,
   /^https:\/\/(?:[a-z0-9-]+\.)?tacobahis\d*\.com$/i,
 ];
 
-function originIzinliMi(origin: string): boolean {
+export function originIzinliMi(origin: string): boolean {
   return IZINLI_ORIGINLER.some((desen) => desen.test(origin));
 }
 
