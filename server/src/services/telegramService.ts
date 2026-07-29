@@ -20,18 +20,37 @@ async function telegramApiCall(method: string, params: Record<string, unknown> =
   return body.result;
 }
 
-/** Kullanıcının belirtilen kanal/gruptaki gerçek zamanlı üyelik durumunu döner (member/administrator/creator/left/kicked). */
-export async function getChatMemberStatus(chatId: string, telegramUserId: number | string): Promise<string | null> {
+/**
+ * Üyelik sorgusunun sonucu.
+ *
+ * "Sorgulayamadım" ile "üye değil" ayrı tutulur. Önceden her hata yutulup `null`
+ * dönüyordu ve çağıran taraf bunu "üye değil" sayıyordu: bot kanalda yönetici
+ * değilse, chatId yanlışsa ya da token bozuksa oyuncu kanala üye olsa bile
+ * "kanala katılmanız gerekiyor" görüyor, log da düşmüyordu.
+ */
+export type ChatMemberSonucu =
+  | { ok: true; status: string; isMember: boolean }
+  | { ok: false; error: string };
+
+/** Kullanıcının belirtilen kanal/gruptaki gerçek zamanlı üyelik durumunu sorgular. */
+export async function getChatMember(chatId: string, telegramUserId: number | string): Promise<ChatMemberSonucu> {
   try {
     const result = await telegramApiCall('getChatMember', { chat_id: chatId, user_id: telegramUserId });
-    return result?.status ?? null;
-  } catch {
-    return null;
+    const status = String(result?.status ?? '');
+    return { ok: true, status, isMember: isActiveMemberStatus(status, result?.is_member) };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : 'Telegram üyelik sorgusu başarısız.' };
   }
 }
 
-export function isActiveMemberStatus(status: string | null): boolean {
-  return status != null && ['member', 'administrator', 'creator'].includes(status);
+/**
+ * `restricted` durumundaki kullanıcı kanalda kısıtlanmıştır ama Telegram
+ * `is_member: true` diyorsa hâlâ üyedir; bonusu hak eder.
+ */
+export function isActiveMemberStatus(status: string | null, isMemberFlag?: unknown): boolean {
+  if (status == null) return false;
+  if (['member', 'administrator', 'creator'].includes(status)) return true;
+  return status === 'restricted' && isMemberFlag === true;
 }
 
 export async function sendTelegramMessage(chatId: number | string, text: string): Promise<void> {

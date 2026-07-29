@@ -31,6 +31,11 @@ const PUBLIC_EXACT_PATHS = new Set([
   '/api/promos/auto',
   '/api/bonuses',
   '/api/freebet-bonuses',
+  // Telegram Bot API'nin çağırdığı webhook. Panel oturumu olamaz; kendi kimlik
+  // doğrulaması var (x-telegram-bot-api-secret-token). Bu listede olmadığı için
+  // Telegram'ın gönderdiği her update handler'a ulaşmadan 401 alıyordu ve
+  // oyuncu hesabı hiç bağlanamıyordu.
+  '/api/telegram/webhook',
 ]);
 
 /** Auth gerektirmeyen rota ön ekleri. */
