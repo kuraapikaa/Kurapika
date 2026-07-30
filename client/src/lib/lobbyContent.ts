@@ -299,7 +299,7 @@ export const DEFAULT_LOBBY_PAGE_CONTENTS: Record<LobbyPageId, LobbyPageContent> 
     usernamePlaceholder: 'Kullanıcı adınız',
     submitButton: 'Katıl',
     extra: {
-      liveLabel: 'Anlık (BC Link)',
+      liveLabel: 'Anlık',
       tournamentSuffix: 'TURNUVA',
       prizePoolTitle: 'ÖDÜL HAVUZU',
       updateLabel: 'GÜNCELLEME',

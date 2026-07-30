@@ -16,6 +16,8 @@ type Match = {
   awayLogoUrl?: string | null;
   league: string;
   startsAt: string;
+  /** Tahminlerin kapandigi an; bos ise startsAt kullanilir. */
+  predictionClosesAt?: string;
   status: 'open' | 'closed' | 'finished';
   homeScore: number | null;
   awayScore: number | null;
@@ -302,22 +304,36 @@ export function SkorTahminSayfasi() {
         </LobbyCard>
 
         <div className="flex flex-col gap-3.5">
+          {/* Ayın oyuncusu: görsel özne, dekor değil.
+              Önceden absolute + 96px + opacity-25 ile köşeye sıkışmış, arka
+              plan dokusu gibi duruyordu. Artık akışta, tam opaklıkta ve
+              metinle yan yana; arkasındaki altın hâle onu zeminden ayırıyor. */}
           <LobbyCard className="relative overflow-hidden">
-            <img
-              src={monthlyPlayer.imageUrl || '/assets/brand/narcosbahis.png'}
-              alt={monthlyPlayer.title || lobbyExtraText(pageContent, 'monthlyPlayerTitle', 'Ayın oyuncusu')}
-              className="pointer-events-none absolute -bottom-5 -right-5 h-24 w-24 object-contain opacity-25"
-            />
-            <div className="relative z-10 max-w-[78%]">
-              <p className="text-[9px] font-black uppercase tracking-[0.16em]" style={{ color: palette.accentColor }}>
-                {monthlyPlayer.title || lobbyExtraText(pageContent, 'monthlyPlayerTitle', 'Ayın oyuncusu')}
-              </p>
-              <p className="mt-1.5 text-[13px] font-black leading-tight tracking-[-0.02em] text-[color:var(--lobby-text,#f3ecdd)]">
-                {monthlyPlayer.mainText || league?.prize || lobbyExtraText(pageContent, 'prizePoolLabel', 'Ödül havuzu')}
-              </p>
-              <p className="mt-1.5 text-[11px] font-semibold leading-4" style={{ color: palette.mutedTextColor }}>
-                {monthlyPlayer.subtitle || league?.rewards?.monthly?.label || league?.rules}
-              </p>
+            <div className="flex items-stretch gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-[9px] font-black uppercase tracking-[0.16em]" style={{ color: palette.accentColor }}>
+                  {monthlyPlayer.title || lobbyExtraText(pageContent, 'monthlyPlayerTitle', 'Ayın oyuncusu')}
+                </p>
+                <p className="mt-1.5 text-[13px] font-black leading-tight tracking-[-0.02em] text-[color:var(--lobby-text,#f3ecdd)]">
+                  {monthlyPlayer.mainText || league?.prize || lobbyExtraText(pageContent, 'prizePoolLabel', 'Ödül havuzu')}
+                </p>
+                <p className="mt-1.5 text-[11px] font-semibold leading-4" style={{ color: palette.mutedTextColor }}>
+                  {monthlyPlayer.subtitle || league?.rewards?.monthly?.label || league?.rules}
+                </p>
+              </div>
+              <div className="relative flex w-[92px] shrink-0 items-end justify-center self-stretch">
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-x-0 bottom-0 h-[86px] rounded-full blur-[26px]"
+                  style={{ backgroundColor: hexToRgba(palette.primaryColor, 0.22) }}
+                />
+                <img
+                  src={monthlyPlayer.imageUrl || '/assets/brand/narcosbahis.png'}
+                  alt={monthlyPlayer.title || lobbyExtraText(pageContent, 'monthlyPlayerTitle', 'Ayın oyuncusu')}
+                  loading="lazy"
+                  className="relative z-10 h-[104px] w-full object-contain object-bottom drop-shadow-[0_10px_20px_rgba(0,0,0,.45)]"
+                />
+              </div>
             </div>
           </LobbyCard>
 
@@ -453,8 +469,14 @@ function ScoreInput({
 }
 
 function isMatchOpen(match: Match) {
-  const startsAt = match.startsAt ? new Date(match.startsAt).getTime() : null;
-  return match.status === 'open' && (!startsAt || startsAt > Date.now());
+  // Sunucudaki tahminKapanisZamani ile ayni kural: acik son tarih varsa o,
+  // yoksa baslama saati. Ikisi ayrisirsa arayuz "acik" gosterip sunucu
+  // reddederdi.
+  const acikKapanis = match.predictionClosesAt ? new Date(match.predictionClosesAt).getTime() : NaN;
+  const kapanis = Number.isFinite(acikKapanis)
+    ? acikKapanis
+    : (match.startsAt ? new Date(match.startsAt).getTime() : NaN);
+  return match.status === 'open' && (!Number.isFinite(kapanis) || kapanis > Date.now());
 }
 
 function formatMatchDate(value: string, fallback: string) {

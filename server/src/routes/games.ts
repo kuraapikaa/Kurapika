@@ -273,7 +273,7 @@ const DEFAULT_GAME_SETTINGS = {
         usernameLabel: 'KULLANICI ADI',
         usernamePlaceholder: 'Kullanıcı adınız',
         submitButton: 'Katıl',
-        extra: { liveLabel: 'Anlık (BC Link)', tournamentSuffix: 'TURNUVA', prizePoolTitle: 'ÖDÜL HAVUZU', updateLabel: 'GÜNCELLEME' }
+        extra: { liveLabel: 'Anlık', tournamentSuffix: 'TURNUVA', prizePoolTitle: 'ÖDÜL HAVUZU', updateLabel: 'GÜNCELLEME' }
       },
       loyalty: {
         label: 'Sadakat',
@@ -1318,6 +1318,19 @@ function scorePredictionLeaderboard(entries: any[], matches: any[], from: Date, 
   return Array.from(board.values()).sort((a, b) => b.points - a.points || b.exact - a.exact || a.username.localeCompare(b.username, 'tr'));
 }
 
+/**
+ * Bir maç için tahminlerin kapandığı an (ms) — yoksa null.
+ *
+ * predictionClosesAt yönetici tarafından girilebilen açık son tarih. Boşsa
+ * geriye dönük uyumluluk için maçın başlama saati kullanılır.
+ */
+export function tahminKapanisZamani(match: any): number | null {
+  const acik = match?.predictionClosesAt ? new Date(match.predictionClosesAt).getTime() : NaN;
+  if (Number.isFinite(acik)) return acik;
+  const baslangic = match?.startsAt ? new Date(match.startsAt).getTime() : NaN;
+  return Number.isFinite(baslangic) ? baslangic : null;
+}
+
 function buildPredictionLeaguePayload(settings: any, entries: any[], username?: string) {
   const league = settings.predictionLeague || DEFAULT_GAME_SETTINGS.predictionLeague;
   const matches = Array.isArray(league.matches) ? league.matches : [];
@@ -2089,8 +2102,16 @@ const selectedSlice = selected.slice;
       return reply.status(404).send({ ok: false, message: 'Maç bulunamadı.' });
     }
 
-    const startsAt = match.startsAt ? new Date(match.startsAt).getTime() : null;
-    const isClosed = match.status === 'closed' || match.status === 'finished' || (startsAt && startsAt <= Date.now());
+    // Tahmin son tarihi maçın başlama saatinden AYRI.
+    //
+    // Önceden tek ölçüt startsAt idi: başlama saati geçen maç, yönetici
+    // "açık" işaretlese bile tahmine kapanıyordu. predictionClosesAt
+    // tanımlıysa son tarih odur; tanımlı değilse eski davranış (başlama
+    // saati) sürüyor, yani mevcut maçlar etkilenmiyor.
+    const kapanis = tahminKapanisZamani(match);
+    const isClosed = match.status === 'closed'
+      || match.status === 'finished'
+      || (kapanis != null && kapanis <= Date.now());
     if (isClosed) {
       return reply.status(400).send({ ok: false, message: 'Bu maç için tahmin süresi kapandı.' });
     }

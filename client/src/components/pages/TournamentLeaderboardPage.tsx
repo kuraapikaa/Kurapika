@@ -146,7 +146,7 @@ export function TournamentLeaderboardPage({ period }: { period: TournamentPeriod
               {periodLabel} {lobbyExtraText(pageContent, 'tournamentSuffix', 'TURNUVA')}
             </span>
             <span className="rounded-lg border border-[rgba(243,236,221,0.08)] bg-[rgba(243,236,221,0.05)] px-2.5 py-1.5 text-[10px] font-black text-[color:var(--lobby-text,#f3ecdd)]">
-              {lobbyExtraText(pageContent, 'liveLabel', 'Anlık (BC Link)')}
+              {lobbyExtraText(pageContent, 'liveLabel', 'Anlık')}
             </span>
             {isActive === false ? (
               <span className="rounded-lg border border-rose-300/15 bg-rose-400/10 px-2.5 py-1.5 text-[10px] font-black text-rose-200">

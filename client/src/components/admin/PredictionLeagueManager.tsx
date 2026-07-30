@@ -13,6 +13,8 @@ type PredictionMatch = {
   awayLogoUrl?: string | null;
   league: string;
   startsAt: string;
+  /** Tahminlerin kapandigi an; bos birakilirsa startsAt gecerli. */
+  predictionClosesAt?: string;
   status: 'open' | 'closed' | 'finished';
   homeScore: number | null;
   awayScore: number | null;
@@ -43,6 +45,7 @@ const emptyMatch = (): PredictionMatch => ({
   awayLogoUrl: '',
   league: 'Süper Lig',
   startsAt: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString().slice(0, 16),
+  predictionClosesAt: '',
   status: 'open',
   homeScore: null,
   awayScore: null,
@@ -244,6 +247,18 @@ export function PredictionLeagueManager({
                     onChange={(event) => updateMatch(match.id, { startsAt: event.target.value })}
                     className="h-11 w-full rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/30 px-3 text-xs font-bold text-white outline-none focus:border-emerald-300/40"
                   />
+                </div>
+                <div>
+                  <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.14em] text-[color:var(--panel-faint,#5c6470)]">Tahmin bitişi</label>
+                  <input
+                    type="datetime-local"
+                    value={(match.predictionClosesAt || '').slice(0, 16)}
+                    onChange={(event) => updateMatch(match.id, { predictionClosesAt: event.target.value })}
+                    className="h-11 w-full rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/30 px-3 text-xs font-bold text-white outline-none focus:border-emerald-300/40"
+                  />
+                  <p className="mt-1.5 text-[10px] text-[color:var(--panel-faint,#5c6470)]">
+                    Boş bırakılırsa tahminler maç başlarken kapanır. Başlama saati geçmiş bir maçı tahmine açmak için buraya ileri bir tarih girin.
+                  </p>
                 </div>
               </div>
 
