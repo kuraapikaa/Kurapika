@@ -26,12 +26,13 @@ import {
   Zap,
 } from 'lucide-react';
 import { type CSSProperties, useEffect, useMemo, useState } from 'react';
-import { bonusPanelApi, formsApi, loyaltyApi, tournamentApi } from '../../api/client';
+import { bonusPanelApi, formsApi, gamesApi, loyaltyApi, tournamentApi } from '../../api/client';
 import { fetchGamesConfigCached, readCachedGamesConfig } from '../../lib/lobbyConfigCache';
 import { useOtomatikOturum } from '../../lib/useParentUsername';
 import { cn } from '../../lib/utils';
 import { normalizeLobbyPalette } from '../../lib/lobbyTheme';
 import { sadakatIlerlemesi } from '../../lib/sadakatIlerlemesi';
+import { yeniTamamlananlar, type DuyurulacakGorev } from '../../lib/gorevBildirimi';
 
 type LobbyTabId = 'games' | 'tournaments' | 'support';
 
@@ -411,6 +412,23 @@ export function PlayerLobby() {
   // ("Ahmet***"); ayni ilk isim + oyun + tutar birlesimi taniyan biri icin
   // kimlik ipucu veriyordu. Tek harf hem oyuncuyu gizliyor hem seridin
   // "gercek insanlar kazaniyor" hissini koruyor.
+  // Tamamlanan gunluk gorevler lobiye girildiginde bir kez duyurulur.
+  // Duyurulmus olanlarin kaydi tarayicida (bkz. gorevBildirimi).
+  const [gorevBildirimleri, setGorevBildirimleri] = useState<DuyurulacakGorev[]>([]);
+  useEffect(() => {
+    if (!activeUser) return;
+    let iptal = false;
+    gamesApi.dailyTasksStatus()
+      .then((res: any) => {
+        if (iptal || !res?.ok) return;
+        const veri = res.data || {};
+        const yeni = yeniTamamlananlar(String(veri.dateKey || ''), veri.tasks || []);
+        if (yeni.length > 0) setGorevBildirimleri(yeni);
+      })
+      .catch(() => { /* gorev servisi dususe lobi calismaya devam etsin */ });
+    return () => { iptal = true; };
+  }, [activeUser]);
+
   const liveWinners = useMemo(() => [
     { user: 'A***', win: '₺2.450', game: 'Şans Çarkı', time: '1 dk önce' },
     { user: 'S***', win: '₺12.800', game: 'Sweet Bonanza', time: '2 dk önce' },
@@ -714,6 +732,12 @@ export function PlayerLobby() {
           </section>
         )}
 
+        <GorevBildirimPaneli
+          gorevler={gorevBildirimleri}
+          theme={lobbyTheme}
+          onKapat={() => setGorevBildirimleri([])}
+        />
+
         {activeUser && <LobbyWelcome theme={lobbyTheme} username={activeUser} loyalty={loyalty} />}
 
         <LobbyBanner theme={lobbyTheme} />
@@ -1011,6 +1035,82 @@ function SupportTab({ config }: { config: LobbyTabsConfig['support'] }) {
  * level = floor(xp/1000)+1, yani seviye basina 1000 XP: ilerleme xp%1000,
  * kalan 1000-(xp%1000). Mockup'taki %62 / 1.900 XP degerleri temsiliydi.
  */
+/**
+ * Tamamlanan gorev bildirimi.
+ *
+ * Modal degil, sayfanin ustunde duran bir serit: lobiye giren oyuncunun
+ * onune engel cikarmadan haber veriyor. Modal olsaydi her girisde
+ * kapatilmasi gereken bir adim eklerdi.
+ *
+ * Odul "al" akisi bilerek burada degil — bildirim haber verir, islem
+ * Gorevler sayfasinda yapilir; iki yerde ayni akisi tutmak ikisini de
+ * bozulmaya acik hale getirirdi.
+ */
+function GorevBildirimPaneli({
+  gorevler,
+  theme,
+  onKapat,
+}: {
+  gorevler: DuyurulacakGorev[];
+  theme: LobbyTheme;
+  onKapat: () => void;
+}) {
+  if (gorevler.length === 0) return null;
+  const cogul = gorevler.length > 1;
+
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      role="status"
+      aria-live="polite"
+      className="relative flex flex-wrap items-center gap-3 rounded-xl border p-3.5 md:p-4"
+      style={{
+        borderColor: hexToRgba(theme.accentColor, 0.3),
+        backgroundColor: hexToRgba(theme.accentColor, 0.08),
+      }}
+    >
+      <span
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+        style={{ backgroundColor: hexToRgba(theme.accentColor, 0.16), color: theme.accentColor }}
+      >
+        <CheckCircle2 size={20} />
+      </span>
+
+      <div className="min-w-0 flex-1">
+        <p className="text-[13px] font-black" style={{ color: theme.textColor }}>
+          {cogul ? `${gorevler.length} görev tamamlandı` : 'Görev tamamlandı'}
+        </p>
+        <p className="mt-0.5 truncate text-[12px] font-semibold" style={{ color: theme.mutedTextColor }}>
+          {gorevler.map((g) => g.title).join(' · ')}
+        </p>
+      </div>
+
+      <Link
+        to="/gorevler"
+        className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg px-4 text-[11px] font-black uppercase tracking-[0.12em]"
+        style={{
+          background: `linear-gradient(120deg, ${theme.primaryColor}, ${theme.secondaryColor})`,
+          color: '#171204',
+        }}
+      >
+        Ödülü al
+        <ChevronRight size={14} />
+      </Link>
+
+      <button
+        type="button"
+        onClick={onKapat}
+        aria-label="Bildirimi kapat"
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition"
+        style={{ color: theme.mutedTextColor }}
+      >
+        <XCircle size={16} />
+      </button>
+    </motion.section>
+  );
+}
+
 function LobbyWelcome({ theme, username, loyalty }: { theme: LobbyTheme; username: string; loyalty: any }) {
   const saat = new Date().getHours();
   const selam = saat < 6 ? 'İyi geceler' : saat < 12 ? 'Günaydın' : saat < 18 ? 'İyi günler' : 'İyi akşamlar';

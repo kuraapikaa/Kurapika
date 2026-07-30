@@ -300,6 +300,14 @@ export function RulesManager() {
         setIsAdding(false);
     };
 
+    /**
+     * Tutar hesabinin tabani: kayip bonusunda NET KAYIP, digerlerinde yatirim.
+     * Etiketler buna gore degisiyor; sabit "Yatirim" yazmak kayip bonusunda
+     * yanlis alani ayarladigi izlenimi veriyordu.
+     */
+    const tabanAdi = editValue?.lossBonus ? 'Kayıp' : 'Yatırım';
+    const tabanAdiKucuk = editValue?.lossBonus ? 'kayıp' : 'yatırım';
+
     const filteredRules = useMemo<Array<[string, PromoSpec]>>(() => {
         if (!config) return [];
         const source = activeTab === 'id' ? config.PROMO_SPECS : config.PROMO_TITLE_SPECS;
@@ -604,7 +612,7 @@ export function RulesManager() {
                                                                 <option value="full">Tam Yatırım</option>
                                                                 <option value="tiered">Baremli Tutar</option>
                                                                 <option value="tieredRange">Baremli Yatırım Aralığı</option>
-                                                                <option value="tieredPercentage">Yüzdeli Yatırım Baremi Aralığı</option>
+                                                                <option value="tieredPercentage">{`Yüzdeli ${tabanAdi} Baremi Aralığı`}</option>
                                                             </select>
                                                         </div>
                                                     </div>
@@ -652,7 +660,7 @@ export function RulesManager() {
                                                                     <div key={idx} className="flex gap-2 items-center">
                                                                         <input
                                                                             type="number"
-                                                                            placeholder="Min Yatırım"
+                                                                            placeholder={`Min ${tabanAdi}`}
                                                                             value={tier.min}
                                                                             onChange={(e) => {
                                                                                 const newTiers = [...(editValue.tieredAmounts || [])];
@@ -706,7 +714,7 @@ export function RulesManager() {
                                                                     <div key={idx} className="flex gap-2 items-center">
                                                                         <input
                                                                             type="number"
-                                                                            placeholder="Min Yatırım"
+                                                                            placeholder={`Min ${tabanAdi}`}
                                                                             value={range.min}
                                                                             onChange={(e) => {
                                                                                 const newRanges = [...(editValue.tieredRanges || [])];
@@ -718,7 +726,7 @@ export function RulesManager() {
                                                                         <ArrowRight size={14} className="text-[color:var(--panel-faint,#5c6470)]" />
                                                                         <input
                                                                             type="number"
-                                                                            placeholder="Max Yatırım"
+                                                                            placeholder={`Max ${tabanAdi}`}
                                                                             value={range.max}
                                                                             onChange={(e) => {
                                                                                 const newRanges = [...(editValue.tieredRanges || [])];
@@ -767,8 +775,8 @@ export function RulesManager() {
                                                         <div className="p-4 rounded-xl bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] space-y-4">
                                                             <div className="flex items-center justify-between">
                                                                 <div>
-                                                                    <label className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest block pl-1">Yüzdeli Yatırım Baremi Aralığı</label>
-                                                                    <p className="mt-1 pl-1 text-[10px] text-[color:var(--panel-faint,#5c6470)]">Yatırım aralığa düşerse bonus, sabit tutar yerine yatırımın yüzdesi olarak hesaplanır. Tavan boş bırakılırsa sınır uygulanmaz.</p>
+                                                                    <label className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest block pl-1">{`Yüzdeli ${tabanAdi} Baremi Aralığı`}</label>
+                                                                    <p className="mt-1 pl-1 text-[10px] text-[color:var(--panel-faint,#5c6470)]">{`${tabanAdi} aralığa düşerse bonus, sabit tutar yerine ${tabanAdiKucuk} tutarının yüzdesi olarak hesaplanır. Tavan boş bırakılırsa sınır uygulanmaz.`}</p>
                                                                 </div>
                                                                 <Button
                                                                     variant="ghost"
@@ -790,7 +798,7 @@ export function RulesManager() {
                                                                         <div key={idx} className="flex gap-2 items-center">
                                                                             <input
                                                                                 type="number"
-                                                                                placeholder="Min Yatırım"
+                                                                                placeholder={`Min ${tabanAdi}`}
                                                                                 value={range.min}
                                                                                 onChange={(e) => update({ min: Number(e.target.value) })}
                                                                                 className="flex-1 h-10 bg-black/40 border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-3 text-xs text-white"
@@ -798,7 +806,7 @@ export function RulesManager() {
                                                                             <ArrowRight size={14} className="text-[color:var(--panel-faint,#5c6470)] shrink-0" />
                                                                             <input
                                                                                 type="number"
-                                                                                placeholder="Max Yatırım"
+                                                                                placeholder={`Max ${tabanAdi}`}
                                                                                 value={range.max}
                                                                                 onChange={(e) => update({ max: Number(e.target.value) })}
                                                                                 className="flex-1 h-10 bg-black/40 border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-3 text-xs text-white"
