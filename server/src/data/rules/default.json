@@ -136,6 +136,30 @@
       "enabled": false,
       "type": "partner",
       "partnerBonusId": "1885"
+    },
+    "kayip-bonusu": {
+      "enabled": true,
+      "type": "cash",
+      "title": "%30'a Varan Kayip Bonusu",
+      "lossBonus": true,
+      "amountType": "tieredPercentage",
+      "tieredPercentageRanges": [
+        {
+          "min": 50,
+          "max": 4999,
+          "percent": 20
+        },
+        {
+          "min": 5000,
+          "max": 19999,
+          "percent": 25
+        },
+        {
+          "min": 20000,
+          "max": 999999999,
+          "percent": 30
+        }
+      ]
     }
   },
   "PROMO_TITLE_SPECS": {}

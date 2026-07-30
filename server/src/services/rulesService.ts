@@ -50,6 +50,13 @@ export type PromoSpec = {
 
     // New Fields
     type?: 'partner' | 'cash';
+    /**
+     * Sanal (nakit) bonusun listede ve panelde gorunen adi.
+     *
+     * Nakit bonuslar platform bonus ID'sine bagli DEGIL; kural anahtari promo
+     * id olarak kullaniliyor (dashboard.ts virtualPromos). Ad buradan geliyor.
+     */
+    title?: string;
     partnerBonusId?: string;
     amountType?: 'fixed' | 'percentage' | 'full' | 'tiered' | 'tieredRange' | 'tieredPercentage';
     fixedAmount?: number;
