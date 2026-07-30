@@ -54,10 +54,38 @@ function hataMesaji(json: Record<string, unknown>, res: Response): string {
   );
 }
 
+/**
+ * GEÇİCİ ÖNLEM — Cloudflare kimlik yanıtlarını önbelleğe alıyor.
+ *
+ * Sunucu doğru başlıkları gönderiyor:
+ *   Cache-Control: no-store, no-cache, must-revalidate, private
+ *   Vary: Cookie, Accept-Encoding
+ *
+ * Cloudflare bunları YOK SAYIYOR. Canlıda ölçüldü: aynı URL'ye farklı
+ * çerezle atılan istek `cf-cache-status: HIT` alıyor, yani bir oyuncu
+ * diğerinin yanıtını görüyor. Lobide "son giren oyuncunun oturumu
+ * görünüyor" şikayeti bu.
+ *
+ * Cloudflare kenarında önbellek kuralı ezildiği için origin'den kapatmak
+ * yetmiyor. Her isteği benzersiz URL yaparak önbelleği atlıyoruz: eşleşecek
+ * bir anahtar olmayınca kenar her zaman origin'e gidiyor.
+ *
+ * Bu ÇÖZÜM DEĞİL, zarar azaltma. Kalıcı çözüm Cloudflare'de /api/* için
+ * "Bypass cache" kuralı. O yapıldığında bu satır kaldırılmalı — aksi halde
+ * gerçekten önbelleklenebilir uçlar da (ör. /api/games/config) boşuna
+ * origin'e gidiyor.
+ */
+function onbellekKirici(): string {
+  return `_cb=${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+}
+
 async function get<T>(path: string, params?: Record<string, string>): Promise<T> {
-  const url = params ? `${API_BASE}${path}?${new URLSearchParams(params)}` : `${API_BASE}${path}`;
+  const sorgu = new URLSearchParams(params);
+  sorgu.set('_cb', onbellekKirici().slice(4));
+  const url = `${API_BASE}${path}?${sorgu}`;
   const res = await fetch(url, {
-    headers: { Accept: 'application/json' },
+    headers: { Accept: 'application/json', 'Cache-Control': 'no-cache' },
+    cache: 'no-store',
     credentials: 'include'
   });
   const json = await parseJsonResponse(res);
