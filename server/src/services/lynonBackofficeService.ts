@@ -2447,6 +2447,18 @@ export async function lynonBuildBonusEligibilitySnapshot(input: { login?: string
     String(row.transactionType ?? '').toLowerCase() === 'deposit' &&
     String(row.status ?? '').toLowerCase() === 'success'
   );
+  // Bugunun (Europe/Istanbul) basarili yatirimlari, ESKIDEN YENIYE.
+  //
+  // "4. Yatirimin Bizden Hediye" ardisik yatirim sayar, "%400 Carsamba Happy
+  // Days" gunun kacinci yatirimi oldugunu sorar; ikisi de sirali listeye
+  // ihtiyac duyar. playerPayments YENIDEN ESKIYE sirali oldugu icin ters
+  // ceviriyoruz — sira yanlis olursa kademe de yanlis hesaplanir.
+  const bugunDateKey = istanbulDateKey(now);
+  const sameDayDepositRows = successfulDeposits
+    .filter((row) => istanbulDateKey(String(row.createdAt ?? '')) === bugunDateKey)
+    .slice()
+    .reverse();
+
   const previousDayDateKey = previousIstanbulDateKey(now);
   const previousDayDeposits = successfulDeposits.filter((row) => istanbulDateKey(String(row.createdAt ?? '')) === previousDayDateKey);
   const previousDayDepositTotal = previousDayDeposits.reduce((sum, row) => sum + numberFrom(row.amount), 0);
@@ -2544,6 +2556,13 @@ export async function lynonBuildBonusEligibilitySnapshot(input: { login?: string
     balance: numberFrom(kpi.Balance ?? player.Balance),
     currency: firstNonEmpty(kpi.CurrencyId, player.CurrencyId, config.lynon.currency),
     lastDeposit: lastDepositRow ? { amount: numberFrom(lastDepositRow.amount), dateLocal: lastDepositRow.createdAt } : undefined,
+    sameDayDateKey: bugunDateKey,
+    sameDayDeposits: sameDayDepositRows.map((row) => ({
+      amount: numberFrom(row.amount),
+      dateLocal: String(row.createdAt ?? ''),
+    })),
+    sameDayDepositCount: sameDayDepositRows.length,
+    sameDayDepositTotal: sameDayDepositRows.reduce((sum, row) => sum + numberFrom(row.amount), 0),
     previousDayDateKey,
     previousDayDepositTotal,
     previousDayDepositCount: previousDayDeposits.length,

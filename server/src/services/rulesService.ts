@@ -58,7 +58,17 @@ export type PromoSpec = {
      */
     title?: string;
     partnerBonusId?: string;
-    amountType?: 'fixed' | 'percentage' | 'full' | 'tiered' | 'tieredRange' | 'tieredPercentage';
+    amountType?:
+      | 'fixed'
+      | 'percentage'
+      | 'full'
+      | 'tiered'
+      | 'tieredRange'
+      | 'tieredPercentage'
+      /** Gunun kacinci yatirimi oldugu kademeyi belirler (Carsamba Happy Days). */
+      | 'dailySequencePercentage'
+      /** Son N yatirimin ortalamasi (4. Yatirim Hediyesi). */
+      | 'averageOfLastDeposits';
     fixedAmount?: number;
     percentageAmount?: number;
     tieredAmounts?: Array<{ min: number; bonus: number }>;
@@ -91,6 +101,24 @@ export type PromoSpec = {
     requestWithinHours?: number;
     balanceBelow?: number;
     noOpenBets?: boolean;
+    /**
+     * Gunun kacinci yatirimina hangi yuzde uygulanacagi; sirayla 1., 2., ...
+     * yatirima karsilik gelir. Ornek: [20, 40, 60, 80, 100].
+     *
+     * Dizinin sonundan sonraki yatirimlar bonus almaz — Happy Days 5 kademe.
+     */
+    dailySequencePercents?: number[];
+    /**
+     * Ayni gun icinde, KAYIPLA sonuclanmis ardisik yatirim sayisi sarti.
+     * "4. Yatirimin Bizden Hediye" icin 3: uc yatirim da kaybedilmis olmali.
+     */
+    consecutiveLossDeposits?: number;
+    /** averageOfLastDeposits icin ortalamaya girecek yatirim sayisi. */
+    averageDepositCount?: number;
+    /** Hesaplanan bonusun alt siniri; altina duserse bonus verilmez degil, bu degere yukseltilir. */
+    minimumBonus?: number;
+    /** Hesaplanan bonusun ust siniri. */
+    maximumBonus?: number;
     activeDays?: string[];
     startTime?: string;
     endTime?: string;

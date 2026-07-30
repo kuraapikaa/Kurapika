@@ -215,6 +215,35 @@ interface BonusCalculation {
   calculatedAmount?: number;
 }
 
+/** Bugunun basarili yatirimlari, eskiden yeniye. Snapshot vermezse bos dizi. */
+function ayniGunYatirimlari(account: AccountSnapshot): Array<{ amount: number; dateLocal: string }> {
+  const ham = (account as any).sameDayDeposits;
+  if (!Array.isArray(ham)) return [];
+  return ham
+    .map((row: any) => ({ amount: Number(row?.amount ?? 0), dateLocal: String(row?.dateLocal ?? '') }))
+    .filter((row) => Number.isFinite(row.amount) && row.amount > 0);
+}
+
+/**
+ * Hesaplanan tutari alt/ust sinira kistirir.
+ *
+ * minimumBonus tutari YUKSELTIR (kampanya "bonus 100-2.000 TL araligindadir"
+ * diyor, "100'un altindaysa verilmez" demiyor); maximumBonus tavan uygular.
+ */
+function tutarSinirla(amount: number, spec: PromoSpec): { amount: number; not: string } {
+  let sonuc = amount;
+  let not = '';
+  if (spec.minimumBonus != null && sonuc < spec.minimumBonus) {
+    not = `, ${spec.minimumBonus} TRY alt sinirina yukseltildi`;
+    sonuc = spec.minimumBonus;
+  }
+  if (spec.maximumBonus != null && sonuc > spec.maximumBonus) {
+    not = `, ${spec.maximumBonus} TRY tavanina sinirlandi`;
+    sonuc = spec.maximumBonus;
+  }
+  return { amount: sonuc, not };
+}
+
 function calculateBonusAmount(account: AccountSnapshot, spec: PromoSpec): BonusCalculation | null {
   if (!spec.amountType) return null;
 
@@ -260,6 +289,37 @@ function calculateBonusAmount(account: AccountSnapshot, spec: PromoSpec): BonusC
     } else {
       calcDesc = `${basisLabel} ${basis} TRY, tanımlı yüzdeli yatırım aralıklarından hiçbirine girmiyor.`;
     }
+  } else if (spec.amountType === 'dailySequencePercentage' && spec.dailySequencePercents?.length) {
+    // Kademe, gunun KACINCI yatirimi olduguna gore secilir (1. yatirim -> ilk yuzde).
+    // Snapshot bugunku yatirimlari sayar; son yatirim zaten listede oldugu icin
+    // sira = liste uzunlugu.
+    const sira = ayniGunYatirimlari(account).length;
+    const yuzde = sira >= 1 ? spec.dailySequencePercents[sira - 1] : undefined;
+    if (yuzde != null) {
+      const ham = (basis * yuzde) / 100;
+      const sinirli = tutarSinirla(ham, spec);
+      amount = sinirli.amount;
+      calcDesc = `Bugünün ${sira}. yatırımı; ${basisLabel} ${basis} TRY × %${yuzde} = ${ham.toFixed(2)} TRY${sinirli.not}`;
+    } else if (sira < 1) {
+      calcDesc = 'Bugün başarılı yatırım bulunamadı.';
+    } else {
+      calcDesc = `Bugünün ${sira}. yatırımı; kampanya ${spec.dailySequencePercents.length} kademeyle sınırlı.`;
+    }
+  } else if (spec.amountType === 'averageOfLastDeposits') {
+    const adet = spec.averageDepositCount ?? 3;
+    // Kampanya "son uc yatirimin ortalamasi" diyor; bugunun yatirimlarindan
+    // SON adet tanesi alinir (liste eskiden yeniye sirali).
+    const gunun = ayniGunYatirimlari(account);
+    const secilen = gunun.slice(-adet);
+    if (secilen.length >= adet) {
+      const ortalama = secilen.reduce((sum, row) => sum + row.amount, 0) / secilen.length;
+      const sinirli = tutarSinirla(ortalama, spec);
+      amount = sinirli.amount;
+      calcDesc = `Son ${adet} yatırımın ortalaması (${secilen.map((r) => r.amount).join(' + ')}) / ${adet}`
+        + ` = ${ortalama.toFixed(2)} TRY${sinirli.not}`;
+    } else {
+      calcDesc = `Ortalama için ${adet} yatırım gerekli; bugün ${secilen.length} yatırım var.`;
+    }
   }
 
   if (amount > 0) {
@@ -268,7 +328,13 @@ function calculateBonusAmount(account: AccountSnapshot, spec: PromoSpec): BonusC
       calculatedAmount: amount,
     };
   }
-  if (spec.amountType === 'tiered' || spec.amountType === 'tieredRange' || spec.amountType === 'tieredPercentage') {
+  if (
+    spec.amountType === 'tiered'
+    || spec.amountType === 'tieredRange'
+    || spec.amountType === 'tieredPercentage'
+    || spec.amountType === 'dailySequencePercentage'
+    || spec.amountType === 'averageOfLastDeposits'
+  ) {
     return { item: { id: 'bonus-calculation', label: 'Bonus Hakedişi: 0 TRY', ok: false, reason: calcDesc } };
   }
   return null;
@@ -724,6 +790,48 @@ export async function evaluateForAccount(
         label: 'Açık Bahis Kontrolü',
         ok: openBetCount === 0,
         reason: openBetCount === 0 ? 'UYGUN: Açık bahis yok' : `RED: ${openBetCount} açık bahis var`,
+      });
+    }
+
+    // "4. Yatirimin Bizden Hediye": ayni gun icinde N yatirim yapilmis ve
+    // hepsi kaybedilmis olmali.
+    //
+    // Yatirim basina kar/zarar dokumu Lynon'da yok; elimizdeki net kayip
+    // gunluk toplam. Bu yuzden iki olcut birlikte aranir: yeterli sayida
+    // yatirim VE pozitif net kayip. Bakiye kontrolu (balanceBelow) ayri
+    // kuralda; ikisi birlikte "uc yatirimi da yakti" anlamina gelir.
+    if (spec.consecutiveLossDeposits != null) {
+      const gerekli = spec.consecutiveLossDeposits;
+      const gunun = ayniGunYatirimlari(account);
+      const netLoss = Number((account as any).netLoss ?? 0);
+      const ok = gunun.length >= gerekli && netLoss > 0;
+      items.push({
+        id: 'consecutive-loss-deposits',
+        label: `Aynı Gün Ardışık Kayıp Yatırımı (${gerekli} adet)`,
+        ok,
+        reason: ok
+          ? `UYGUN: Bugün ${gunun.length} yatırım, net kayıp ${netLoss.toFixed(2)} TRY`
+          : gunun.length < gerekli
+            ? `RED: Bugün ${gunun.length} yatırım var, ${gerekli} gerekli.`
+            : 'RED: Oyuncunun doğrulanmış net kaybı yok.',
+      });
+    }
+
+    // Yatirimlarin her biri icin alt sinir ("her yatirim en az 500 TL").
+    if (spec.consecutiveLossDeposits != null && spec.minDepositAmount != null) {
+      const gerekli = spec.consecutiveLossDeposits;
+      const secilen = ayniGunYatirimlari(account).slice(-gerekli);
+      const dusuk = secilen.filter((row) => row.amount < spec.minDepositAmount!);
+      const ok = secilen.length >= gerekli && dusuk.length === 0;
+      items.push({
+        id: 'each-deposit-minimum',
+        label: `Her Yatırım İçin Alt Sınır (${spec.minDepositAmount} TRY)`,
+        ok,
+        reason: ok
+          ? `UYGUN: Son ${gerekli} yatırımın tamamı ${spec.minDepositAmount} TRY ve üzeri`
+          : secilen.length < gerekli
+            ? `RED: Değerlendirilecek ${gerekli} yatırım yok.`
+            : `RED: ${dusuk.length} yatırım alt sınırın altında (${dusuk.map((r) => r.amount).join(', ')} TRY).`,
       });
     }
 

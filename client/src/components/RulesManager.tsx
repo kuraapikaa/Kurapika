@@ -19,7 +19,16 @@ interface PromoSpec {
     partnerBonusId?: string;
 
     // Amount Settings
-    amountType?: 'fixed' | 'percentage' | 'full' | 'tiered' | 'tieredRange' | 'tieredPercentage';
+    amountType?: 'fixed' | 'percentage' | 'full' | 'tiered' | 'tieredRange' | 'tieredPercentage'
+        | 'dailySequencePercentage' | 'averageOfLastDeposits';
+    /** Gunun 1., 2., ... yatirimina uygulanacak yuzdeler (Carsamba Happy Days). */
+    dailySequencePercents?: number[];
+    /** Ayni gun kaybedilmis ardisik yatirim sarti (4. Yatirim Hediyesi). */
+    consecutiveLossDeposits?: number;
+    /** Ortalamaya girecek yatirim sayisi. */
+    averageDepositCount?: number;
+    minimumBonus?: number;
+    maximumBonus?: number;
     fixedAmount?: number;
     percentageAmount?: number;
     tieredAmounts?: { min: number; bonus: number }[];
@@ -58,6 +67,10 @@ interface PromoSpec {
     minBalanceToClaim?: number;
 
     // Constraints
+    /** Talep aninda bakiye bu tutarin altinda olmali. */
+    balanceBelow?: number;
+    /** Talep aninda acik bahis/casino turu olmamali. */
+    noOpenBets?: boolean;
     activeDays?: string[];
     startTime?: string;
     endTime?: string;
@@ -613,6 +626,8 @@ export function RulesManager() {
                                                                 <option value="tiered">Baremli Tutar</option>
                                                                 <option value="tieredRange">Baremli Yatırım Aralığı</option>
                                                                 <option value="tieredPercentage">{`Yüzdeli ${tabanAdi} Baremi Aralığı`}</option>
+                                                                <option value="dailySequencePercentage">Günlük Yatırım Sırası Kademesi</option>
+                                                                <option value="averageOfLastDeposits">Son N Yatırımın Ortalaması</option>
                                                             </select>
                                                         </div>
                                                     </div>
@@ -640,9 +655,60 @@ export function RulesManager() {
                                                                 />
                                                             </div>
                                                         )}
-                                                    </div>
+                                                            {editValue?.amountType === 'averageOfLastDeposits' && (
+                                                                <>
+                                                                    <div className="space-y-2">
+                                                                        <label className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest block pl-1">Ortalamaya Girecek Yatırım Sayısı</label>
+                                                                        <input type="number" placeholder="Örn: 3"
+                                                                            value={editValue?.averageDepositCount ?? ''}
+                                                                            onChange={(e) => setEditValue({ ...editValue, averageDepositCount: Number(e.target.value) })}
+                                                                            className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all outline-none font-bold" />
+                                                                    </div>
+                                                                    <div className="space-y-2">
+                                                                        <label className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest block pl-1">Alt Sınır (₺)</label>
+                                                                        <input type="number" placeholder="Örn: 100"
+                                                                            value={editValue?.minimumBonus ?? ''}
+                                                                            onChange={(e) => setEditValue({ ...editValue, minimumBonus: Number(e.target.value) })}
+                                                                            className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all outline-none font-bold" />
+                                                                    </div>
+                                                                    <div className="space-y-2">
+                                                                        <label className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest block pl-1">Üst Sınır (₺)</label>
+                                                                        <input type="number" placeholder="Örn: 2000"
+                                                                            value={editValue?.maximumBonus ?? ''}
+                                                                            onChange={(e) => setEditValue({ ...editValue, maximumBonus: Number(e.target.value) })}
+                                                                            className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all outline-none font-bold" />
+                                                                    </div>
+                                                                </>
+                                                            )}
+                                                        </div>
 
-                                                    {editValue?.amountType === 'tiered' && (
+                                                        {editValue?.amountType === 'dailySequencePercentage' && (
+                                                            <div className="p-4 rounded-xl bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] space-y-3">
+                                                                <label className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest block pl-1">Günlük Yatırım Sırası Kademeleri</label>
+                                                                <p className="text-[10px] text-[color:var(--panel-faint,#5c6470)] font-medium pl-1">
+                                                                    Virgülle ayrılmış yüzdeler. Soldan sağa günün 1., 2., 3. ... yatırımına uygulanır;
+                                                                    listeden sonraki yatırımlar bonus almaz. Örn: 20, 40, 60, 80, 100
+                                                                </p>
+                                                                <input type="text" placeholder="20, 40, 60, 80, 100"
+                                                                    value={(editValue?.dailySequencePercents ?? []).join(', ')}
+                                                                    onChange={(e) => setEditValue({
+                                                                        ...editValue,
+                                                                        dailySequencePercents: e.target.value
+                                                                            .split(',')
+                                                                            .map((parca) => Number(parca.trim()))
+                                                                            .filter((sayi) => Number.isFinite(sayi) && sayi > 0),
+                                                                    })}
+                                                                    className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all outline-none font-bold" />
+                                                                {(editValue?.dailySequencePercents ?? []).length > 0 && (
+                                                                    <p className="text-[10px] text-[color:var(--panel-muted,#8a919c)] font-medium pl-1">
+                                                                        {(editValue?.dailySequencePercents ?? []).length} kademe · toplam %
+                                                                        {(editValue?.dailySequencePercents ?? []).reduce((a, b) => a + b, 0)}
+                                                                    </p>
+                                                                )}
+                                                            </div>
+                                                        )}
+
+                                                        {editValue?.amountType === 'tiered' && (
                                                         <div className="p-4 rounded-xl bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] space-y-4">
                                                             <div className="flex items-center justify-between">
                                                                 <label className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest block pl-1">Barem Ayarları</label>
@@ -1220,6 +1286,39 @@ export function RulesManager() {
                                                 </div>
 
 
+                                                {/* Section: Talep Anı Koşulları */}
+                                                <div className="space-y-4 pt-4 border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
+                                                    <h4 className="text-[10px] font-semibold text-blue-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                                                        <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                                                        Talep Anı Koşulları
+                                                    </h4>
+                                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                                        <div className="space-y-2">
+                                                            <label className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest block pl-1">Aynı Gün Ardışık Kayıp Yatırımı</label>
+                                                            <p className="text-[10px] text-[color:var(--panel-faint,#5c6470)] font-medium pl-1 mb-1">Kaç yatırımın aynı gün kaybedilmiş olması gerektiği. Boş bırakılırsa kontrol edilmez.</p>
+                                                            <input type="number" placeholder="Örn: 3"
+                                                                value={editValue?.consecutiveLossDeposits ?? ''}
+                                                                onChange={(e) => setEditValue({ ...editValue, consecutiveLossDeposits: e.target.value === '' ? undefined : Number(e.target.value) })}
+                                                                className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all outline-none font-bold" />
+                                                        </div>
+                                                        <div className="space-y-2">
+                                                            <label className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest block pl-1">Bakiye Üst Sınırı (₺)</label>
+                                                            <p className="text-[10px] text-[color:var(--panel-faint,#5c6470)] font-medium pl-1 mb-1">Talep anında bakiye bu tutarın altında olmalı. Kayıp bonuslarında tipik değer 10.</p>
+                                                            <input type="number" placeholder="Örn: 10"
+                                                                value={editValue?.balanceBelow ?? ''}
+                                                                onChange={(e) => setEditValue({ ...editValue, balanceBelow: e.target.value === '' ? undefined : Number(e.target.value) })}
+                                                                className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all outline-none font-bold" />
+                                                        </div>
+                                                        <ToggleField
+                                                            label="Açık Bahis Olmamalı"
+                                                            description="Talep anında açık kupon veya casino turu varsa bonus verilmesin."
+                                                            value={editValue?.noOpenBets}
+                                                            onChange={(v) => setEditValue({ ...editValue, noOpenBets: v })}
+                                                        />
+                                                    </div>
+                                                </div>
+
+
                                                 {/* Section: Time & Category Constraints */}
                                                 <div className="space-y-4 pt-4 border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
                                                     <h4 className="text-[10px] font-semibold text-blue-400 uppercase tracking-[0.2em] flex items-center gap-2">
@@ -1327,7 +1426,9 @@ export function RulesManager() {
                                                                  spec.amountType === 'percentage' ? `%${spec.percentageAmount}` :
                                                                  spec.amountType === 'full' ? 'Tam Yatırım' :
                                                                  spec.amountType === 'tieredRange' ? 'Baremli Yatırım Aralığı' :
-                                                                 spec.amountType === 'tieredPercentage' ? 'Yüzdeli Barem Aralığı' : 'Baremli'}
+                                                                 spec.amountType === 'tieredPercentage' ? 'Yüzdeli Barem Aralığı' :
+                                                                 spec.amountType === 'dailySequencePercentage' ? `Günlük Sıra Kademesi (${(spec.dailySequencePercents ?? []).length})` :
+                                                                 spec.amountType === 'averageOfLastDeposits' ? `Son ${spec.averageDepositCount ?? 3} Yatırım Ortalaması` : 'Baremli'}
                                                             </p>
                                                         </div>
                                                     )}
