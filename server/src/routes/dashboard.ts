@@ -12,6 +12,7 @@ import { getDashboardToken, getBackofficeToken } from '../lib/authStore.js';
 import { proxyDashboard, proxyPostToUrl, proxyDashboardPost, proxyBonusPost, proxyFreeBetPost, proxyClientsPost, proxyRegistrationStats, proxyClientsByIP, proxyWithdrawalPost, proxyDepositsPost, proxyBetReportPost, proxyBetSelectionsPost, proxyClientKpi, proxyClientNotes, proxyClientBonuses, proxyClientTransactions, proxyDetailedReport, fetchBackofficeClientTransactions, proxyClientTurnoversPaging, proxyChargeBonus, proxyManualAdjustment, proxySmsSend, proxyTournamentReportPost, DASHBOARD_HEADERS, BACKOFFICE_HEADERS } from '../lib/proxy.js';
 import { getAllPromosNormalized } from '../services/promosService.js';
 import { churnListesi, type ChurnGirdisi } from '../services/churnScoreService.js';
+import { temasEkle, oyuncuTemaslari, sonTemaslar, sonTemasHaritasi, temasOzeti, ensureCrmDir } from '../services/crmService.js';
 import { evaluateForAccount, evaluateWithdrawalRules, evaluateRiskAnalysis, evaluateWagerSummary, evaluateBonusRules, refreshRules, getRulesForTenant } from '../services/withdrawalEngine.js';
 import { buildAccountSnapshotFromClientId } from '../services/accountSnapshotService.js';
 import { assignmentValuesForPromoSpec, getRules, saveRules, type RulesConfig } from '../services/rulesService.js';
@@ -2126,9 +2127,64 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
           .reduce((toplam, r) => toplam + Math.max(0, r.churn.deger), 0),
       };
 
-      return reply.send({ HasError: false, Data: { players: skorlu, ozet, page, countPerPage } });
+      // Son temas: "bu oyuncu zaten dun arandi" bilgisi olmadan ayni kisi
+      // tekrar tekrar aranir. Tek dokuman okumasi, satir basina istek degil.
+      const temasHaritasi = await sonTemasHaritasi(
+        await getTenantKeyForAdmin(request as any),
+        skorlu.map((r) => String(r.login ?? '')),
+      ).catch(() => ({} as Record<string, { createdAt: string; tur: string; sonuc: string }>));
+
+      const zenginlestirilmis = skorlu.map((row) => ({
+        ...row,
+        sonTemas: temasHaritasi[String(row.login ?? '').trim().toLocaleLowerCase('tr-TR')] ?? null,
+      }));
+
+      return reply.send({ HasError: false, Data: { players: zenginlestirilmis, ozet, page, countPerPage } });
     } catch (err) {
       return sendLynonError(reply, err);
+    }
+  });
+
+  /** Bir oyuncunun temas gecmisi. */
+  fastify.get<{ Params: { login: string } }>('/admin/crm/temas/:login', async (request, reply) => {
+    const tenantKey = await getTenantKeyForAdmin(request as any);
+    try {
+      ensureCrmDir();
+      const temaslar = await oyuncuTemaslari(tenantKey, request.params.login);
+      return reply.send({ HasError: false, Data: { temaslar } });
+    } catch (err) {
+      return reply.status(500).send({ HasError: true, AlertMessage: (err as Error).message });
+    }
+  });
+
+  /** Yeni temas kaydi. Kim yaptigi oturumdan alinir, gövdeden DEGIL. */
+  fastify.post<{
+    Body: { login: string; tur?: string; sonuc?: string; not?: string };
+  }>('/admin/crm/temas', async (request, reply) => {
+    const user = (request.session as any)?.user;
+    if (!user?.username) return reply.status(401).send({ HasError: true, AlertMessage: 'Oturum gerekli.' });
+
+    const tenantKey = await getTenantKeyForAdmin(request as any);
+    try {
+      ensureCrmDir();
+      const temas = await temasEkle(tenantKey, { ...request.body, yapan: user.username });
+      const { audit } = await import('../lib/auditLog.js');
+      audit(user.username, user.role, 'crm_temas', temas.login, `${temas.tur}/${temas.sonuc}`);
+      return reply.send({ HasError: false, Data: { temas } });
+    } catch (err) {
+      return reply.status(400).send({ HasError: true, AlertMessage: (err as Error).message });
+    }
+  });
+
+  /** Son temaslar + ozet: CRM ekraninin gunluk gorunumu. */
+  fastify.get('/admin/crm/gunluk', async (request, reply) => {
+    const tenantKey = await getTenantKeyForAdmin(request as any);
+    try {
+      ensureCrmDir();
+      const temaslar = await sonTemaslar(tenantKey, 200);
+      return reply.send({ HasError: false, Data: { temaslar, ozet: temasOzeti(temaslar) } });
+    } catch (err) {
+      return reply.status(500).send({ HasError: true, AlertMessage: (err as Error).message });
     }
   });
 

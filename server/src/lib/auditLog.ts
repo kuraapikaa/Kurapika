@@ -8,6 +8,9 @@ const LOG_PATH = join(__dirname, '..', '..', 'audit.log');
 
 export type AuditAction =
   | 'login'
+  // CRM temas kaydi: kimin hangi oyuncuyla ne zaman temas ettigi denetlenebilir
+  // olmali — musteri iletisimi bir islem, sessizce yapilmamali.
+  | 'crm_temas'
   | 'logout'
   | 'lead_create'
   | 'lead_update'

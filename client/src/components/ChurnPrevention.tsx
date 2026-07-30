@@ -1,5 +1,5 @@
 import { useMemo, useState, type ReactNode } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import {
   AlertTriangle,
@@ -10,6 +10,9 @@ import {
   Loader2,
   Search,
   ShieldOff,
+  Check,
+  MessageSquare,
+  PhoneCall,
   TrendingDown,
   UserX,
 } from 'lucide-react';
@@ -214,6 +217,106 @@ function Satir({ oyuncu }: { oyuncu: ChurnOyuncu }) {
       )}
 
       <p className="mt-2 text-[11px] font-medium" style={{ color: stil.renk }}>{oyuncu.churn.oneri}</p>
+
+      <TemasSatiri oyuncu={oyuncu} />
+    </div>
+  );
+}
+
+/**
+ * Hizli temas kaydi.
+ *
+ * Churn listesi kimin aranacagini soyluyordu ama "arandi mi" bilgisi hicbir
+ * yerde yoktu; ayni oyuncu iki temsilci tarafindan ayni gun aranabiliyordu.
+ * Kayit listeden cikmadan alinabilsin diye buraya kondu — ayri ekrana
+ * gitmek gereken bir adim, atlanan bir adim olurdu.
+ */
+function TemasSatiri({ oyuncu }: { oyuncu: ChurnOyuncu }) {
+  const qc = useQueryClient();
+  const [acik, setAcik] = useState(false);
+  const [not, setNot] = useState('');
+  const [tur, setTur] = useState('arama');
+  const [sonuc, setSonuc] = useState('ulasildi');
+
+  const kaydet = useMutation({
+    mutationFn: () => crmApi.temasEkle({ login: oyuncu.login, tur, sonuc, not }),
+    onSuccess: () => {
+      setAcik(false);
+      setNot('');
+      qc.invalidateQueries({ queryKey: ['crm-churn'] });
+    },
+  });
+
+  const sonTemas = oyuncu.sonTemas;
+
+  return (
+    <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))] pt-2.5">
+      {sonTemas ? (
+        <span className="inline-flex items-center gap-1.5 rounded-md bg-[rgba(48,209,88,0.1)] px-2 py-1 text-[10px] font-semibold text-[color:var(--panel-success,#30d158)]">
+          <Check size={11} />
+          Son temas {formatDateDisplay(sonTemas.createdAt)} · {sonTemas.tur}
+        </span>
+      ) : (
+        <span className="inline-flex items-center gap-1.5 rounded-md bg-[rgba(242,244,248,0.04)] px-2 py-1 text-[10px] font-semibold text-[color:var(--panel-faint,#5c6470)]">
+          <PhoneCall size={11} /> Hiç temas edilmemiş
+        </span>
+      )}
+
+      {!acik ? (
+        <button
+          type="button"
+          onClick={() => setAcik(true)}
+          className="ml-auto inline-flex items-center gap-1.5 rounded-md border border-[color:var(--panel-border,rgba(242,244,248,0.1))] px-3 py-1.5 text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)]"
+        >
+          <MessageSquare size={11} /> Temas kaydet
+        </button>
+      ) : (
+        <div className="flex w-full flex-wrap items-center gap-2">
+          <select
+            value={tur}
+            onChange={(e) => setTur(e.target.value)}
+            className="h-8 rounded-md border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/30 px-2 text-[11px] text-[color:var(--panel-text,#f2f4f8)]"
+          >
+            <option value="arama">Arama</option>
+            <option value="sms">SMS</option>
+            <option value="not">Not</option>
+            <option value="bonus">Bonus</option>
+            <option value="kampanya">Kampanya</option>
+          </select>
+          <select
+            value={sonuc}
+            onChange={(e) => setSonuc(e.target.value)}
+            className="h-8 rounded-md border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/30 px-2 text-[11px] text-[color:var(--panel-text,#f2f4f8)]"
+          >
+            <option value="ulasildi">Ulaşıldı</option>
+            <option value="ulasilamadi">Ulaşılamadı</option>
+            <option value="geri-dondu">Geri döndü</option>
+            <option value="ilgilenmiyor">İlgilenmiyor</option>
+            <option value="bilinmiyor">Bilinmiyor</option>
+          </select>
+          <input
+            value={not}
+            onChange={(e) => setNot(e.target.value)}
+            placeholder="Kısa not"
+            className="h-8 min-w-0 flex-1 rounded-md border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/30 px-2 text-[11px] text-[color:var(--panel-text,#f2f4f8)] outline-none"
+          />
+          <button
+            type="button"
+            onClick={() => kaydet.mutate()}
+            disabled={kaydet.isPending}
+            className="h-8 rounded-md bg-[color:var(--panel-accent,#0a84ff)] px-3 text-[10px] font-semibold text-white disabled:opacity-50"
+          >
+            {kaydet.isPending ? 'Kaydediliyor' : 'Kaydet'}
+          </button>
+          <button
+            type="button"
+            onClick={() => setAcik(false)}
+            className="h-8 rounded-md px-2 text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)]"
+          >
+            Vazgeç
+          </button>
+        </div>
+      )}
     </div>
   );
 }

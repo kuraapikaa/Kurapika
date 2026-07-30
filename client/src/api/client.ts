@@ -796,10 +796,22 @@ export type ChurnOyuncu = {
   totalDeposits: number;
   totalWithdrawals: number;
   lastLoginDate: string | null;
+  sonTemas: { createdAt: string; tur: string; sonuc: string } | null;
   churn: ChurnSonucu;
 };
 
+export type CrmTemas = {
+  id: string; login: string; tur: string; sonuc: string;
+  not: string; yapan: string; createdAt: string;
+};
+
 export const crmApi = {
+  temasGecmisi: (login: string) =>
+    get<{ HasError: boolean; Data: { temaslar: CrmTemas[] } }>(`/admin/crm/temas/${encodeURIComponent(login)}`),
+  temasEkle: (body: { login: string; tur?: string; sonuc?: string; not?: string }) =>
+    post<{ HasError: boolean; Data: { temas: CrmTemas } }>('/admin/crm/temas', body),
+  gunluk: () =>
+    get<{ HasError: boolean; Data: { temaslar: CrmTemas[]; ozet: { toplam: number; bugun: number; ulasilan: number; ulasilamayan: number; turDagilimi: Record<string, number> } } }>('/admin/crm/gunluk'),
   /**
    * Skorlanmis oyuncu listesi. Tek istek: sunucu hem listeyi hem skoru hem
    * ozeti donuyor. Onceki ekran her oyuncu icin ayri KPI cagirıyordu.
