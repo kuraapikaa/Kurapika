@@ -407,15 +407,23 @@ export function PlayerLobby() {
   );
   const [activeLobbyTab, setActiveLobbyTab] = useState<LobbyTabId>('games');
 
+  // Kazanan adlari yalnizca ILK HARF + maske. Onceden ad govdesi aciktaydi
+  // ("Ahmet***"); ayni ilk isim + oyun + tutar birlesimi taniyan biri icin
+  // kimlik ipucu veriyordu. Tek harf hem oyuncuyu gizliyor hem seridin
+  // "gercek insanlar kazaniyor" hissini koruyor.
   const liveWinners = useMemo(() => [
-    { user: 'Ahmet***', win: '₺2.450', game: 'Şans Çarkı', time: '1 dk önce' },
-    { user: 'Selin***', win: '₺12.800', game: 'Sweet Bonanza', time: '2 dk önce' },
-    { user: 'Mert***', win: '₺500', game: 'Kazı Kazan', time: '3 dk önce' },
-    { user: 'Ayşe***', win: '₺45.000', game: 'Gates of Olympus', time: '4 dk önce' },
-    { user: 'Kaan***', win: '₺3.200', game: 'Aviator', time: '6 dk önce' },
-    { user: 'Buse***', win: '₺8.900', game: 'Big Bass Splash', time: '8 dk önce' },
-    { user: 'Can***', win: '₺1.150', game: 'Şans Çarkı', time: '10 dk önce' },
-    { user: 'Deniz***', win: '₺22.400', game: 'Sugar Rush', time: '12 dk önce' },
+    { user: 'A***', win: '₺2.450', game: 'Şans Çarkı', time: '1 dk önce' },
+    { user: 'S***', win: '₺12.800', game: 'Sweet Bonanza', time: '2 dk önce' },
+    { user: 'M***', win: '₺500', game: 'Kazı Kazan', time: '3 dk önce' },
+    { user: 'A***', win: '₺45.000', game: 'Gates of Olympus', time: '4 dk önce' },
+    { user: 'K***', win: '₺3.200', game: 'Cosmic Clusters!', time: '6 dk önce' },
+    { user: 'B***', win: '₺8.900', game: 'The Big Dog House', time: '8 dk önce' },
+    { user: 'C***', win: '₺1.150', game: 'Fortune Of Olympus', time: '10 dk önce' },
+    { user: 'D***', win: '₺22.400', game: 'Sweet Baklava', time: '12 dk önce' },
+    { user: 'E***', win: '₺6.700', game: 'Black Diamond Bell Link', time: '14 dk önce' },
+    { user: 'Z***', win: '₺15.300', game: 'SugarTime 1000', time: '16 dk önce' },
+    { user: 'O***', win: '₺4.050', game: 'Candy Palace', time: '18 dk önce' },
+    { user: 'İ***', win: '₺31.200', game: 'Sugar Rush', time: '21 dk önce' },
   ], []);
 
   // Ana sitede giriş yapmış oyuncunun kimliği (iframe -> postMessage).

@@ -16,6 +16,8 @@ type Match = {
   awayLogoUrl?: string | null;
   league: string;
   startsAt: string;
+  /** Tahminlerin kapandigi an; bos ise startsAt kullanilir. */
+  predictionClosesAt?: string;
   status: 'open' | 'closed' | 'finished';
   homeScore: number | null;
   awayScore: number | null;
@@ -453,8 +455,14 @@ function ScoreInput({
 }
 
 function isMatchOpen(match: Match) {
-  const startsAt = match.startsAt ? new Date(match.startsAt).getTime() : null;
-  return match.status === 'open' && (!startsAt || startsAt > Date.now());
+  // Sunucudaki tahminKapanisZamani ile ayni kural: acik son tarih varsa o,
+  // yoksa baslama saati. Ikisi ayrisirsa arayuz "acik" gosterip sunucu
+  // reddederdi.
+  const acikKapanis = match.predictionClosesAt ? new Date(match.predictionClosesAt).getTime() : NaN;
+  const kapanis = Number.isFinite(acikKapanis)
+    ? acikKapanis
+    : (match.startsAt ? new Date(match.startsAt).getTime() : NaN);
+  return match.status === 'open' && (!Number.isFinite(kapanis) || kapanis > Date.now());
 }
 
 function formatMatchDate(value: string, fallback: string) {
