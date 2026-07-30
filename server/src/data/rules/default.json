@@ -160,6 +160,47 @@
           "percent": 30
         }
       ]
+    },
+    "dorduncu-yatirim-hediyesi": {
+      "enabled": true,
+      "type": "cash",
+      "title": "4. Yatirimin Bizden Hediye!",
+      "consecutiveLossDeposits": 3,
+      "minDepositAmount": 500,
+      "amountType": "averageOfLastDeposits",
+      "averageDepositCount": 3,
+      "minimumBonus": 100,
+      "maximumBonus": 2000,
+      "balanceBelow": 10,
+      "noOpenBets": true,
+      "casinoWagering": 10,
+      "sportWagering": 5,
+      "minSportOdds": 1.5,
+      "maxPayoutMult": 10,
+      "perDayLimit": 1,
+      "excludeFromLossCalculations": true
+    },
+    "carsamba-happy-days": {
+      "enabled": true,
+      "type": "cash",
+      "title": "%400 Carsamba Happy Days",
+      "activeDays": [
+        "Wednesday"
+      ],
+      "amountType": "dailySequencePercentage",
+      "dailySequencePercents": [
+        20,
+        40,
+        60,
+        80,
+        100
+      ],
+      "minDepositAmount": 250,
+      "balanceBelow": 10,
+      "noOpenBets": true,
+      "casinoWagering": 15,
+      "maxPayoutMult": 10,
+      "excludeFromLossCalculations": true
     }
   },
   "PROMO_TITLE_SPECS": {}
