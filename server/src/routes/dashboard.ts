@@ -13,6 +13,7 @@ import { proxyDashboard, proxyPostToUrl, proxyDashboardPost, proxyBonusPost, pro
 import { getAllPromosNormalized } from '../services/promosService.js';
 import { churnListesi, type ChurnGirdisi } from '../services/churnScoreService.js';
 import { temasEkle, oyuncuTemaslari, sonTemaslar, sonTemasHaritasi, temasOzeti, ensureCrmDir } from '../services/crmService.js';
+import { affiliateMetrikleri } from '../services/affiliateMetrics.js';
 import { evaluateForAccount, evaluateWithdrawalRules, evaluateRiskAnalysis, evaluateWagerSummary, evaluateBonusRules, refreshRules, getRulesForTenant } from '../services/withdrawalEngine.js';
 import { buildAccountSnapshotFromClientId } from '../services/accountSnapshotService.js';
 import { assignmentValuesForPromoSpec, getRules, saveRules, type RulesConfig } from '../services/rulesService.js';
@@ -299,7 +300,16 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
         return reply.status(409).send({ HasError: true, AlertMessage: 'Affiliate özeti için Lynon bağlantısı gerekli.' });
       }
       try {
-        return reply.send(await lynonAffiliateSummary(startDate, endDate));
+        const ozet = await lynonAffiliateSummary(startDate, endDate);
+        // Ham toplamlar zaten geliyordu; ekranin ihtiyaci olan oranlar
+        // (net pozisyon, oyuncu basi gelir, gelir payi, cekim orani) burada
+        // turetiliyor. Istemcide hesaplansa her ekran kendi yorumunu yapardi.
+        const satirlar = ((ozet as any)?.Data?.Objects ?? []) as any[];
+        const { satirlar: zengin, toplam } = affiliateMetrikleri(satirlar);
+        return reply.send({
+          ...(ozet as any),
+          Data: { ...(ozet as any).Data, Objects: zengin, Toplam: toplam },
+        });
       } catch (err) {
         return sendLynonError(reply, err);
       }
