@@ -1692,7 +1692,7 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
               ? { overallOk: false, items: [{ id: 'disabled-rule', ok: false, label: 'Bu kampanya bonus taleplerinde pasif durumda.' }] }
               : missingPartnerBonusId
                 ? { overallOk: false, items: [{ id: 'missing-partner-bonus-id', ok: false, label: 'Partner Bonus ID eksik; bonus ataması güvenli biçimde durduruldu.' }] }
-                : await evaluateForAccount(account as any, { id: bonusId, title: bonusName || String(bonusId), ...spec } as any, specs, tenantKey);
+                : await evaluateForAccount(account as any, { id: bonusId, title: bonusName || String(bonusId), ...spec } as any, specs, tenantKey, 'bonus');
           if (bonusId && specificBonusCheck.overallOk && hasCompleteEligibilityData(account)) {
             const username = (request.session as any)?.user?.username ?? 'anonymous';
             const permitKey = bonusAssignmentPermitKey(tenantKey, username, account.ClientId, bonusId);
@@ -1805,7 +1805,7 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
                 title: promo.title || bonusName,
                 ...(promo.rules || activeSpec || {}),
                 raw: promo.conditions?.join('\n') || ''
-             } as any, specs, tenantKey);
+             } as any, specs, tenantKey, 'bonus');
           }
         }
 
@@ -1883,7 +1883,7 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
             id: Number(BonusId),
             title: (spec as any).title || String(BonusId),
             ...spec,
-          } as any, rules, tenantKey);
+          } as any, rules, tenantKey, 'bonus');
           if (!currentCheck.overallOk) {
             const reasons = currentCheck.items.filter((item) => !item.ok).map((item) => item.reason || item.label);
             return reply.status(409).send({
@@ -1964,7 +1964,7 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
                       const checkRes = await evaluateForAccount(account as any, {
                           id: Number(strId) || (spec as any).partnerBonusId || 0,
                           title: (spec as any).title || strId,
-                      } as any, rules, tenantKey);
+                      } as any, rules, tenantKey, 'bonus');
 
                       if (!checkRes.overallOk) {
                           const reasons = checkRes.items.filter(i => !i.ok).map(i => i.label);

@@ -275,12 +275,28 @@ function calculateBonusAmount(account: AccountSnapshot, spec: PromoSpec): BonusC
 }
 const defaultEmptySpecs: RulesConfig = { PROMO_SPECS: {}, PROMO_TITLE_SPECS: {} };
 
+/**
+ * Degerlendirme kapsami.
+ *
+ * "Cevrim & Odeme Kurallari" (anapara cevrimi, bonus cevrimi, maksimum kazanc)
+ * bonus TALEBINI engellememelidir: oyuncu bonusu isterken onceki bonusun
+ * cevrimini tamamlamis olmak zorunda degil. Bu kurallar yalnizca OTOMATIK
+ * CEKIM onayinda anlamli.
+ *
+ * autoWithdrawJob da bu fonksiyonu kullandigi icin kontrolleri silemiyoruz;
+ * kapsama gore ayiriyoruz. Varsayilan 'cekim' — mevcut cagiranlarin davranisi
+ * degismesin, bonus yolu acikca 'bonus' gecsin.
+ */
+export type DegerlendirmeKapsami = 'bonus' | 'cekim';
+
 export async function evaluateForAccount(
   account: AccountSnapshot,
   promo: NormalizedPromo,
   specs: RulesConfig = defaultEmptySpecs,
-  tenantKey: string = 'default'
+  tenantKey: string = 'default',
+  kapsam: DegerlendirmeKapsami = 'cekim'
 ): Promise<PromoChecklist> {
+  const cevrimKurallariUygulanir = kapsam === 'cekim';
   const items: ChecklistItem[] = [];
   const spec = getSpecForPromo(specs, promo);
 
@@ -399,7 +415,7 @@ export async function evaluateForAccount(
 
   const fsText = isFreeSpin && freeSpinWinAmount > 0 ? ` (İşlemlerden yansıyan FS Kazancı: ${freeSpinWinAmount.toFixed(2)} TRY)` : '';
 
-  if (requiredPrincipalWager > 0) {
+  if (cevrimKurallariUygulanir && requiredPrincipalWager > 0) {
     const ok = playedAmount >= requiredPrincipalWager;
     items.push({
       id: 'principal-wager',
@@ -409,7 +425,7 @@ export async function evaluateForAccount(
     });
   }
 
-  if (promo.wagering || bonusMult > 0 || bonusRemaining > 0) {
+  if (cevrimKurallariUygulanir && (promo.wagering || bonusMult > 0 || bonusRemaining > 0)) {
     const ok = bonusRemaining <= 0;
     items.push({
       id: 'bonus-wagering',
@@ -439,7 +455,7 @@ export async function evaluateForAccount(
     }
   }
 
-  if (maxPayout != null) {
+  if (cevrimKurallariUygulanir && maxPayout != null) {
     const ok = balance <= maxPayout;
     const bonusExceededAmount = balance - maxPayout;
     items.push({
