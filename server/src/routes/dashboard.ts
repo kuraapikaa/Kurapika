@@ -11,6 +11,7 @@ const PROMOTIONS_JSON_PATH = path.join(__dirname, '..', '..', 'promotions-data.j
 import { getDashboardToken, getBackofficeToken } from '../lib/authStore.js';
 import { proxyDashboard, proxyPostToUrl, proxyDashboardPost, proxyBonusPost, proxyFreeBetPost, proxyClientsPost, proxyRegistrationStats, proxyClientsByIP, proxyWithdrawalPost, proxyDepositsPost, proxyBetReportPost, proxyBetSelectionsPost, proxyClientKpi, proxyClientNotes, proxyClientBonuses, proxyClientTransactions, proxyDetailedReport, fetchBackofficeClientTransactions, proxyClientTurnoversPaging, proxyChargeBonus, proxyManualAdjustment, proxySmsSend, proxyTournamentReportPost, DASHBOARD_HEADERS, BACKOFFICE_HEADERS } from '../lib/proxy.js';
 import { getAllPromosNormalized } from '../services/promosService.js';
+import { churnListesi, type ChurnGirdisi } from '../services/churnScoreService.js';
 import { evaluateForAccount, evaluateWithdrawalRules, evaluateRiskAnalysis, evaluateWagerSummary, evaluateBonusRules, refreshRules, getRulesForTenant } from '../services/withdrawalEngine.js';
 import { buildAccountSnapshotFromClientId } from '../services/accountSnapshotService.js';
 import { assignmentValuesForPromoSpec, getRules, saveRules, type RulesConfig } from '../services/rulesService.js';
@@ -2071,6 +2072,66 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
     }
   );
   // Admin: Partner Bonus Listesini Getir
+  /**
+   * CRM / churn listesi — skorlanmis oyuncular.
+   *
+   * Onceki ChurnPrevention ekrani bunu TARAYICIDA yapiyordu: once oyuncu
+   * listesi, sonra her oyuncu icin ayri KPI istegi (useQueries). 20 satir =
+   * 20 paralel istek. Burada tek Lynon cagrisi yetiyor, cunku oyuncu listesi
+   * skorlama icin gereken alanlarin hepsini zaten donuyor.
+   */
+  fastify.post<{
+    Body: { page?: number; countPerPage?: number; minSkor?: number; segment?: string; query?: string };
+  }>('/admin/crm/churn', async (request, reply) => {
+    if (!shouldUseLynon(request)) {
+      return reply.status(409).send({ HasError: true, AlertMessage: 'CRM için Lynon bağlantısı gerekli.' });
+    }
+    const body = request.body ?? {};
+    const page = Math.max(1, Number(body.page) || 1);
+    const countPerPage = Math.min(200, Math.max(10, Number(body.countPerPage) || 50));
+
+    try {
+      const liste = await lynonPlayers({ page, countPerPage, query: body.query });
+      const satirlar = ((liste as any)?.Data?.Objects ?? []) as Array<Record<string, unknown>>;
+
+      const girdiler = satirlar.map((row) => ({
+        id: row.Id,
+        login: row.Login,
+        kategori: row.CategoryName ?? null,
+        lastLoginDate: (row.LastLoginLocalDate as string) ?? null,
+        registrationDate: (row.CreatedLocalDate as string) ?? null,
+        totalDeposits: Number(row.TotalDeposit ?? 0),
+        totalWithdrawals: Number(row.TotalWithdraw ?? 0),
+        balance: Number(row.Balance ?? 0),
+        isLocked: row.IsLocked === true,
+      })) satisfies Array<ChurnGirdisi & Record<string, unknown>>;
+
+      let skorlu = churnListesi(girdiler);
+
+      const minSkor = Number(body.minSkor);
+      if (Number.isFinite(minSkor) && minSkor > 0) {
+        skorlu = skorlu.filter((row) => row.churn.skor >= minSkor);
+      }
+      if (body.segment) {
+        skorlu = skorlu.filter((row) => row.churn.segment === body.segment);
+      }
+
+      // Ozet: ekranin ust seridi bunu tek bakista gostersin.
+      const ozet = {
+        toplam: skorlu.length,
+        kritik: skorlu.filter((r) => r.churn.seviye === 'kritik').length,
+        yuksek: skorlu.filter((r) => r.churn.seviye === 'yuksek').length,
+        riskAltindakiDeger: skorlu
+          .filter((r) => r.churn.seviye === 'kritik' || r.churn.seviye === 'yuksek')
+          .reduce((toplam, r) => toplam + Math.max(0, r.churn.deger), 0),
+      };
+
+      return reply.send({ HasError: false, Data: { players: skorlu, ozet, page, countPerPage } });
+    } catch (err) {
+      return sendLynonError(reply, err);
+    }
+  });
+
   fastify.post('/admin/bonus/partner-list', async (request, reply) => {
     if (shouldUseLynon(request)) {
       try {
