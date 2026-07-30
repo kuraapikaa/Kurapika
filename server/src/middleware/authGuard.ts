@@ -1,5 +1,5 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import type { SessionUser, BonusPanelUser } from '../types/betconstruct.js';
+import type { SessionUser, BonusPanelUser, AffiliateUser } from '../types/betconstruct.js';
 
 /** Ana panel giriş ekranını ve session kontrolünü devre dışı bırakır. */
 export function isPanelAuthDisabled(): boolean {
@@ -36,7 +36,20 @@ const PUBLIC_EXACT_PATHS = new Set([
   // Telegram'ın gönderdiği her update handler'a ulaşmadan 401 alıyordu ve
   // oyuncu hesabı hiç bağlanamıyordu.
   '/api/telegram/webhook',
+  // Affiliate portal kimlik dogrulama uclari. Panel oturumu olamaz; kendi
+  // oturumlarini bu uclar kuruyor.
+  '/api/affiliate-portal/login',
+  '/api/affiliate-portal/me',
+  '/api/affiliate-portal/logout',
 ]);
+
+/**
+ * Affiliate portal veri uclari — ortak oturumu VEYA admin yeterli.
+ *
+ * Ortak yalnizca kendi BTag'ini gorur; filtreleme rota icinde yapiliyor.
+ * Admin de gorebilsin ki destek ekibi ortagin ekranini dogrulayabilsin.
+ */
+const AFFILIATE_PORTAL_PREFIX = '/api/affiliate-portal/';
 
 /** Auth gerektirmeyen rota ön ekleri. */
 const PUBLIC_PREFIXES = [
@@ -81,6 +94,12 @@ export function registerAuthMiddleware(app: FastifyInstance): void {
 
     // Bonus panel API'leri: admin veya bonus panel girişi yeterli
     if (BONUS_PANEL_PATHS.has(path) && (user || bonusPanelUser)) {
+      return;
+    }
+
+    // Affiliate portal: ortak oturumu veya admin yeterli.
+    const affiliateUser = session?.affiliateUser as AffiliateUser | undefined;
+    if (path.startsWith(AFFILIATE_PORTAL_PREFIX) && (user || affiliateUser)) {
       return;
     }
 
