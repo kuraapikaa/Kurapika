@@ -221,6 +221,36 @@ async function shutdown(signal: string) {
 }
 process.once('SIGTERM', () => { void shutdown('SIGTERM'); });
 process.once('SIGINT', () => { void shutdown('SIGINT'); });
+
+/**
+ * Surec seviyesi hata yakalayicilar.
+ *
+ * Node 15'ten beri YAKALANMAMIS BIR PROMISE REDDI TUM SURECI SONLANDIRIYOR.
+ * Bu uygulama Lynon, Telegram, BetConstruct ve Redis'e surekli cagri yapiyor;
+ * arka planda .catch()'siz kalan tek bir promise sunucuyu dusurur ve herkes
+ * "connection refused" alir. Yakalayici olmadigi icin de geriye HICBIR IZ
+ * kalmiyordu: surec sessizce oluyor, Railway yeniden baslatiyor, elimizde
+ * yalnizca kenar logunda 502 kaliyordu.
+ *
+ * Iki durum bilerek FARKLI ele aliniyor:
+ *
+ * unhandledRejection — surec OLDURULMEZ. Bunlar cogunlukla basarisiz bir dis
+ * cagri; tum sunucuyu dusurmek orantisiz. Loglanir, servis calismaya devam
+ * eder.
+ *
+ * uncaughtException — loglanir ve duzgun kapatilip cikilir. Burada uygulama
+ * durumu bozulmus olabilir; ayakta tutmak sessiz veri hatasi uretme riski
+ * tasir. Railway ON_FAILURE ile temiz bir ornek baslatir.
+ */
+process.on('unhandledRejection', (reason) => {
+  const detay = reason instanceof Error ? (reason.stack ?? reason.message) : String(reason);
+  console.error('[server] YAKALANMAMIS PROMISE REDDI — servis ayakta kalmaya devam ediyor:', detay);
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('[server] YAKALANMAMIS ISTISNA — durum bozulmus olabilir, kapatiliyor:', error.stack ?? error.message);
+  void shutdown('uncaughtException').finally(() => process.exit(1));
+});
 console.log(`[server] Dinlemeye başlanıyor: http://localhost:${port}`);
 try {
   await app.listen({ port, host: '0.0.0.0' });
