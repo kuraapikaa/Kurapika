@@ -25,6 +25,8 @@ interface PromoSpec {
     tieredAmounts?: { min: number; bonus: number }[];
     tieredRanges?: { min: number; max: number; bonus: number }[];
     tieredPercentageRanges?: { min: number; max: number; percent: number; maxBonus?: number }[];
+    /** Bonus tabanini yatirimdan NET KAYBA cevirir (promoEvaluator.depositBasis). */
+    lossBonus?: boolean;
 
     // Automation & Loss Bonus
     isAutoCharge?: boolean;
@@ -751,6 +753,15 @@ export function RulesManager() {
                                                             </div>
                                                         </div>
                                                     )}
+
+                                                    <div className="p-4 rounded-xl bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
+                                                        <ToggleField
+                                                            label="Kayıp bonusu (taban: net kayıp)"
+                                                            description="Açıkken bonus tutarı yatırıma değil oyuncunun NET KAYBINA göre hesaplanır. Kademeli yüzde kullanan kayıp bonuslarında bu şart; kapalı bırakılırsa baremler son yatırıma uygulanır ve tutar yanlış çıkar."
+                                                            value={editValue?.lossBonus}
+                                                            onChange={(v) => setEditValue({ ...editValue, lossBonus: v })}
+                                                        />
+                                                    </div>
 
                                                     {editValue?.amountType === 'tieredPercentage' && (
                                                         <div className="p-4 rounded-xl bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] space-y-4">
