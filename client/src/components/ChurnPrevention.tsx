@@ -1,351 +1,281 @@
-import { useState } from 'react';
-import { matchesTr } from '../lib/turkishSearch';
-import { useQuery, useQueries } from '@tanstack/react-query';
-import { dashboardApi } from '../api/client';
-import { formatNumber, formatDateDisplay } from '../lib/format';
-import {
-    Clock,
-    AlertTriangle,
-    ArrowRight,
-    Loader2,
-    UserX,
-    ChevronLeft,
-    ChevronRight,
-    Crown,
-    Search
-} from 'lucide-react';
+import { useMemo, useState, type ReactNode } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
+import {
+  AlertTriangle,
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+  Crown,
+  Loader2,
+  Search,
+  ShieldOff,
+  TrendingDown,
+  UserX,
+} from 'lucide-react';
+import { crmApi, type ChurnOyuncu, type ChurnSonucu } from '../api/client';
+import { formatNumber, formatDateDisplay } from '../lib/format';
+import { matchesTr } from '../lib/turkishSearch';
 import { cn } from '../lib/utils';
 
+/**
+ * Kayıp riski (churn) ekranı.
+ *
+ * Skorlama SUNUCUDA (churnScoreService). Bu ekran önceden listeyi çekip her
+ * oyuncu için ayrı KPI isteği atıyordu — 20 satır = 20 paralel istek, sayfa
+ * değişince baştan. Artık tek çağrı listeyi, skoru ve özeti birlikte getiriyor.
+ *
+ * Skor kadar SEBEBİ de gösteriliyor: operatör bir oyuncuyu neden aradığını
+ * bilmeden aramamalı. Skor tek başına "şuna güven" demek olurdu.
+ */
+
+const SEVIYE_STILI: Record<ChurnSonucu['seviye'], { etiket: string; renk: string; zemin: string }> = {
+  kritik: { etiket: 'Kritik', renk: 'var(--panel-danger,#ff453a)', zemin: 'rgba(255,69,58,0.12)' },
+  yuksek: { etiket: 'Yüksek', renk: 'var(--panel-warning,#ff9f0a)', zemin: 'rgba(255,159,10,0.12)' },
+  orta: { etiket: 'Orta', renk: 'var(--panel-info,#64d2ff)', zemin: 'rgba(100,210,255,0.1)' },
+  dusuk: { etiket: 'Düşük', renk: 'var(--panel-muted,#8a919c)', zemin: 'rgba(242,244,248,0.05)' },
+};
+
+const SEGMENT_ETIKET: Record<ChurnSonucu['segment'], string> = {
+  vip: 'VIP',
+  yuksek: 'Yüksek değer',
+  orta: 'Orta',
+  dusuk: 'Düşük',
+  yeni: 'Yeni',
+};
+
+const SEGMENTLER = [
+  { id: '', label: 'Tümü' },
+  { id: 'vip', label: 'VIP' },
+  { id: 'yuksek', label: 'Yüksek değer' },
+  { id: 'orta', label: 'Orta' },
+  { id: 'yeni', label: 'Yeni' },
+];
+
+const ESIKLER = [
+  { id: '0', label: 'Hepsi' },
+  { id: '25', label: 'Orta ve üstü' },
+  { id: '50', label: 'Yüksek ve üstü' },
+  { id: '75', label: 'Yalnızca kritik' },
+];
+
 export function ChurnPrevention() {
-    const [inactivityDays, setInactivityDays] = useState(3);
-    const [page, setPage] = useState(1);
-    const [showVipOnly, setShowVipOnly] = useState(false);
-    const [searchTerm, setSearchTerm] = useState('');
-    const rowsPerPage = showVipOnly ? 200 : 50; // VIP araması için havuzu genişletiyoruz
+  const [page, setPage] = useState(1);
+  const [minSkor, setMinSkor] = useState(25);
+  const [segment, setSegment] = useState('');
+  const [arama, setArama] = useState('');
+  const countPerPage = 50;
 
-    // Calculate the threshold date (current time - inactivityDays)
-    const thresholdDate = new Date();
-    thresholdDate.setDate(thresholdDate.getDate() - inactivityDays);
+  const { data, isLoading, isFetching, error } = useQuery({
+    queryKey: ['crm-churn', page, minSkor, segment],
+    queryFn: () => crmApi.churn({ page, countPerPage, minSkor, segment: segment || undefined }),
+    staleTime: 2 * 60 * 1000,
+  });
 
-    // Format for API: "DD-MM-YY - HH:mm:ss"
-    const formatDateForAPI = (date: Date) => {
-        const d = String(date.getDate()).padStart(2, '0');
-        const m = String(date.getMonth() + 1).padStart(2, '0');
-        const y = String(date.getFullYear()).slice(-2);
-        const h = String(date.getHours()).padStart(2, '0');
-        const min = String(date.getMinutes()).padStart(2, '0');
-        const s = String(date.getSeconds()).padStart(2, '0');
-        return `${d}-${m}-${y} - ${h}:${min}:${s}`;
-    };
+  const oyuncular = data?.Data?.players ?? [];
+  const ozet = data?.Data?.ozet;
 
-    const maxLoginDate = formatDateForAPI(thresholdDate);
+  // Arama yerel: sunucu sayfası zaten skora göre sıralı geliyor, istemcide
+  // daraltmak sayfa değiştirmeden hızlı sonuç veriyor.
+  const filtreli = useMemo(
+    () => (arama.trim() ? oyuncular.filter((o) => matchesTr(o.login ?? '', arama)) : oyuncular),
+    [oyuncular, arama],
+  );
 
-    const { data, isLoading, isFetching } = useQuery({
-        queryKey: ['churn-players', inactivityDays, page],
-        queryFn: () => dashboardApi.clients({
-            MaxLastTimeLoginDateLocal: maxLoginDate,
-            SkeepRows: (page - 1) * rowsPerPage,
-            MaxRows: rowsPerPage,
-            IsOrderedDesc: true,
-            OrderedItem: 1
-        }),
-        staleTime: 2 * 60 * 1000,
-    });
-
-    const players = data?.Data?.Objects ?? [];
-    const totalCount = data?.Data?.Count ?? 0;
-    const totalPages = Math.ceil(totalCount / rowsPerPage);
-
-    // Parallel KPI fetching for visible players to find VIPs
-    const kpiQueries = useQueries({
-        queries: players.map((p: any) => ({
-            queryKey: ['client-kpi', p.Id],
-            queryFn: () => dashboardApi.clientKpi(p.Id),
-            staleTime: 5 * 60 * 1000,
-            enabled: players.length > 0,
-        }))
-    });
-
-    const kpiMap = kpiQueries.reduce((acc: Record<number, any>, q, i) => {
-        if (q.data?.Data && players[i]) {
-            acc[players[i].Id] = q.data.Data;
-        }
-        return acc;
-    }, {});
-
-    const processedPlayers = players.filter((p: any) => {
-        const kpi = kpiMap[p.Id];
-        const totalDep = kpi?.TotalDeposit || p.TotalDeposit || 0;
-        const isVip = totalDep > 5000 || (kpi?.ProfitAndLose || 0) > 5000;
-
-        const matchesSearch = matchesTr(p.Login, searchTerm);
-        const matchesVip = showVipOnly ? isVip : true;
-
-        return matchesSearch && matchesVip;
-    });
-
-    return (
-        <div className="animate-in space-y-6 pb-20">
-            {/* Header */}
-            <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-6 rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] backdrop-blur-md">
-                <div className="flex items-center gap-3">
-                    <div className="rounded-xl bg-rose-500/20 p-3 text-rose-400 shadow-xl shadow-rose-500/10">
-                        <UserX size={28} />
-                    </div>
-                    <div>
-                        <h2 className="text-2xl font-semibold text-white tracking-tight">Kayıp Hatırlatıcı (Churn)</h2>
-                        <p className="text-xs font-bold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-[0.2em] mt-1">İnaktif Oyuncu Takip Paneli</p>
-                    </div>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-4">
-                    {/* VIP Toggle */}
-                    <button
-                        onClick={() => {
-                            setShowVipOnly(!showVipOnly);
-                            setPage(1);
-                        }}
-                        className={cn(
-                            "flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-semibold transition-all border",
-                            showVipOnly
-                                ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white border-amber-400 shadow-lg shadow-amber-500/20"
-                                : "bg-white/5 text-[color:var(--panel-muted,#8a919c)] border-[color:var(--panel-border,rgba(242,244,248,0.1))] hover:text-white"
-                        )}
-                    >
-                        <Crown size={16} /> VIP ADAYLARI
-                    </button>
-
-                    {/* Search Bar */}
-                    <div className="relative">
-                        <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-[color:var(--panel-muted,#8a919c)]" />
-                        <input
-                            type="text"
-                            placeholder="Kullanıcı adı ara..."
-                            value={searchTerm}
-                            onChange={(e) => {
-                                setSearchTerm(e.target.value);
-                                setPage(1);
-                            }}
-                            className="h-11 w-64 rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] pl-11 pr-4 text-sm font-medium text-white transition-all focus:border-rose-500/50 focus:ring-1 focus:ring-rose-500/20 outline-none"
-                        />
-                    </div>
-
-                    <div className="flex items-center gap-2 rounded-xl bg-white/5 border border-[color:var(--panel-border,rgba(242,244,248,0.1))] p-1.5">
-                        <span className="pl-3 text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase">Süre:</span>
-                        <div className="flex gap-1">
-                            {[3, 7, 15, 30].map((days) => (
-                                <button
-                                    key={days}
-                                    onClick={() => {
-                                        setInactivityDays(days);
-                                        setPage(1);
-                                    }}
-                                    className={cn(
-                                        "px-4 py-2 rounded-xl text-[10px] font-semibold transition-all",
-                                        inactivityDays === days
-                                            ? "bg-rose-600 text-white shadow-lg shadow-rose-600/20"
-                                            : "text-[color:var(--panel-muted,#8a919c)] hover:text-white hover:bg-white/5"
-                                    )}
-                                >
-                                    {days}G+
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Info Box */}
-            <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-4 flex items-start gap-4">
-                <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400">
-                    <AlertTriangle size={20} />
-                </div>
-                <div>
-                    <h4 className="text-sm font-bold text-blue-300">Stratejik Bilgi</h4>
-                    <p className="text-xs text-[color:var(--panel-muted,#8a919c)] mt-1 leading-relaxed">
-                        En son <strong>{inactivityDays} gün önce</strong> giriş yapmış oyuncular listelenmektedir.
-                        Geri kazanım için VIP adaylarını ve yüksek bakiyeli oyuncuları önceliklendirin.
-                        <span className="block mt-1 opacity-70 italic font-medium">Not: VIP filtresi mevcut sayfadaki {rowsPerPage} oyuncu arasından tarama yapar.</span>
-                    </p>
-                </div>
-            </div>
-
-            {/* Table */}
-            <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] backdrop-blur-md overflow-hidden shadow-2xl">
-                <div className="flex items-center justify-between px-8 py-6 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
-                    <div className="flex items-center gap-3">
-                        <Clock size={18} className="text-rose-400" />
-                        <h3 className="text-sm font-semibold text-white uppercase tracking-wider">İnaktif Oyuncu Listesi</h3>
-                    </div>
-                    {isFetching && <Loader2 className="h-4 w-4 animate-spin text-[color:var(--panel-muted,#8a919c)]" />}
-                    <div className="text-[10px] font-bold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">
-                        GÖSTERİLEN: {processedPlayers.length} / TOPLAM {totalCount}
-                    </div>
-                </div>
-
-                <div className="overflow-x-auto min-h-[400px]">
-                    <table className="w-full text-left">
-                        <thead>
-                            <tr className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[color:var(--panel-muted,#8a919c)] border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] opacity-70">
-                                <th className="px-8 py-5">Oyuncu / ID</th>
-                                <th className="px-8 py-5">Son Giriş</th>
-                                <th className="px-8 py-5">Kayıt Tarihi</th>
-                                <th className="px-8 py-5 text-right">Bakiye</th>
-                                <th className="px-8 py-5 text-right">Toplam Yatırım</th>
-                                <th className="px-8 py-5 text-center">İşlem</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-white/5">
-                            {isLoading ? (
-                                <tr>
-                                    <td colSpan={6} className="py-20 text-center">
-                                        <Loader2 className="mx-auto h-8 w-8 animate-spin text-rose-500 opacity-50" />
-                                        <p className="mt-2 text-xs font-bold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">Taranıyor...</p>
-                                    </td>
-                                </tr>
-                            ) : processedPlayers.length === 0 ? (
-                                <tr>
-                                    <td colSpan={6} className="py-20 text-center">
-                                        <div className="flex flex-col items-center gap-3">
-                                            <div className="p-4 rounded-full bg-[color:var(--panel-surface-2,rgba(242,244,248,0.05))] text-[color:var(--panel-muted,#8a919c)]">
-                                                <UserX size={32} />
-                                            </div>
-                                            <p className="text-[color:var(--panel-muted,#8a919c)] italic text-sm">
-                                                {showVipOnly
-                                                    ? `Taranan bu sayfadaki ${rowsPerPage} oyuncu arasında kriterlere uygun VIP adayı bulunamadı. Lütfen sonraki sayfalara göz atın (Toplam inaktif havuzu: ${totalCount}).`
-                                                    : "Seçili kriterde inaktif oyuncu bulunamadı."}
-                                            </p>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ) : (
-                                processedPlayers.map((player: any) => {
-                                    const kpi = kpiMap[player.Id];
-                                    const totalDep = kpi?.TotalDeposit || player.TotalDeposit || 0;
-                                    const isVipCandidate = totalDep > 5000 || (kpi?.ProfitAndLose || 0) > 5000;
-                                    const isHighBalance = (player.Balance || 0) > 1000;
-
-                                    return (
-                                        <tr key={player.Id} className={cn(
-                                            "group transition-colors relative",
-                                            isVipCandidate ? "bg-amber-500/[0.03] hover:bg-amber-500/[0.06]" : "hover:bg-white/[0.02]"
-                                        )}>
-                                            <td className="px-8 py-5">
-                                                <div className="flex flex-col">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-sm font-semibold text-white">
-                                                            {player.Login}
-                                                        </span>
-                                                        {isVipCandidate && (
-                                                            <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/20 px-1.5 py-0.5 text-[9px] font-semibold text-amber-500 border border-amber-500/30">
-                                                                <Crown size={10} /> VIP ADAYI
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                    <span className="text-[10px] font-bold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-tighter">
-                                                        ID: #{player.Id} · {player.FirstName || ''} {player.LastName || ''}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                            <td className="px-8 py-5">
-                                                <div className="flex flex-col">
-                                                    <span className={cn(
-                                                        "text-xs font-bold",
-                                                        isVipCandidate ? "text-amber-400" : "text-rose-400"
-                                                    )}>
-                                                        {formatDateDisplay(player.LastLoginLocalDate)}
-                                                    </span>
-                                                    <span className="text-[10px] text-[color:var(--panel-muted,#8a919c)] uppercase">
-                                                        {calculateInactivity(player.LastLoginLocalDate)} GÜNDÜR YOK
-                                                    </span>
-                                                </div>
-                                            </td>
-                                            <td className="px-8 py-5">
-                                                <span className="text-xs font-medium text-[color:var(--panel-muted,#8a919c)]">
-                                                    {formatDateDisplay(player.CreatedLocalDate)}
-                                                </span>
-                                            </td>
-                                            <td className="px-8 py-5 text-right">
-                                                <div className="flex flex-col items-end">
-                                                    <span className={cn(
-                                                        "text-sm font-semibold tabular-nums",
-                                                        isHighBalance ? "text-emerald-400" : (player.Balance || 0) > 10 ? "text-white" : "text-[color:var(--panel-faint,#5c6470)]"
-                                                    )}>
-                                                        {formatNumber(player.Balance || 0)} {player.CurrencyId}
-                                                    </span>
-                                                    {isHighBalance && (
-                                                        <span className="text-[9px] font-bold text-emerald-500/70 uppercase">Yüksek Bakiye</span>
-                                                    )}
-                                                </div>
-                                            </td>
-                                            <td className="px-8 py-5 text-right">
-                                                <div className="flex flex-col items-end">
-                                                    <span className={cn(
-                                                        "text-sm font-semibold tabular-nums",
-                                                        isVipCandidate ? "text-amber-500" : "text-[color:var(--panel-text-dim,#c8cdd5)]"
-                                                    )}>
-                                                        {formatNumber(totalDep)}
-                                                    </span>
-                                                    {kpi && (
-                                                        <span className="text-[9px] font-bold text-[color:var(--panel-muted,#8a919c)] uppercase">P/L: {formatNumber(kpi.ProfitAndLose)}</span>
-                                                    )}
-                                                </div>
-                                            </td>
-                                            <td className="px-8 py-5 text-center">
-                                                <Link
-                                                    to={`/oyuncu/${player.Id}/${player.Login}`}
-                                                    className={cn(
-                                                        "inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-[10px] font-semibold transition-all uppercase tracking-widest",
-                                                        isVipCandidate
-                                                            ? "bg-amber-600 text-white border-amber-500 hover:bg-amber-500"
-                                                            : "bg-white/5 border-[color:var(--panel-border,rgba(242,244,248,0.1))] text-[color:var(--panel-text-dim,#c8cdd5)] hover:bg-rose-500 hover:text-white hover:border-rose-500"
-                                                    )}
-                                                >
-                                                    İncele <ArrowRight size={12} />
-                                                </Link>
-                                            </td>
-                                        </tr>
-                                    );
-                                })
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-
-                {/* Pagination */}
-                {totalPages > 1 && (
-                    <div className="flex items-center justify-between px-8 py-6 border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))]">
-                        <p className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">
-                            Sayfa {page} / {totalPages} · Toplam {totalCount} Kayıt
-                        </p>
-                        <div className="flex items-center gap-2">
-                            <button
-                                onClick={() => setPage(p => Math.max(1, p - 1))}
-                                disabled={page === 1}
-                                className="h-10 w-10 flex items-center justify-center rounded-xl bg-white/5 text-[color:var(--panel-muted,#8a919c)] hover:bg-white/10 hover:text-white disabled:opacity-20 transition-all border border-[color:var(--panel-border,rgba(242,244,248,0.1))]"
-                            >
-                                <ChevronLeft size={18} />
-                            </button>
-                            <button
-                                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                                disabled={page === totalPages}
-                                className="h-10 w-10 flex items-center justify-center rounded-xl bg-white/5 text-[color:var(--panel-muted,#8a919c)] hover:bg-white/10 hover:text-white disabled:opacity-20 transition-all border border-[color:var(--panel-border,rgba(242,244,248,0.1))]"
-                            >
-                                <ChevronRight size={18} />
-                            </button>
-                        </div>
-                    </div>
-                )}
-            </div>
+  return (
+    <div className="animate-in space-y-4 pb-20">
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-[color:var(--panel-faint,#5c6470)]">CRM</p>
+          <h2 className="mt-1 text-2xl font-semibold text-[color:var(--panel-text,#f2f4f8)]">Kayıp riski</h2>
+          <p className="mt-1 text-[12px] text-[color:var(--panel-muted,#8a919c)]">
+            Skor sunucuda hesaplanır; her satırda riskin gerekçesi ve önerilen aksiyon görünür.
+          </p>
         </div>
-    );
+        {isFetching && <Loader2 size={16} className="animate-spin text-[color:var(--panel-muted,#8a919c)]" />}
+      </header>
+
+      <OzetSerit ozet={ozet} />
+
+      <div className="flex flex-wrap items-center gap-2">
+        <SecimGrubu
+          deger={String(minSkor)}
+          secenekler={ESIKLER}
+          onSec={(v) => { setMinSkor(Number(v)); setPage(1); }}
+        />
+        <SecimGrubu
+          deger={segment}
+          secenekler={SEGMENTLER}
+          onSec={(v) => { setSegment(v); setPage(1); }}
+        />
+        <div className="relative ml-auto">
+          <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--panel-faint,#5c6470)]" />
+          <input
+            value={arama}
+            onChange={(event) => setArama(event.target.value)}
+            placeholder="Kullanıcı adı ara"
+            className="h-9 w-56 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/30 pl-9 pr-3 text-xs font-semibold text-[color:var(--panel-text,#f2f4f8)] outline-none"
+          />
+        </div>
+      </div>
+
+      {error ? (
+        <Durum ikon={<ShieldOff size={20} />} baslik="Liste alınamadı" alt={(error as Error).message} />
+      ) : isLoading ? (
+        <Durum ikon={<Loader2 size={20} className="animate-spin" />} baslik="Yükleniyor" alt="Oyuncular skorlanıyor." />
+      ) : filtreli.length === 0 ? (
+        <Durum ikon={<UserX size={20} />} baslik="Risk altında oyuncu yok" alt="Seçili eşik ve segmentte kayıt bulunamadı." />
+      ) : (
+        <div className="space-y-2">
+          {filtreli.map((oyuncu) => <Satir key={oyuncu.id} oyuncu={oyuncu} />)}
+        </div>
+      )}
+
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-[11px] text-[color:var(--panel-muted,#8a919c)]">Sayfa {page}</span>
+        <div className="flex gap-2">
+          <Sayfalama yon="geri" pasif={page <= 1} onTikla={() => setPage((p) => Math.max(1, p - 1))} />
+          <Sayfalama yon="ileri" pasif={oyuncular.length < countPerPage} onTikla={() => setPage((p) => p + 1)} />
+        </div>
+      </div>
+    </div>
+  );
 }
 
-function calculateInactivity(lastLogin: string | null): number {
-    if (!lastLogin) return 999;
-    const last = new Date(lastLogin);
-    const now = new Date();
-    const diff = now.getTime() - last.getTime();
-    return Math.floor(diff / (1000 * 60 * 60 * 24));
+function OzetSerit({ ozet }: { ozet?: { toplam: number; kritik: number; yuksek: number; riskAltindakiDeger: number } }) {
+  const kartlar = [
+    { etiket: 'Listedeki oyuncu', deger: formatNumber(ozet?.toplam ?? 0), Ikon: UserX, renk: 'var(--panel-muted,#8a919c)' },
+    { etiket: 'Kritik', deger: formatNumber(ozet?.kritik ?? 0), Ikon: AlertTriangle, renk: 'var(--panel-danger,#ff453a)' },
+    { etiket: 'Yüksek', deger: formatNumber(ozet?.yuksek ?? 0), Ikon: TrendingDown, renk: 'var(--panel-warning,#ff9f0a)' },
+    { etiket: 'Risk altındaki net yatırım', deger: `${formatNumber(ozet?.riskAltindakiDeger ?? 0)} ₺`, Ikon: Crown, renk: 'var(--panel-success,#30d158)' },
+  ];
+  return (
+    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      {kartlar.map(({ etiket, deger, Ikon, renk }) => (
+        <div key={etiket} className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-4">
+          <div className="mb-2 inline-flex rounded-lg p-2" style={{ backgroundColor: 'rgba(242,244,248,0.04)', color: renk }}>
+            <Ikon size={16} />
+          </div>
+          <div className="text-[9px] font-bold uppercase tracking-[0.14em] text-[color:var(--panel-faint,#5c6470)]">{etiket}</div>
+          <div className="mt-1 text-xl font-semibold tabular-nums text-[color:var(--panel-text,#f2f4f8)]">{deger}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Satir({ oyuncu }: { oyuncu: ChurnOyuncu }) {
+  const stil = SEVIYE_STILI[oyuncu.churn.seviye];
+  return (
+    <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-3.5">
+      <div className="flex flex-wrap items-center gap-3">
+        <div
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-sm font-bold tabular-nums"
+          style={{ backgroundColor: stil.zemin, color: stil.renk }}
+          title={`Risk skoru: ${oyuncu.churn.skor}/100`}
+        >
+          {oyuncu.churn.skor}
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="truncate text-sm font-semibold text-[color:var(--panel-text,#f2f4f8)]">{oyuncu.login}</span>
+            <Rozet metin={stil.etiket} renk={stil.renk} zemin={stil.zemin} />
+            <Rozet metin={SEGMENT_ETIKET[oyuncu.churn.segment]} renk="var(--panel-muted,#8a919c)" zemin="rgba(242,244,248,0.05)" />
+          </div>
+          <p className="mt-1 text-[11px] text-[color:var(--panel-muted,#8a919c)]">
+            {oyuncu.churn.sessizGun == null ? 'Giriş kaydı yok' : `${oyuncu.churn.sessizGun} gündür sessiz`}
+            {' · '}Net yatırım {formatNumber(oyuncu.churn.deger)} ₺
+            {oyuncu.lastLoginDate ? ` · Son giriş ${formatDateDisplay(oyuncu.lastLoginDate)}` : ''}
+          </p>
+        </div>
+
+        <Link
+          to={`/oyuncular?q=${encodeURIComponent(oyuncu.login)}`}
+          className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg bg-[color:var(--panel-accent,#0a84ff)] px-4 text-[11px] font-semibold text-white"
+        >
+          Profili aç <ArrowRight size={13} />
+        </Link>
+      </div>
+
+      {/* Skorun gerekçesi. Operatör neden aradığını bilmeli. */}
+      {oyuncu.churn.sebepler.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-1.5 border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))] pt-3">
+          {oyuncu.churn.sebepler.map((sebep) => (
+            <span
+              key={sebep.kod}
+              className="rounded-md px-2 py-1 text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)]"
+              style={{ backgroundColor: 'rgba(242,244,248,0.04)' }}
+            >
+              {sebep.aciklama}
+            </span>
+          ))}
+        </div>
+      )}
+
+      <p className="mt-2 text-[11px] font-medium" style={{ color: stil.renk }}>{oyuncu.churn.oneri}</p>
+    </div>
+  );
+}
+
+function Rozet({ metin, renk, zemin }: { metin: string; renk: string; zemin: string }) {
+  return (
+    <span className="rounded-md px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em]" style={{ color: renk, backgroundColor: zemin }}>
+      {metin}
+    </span>
+  );
+}
+
+function SecimGrubu({
+  deger,
+  secenekler,
+  onSec,
+}: {
+  deger: string;
+  secenekler: Array<{ id: string; label: string }>;
+  onSec: (value: string) => void;
+}) {
+  return (
+    <div className="flex gap-1 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20 p-1">
+      {secenekler.map((secenek) => (
+        <button
+          key={secenek.id}
+          type="button"
+          onClick={() => onSec(secenek.id)}
+          className={cn(
+            'rounded-md px-3 py-1.5 text-[11px] font-semibold transition',
+            deger === secenek.id
+              ? 'bg-[color:var(--panel-accent,#0a84ff)] text-white'
+              : 'text-[color:var(--panel-muted,#8a919c)] hover:text-[color:var(--panel-text,#f2f4f8)]',
+          )}
+        >
+          {secenek.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function Sayfalama({ yon, pasif, onTikla }: { yon: 'geri' | 'ileri'; pasif: boolean; onTikla: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onTikla}
+      disabled={pasif}
+      aria-label={yon === 'geri' ? 'Önceki sayfa' : 'Sonraki sayfa'}
+      className="flex h-9 w-9 items-center justify-center rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] text-[color:var(--panel-muted,#8a919c)] disabled:opacity-40"
+    >
+      {yon === 'geri' ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+    </button>
+  );
+}
+
+function Durum({ ikon, baslik, alt }: { ikon: ReactNode; baslik: string; alt: string }) {
+  return (
+    <div className="flex flex-col items-center gap-2 rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] px-6 py-14 text-center">
+      <span className="text-[color:var(--panel-muted,#8a919c)]">{ikon}</span>
+      <p className="text-sm font-semibold text-[color:var(--panel-text,#f2f4f8)]">{baslik}</p>
+      <p className="text-[12px] text-[color:var(--panel-muted,#8a919c)]">{alt}</p>
+    </div>
+  );
 }

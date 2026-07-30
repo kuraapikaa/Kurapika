@@ -750,6 +750,39 @@ export interface AuditEntry {
   detail?: string;
 }
 
+export type ChurnSebebi = { kod: string; aciklama: string; agirlik: number };
+export type ChurnSonucu = {
+  skor: number;
+  seviye: 'dusuk' | 'orta' | 'yuksek' | 'kritik';
+  sessizGun: number | null;
+  deger: number;
+  segment: 'vip' | 'yuksek' | 'orta' | 'dusuk' | 'yeni';
+  sebepler: ChurnSebebi[];
+  oneri: string;
+};
+export type ChurnOyuncu = {
+  id: number;
+  login: string;
+  kategori: string | null;
+  balance: number;
+  totalDeposits: number;
+  totalWithdrawals: number;
+  lastLoginDate: string | null;
+  churn: ChurnSonucu;
+};
+
+export const crmApi = {
+  /**
+   * Skorlanmis oyuncu listesi. Tek istek: sunucu hem listeyi hem skoru hem
+   * ozeti donuyor. Onceki ekran her oyuncu icin ayri KPI cagirıyordu.
+   */
+  churn: (body: { page?: number; countPerPage?: number; minSkor?: number; segment?: string; query?: string }) =>
+    post<{ HasError: boolean; Data: { players: ChurnOyuncu[]; ozet: { toplam: number; kritik: number; yuksek: number; riskAltindakiDeger: number }; page: number; countPerPage: number } }>(
+      '/admin/crm/churn',
+      body,
+    ),
+};
+
 export const adminApi = {
   audit: (limit?: number) => get<{ data: AuditEntry[] }>('/audit', limit != null ? { limit: String(limit) } : undefined),
   staffUsers: () => get<any>('/admin/staff-users'),
