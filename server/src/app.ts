@@ -216,6 +216,28 @@ export async function buildApp() {
     `[session] cerez: sameSite=${cookieSameSite} secure=${cookieSecure} partitioned=${cookiePartitioned} gomulu=${gomulebilir}`
   );
 
+  // ─── API yanıtları asla önbelleğe alınmamalı ──────────────────────────────
+  //
+  // GÜVENLİK: /api/bonus-panel/me gibi uçlar oturum sahibinin kimliğini
+  // döndürüyor. Yanıtta Cache-Control ve Vary: Cookie yoktu; Cloudflare bu
+  // ucu önbelleğe alıp (cf-cache-status: EXPIRED ile doğrulandı) TEK girdiyi
+  // tüm ziyaretçilere servis ediyordu. Sonuç: bir oyuncu lobide BAŞKA bir
+  // oyuncunun kullanıcı adıyla doğrulanmış görünüyordu.
+  //
+  // Tek tek uçları işaretlemek yerine /api altındaki her yanıtı kapatıyoruz:
+  // hangi ucun kimlik sızdırdığını tek tek doğru bilmek zorunda kalmayalım,
+  // yeni uç eklendiğinde de varsayılan güvenli olsun. Statik dosyalar ve SPA
+  // kabuğu bu hook'un dışında (onlar index.ts'te kendi başlıklarını alıyor).
+  app.addHook('onSend', async (request, reply, payload) => {
+    if (!request.url?.startsWith('/api')) return payload;
+    reply.header('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    reply.header('Pragma', 'no-cache');           // eski vekiller
+    reply.header('Expires', '0');
+    // Bir ara katman yine de saklarsa en azından oturuma göre ayrıştırsın.
+    reply.header('Vary', 'Cookie, Accept-Encoding');
+    return payload;
+  });
+
   // ─── Global Error Handler ─────────────────────────────────────────────────
   registerGlobalErrorHandler(app);
 
