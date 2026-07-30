@@ -11,6 +11,11 @@ export type AuditAction =
   // CRM temas kaydi: kimin hangi oyuncuyla ne zaman temas ettigi denetlenebilir
   // olmali — musteri iletisimi bir islem, sessizce yapilmamali.
   | 'crm_temas'
+  // Ortak hesabi kimlik dogrulama verisi ve komisyon orani tutuyor; kimin
+  // hangi orani degistirdigi denetlenebilir olmali — bu bir odeme karari.
+  | 'affiliate_hesap_create'
+  | 'affiliate_hesap_update'
+  | 'affiliate_hesap_delete'
   | 'logout'
   | 'lead_create'
   | 'lead_update'

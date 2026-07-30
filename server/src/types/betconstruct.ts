@@ -149,4 +149,15 @@ export interface BonusPanelUser {
   login: string;
 }
 
+/**
+ * Affiliate portal oturumu. Panel oturumundan (SessionUser) AYRI tutulur:
+ * ortak, admin uclarina erisemez.
+ */
+export interface AffiliateUser {
+  id: string;
+  bTag: string;
+  email: string;
+  ad: string;
+}
+
 

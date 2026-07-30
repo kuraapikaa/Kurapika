@@ -124,6 +124,19 @@ async function post<T>(path: string, body: Record<string, unknown>): Promise<T> 
 
 
 
+async function del<T>(path: string): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: 'DELETE',
+    headers: { Accept: 'application/json' },
+    credentials: 'include',
+  });
+  const json = await parseJsonResponse(res);
+  if (!res.ok) {
+    throw new ApiError(hataMesaji(json, res), res.status);
+  }
+  return json as T;
+}
+
 export interface DateRange {
   startDate: string;
   endDate: string;
@@ -917,6 +930,123 @@ export const gamesApi = {
   teamLogo: (name: string) => get<any>(`/admin/games/team-logo?name=${encodeURIComponent(name)}`),
   telegramBonusStatus: () => get<any>('/games/telegram-bonus/status'),
   verifyTelegramBonus: () => post<any>('/games/telegram-bonus/verify', {}),
+};
+
+export type AffiliateKomisyonModeli = 'revshare' | 'cpa' | 'hibrit';
+export type AffiliateHesapDurumu = 'aktif' | 'beklemede' | 'askida';
+
+export interface AffiliateHesap {
+  id: string;
+  bTag: string;
+  ad: string;
+  email: string;
+  komisyonModeli: AffiliateKomisyonModeli;
+  revsharePayi: number;
+  cpaTutari: number;
+  durum: AffiliateHesapDurumu;
+  basvuruId?: string;
+  not?: string;
+  createdAt: string;
+  sonGiris?: string;
+}
+
+export interface AffiliateMetrik {
+  bTag: string;
+  totalPlayers?: number | null;
+  activePlayers?: number | null;
+  totalDeposits?: number | null;
+  totalWithdrawals?: number | null;
+  netRevenue?: number | null;
+  conversionRate?: number | null;
+  netPozisyon: number;
+  oyuncuBasiGelir: number;
+  oyuncuBasiYatirim: number;
+  gelirPayi: number;
+  cekimOrani: number;
+}
+
+export interface AffiliateKomisyon {
+  revshare: number;
+  cpa: number;
+  toplam: number;
+  aciklama: string;
+}
+
+export interface AffiliateToplam {
+  bTagSayisi: number;
+  oyuncu: number;
+  aktifOyuncu: number;
+  yatirim: number;
+  cekim: number;
+  netGelir: number;
+  netPozisyon: number;
+  ortalamaDonusum: number;
+}
+
+/** Ortak portali — panel oturumundan ayri kimlik. */
+export const affiliatePortalApi = {
+  login: (body: { email: string; password: string }) =>
+    post<{ ok: boolean; user?: { id: string; bTag: string; email: string; ad: string }; message?: string }>(
+      '/affiliate-portal/login',
+      body,
+    ),
+  me: () =>
+    get<{ ok: boolean; user?: { id: string; bTag: string; email: string; ad: string } }>('/affiliate-portal/me'),
+  logout: () => post<{ ok: boolean }>('/affiliate-portal/logout', {}),
+  ozet: (params?: { startDate?: string; endDate?: string }) =>
+    get<{
+      ok: boolean;
+      ortak: { ad: string; bTag: string; komisyonModeli: AffiliateKomisyonModeli; revsharePayi: number; cpaTutari: number };
+      aralik: DateRange;
+      satirlar: AffiliateMetrik[];
+      toplam: AffiliateToplam;
+      komisyon: AffiliateKomisyon;
+      message?: string;
+    }>('/affiliate-portal/ozet', params as Record<string, string> | undefined),
+};
+
+/** Admin: ortak hesaplari ve komisyon raporu. */
+export const affiliateAdminApi = {
+  hesaplar: () => get<{ ok: boolean; hesaplar: AffiliateHesap[] }>('/admin/affiliate/hesaplar'),
+  hesapEkle: (body: {
+    bTag: string;
+    ad: string;
+    email: string;
+    password: string;
+    komisyonModeli?: AffiliateKomisyonModeli;
+    revsharePayi?: number;
+    cpaTutari?: number;
+    durum?: AffiliateHesapDurumu;
+    basvuruId?: string;
+    not?: string;
+  }) => post<{ ok: boolean; hesap?: AffiliateHesap; message?: string }>('/admin/affiliate/hesaplar', body),
+  hesapGuncelle: (
+    id: string,
+    body: {
+      ad?: string;
+      bTag?: string;
+      komisyonModeli?: AffiliateKomisyonModeli;
+      revsharePayi?: number;
+      cpaTutari?: number;
+      durum?: AffiliateHesapDurumu;
+      not?: string;
+      password?: string;
+    },
+  ) => post<{ ok: boolean; hesap?: AffiliateHesap; message?: string }>(`/admin/affiliate/hesaplar/${id}`, body),
+  hesapSil: (id: string) => del<{ ok: boolean; message?: string }>(`/admin/affiliate/hesaplar/${id}`),
+  komisyonRaporu: (body: { startDate?: string; endDate?: string }) =>
+    post<{
+      ok: boolean;
+      aralik: DateRange;
+      satirlar: Array<{
+        ortak: Pick<AffiliateHesap, 'id' | 'ad' | 'email' | 'bTag' | 'durum' | 'komisyonModeli' | 'revsharePayi' | 'cpaTutari'>;
+        metrik: AffiliateMetrik | null;
+        komisyon: AffiliateKomisyon;
+      }>;
+      baglanmamis: AffiliateMetrik[];
+      toplamKomisyon: number;
+      message?: string;
+    }>('/admin/affiliate/komisyon-raporu', body),
 };
 
 export const formsApi = {

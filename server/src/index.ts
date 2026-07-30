@@ -52,6 +52,7 @@ import { registerAuthMiddleware } from './middleware/authGuard.js';
 import { maybeSendDemoMock } from './lib/demoMockData.js';
 import { dashboardRoutes } from './routes/dashboard.js';
 import { gamesRoutes } from './routes/games.js';
+import { affiliateRoutes } from './routes/affiliate.js';
 import { formsRoutes } from './routes/forms.js';
 import { masterRoutes } from './routes/master.js';
 import { loyaltyRoutes } from './routes/loyalty.js';
@@ -88,6 +89,7 @@ await app.register(dashboardRoutes, { prefix: '/api', config });
 await app.register(lynonRoutes, { prefix: '/api' });
 await app.register(gamesRoutes, { prefix: '/api' });
 await app.register(formsRoutes, { prefix: '/api' });
+await app.register(affiliateRoutes, { prefix: '/api' });
 await app.register(masterRoutes, { prefix: '/api' });
 await app.register(loyaltyRoutes, { prefix: '/api' });
 
