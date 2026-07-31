@@ -186,10 +186,30 @@ export function assignmentValuesForPromoSpec(spec: PromoSpec): Record<string, un
   const sourceRecord = sourceGame != null && typeof sourceGame === 'object' && !Array.isArray(sourceGame)
     ? sourceGame as Record<string, unknown>
     : {};
-  const gameId = Number(spec.freespinGameId ?? sourceRecord.id ?? sourceRecord.Id ?? (typeof sourceGame === 'number' ? sourceGame : NaN));
-  const providerId = Number(spec.freespinGameProviderId ?? sourceRecord.providerId ?? sourceRecord.ProviderId);
-  if (Number.isInteger(gameId) && gameId > 0 && Number.isInteger(providerId) && providerId > 0) {
-    values.Game = { id: gameId, providerId } satisfies FreespinGameSelection;
+
+  // Oyun secimi ATOMIK: id ve providerId ayni kaynaktan gelmeli.
+  //
+  // Onceden ikisi ayri ayri coalesce ediliyordu; Freespin blogunda yalnizca
+  // Game ID doluysa providerId ham atama haritasindaki BASKA bir oyundan
+  // aliniyordu. Ortaya hicbir yerde yapilandirilmamis bir id/provider cifti
+  // cikiyor, freespin yanlis oyunda taniml aniyor ya da Lynon atamayi
+  // reddediyordu.
+  const blokId = Number(spec.freespinGameId);
+  const blokProvider = Number(spec.freespinGameProviderId);
+  const blokSecimiVar = spec.freespinGameId != null || spec.freespinGameProviderId != null;
+  const blokGecerli = Number.isInteger(blokId) && blokId > 0 && Number.isInteger(blokProvider) && blokProvider > 0;
+
+  if (blokGecerli) {
+    values.Game = { id: blokId, providerId: blokProvider } satisfies FreespinGameSelection;
+    return values;
+  }
+  // Blok yarim doldurulmus: karistirmak yerine yok say, ham secim gecerli olsun.
+  if (blokSecimiVar && sourceGame == null) return values;
+
+  const kaynakId = Number(sourceRecord.id ?? sourceRecord.Id ?? (typeof sourceGame === 'number' ? sourceGame : NaN));
+  const kaynakProvider = Number(sourceRecord.providerId ?? sourceRecord.ProviderId);
+  if (Number.isInteger(kaynakId) && kaynakId > 0 && Number.isInteger(kaynakProvider) && kaynakProvider > 0) {
+    values.Game = { id: kaynakId, providerId: kaynakProvider } satisfies FreespinGameSelection;
   } else if (sourceGame !== undefined && sourceGame !== null && sourceGame !== '') {
     values.Game = sourceGame;
   }
