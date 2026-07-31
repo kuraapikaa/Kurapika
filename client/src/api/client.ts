@@ -926,6 +926,15 @@ export const gamesApi = {
   /** Oyuncunun kendi turnuva sirasi; siralama tablosu yalnizca ilk N'i doner. */
   tournamentMyRank: (period: 'gunluk' | 'haftalik' | 'aylik' = 'gunluk') =>
     get<any>('/games/tournament/my-rank', { period }),
+  /**
+   * Oyuncuya acik turnuva siralamasi.
+   *
+   * /tournament/leaderboard dashboard altinda ve authGuard'in arkasinda;
+   * oyuncunun panel oturumu olmadigi icin oradan 401 doniyordu.
+   */
+  tournamentLeaderboard: (period: 'gunluk' | 'haftalik' | 'aylik' = 'gunluk', limit = 20) =>
+    get<any>('/games/tournament/leaderboard', { period, limit: String(limit) }),
+  tournamentPublicSettings: () => get<any>('/games/tournament/settings'),
   claimDailyTask: (taskId: string) => post<any>('/games/daily-tasks/claim', { taskId }),
   battlePassStatus: () => get<any>('/games/battle-pass/status'),
   claimBattlePassReward: (body: { level: number; track?: 'free' | 'premium' }) =>
