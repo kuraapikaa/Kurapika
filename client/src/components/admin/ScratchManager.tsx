@@ -1,11 +1,28 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
+import { Plus, Ticket } from 'lucide-react';
 import {
-  Ticket, Plus, Trash2, Gift, Sparkles, BarChart3, Layers, Info, ShieldCheck, SlidersHorizontal
-} from 'lucide-react';
-import {
-  BarChart, Bar, XAxis, ResponsiveContainer, Cell, Tooltip as RechartsTooltip
-} from 'recharts';
-import { cn } from '../../lib/utils';
+  Alan,
+  AlanIcinde,
+  Bolum,
+  BosDurum,
+  Dugme,
+  Girdi,
+  Izgara,
+  IzgaraBaslik,
+  IzgaraSatir,
+  MaliyetKarti,
+  ModulBasligi,
+  Olcut,
+  OlcutListesi,
+  PaySeridi,
+  RAKAM,
+  Secim,
+  SilDugmesi,
+  Uyari,
+  beklenenMaliyet,
+  lira,
+  sayi,
+} from './oyunUi';
 import { LynonAssignmentValuesField } from './LynonAssignmentValuesField';
 
 interface ScratchReward {
@@ -28,309 +45,244 @@ interface ScratchManagerProps {
   onUpdate: (newConfig: any) => void;
 }
 
+const MODUL = 'kazi' as const;
+const SUTUNLAR = 'minmax(0,2fr) 110px 110px minmax(150px,1fr) 44px';
+
 export function ScratchManager({ config, bonusOptions, onUpdate }: ScratchManagerProps) {
-  const [editingId, setEditingId] = useState<string | number | null>(null);
+  const oduller = config.rewards ?? [];
 
-  const stats = useMemo(() => {
-    const totalWeight = config.rewards.reduce((acc, r) => acc + (Number(r.probability) || 0), 0);
-    const avgReward =
-      config.rewards.length > 0
-        ? config.rewards.reduce((acc, r) => acc + r.amount, 0) / config.rewards.length
-        : 0;
+  const ozet = useMemo(() => {
+    const parcalar = oduller.map((r) => ({ agirlik: Number(r.probability) || 0, tutar: Number(r.amount) || 0 }));
+    const toplamAgirlik = parcalar.reduce((t, p) => t + p.agirlik, 0);
     return {
-      totalWeight,
-      rewardCount: config.rewards.length,
-      winProb: config.baseWinProbability,
-      avgReward: avgReward.toFixed(1)
+      toplamAgirlik,
+      adet: oduller.length,
+      maliyet: beklenenMaliyet(parcalar, config.baseWinProbability),
+      enBuyuk: oduller.reduce((enB, r) => Math.max(enB, Number(r.amount) || 0), 0),
+      agirliksiz: oduller.filter((r) => !(Number(r.probability) > 0)).length,
     };
-  }, [config]);
+  }, [oduller, config.baseWinProbability]);
 
-  const chartData = useMemo(
-    () =>
-      config.rewards.map(r => ({
-        name: r.label.length > 9 ? r.label.substring(0, 9) + '…' : r.label,
-        weight: r.probability
-      })),
-    [config]
-  );
-
-  const handleAddReward = () => {
+  const odulEkle = () => {
     onUpdate({
       ...config,
       rewards: [
-        ...config.rewards,
-        { id: Date.now(), label: 'Yeni Odul', probability: 10, type: 'bonus', bonusId: null, amount: 10 }
-      ]
+        ...oduller,
+        { id: Date.now(), label: 'Yeni ödül', probability: 10, type: 'bonus', bonusId: null, amount: 10 },
+      ],
     });
   };
 
-  const handleRemove = (id: string | number) => {
-    onUpdate({ ...config, rewards: config.rewards.filter(r => r.id !== id) });
-    if (editingId === id) setEditingId(null);
+  const odulSil = (id: string | number) => {
+    onUpdate({ ...config, rewards: oduller.filter((r) => r.id !== id) });
   };
 
-  const handleUpdate = (id: string | number, values: Partial<ScratchReward>) => {
-    onUpdate({
-      ...config,
-      rewards: config.rewards.map(r => (r.id === id ? { ...r, ...values } : r))
-    });
+  const odulGuncelle = (id: string | number, values: Partial<ScratchReward>) => {
+    onUpdate({ ...config, rewards: oduller.map((r) => (r.id === id ? { ...r, ...values } : r)) });
   };
 
-  const statCards = [
-    { label: 'Kazanma Orani', value: `%${stats.winProb}`, icon: Sparkles, tone: 'text-amber-400' },
-    { label: 'Odul Cesidi', value: stats.rewardCount, icon: Layers, tone: 'text-blue-400' },
-    { label: 'Toplam Agirlik', value: stats.totalWeight, icon: BarChart3, tone: 'text-blue-400' },
-    { label: 'Ort. Odul', value: `${stats.avgReward} TL`, icon: Gift, tone: 'text-emerald-400' }
-  ];
+  const bonuslu = oduller.filter((r) => r.type === 'bonus' && r.bonusId);
 
   return (
     <div className="space-y-5">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {statCards.map(stat => {
-          const Icon = stat.icon;
-          return (
-            <div key={stat.label} className="rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-4">
-              <div className="flex items-center gap-3">
-                <div className={cn('flex h-9 w-9 items-center justify-center rounded-md bg-black/40', stat.tone)}>
-                  <Icon size={17} />
-                </div>
-                <div className="min-w-0">
-                  <div className="truncate text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">{stat.label}</div>
-                  <div className="text-xl font-semibold text-white">{stat.value}</div>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      <ModulBasligi
+        modul={MODUL}
+        ikon={<Ticket size={20} />}
+        baslik="Kazı Kazan"
+        aciklama="Kazanma oranı, ödül havuzu ve ağırlıklar."
+        saginda={
+          <Dugme modul={MODUL} tur="birincil" onClick={odulEkle}>
+            <Plus size={14} /> Ödül ekle
+          </Dugme>
+        }
+      />
 
-      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-5">
-          <div className="flex flex-col gap-3 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <div className="text-sm font-semibold text-white">Genel Kazanma Olasiligi</div>
-              <p className="mt-0.5 text-xs font-medium text-[color:var(--panel-muted,#8a919c)]">Her oyunda bu oran kadar odul cekilisi yapilir.</p>
+          <Bolum baslik="Oyun kuralları" aciklama="Her oyunda bu oranla ödül çekilişi yapılır.">
+            <div className="grid grid-cols-1 gap-4 px-5 py-4 sm:grid-cols-2">
+              <Alan etiket="Kazanma oranı" ipucu="Kalan oyunlar boş çıkar; havuza boş ödül eklemeye gerek yok.">
+                <AlanIcinde ek="%">
+                  <Girdi
+                    modul={MODUL}
+                    sayisal
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={config.baseWinProbability}
+                    onChange={(e) => onUpdate({ ...config, baseWinProbability: Number(e.target.value) })}
+                  />
+                </AlanIcinde>
+              </Alan>
+              <Alan etiket="Yatırım şartı" ipucu="Oynamak için gereken son yatırım tutarı. 0 = şartsız.">
+                <AlanIcinde ek="TL">
+                  <Girdi
+                    modul={MODUL}
+                    sayisal
+                    type="number"
+                    min={0}
+                    value={config.minInvestment ?? 0}
+                    onChange={(e) => onUpdate({ ...config, minInvestment: Number(e.target.value) })}
+                  />
+                </AlanIcinde>
+              </Alan>
             </div>
-            <label className="flex items-center gap-3">
-              <span className="text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">Oran</span>
-              <div className="relative">
-                <input
-                  type="number"
-                  min={0}
-                  max={100}
-                  value={config.baseWinProbability}
-                  onChange={e => onUpdate({ ...config, baseWinProbability: Number(e.target.value) })}
-                  className="h-10 w-28 rounded-md border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/30 px-3 pr-8 text-sm font-semibold text-amber-300 outline-none transition focus:border-amber-500/60"
-                />
-                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-[color:var(--panel-faint,#5c6470)]">%</span>
-              </div>
-            </label>
-          </div>
+          </Bolum>
 
-          <div className="flex flex-col gap-3 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <div className="text-sm font-semibold text-white">Yatırım Şartı</div>
-              <p className="mt-0.5 text-xs font-medium text-[color:var(--panel-muted,#8a919c)]">Oyuncunun kazı kazan oynayabilmesi için gereken minimum son yatırım tutarı. 0 = şartsız.</p>
-            </div>
-            <label className="flex items-center gap-3">
-              <span className="text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">Min. Yatırım</span>
-              <div className="relative">
-                <input
-                  type="number"
-                  min={0}
-                  value={config.minInvestment ?? 0}
-                  onChange={e => onUpdate({ ...config, minInvestment: Number(e.target.value) })}
-                  className="h-10 w-32 rounded-md border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/30 px-3 pr-8 text-sm font-semibold text-amber-300 outline-none transition focus:border-amber-500/60"
-                />
-                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-[color:var(--panel-faint,#5c6470)]">TL</span>
-              </div>
-            </label>
-          </div>
-
-          <section className="overflow-hidden rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))]">
-            <div className="flex flex-col gap-3 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="text-sm font-semibold text-white">Odul Havuzu</h2>
-                <p className="mt-0.5 text-xs font-medium text-[color:var(--panel-muted,#8a919c)]">Kazanildiginda uygulanacak oduller ve agirliklari.</p>
-              </div>
-              <button
-                onClick={handleAddReward}
-                className="inline-flex h-9 items-center gap-2 rounded-md bg-amber-500 px-4 text-[11px] font-semibold uppercase tracking-widest text-[#050609] transition hover:bg-amber-400"
-              >
-                <Plus size={14} />
-                Odul Ekle
-              </button>
-            </div>
-
-            {config.rewards.length === 0 ? (
-              <div className="flex flex-col items-center gap-3 py-12">
-                <Ticket size={28} className="text-[color:var(--panel-faint,#5c6470)]" />
-                <p className="text-sm font-bold text-[color:var(--panel-faint,#5c6470)]">Henuz odul eklenmedi.</p>
-              </div>
+          <Bolum
+            baslik="Ödül havuzu"
+            aciklama="Ağırlık mutlak oran değil; ödülün havuz içindeki payını belirler."
+          >
+            {oduller.length === 0 ? (
+              <BosDurum
+                ikon={<Ticket size={26} />}
+                baslik="Havuz boş. Ödül eklemeden oyun kazanç veremez."
+                eylem={
+                  <Dugme modul={MODUL} tur="birincil" onClick={odulEkle}>
+                    <Plus size={14} /> İlk ödülü ekle
+                  </Dugme>
+                }
+              />
             ) : (
-              <div className="overflow-x-auto">
-                <div className="min-w-[660px]">
-                  <div className="grid grid-cols-[minmax(0,2fr)_100px_100px_minmax(140px,1fr)_44px] gap-3 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20 px-5 py-2.5 text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">
+              <>
+                <Izgara sutunlar={SUTUNLAR}>
+                  <IzgaraBaslik>
                     <span>Etiket</span>
                     <span>Tutar</span>
-                    <span>Agirlik</span>
-                    <span>Bonus ID</span>
+                    <span>Ağırlık</span>
+                    <span>Bonus</span>
                     <span />
-                  </div>
-                  {config.rewards.map((reward, idx) => (
-                    <div
-                      key={reward.id || idx}
-                      className="grid grid-cols-[minmax(0,2fr)_100px_100px_minmax(140px,1fr)_44px] items-center gap-3 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] px-5 py-3 last:border-b-0"
-                    >
-                      <input
-                        type="text"
-                        value={reward.label}
-                        onChange={e => handleUpdate(reward.id, { label: e.target.value })}
-                        className="h-9 rounded-md border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/30 px-3 text-xs font-bold text-white outline-none transition focus:border-amber-500/60"
-                        placeholder="Odul adi"
+                  </IzgaraBaslik>
+                  {oduller.map((odul, idx) => (
+                    <IzgaraSatir key={odul.id || idx}>
+                      <Girdi
+                        modul={MODUL}
+                        className="h-9"
+                        value={odul.label}
+                        onChange={(e) => odulGuncelle(odul.id, { label: e.target.value })}
+                        placeholder="Ödül adı"
+                        aria-label="Ödül adı"
                       />
-                      <input
+                      <Girdi
+                        modul={MODUL}
+                        sayisal
+                        className="h-9"
                         type="number"
-                        value={reward.amount}
-                        onChange={e => handleUpdate(reward.id, { amount: Number(e.target.value) })}
-                        className="h-9 rounded-md border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/30 px-3 text-xs font-semibold text-emerald-300 outline-none transition focus:border-amber-500/60"
+                        min={0}
+                        value={odul.amount}
+                        onChange={(e) => odulGuncelle(odul.id, { amount: Number(e.target.value) })}
+                        aria-label="Ödül tutarı"
                       />
-                      <input
+                      <Girdi
+                        modul={MODUL}
+                        sayisal
+                        className="h-9"
                         type="number"
-                        value={reward.probability}
-                        onChange={e => handleUpdate(reward.id, { probability: Number(e.target.value) })}
-                        className="h-9 rounded-md border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/30 px-3 text-xs font-semibold text-[color:var(--panel-text,#f2f4f8)] outline-none transition focus:border-amber-500/60"
+                        min={0}
+                        value={odul.probability}
+                        onChange={(e) => odulGuncelle(odul.id, { probability: Number(e.target.value) })}
+                        aria-label="Ödül ağırlığı"
                       />
-                      <select
-                        value={reward.bonusId || ''}
-                        onChange={e => {
+                      <Secim
+                        modul={MODUL}
+                        className="h-9 text-[11px]"
+                        value={odul.bonusId || ''}
+                        onChange={(e) => {
                           const val = e.target.value;
-                          const opt = bonusOptions.find(o => o.id === val);
-                          handleUpdate(reward.id, {
-                            bonusId: val || null,
-                            label: opt ? opt.value : reward.label
-                          });
+                          const opt = bonusOptions.find((o) => o.id === val);
+                          odulGuncelle(odul.id, { bonusId: val || null, label: opt ? opt.value : odul.label });
                         }}
-                        className="h-9 rounded-md border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/30 px-2 text-[11px] font-bold text-[color:var(--panel-text-dim,#c8cdd5)] outline-none transition focus:border-amber-500/60"
+                        aria-label="Bağlı bonus"
                       >
                         <option value="">Manuel</option>
-                        {bonusOptions.map(opt => (
+                        {bonusOptions.map((opt) => (
                           <option key={opt.id} value={opt.id}>{opt.display}</option>
                         ))}
-                      </select>
-                      <button
-                        onClick={() => handleRemove(reward.id)}
-                        className="flex h-9 w-9 items-center justify-center rounded-md text-[color:var(--panel-faint,#5c6470)] transition hover:bg-rose-500/10 hover:text-rose-400"
-                        aria-label="Odulu sil"
-                      >
-                        <Trash2 size={15} />
-                      </button>
-                    </div>
+                      </Secim>
+                      <SilDugmesi onClick={() => odulSil(odul.id)} etiket={`${odul.label} ödülünü sil`} />
+                    </IzgaraSatir>
                   ))}
+                </Izgara>
+                <div className="border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
+                  <PaySeridi
+                    modul={MODUL}
+                    parcalar={oduller.map((r) => ({
+                      id: r.id,
+                      etiket: r.label || 'Adsız',
+                      agirlik: Number(r.probability) || 0,
+                    }))}
+                  />
                 </div>
-              </div>
+              </>
             )}
-          </section>
-          {config.rewards.some(reward => reward.type === 'bonus' && reward.bonusId) && (
-            <section className="grid grid-cols-1 gap-3 rounded-lg border border-amber-300/15 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-4 lg:grid-cols-2">
-              {config.rewards.filter(reward => reward.type === 'bonus' && reward.bonusId).map(reward => (
-                <LynonAssignmentValuesField
-                  key={`assignment-${reward.id}`}
-                  label={`${reward.label || `Ödül #${reward.id}`} · Lynon parametreleri`}
-                  values={reward.assignmentValues}
-                  onChange={assignmentValues => handleUpdate(reward.id, { assignmentValues })}
-                />
-              ))}
-            </section>
+          </Bolum>
+
+          {bonuslu.length > 0 && (
+            <Bolum baslik="Lynon parametreleri" aciklama="Bonusa bağlı ödüller için atama değerleri.">
+              <div className="grid grid-cols-1 gap-3 px-5 py-4 lg:grid-cols-2">
+                {bonuslu.map((odul) => (
+                  <LynonAssignmentValuesField
+                    key={`assignment-${odul.id}`}
+                    label={`${odul.label || `Ödül #${odul.id}`}`}
+                    values={odul.assignmentValues}
+                    onChange={(assignmentValues) => odulGuncelle(odul.id, { assignmentValues })}
+                  />
+                ))}
+              </div>
+            </Bolum>
           )}
         </div>
 
         <aside className="space-y-5">
-          <section className="rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-5">
-            <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-white">
-              <BarChart3 size={15} className="text-amber-400" />
-              Siklik Dagilimi
-            </h2>
-            {chartData.length > 0 ? (
-              <div className="h-52">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData} barCategoryGap="28%">
-                    <XAxis
-                      dataKey="name"
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fill: '#52525b', fontSize: 9, fontWeight: 700 }}
-                    />
-                    <Bar dataKey="weight" radius={[5, 5, 0, 0]}>
-                      {chartData.map((_, i) => (
-                        <Cell key={i} fill={i % 2 === 0 ? '#f59e0b' : '#6366f1'} fillOpacity={0.85} />
-                      ))}
-                    </Bar>
-                    <RechartsTooltip
-                      cursor={{ fill: 'rgba(255,255,255,0.04)' }}
-                      contentStyle={{
-                        backgroundColor: 'rgba(9,9,11,0.96)',
-                        border: '1px solid rgba(255,255,255,0.12)',
-                        borderRadius: 8,
-                        fontSize: 11,
-                        fontWeight: 700,
-                        color: '#fff'
-                      }}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            ) : (
-              <div className="flex h-52 items-center justify-center text-xs font-bold text-[color:var(--panel-faint,#5c6470)]">
-                Odul eklendikten sonra grafik gorunur
-              </div>
-            )}
-          </section>
+          <MaliyetKarti
+            modul={MODUL}
+            tutar={ozet.maliyet}
+            altBaslik={`%${sayi(config.baseWinProbability)} kazanma oranı ve mevcut ağırlıklara göre.`}
+          />
 
-          <section className="rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-5">
-            <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-white">
-              <Info size={15} className="text-[color:var(--panel-muted,#8a919c)]" />
-              Bilgi
-            </h2>
-            <div className="space-y-3">
-              {[
-                { color: 'bg-amber-500', text: 'Agirliklar mutlak oran degil, birbirine gore cikma sikligi ifade eder.' },
-                { color: 'bg-blue-500', text: 'Kayip ihtimali "Genel Kazanma" uzerinden hesaplanir; havuzda bos odul eklemeye gerek yoktur.' },
-                { color: 'bg-emerald-500', text: 'Bonus ID secildiginde odul oyuncu hesabina aninda ve otomatik yuklenir.' }
-              ].map((item, i) => (
-                <div key={i} className="flex gap-3 text-[11px] font-medium text-[color:var(--panel-muted,#8a919c)]">
-                  <div className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${item.color}`} />
-                  <span>{item.text}</span>
-                </div>
-              ))}
-            </div>
-          </section>
+          <Bolum baslik="Havuz özeti">
+            <OlcutListesi>
+              <Olcut etiket="Ödül çeşidi" deger={sayi(ozet.adet)} vurgulu />
+              <Olcut etiket="Toplam ağırlık" deger={sayi(ozet.toplamAgirlik)} />
+              <Olcut etiket="En büyük ödül" deger={lira(ozet.enBuyuk)} />
+              <Olcut
+                etiket="Oyun başına ortalama"
+                deger={lira(ozet.maliyet / 100)}
+              />
+            </OlcutListesi>
+          </Bolum>
 
-          <section className="rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-5">
-            <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-white">
-              <SlidersHorizontal size={15} className="text-[color:var(--panel-muted,#8a919c)]" />
-              Durum
-            </h2>
-            <div className="space-y-3">
-              <div className="flex items-start gap-3 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20 p-3">
-                <ShieldCheck size={15} className="mt-0.5 shrink-0 text-amber-400" />
-                <div>
-                  <div className="text-xs font-semibold text-white">Simulasyon Tahmini</div>
-                  <div className="mt-1 text-[11px] font-medium text-[color:var(--panel-muted,#8a919c)]">
-                    Her <span className="text-white">100</span> oyunda yaklasik{' '}
-                    <span className="text-amber-400">{stats.winProb}</span> oyuncu kazanir. Dagitim yukaridaki agirliklara gore yapilir.
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-start gap-3 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20 p-3">
-                <ShieldCheck size={15} className="mt-0.5 shrink-0 text-emerald-400" />
-                <div>
-                  <div className="text-xs font-semibold text-white">Kayit kontrollu</div>
-                  <div className="mt-1 text-[11px] font-medium text-[color:var(--panel-muted,#8a919c)]">Degisiklikler kaydet butonu ile yayina alinir.</div>
-                </div>
-              </div>
-            </div>
-          </section>
+          {ozet.agirliksiz > 0 && (
+            <Uyari tur="dikkat">
+              {ozet.agirliksiz} ödülün ağırlığı 0. Bu ödüller hiç çıkmaz.
+            </Uyari>
+          )}
+          {oduller.length > 0 && ozet.toplamAgirlik === 0 && (
+            <Uyari tur="hata">
+              Toplam ağırlık 0. Kazanan oyunlarda ödül seçilemez; en az bir ödüle ağırlık verin.
+            </Uyari>
+          )}
+          {config.baseWinProbability > 0 && oduller.length === 0 && (
+            <Uyari tur="hata">
+              Kazanma oranı %{sayi(config.baseWinProbability)} ama havuzda ödül yok.
+            </Uyari>
+          )}
+
+          <Bolum baslik="Nasıl çalışır">
+            <ul className="space-y-2.5 px-5 py-4 text-[11px] font-medium leading-relaxed text-[color:var(--panel-muted,#8a919c)]">
+              <li>
+                Önce kazanma oranı çekilir. Kaybeden oyunlarda havuza hiç bakılmaz.
+              </li>
+              <li>
+                Kazanan oyunda ödül, ağırlıkların <span className={RAKAM}>payına</span> göre seçilir.
+                Ağırlık 20 olan bir ödül, ağırlık 10 olanın iki katı sıklıkta çıkar.
+              </li>
+              <li>
+                Bonus seçilen ödüller oyuncu hesabına otomatik yüklenir. Manuel ödüller
+                yalnızca kayıt oluşturur.
+              </li>
+            </ul>
+          </Bolum>
         </aside>
       </div>
     </div>

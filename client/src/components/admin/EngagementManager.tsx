@@ -1,6 +1,23 @@
-import type { ReactNode } from 'react';
-import { BadgeCheck, Gift, Layers, ListChecks, Plus, Trash2 } from 'lucide-react';
-import { cn } from '../../lib/utils';
+import { useMemo } from 'react';
+import { BadgeCheck, Gift, Layers, ListChecks, Plus } from 'lucide-react';
+import {
+  Alan,
+  AlanIcinde,
+  Anahtar,
+  Bolum,
+  BosDurum,
+  Dugme,
+  Girdi,
+  ModulBasligi,
+  Olcut,
+  OlcutListesi,
+  RAKAM,
+  Secim,
+  SilDugmesi,
+  Uyari,
+  lira,
+  sayi,
+} from './oyunUi';
 
 type EngagementMode = 'dailyTasks' | 'battlePass';
 
@@ -13,15 +30,26 @@ interface EngagementManagerProps {
   onBattlePassChange: (config: any) => void;
 }
 
-const METRICS = [
-  { id: 'login', label: 'Giriş' },
-  { id: 'deposit_total', label: 'Yatırım tutarı' },
-  { id: 'deposit_count', label: 'Yatırım adedi' },
-  { id: 'wager_total', label: 'Oyun hacmi' },
-  { id: 'bonus_count', label: 'Bonus adedi' },
+const MODUL = 'gorev' as const;
+
+/**
+ * Gorev metrikleri.
+ *
+ * Hepsi Players Overview raporunun DONEM (FILTERED) kolonlarindan
+ * hesaplaniyor — omur boyu toplamdan degil. Aksi halde "bugun 500 TL yatir"
+ * gorevi gecmiste yatirimi olan herkeste aninda tamamlanmis gorunurdu.
+ */
+const METRIKLER = [
+  { id: 'login', label: 'Giriş', birim: 'kez', aciklama: 'Gün içinde giriş yapmak' },
+  { id: 'deposit_total', label: 'Yatırım tutarı', birim: 'TL', aciklama: 'Gün içindeki toplam yatırım' },
+  { id: 'deposit_count', label: 'Yatırım adedi', birim: 'adet', aciklama: 'Gün içindeki yatırım sayısı' },
+  { id: 'wager_total', label: 'Oyun hacmi', birim: 'TL', aciklama: 'Gün içindeki toplam bahis' },
+  { id: 'bonus_count', label: 'Bonus adedi', birim: 'adet', aciklama: 'Gün içinde alınan bonus' },
 ];
 
-const DEFAULT_DAILY = {
+const metrikBilgisi = (id: string) => METRIKLER.find((m) => m.id === id) ?? METRIKLER[0];
+
+const VARSAYILAN_GOREV = {
   isActive: true,
   title: 'Günlük Görevler',
   description: 'Gün içindeki gerçek aktivitenizi tamamlayın, XP ve ödül kazanın.',
@@ -29,7 +57,7 @@ const DEFAULT_DAILY = {
   tasks: [],
 };
 
-const DEFAULT_PASS = {
+const VARSAYILAN_PASS = {
   isActive: true,
   seasonId: 'season-1',
   title: 'Sezon Kartı',
@@ -41,20 +69,19 @@ const DEFAULT_PASS = {
   levels: [],
 };
 
-function toDateTimeLocal(value: string) {
+function tarihGirdisine(value: string) {
   if (!value) return '';
   const date = new Date(value);
   if (!Number.isFinite(date.getTime())) return '';
-  const offsetMs = date.getTimezoneOffset() * 60 * 1000;
-  return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
 }
 
-function fromDateTimeLocal(value: string) {
+function tarihtenIso(value: string) {
   const date = new Date(value);
   return Number.isFinite(date.getTime()) ? date.toISOString() : new Date().toISOString();
 }
 
-function nextId(prefix: string) {
+function yeniId(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
 }
 
@@ -66,335 +93,536 @@ export function EngagementManager({
   onDailyTasksChange,
   onBattlePassChange,
 }: EngagementManagerProps) {
-  const daily = { ...DEFAULT_DAILY, ...(dailyTasks || {}), tasks: Array.isArray(dailyTasks?.tasks) ? dailyTasks.tasks : [] };
+  const daily = {
+    ...VARSAYILAN_GOREV,
+    ...(dailyTasks || {}),
+    tasks: Array.isArray(dailyTasks?.tasks) ? dailyTasks.tasks : [],
+  };
   const pass = {
-    ...DEFAULT_PASS,
+    ...VARSAYILAN_PASS,
     ...(battlePass || {}),
     xpRules: Array.isArray(battlePass?.xpRules) ? battlePass.xpRules : [],
     levels: Array.isArray(battlePass?.levels) ? battlePass.levels : [],
   };
 
-  const updateDaily = (values: any) => onDailyTasksChange({ ...daily, ...values });
-  const updateTask = (id: string, values: any) => updateDaily({
-    tasks: daily.tasks.map((task: any) => task.id === id ? { ...task, ...values } : task),
-  });
-  const addTask = () => updateDaily({
-    tasks: [
-      ...daily.tasks,
-      {
-        id: nextId('task'),
-        title: 'Yeni görev',
-        description: 'Görev açıklaması',
-        metric: 'deposit_total',
-        target: 500,
-        xp: 100,
-        rewardLabel: '50 TL Bonus',
-        rewardBonusId: null,
-        rewardAmount: 50,
-        active: true,
-      },
-    ],
-  });
-
-  const updatePass = (values: any) => onBattlePassChange({ ...pass, ...values });
-  const updateRule = (id: string, values: any) => updatePass({
-    xpRules: pass.xpRules.map((rule: any) => rule.id === id ? { ...rule, ...values } : rule),
-  });
-  const addRule = () => updatePass({
-    xpRules: [
-      ...pass.xpRules,
-      { id: nextId('xp'), label: 'Yeni XP kuralı', metric: 'deposit_total', unit: 100, xp: 10, cap: 1000, active: true },
-    ],
-  });
-  const updateLevel = (levelNo: number, values: any) => updatePass({
-    levels: pass.levels.map((level: any) => Number(level.level) === levelNo ? { ...level, ...values } : level),
-  });
-  const addLevel = () => {
-    const nextLevel = Math.max(0, ...pass.levels.map((level: any) => Number(level.level) || 0)) + 1;
-    updatePass({
-      levels: [
-        ...pass.levels,
+  const gorevGuncelle = (values: any) => onDailyTasksChange({ ...daily, ...values });
+  const tekGorev = (id: string, values: any) =>
+    gorevGuncelle({ tasks: daily.tasks.map((t: any) => (t.id === id ? { ...t, ...values } : t)) });
+  const gorevEkle = () =>
+    gorevGuncelle({
+      tasks: [
+        ...daily.tasks,
         {
-          level: nextLevel,
-          requiredXp: nextLevel * 250,
-          freeRewardLabel: 'Bonus ödülü',
-          freeBonusId: null,
-          freeAmount: 50,
-          premiumRewardLabel: 'Premium bonus',
-          premiumBonusId: null,
-          premiumAmount: 100,
+          id: yeniId('task'),
+          title: 'Yeni görev',
+          description: '',
+          metric: 'deposit_total',
+          target: 500,
+          xp: 100,
+          rewardLabel: '50 TL bonus',
+          rewardBonusId: null,
+          rewardAmount: 50,
+          active: true,
         },
       ],
     });
-  };
+
+  const ozet = useMemo(() => {
+    const aktif = daily.tasks.filter((t: any) => t.active !== false);
+    return {
+      toplam: daily.tasks.length,
+      aktif: aktif.length,
+      gunlukXp: aktif.reduce((t: number, g: any) => t + (Number(g.xp) || 0), 0),
+      gunlukOdul: aktif.reduce((t: number, g: any) => t + (Number(g.rewardAmount) || 0), 0),
+      odulsuz: aktif.filter((g: any) => !(Number(g.rewardAmount) > 0) && !g.rewardBonusId).length,
+      hedefsiz: aktif.filter((g: any) => !(Number(g.target) > 0)).length,
+    };
+  }, [daily.tasks]);
+
+  const passGuncelle = (values: any) => onBattlePassChange({ ...pass, ...values });
+
+  if (mode === 'battlePass') {
+    return (
+      <BattlePassBolumu
+        pass={pass}
+        bonusOptions={bonusOptions}
+        onGuncelle={passGuncelle}
+      />
+    );
+  }
 
   return (
-    <section className="space-y-4">
-      <datalist id="engagement-bonus-options">
-        {bonusOptions.map((option: any) => (
-          <option key={`${option.id}-${option.value}`} value={option.id}>
-            {option.display}
-          </option>
-        ))}
-      </datalist>
+    <div className="space-y-5">
+      <ModulBasligi
+        modul={MODUL}
+        ikon={<ListChecks size={20} />}
+        baslik="Günlük Görevler"
+        aciklama="Türkiye (GMT+3) gün penceresinde gerçek aktiviteyle hesaplanır."
+        saginda={
+          <Dugme modul={MODUL} tur="birincil" onClick={gorevEkle}>
+            <Plus size={14} /> Görev ekle
+          </Dugme>
+        }
+      />
 
-      {mode === 'dailyTasks' ? (
-        <div className="space-y-4">
-          <HeaderCard
-            icon={ListChecks}
-            title="Günlük Görevler"
-            desc="Türkiye (GMT+3) gün penceresi ve Lynon aktivitesiyle hesaplanır; ödül seçilen canlı kampanyaya atanır."
-            active={daily.isActive !== false}
-            onActiveChange={(isActive) => updateDaily({ isActive })}
-          />
-
-          <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-4">
-            <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_1.4fr_140px]">
-              <TextField label="Başlık" value={daily.title} onChange={(title) => updateDaily({ title })} />
-              <TextField label="Açıklama" value={daily.description} onChange={(description) => updateDaily({ description })} />
-              <NumberField label="Reset saati (TR / GMT+3)" value={daily.resetHour || 0} onChange={(resetHour) => updateDaily({ resetHour })} />
-            </div>
-          </div>
-
-          <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))]">
-            <div className="flex items-center justify-between gap-3 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] px-4 py-4">
-              <div>
-                <h3 className="text-sm font-semibold text-white">Görevler</h3>
-                <p className="mt-1 text-xs font-medium text-[color:var(--panel-muted,#8a919c)]">Metrik, hedef ve ödül eşleşmelerini düzenleyin.</p>
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="space-y-5">
+          <Bolum baslik="Modül ayarları">
+            <div className="space-y-4 px-5 py-4">
+              <Anahtar
+                modul={MODUL}
+                acik={daily.isActive !== false}
+                onDegis={(isActive) => gorevGuncelle({ isActive })}
+                etiket="Görevler yayında"
+                aciklama="Kapalıyken lobide görev sekmesi görünmez."
+              />
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_1.4fr_160px]">
+                <Alan etiket="Başlık">
+                  <Girdi modul={MODUL} value={daily.title} onChange={(e) => gorevGuncelle({ title: e.target.value })} />
+                </Alan>
+                <Alan etiket="Açıklama">
+                  <Girdi
+                    modul={MODUL}
+                    value={daily.description}
+                    onChange={(e) => gorevGuncelle({ description: e.target.value })}
+                  />
+                </Alan>
+                <Alan etiket="Sıfırlama saati" ipucu="Türkiye saati (GMT+3).">
+                  <AlanIcinde ek=":00">
+                    <Girdi
+                      modul={MODUL}
+                      sayisal
+                      type="number"
+                      min={0}
+                      max={23}
+                      value={daily.resetHour || 0}
+                      onChange={(e) => gorevGuncelle({ resetHour: Number(e.target.value) })}
+                    />
+                  </AlanIcinde>
+                </Alan>
               </div>
-              <button type="button" onClick={addTask} className="inline-flex h-10 items-center gap-2 rounded-lg bg-[color:var(--panel-info,#64d2ff)] px-4 text-xs font-semibold uppercase tracking-widest text-[#050609]">
-                <Plus size={15} />
-                Görev Ekle
-              </button>
             </div>
-            <div className="space-y-3 p-4">
-              {daily.tasks.map((task: any) => (
-                <div key={task.id} className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20 p-4">
-                  <div className="mb-4 flex items-center justify-between gap-3">
-                    <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">
-                      <input type="checkbox" checked={task.active !== false} onChange={(event) => updateTask(task.id, { active: event.target.checked })} />
-                      Aktif
-                    </label>
-                    <button type="button" onClick={() => updateDaily({ tasks: daily.tasks.filter((item: any) => item.id !== task.id) })} className="flex h-9 w-9 items-center justify-center rounded-lg text-[color:var(--panel-faint,#5c6470)] hover:bg-rose-500/10 hover:text-rose-400" aria-label="Görevi sil">
-                      <Trash2 size={15} />
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-1 gap-3 xl:grid-cols-4">
-                    <TextField label="Görev adı" value={task.title || ''} onChange={(title) => updateTask(task.id, { title })} />
-                    <SelectField label="Metrik" value={task.metric || 'login'} options={METRICS} onChange={(metric) => updateTask(task.id, { metric })} />
-                    <NumberField label="Hedef" value={task.target || 1} onChange={(target) => updateTask(task.id, { target })} />
-                    <NumberField label="XP" value={task.xp || 0} onChange={(xp) => updateTask(task.id, { xp })} />
-                    <TextField className="xl:col-span-2" label="Açıklama" value={task.description || ''} onChange={(description) => updateTask(task.id, { description })} />
-                    <TextField label="Ödül etiketi" value={task.rewardLabel || ''} onChange={(rewardLabel) => updateTask(task.id, { rewardLabel })} />
-                    <NumberField label="Ödül tutarı" value={task.rewardAmount || 0} onChange={(rewardAmount) => updateTask(task.id, { rewardAmount })} />
-                    <CampaignSelect label="Lynon ödül kampanyası" value={String(task.rewardBonusId || '')} options={bonusOptions} onChange={(rewardBonusId) => updateTask(task.id, { rewardBonusId: rewardBonusId || null })} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          <HeaderCard
-            icon={Layers}
-            title="Sezon Kartı"
-            desc="XP, sezon tarihleri ve level ödülleri gerçek oyuncu aktivitesiyle açılır."
-            active={pass.isActive !== false}
-            onActiveChange={(isActive) => updatePass({ isActive })}
-          />
+          </Bolum>
 
-          <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-4">
-            <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 xl:grid-cols-4">
-              <TextField label="Sezon ID" value={pass.seasonId} onChange={(seasonId) => updatePass({ seasonId })} />
-              <TextField label="Başlık" value={pass.title} onChange={(title) => updatePass({ title })} />
-              <DateField label="Başlangıç" value={pass.startsAt} onChange={(startsAt) => updatePass({ startsAt })} />
-              <DateField label="Bitiş" value={pass.endsAt} onChange={(endsAt) => updatePass({ endsAt })} />
-              <TextField className="xl:col-span-3" label="Açıklama" value={pass.description} onChange={(description) => updatePass({ description })} />
-              <label className="flex h-[66px] items-center gap-3 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/25 px-3 text-xs font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">
-                <input type="checkbox" checked={pass.premiumEnabled === true} onChange={(event) => updatePass({ premiumEnabled: event.target.checked })} />
-                Premium hat
-              </label>
-            </div>
-          </div>
-
-          <ConfigList
-            title="XP Kuralları"
-            action="Kural Ekle"
-            onAdd={addRule}
-            icon={BadgeCheck}
+          <Bolum
+            baslik="Görevler"
+            aciklama="Metrik, hedef ve ödül eşleşmeleri."
           >
-            {pass.xpRules.map((rule: any) => (
-              <div key={rule.id} className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20 p-4">
+            {daily.tasks.length === 0 ? (
+              <BosDurum
+                ikon={<ListChecks size={26} />}
+                baslik="Henüz görev yok. Oyuncular boş bir liste görür."
+                eylem={
+                  <Dugme modul={MODUL} tur="birincil" onClick={gorevEkle}>
+                    <Plus size={14} /> İlk görevi ekle
+                  </Dugme>
+                }
+              />
+            ) : (
+              <div className="space-y-3 p-4">
+                {daily.tasks.map((gorev: any) => {
+                  const metrik = metrikBilgisi(gorev.metric || 'login');
+                  const pasif = gorev.active === false;
+                  return (
+                    <div
+                      key={gorev.id}
+                      className={`rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20 p-4 transition-opacity ${pasif ? 'opacity-50' : ''}`}
+                    >
+                      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <span className="text-[13px] font-semibold text-[color:var(--panel-text,#f2f4f8)]">
+                            {gorev.title || 'Adsız görev'}
+                          </span>
+                          {/* Gorevin ne istedigi tek satirda okunabilsin. */}
+                          <span className={`${RAKAM} rounded-md bg-white/[0.06] px-2 py-1 text-[10px] font-bold text-[color:var(--panel-muted,#8a919c)]`}>
+                            {metrik.label} ≥ {sayi(Number(gorev.target) || 0)} {metrik.birim}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <label className="flex cursor-pointer items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-[color:var(--panel-muted,#8a919c)]">
+                            <input
+                              type="checkbox"
+                              checked={!pasif}
+                              onChange={(e) => tekGorev(gorev.id, { active: e.target.checked })}
+                            />
+                            Aktif
+                          </label>
+                          <SilDugmesi
+                            onClick={() => gorevGuncelle({ tasks: daily.tasks.filter((t: any) => t.id !== gorev.id) })}
+                            etiket={`${gorev.title || 'Görevi'} sil`}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-3 xl:grid-cols-4">
+                        <Alan etiket="Görev adı">
+                          <Girdi modul={MODUL} value={gorev.title || ''} onChange={(e) => tekGorev(gorev.id, { title: e.target.value })} />
+                        </Alan>
+                        <Alan etiket="Metrik" ipucu={metrik.aciklama}>
+                          <Secim
+                            modul={MODUL}
+                            value={gorev.metric || 'login'}
+                            onChange={(e) => tekGorev(gorev.id, { metric: e.target.value })}
+                          >
+                            {METRIKLER.map((m) => (
+                              <option key={m.id} value={m.id}>{m.label}</option>
+                            ))}
+                          </Secim>
+                        </Alan>
+                        <Alan etiket="Hedef">
+                          <AlanIcinde ek={metrik.birim}>
+                            <Girdi
+                              modul={MODUL}
+                              sayisal
+                              type="number"
+                              min={0}
+                              value={gorev.target ?? 1}
+                              onChange={(e) => tekGorev(gorev.id, { target: Number(e.target.value) })}
+                            />
+                          </AlanIcinde>
+                        </Alan>
+                        <Alan etiket="XP">
+                          <Girdi
+                            modul={MODUL}
+                            sayisal
+                            type="number"
+                            min={0}
+                            value={gorev.xp ?? 0}
+                            onChange={(e) => tekGorev(gorev.id, { xp: Number(e.target.value) })}
+                          />
+                        </Alan>
+                        <Alan etiket="Açıklama" className="xl:col-span-2">
+                          <Girdi
+                            modul={MODUL}
+                            value={gorev.description || ''}
+                            onChange={(e) => tekGorev(gorev.id, { description: e.target.value })}
+                            placeholder="Oyuncuya gösterilecek açıklama"
+                          />
+                        </Alan>
+                        <Alan etiket="Ödül etiketi">
+                          <Girdi
+                            modul={MODUL}
+                            value={gorev.rewardLabel || ''}
+                            onChange={(e) => tekGorev(gorev.id, { rewardLabel: e.target.value })}
+                          />
+                        </Alan>
+                        <Alan etiket="Ödül tutarı">
+                          <AlanIcinde ek="TL">
+                            <Girdi
+                              modul={MODUL}
+                              sayisal
+                              type="number"
+                              min={0}
+                              value={gorev.rewardAmount ?? 0}
+                              onChange={(e) => tekGorev(gorev.id, { rewardAmount: Number(e.target.value) })}
+                            />
+                          </AlanIcinde>
+                        </Alan>
+                        <Alan
+                          etiket="Lynon kampanyası"
+                          className="xl:col-span-4"
+                          ipucu="Seçilirse ödül otomatik atanır; boşsa yalnızca kayıt oluşur."
+                        >
+                          <Secim
+                            modul={MODUL}
+                            value={String(gorev.rewardBonusId || '')}
+                            onChange={(e) => tekGorev(gorev.id, { rewardBonusId: e.target.value || null })}
+                          >
+                            <option value="">Otomatik atama yok</option>
+                            {bonusOptions.map((opt: any) => (
+                              <option key={opt.id} value={opt.id}>{opt.display}</option>
+                            ))}
+                          </Secim>
+                        </Alan>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </Bolum>
+        </div>
+
+        <aside className="space-y-5">
+          <Bolum baslik="Günlük yük">
+            <OlcutListesi>
+              <Olcut etiket="Aktif görev" deger={`${sayi(ozet.aktif)} / ${sayi(ozet.toplam)}`} vurgulu />
+              <Olcut etiket="Toplam XP" deger={sayi(ozet.gunlukXp)} />
+              <Olcut etiket="Tümü tamamlanırsa" deger={lira(ozet.gunlukOdul)} vurgulu />
+            </OlcutListesi>
+            <p className="border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))] px-5 py-3 text-[11px] font-medium text-[color:var(--panel-muted,#8a919c)]">
+              Bir oyuncu günün tüm görevlerini bitirirse maliyet bu kadar.
+            </p>
+          </Bolum>
+
+          {ozet.hedefsiz > 0 && (
+            <Uyari tur="hata">
+              {ozet.hedefsiz} aktif görevin hedefi 0. Bu görevler açılır açılmaz tamamlanmış görünür.
+            </Uyari>
+          )}
+          {ozet.odulsuz > 0 && (
+            <Uyari tur="dikkat">
+              {ozet.odulsuz} aktif görevin ödülü yok. Oyuncu tamamlar ama hiçbir şey almaz.
+            </Uyari>
+          )}
+          {daily.isActive === false && daily.tasks.length > 0 && (
+            <Uyari tur="dikkat">Modül kapalı; tanımlı görevler oyuncuya gösterilmiyor.</Uyari>
+          )}
+
+          <Bolum baslik="Hesaplama">
+            <ul className="space-y-2.5 px-5 py-4 text-[11px] font-medium leading-relaxed text-[color:var(--panel-muted,#8a919c)]">
+              <li>
+                İlerleme, Players Overview raporunun <span className="font-bold">dönem</span> kolonlarından
+                okunur — ömür boyu toplamdan değil.
+              </li>
+              <li>
+                Gün penceresi sıfırlama saatinde başlar ve 24 saat sürer. Saat değişirse
+                o günün ilerlemesi yeni pencereye göre yeniden hesaplanır.
+              </li>
+              <li>
+                Ödül kampanyası seçili görevlerde tamamlanma anında atama yapılır; oyuncunun
+                ayrıca talep etmesi gerekmez.
+              </li>
+            </ul>
+          </Bolum>
+        </aside>
+      </div>
+    </div>
+  );
+}
+
+// ─── Sezon kartı ─────────────────────────────────────────────────────────────
+
+/**
+ * Sezon karti editoru.
+ *
+ * DIKKAT: bu ekran su anda admin panelinden ULASILAMIYOR — AdminGames
+ * yalnizca mode="dailyTasks" ile cagiriyor ve onBattlePassChange bos bir
+ * fonksiyon. Oyuncu tarafi (BattlePassPage) canli calisiyor, yani sezon
+ * karti yapilandirilamiyor. Silmek yerine calisir birakildi; sekme olarak
+ * acilmasi ayri bir karar.
+ */
+function BattlePassBolumu({
+  pass,
+  bonusOptions,
+  onGuncelle,
+}: {
+  pass: any;
+  bonusOptions: any[];
+  onGuncelle: (values: any) => void;
+}) {
+  const kuralGuncelle = (id: string, values: any) =>
+    onGuncelle({ xpRules: pass.xpRules.map((r: any) => (r.id === id ? { ...r, ...values } : r)) });
+  const seviyeGuncelle = (no: number, values: any) =>
+    onGuncelle({ levels: pass.levels.map((l: any) => (Number(l.level) === no ? { ...l, ...values } : l)) });
+
+  return (
+    <div className="space-y-5">
+      <ModulBasligi
+        modul={MODUL}
+        ikon={<Layers size={20} />}
+        baslik="Sezon Kartı"
+        aciklama="XP kuralları, sezon tarihleri ve seviye ödülleri."
+      />
+
+      <Uyari tur="dikkat">
+        Bu ekran admin panelinde bir sekmeye bağlı değil ve değişiklikler kaydedilmiyor.
+      </Uyari>
+
+      <Bolum baslik="Sezon">
+        <div className="space-y-4 px-5 py-4">
+          <Anahtar
+            modul={MODUL}
+            acik={pass.isActive !== false}
+            onDegis={(isActive) => onGuncelle({ isActive })}
+            etiket="Sezon yayında"
+          />
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-4">
+            <Alan etiket="Sezon ID">
+              <Girdi modul={MODUL} value={pass.seasonId} onChange={(e) => onGuncelle({ seasonId: e.target.value })} />
+            </Alan>
+            <Alan etiket="Başlık">
+              <Girdi modul={MODUL} value={pass.title} onChange={(e) => onGuncelle({ title: e.target.value })} />
+            </Alan>
+            <Alan etiket="Başlangıç">
+              <Girdi
+                modul={MODUL}
+                type="datetime-local"
+                value={tarihGirdisine(pass.startsAt)}
+                onChange={(e) => onGuncelle({ startsAt: tarihtenIso(e.target.value) })}
+              />
+            </Alan>
+            <Alan etiket="Bitiş">
+              <Girdi
+                modul={MODUL}
+                type="datetime-local"
+                value={tarihGirdisine(pass.endsAt)}
+                onChange={(e) => onGuncelle({ endsAt: tarihtenIso(e.target.value) })}
+              />
+            </Alan>
+            <Alan etiket="Açıklama" className="xl:col-span-3">
+              <Girdi modul={MODUL} value={pass.description} onChange={(e) => onGuncelle({ description: e.target.value })} />
+            </Alan>
+          </div>
+          <Anahtar
+            modul={MODUL}
+            acik={pass.premiumEnabled === true}
+            onDegis={(premiumEnabled) => onGuncelle({ premiumEnabled })}
+            etiket="Premium hat"
+            aciklama="İkinci ödül sırasını açar."
+          />
+        </div>
+      </Bolum>
+
+      <Bolum
+        baslik="XP kuralları"
+        eylem={
+          <Dugme
+            modul={MODUL}
+            tur="birincil"
+            onClick={() =>
+              onGuncelle({
+                xpRules: [
+                  ...pass.xpRules,
+                  { id: yeniId('xp'), label: 'Yeni XP kuralı', metric: 'deposit_total', unit: 100, xp: 10, cap: 1000, active: true },
+                ],
+              })
+            }
+          >
+            <Plus size={14} /> Kural ekle
+          </Dugme>
+        }
+      >
+        {pass.xpRules.length === 0 ? (
+          <BosDurum ikon={<BadgeCheck size={26} />} baslik="XP kuralı yok; oyuncular seviye atlayamaz." />
+        ) : (
+          <div className="space-y-3 p-4">
+            {pass.xpRules.map((kural: any) => (
+              <div key={kural.id} className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20 p-4">
                 <div className="mb-4 flex items-center justify-between gap-3">
-                  <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">
-                    <input type="checkbox" checked={rule.active !== false} onChange={(event) => updateRule(rule.id, { active: event.target.checked })} />
+                  <label className="flex cursor-pointer items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-[color:var(--panel-muted,#8a919c)]">
+                    <input type="checkbox" checked={kural.active !== false} onChange={(e) => kuralGuncelle(kural.id, { active: e.target.checked })} />
                     Aktif
                   </label>
-                  <button type="button" onClick={() => updatePass({ xpRules: pass.xpRules.filter((item: any) => item.id !== rule.id) })} className="flex h-9 w-9 items-center justify-center rounded-lg text-[color:var(--panel-faint,#5c6470)] hover:bg-rose-500/10 hover:text-rose-400" aria-label="Kuralı sil">
-                    <Trash2 size={15} />
-                  </button>
+                  <SilDugmesi
+                    onClick={() => onGuncelle({ xpRules: pass.xpRules.filter((r: any) => r.id !== kural.id) })}
+                    etiket="Kuralı sil"
+                  />
                 </div>
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
-                  <TextField label="Ad" value={rule.label || ''} onChange={(label) => updateRule(rule.id, { label })} />
-                  <SelectField label="Metrik" value={rule.metric || 'deposit_total'} options={METRICS} onChange={(metric) => updateRule(rule.id, { metric })} />
-                  <NumberField label="Birim" value={rule.unit || 1} onChange={(unit) => updateRule(rule.id, { unit })} />
-                  <NumberField label="XP" value={rule.xp || 0} onChange={(xp) => updateRule(rule.id, { xp })} />
-                  <NumberField label="Limit" value={rule.cap || 0} onChange={(cap) => updateRule(rule.id, { cap })} />
+                  <Alan etiket="Ad">
+                    <Girdi modul={MODUL} value={kural.label || ''} onChange={(e) => kuralGuncelle(kural.id, { label: e.target.value })} />
+                  </Alan>
+                  <Alan etiket="Metrik">
+                    <Secim modul={MODUL} value={kural.metric || 'deposit_total'} onChange={(e) => kuralGuncelle(kural.id, { metric: e.target.value })}>
+                      {METRIKLER.map((m) => <option key={m.id} value={m.id}>{m.label}</option>)}
+                    </Secim>
+                  </Alan>
+                  <Alan etiket="Birim">
+                    <Girdi modul={MODUL} sayisal type="number" value={kural.unit ?? 1} onChange={(e) => kuralGuncelle(kural.id, { unit: Number(e.target.value) })} />
+                  </Alan>
+                  <Alan etiket="XP">
+                    <Girdi modul={MODUL} sayisal type="number" value={kural.xp ?? 0} onChange={(e) => kuralGuncelle(kural.id, { xp: Number(e.target.value) })} />
+                  </Alan>
+                  <Alan etiket="Üst sınır">
+                    <Girdi modul={MODUL} sayisal type="number" value={kural.cap ?? 0} onChange={(e) => kuralGuncelle(kural.id, { cap: Number(e.target.value) })} />
+                  </Alan>
                 </div>
               </div>
             ))}
-          </ConfigList>
+          </div>
+        )}
+      </Bolum>
 
-          <ConfigList
-            title="Seviye Ödülleri"
-            action="Seviye Ekle"
-            onAdd={addLevel}
-            icon={Gift}
+      <Bolum
+        baslik="Seviye ödülleri"
+        eylem={
+          <Dugme
+            modul={MODUL}
+            tur="birincil"
+            onClick={() => {
+              const sonraki = Math.max(0, ...pass.levels.map((l: any) => Number(l.level) || 0)) + 1;
+              onGuncelle({
+                levels: [
+                  ...pass.levels,
+                  {
+                    level: sonraki,
+                    requiredXp: sonraki * 250,
+                    freeRewardLabel: 'Bonus ödülü',
+                    freeBonusId: null,
+                    freeAmount: 50,
+                    premiumRewardLabel: 'Premium bonus',
+                    premiumBonusId: null,
+                    premiumAmount: 100,
+                  },
+                ],
+              });
+            }}
           >
-            {pass.levels.map((level: any) => (
-              <div key={level.level} className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20 p-4">
+            <Plus size={14} /> Seviye ekle
+          </Dugme>
+        }
+      >
+        {pass.levels.length === 0 ? (
+          <BosDurum ikon={<Gift size={26} />} baslik="Seviye yok; toplanan XP hiçbir ödüle çıkmıyor." />
+        ) : (
+          <div className="space-y-3 p-4">
+            {pass.levels.map((seviye: any) => (
+              <div key={seviye.level} className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20 p-4">
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[color:var(--panel-info,#64d2ff)] text-sm font-semibold text-[#050609]">{level.level}</div>
-                    <div>
-                      <div className="text-sm font-semibold text-white">Seviye {level.level}</div>
-                      <div className="text-xs font-bold text-[color:var(--panel-faint,#5c6470)]">{level.requiredXp || 0} XP</div>
-                    </div>
+                    <span className={`${RAKAM} flex h-9 w-9 items-center justify-center rounded-lg bg-[color:var(--panel-success,#30d158)]/15 text-[13px] font-bold text-[color:var(--panel-success,#30d158)]`}>
+                      {seviye.level}
+                    </span>
+                    <span className={`${RAKAM} text-[11px] font-bold text-[color:var(--panel-muted,#8a919c)]`}>
+                      {sayi(Number(seviye.requiredXp) || 0)} XP
+                    </span>
                   </div>
-                  <button type="button" onClick={() => updatePass({ levels: pass.levels.filter((item: any) => item.level !== level.level) })} className="flex h-9 w-9 items-center justify-center rounded-lg text-[color:var(--panel-faint,#5c6470)] hover:bg-rose-500/10 hover:text-rose-400" aria-label="Seviyeyi sil">
-                    <Trash2 size={15} />
-                  </button>
+                  <SilDugmesi
+                    onClick={() => onGuncelle({ levels: pass.levels.filter((l: any) => l.level !== seviye.level) })}
+                    etiket={`Seviye ${seviye.level} sil`}
+                  />
                 </div>
-                <div className="grid grid-cols-1 gap-3 xl:grid-cols-7">
-                  <NumberField label="Seviye" value={level.level || 1} onChange={(value) => updateLevel(Number(level.level), { level: value })} />
-                  <NumberField label="Gerekli XP" value={level.requiredXp || 0} onChange={(requiredXp) => updateLevel(Number(level.level), { requiredXp })} />
-                  <TextField label="Ücretsiz ödül" value={level.freeRewardLabel || ''} onChange={(freeRewardLabel) => updateLevel(Number(level.level), { freeRewardLabel })} />
-                  <TextField label="Ücretsiz ID" value={level.freeBonusId || ''} list="engagement-bonus-options" onChange={(freeBonusId) => updateLevel(Number(level.level), { freeBonusId })} />
-                  <NumberField label="Ücretsiz tutar" value={level.freeAmount || 0} onChange={(freeAmount) => updateLevel(Number(level.level), { freeAmount })} />
-                  <TextField label="Premium ödül" value={level.premiumRewardLabel || ''} onChange={(premiumRewardLabel) => updateLevel(Number(level.level), { premiumRewardLabel })} />
-                  <TextField label="Premium ID" value={level.premiumBonusId || ''} list="engagement-bonus-options" onChange={(premiumBonusId) => updateLevel(Number(level.level), { premiumBonusId })} />
+                <div className="grid grid-cols-1 gap-3 xl:grid-cols-4">
+                  <Alan etiket="Seviye">
+                    <Girdi modul={MODUL} sayisal type="number" value={seviye.level ?? 1} onChange={(e) => seviyeGuncelle(Number(seviye.level), { level: Number(e.target.value) })} />
+                  </Alan>
+                  <Alan etiket="Gerekli XP">
+                    <Girdi modul={MODUL} sayisal type="number" value={seviye.requiredXp ?? 0} onChange={(e) => seviyeGuncelle(Number(seviye.level), { requiredXp: Number(e.target.value) })} />
+                  </Alan>
+                  <Alan etiket="Ücretsiz ödül">
+                    <Girdi modul={MODUL} value={seviye.freeRewardLabel || ''} onChange={(e) => seviyeGuncelle(Number(seviye.level), { freeRewardLabel: e.target.value })} />
+                  </Alan>
+                  <Alan etiket="Ücretsiz tutar">
+                    <AlanIcinde ek="TL">
+                      <Girdi modul={MODUL} sayisal type="number" value={seviye.freeAmount ?? 0} onChange={(e) => seviyeGuncelle(Number(seviye.level), { freeAmount: Number(e.target.value) })} />
+                    </AlanIcinde>
+                  </Alan>
+                  <Alan etiket="Ücretsiz kampanya" className="xl:col-span-2">
+                    <Secim modul={MODUL} value={String(seviye.freeBonusId || '')} onChange={(e) => seviyeGuncelle(Number(seviye.level), { freeBonusId: e.target.value || null })}>
+                      <option value="">Yok</option>
+                      {bonusOptions.map((o: any) => <option key={o.id} value={o.id}>{o.display}</option>)}
+                    </Secim>
+                  </Alan>
+                  {pass.premiumEnabled && (
+                    <>
+                      <Alan etiket="Premium ödül">
+                        <Girdi modul={MODUL} value={seviye.premiumRewardLabel || ''} onChange={(e) => seviyeGuncelle(Number(seviye.level), { premiumRewardLabel: e.target.value })} />
+                      </Alan>
+                      <Alan etiket="Premium kampanya">
+                        <Secim modul={MODUL} value={String(seviye.premiumBonusId || '')} onChange={(e) => seviyeGuncelle(Number(seviye.level), { premiumBonusId: e.target.value || null })}>
+                          <option value="">Yok</option>
+                          {bonusOptions.map((o: any) => <option key={o.id} value={o.id}>{o.display}</option>)}
+                        </Secim>
+                      </Alan>
+                    </>
+                  )}
                 </div>
               </div>
             ))}
-          </ConfigList>
-        </div>
-      )}
-    </section>
-  );
-}
-
-function CampaignSelect({ label, value, options, onChange }: { label: string; value: string; options: any[]; onChange: (value: string) => void }) {
-  return (
-    <div className="min-w-0">
-      <label className="mb-2 block text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">{label}</label>
-      <select value={value} onChange={(event) => onChange(event.target.value)} className="h-11 w-full rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/25 px-3 text-sm font-bold text-white outline-none focus:border-[color:var(--panel-info,#64d2ff)]/50">
-        <option value="">Canlı Lynon kampanyası seçin</option>
-        {options.filter((option: any) => !option.isSpecial).map((option: any) => <option key={option.id} value={option.id}>{option.display}</option>)}
-      </select>
-    </div>
-  );
-}
-function HeaderCard({ icon: Icon, title, desc, active, onActiveChange }: { icon: any; title: string; desc: string; active: boolean; onActiveChange: (value: boolean) => void }) {
-  return (
-    <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-[color:var(--panel-info,#64d2ff)]/10 text-cyan-300">
-            <Icon size={20} />
-          </span>
-          <div>
-            <h2 className="text-lg font-semibold text-white">{title}</h2>
-            <p className="mt-1 text-xs font-medium text-[color:var(--panel-muted,#8a919c)]">{desc}</p>
           </div>
-        </div>
-        <label className={cn('inline-flex h-10 items-center gap-2 rounded-lg border px-3 text-xs font-semibold uppercase tracking-widest', active ? 'border-emerald-300/20 bg-emerald-300/10 text-emerald-300' : 'border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.03] text-[color:var(--panel-muted,#8a919c)]')}>
-          <input type="checkbox" checked={active} onChange={(event) => onActiveChange(event.target.checked)} />
-          {active ? 'Aktif' : 'Pasif'}
-        </label>
-      </div>
+        )}
+      </Bolum>
     </div>
-  );
-}
-
-function ConfigList({ title, action, icon: Icon, onAdd, children }: { title: string; action: string; icon: any; onAdd: () => void; children: ReactNode }) {
-  return (
-    <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))]">
-      <div className="flex items-center justify-between gap-3 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] px-4 py-4">
-        <div className="flex items-center gap-3">
-          <Icon size={18} className="text-cyan-300" />
-          <h3 className="text-sm font-semibold text-white">{title}</h3>
-        </div>
-        <button type="button" onClick={onAdd} className="inline-flex h-10 items-center gap-2 rounded-lg bg-[color:var(--panel-info,#64d2ff)] px-4 text-xs font-semibold uppercase tracking-widest text-[#050609]">
-          <Plus size={15} />
-          {action}
-        </button>
-      </div>
-      <div className="space-y-3 p-4">{children}</div>
-    </div>
-  );
-}
-
-function fieldClass(extra?: string) {
-  return cn('min-w-0', extra);
-}
-
-function TextField({ label, value, onChange, className, list }: { label: string; value: string; onChange: (value: string) => void; className?: string; list?: string }) {
-  return (
-    <label className={fieldClass(className)}>
-      <span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">{label}</span>
-      <input
-        type="text"
-        list={list}
-        value={value ?? ''}
-        onChange={(event) => onChange(event.target.value)}
-        className="h-10 w-full rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] px-3 text-sm font-bold text-white outline-none transition focus:border-cyan-300/50"
-      />
-    </label>
-  );
-}
-
-function NumberField({ label, value, onChange }: { label: string; value: number; onChange: (value: number) => void }) {
-  return (
-    <label className="min-w-0">
-      <span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">{label}</span>
-      <input
-        type="number"
-        value={value ?? 0}
-        onChange={(event) => onChange(Number(event.target.value))}
-        className="h-10 w-full rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] px-3 text-sm font-semibold text-white outline-none transition focus:border-cyan-300/50"
-      />
-    </label>
-  );
-}
-
-function DateField({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
-  return (
-    <label className="min-w-0">
-      <span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">{label}</span>
-      <input
-        type="datetime-local"
-        value={toDateTimeLocal(value)}
-        onChange={(event) => onChange(fromDateTimeLocal(event.target.value))}
-        className="h-10 w-full rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] px-3 text-sm font-semibold text-white outline-none transition focus:border-cyan-300/50"
-      />
-    </label>
-  );
-}
-
-function SelectField({ label, value, options, onChange }: { label: string; value: string; options: Array<{ id: string; label: string }>; onChange: (value: string) => void }) {
-  return (
-    <label className="min-w-0">
-      <span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">{label}</span>
-      <select
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className="h-10 w-full rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] px-3 text-sm font-semibold text-white outline-none transition focus:border-cyan-300/50"
-      >
-        {options.map((option) => (
-          <option key={option.id} value={option.id}>{option.label}</option>
-        ))}
-      </select>
-    </label>
   );
 }
