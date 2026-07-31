@@ -995,6 +995,15 @@ export interface AffiliateToplam {
   ortalamaDonusum: number;
 }
 
+export type AffiliateOdemeDurumu = 'bekliyor' | 'odendi' | 'iptal';
+
+export interface AffiliateOdemeSatiri {
+  donem: string;
+  tutar: number;
+  durum: AffiliateOdemeDurumu;
+  odenmeTarihi: string | null;
+}
+
 /** Ortak portali — panel oturumundan ayri kimlik. */
 export const affiliatePortalApi = {
   login: (body: { email: string; password: string }) =>
@@ -1013,6 +1022,8 @@ export const affiliatePortalApi = {
       satirlar: AffiliateMetrik[];
       toplam: AffiliateToplam;
       komisyon: AffiliateKomisyon;
+      odemeler?: AffiliateOdemeSatiri[];
+      odemeOzeti?: { odenmis: number; bekleyen: number };
       message?: string;
     }>('/affiliate-portal/ozet', params as Record<string, string> | undefined),
 };
