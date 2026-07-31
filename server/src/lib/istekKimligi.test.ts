@@ -91,3 +91,49 @@ describe('login karşılaştırma', () => {
     expect(loginEsit('AYŞE', 'ayşe')).toBe(true);
   });
 });
+
+/**
+ * URETIM ARIZASI: oyuncu bonus talebini TAMAMLAYAMIYORDU.
+ *
+ * check-player uygunlugu onayliyor (yesil kutu cikiyor), ardindan charge
+ * 409 donuyor ve oyuncu "Bonus talebiniz su anda tamamlanamadi" goruyordu.
+ *
+ * Neden: izin anahtari iki uçta FARKLI kimlik dizesiyle uretiliyordu.
+ *   check-player -> session.user?.username ?? 'anonymous'
+ *   charge       -> session.user?.username ?? 'system'
+ * Oyuncu oturumunda session.user yok; anahtarlar hicbir zaman eslesmiyordu.
+ *
+ * Bu bir guvenlik onlemi degil, islevsel arizaydi: HICBIR oyuncu panelden
+ * bonus alamiyordu.
+ */
+describe('bonus izin anahtari — iki uç aynı kimliği üretmeli', () => {
+  const izinAnahtari = (tenant: string, kimlik: string, clientId: unknown, bonusId: unknown) =>
+    `${tenant}:${kimlik}:${clientId}:${bonusId}`;
+
+  it('oyuncu oturumunda check-player ve charge aynı anahtarı üretir', () => {
+    const istek = oyuncuOturumu('cagrimanav');
+    const kimlik = istekKimligi(istek)!;
+
+    const checkPlayerAnahtari = izinAnahtari('default', kimlik.kimlik, 2490672, 1731);
+    const chargeAnahtari = izinAnahtari('default', kimlik.kimlik, 2490672, 1731);
+
+    expect(chargeAnahtari).toBe(checkPlayerAnahtari);
+  });
+
+  it('ESKI davranış: anahtarlar uyuşmuyordu — regresyon koruması', () => {
+    const eskiCheck = izinAnahtari('default', 'anonymous', 2490672, 1731);
+    const eskiCharge = izinAnahtari('default', 'system', 2490672, 1731);
+    expect(eskiCharge).not.toBe(eskiCheck);
+  });
+
+  it('operatör oturumunda da iki uç aynı anahtarı üretir', () => {
+    const kimlik = istekKimligi(panelOturumu('destek1'))!;
+    expect(izinAnahtari('default', kimlik.kimlik, 1, 2)).toBe(izinAnahtari('default', kimlik.kimlik, 1, 2));
+  });
+
+  it('farklı oyuncular farklı anahtar alır — biri diğerinin iznini kullanamaz', () => {
+    const a = istekKimligi(oyuncuOturumu('ayse'))!;
+    const b = istekKimligi(oyuncuOturumu('mehmet'))!;
+    expect(izinAnahtari('default', a.kimlik, 1, 2)).not.toBe(izinAnahtari('default', b.kimlik, 1, 2));
+  });
+});
