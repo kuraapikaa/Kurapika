@@ -1948,11 +1948,49 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
             if (!Number.isFinite(effectiveAmount) || effectiveAmount <= 0) {
               return reply.status(422).send({ HasError: true, AlertMessage: 'Nakit bonus tutarı pozitif olmalıdır.' });
             }
+
+            /**
+             * MUKERRER KORUMASI.
+             *
+             * Nakit bonus bakiye duzeltmesi olarak yaziliyor; Lynon'un bonus
+             * listesinde gorunmuyor. Bu yolda "bugun verildi mi" diye bakan
+             * HICBIR kontrol yoktu — ertesi gun isinde vardi (cashAlreadyCredited),
+             * oyuncuya acik charge yolunda yoktu.
+             *
+             * Sonuc: oyuncu bonusu aliyor, kaybediyor, bakiye tekrar esigin
+             * altina dusuyor ve ayni bonusu tekrar aliyordu. Her turda yeni
+             * bir correction; oyuncu defalarca bedava bakiye kazaniyordu.
+             *
+             * Kural allowSameDayRepeat ile acikca izin vermedikce ayni kural
+             * ayni oyuncuya gunde bir kez verilir.
+             */
+            const kuralAnahtari = String(resolvedRule?.key ?? BonusId);
+            if ((spec as { allowSameDayRepeat?: boolean }).allowSameDayRepeat !== true) {
+              const { bugunVerilmisMi, nakitKullanimlari } = await import('../services/nakitBonusGecmisi.js');
+              const gunBaslangici = Date.now() - 24 * 60 * 60 * 1000;
+              const kullanimlar = nakitKullanimlari(
+                ((currentAccount as unknown as { balanceCorrections?: unknown }).balanceCorrections ?? []) as never,
+              );
+              if (bugunVerilmisMi(kullanimlar, kuralAnahtari, gunBaslangici)) {
+                request.log.warn(
+                  { ClientId, kuralAnahtari },
+                  'Nakit bonus mukerrer talep engellendi.',
+                );
+                return reply.status(409).send({
+                  HasError: true,
+                  AlertMessage: 'Bu bonus bu oyuncuya son 24 saatte zaten tanımlanmış.',
+                });
+              }
+            }
+
             const result = await lynonAdjustPlayerMainAccount({
               playerId: ClientId,
               amount: effectiveAmount,
               correctionType: 'crediting',
-              note: `Bonus ${resolvedRule?.key ?? BonusId} / ${username}`.slice(0, 50),
+              // Not bicimi SABIT: `Bonus <kuralAnahtari> / <kullanici>`.
+              // nakitBonusGecmisi bu bicimden kural anahtarini cikariyor;
+              // degistirilirse mukerrer korumasi kor kalir.
+              note: `Bonus ${kuralAnahtari} / ${username}`.slice(0, 50),
             });
             audit(username, role, 'bonus_charge_as_cash', String(ClientId), `RuleId: ${resolvedRule?.key ?? BonusId}, Amount: ${effectiveAmount}`);
             return reply.send({

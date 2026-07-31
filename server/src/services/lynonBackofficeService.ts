@@ -2581,6 +2581,20 @@ export async function lynonBuildBonusEligibilitySnapshot(input: { login?: string
     profileTransactionsByType,
     profileTransactionsCount: profileTransactions.length,
     financialMovementCount: financialMovements.length,
+    /**
+     * Bakiye duzeltmeleri — nakit bonus limitleri icin.
+     *
+     * Nakit bonuslar kampanya olarak atanmiyor, `crediting` duzeltmesi
+     * olarak yaziliyor; `bonuses` listesinde hic gorunmuyorlar. Limit
+     * kontrolleri oradan saydigi icin nakit bonuslarda YAPISAL OLARAK
+     * kordu ve ayni bonus tekrar tekrar alinabiliyordu.
+     */
+    balanceCorrections: financialMovements.map((row) => ({
+      not: String(row.Note ?? row.note ?? row.Info ?? ''),
+      tutar: numberFrom(row.Amount ?? row.amount),
+      tarih: String(row.CreatedLocal ?? row.createdAt ?? ''),
+      tur: String(row.CorrectionType ?? row.correctionType ?? ''),
+    })),
     paymentTransactionCount: paymentTransactions.length,
     recentGames: casinoBets.map((row) => firstNonEmpty(row.gameName, row.game?.name)).filter(Boolean),
     recentGameProviders: casinoBets.map((row) => firstNonEmpty(recordOf(row.round).providerName, row.providerName, row.game?.providerName)).filter(Boolean),

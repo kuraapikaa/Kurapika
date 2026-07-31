@@ -31,6 +31,16 @@ export type PromoSpec = {
     canReceiveWheelBonus?: boolean;
     /** Günlük kullanım limiti (bonus adı/ID eşleşmesine göre). */
     perDayLimit?: number;
+    /**
+     * Nakit bonusun AYNI GUN tekrar verilmesine acikca izin verir.
+     *
+     * Varsayilan kapali: nakit bonus bakiye duzeltmesi olarak yaziliyor ve
+     * hicbir yerde "bugun verildi" kaydi tutulmuyordu; oyuncu bonusu alip
+     * kaybedince tekrar talep edebiliyor ve her turda yeni bir correction
+     * olusuyordu. Gunde birden fazla verilmesi gereken bir bonus varsa
+     * bu bayrak acikca acilmali.
+     */
+    allowSameDayRepeat?: boolean;
     /** Haftalık kullanım limiti (bonus adı/ID eşleşmesine göre). */
     perWeekLimit?: number;
     /** İlk yatırım bonusu mu? true ise yalnızca ilk yatırımda/ilk yatırımlar arasında geçerli. */
