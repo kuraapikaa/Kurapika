@@ -8,6 +8,7 @@ import { getBackofficeToken } from '../lib/authStore.js';
 import { resolveTenantKeyForRequest, safeTenantKey } from '../lib/tenant.js';
 import { readStoredDocument, writeStoredDocument } from '../lib/documentStore.js';
 import { isLynonConfigured, lynonAssignCampaignToPlayer, lynonBuildBonusEligibilitySnapshot, lynonCreditPlayerMainAccount, lynonFindPlayerByLogin, lynonPlayerActivity } from '../services/lynonBackofficeService.js';
+import { oyuncuAktivitesi } from '../services/oyuncuRaporService.js';
 import { getChatMember, isTelegramConfigured, sendTelegramMessage } from '../services/telegramService.js';
 import { ensureTelegramLinkDir, getLinkedTelegramUserId, linkTelegramAccount } from '../services/telegramLinkService.js';
 
@@ -1050,6 +1051,23 @@ async function buildPlayerActivity(login: string, from: Date, to: Date) {
 
 async function buildPlayerActivityLive(login: string, from: Date, to: Date) {
   if (isLynonConfigured()) {
+    // 1) Players Overview raporu (1841) — TEK istek, site geneli.
+    //
+    // Oyuncu basina dort ayri cagri yerine tek rapor: gunluk gorev ve
+    // turnuva ayni pencereyi sorduğunda cevap onbellekten paylasiliyor.
+    // Rapor FILTERED kolonlariyla tam da istenen araligi donuyor.
+    try {
+      const rapor = await oyuncuAktivitesi(login, from, to);
+      if (rapor.ok) return rapor;
+      // Oyuncu bu pencerede raporda yok (ornegin yeni kayit). Sifir
+      // varsaymak yerine asagidaki kaynaklara dusuyoruz: oyuncunun
+      // gercekten hareketsiz mi yoksa rapor disinda mi oldugunu
+      // ayirt edemeyiz ve gorev haksiz yere tamamlanmamis gorunurdu.
+    } catch (err) {
+      console.warn('[games] Players Overview raporu okunamadı; oyuncu bazlı sorguya düşülüyor.', err);
+    }
+
+    // 2) Oyuncu bazli Lynon sorgulari (dort cagri).
     try {
       return await lynonPlayerActivity(login, from, to);
     } catch (err) {

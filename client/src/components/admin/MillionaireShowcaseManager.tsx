@@ -1,5 +1,21 @@
-import { Crown, Eye, Film, Link2, Plus, Sparkles, Trash2, Trophy } from 'lucide-react';
-import { cn } from '../../lib/utils';
+import { useMemo } from 'react';
+import { Crown, Film, Link2, Plus, Star, Trophy } from 'lucide-react';
+import {
+  Alan,
+  Anahtar,
+  Bolum,
+  BosDurum,
+  Dugme,
+  Girdi,
+  ModulBasligi,
+  Olcut,
+  OlcutListesi,
+  RAKAM,
+  SilDugmesi,
+  Uyari,
+  lira,
+  sayi,
+} from './oyunUi';
 
 type MillionaireRecord = {
   id: string;
@@ -13,11 +29,7 @@ type MillionaireRecord = {
   featured?: boolean;
 };
 
-type SocialLink = {
-  id: string;
-  label: string;
-  url: string;
-};
+type SocialLink = { id: string; label: string; url: string };
 
 type MillionaireShowcaseConfig = {
   isActive: boolean;
@@ -32,7 +44,9 @@ type MillionaireShowcaseConfig = {
   records: MillionaireRecord[];
 };
 
-const DEFAULT_SHOWCASE: MillionaireShowcaseConfig = {
+const MODUL = 'vitrin' as const;
+
+const VARSAYILAN: MillionaireShowcaseConfig = {
   isActive: true,
   eyebrow: 'Büyük Kazanç Vitrini',
   title: 'Büyük kazanç anları burada parlıyor',
@@ -42,10 +56,10 @@ const DEFAULT_SHOWCASE: MillionaireShowcaseConfig = {
   showSocial: false,
   disclaimer: '18+ Sorumlu oyun. Görseller ve videolar yalnızca izinli içeriklerle kullanılmalıdır.',
   socialLinks: [],
-  records: []
+  records: [],
 };
 
-const emptyRecord = (): MillionaireRecord => ({
+const yeniKayit = (): MillionaireRecord => ({
   id: `win-${Date.now()}`,
   title: 'Yeni büyük kazanç',
   amount: '₺100.000',
@@ -54,409 +68,281 @@ const emptyRecord = (): MillionaireRecord => ({
   imageUrl: '',
   posterUrl: '',
   videoUrl: '',
-  featured: false
+  featured: false,
 });
 
-const emptySocial = (): SocialLink => ({
-  id: `social-${Date.now()}`,
-  label: 'Sosyal kanal',
-  url: ''
-});
+const yeniSosyal = (): SocialLink => ({ id: `social-${Date.now()}`, label: 'Sosyal kanal', url: '' });
 
-const parseAmount = (amount: string) => Number(String(amount || '').replace(/[^\d]/g, '')) || 0;
-
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat('tr-TR', {
-    style: 'currency',
-    currency: 'TRY',
-    maximumFractionDigits: 0
-  }).format(value);
+const tutarSayisi = (amount: string) => Number(String(amount || '').replace(/[^\d]/g, '')) || 0;
 
 export function MillionaireShowcaseManager({
   config,
-  onUpdate
+  onUpdate,
 }: {
   config?: Partial<MillionaireShowcaseConfig>;
   onUpdate: (config: MillionaireShowcaseConfig) => void;
 }) {
-  const safeConfig: MillionaireShowcaseConfig = {
-    ...DEFAULT_SHOWCASE,
+  const veri: MillionaireShowcaseConfig = {
+    ...VARSAYILAN,
     ...(config || {}),
-    records: Array.isArray(config?.records) ? config.records : DEFAULT_SHOWCASE.records,
-    socialLinks: Array.isArray(config?.socialLinks) ? config.socialLinks : DEFAULT_SHOWCASE.socialLinks
+    records: Array.isArray(config?.records) ? config.records : VARSAYILAN.records,
+    socialLinks: Array.isArray(config?.socialLinks) ? config.socialLinks : VARSAYILAN.socialLinks,
   };
 
-  const totalAmount = safeConfig.records.reduce((sum, record) => sum + parseAmount(record.amount), 0);
-  const featuredRecord = safeConfig.records.find((record) => record.featured) || safeConfig.records[0];
-  const videoCount = safeConfig.records.filter((record) => Boolean(record.videoUrl)).length;
+  const guncelle = (patch: Partial<MillionaireShowcaseConfig>) => onUpdate({ ...veri, ...patch });
 
-  const updateConfig = (patch: Partial<MillionaireShowcaseConfig>) => {
-    onUpdate({ ...safeConfig, ...patch });
-  };
-
-  const updateRecord = (id: string, patch: Partial<MillionaireRecord>) => {
-    const records = safeConfig.records.map((record) => {
-      if (record.id !== id) {
-        return patch.featured ? { ...record, featured: false } : record;
-      }
-
-      return { ...record, ...patch };
+  /**
+   * Tek one-cikan kurali.
+   *
+   * Bir kayit one cikarilinca digerlerinin isareti kalkar: vitrinin basinda
+   * tek buyuk kart var, iki kayit birden one cikarsa hangisinin gosterilecegi
+   * belirsizlesir.
+   */
+  const kayitGuncelle = (id: string, patch: Partial<MillionaireRecord>) => {
+    const records = veri.records.map((kayit) => {
+      if (kayit.id !== id) return patch.featured ? { ...kayit, featured: false } : kayit;
+      return { ...kayit, ...patch };
     });
-
-    onUpdate({ ...safeConfig, records });
+    onUpdate({ ...veri, records });
   };
 
-  const addRecord = () => {
-    onUpdate({ ...safeConfig, records: [...safeConfig.records, emptyRecord()] });
-  };
+  const sosyalGuncelle = (id: string, patch: Partial<SocialLink>) =>
+    guncelle({ socialLinks: veri.socialLinks.map((s) => (s.id === id ? { ...s, ...patch } : s)) });
 
-  const removeRecord = (id: string) => {
-    onUpdate({ ...safeConfig, records: safeConfig.records.filter((record) => record.id !== id) });
-  };
-
-  const updateSocial = (id: string, patch: Partial<SocialLink>) => {
-    onUpdate({
-      ...safeConfig,
-      socialLinks: safeConfig.socialLinks.map((link) => link.id === id ? { ...link, ...patch } : link)
-    });
-  };
-
-  const addSocial = () => {
-    onUpdate({ ...safeConfig, socialLinks: [...safeConfig.socialLinks, emptySocial()] });
-  };
-
-  const removeSocial = (id: string) => {
-    onUpdate({ ...safeConfig, socialLinks: safeConfig.socialLinks.filter((link) => link.id !== id) });
-  };
+  const ozet = useMemo(() => {
+    const tutarlar = veri.records.map((r) => tutarSayisi(r.amount));
+    return {
+      adet: veri.records.length,
+      videolu: veri.records.filter((r) => (r.videoUrl || '').trim()).length,
+      gorselsiz: veri.records.filter((r) => !(r.imageUrl || '').trim()).length,
+      tutarsiz: veri.records.filter((r) => tutarSayisi(r.amount) === 0).length,
+      enBuyuk: tutarlar.length ? Math.max(...tutarlar) : 0,
+      toplam: tutarlar.reduce((t, v) => t + v, 0),
+      oneCikan: veri.records.find((r) => r.featured),
+    };
+  }, [veri.records]);
 
   return (
     <div className="space-y-5">
-      <section className="overflow-hidden rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))]">
-        <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_390px]">
-          <div className="space-y-5 p-5 md:p-6">
-            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-              <div>
-                <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-amber-300/20 bg-[color:var(--panel-warning,#ff9f0a)]/10 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-200">
-                  <Crown size={13} />
-                  Lobi vitrini
-                </div>
-                <h2 className="text-2xl font-semibold tracking-[-0.04em] text-white md:text-3xl">Büyük Kazanç Vitrini</h2>
-                <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-[color:var(--panel-muted,#8a919c)]">
-                  Lobide görünecek kazanç alanını, kayıtları ve video bağlantılarını buradan yönetin.
-                </p>
-              </div>
+      <ModulBasligi
+        modul={MODUL}
+        ikon={<Crown size={20} />}
+        baslik="Kazanç Vitrini"
+        aciklama="Lobide gösterilen büyük kazanç kayıtları ve video anları."
+        saginda={
+          <Dugme modul={MODUL} tur="birincil" onClick={() => guncelle({ records: [...veri.records, yeniKayit()] })}>
+            <Plus size={14} /> Kazanç ekle
+          </Dugme>
+        }
+      />
 
-              <label className="flex w-fit cursor-pointer items-center gap-3 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/30 px-4 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--panel-text-dim,#c8cdd5)]">
-                <input
-                  type="checkbox"
-                  checked={safeConfig.isActive}
-                  onChange={(event) => updateConfig({ isActive: event.target.checked })}
-                  className="h-4 w-4 accent-amber-300"
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="space-y-5">
+          <Bolum baslik="Vitrin metinleri">
+            <div className="space-y-4 px-5 py-4">
+              <Anahtar
+                modul={MODUL}
+                acik={veri.isActive !== false}
+                onDegis={(isActive) => guncelle({ isActive })}
+                etiket="Vitrin yayında"
+                aciklama="Kapalıyken lobide kazanç bölümü görünmez."
+              />
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <Alan etiket="Üst etiket">
+                  <Girdi modul={MODUL} value={veri.eyebrow} onChange={(e) => guncelle({ eyebrow: e.target.value })} />
+                </Alan>
+                <Alan etiket="Buton yazısı">
+                  <Girdi modul={MODUL} value={veri.ctaLabel} onChange={(e) => guncelle({ ctaLabel: e.target.value })} />
+                </Alan>
+                <Alan etiket="Başlık" className="lg:col-span-2">
+                  <Girdi modul={MODUL} value={veri.title} onChange={(e) => guncelle({ title: e.target.value })} />
+                </Alan>
+                <Alan etiket="Açıklama" className="lg:col-span-2">
+                  <Girdi modul={MODUL} value={veri.description} onChange={(e) => guncelle({ description: e.target.value })} />
+                </Alan>
+                <Alan etiket="Yasal uyarı" className="lg:col-span-2" ipucu="Vitrinin altında küçük punto gösterilir.">
+                  <Girdi modul={MODUL} value={veri.disclaimer} onChange={(e) => guncelle({ disclaimer: e.target.value })} />
+                </Alan>
+              </div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <Anahtar
+                  modul={MODUL}
+                  acik={veri.showTicker !== false}
+                  onDegis={(showTicker) => guncelle({ showTicker })}
+                  etiket="Kayan şerit"
+                  aciklama="Kazançları yatay akan bantta gösterir."
                 />
-                Lobide aktif
-              </label>
-            </div>
-
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-              <StatCard label="Toplam vitrin" value={formatCurrency(totalAmount)} icon={Trophy} tone="amber" />
-              <StatCard label="Kazanç kaydı" value={safeConfig.records.length} icon={Sparkles} tone="emerald" />
-              <StatCard label="Video ekli" value={videoCount} icon={Film} tone="sky" />
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-              <Field label="Üst etiket" value={safeConfig.eyebrow} onChange={(value) => updateConfig({ eyebrow: value })} />
-              <Field label="Buton metni" value={safeConfig.ctaLabel} onChange={(value) => updateConfig({ ctaLabel: value })} />
-              <Field label="Başlık" value={safeConfig.title} onChange={(value) => updateConfig({ title: value })} />
-              <Field label="Uyarı metni" value={safeConfig.disclaimer} onChange={(value) => updateConfig({ disclaimer: value })} />
-              <TextArea label="Açıklama" value={safeConfig.description} onChange={(value) => updateConfig({ description: value })} className="lg:col-span-2" />
-            </div>
-
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              <ToggleCard
-                title="Kayan kazanç bandı"
-                description="Vitrindeki kazançları lobinin içinde hareketli şerit olarak gösterir."
-                checked={safeConfig.showTicker}
-                onChange={(showTicker) => updateConfig({ showTicker })}
-              />
-              <ToggleCard
-                title="Sosyal link alanı"
-                description="Vitrin altında izinli sosyal kanal bağlantılarını gösterir."
-                checked={safeConfig.showSocial}
-                onChange={(showSocial) => updateConfig({ showSocial })}
-              />
-            </div>
-          </div>
-
-          <div className="border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20 p-5 lg:border-l lg:border-t-0 md:p-6">
-            <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-4">
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[color:var(--panel-faint,#5c6470)]">Canlı önizleme</p>
-                  <h3 className="text-lg font-semibold text-white">Lobi kartı</h3>
-                </div>
-                <Eye size={18} className="text-amber-300" />
+                <Anahtar
+                  modul={MODUL}
+                  acik={veri.showSocial === true}
+                  onDegis={(showSocial) => guncelle({ showSocial })}
+                  etiket="Sosyal bağlantılar"
+                  aciklama="Vitrinin altında kanal linkleri."
+                />
               </div>
+            </div>
+          </Bolum>
 
-              <div className="overflow-hidden rounded-xl border border-amber-300/15 bg-gradient-to-br from-[#18120a] via-[#090b10] to-[#05070b] p-4">
-                <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-amber-300/20 bg-[color:var(--panel-warning,#ff9f0a)]/10 px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-amber-200">
-                  <Sparkles size={12} />
-                  {safeConfig.eyebrow}
-                </div>
-                <h4 className="text-3xl font-semibold leading-none tracking-[-0.05em] text-white">{safeConfig.title}</h4>
-                <p className="mt-3 line-clamp-3 text-sm font-medium leading-6 text-[color:var(--panel-muted,#8a919c)]">{safeConfig.description}</p>
-
-                {featuredRecord && (
-                  <div className="mt-6 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.04] p-4">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[color:var(--panel-muted,#8a919c)]">Öne çıkan kayıt</p>
-                    <div className="mt-2 flex items-end justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="truncate text-base font-semibold text-white">{featuredRecord.title}</p>
-                        <p className="mt-1 text-xs font-bold text-[color:var(--panel-muted,#8a919c)]">{featuredRecord.player} · {featuredRecord.game}</p>
+          <Bolum
+            baslik="Kazanç kayıtları"
+            aciklama="Öne çıkan kayıt vitrinin başında büyük kartla gösterilir; aynı anda yalnızca biri olabilir."
+          >
+            {veri.records.length === 0 ? (
+              <BosDurum
+                ikon={<Trophy size={26} />}
+                baslik="Kayıt yok. Vitrin açık olsa bile boş görünür."
+                eylem={
+                  <Dugme modul={MODUL} tur="birincil" onClick={() => guncelle({ records: [yeniKayit()] })}>
+                    <Plus size={14} /> İlk kazancı ekle
+                  </Dugme>
+                }
+              />
+            ) : (
+              <div className="space-y-3 p-4">
+                {veri.records.map((kayit) => (
+                  <div
+                    key={kayit.id}
+                    className="rounded-xl border bg-black/20 p-4"
+                    style={{
+                      borderColor: kayit.featured ? '#bf5af259' : 'var(--panel-border, rgba(242,244,248,0.1))',
+                    }}
+                  >
+                    <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <span className={`${RAKAM} text-[15px] font-semibold text-[color:var(--panel-text,#f2f4f8)]`}>
+                          {kayit.amount || '—'}
+                        </span>
+                        <span className="truncate text-[11px] font-medium text-[color:var(--panel-muted,#8a919c)]">
+                          {kayit.player || 'Oyuncu yok'} · {kayit.game || 'Oyun yok'}
+                        </span>
+                        {(kayit.videoUrl || '').trim() && (
+                          <span className="inline-flex items-center gap-1 rounded-md bg-white/[0.06] px-2 py-1 text-[10px] font-bold text-[color:var(--panel-muted,#8a919c)]">
+                            <Film size={11} /> Video
+                          </span>
+                        )}
                       </div>
-                      <p className="shrink-0 text-2xl font-semibold text-amber-200">{featuredRecord.amount}</p>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => kayitGuncelle(kayit.id, { featured: !kayit.featured })}
+                          aria-pressed={!!kayit.featured}
+                          title={kayit.featured ? 'Öne çıkarmayı kaldır' : 'Öne çıkar'}
+                          className="flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-[10px] font-bold transition-colors"
+                          style={
+                            kayit.featured
+                              ? { background: '#bf5af21f', color: '#bf5af2' }
+                              : { color: 'var(--panel-faint, #5c6470)' }
+                          }
+                        >
+                          <Star size={13} fill={kayit.featured ? 'currentColor' : 'none'} />
+                          Öne çıkan
+                        </button>
+                        <SilDugmesi
+                          onClick={() => guncelle({ records: veri.records.filter((r) => r.id !== kayit.id) })}
+                          etiket="Kaydı sil"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 gap-3 xl:grid-cols-4">
+                      <Alan etiket="Başlık">
+                        <Girdi modul={MODUL} value={kayit.title} onChange={(e) => kayitGuncelle(kayit.id, { title: e.target.value })} />
+                      </Alan>
+                      <Alan etiket="Tutar" ipucu="Serbest metin; lobide yazdığınız gibi görünür.">
+                        <Girdi modul={MODUL} value={kayit.amount} onChange={(e) => kayitGuncelle(kayit.id, { amount: e.target.value })} />
+                      </Alan>
+                      <Alan etiket="Oyuncu" ipucu="Maskeli yazın: K***">
+                        <Girdi modul={MODUL} value={kayit.player} onChange={(e) => kayitGuncelle(kayit.id, { player: e.target.value })} />
+                      </Alan>
+                      <Alan etiket="Oyun">
+                        <Girdi modul={MODUL} value={kayit.game} onChange={(e) => kayitGuncelle(kayit.id, { game: e.target.value })} />
+                      </Alan>
+                      <Alan etiket="Görsel URL" className="xl:col-span-2">
+                        <Girdi modul={MODUL} value={kayit.imageUrl || ''} onChange={(e) => kayitGuncelle(kayit.id, { imageUrl: e.target.value })} placeholder="https://..." />
+                      </Alan>
+                      <Alan etiket="Video URL">
+                        <Girdi modul={MODUL} value={kayit.videoUrl || ''} onChange={(e) => kayitGuncelle(kayit.id, { videoUrl: e.target.value })} placeholder="https://..." />
+                      </Alan>
+                      <Alan etiket="Video kapağı">
+                        <Girdi modul={MODUL} value={kayit.posterUrl || ''} onChange={(e) => kayitGuncelle(kayit.id, { posterUrl: e.target.value })} placeholder="https://..." />
+                      </Alan>
                     </div>
                   </div>
-                )}
+                ))}
               </div>
-            </div>
-          </div>
-        </div>
-      </section>
+            )}
+          </Bolum>
 
-      <section className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))]">
-        <div className="flex flex-col gap-3 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] p-5 md:flex-row md:items-center md:justify-between md:p-6">
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--panel-faint,#5c6470)]">İçerik</p>
-            <h3 className="text-xl font-semibold text-white">Kazanç kayıtları</h3>
-          </div>
-          <button
-            type="button"
-            onClick={addRecord}
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-[color:var(--panel-warning,#ff9f0a)] px-4 text-xs font-semibold uppercase tracking-[0.12em] text-[#050609] transition hover:bg-[color:var(--panel-warning,#ff9f0a)]"
-          >
-            <Plus size={16} />
-            Kayıt ekle
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 gap-4 p-5 xl:grid-cols-2 md:p-6">
-          {safeConfig.records.map((record, index) => (
-            <RecordEditor
-              key={record.id}
-              record={record}
-              index={index}
-              onUpdate={(patch) => updateRecord(record.id, patch)}
-              onRemove={() => removeRecord(record.id)}
-            />
-          ))}
-
-          {safeConfig.records.length === 0 && (
-            <div className="xl:col-span-2 rounded-xl border border-dashed border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/25 p-10 text-center">
-              <Trophy className="mx-auto mb-3 text-[color:var(--panel-faint,#5c6470)]" size={34} />
-              <p className="text-sm font-bold text-[color:var(--panel-muted,#8a919c)]">Henüz kazanç kaydı eklenmedi.</p>
-            </div>
+          {veri.showSocial && (
+            <Bolum
+              baslik="Sosyal bağlantılar"
+              eylem={
+                <Dugme modul={MODUL} onClick={() => guncelle({ socialLinks: [...veri.socialLinks, yeniSosyal()] })}>
+                  <Plus size={14} /> Bağlantı ekle
+                </Dugme>
+              }
+            >
+              {veri.socialLinks.length === 0 ? (
+                <BosDurum ikon={<Link2 size={26} />} baslik="Sosyal bağlantı açık ama liste boş." />
+              ) : (
+                <div className="space-y-3 p-4">
+                  {veri.socialLinks.map((link) => (
+                    <div key={link.id} className="flex items-end gap-3">
+                      <Alan etiket="Etiket" className="w-48 shrink-0">
+                        <Girdi modul={MODUL} value={link.label} onChange={(e) => sosyalGuncelle(link.id, { label: e.target.value })} />
+                      </Alan>
+                      <Alan etiket="Adres" className="min-w-0 flex-1">
+                        <Girdi modul={MODUL} value={link.url} onChange={(e) => sosyalGuncelle(link.id, { url: e.target.value })} placeholder="https://..." />
+                      </Alan>
+                      <SilDugmesi
+                        onClick={() => guncelle({ socialLinks: veri.socialLinks.filter((s) => s.id !== link.id) })}
+                        etiket="Bağlantıyı sil"
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Bolum>
           )}
         </div>
-      </section>
 
-      <section className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-5 md:p-6">
-        <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--panel-faint,#5c6470)]">Bağlantılar</p>
-            <h3 className="text-xl font-semibold text-white">Sosyal linkler</h3>
-          </div>
-          <button
-            type="button"
-            onClick={addSocial}
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.04] px-4 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:bg-white/[0.07]"
-          >
-            <Plus size={15} />
-            Link ekle
-          </button>
-        </div>
+        <aside className="space-y-5">
+          <Bolum baslik="Vitrin özeti">
+            <OlcutListesi>
+              <Olcut etiket="Kayıt" deger={sayi(ozet.adet)} vurgulu />
+              <Olcut etiket="Videolu" deger={sayi(ozet.videolu)} />
+              <Olcut etiket="En büyük kazanç" deger={lira(ozet.enBuyuk)} vurgulu />
+              <Olcut etiket="Vitrindeki toplam" deger={lira(ozet.toplam)} />
+            </OlcutListesi>
+            <p className="border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))] px-5 py-3 text-[11px] font-medium text-[color:var(--panel-muted,#8a919c)]">
+              {ozet.oneCikan
+                ? `Öne çıkan: ${ozet.oneCikan.title || ozet.oneCikan.amount}`
+                : 'Öne çıkan kayıt seçilmedi; vitrin ilk kaydı kullanır.'}
+            </p>
+          </Bolum>
 
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-          {safeConfig.socialLinks.map((link) => (
-            <div key={link.id} className="grid grid-cols-1 gap-3 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/25 p-4 md:grid-cols-[180px_minmax(0,1fr)_42px]">
-              <Field label="Etiket" value={link.label} onChange={(value) => updateSocial(link.id, { label: value })} />
-              <Field label="URL" value={link.url} onChange={(value) => updateSocial(link.id, { url: value })} />
-              <button
-                type="button"
-                onClick={() => removeSocial(link.id)}
-                aria-label="Sosyal linki sil"
-                className="mt-auto flex h-11 items-center justify-center rounded-lg border border-rose-300/15 bg-rose-400/10 text-rose-300"
-              >
-                <Trash2 size={16} />
-              </button>
-            </div>
-          ))}
-
-          {safeConfig.socialLinks.length === 0 && (
-            <div className="lg:col-span-2 rounded-lg border border-dashed border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20 p-8 text-center">
-              <Link2 className="mx-auto mb-3 text-[color:var(--panel-faint,#5c6470)]" size={28} />
-              <p className="text-sm font-bold text-[color:var(--panel-muted,#8a919c)]">Sosyal link eklenmedi.</p>
-            </div>
+          {ozet.gorselsiz > 0 && (
+            <Uyari tur="dikkat">
+              {ozet.gorselsiz} kaydın görseli yok. Bu kartlar lobide boş çerçeveyle çıkar.
+            </Uyari>
           )}
-        </div>
-      </section>
-    </div>
-  );
-}
+          {ozet.tutarsiz > 0 && (
+            <Uyari tur="dikkat">
+              {ozet.tutarsiz} kaydın tutarı okunamıyor. Sıralama ve toplamlarda 0 sayılır.
+            </Uyari>
+          )}
+          {veri.isActive !== false && ozet.adet === 0 && (
+            <Uyari tur="hata">Vitrin açık ama kayıt yok; lobide boş bölüm görünür.</Uyari>
+          )}
 
-function RecordEditor({
-  record,
-  index,
-  onUpdate,
-  onRemove
-}: {
-  record: MillionaireRecord;
-  index: number;
-  onUpdate: (patch: Partial<MillionaireRecord>) => void;
-  onRemove: () => void;
-}) {
-  return (
-    <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/25 p-4">
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className={cn(
-            'flex h-10 w-10 items-center justify-center rounded-lg border text-xs font-semibold',
-            record.featured
-              ? 'border-amber-300/30 bg-[color:var(--panel-warning,#ff9f0a)]/15 text-amber-200'
-              : 'border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.04] text-[color:var(--panel-muted,#8a919c)]'
-          )}>
-            #{index + 1}
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-white">Kazanç kartı</p>
-            <p className="text-xs font-semibold text-[color:var(--panel-faint,#5c6470)]">Görsel, poster ve video URL alanları</p>
-          </div>
-        </div>
-        <button
-          type="button"
-          onClick={onRemove}
-          aria-label="Kazanç kaydını sil"
-          className="flex h-10 w-10 items-center justify-center rounded-lg border border-rose-300/15 bg-rose-400/10 text-rose-300"
-        >
-          <Trash2 size={16} />
-        </button>
+          <Bolum baslik="İçerik kuralı">
+            <ul className="space-y-2.5 px-5 py-4 text-[11px] font-medium leading-relaxed text-[color:var(--panel-muted,#8a919c)]">
+              <li>Oyuncu adları maskeli yazılmalı; tam kullanıcı adı yayınlamayın.</li>
+              <li>Görsel ve videolar yalnızca izin alınmış içeriklerden kullanılmalı.</li>
+              <li>Aynı anda tek kayıt öne çıkabilir; yenisini seçince eskisi normale döner.</li>
+            </ul>
+          </Bolum>
+        </aside>
       </div>
-
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-        <Field label="Başlık" value={record.title} onChange={(value) => onUpdate({ title: value })} />
-        <Field label="Tutar" value={record.amount} onChange={(value) => onUpdate({ amount: value })} />
-        <Field label="Oyuncu" value={record.player} onChange={(value) => onUpdate({ player: value })} />
-        <Field label="Oyun" value={record.game} onChange={(value) => onUpdate({ game: value })} />
-        <Field label="Görsel URL" value={record.imageUrl || ''} onChange={(value) => onUpdate({ imageUrl: value })} />
-        <Field label="Poster URL" value={record.posterUrl || ''} onChange={(value) => onUpdate({ posterUrl: value })} />
-        <Field label="Video URL" value={record.videoUrl || ''} onChange={(value) => onUpdate({ videoUrl: value })} className="md:col-span-2" />
-      </div>
-
-      <label className="mt-4 flex cursor-pointer items-center gap-3 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.035] px-4 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--panel-text-dim,#c8cdd5)]">
-        <input
-          type="checkbox"
-          checked={Boolean(record.featured)}
-          onChange={(event) => onUpdate({ featured: event.target.checked })}
-          className="h-4 w-4 accent-amber-300"
-        />
-        Öne çıkan kayıt yap
-      </label>
-    </div>
-  );
-}
-
-function StatCard({ label, value, icon: Icon, tone }: { label: string; value: string | number; icon: typeof Trophy; tone: 'amber' | 'emerald' | 'sky' }) {
-  const toneClass = {
-    amber: 'border-amber-300/15 bg-[color:var(--panel-warning,#ff9f0a)]/10 text-amber-200',
-    emerald: 'border-emerald-300/15 bg-emerald-300/10 text-emerald-200',
-    sky: 'border-sky-300/15 bg-sky-300/10 text-sky-200'
-  }[tone];
-
-  return (
-    <div className="rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/25 p-4">
-      <div className="flex items-center gap-3">
-        <div className={cn('flex h-10 w-10 items-center justify-center rounded-lg border', toneClass)}>
-          <Icon size={18} />
-        </div>
-        <div className="min-w-0">
-          <p className="truncate text-[10px] font-semibold uppercase tracking-[0.14em] text-[color:var(--panel-faint,#5c6470)]">{label}</p>
-          <p className="truncate text-xl font-semibold text-white">{value}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ToggleCard({
-  title,
-  description,
-  checked,
-  onChange
-}: {
-  title: string;
-  description: string;
-  checked: boolean;
-  onChange: (checked: boolean) => void;
-}) {
-  return (
-    <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/25 p-4">
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={(event) => onChange(event.target.checked)}
-        className="mt-1 h-4 w-4 accent-amber-300"
-      />
-      <span>
-        <span className="block text-sm font-semibold text-white">{title}</span>
-        <span className="mt-1 block text-xs font-medium leading-5 text-[color:var(--panel-muted,#8a919c)]">{description}</span>
-      </span>
-    </label>
-  );
-}
-
-function Field({
-  label,
-  value,
-  onChange,
-  className
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  className?: string;
-}) {
-  return (
-    <div className={className}>
-      <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.14em] text-[color:var(--panel-faint,#5c6470)]">{label}</label>
-      <input
-        type="text"
-        value={value || ''}
-        onChange={(event) => onChange(event.target.value)}
-        className="h-11 w-full rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/30 px-3 text-sm font-bold text-white outline-none transition focus:border-amber-300/45"
-      />
-    </div>
-  );
-}
-
-function TextArea({
-  label,
-  value,
-  onChange,
-  className
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  className?: string;
-}) {
-  return (
-    <div className={className}>
-      <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.14em] text-[color:var(--panel-faint,#5c6470)]">{label}</label>
-      <textarea
-        value={value || ''}
-        onChange={(event) => onChange(event.target.value)}
-        rows={4}
-        className="min-h-28 w-full resize-y rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/30 px-3 py-3 text-sm font-bold leading-6 text-white outline-none transition focus:border-amber-300/45"
-      />
     </div>
   );
 }

@@ -4,8 +4,6 @@ import {
   BadgePlus,
   CheckCircle2,
   Copy,
-  Gift,
-  LayoutGrid,
   Monitor,
   PackageCheck,
   Palette,
@@ -14,12 +12,25 @@ import {
   Smartphone,
   Target,
   Ticket,
-  Trash2,
-  TrendingUp,
-  Zap
+  Trash2
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { LynonAssignmentValuesField } from './LynonAssignmentValuesField';
+import {
+  Alan,
+  AlanIcinde,
+  Bolum,
+  Girdi,
+  MaliyetKarti,
+  ModulBasligi,
+  Olcut,
+  OlcutListesi,
+  PaySeridi,
+  Uyari,
+  beklenenMaliyet,
+  lira,
+  sayi as trSayi,
+} from './oyunUi';
 
 export interface WheelSlice {
   id: string | number;
@@ -459,7 +470,16 @@ export function WheelManager({
       count: wheel.length,
       totalProb,
       rewardPercent: totalProb ? Number(((rewardProb / totalProb) * 100).toFixed(1)) : 0,
-      avgReward: Number(avgReward.toFixed(1))
+      avgReward: Number(avgReward.toFixed(1)),
+      // 100 cevirmede beklenen odeme. Operatorun asil sordugu soru bu:
+      // dilim tutarlarini degistirince maliyetin nasil oynadigi.
+      maliyet: beklenenMaliyet(
+        wheel.map((slice) => ({
+          agirlik: Number(slice.probability) || 0,
+          tutar: slice.isLoss ? 0 : Number(slice.amount) || 0,
+        })),
+      ),
+      agirliksiz: wheel.filter((slice) => !(Number(slice.probability) > 0)).length,
     };
   }, [wheel]);
 
@@ -536,16 +556,82 @@ export function WheelManager({
 
   const probabilityOk = stats.totalProb === 100;
 
-  const summaryCards = [
-    { label: 'Dilim Sayısı', value: `${stats.count}/12`, icon: LayoutGrid },
-    { label: 'Toplam Olasılık', value: `%${stats.totalProb}`, icon: Zap },
-    { label: 'Kazanma Payı', value: `%${stats.rewardPercent}`, icon: TrendingUp },
-    { label: 'Ortalama Ödül', value: `${stats.avgReward} TL`, icon: Gift }
-  ];
-
   return (
     <div className="space-y-5">
-      <DeviceSimulationPanel wheel={wheel} appearance={wheelAppearance} />
+      <ModulBasligi
+        modul="cark"
+        ikon={<Target size={20} />}
+        baslik="Şans Çarkı"
+        aciklama="Dilimler, olasılıklar, görünüm ve teslimat kayıtları."
+        saginda={
+          <div className="flex flex-wrap items-end gap-3">
+            <Alan etiket="Min. yatırım" className="w-40">
+              <AlanIcinde ek="TL">
+                <Girdi
+                  modul="cark"
+                  sayisal
+                  type="number"
+                  min={0}
+                  value={minInvestment}
+                  onChange={(event) => onMinInvestmentChange(Number(event.target.value))}
+                />
+              </AlanIcinde>
+            </Alan>
+            <div
+              className={cn(
+                'inline-flex h-10 items-center gap-2 rounded-lg border px-3 text-[11px] font-bold',
+                probabilityOk
+                  ? 'border-[color:var(--panel-success,#30d158)]/25 bg-[color:var(--panel-success,#30d158)]/10 text-[color:var(--panel-success,#30d158)]'
+                  : 'border-[color:var(--panel-warning,#ff9f0a)]/25 bg-[color:var(--panel-warning,#ff9f0a)]/10 text-[color:var(--panel-warning,#ff9f0a)]',
+              )}
+            >
+              {probabilityOk ? <CheckCircle2 size={14} /> : <AlertTriangle size={14} />}
+              {probabilityOk ? 'Olasılık dengeli' : `Toplam %${trSayi(stats.totalProb)}`}
+            </div>
+          </div>
+        }
+      />
+
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="min-w-0 space-y-5">
+          <DeviceSimulationPanel wheel={wheel} appearance={wheelAppearance} />
+        </div>
+        <aside className="space-y-5">
+          <MaliyetKarti
+            modul="cark"
+            tutar={stats.maliyet}
+            altBaslik="Dilim tutarları ve olasılıklarına göre; kayıp dilimleri 0 sayılır."
+          />
+          <Bolum baslik="Çark özeti">
+            <OlcutListesi>
+              <Olcut etiket="Dilim" deger={`${trSayi(stats.count)} / 12`} vurgulu />
+              <Olcut etiket="Toplam olasılık" deger={`%${trSayi(stats.totalProb)}`} vurgulu={probabilityOk} />
+              <Olcut etiket="Kazanma payı" deger={`%${trSayi(stats.rewardPercent)}`} />
+              <Olcut etiket="Ortalama ödül" deger={lira(stats.avgReward)} />
+              <Olcut etiket="Çevirme başına" deger={lira(stats.maliyet / 100)} />
+            </OlcutListesi>
+            <div className="border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
+              <PaySeridi
+                modul="cark"
+                parcalar={wheel.map((slice) => ({
+                  id: slice.id,
+                  etiket: slice.label || 'Adsız',
+                  agirlik: Number(slice.probability) || 0,
+                }))}
+              />
+            </div>
+          </Bolum>
+          {!probabilityOk && (
+            <Uyari tur="dikkat">
+              Olasılık toplamı %{trSayi(stats.totalProb)}. Çark yine döner ama dilim payları
+              beklediğinizden farklı olur.
+            </Uyari>
+          )}
+          {stats.agirliksiz > 0 && (
+            <Uyari tur="dikkat">{stats.agirliksiz} dilimin olasılığı 0; bu dilimler hiç gelmez.</Uyari>
+          )}
+        </aside>
+      </div>
 
       <section className="min-w-0 rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] shadow-[0_18px_70px_rgba(0,0,0,0.24)]">
         <div className="border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] p-4">
@@ -563,7 +649,7 @@ export function WheelManager({
                     className={cn(
                       'inline-flex h-10 items-center gap-2 rounded-lg px-4 text-xs font-semibold uppercase tracking-widest transition',
                       active
-                        ? 'bg-[color:var(--panel-accent,#0a84ff)] text-[#050609]'
+                        ? 'bg-[#ff9f0a] text-[#050609]'
                         : 'bg-white/[0.04] text-[color:var(--panel-muted,#8a919c)] hover:bg-white/[0.07] hover:text-[color:var(--panel-text-dim,#c8cdd5)]'
                     )}
                   >
@@ -574,53 +660,10 @@ export function WheelManager({
               })}
             </div>
 
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <label className="flex items-center gap-3">
-                <span className="text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">Min. Yatırım</span>
-                <span className="relative">
-                  <input
-                    type="number"
-                    value={minInvestment}
-                    onChange={event => onMinInvestmentChange(Number(event.target.value))}
-                    className="h-10 w-32 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] px-3 pr-8 text-sm font-semibold text-[color:var(--panel-info,#64d2ff)] outline-none transition focus:border-[color:var(--panel-accent,#0a84ff)]/50"
-                  />
-                  <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-[color:var(--panel-faint,#5c6470)]">TL</span>
-                </span>
-              </label>
-
-              <div className={cn(
-                'inline-flex h-10 items-center gap-2 rounded-lg border px-3 text-xs font-semibold',
-                probabilityOk
-                  ? 'border-emerald-400/20 bg-emerald-400/10 text-emerald-300'
-                  : 'border-amber-400/20 bg-amber-400/10 text-amber-300'
-              )}>
-                {probabilityOk ? <CheckCircle2 size={15} /> : <AlertTriangle size={15} />}
-                {probabilityOk ? 'Olasılık Dengeli' : 'Olasılık %100 Değil'}
-              </div>
-            </div>
           </div>
         </div>
 
         <div className="p-4">
-          <div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-2 2xl:grid-cols-4">
-            {summaryCards.map(card => {
-              const Icon = card.icon;
-              return (
-                <div key={card.label} className="rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.025] p-3">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-black/35 text-[color:var(--panel-accent,#0a84ff)]">
-                      <Icon size={16} />
-                    </span>
-                    <span className="min-w-0">
-                      <span className="block truncate text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">{card.label}</span>
-                      <span className="block text-lg font-semibold text-white">{card.value}</span>
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
           {activeTab === 'slices' && (
             <div className="overflow-hidden rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
               <div className="flex flex-col gap-3 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
@@ -631,10 +674,10 @@ export function WheelManager({
                 <button
                   type="button"
                   onClick={handleAddSlice}
-                  className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[color:var(--panel-accent,#0a84ff)] px-4 text-xs font-semibold uppercase tracking-widest text-[#050609] transition hover:bg-[color:var(--panel-info,#64d2ff)]"
+                  className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#ff9f0a] px-4 text-xs font-bold text-[#050609] transition hover:opacity-90"
                 >
                   <Plus size={15} />
-                  Dilim Ekle
+                  Dilim ekle
                 </button>
               </div>
 
