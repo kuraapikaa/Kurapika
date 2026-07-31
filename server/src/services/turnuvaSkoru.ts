@@ -105,7 +105,24 @@ export function oyuncuSkoru(
 ): { skor: number } | { elenmeNedeni: string } {
   const { bahisTutari, kazancTutari, bahisAdedi, ggr } = olcum;
 
-  if (kurallar.toplamBahisAdediMin > 0 && bahisAdedi < kurallar.toplamBahisAdediMin) {
+  /**
+   * Bahis ADEDI bilinmiyor olabilir.
+   *
+   * Players Overview (1841) bahis adedi dondurmuyor; cagiran taraf 0
+   * geciyor. 0'i "hic bahis yapmadi" saymak YANLIS — bilgi yok demek.
+   *
+   * REGRESYON: onceden bu ayrim yoktu. Skor `ortalamaBahis x sayilanAdet`
+   * ile hesaplaniyordu; adet 0 olunca ortalama da 0 cikiyor ve carpim
+   * 0 x 0 = 0 oluyordu. Her oyuncu 0 skor aliyor, hepsi eleniyor ve
+   * siralama HER ZAMAN bos donuyordu.
+   *
+   * Adet bilinmiyorsa: tutar dogrudan kullanilir, adede dayali kurallar
+   * (min/max adet, ortalama bahis siniri) uygulanmaz — bilinmeyen bir
+   * degere gore oyuncu elemek olmaz.
+   */
+  const adetBiliniyor = bahisAdedi > 0;
+
+  if (adetBiliniyor && kurallar.toplamBahisAdediMin > 0 && bahisAdedi < kurallar.toplamBahisAdediMin) {
     return { elenmeNedeni: `En az ${kurallar.toplamBahisAdediMin} bahis gerekli` };
   }
 
@@ -115,23 +132,24 @@ export function oyuncuSkoru(
   // donuyor. Ortalama, "kucuk bahislerle sıralamaya oynama" ve "tek
   // devasa bahisle listeyi kilitleme" davranislarini ayirt etmeye yetiyor.
   // Bahis bazinda filtre gerekiyorsa ayri bir veri kaynagi gerekir.
-  const ortalamaBahis = bahisAdedi > 0 ? bahisTutari / bahisAdedi : 0;
-  if (kurallar.tekBahisMin > 0 && ortalamaBahis < kurallar.tekBahisMin) {
+  const ortalamaBahis = adetBiliniyor ? bahisTutari / bahisAdedi : 0;
+  if (adetBiliniyor && kurallar.tekBahisMin > 0 && ortalamaBahis < kurallar.tekBahisMin) {
     return { elenmeNedeni: `Ortalama bahis ${kurallar.tekBahisMin} altında` };
   }
 
   // Sayilan bahis adedi ust sinirla kirpilir; kirpma sonrasi tutar
   // orantili olarak azaltilir.
-  const sayilanAdet = kurallar.toplamBahisAdediMax > 0
+  const sayilanAdet = adetBiliniyor && kurallar.toplamBahisAdediMax > 0
     ? Math.min(bahisAdedi, kurallar.toplamBahisAdediMax)
     : bahisAdedi;
-  const adetOrani = bahisAdedi > 0 ? sayilanAdet / bahisAdedi : 0;
+  // Adet bilinmiyorken oran 1: tutarin tamami sayilir.
+  const adetOrani = adetBiliniyor ? sayilanAdet / bahisAdedi : 1;
 
   // Tek bahis ust siniri: ortalama bahsin tavani asan kismi sayilmaz.
   const kirpilmisOrtalama = kurallar.tekBahisMax > 0
     ? Math.min(ortalamaBahis, kurallar.tekBahisMax)
     : ortalamaBahis;
-  const sayilanTutar = kirpilmisOrtalama * sayilanAdet;
+  const sayilanTutar = adetBiliniyor ? kirpilmisOrtalama * sayilanAdet : bahisTutari;
 
   let ham: number;
   switch (kurallar.formul) {
@@ -148,6 +166,9 @@ export function oyuncuSkoru(
       ham = Math.max(0, ggr * adetOrani);
       break;
     case 'bahisAdedi':
+      // Adet bilinmiyorsa bu formul calisamaz. 0 dondurup sessizce
+      // herkesi elemektense acikca elenme nedeni veriyoruz.
+      if (!adetBiliniyor) return { elenmeNedeni: 'Bahis adedi verisi yok' };
       ham = sayilanAdet;
       break;
     case 'bahis':

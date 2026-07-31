@@ -182,3 +182,52 @@ describe('kullanıcı adı maskeleme', () => {
     expect(loginMaskele(undefined as never)).toBe('***');
   });
 });
+
+/**
+ * REGRESYON: siralama her zaman bos donuyordu.
+ *
+ * Players Overview raporu bahis ADEDI dondurmuyor; cagiran taraf 0
+ * geciyordu. Skor `ortalamaBahis x sayilanAdet` ile hesaplandigi icin
+ * 0 x 0 = 0 cikiyor, her oyuncu eleniyor ve lobide "Siralama henuz
+ * olusmadi" gorunuyordu.
+ */
+describe('bahis adedi bilinmiyorken (rapor adet vermiyor)', () => {
+  const adetsiz = (patch: Partial<OyuncuOlcumu> = {}) => olcum({ bahisAdedi: 0, ...patch });
+
+  it('tutar doğrudan skor olur — sıfıra çökmez', () => {
+    expect(oyuncuSkoru(adetsiz(), kural({ formul: 'bahis' }))).toEqual({ skor: 10_000 });
+  });
+
+  it('çarpanlı formül de çalışır', () => {
+    expect(oyuncuSkoru(adetsiz(), kural({ formul: 'bahisXcarpan', skorCarpani: 3 }))).toEqual({ skor: 30_000 });
+  });
+
+  it('kazanç oranı doğru hesaplanır', () => {
+    expect(oyuncuSkoru(adetsiz(), kural({ formul: 'kazancOrani' }))).toEqual({ skor: 0.8 });
+  });
+
+  it('net kayıp tam değeri kullanır — orantı 1', () => {
+    expect(oyuncuSkoru(adetsiz(), kural({ formul: 'netKayip' }))).toEqual({ skor: 2_000 });
+  });
+
+  it('adede dayalı sınırlar UYGULANMAZ — bilinmeyen değere göre eleme olmaz', () => {
+    expect(oyuncuSkoru(adetsiz(), kural({ toplamBahisAdediMin: 50 }))).toEqual({ skor: 10_000 });
+    expect(oyuncuSkoru(adetsiz(), kural({ toplamBahisAdediMax: 10 }))).toEqual({ skor: 10_000 });
+    expect(oyuncuSkoru(adetsiz(), kural({ tekBahisMin: 500 }))).toEqual({ skor: 10_000 });
+  });
+
+  it('bahis adedi formülü açıkça elenme nedeni verir', () => {
+    expect(oyuncuSkoru(adetsiz(), kural({ formul: 'bahisAdedi' }))).toEqual({
+      elenmeNedeni: 'Bahis adedi verisi yok',
+    });
+  });
+
+  it('sıralama dolu döner — bildirilen hata', () => {
+    const liste = [
+      adetsiz({ login: 'ali', bahisTutari: 5_000 }),
+      adetsiz({ login: 'veli', bahisTutari: 15_000 }),
+      adetsiz({ login: 'ayse', bahisTutari: 0 }),
+    ];
+    expect(turnuvaSiralamasi(liste, VARSAYILAN_KURALLAR).map((s) => s.login)).toEqual(['veli', 'ali']);
+  });
+});
