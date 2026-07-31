@@ -2268,6 +2268,35 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
     }
   });
 
+  /**
+   * Ertesi gun bonusunu KURU calistirir — hicbir sey yazmaz.
+   *
+   * Is yalnizca Turkiye saatiyle 00:15-00:19 arasinda calisiyor. O 5 dakikalik
+   * pencere disinda "neden eklenmedi" sorusunu cevaplamanin yolu yoktu; kural
+   * degistirip ertesi geceye kadar beklemek gerekiyordu.
+   *
+   * Bu uc isin ayni kapilarindan gecer ve her birinin sonucunu doner.
+   * Zaman penceresi ve idempotency KASITLI atlanir: "su anda calissaydi ne
+   * olurdu" sorusunu cevapliyoruz.
+   */
+  fastify.post<{ Body: { playerId?: string | number } }>(
+    '/admin/bonus/next-day/dry-run',
+    async (request, reply) => {
+      const playerId = request.body?.playerId;
+      if (playerId == null || String(playerId).trim() === '') {
+        return reply.status(400).send({ HasError: true, AlertMessage: 'playerId gerekli.' });
+      }
+      try {
+        const { nextDayBonusKuruCalistir } = await import('../jobs/nextDayBonusJob.js');
+        const sonuc = await nextDayBonusKuruCalistir(playerId);
+        return reply.send({ HasError: false, Data: sonuc });
+      } catch (err) {
+        request.log.warn({ err, playerId }, 'Ertesi gun kuru calistirma basarisiz.');
+        return sendLynonError(reply, err);
+      }
+    },
+  );
+
   fastify.post('/admin/bonus/partner-list', async (request, reply) => {
     if (shouldUseLynon(request)) {
       try {

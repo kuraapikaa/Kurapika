@@ -129,6 +129,124 @@ async function cashAlreadyCredited(playerId: number | string, dateKey: string, n
   return rows.some((row: any) => String(row.note ?? '').trim() === note);
 }
 
+export type KuruKapi = { ad: string; gecti: boolean; aciklama: string };
+
+export type KuruSonuc = {
+  playerId: string;
+  dateKey: string;
+  kapilar: KuruKapi[];
+  /** Tum kapilar gecerse bonus verilirdi. */
+  verilirdi: boolean;
+  /** Verilecek tutar (hesaplanabildiyse). */
+  tutar: number | null;
+};
+
+/**
+ * Ertesi gun bonusunu KURU calistirir: hicbir sey yazmaz, atama yapmaz.
+ *
+ * Is yalnizca Turkiye saatiyle 00:15-00:19 arasinda calisiyor. Bu 5 dakikalik
+ * pencere disinda "neden eklenmedi" sorusunu cevaplamanin hicbir yolu yoktu;
+ * kural degistirip ertesi geceye kadar beklemek gerekiyordu.
+ *
+ * Bu fonksiyon isin kapilarindan AYNI sirayla gecer ve her birinin sonucunu
+ * doner. Zaman penceresi ve idempotency kayitlari KASITLI olarak atlanir —
+ * amac "su anda calissaydi ne olurdu" sorusunu cevaplamak.
+ */
+export async function nextDayBonusKuruCalistir(
+  playerId: string | number,
+  now = new Date(),
+): Promise<KuruSonuc> {
+  const dateKey = istanbulDateKey(now);
+  const kapilar: KuruKapi[] = [];
+  const ekle = (ad: string, gecti: boolean, aciklama: string) => {
+    kapilar.push({ ad, gecti, aciklama });
+    return gecti;
+  };
+
+  if (!ekle('Lynon baglantisi', isLynonConfigured(), isLynonConfigured() ? 'Yapilandirilmis' : 'Lynon yapilandirilmamis')) {
+    return { playerId: String(playerId), dateKey, kapilar, verilirdi: false, tutar: null };
+  }
+
+  const rules = await getRules('default');
+  const activeRules = automaticRules(rules);
+  if (!ekle(
+    'Otomatik kural',
+    activeRules.length > 0,
+    activeRules.length > 0
+      ? `${activeRules.length} kural aktif: ${activeRules.map((r) => r.key).join(', ')}`
+      : 'Hicbir kuralda isNextDayBonus + autoGrantNextDayAt0015 birlikte acik degil',
+  )) {
+    return { playerId: String(playerId), dateKey, kapilar, verilirdi: false, tutar: null };
+  }
+
+  const previousDateKey = previousIstanbulDateKey(now);
+  const oncekiGunOyuncular = await previousDayDepositorIds(previousDateKey);
+  const listede = oncekiGunOyuncular.some((id: unknown) => String(id) === String(playerId));
+  ekle(
+    'Onceki gun yatirimi',
+    listede,
+    listede
+      ? `${previousDateKey} tarihinde yatirimi var`
+      : `${previousDateKey} tarihinde basarili yatirimi YOK (o gun ${oncekiGunOyuncular.length} oyuncu yatirim yapmis)`,
+  );
+
+  const catalog = await lynonBonusDefinitions();
+  const catalogRows = Array.isArray(catalog.Result) ? catalog.Result : [];
+  const campaignById = new Map<number, any>(
+    catalogRows
+      .filter((row: any) => Number.isInteger(Number(row.PartnerBonusId)) && Number(row.PartnerBonusId) > 0 && row.IsDeleted !== true && row.IsDisabled !== true)
+      .map((row: any) => [Number(row.PartnerBonusId), row] as const)
+  );
+
+  let verilirdi = false;
+  let tutar: number | null = null;
+
+  for (const rule of activeRules) {
+    const configuredType = String(rule.spec.type ?? 'partner').toLocaleLowerCase('tr-TR');
+    const isCash = configuredType === 'cash' || configuredType === 'nakit';
+    const campaignId = Number(rule.spec.partnerBonusId);
+    const campaign = isCash ? null : campaignById.get(campaignId);
+
+    if (!ekle(
+      `[${rule.key}] Lynon kampanyasi`,
+      isCash || Boolean(campaign),
+      isCash
+        ? 'Nakit bonus; kampanya gerekmiyor'
+        : campaign
+          ? `Aktif: ${campaign.Name ?? campaignId}`
+          : `PartnerBonusId ${rule.spec.partnerBonusId ?? 'eksik'} icin aktif kampanya YOK (silinmis/pasif olabilir)`,
+    )) continue;
+
+    const account = await lynonBuildBonusEligibilitySnapshot({ playerId });
+    const promoId = rule.group === 'id' && Number.isFinite(Number(rule.key)) ? Number(rule.key) : campaignId;
+    const promoTitle = rule.group === 'title' ? rule.key : String(campaign?.Name ?? rule.key);
+    const check = await evaluateForAccount(account as any, { id: promoId, title: promoTitle, ...rule.spec } as any, rules, 'default', 'bonus');
+
+    const dusenler = check.items.filter((item) => !item.ok);
+    ekle(
+      `[${rule.key}] Uygunluk kurallari`,
+      check.overallOk,
+      check.overallOk ? 'Tum maddeler gecti' : dusenler.map((i) => i.reason || i.label).join(' | ').slice(0, 500),
+    );
+
+    const hesaplanan = Number(check.calculatedAmount ?? rule.spec.fixedAmount ?? 0);
+    ekle(
+      `[${rule.key}] Tutar`,
+      Number.isFinite(hesaplanan) && hesaplanan > 0,
+      Number.isFinite(hesaplanan) && hesaplanan > 0
+        ? `${hesaplanan} TRY`
+        : 'Hesaplanan tutar 0 — barem/yuzde tanimi eksik olabilir',
+    );
+
+    if (check.overallOk && hesaplanan > 0 && listede) {
+      verilirdi = true;
+      tutar = hesaplanan;
+    }
+  }
+
+  return { playerId: String(playerId), dateKey, kapilar, verilirdi, tutar };
+}
+
 export async function runNextDayBonusJob(now = new Date()): Promise<{
   skipped: boolean;
   dateKey: string;
