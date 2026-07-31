@@ -18,19 +18,51 @@ const ADMIN_PASS = (process.env.ADMIN_PASS || '').replace(/['"]/g, '').trim();
 const BCRYPT_ROUNDS = 12;
 
 /**
- * Tenant şifresini doğrula.
- * Önce bcrypt hash ile dener; hash yoksa düz metin (legacy) karşılaştırması yapar.
+ * Iki dizeyi SABIT ZAMANDA karsilastirir.
+ *
+ * Duz metin karsilastirmasi `===` ile yapiliyordu; ilk farkli karakterde
+ * kisa devre ettigi icin yanit suresi dogru onek uzunlugunu sizdirir.
+ * Parola tahmini bu sinyalle karakter karakter daraltilabilir.
+ *
+ * Uzunluklar farkliysa yine de tam tur donulur — erken cikis uzunlugu
+ * sizdirirdi.
  */
-async function verifyTenantPassword(tenant: Tenant, inputPassword: string): Promise<boolean> {
-  // Yeni format: hashlenmiş şifre
+function sabitZamanliEsit(a: string, b: string): boolean {
+  const uzunluk = Math.max(a.length, b.length);
+  let fark = a.length ^ b.length;
+  for (let i = 0; i < uzunluk; i++) {
+    fark |= (a.charCodeAt(i) || 0) ^ (b.charCodeAt(i) || 0);
+  }
+  return fark === 0;
+}
+
+/**
+ * Parola dogrulama sonucu.
+ *
+ * `yukseltilmeli`: dogrulama DUZ METIN uzerinden gecti demektir; cagiran
+ * taraf hash'e cevirip kaydetmeli.
+ */
+type ParolaSonucu = { gecerli: boolean; yukseltilmeli: boolean };
+
+/**
+ * Tenant sifresini dogrula.
+ *
+ * Duz metin destegi KALDIRILMADI ama kalici degil: dogru duz metin parola
+ * girildiginde cagiran taraf onu bcrypt'e cevirip kaydediyor, boylece
+ * kayit bir sonraki giriste hash'li hale geliyor.
+ *
+ * Dogrudan kaldirmak, parolasi hala duz metin tutulan tenant'lari
+ * kilitlerdi; kademeli gecis kilitlemeden kapatiyor.
+ */
+async function verifyTenantPassword(tenant: Tenant, inputPassword: string): Promise<ParolaSonucu> {
   if (tenant.adminPasswordHash) {
-    return compare(inputPassword, tenant.adminPasswordHash);
+    return { gecerli: await compare(inputPassword, tenant.adminPasswordHash), yukseltilmeli: false };
   }
-  // Legacy format: düz metin (geçiş süreci)
   if (tenant.adminPassword) {
-    return tenant.adminPassword === inputPassword;
+    const gecerli = sabitZamanliEsit(tenant.adminPassword, inputPassword);
+    return { gecerli, yukseltilmeli: gecerli };
   }
-  return false;
+  return { gecerli: false, yukseltilmeli: false };
 }
 
 /**
@@ -41,10 +73,18 @@ export async function hashPassword(plaintext: string): Promise<string> {
   return hash(plaintext, BCRYPT_ROUNDS);
 }
 
-async function verifyStaffPassword(staff: NonNullable<Tenant['staffUsers']>[number], inputPassword: string): Promise<boolean> {
-  if (staff.passwordHash) return compare(inputPassword, staff.passwordHash);
-  if (staff.password) return staff.password === inputPassword;
-  return false;
+async function verifyStaffPassword(
+  staff: NonNullable<Tenant['staffUsers']>[number],
+  inputPassword: string,
+): Promise<ParolaSonucu> {
+  if (staff.passwordHash) {
+    return { gecerli: await compare(inputPassword, staff.passwordHash), yukseltilmeli: false };
+  }
+  if (staff.password) {
+    const gecerli = sabitZamanliEsit(staff.password, inputPassword);
+    return { gecerli, yukseltilmeli: gecerli };
+  }
+  return { gecerli: false, yukseltilmeli: false };
 }
 
 function getManageableTenantId(user: SessionUser | undefined, tenants: Tenant[]): string | undefined {
@@ -74,8 +114,16 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
     for (const tenant of tenants) {
       if (tenant.adminEmail !== inputUser || tenant.isActive === false) continue;
 
-      const passwordMatch = await verifyTenantPassword(tenant, inputPass);
+      const { gecerli: passwordMatch, yukseltilmeli } = await verifyTenantPassword(tenant, inputPass);
       if (passwordMatch) {
+        // Duz metin parola bir daha diskte kalmasin: dogrulanan degeri
+        // hash'e cevirip acik kopyayi siliyoruz.
+        if (yukseltilmeli) {
+          tenant.adminPasswordHash = await hashPassword(inputPass);
+          delete (tenant as { adminPassword?: string }).adminPassword;
+          await saveTenants(tenants);
+          console.log(`[auth] Tenant parolasi hash'e yukseltildi: ${inputUser}`);
+        }
         console.log(`[auth] Müşteri girişi BAŞARILI: ${inputUser} (Site: ${tenant.siteName})`);
         const sessionUser: SessionUser = {
           username: inputUser,
@@ -96,8 +144,13 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
       const staff = tenant.staffUsers?.find((item) => item.username === inputUser && item.isActive !== false);
       if (!staff) continue;
 
-      const passwordMatch = await verifyStaffPassword(staff, inputPass);
+      const { gecerli: passwordMatch, yukseltilmeli: staffYukselt } = await verifyStaffPassword(staff, inputPass);
       if (passwordMatch) {
+        if (staffYukselt) {
+          staff.passwordHash = await hashPassword(inputPass);
+          delete (staff as { password?: string }).password;
+          console.log(`[auth] Personel parolasi hash'e yukseltildi: ${staff.username}`);
+        }
         staff.lastLoginAt = new Date().toISOString();
         await saveTenants(tenants);
         const sessionUser: SessionUser = {

@@ -18,6 +18,15 @@ import {
 } from '../services/affiliateAccountService.js';
 import { lynonAffiliateSummary } from '../services/lynonBackofficeService.js';
 import type { AffiliateUser } from '../types/betconstruct.js';
+import {
+  AffiliateOdemeHatasi,
+  bekleyenToplam,
+  odemeDurumGuncelle,
+  odemeKaydet,
+  odemeler,
+  odenmisToplam,
+  type OdemeDurumu,
+} from '../services/affiliateOdemeService.js';
 
 /**
  * Affiliate modulu: ortak portali girisi + admin hesap yonetimi.
@@ -49,7 +58,7 @@ function varsayilanAralik(): { startDate: string; endDate: string } {
 }
 
 function hataYanit(reply: FastifyReply, err: unknown) {
-  if (err instanceof AffiliateHesapHatasi) {
+  if (err instanceof AffiliateHesapHatasi || err instanceof AffiliateOdemeHatasi) {
     return reply.status(err.statusCode).send({ ok: false, message: err.message });
   }
   const mesaj = err instanceof Error ? err.message : 'Beklenmeyen hata.';
@@ -164,6 +173,9 @@ export async function affiliateRoutes(app: FastifyInstance): Promise<void> {
           cpaTutari: guncel.cpaTutari,
         });
 
+        // Ortak "gecen ay ne aldim" diye sorunca cevap verebilelim.
+        const kendiOdemeleri = await odemeler(tenantKey, guncel.id);
+
         return reply.send({
           ok: true,
           ortak: {
@@ -172,6 +184,16 @@ export async function affiliateRoutes(app: FastifyInstance): Promise<void> {
             komisyonModeli: guncel.komisyonModeli,
             revsharePayi: guncel.revsharePayi,
             cpaTutari: guncel.cpaTutari,
+          },
+          odemeler: kendiOdemeleri.map((o) => ({
+            donem: o.donem,
+            tutar: o.tutar,
+            durum: o.durum,
+            odenmeTarihi: o.odenmeTarihi ?? null,
+          })),
+          odemeOzeti: {
+            odenmis: odenmisToplam(kendiOdemeleri),
+            bekleyen: bekleyenToplam(kendiOdemeleri),
           },
           aralik: { startDate, endDate },
           satirlar,
@@ -309,6 +331,98 @@ export async function affiliateRoutes(app: FastifyInstance): Promise<void> {
       return hataYanit(reply, err);
     }
   });
+
+  // ─── Admin: odeme kayitlari ────────────────────────────────────────────────
+
+  app.get<{ Querystring: { ortakId?: string } }>('/admin/affiliate/odemeler', async (request, reply) => {
+    const tenantKey = await resolveTenantKeyForRequest(request as any);
+    try {
+      const liste = await odemeler(tenantKey, request.query?.ortakId);
+      return reply.send({
+        ok: true,
+        odemeler: liste,
+        ozet: { odenmis: odenmisToplam(liste), bekleyen: bekleyenToplam(liste) },
+      });
+    } catch (err) {
+      return hataYanit(reply, err);
+    }
+  });
+
+  /**
+   * Donem hakedisini odeme kaydina cevirir.
+   *
+   * Tutar ve dayanaklari (net gelir, aktif oyuncu, oran) kayda SABITLENIR:
+   * rapor sonradan degisse bile odenen tutarin gerekcesi denetlenebilmeli.
+   */
+  app.post<{
+    Body: {
+      ortakId?: string;
+      donem?: string;
+      donemBaslangic?: string;
+      donemBitis?: string;
+      tutar?: number;
+      netGelir?: number;
+      aktifOyuncu?: number;
+      not?: string;
+    };
+  }>('/admin/affiliate/odemeler', async (request, reply) => {
+    const tenantKey = await resolveTenantKeyForRequest(request as any);
+    const body = request.body ?? {};
+    const admin = adminKullanici(request);
+
+    try {
+      const ortak = (await hesaplar(tenantKey)).find((h) => h.id === body.ortakId);
+      if (!ortak) return reply.status(404).send({ ok: false, message: 'Ortak bulunamadı.' });
+
+      const kayit = await odemeKaydet(
+        {
+          ortakId: ortak.id,
+          bTag: ortak.bTag,
+          donem: String(body.donem ?? ''),
+          donemBaslangic: String(body.donemBaslangic ?? ''),
+          donemBitis: String(body.donemBitis ?? ''),
+          tutar: Number(body.tutar),
+          netGelir: Number(body.netGelir ?? 0),
+          aktifOyuncu: Number(body.aktifOyuncu ?? 0),
+          komisyonModeli: ortak.komisyonModeli,
+          revsharePayi: ortak.revsharePayi,
+          cpaTutari: ortak.cpaTutari,
+          not: body.not,
+          olusturan: admin?.username ?? 'system',
+        },
+        tenantKey,
+      );
+
+      if (admin) {
+        audit(admin.username, admin.role, 'affiliate_odeme_create', ortak.bTag, `${kayit.donem} · ${kayit.tutar}`);
+      }
+      return reply.send({ ok: true, odeme: kayit });
+    } catch (err) {
+      return hataYanit(reply, err);
+    }
+  });
+
+  app.post<{ Params: { id: string }; Body: { durum?: string } }>(
+    '/admin/affiliate/odemeler/:id/durum',
+    async (request, reply) => {
+      const tenantKey = await resolveTenantKeyForRequest(request as any);
+      const admin = adminKullanici(request);
+      try {
+        const kayit = await odemeDurumGuncelle(
+          request.params.id,
+          String(request.body?.durum ?? '') as OdemeDurumu,
+          admin?.username ?? 'system',
+          tenantKey,
+        );
+        if (admin) {
+          audit(admin.username, admin.role, 'affiliate_odeme_update', kayit.bTag, `${kayit.donem} → ${kayit.durum}`);
+        }
+        return reply.send({ ok: true, odeme: kayit });
+      } catch (err) {
+        return hataYanit(reply, err);
+      }
+    },
+  );
 
   // ─── Admin: komisyon raporu ────────────────────────────────────────────────
 

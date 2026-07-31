@@ -22,6 +22,25 @@ export default defineConfig({
         main: resolve(__dirname, 'index.html'),
         ortak: resolve(__dirname, 'ortak.html'),
       },
+      output: {
+        /**
+         * Saticı kodunu ayri parcalara bol.
+         *
+         * Hepsi tek `main` parcasindaydi: uygulama kodunda tek satir
+         * degisince React dahil 828 kB'lik parcanin tamami yeniden
+         * indiriliyordu. Satici kodu nadiren degisir; ayri parcada
+         * tarayici onbelleginde kalir.
+         */
+        manualChunks(id: string) {
+          if (!id.includes('node_modules')) return undefined;
+          if (/[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/.test(id)) return 'vendor-react';
+          if (id.includes('react-router')) return 'vendor-router';
+          if (id.includes('@tanstack')) return 'vendor-query';
+          if (id.includes('recharts') || id.includes('d3-')) return 'vendor-charts';
+          if (id.includes('framer-motion')) return 'vendor-motion';
+          return 'vendor';
+        },
+      },
     },
   },
   server: {

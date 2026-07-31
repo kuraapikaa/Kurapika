@@ -42,7 +42,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { DateRangeBar } from './components/DateRangeBar';
 import { DateRangePresets } from './components/DateRangePresets';
 import { SummaryCards } from './components/SummaryCards';
-import { DashboardCharts } from './components/DashboardCharts';
+
 import { RulesManager } from './components/RulesManager';
 import { PartnerProfit } from './components/PartnerProfit';
 import { TopSports } from './components/TopSports';
@@ -77,6 +77,9 @@ const LoyaltySettings = lazy(() => import('./components/admin/LoyaltySettings').
 const UserSystem = lazy(() => import('./components/admin/UserSystem').then(m => ({ default: m.UserSystem })));
 const VIPSettings = lazy(() => import('./components/admin/VIPSettings').then(m => ({ default: m.VIPSettings })));
 const AffiliatePanel = lazy(() => import('./components/admin/AffiliatePanel').then(m => ({ default: m.AffiliatePanel })));
+// recharts ~200 kB; STATIK import edildiginde ana pakete giriyordu ve
+// lobiye giren oyuncu bile indiriyordu. Yalnizca finans sekmesi acildiginda yuklensin.
+const DashboardCharts = lazy(() => import('./components/DashboardCharts').then(m => ({ default: m.DashboardCharts })));
 
 const BonusTalepSayfasi = lazy(() => import('./components/pages/BonusTalepSayfasi').then(m => ({ default: m.BonusTalepSayfasi })));
 const PlayerLobby = lazy(() => import('./components/pages/PlayerLobby').then(m => ({ default: m.PlayerLobby })));
@@ -924,7 +927,9 @@ export default function App() {
                         {(dashboardSubTab === 'all' || dashboardSubTab === 'financial') && (
                           <div className="space-y-3">
                             <SummaryCards data={summary.data} isLoading={summary.isLoading ?? false} error={summary.error ?? null} />
-                            <DashboardCharts data={partnerProfit?.data?.Data} />
+                            <Suspense fallback={<div className="h-64 animate-pulse rounded-xl bg-[color:var(--panel-surface,rgba(242,244,248,0.028))]" />}>
+                              <DashboardCharts data={partnerProfit?.data?.Data} />
+                            </Suspense>
                           </div>
                         )}
                         {(dashboardSubTab === 'all' || dashboardSubTab === 'partner') && (
