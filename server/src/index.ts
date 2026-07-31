@@ -174,6 +174,10 @@ if (isProduction) {
     return hashli ? 'public, max-age=31536000, immutable' : 'public, max-age=3600';
   };
 
+  // Ortak paneli ayri bir Vite girisi (/ortak.html). Eskiden SPA icinde
+  // /ortak-paneli rotasiydi; disariya verilmis baglantilar kirilmasin.
+  app.get('/ortak-paneli', async (_request, reply) => reply.redirect('/ortak.html', 301));
+
   app.get('*', async (request, reply) => {
     const pathname = request.url?.split('?')[0] ?? '/';
     const safePath = join(clientDist, pathname === '/' ? 'index.html' : pathname.replace(/^\//, ''));
