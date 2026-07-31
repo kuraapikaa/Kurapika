@@ -14,6 +14,7 @@ import { getAllPromosNormalized } from '../services/promosService.js';
 import { churnListesi, type ChurnGirdisi } from '../services/churnScoreService.js';
 import { temasEkle, oyuncuTemaslari, sonTemaslar, sonTemasHaritasi, temasOzeti, ensureCrmDir } from '../services/crmService.js';
 import { affiliateMetrikleri } from '../services/affiliateMetrics.js';
+import { oyuncuRaporu, siralamaOlustur, type SiralamaMetrigi } from '../services/oyuncuRaporService.js';
 import { evaluateForAccount, evaluateWithdrawalRules, evaluateRiskAnalysis, evaluateWagerSummary, evaluateBonusRules, refreshRules, getRulesForTenant } from '../services/withdrawalEngine.js';
 import { buildAccountSnapshotFromClientId } from '../services/accountSnapshotService.js';
 import { assignmentValuesForPromoSpec, getRules, saveRules, type RulesConfig } from '../services/rulesService.js';
@@ -2526,7 +2527,95 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
   );
 
   /** Public: Turnuva Liderlik Tablosu Verisi */
+  /**
+   * Istemcinin gonderdigi tarihi rapor penceresine cevirir.
+   *
+   * TournamentLeaderboardPage "DD-MM-YY" gonderiyor (eski backoffice ucunun
+   * bekledigi bicim). Rapor ISO an istiyor. Iki bicimi de kabul ediyoruz;
+   * cozulemezse son 24 saate duseriz — bos sayfa gostermektense guncel
+   * pencere daha yararli.
+   */
+  function turnuvaTarihi(value: unknown, gunSonu: boolean): Date | null {
+    const text = String(value ?? '').trim();
+    if (!text) return null;
+
+    const ddmmyy = /^(\d{2})-(\d{2})-(\d{2})$/.exec(text);
+    if (ddmmyy) {
+      const [, dd, mm, yy] = ddmmyy;
+      // Turkiye saatiyle gun siniri; rapor UTC istiyor (+03:00).
+      const saat = gunSonu ? '23:59:59.999' : '00:00:00.000';
+      const parsed = new Date(`20${yy}-${mm}-${dd}T${saat}+03:00`);
+      return Number.isFinite(parsed.getTime()) ? parsed : null;
+    }
+
+    const parsed = new Date(text);
+    return Number.isFinite(parsed.getTime()) ? parsed : null;
+  }
+
+  function turnuvaAraligi(body: Record<string, unknown>): { from: Date; to: Date } {
+    const to = turnuvaTarihi(body.ToDate, true) ?? new Date();
+    const from = turnuvaTarihi(body.FromDate, false) ?? new Date(to.getTime() - 24 * 60 * 60 * 1000);
+    // Ters aralik gelirse rapor bos doner; duzelt.
+    return from <= to ? { from, to } : { from: to, to: from };
+  }
+
+  /** Eski ucun OrderKey degerlerini rapor metriklerine esler. */
+  function turnuvaMetrigi(orderKey: unknown): SiralamaMetrigi {
+    const key = String(orderKey ?? '').trim().toLowerCase();
+    if (key === 'depositamount') return 'yatirimTutari';
+    if (key === 'profit' || key === 'ggr') return 'ggr';
+    if (key === 'casinobetamount') return 'casinoBahis';
+    if (key === 'sportbetamount') return 'sporBahis';
+    return 'bahisTutari';
+  }
+
+  /**
+   * Turnuva siralamasi.
+   *
+   * Birincil kaynak Players Overview raporu (1841): TEK istekte site
+   * genelini, istenen pencereye gore filtrelenmis olarak donuyor. Eski
+   * backoffice ucu yalnizca yedek — Lynon yapilandirili degilse ya da
+   * rapor okunamazsa devreye giriyor.
+   *
+   * Cevap sekli KORUNDU (Result.ReportByTResultViewModel): uc turnuva
+   * sayfasi da bu alani okuyor, istemci degistirmeye gerek kalmasin.
+   */
   fastify.post('/tournament/leaderboard', async (request, reply) => {
+    const body = (request.body ?? {}) as Record<string, unknown>;
+
+    if (isLynonConfigured()) {
+      try {
+        const { from, to } = turnuvaAraligi(body);
+        const metrik = turnuvaMetrigi(body.OrderKey);
+        const limit = Number(body.Take ?? 20);
+        const satirlar = await oyuncuRaporu(from, to, String(body.CurrencyId ?? config.lynon.currency));
+        const sirali = siralamaOlustur(satirlar, metrik, Number.isFinite(limit) && limit > 0 ? limit : 20);
+        const indeks = new Map(satirlar.map((satir) => [satir.login, satir]));
+
+        return reply.send({
+          Result: {
+            ReportByTResultViewModel: sirali.map((kayit) => {
+              const satir = indeks.get(kayit.login);
+              return {
+                PlayerId: Number(kayit.playerId) || 0,
+                UserName: kayit.login,
+                Name: kayit.adSoyad,
+                BetAmount: satir?.donem.bahisTutari ?? 0,
+                WinAmount: satir?.donem.kazancTutari ?? 0,
+                // Oyuncunun kari = kazanc - bahis. Rapordaki GGR kasa
+                // tarafindan bakiyor (bahis - kazanc), isareti ters.
+                Profit: (satir?.donem.kazancTutari ?? 0) - (satir?.donem.bahisTutari ?? 0),
+                Round: 0,
+              };
+            }),
+          },
+          kaynak: 'players-overview-1841',
+        });
+      } catch (err) {
+        request.log.warn({ err }, 'Turnuva sıralaması rapordan üretilemedi; eski uca düşülüyor.');
+      }
+    }
+
     return proxyTournamentReportPost(request as FastifyRequest<{ Body?: Record<string, unknown> }>, reply, config.tournamentReportApi, getBackofficeToken());
   });
 

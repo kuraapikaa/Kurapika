@@ -614,6 +614,13 @@ export function RulesManager() {
                                                         <div className="space-y-2">
                                                             <label className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest block pl-1">Tutar Tipi</label>
                                                             <p className="text-[10px] text-[color:var(--panel-faint,#5c6470)] font-medium pl-1 mb-1">Eklenecek miktarın nasıl hesaplanacağını seçin.</p>
+                                                            {/* BonusMoneyAmount ham haritada tanimliysa buradaki hesap HIC
+                                                                uygulanmiyor (dashboard.ts birlestirmesi). Sessizdi. */}
+                                                            {(editValue?.assignmentValues as Record<string, unknown> | undefined)?.BonusMoneyAmount != null && (
+                                                                <p className="mb-2 rounded-lg bg-amber-500/10 px-3 py-2 text-[10px] font-semibold text-amber-300">
+                                                                    Atama Değerleri’nde BonusMoneyAmount sabit tanımlı. Bu hesaplama uygulanmaz; tutarı oradan silin ya da oradan yönetin.
+                                                                </p>
+                                                            )}
                                                             <select
                                                                 value={editValue?.amountType ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, amountType: e.target.value as any })}
@@ -917,6 +924,29 @@ export function RulesManager() {
                                                             Freespin / F: Process FreeSpin
                                                         </h4>
                                                         <p className="mt-1 text-[10px] text-[color:var(--panel-faint,#5c6470)]">Bet Level ve Count ile birlikte Game ID ve Provider ID zorunludur. Lynon bu değerleri F: Process FreeSpin bloğuna gönderir.</p>
+                                                        {/* Ayni deger iki yerden gelebiliyor: buradaki alanlar ve asagidaki
+                                                            ham Atama Degerleri haritasi. Oncelik buradaki alanlarda, ama
+                                                            bu hicbir yerde yazmiyordu; admin ham haritayi duzeltip
+                                                            degisiklik neden islemedi diye ariyordu. */}
+                                                        {(() => {
+                                                            const ham = (editValue?.assignmentValues ?? {}) as Record<string, unknown>;
+                                                            const ezilen: string[] = [];
+                                                            if (ham.BetLevel != null && editValue?.freespinBetLevel != null) ezilen.push('BetLevel');
+                                                            if (ham.RoundCount != null && editValue?.freespinCount != null) ezilen.push('RoundCount');
+                                                            if (ham.Game != null && editValue?.freespinGameId != null && editValue?.freespinGameProviderId != null) ezilen.push('Game');
+                                                            if (ezilen.length === 0) return null;
+                                                            return (
+                                                                <p className="mt-2 rounded-lg bg-amber-500/10 px-3 py-2 text-[10px] font-semibold text-amber-300">
+                                                                    Atama Değerleri’nde de tanımlı: {ezilen.join(', ')}. Buradaki alanlar önceliklidir; oradaki değer gönderilmez.
+                                                                </p>
+                                                            );
+                                                        })()}
+                                                        {/* Yarim doldurulmus oyun secimi Lynon tarafindan reddedilir. */}
+                                                        {(editValue?.freespinGameId != null) !== (editValue?.freespinGameProviderId != null) && (
+                                                            <p className="mt-2 rounded-lg bg-rose-500/10 px-3 py-2 text-[10px] font-semibold text-rose-300">
+                                                                Game ID ve Provider ID birlikte doldurulmalı. Yalnızca biri girilirse oyun seçimi hiç gönderilmez.
+                                                            </p>
+                                                        )}
                                                     </div>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
                                                         <label className="space-y-2">
