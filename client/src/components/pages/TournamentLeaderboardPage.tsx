@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Loader2, Medal, Trophy, Zap } from 'lucide-react';
-import { tournamentApi } from '../../api/client';
+import { gamesApi } from '../../api/client';
 import { TournamentPeriodSwitch } from './TournamentPeriodSwitch';
 import { lobbyExtraText, renderLobbyTemplate } from '../../lib/lobbyContent';
 import { useLobbyPageTheme, hexToRgba } from '../../lib/lobbyTheme';
@@ -37,13 +37,6 @@ const PERIODS: Record<TournamentPeriod, PeriodConfig> = {
   aylik: { settingsKey: 'aylik', lookbackDays: 30, fallbackPrize: '500.000', labelKey: 'monthlyLabel', labelFallback: 'AYLIK' },
 };
 
-function formatDate(date: Date) {
-  const d = String(date.getDate()).padStart(2, '0');
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const y = String(date.getFullYear()).slice(-2);
-  return `${d}-${m}-${y}`;
-}
-
 /**
  * Günlük/haftalık/aylık turnuva sayfalarının ortak gövdesi. Üç sayfa daha önce
  * birbirinin kopyasıydı ve ayrı ayrı güncellenmek zorundaydı; tek fark dönemin
@@ -67,28 +60,43 @@ export function TournamentLeaderboardPage({ period }: { period: TournamentPeriod
       setLiveTitle('');
       setIsActive(null);
       try {
-        tournamentApi.getSettings().then((s) => {
-          if (cancelled) return;
-          const periodSettings = s?.[cfg.settingsKey];
+        // OYUNCUYA ACIK uclar.
+        //
+        // Onceden /tournament/leaderboard ve /admin/tournaments/settings
+        // cagriliyordu; ikisi de dashboard altinda ve authGuard'in
+        // arkasinda. Oyuncunun panel oturumu olmadigi icin her istek 401
+        // doniyor, sayfa hep bos ve "0 Oyuncu" gorunuyordu.
+        const [ayarSonuc, siraSonuc] = await Promise.allSettled([
+          gamesApi.tournamentPublicSettings(),
+          gamesApi.tournamentLeaderboard(period, 20),
+        ]);
+        if (cancelled) return;
+
+        if (ayarSonuc.status === 'fulfilled' && ayarSonuc.value?.ok) {
+          const periodSettings = ayarSonuc.value.data?.[cfg.settingsKey];
           if (periodSettings?.prize) setPrize(periodSettings.prize);
           if (typeof periodSettings?.title === 'string' && periodSettings.title.trim()) {
             setLiveTitle(periodSettings.title.trim());
           }
           if (typeof periodSettings?.isActive === 'boolean') setIsActive(periodSettings.isActive);
-        }).catch(() => {});
+        }
 
-        const now = new Date();
-        const fromDate = new Date();
-        if (cfg.lookbackDays > 0) fromDate.setDate(now.getDate() - cfg.lookbackDays);
-        const toDate = new Date();
-        toDate.setDate(now.getDate() + 1);
-
-        const res = await tournamentApi.leaderboard({
-          FromDate: formatDate(cfg.lookbackDays > 0 ? fromDate : now),
-          ToDate: formatDate(toDate),
-        });
-        if (cancelled) return;
-        setData(res.Result?.ReportByTResultViewModel ?? []);
+        if (siraSonuc.status === 'fulfilled' && siraSonuc.value?.ok) {
+          const rows = siraSonuc.value.data?.rows ?? [];
+          setData(rows.map((row: any) => ({
+            PlayerId: 0,
+            // Sunucu kullanici adini maskeli donuyor (A***): uc herkese
+            // acik, tam ad + bahis hacmi birlikte yayinlanmamali.
+            UserName: row.oyuncu,
+            Name: row.oyuncu,
+            BetAmount: Number(row.bahis) || 0,
+            WinAmount: Number(row.kazanc) || 0,
+            Profit: (Number(row.kazanc) || 0) - (Number(row.bahis) || 0),
+            Round: 0,
+          })));
+        } else {
+          setData([]);
+        }
       } catch (error) {
         console.error('Leaderboard fetch error:', error);
         if (!cancelled) setData([]);

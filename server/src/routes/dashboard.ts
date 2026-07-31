@@ -15,6 +15,7 @@ import { churnListesi, type ChurnGirdisi } from '../services/churnScoreService.j
 import { temasEkle, oyuncuTemaslari, sonTemaslar, sonTemasHaritasi, temasOzeti, ensureCrmDir } from '../services/crmService.js';
 import { affiliateMetrikleri } from '../services/affiliateMetrics.js';
 import { oyuncuRaporu, siralamaOlustur, type SiralamaMetrigi } from '../services/oyuncuRaporService.js';
+import { readTournamentSettings, writeTournamentSettings } from '../services/turnuvaAyarService.js';
 import { evaluateForAccount, evaluateWithdrawalRules, evaluateRiskAnalysis, evaluateWagerSummary, evaluateBonusRules, refreshRules, getRulesForTenant } from '../services/withdrawalEngine.js';
 import { buildAccountSnapshotFromClientId } from '../services/accountSnapshotService.js';
 import { assignmentValuesForPromoSpec, getRules, saveRules, type RulesConfig } from '../services/rulesService.js';
@@ -2619,34 +2620,18 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
     return proxyTournamentReportPost(request as FastifyRequest<{ Body?: Record<string, unknown> }>, reply, config.tournamentReportApi, getBackofficeToken());
   });
 
-  /** Turnuva ayarlarını getir */
+  /**
+   * Turnuva ayarlarini getir.
+   *
+   * Okuma mantigi turnuvaAyarService'e tasindi: oyuncuya acik uc de ayni
+   * ayarlari okuyor, iki kopya birinin varsayilani degisince sessizce
+   * ayrisirdi.
+   */
   fastify.get('/admin/tournaments/settings', async (request: any, reply) => {
     const user = request.session?.user;
     if (!user) return reply.status(401).send({ error: 'Oturum açın' });
-
-    const tenantKey = safeTenantKey(await resolveTenantKeyForRequest(request));
-    const tournamentsDir = path.resolve(process.cwd(), 'src', 'data', 'tournaments');
-    const settingsPath = path.join(tournamentsDir, `${tenantKey}.json`);
-    const legacySettingsPath = path.resolve(process.cwd(), 'src', 'data', 'tournaments.json');
-    const defaults = {
-      gunluk: { prize: '50.000', isActive: true },
-      haftalik: { prize: '250.000', isActive: true },
-      aylik: { prize: '500.000', isActive: true },
-    };
-
     try {
-      const settings = await readStoredDocument<any>({
-        tenantKey,
-        namespace: 'tournaments',
-        filePath: settingsPath,
-        fallback: async () => {
-          if (tenantKey === 'default' && existsSync(legacySettingsPath)) {
-            try { return JSON.parse(await readFile(legacySettingsPath, 'utf-8')); } catch { /* defaults */ }
-          }
-          return defaults;
-        },
-      });
-      return reply.send(settings);
+      return reply.send(await readTournamentSettings(await resolveTenantKeyForRequest(request)));
     } catch {
       return reply.status(500).send({ error: 'Ayarlar okunamadı' });
     }
@@ -2655,14 +2640,8 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
   fastify.post('/admin/tournaments/settings', async (request: any, reply) => {
     const user = request.session?.user;
     if (user?.role !== 'admin') return reply.status(403).send({ error: 'Yetkisiz' });
-
-    const tenantKey = safeTenantKey(await resolveTenantKeyForRequest(request));
-    const settingsPath = path.resolve(process.cwd(), 'src', 'data', 'tournaments', `${tenantKey}.json`);
     try {
-      await writeStoredDocument(
-        { tenantKey, namespace: 'tournaments', filePath: settingsPath },
-        request.body,
-      );
+      await writeTournamentSettings(await resolveTenantKeyForRequest(request), request.body);
       return reply.send({ ok: true });
     } catch {
       return reply.status(500).send({ error: 'Kaydedilemedi' });

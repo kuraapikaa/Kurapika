@@ -9,6 +9,13 @@ import { resolveTenantKeyForRequest, safeTenantKey } from '../lib/tenant.js';
 import { readStoredDocument, writeStoredDocument } from '../lib/documentStore.js';
 import { isLynonConfigured, lynonAssignCampaignToPlayer, lynonBuildBonusEligibilitySnapshot, lynonCreditPlayerMainAccount, lynonFindPlayerByLogin, lynonPlayerActivity } from '../services/lynonBackofficeService.js';
 import { loginAnahtari, oyuncuAktivitesi, oyuncuRaporu, siralamaOlustur, type SiralamaMetrigi } from '../services/oyuncuRaporService.js';
+import { readTournamentSettings } from '../services/turnuvaAyarService.js';
+import {
+  kurallariCozumle,
+  loginMaskele,
+  turnuvaSiralamasi,
+  type OyuncuOlcumu,
+} from '../services/turnuvaSkoru.js';
 import { getChatMember, isTelegramConfigured, sendTelegramMessage } from '../services/telegramService.js';
 import { ensureTelegramLinkDir, getLinkedTelegramUserId, linkTelegramAccount } from '../services/telegramLinkService.js';
 
@@ -2180,6 +2187,107 @@ const selectedSlice = selected.slice;
       ok: true,
       data: buildDailyTasksPayload(settings, claims, activity, bonusPanelUser.login)
     });
+  });
+
+  /**
+   * Turnuva donem penceresi (Turkiye saati).
+   *
+   * gunluk  bugun 00:00 -> simdi
+   * haftalik / aylik  son 7 / 30 gun
+   */
+  function turnuvaPenceresi(period: string): { from: Date; to: Date; gun: number } {
+    const gun = period === 'aylik' ? 30 : period === 'haftalik' ? 7 : 0;
+    const to = new Date();
+    const from = new Date();
+    if (gun > 0) from.setDate(to.getDate() - gun);
+    else from.setHours(0, 0, 0, 0);
+    return { from, to, gun };
+  }
+
+  /** Rapor satirlarini skorlama olcumune cevirir. */
+  function olcumlereCevir(satirlar: Awaited<ReturnType<typeof oyuncuRaporu>>): OyuncuOlcumu[] {
+    return satirlar.map((satir) => ({
+      login: satir.login,
+      playerId: satir.playerId,
+      adSoyad: satir.adSoyad,
+      bahisTutari: satir.donem.bahisTutari,
+      kazancTutari: satir.donem.kazancTutari,
+      // Rapor bahis ADEDI vermiyor; yatirim adedi tek yakin olcu degil,
+      // bu yuzden adet bazli kurallar icin 0 gonderiliyor ve o kurallar
+      // devre disi kaliyor. Adet filtresi gerekiyorsa ayri bir kaynak sart.
+      bahisAdedi: 0,
+      ggr: satir.donem.ggr,
+    }));
+  }
+
+  /**
+   * OYUNCUYA ACIK turnuva siralamasi.
+   *
+   * Onceden lobi /api/tournament/leaderboard'u cagiriyordu; o uc dashboard
+   * altinda ve authGuard'in arkasinda. Oyuncunun panel oturumu olmadigi
+   * icin her istek 401 doniyor, sayfa "Siralama henuz olusmadi" gosteriyordu.
+   * Bildirilen bos siralama buydu.
+   *
+   * Kullanici adlari MASKELI: bu uc herkese acik, tam kullanici adi ve
+   * bahis hacmini birlikte yayinlamak oyuncu bilgisini disariya acardi.
+   */
+  app.get('/games/tournament/leaderboard', async (request: any, reply) => {
+    const period = String(request.query?.period ?? 'gunluk');
+    const limit = Math.min(200, Math.max(1, Number(request.query?.limit) || 20));
+    const tenantKey = await resolveTenantKeyForRequest(request);
+
+    try {
+      const ayarlar = await readTournamentSettings(tenantKey);
+      const donemAyari = (ayarlar?.[period] ?? {}) as Record<string, unknown>;
+      const kurallar = kurallariCozumle(donemAyari.kurallar);
+      const { from, to } = turnuvaPenceresi(period);
+
+      const satirlar = await oyuncuRaporu(from, to);
+      const sirali = turnuvaSiralamasi(olcumlereCevir(satirlar), kurallar, limit);
+
+      return reply.send({
+        ok: true,
+        data: {
+          period,
+          prize: donemAyari.prize ?? null,
+          title: donemAyari.title ?? null,
+          isActive: donemAyari.isActive !== false,
+          formul: kurallar.formul,
+          katilimci: sirali.length,
+          rows: sirali.map((satir) => ({
+            sira: satir.sira,
+            oyuncu: loginMaskele(satir.login),
+            skor: satir.skor,
+            bahis: satir.bahisTutari,
+            kazanc: satir.kazancTutari,
+          })),
+        },
+      });
+    } catch (err) {
+      request.log.warn({ err, period }, 'Turnuva sıralaması üretilemedi.');
+      return reply.status(502).send({ ok: false, message: 'Sıralama şu an alınamıyor.' });
+    }
+  });
+
+  /**
+   * Oyuncuya acik turnuva ayarlari.
+   *
+   * Yalnizca vitrin alanlari: odul, baslik, yayin durumu. Skorlama
+   * kurallari ve olcut secimi operasyonel bilgi, disariya verilmiyor.
+   */
+  app.get('/games/tournament/settings', async (request: any, reply) => {
+    const tenantKey = await resolveTenantKeyForRequest(request);
+    const ayarlar = await readTournamentSettings(tenantKey);
+    const vitrin: Record<string, unknown> = {};
+    for (const donem of ['gunluk', 'haftalik', 'aylik']) {
+      const cfg = (ayarlar?.[donem] ?? {}) as Record<string, unknown>;
+      vitrin[donem] = {
+        prize: cfg.prize ?? null,
+        title: cfg.title ?? null,
+        isActive: cfg.isActive !== false,
+      };
+    }
+    return reply.send({ ok: true, data: vitrin });
   });
 
   /**

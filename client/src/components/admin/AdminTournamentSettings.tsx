@@ -45,10 +45,34 @@ const OLCUTLER = [
   { id: 'GGR', ad: 'GGR' },
 ] as const;
 
+/**
+ * Skor hesaplama formulleri.
+ *
+ * Sunucudaki turnuvaSkoru.HESAPLAMA_FORMULLERI ile birebir ayni olmali;
+ * ayrisirsa admin burada seceni sunucu tanimaz ve sessizce varsayilana
+ * (toplam bahis) duser.
+ */
+const FORMULLER = [
+  { id: 'bahis', ad: 'Toplam bahis', aciklama: 'Skor = dönem içindeki toplam bahis tutarı.' },
+  { id: 'bahisXcarpan', ad: 'Toplam bahis × çarpan', aciklama: 'Toplam bahis, aşağıdaki çarpanla ölçeklenir.' },
+  { id: 'kazancOrani', ad: 'Kazanç oranı', aciklama: 'Skor = kazanç ÷ bahis. Küçük oyuncuya da şans verir.' },
+  { id: 'netKayip', ad: 'Net kayıp', aciklama: 'Skor = oyuncunun net kaybı. Kazanan oyuncular 0 alır.' },
+  { id: 'bahisAdedi', ad: 'Bahis adedi', aciklama: 'Skor = bahis sayısı. Tutar değil sıklık ödüllendirilir.' },
+] as const;
+
+const VARSAYILAN_KURALLAR = {
+  formul: 'bahis',
+  skorCarpani: 1,
+  tekBahisMin: 0,
+  tekBahisMax: 0,
+  toplamBahisAdediMin: 0,
+  toplamBahisAdediMax: 0,
+};
+
 const VARSAYILAN: Record<DonemAnahtari, any> = {
-  gunluk: { prize: '50.000', isActive: true, title: '', orderKey: 'BetAmount', topCount: 20 },
-  haftalik: { prize: '250.000', isActive: true, title: '', orderKey: 'BetAmount', topCount: 20 },
-  aylik: { prize: '500.000', isActive: true, title: '', orderKey: 'BetAmount', topCount: 20 },
+  gunluk: { prize: '50.000', isActive: true, title: '', orderKey: 'BetAmount', topCount: 20, kurallar: { ...VARSAYILAN_KURALLAR } },
+  haftalik: { prize: '250.000', isActive: true, title: '', orderKey: 'BetAmount', topCount: 20, kurallar: { ...VARSAYILAN_KURALLAR } },
+  aylik: { prize: '500.000', isActive: true, title: '', orderKey: 'BetAmount', topCount: 20, kurallar: { ...VARSAYILAN_KURALLAR } },
 };
 
 /** Eski uc "DD-MM-YY" bekliyor; sunucu bunu Turkiye gun sinirina ceviriyor. */
@@ -102,6 +126,16 @@ export function AdminTournamentSettings() {
 
   const donemGuncelle = (key: DonemAnahtari, patch: Record<string, unknown>) => {
     setSettings((onceki) => ({ ...(onceki || {}), [key]: { ...(onceki?.[key] || {}), ...patch } }));
+  };
+
+  const kuralGuncelle = (key: DonemAnahtari, patch: Record<string, unknown>) => {
+    setSettings((onceki) => ({
+      ...(onceki || {}),
+      [key]: {
+        ...(onceki?.[key] || {}),
+        kurallar: { ...VARSAYILAN_KURALLAR, ...(onceki?.[key]?.kurallar || {}), ...patch },
+      },
+    }));
   };
 
   /**
@@ -176,6 +210,7 @@ export function AdminTournamentSettings() {
         <div className="space-y-5">
           {DONEMLER.map((donem) => {
             const cfg = { ...VARSAYILAN[donem.id], ...(settings[donem.id] || {}) };
+            const kurallar = { ...VARSAYILAN_KURALLAR, ...(cfg.kurallar || {}) };
             return (
               <Bolum key={donem.id} baslik={`${donem.ad} turnuva`} aciklama={donem.aciklama}>
                 <div className="space-y-4 px-5 py-4">
@@ -224,6 +259,105 @@ export function AdminTournamentSettings() {
                       />
                     </Alan>
                   </div>
+                  {/* ── Skorlama ─────────────────────────────────────
+                      Onceden siralama ham metrigin kendisiydi: turnuva
+                      "en cok parasi olan kazanir" haline geliyordu.
+                      Bu alanlar kucuk oyuncuya sans tanimak ve bonus
+                      avcilarini elemek icin. */}
+                  <div className="space-y-4 border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))] pt-4">
+                    <div>
+                      <h4 className="text-[11px] font-bold uppercase tracking-[0.14em] text-[color:var(--panel-text-dim,#c8cdd5)]">
+                        Skorlama
+                      </h4>
+                      <p className="mt-1 text-[11px] font-medium text-[color:var(--panel-muted,#8a919c)]">
+                        {FORMULLER.find((f) => f.id === (kurallar.formul ?? 'bahis'))?.aciklama}
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                      <Alan etiket="Calculation Formula" ipucu="Skorun neye göre hesaplanacağı.">
+                        <Secim
+                          modul={MODUL}
+                          value={kurallar.formul ?? 'bahis'}
+                          onChange={(e) => kuralGuncelle(donem.id, { formul: e.target.value })}
+                        >
+                          {FORMULLER.map((f) => <option key={f.id} value={f.id}>{f.ad}</option>)}
+                        </Secim>
+                      </Alan>
+                      <Alan
+                        etiket="Score Multiplier"
+                        ipucu={kurallar.formul === 'bahisXcarpan'
+                          ? 'Skor bu çarpanla ölçeklenir.'
+                          : 'Yalnızca “Toplam bahis × çarpan” formülünde kullanılır.'}
+                      >
+                        <Girdi
+                          modul={MODUL}
+                          sayisal
+                          type="number"
+                          min={0.01}
+                          step={0.01}
+                          disabled={kurallar.formul !== 'bahisXcarpan'}
+                          value={kurallar.skorCarpani ?? 1}
+                          onChange={(e) => kuralGuncelle(donem.id, { skorCarpani: Number(e.target.value) })}
+                        />
+                      </Alan>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                      <Alan etiket="Single Min Bet Amount" ipucu="Ortalama bahsi bunun altında kalan oyuncu elenir. 0 = sınırsız.">
+                        <Girdi
+                          modul={MODUL}
+                          sayisal
+                          type="number"
+                          min={0}
+                          value={kurallar.tekBahisMin ?? 0}
+                          onChange={(e) => kuralGuncelle(donem.id, { tekBahisMin: Number(e.target.value) })}
+                        />
+                      </Alan>
+                      <Alan etiket="Single Max Bet Amount" ipucu="Bu tutarın üstü sayılmaz; tek dev bahis listeyi kilitlemesin. 0 = sınırsız.">
+                        <Girdi
+                          modul={MODUL}
+                          sayisal
+                          type="number"
+                          min={0}
+                          value={kurallar.tekBahisMax ?? 0}
+                          onChange={(e) => kuralGuncelle(donem.id, { tekBahisMax: Number(e.target.value) })}
+                        />
+                      </Alan>
+                      <Alan etiket="Total Min Bet Count" ipucu="Sıralamaya girmek için gereken en az bahis adedi. 0 = sınırsız.">
+                        <Girdi
+                          modul={MODUL}
+                          sayisal
+                          type="number"
+                          min={0}
+                          value={kurallar.toplamBahisAdediMin ?? 0}
+                          onChange={(e) => kuralGuncelle(donem.id, { toplamBahisAdediMin: Number(e.target.value) })}
+                        />
+                      </Alan>
+                      <Alan etiket="Total Max Bet Count" ipucu="Sayılan en fazla bahis adedi. 0 = sınırsız.">
+                        <Girdi
+                          modul={MODUL}
+                          sayisal
+                          type="number"
+                          min={0}
+                          value={kurallar.toplamBahisAdediMax ?? 0}
+                          onChange={(e) => kuralGuncelle(donem.id, { toplamBahisAdediMax: Number(e.target.value) })}
+                        />
+                      </Alan>
+                    </div>
+
+                    {/* Bahis ADEDI raporda gelmiyor; adet bazli kurallar
+                        sessizce etkisiz kalmasin diye acikca soyluyoruz. */}
+                    {(Number(kurallar.toplamBahisAdediMin) > 0
+                      || Number(kurallar.toplamBahisAdediMax) > 0
+                      || kurallar.formul === 'bahisAdedi') && (
+                      <Uyari tur="dikkat">
+                        Players Overview raporu bahis <strong>adedi</strong> döndürmüyor. Adede dayalı kurallar
+                        (Total Min/Max Bet Count ve “Bahis adedi” formülü) veri gelene kadar etkisiz kalır.
+                      </Uyari>
+                    )}
+                  </div>
+
                   <Dugme modul={MODUL} onClick={() => onizlemeGetir(donem.id)} disabled={onizlemeYukleniyor}>
                     {onizlemeYukleniyor && onizlemeDonem === donem.id ? (
                       <Loader2 size={13} className="animate-spin" />
