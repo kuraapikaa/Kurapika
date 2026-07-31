@@ -506,6 +506,53 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
    * - Applies per-tenant overrides (custom title/image from Admin panel).
    * - Supports both ID-based and Title-based rule mapping.
    */
+  /**
+   * Kural Merkezi'ndeki NAKIT bonuslari promosyon satirina cevirir.
+   *
+   * Nakit bonuslarin Lynon kampanya karsiligi YOK (partnerBonusId yok);
+   * platform katalogundan hicbir zaman gelmezler. Bu yuzden kural
+   * tanimindan uretiliyorlar.
+   *
+   * Onceden yalnizca eski (BetConstruct) dalda uretiliyorlardi. Lynon
+   * dali erken donduğu icin canlida hic gorunmuyorlardi: Kural
+   * Merkezi'nde aktif isaretlenen kayip bonusu, 4. yatirim hediyesi ve
+   * Carsamba Happy Days bonus talep ekraninda listelenmiyordu.
+   */
+  function sanalNakitBonuslar(
+    rules: { PROMO_SPECS?: Record<string, unknown>; PROMO_TITLE_SPECS?: Record<string, unknown> } | undefined,
+    overrides: any,
+    mevcutIdler: Set<string>,
+  ): any[] {
+    const tumKurallar = [
+      ...Object.entries(rules?.PROMO_SPECS ?? {}),
+      ...Object.entries(rules?.PROMO_TITLE_SPECS ?? {}),
+    ];
+    const sonuc: any[] = [];
+    const eklenen = new Set<string>();
+
+    for (const [key, spec] of tumKurallar) {
+      const kural = spec as Record<string, any>;
+      if (kural?.type !== 'cash') continue;
+      if (kural?.enabled === false) continue;
+      // Ayni kural hem PROMO_SPECS hem PROMO_TITLE_SPECS'te olabilir.
+      if (eklenen.has(key) || mevcutIdler.has(String(key))) continue;
+      eklenen.add(key);
+
+      const o = overrides?.byExternalId?.[key];
+      sonuc.push({
+        id: key,
+        promoTitle: o?.title || kural.title || key,
+        image: o?.image || '',
+        detailHtml: o?.detailHtml || '',
+        rules: { externalId: key, ...kural, enabled: true },
+        backofficeId: key,
+        isVirtual: true,
+        tags: ['Nakit'],
+      });
+    }
+    return sonuc;
+  }
+
   fastify.get<{ Querystring: { includeUnconfigured?: string } }>('/promos/auto', async (request, reply) => {
     try {
       const tenantKey = await resolveTenantKeyFromHost(request as any);
@@ -573,10 +620,17 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
             })
             .filter(Boolean);
 
+          // Nakit bonuslar Lynon katalogunda yok; kural tanimindan eklenir.
+          const sanallar = sanalNakitBonuslar(
+            rules,
+            overrides,
+            new Set(promotions.map((promo: any) => String(promo?.id))),
+          );
+
           return reply.send({
             HasError: false,
             Data: {
-              promotions,
+              promotions: [...promotions, ...sanallar],
               fetchedAt: new Date().toISOString(),
               source: 'Lynon Bonus Engine V2 + Bonus Kuralları (site 137)',
               dataCompleteness: catalog.DataCompleteness,
@@ -642,32 +696,12 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
         };
       }).filter(Boolean);
 
-      // 3. Add Virtual (Cash/Nakit) Bonuses that aren't tied to Platform IDs
-      const virtualPromos: any[] = [];
-      const allSpecs = [...Object.entries(specs), ...Object.entries(titleSpecs)];
-      for (const [key, spec] of allSpecs) {
-          if ((spec as any).type === 'cash' && (spec as any).enabled !== false) {
-              // Direct check if this virtual bonus is already in the list (by backofficeId match, though unlikely)
-              if (promotions.find(p => String(p?.id) === String(key))) continue;
-
-              // Try to find override for virtual key
-              const o = overrides?.byExternalId?.[key];
-
-              virtualPromos.push({
-                  id: key,
-                  promoTitle: o?.title || (spec as any).title || key,
-                  image: o?.image || '',
-                  detailHtml: o?.detailHtml || '',
-                  rules: {
-                      externalId: key,
-                      ...(spec as any)
-                  },
-                  backofficeId: key,
-                  isVirtual: true,
-                  tags: ['Nakit']
-              });
-          }
-      }
+      // 3. Nakit bonuslar — Lynon daliyla ayni yardimci.
+      const virtualPromos = sanalNakitBonuslar(
+        rules,
+        overrides,
+        new Set(promotions.map((promo: any) => String(promo?.id))),
+      );
 
       const catalogPromotions = NARCOS_BONUSES.map((bonus, index) => ({
         id: bonus.templateId ?? 1000 + index,
