@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { DURUM_NOKTASI, durumAyrintisi, islemDurumu } from '../lib/islemDurumu';
 import { useQuery } from '@tanstack/react-query';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { dashboardApi, adminApi } from '../api/client';
@@ -1382,13 +1383,10 @@ export function PlayerProfile() {
                                                                     </td>
                                                                     <td className="py-6 pr-4">
                                                                         {(() => {
-                                                                            const typeStr = String(tx.DocumentTypeName ?? '');
-                                                                            const state = String(tx.DocumentState ?? tx.State ?? '').toLowerCase();
-                                                                            const isRejected = /rejected|failed|cancelled|canceled/.test(state) || typeStr.toLowerCase().includes('reddedilmiş');
-                                                                            const isApproved = /success|paid|approved|completed/.test(state) || tx.DocumentState === 10;
-                                                                            const label = isRejected ? 'Reddedildi' : isApproved ? 'Başarılı' : 'Beklemede';
-                                                                            const dotClass = isRejected ? 'bg-rose-500' : isApproved ? 'bg-emerald-500' : 'bg-amber-500';
-                                                                            const textClass = isRejected ? 'text-rose-400' : isApproved ? 'text-emerald-400' : 'text-amber-400';
+                                                                            const durum = islemDurumu(tx);
+                                                                            const label = durumAyrintisi(tx);
+                                                                            const dotClass = DURUM_NOKTASI[durum];
+                                                                            const textClass = durum === 'basarisiz' ? 'text-rose-400' : durum === 'basarili' ? 'text-emerald-400' : 'text-amber-400';
                                                                             return (
                                                                                 <div className="flex items-center gap-2">
                                                                                     <div className={`h-2 w-2 rounded-full ${dotClass}`} />

@@ -166,7 +166,7 @@ export function OrtaklikSayfasi() {
             {/* Mevcut ortaklar dogrudan panele gitsin; basvuru formunu
                 yeniden doldurmaya calisiyorlardi. */}
             <a
-              href="/ortak-paneli"
+              href="/ortak.html"
               className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-[rgba(243,236,221,0.12)] px-6 text-sm font-bold text-[color:var(--lobby-text,#f3ecdd)] transition-colors hover:border-[color:var(--lobby-gold,#e7c574)]/40"
             >
               <LogIn size={15} aria-hidden="true" /> Ortak Girişi
@@ -317,7 +317,7 @@ export function OrtaklikSayfasi() {
 
         <p className="pb-6 text-center text-[11px] leading-relaxed text-[color:var(--lobby-muted,#8f8674)]">
           Zaten ortak mısınız?{' '}
-          <a href="/ortak-paneli" className="font-bold text-[color:var(--lobby-gold,#e7c574)] hover:underline">
+          <a href="/ortak.html" className="font-bold text-[color:var(--lobby-gold,#e7c574)] hover:underline">
             Ortak paneline giriş yapın
           </a>
           .

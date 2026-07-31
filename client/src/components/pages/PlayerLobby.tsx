@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { type CSSProperties, useEffect, useMemo, useState } from 'react';
 import { bonusPanelApi, formsApi, gamesApi, loyaltyApi, tournamentApi } from '../../api/client';
+import { LobiDurumSeridi } from './LobiDurumSeridi';
 import { fetchGamesConfigCached, readCachedGamesConfig } from '../../lib/lobbyConfigCache';
 import { useOtomatikOturum } from '../../lib/useParentUsername';
 import { cn } from '../../lib/utils';
@@ -739,6 +740,11 @@ export function PlayerLobby() {
         />
 
         {activeUser && <LobbyWelcome theme={lobbyTheme} username={activeUser} loyalty={loyalty} />}
+
+        {/* Oyuncunun kendi turnuva sirasi ve gunluk gorev ilerlemesi.
+            Onceden ikisi de yalnizca birer bagdi; oyuncu kacinci oldugunu
+            gormek icin sayfayi acmak zorundaydi. */}
+        {activeUser && <LobiDurumSeridi username={activeUser} />}
 
         <LobbyBanner theme={lobbyTheme} />
 

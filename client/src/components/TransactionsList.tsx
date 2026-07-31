@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { DURUM_SINIFI, durumAyrintisi, islemDurumu } from '../lib/islemDurumu';
 import { useQuery } from '@tanstack/react-query';
 import { dashboardApi, type DateRange } from '../api/client';
 import { formatNumber, formatDateTimeWithSeconds } from '../lib/format';
@@ -318,21 +319,16 @@ export function TransactionsList({ dateRange }: TransactionsListProps) {
                                         </td>
                                         <td className="py-6 pr-6 text-right">
                                             {(() => {
-                                                const isRejected = String(tx.TypeName ?? '').toLowerCase().includes('reddedilmiştir');
-                                                if (isRejected) {
-                                                    return (
-                                                        <span className="rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-widest ring-1 bg-rose-500/10 text-rose-400 ring-rose-500/20">
-                                                            REDDEDİLMİŞ
-                                                        </span>
-                                                    );
-                                                }
-                                                const isApproved = tx.State === 10;
+                                                // Once `tx.State === 10` bakiliyordu; Lynon State'i STRING
+                                                // oldugu icin bu kosul hicbir zaman tutmuyor ve reddedilen
+                                                // islem "ISLEMDE" gorunuyordu. Tek kaynak: islemDurumu().
+                                                const durum = islemDurumu(tx);
                                                 return (
-                                                    <span className={`rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-widest ring-1 ${isApproved
-                                                        ? 'bg-emerald-500/10 text-emerald-400 ring-emerald-500/20'
-                                                        : 'bg-amber-500/10 text-amber-400 ring-amber-500/20'
-                                                        }`}>
-                                                        {isApproved ? 'ONAYLI' : 'İŞLEMDE'}
+                                                    <span
+                                                        className={`rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-widest ring-1 ${DURUM_SINIFI[durum]}`}
+                                                        title={durumAyrintisi(tx)}
+                                                    >
+                                                        {durumAyrintisi(tx)}
                                                     </span>
                                                 );
                                             })()}

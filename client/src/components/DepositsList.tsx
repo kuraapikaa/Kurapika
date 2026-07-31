@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { DepositsResponse } from '../types/dashboard';
 import { formatNumber, formatDateTimeDisplay } from '../lib/format';
@@ -5,6 +6,7 @@ import { cn } from '../lib/utils';
 import { Card } from './ui/Card';
 import { Button } from './ui/Button';
 import { Wallet, AlertCircle, Download } from 'lucide-react';
+import { DURUM_ETIKETI, DURUM_SINIFI, durumAyrintisi, islemDurumu, type IslemDurumu } from '../lib/islemDurumu';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface DepositsListProps {
@@ -15,6 +17,7 @@ interface DepositsListProps {
 
 export function DepositsList({ data, isLoading, error }: DepositsListProps) {
     const navigate = useNavigate();
+    const [suzgec, setSuzgec] = useState<IslemDurumu | 'hepsi'>('hepsi');
 
     if (error) {
         return (
@@ -41,10 +44,29 @@ export function DepositsList({ data, isLoading, error }: DepositsListProps) {
         const dateB = b.CreatedLocal ? new Date(b.CreatedLocal).getTime() : 0;
         return dateB - dateA;
     });
-    const totalAmount = data?.Data?.TotalAmount ?? 0;
+    const sayimlar = deposits.reduce(
+        (acc, row) => {
+            acc[islemDurumu(row as any)] += 1;
+            return acc;
+        },
+        { basarili: 0, basarisiz: 0, beklemede: 0 } as Record<IslemDurumu, number>,
+    );
+
+    const gorunen = suzgec === 'hepsi' ? deposits : deposits.filter((row) => islemDurumu(row as any) === suzgec);
+
+    // TOPLAM TUTAR yalnizca BASARILI islemleri sayar.
+    //
+    // Sunucunun donduru TotalAmount reddedilen ve bekleyen kayitlari da
+    // topluyor; ekranda "toplam yatirim" olarak gosterilince kasaya
+    // girmemis para girmis gibi okunuyordu.
+    const basariliToplam = deposits
+        .filter((row) => islemDurumu(row as any) === 'basarili')
+        .reduce((sum, row) => sum + (Number((row as any).Amount) || 0), 0);
+    const hamToplam = data?.Data?.TotalAmount ?? 0;
     const count = data?.Data?.Documents?.Count ?? deposits.length;
 
     const columnLabels: Record<string, string> = {
+        __durum: 'Durum',
         ClientId: 'Müşteri ID',
         ClientLogin: 'Kullanıcı',
         ClientName: 'Ad Soyad',
@@ -53,18 +75,62 @@ export function DepositsList({ data, isLoading, error }: DepositsListProps) {
         Id: 'İşlem No',
         TypeName: 'İşlem Türü',
         CreatedLocal: 'Tarih/Saat',
+        ModifiedLocal: 'Güncelleme',
         PaymentSystemName: 'Yöntem',
-        UserName: 'Onaylayan',
+        IntegrationName: 'Sağlayıcı',
+        __hesap: 'Hesap',
+        commissionFee: 'Komisyon',
+        reviewerUserName: 'İnceleyen',
+        ExternalId: 'Platform ref.',
         Note: 'Notlar',
     };
 
+    // Durum EN BASTA: operatorun once gormesi gereken sey paranin gecip
+    // gecmedigi. Onceden bu kolon hic yoktu ve reddedilen yatirim, listede
+    // tamamlanmis yatirimla ayni gorunuyordu.
+    //
+    // Saglayici, hesap, komisyon ve inceleyen alanlari cevapta zaten
+    // geliyordu ama hicbiri ekrana cikmiyordu.
     const allKeys = [
-        'ClientId', 'ClientLogin', 'ClientName', 'Amount', 'CurrencyId',
-        'Id', 'TypeName', 'CreatedLocal', 'PaymentSystemName', 'UserName', 'Note'
+        '__durum', 'ClientId', 'ClientLogin', 'ClientName', 'Amount', 'CurrencyId',
+        'Id', 'TypeName', 'CreatedLocal', 'ModifiedLocal', 'PaymentSystemName',
+        'IntegrationName', '__hesap', 'commissionFee', 'reviewerUserName', 'ExternalId', 'Note'
     ];
 
     function formatCell(key: string, val: unknown, row: any): React.ReactNode {
+        if (key === '__durum') {
+            const durum = islemDurumu(row);
+            return (
+                <span className={cn(
+                    'inline-block rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-widest ring-1 whitespace-nowrap',
+                    DURUM_SINIFI[durum],
+                )} title={durumAyrintisi(row)}>
+                    {durumAyrintisi(row)}
+                </span>
+            );
+        }
+        if (key === '__hesap') {
+            // Cevaptaki inputs alani IBAN ve hesap sahibini tasiyor; cekim
+            // incelemesinde en cok bakilan bilgi ama hic gosterilmiyordu.
+            const inputs = row?.inputs ?? {};
+            const no = String(inputs.account_no ?? inputs.accountNo ?? '').trim();
+            const ad = String(inputs.account_title ?? inputs.accountTitle ?? '').trim();
+            if (!no && !ad) return <span className="text-[color:var(--panel-faint,#5c6470)]">–</span>;
+            return (
+                <span className="block max-w-[200px] truncate text-left" title={`${ad} ${no}`.trim()}>
+                    {ad && <span className="block truncate text-white/80">{ad}</span>}
+                    {no && <span className="block truncate tabular-nums text-[10px]">{no}</span>}
+                </span>
+            );
+        }
         if (val == null) return <span className="text-[color:var(--panel-faint,#5c6470)]">–</span>;
+        if (key === 'commissionFee') {
+            const n = Number(val);
+            if (!Number.isFinite(n) || n === 0) return <span className="text-[color:var(--panel-faint,#5c6470)]">–</span>;
+            return <span className="tabular-nums text-amber-300">{formatNumber(n)}</span>;
+        }
+        if (key === 'ModifiedLocal')
+            return <span className="tabular-nums opacity-80 text-left">{formatDateTimeDisplay(String(val))}</span>;
         if (key === 'CreatedLocal')
             return <span className="tabular-nums opacity-80 text-left">{formatDateTimeDisplay(String(val))}</span>;
         if (key === 'Amount' && typeof val === 'number')
@@ -116,12 +182,45 @@ export function DepositsList({ data, isLoading, error }: DepositsListProps) {
                         </div>
                         <div className="h-8 w-px bg-white/5" />
                         <div className="flex flex-col">
-                            <span className="text-[9px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">Toplam Tutar</span>
+                            <span className="text-[9px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">Başarılı Tutar</span>
                             <div className="flex items-baseline gap-1.5">
-                                <span className="text-sm font-semibold text-emerald-400 tabular-nums neon-glow-emerald">{formatNumber(totalAmount)}</span>
+                                <span className="text-sm font-semibold text-emerald-400 tabular-nums neon-glow-emerald">{formatNumber(basariliToplam)}</span>
                                 <span className="text-[9px] font-bold text-emerald-600/60 tracking-tighter">TRY</span>
                             </div>
                         </div>
+                        {Math.round(hamToplam) !== Math.round(basariliToplam) && (
+                            <>
+                                <div className="h-8 w-px bg-white/5" />
+                                <div className="flex flex-col" title="Reddedilen ve bekleyen işlemler dahil">
+                                    <span className="text-[9px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">Tüm Kayıtlar</span>
+                                    <span className="text-sm font-semibold text-[color:var(--panel-muted,#8a919c)] tabular-nums">{formatNumber(hamToplam)}</span>
+                                </div>
+                            </>
+                        )}
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-1.5">
+                        {([
+                            ['hepsi', `Hepsi ${deposits.length}`],
+                            ['basarili', `${DURUM_ETIKETI.basarili} ${sayimlar.basarili}`],
+                            ['basarisiz', `${DURUM_ETIKETI.basarisiz} ${sayimlar.basarisiz}`],
+                            ['beklemede', `${DURUM_ETIKETI.beklemede} ${sayimlar.beklemede}`],
+                        ] as Array<[IslemDurumu | 'hepsi', string]>).map(([id, etiket]) => (
+                            <button
+                                key={id}
+                                type="button"
+                                onClick={() => setSuzgec(id)}
+                                aria-pressed={suzgec === id}
+                                className={cn(
+                                    'rounded-lg px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-colors',
+                                    suzgec === id
+                                        ? 'bg-white/10 text-white'
+                                        : 'text-[color:var(--panel-muted,#8a919c)] hover:bg-white/5',
+                                )}
+                            >
+                                {etiket}
+                            </button>
+                        ))}
                     </div>
                     <Button variant="secondary" size="sm" className="rounded-xl border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/5 hover:bg-white/10 uppercase font-semibold text-[10px] tracking-widest gap-2">
                         <Download size={14} /> DIŞA AKTAR
@@ -151,19 +250,19 @@ export function DepositsList({ data, isLoading, error }: DepositsListProps) {
                                 </tr>
                             </thead>
                             <tbody className="relative z-10">
-                                {deposits.length === 0 ? (
+                                {gorunen.length === 0 ? (
                                     <tr>
                                         <td colSpan={allKeys.length} className="p-24 text-center">
                                             <div className="relative inline-block">
                                                 <div className="absolute inset-0 bg-[color:var(--panel-muted,#8a919c)] rounded-full blur-[40px] opacity-10" />
                                                 <Wallet size={48} className="relative mx-auto mb-6 text-[color:var(--panel-faint,#5c6470)]" />
                                             </div>
-                                            <p className="text-[11px] font-bold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">Şu an için yatırım kaydı bulunamadı.</p>
+                                            <p className="text-[11px] font-bold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">{suzgec === 'hepsi' ? 'Şu an için yatırım kaydı bulunamadı.' : `Bu durumda kayıt yok.`}</p>
                                         </td>
                                     </tr>
                                 ) : (
                                     <AnimatePresence>
-                                        {deposits.map((row, rowIdx) => (
+                                        {gorunen.map((row, rowIdx) => (
                                             <motion.tr
                                                 key={row.Id}
                                                 initial={{ opacity: 0, y: 10 }}

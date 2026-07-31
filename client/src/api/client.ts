@@ -923,6 +923,9 @@ export const gamesApi = {
   submitPrediction: (body: { matchId: string; homeScore: number; awayScore: number }) =>
     post<any>('/games/prediction-league/predict', body),
   dailyTasksStatus: () => get<any>('/games/daily-tasks/status'),
+  /** Oyuncunun kendi turnuva sirasi; siralama tablosu yalnizca ilk N'i doner. */
+  tournamentMyRank: (period: 'gunluk' | 'haftalik' | 'aylik' = 'gunluk') =>
+    get<any>('/games/tournament/my-rank', { period }),
   claimDailyTask: (taskId: string) => post<any>('/games/daily-tasks/claim', { taskId }),
   battlePassStatus: () => get<any>('/games/battle-pass/status'),
   claimBattlePassReward: (body: { level: number; track?: 'free' | 'premium' }) =>

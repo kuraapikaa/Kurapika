@@ -85,7 +85,6 @@ const CarkSayfasi = lazy(() => import('./components/pages/CarkSayfasi').then(m =
 const KaziKazanSayfasi = lazy(() => import('./components/pages/KaziKazanSayfasi').then(m => ({ default: m.KaziKazanSayfasi })));
 const BeniAraSayfasi = lazy(() => import('./components/pages/BeniAraSayfasi').then(m => ({ default: m.BeniAraSayfasi })));
 const OrtaklikSayfasi = lazy(() => import('./components/pages/OrtaklikSayfasi').then(m => ({ default: m.OrtaklikSayfasi })));
-const AffiliatePortal = lazy(() => import('./components/affiliate/AffiliatePortal').then(m => ({ default: m.AffiliatePortal })));
 const YaziTuraSayfasi = lazy(() => import('./components/pages/YaziTuraSayfasi').then(m => ({ default: m.YaziTuraSayfasi })));
 const TasKagitMakasSayfasi = lazy(() => import('./components/pages/TasKagitMakasSayfasi').then(m => ({ default: m.TasKagitMakasSayfasi })));
 const SkorTahminSayfasi = lazy(() => import('./components/pages/SkorTahminSayfasi').then(m => ({ default: m.SkorTahminSayfasi })));
@@ -342,7 +341,7 @@ export default function App() {
   const pathname = location.pathname || '/';
   const activeTab = pathToTab(pathname);
   const hasDateFilters = activeTab === 'dashboard' || activeTab === 'withdrawals' || activeTab === 'deposits' || activeTab === 'autoWithdraw' || activeTab === 'registrationStats' || activeTab === 'providerReport' || activeTab === 'bonusReport' || activeTab === 'transactions';
-  const narcosPublicPaths = ['/bonus-talep', '/lobi', '/milyonerler', '/cark', '/kazi-kazan', '/skor-tahmin', '/gorevler', '/beni-ara', '/ortaklik', '/ortak-paneli', '/sadakat', '/vip'];
+  const narcosPublicPaths = ['/bonus-talep', '/lobi', '/milyonerler', '/cark', '/kazi-kazan', '/skor-tahmin', '/gorevler', '/beni-ara', '/ortaklik', '/sadakat', '/vip'];
 
   useEffect(() => {
     const isNarcosPublicPage = narcosPublicPaths.some((route) => pathname === route || pathname.startsWith(`${route}/`)) || pathname.startsWith('/turnuva/');
@@ -399,7 +398,7 @@ export default function App() {
 
     // Oyuncu sayfalarındaysak admin auth kontrolü yapmaya gerek yok (401 hatasını önler)
     // Ancak halihazırda admin girişi yapılmışsa auth kontrolüne devam et
-    const publicRoutes = ['/bonus-talep', '/lobi', '/milyonerler', '/cark', '/kazi-kazan', '/skor-tahmin', '/gorevler', '/beni-ara', '/ortaklik', '/ortak-paneli', '/turnuva', '/sadakat', '/vip'];
+    const publicRoutes = ['/bonus-talep', '/lobi', '/milyonerler', '/cark', '/kazi-kazan', '/skor-tahmin', '/gorevler', '/beni-ara', '/ortaklik', '/turnuva', '/sadakat', '/vip'];
     if (publicRoutes.some(route => pathname === route || pathname.startsWith(route)) && isAuthenticated !== true) {
       setIsAuthenticated(false);
       return;
@@ -588,7 +587,7 @@ export default function App() {
   return (
     <AnimatePresence mode="wait">
       {isAuthenticated === null &&
-       !['/bonus-talep', '/lobi', '/milyonerler', '/cark', '/kazi-kazan', '/skor-tahmin', '/gorevler', '/beni-ara', '/ortaklik', '/ortak-paneli', '/sadakat', '/yazi-tura', '/tas-kagit-makas', '/vip'].includes(pathname) &&
+       !['/bonus-talep', '/lobi', '/milyonerler', '/cark', '/kazi-kazan', '/skor-tahmin', '/gorevler', '/beni-ara', '/ortaklik', '/sadakat', '/yazi-tura', '/tas-kagit-makas', '/vip'].includes(pathname) &&
        !pathname.startsWith('/master') ? (
         <motion.div
           key="auth-loading"
@@ -643,10 +642,6 @@ export default function App() {
       ) : pathname === '/ortaklik' ? (
         <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-[#070b14]"><div className="w-10 h-10 border-2 border-amber-400/30 border-t-amber-400 rounded-full animate-spin" /></div>}>
           <OrtaklikSayfasi />
-        </Suspense>
-      ) : pathname === '/ortak-paneli' ? (
-        <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-[#0b0b0f]"><div className="w-10 h-10 border-2 border-amber-400/30 border-t-amber-400 rounded-full animate-spin" /></div>}>
-          <AffiliatePortal />
         </Suspense>
       ) : pathname === '/yazi-tura' ? (
         <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-[#070b14]"><div className="w-10 h-10 border-2 border-amber-400/30 border-t-amber-400 rounded-full animate-spin" /></div>}>

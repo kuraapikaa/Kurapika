@@ -8,7 +8,7 @@ import { getBackofficeToken } from '../lib/authStore.js';
 import { resolveTenantKeyForRequest, safeTenantKey } from '../lib/tenant.js';
 import { readStoredDocument, writeStoredDocument } from '../lib/documentStore.js';
 import { isLynonConfigured, lynonAssignCampaignToPlayer, lynonBuildBonusEligibilitySnapshot, lynonCreditPlayerMainAccount, lynonFindPlayerByLogin, lynonPlayerActivity } from '../services/lynonBackofficeService.js';
-import { oyuncuAktivitesi } from '../services/oyuncuRaporService.js';
+import { loginAnahtari, oyuncuAktivitesi, oyuncuRaporu, siralamaOlustur, type SiralamaMetrigi } from '../services/oyuncuRaporService.js';
 import { getChatMember, isTelegramConfigured, sendTelegramMessage } from '../services/telegramService.js';
 import { ensureTelegramLinkDir, getLinkedTelegramUserId, linkTelegramAccount } from '../services/telegramLinkService.js';
 
@@ -2180,6 +2180,62 @@ const selectedSlice = selected.slice;
       ok: true,
       data: buildDailyTasksPayload(settings, claims, activity, bonusPanelUser.login)
     });
+  });
+
+  /**
+   * Oyuncunun KENDI turnuva sirasi.
+   *
+   * Siralama tablosu yalnizca ilk N oyuncuyu donuyor; lobide "sen kacincisin"
+   * diye sormak icin bu yetmez — 200. sirada olan oyuncu listede hic
+   * gorunmedigi icin sirasini ogrenemiyordu. Bu uc tum raporda arar.
+   */
+  app.get('/games/tournament/my-rank', async (request: any, reply) => {
+    const bonusPanelUser = request.session?.bonusPanelUser;
+    if (!bonusPanelUser?.login) {
+      return reply.status(401).send({ ok: false, message: 'Sıranızı görmek için kullanıcı adınızı doğrulayın.' });
+    }
+
+    const donem = String(request.query?.period ?? 'gunluk');
+    const gunSayisi = donem === 'aylik' ? 30 : donem === 'haftalik' ? 7 : 0;
+    const olcut = (String(request.query?.metric ?? 'bahisTutari') as SiralamaMetrigi);
+
+    const to = new Date();
+    const from = new Date();
+    if (gunSayisi > 0) from.setDate(to.getDate() - gunSayisi);
+    else from.setHours(0, 0, 0, 0);
+
+    try {
+      const satirlar = await oyuncuRaporu(from, to);
+      // Limit yok: oyuncu kacinci olursa olsun bulunmali.
+      const sirali = siralamaOlustur(satirlar, olcut, satirlar.length);
+      const anahtar = loginAnahtari(bonusPanelUser.login);
+      const index = sirali.findIndex((satir) => loginAnahtari(satir.login) === anahtar);
+
+      if (index < 0) {
+        // Oyuncu bu donemde hic oynamamis: sira YOK, 0 degil.
+        // "0. sira" diye bir sey yok; istemci bunu ayirt edebilmeli.
+        return reply.send({
+          ok: true,
+          data: { period: donem, metric: olcut, sira: null, deger: 0, katilimci: sirali.length },
+        });
+      }
+
+      return reply.send({
+        ok: true,
+        data: {
+          period: donem,
+          metric: olcut,
+          sira: index + 1,
+          deger: sirali[index].deger,
+          katilimci: sirali.length,
+          // Bir ust siradakiyle fark: "ne kadar bahis yaparsam yukselirim".
+          ustFark: index > 0 ? Math.max(0, sirali[index - 1].deger - sirali[index].deger) : 0,
+        },
+      });
+    } catch (err) {
+      request.log.warn({ err }, 'Turnuva sırası hesaplanamadı.');
+      return reply.status(502).send({ ok: false, message: 'Sıralama şu an alınamıyor.' });
+    }
   });
 
   app.post('/games/daily-tasks/claim', async (request: any, reply) => {

@@ -1,3 +1,4 @@
+import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
@@ -12,6 +13,16 @@ export default defineConfig({
   build: {
     sourcemap: false,
     reportCompressedSize: false,
+    rollupOptions: {
+      // Iki ayri giris: ana uygulama ve ortak paneli.
+      //
+      // Ortak, yonetim panelinin JS'ini indirmemeli; ayni pakette olsalardi
+      // admin ekranlarinin kodu ortagin tarayicisina da inerdi.
+      input: {
+        main: resolve(__dirname, 'index.html'),
+        ortak: resolve(__dirname, 'ortak.html'),
+      },
+    },
   },
   server: {
     host: '127.0.0.1',
