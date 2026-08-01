@@ -2555,7 +2555,21 @@ export async function lynonBuildBonusEligibilitySnapshot(input: { login?: string
     totalWithdrawals: numberFrom(kpi.WithdrawalAmount, withdrawals.filter((row) => String(row.status).toLowerCase() === 'success').reduce((sum, row) => sum + numberFrom(row.amount), 0)),
     balance: numberFrom(kpi.Balance ?? player.Balance),
     currency: firstNonEmpty(kpi.CurrencyId, player.CurrencyId, config.lynon.currency),
-    lastDeposit: lastDepositRow ? { amount: numberFrom(lastDepositRow.amount), dateLocal: lastDepositRow.createdAt } : undefined,
+    /**
+     * Son yatirim — KIMLIGIYLE birlikte.
+     *
+     * Oyun haklari (cark, kazi kazan) artik yatirim kimligine baglaniyor:
+     * bir yatirim bir hak. Kimlik olmadan "bu yatirimla oynandi mi"
+     * sorusu cevaplanamiyordu; cark yalnizca gunluk limitle sinirliydi ve
+     * oyuncu tek yatirimla her gun yeniden ceviriyordu.
+     */
+    lastDeposit: lastDepositRow
+      ? {
+          id: lastDepositRow.id ?? lastDepositRow.platformTransactionId ?? null,
+          amount: numberFrom(lastDepositRow.amount),
+          dateLocal: lastDepositRow.createdAt,
+        }
+      : undefined,
     sameDayDateKey: bugunDateKey,
     sameDayDeposits: sameDayDepositRows.map((row) => ({
       amount: numberFrom(row.amount),

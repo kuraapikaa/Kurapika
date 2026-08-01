@@ -8,6 +8,7 @@ import { getBackofficeToken } from '../lib/authStore.js';
 import { resolveTenantKeyForRequest, safeTenantKey } from '../lib/tenant.js';
 import { readStoredDocument, writeStoredDocument } from '../lib/documentStore.js';
 import { kilitle, odulAnahtari } from '../lib/odulKilidi.js';
+import { yatirimHakki } from '../services/yatirimHakki.js';
 import { isLynonConfigured, lynonAssignCampaignToPlayer, lynonBuildBonusEligibilitySnapshot, lynonCreditPlayerMainAccount, lynonFindPlayerByLogin, lynonPlayerActivity } from '../services/lynonBackofficeService.js';
 import { loginAnahtari, oyuncuAktivitesi, oyuncuRaporu, siralamaOlustur, type SiralamaMetrigi } from '../services/oyuncuRaporService.js';
 import { readTournamentSettings } from '../services/turnuvaAyarService.js';
@@ -899,11 +900,14 @@ async function readEngagementClaims(tenantKey = 'default') {
     tenantKey: key,
     namespace: 'engagement-claims',
     filePath: engagementClaimsPath(key),
-    fallback: { daily: [], battlePass: [] },
+    fallback: { daily: [], battlePass: [], scratch: [] },
   });
   return {
     daily: Array.isArray(data?.daily) ? data.daily : [],
     battlePass: Array.isArray(data?.battlePass) ? data.battlePass : [],
+    // Kazi kazan oynama kayitlari. Onceden HIC tutulmuyordu; uc sinirsiz
+    // cagrilabiliyordu. Hak artik yatirim kimligine bagli.
+    scratch: Array.isArray(data?.scratch) ? data.scratch : [],
   };
 }
 
@@ -1675,14 +1679,26 @@ export async function gamesRoutes(app: FastifyInstance) {
         return reply.status(429).send({ ok: false, message: `Günlük çark hakkınızı kullandınız. Limit: ${dailyLimit}` });
       }
 
+      /**
+       * BIR YATIRIM = BIR HAK.
+       *
+       * Onceden yalnizca gunluk limit vardi ve minimum tutara bakiliyordu,
+       * ama hangi yatirim oldugu KAYDEDILMIYORDU. Oyuncu tek yatirimla her
+       * gun yeniden cevirebiliyordu — gun degisince limit sifirlaniyor,
+       * yatirim ayni kaliyordu.
+       *
+       * Cark KODU bu kurala girmez: kod yatirimdan bagimsiz, operatorun
+       * verdigi tek kullanimlik ayri bir haktir.
+       */
+      let carkDepositId: string | null = null;
       const minInvestment = Number(settings.wheelMinInvestment || 0);
-      if (!code && minInvestment > 0) {
+      if (!code) {
         if (!isLynonConfigured()) {
           return reply.status(503).send({ ok: false, message: 'Yatırım doğrulaması için Lynon bağlantısı gerekli.' });
         }
         const snapshot = await lynonBuildBonusEligibilitySnapshot({ login });
         const lastDepositAmount = Number(snapshot.lastDeposit?.amount || 0);
-        if (!snapshot.dataCompleteness?.payments || lastDepositAmount < minInvestment) {
+        if (!snapshot.dataCompleteness?.payments || (minInvestment > 0 && lastDepositAmount < minInvestment)) {
           return reply.status(422).send({
             ok: false,
             message: `Çark için son başarılı yatırım en az ${minInvestment} TL olmalıdır.`,
@@ -1690,6 +1706,12 @@ export async function gamesRoutes(app: FastifyInstance) {
             required: minInvestment,
           });
         }
+
+        const hak = yatirimHakki(claims as never, login, 'cark', (snapshot.lastDeposit as any)?.id);
+        if (!hak.uygun) {
+          return reply.status(429).send({ ok: false, message: hak.neden });
+        }
+        carkDepositId = hak.depositId;
       }
 
       const wheelSlices = Array.isArray(settings.wheel) ? settings.wheel : [];
@@ -1733,6 +1755,9 @@ const selectedSlice = selected.slice;
         dateKey,
         createdAt: new Date().toISOString(),
         status: 'pending',
+        // Hakkin baglandigi yatirim; ayni yatirim tekrar oynatmasin.
+        depositId: carkDepositId,
+        oyun: 'cark',
         sliceId: selectedSlice.id,
         label: selectedSlice.label,
         rewardType: selectedSlice.type,
@@ -1807,12 +1832,29 @@ const selectedSlice = selected.slice;
     const settings = await readGameSettings(tenantKey);
     const scratch = settings.scratchcard;
 
+    /**
+     * BIR YATIRIM = BIR HAK.
+     *
+     * Bu ucta ONCEDEN HICBIR SINIR YOKTU: ne gunluk hak, ne oynama kaydi,
+     * ne kontrol. Dogrudan cagrilarak sinirsiz oynanabiliyor ve her
+     * kazanan tur yeni bir kampanya bonusu uretiyordu.
+     *
+     * Kilit, cift tiklama/es zamanli istegin ayni yatirimi iki kez
+     * harcamasini engelliyor (bkz. odulKilidi).
+     */
+    return kilitle(odulAnahtari(bonusPanelUser.login, 'kazikazan', 'play'), async () => {
+    if (!isLynonConfigured()) {
+      return reply.status(503).send({ ok: false, message: 'Yatırım doğrulaması için Lynon bağlantısı gerekli.' });
+    }
+    const snapshot = await lynonBuildBonusEligibilitySnapshot({ login: bonusPanelUser.login });
+    const claims = await readEngagementClaims(tenantKey);
+    const hak = yatirimHakki(claims.scratch as never, bonusPanelUser.login, 'kazikazan', (snapshot.lastDeposit as any)?.id);
+    if (!hak.uygun) {
+      return reply.status(429).send({ ok: false, message: hak.neden });
+    }
+
     const minInvestment = Number(scratch.minInvestment || 0);
     if (minInvestment > 0) {
-      if (!isLynonConfigured()) {
-        return reply.status(503).send({ ok: false, message: 'Yatırım doğrulaması için Lynon bağlantısı gerekli.' });
-      }
-      const snapshot = await lynonBuildBonusEligibilitySnapshot({ login: bonusPanelUser.login });
       const lastDepositAmount = Number(snapshot.lastDeposit?.amount || 0);
       if (!snapshot.dataCompleteness?.payments || lastDepositAmount < minInvestment) {
         return reply.status(422).send({
@@ -1823,6 +1865,20 @@ const selectedSlice = selected.slice;
         });
       }
     }
+
+    // Hak REZERVE edilir: cekilisten once yatirim harcanmis sayilir.
+    // Sonra yazilsaydi cekilis sirasindaki ikinci istek ayni yatirimla
+    // tekrar oynardi.
+    const scratchKaydi: any = {
+      id: `${hak.depositId}-${Date.now()}`,
+      username: bonusPanelUser.login,
+      depositId: hak.depositId,
+      oyun: 'kazikazan',
+      status: 'pending',
+      playedAt: new Date().toISOString(),
+    };
+    claims.scratch.push(scratchKaydi);
+    await writeEngagementClaims(claims, tenantKey);
 
     const isWin = (Math.random() * 100) < (scratch.baseWinProbability || 0);
 
@@ -1847,7 +1903,14 @@ const selectedSlice = selected.slice;
        chargeStatus = await chargeBonusToPlayer(bonusPanelUser.login, selectedReward.bonusId ? Number(selectedReward.bonusId) : null, selectedReward.label, selectedReward.amount, selectedReward.assignmentValues || {});
     }
 
+    scratchKaydi.status = 'granted';
+    scratchKaydi.won = isWin;
+    scratchKaydi.reward = selectedReward;
+    scratchKaydi.chargeStatus = chargeStatus;
+    await writeEngagementClaims(claims, tenantKey);
+
     return reply.send({ ok: !selectedReward || chargeStatus?.ok === true, won: isWin, reward: selectedReward, chargeStatus, message: chargeStatus?.ok === false ? chargeStatus.message : undefined });
+    });
   });
 
   app.get('/games/telegram-bonus/status', async (request: any, reply) => {
