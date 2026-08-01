@@ -8,6 +8,7 @@ import { getBackofficeToken } from '../lib/authStore.js';
 import { resolveTenantKeyForRequest, safeTenantKey } from '../lib/tenant.js';
 import { readStoredDocument, writeStoredDocument } from '../lib/documentStore.js';
 import { kilitle, odulAnahtari } from '../lib/odulKilidi.js';
+import { atamaDurumu, telegramBonusuAlinmis } from '../services/telegramBonusHakki.js';
 import { yatirimHakki } from '../services/yatirimHakki.js';
 import { isLynonConfigured, lynonAssignCampaignToPlayer, lynonBuildBonusEligibilitySnapshot, lynonCreditPlayerMainAccount, lynonFindPlayerByLogin, lynonPlayerActivity } from '../services/lynonBackofficeService.js';
 import { loginAnahtari, oyuncuAktivitesi, oyuncuRaporu, siralamaOlustur, type SiralamaMetrigi } from '../services/oyuncuRaporService.js';
@@ -2064,7 +2065,9 @@ const selectedSlice = selected.slice;
       getLinkedTelegramUserId(tenantKey, login),
       readTelegramClaims(tenantKey),
     ]);
-    const claimed = claims.some((c: any) => c.username === login && c.ok === true);
+    // Durum ekrani, verme ucuyla AYNI kurali kullanmali; yoksa panel
+    // "alabilirsin" derken uc 409 doner.
+    const claimed = telegramBonusuAlinmis(claims as any[], login, linkedId).alinmis;
 
     return reply.send({
       ok: true,
@@ -2102,13 +2105,18 @@ const selectedSlice = selected.slice;
     // Ayni desen: kontrol ile verme arasinda yaris penceresi var.
     return kilitle(odulAnahtari(login, 'telegram', 'bonus'), async () => {
     const claims = await readTelegramClaims(tenantKey);
-    if (claims.some((c: any) => c.username === login && c.ok === true)) {
-      return reply.status(409).send({ ok: false, message: 'Telegram bonusunu zaten aldınız.' });
-    }
 
+    // Telegram kimligi de bir anahtar: ayni Telegram hesabi farkli oyuncu
+    // adlariyla tekrar bonus alamasin. Bu yuzden hak kontrolu bagli kimlik
+    // ogrenildikten SONRA yapiliyor.
     const telegramUserId = await getLinkedTelegramUserId(tenantKey, login);
     if (!telegramUserId) {
       return reply.status(422).send({ ok: false, message: 'Önce Telegram hesabınızı bağlayın.', linkRequired: true });
+    }
+
+    const hak = telegramBonusuAlinmis(claims as any[], login, telegramUserId);
+    if (hak.alinmis) {
+      return reply.status(409).send({ ok: false, message: hak.neden });
     }
 
     const membership = await getChatMember(telegramBonus.chatId, telegramUserId);
@@ -2133,6 +2141,18 @@ const selectedSlice = selected.slice;
       });
     }
 
+    // ONCE REZERVE ET, SONRA VER. Kayit atamadan sonra yazilirsa, atama
+    // yapilip yazma dustugunde hicbir iz kalmiyor ve oyuncu tekrar
+    // alabiliyordu.
+    const kayit: Record<string, unknown> = {
+      username: login,
+      telegramUserId,
+      durum: 'pending',
+      createdAt: new Date().toISOString(),
+    };
+    claims.push(kayit);
+    await writeTelegramClaims(claims, tenantKey);
+
     const grant = await chargeBonusToPlayer(
       login,
       telegramBonus.bonusId ? Number(telegramBonus.bonusId) : null,
@@ -2140,14 +2160,21 @@ const selectedSlice = selected.slice;
       telegramBonus.amount,
       telegramBonus.assignmentValues || {},
     );
-    claims.push({
-      username: login,
-      telegramUserId,
-      ok: grant?.ok === true,
-      message: grant?.message,
-      createdAt: new Date().toISOString(),
-    });
+
+    // `belirsiz`: Lynon cagrildi ama hata dondu — atama gerceklesmis
+    // olabilir. Kayit hakki tuketmeye devam eder; operator bakar.
+    kayit.durum = atamaDurumu(grant);
+    kayit.ok = grant?.ok === true;
+    kayit.message = grant?.message;
+    kayit.resolvedAt = new Date().toISOString();
     await writeTelegramClaims(claims, tenantKey);
+
+    if (kayit.durum === 'belirsiz') {
+      request.log.error(
+        { login, telegramUserId, grantMessage: grant?.message },
+        '[telegram] Kampanya atamasi dogrulanamadi; bonus verilmis olabilir, hak tuketildi.'
+      );
+    }
 
     return reply.status(grant?.ok === true ? 200 : 422).send({
       ok: grant?.ok === true,
