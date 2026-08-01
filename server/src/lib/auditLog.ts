@@ -16,6 +16,9 @@ export type AuditAction =
   | 'affiliate_hesap_create'
   | 'affiliate_hesap_update'
   | 'affiliate_hesap_delete'
+  // Odeme kaydi para hareketi; kimin hangi donemi odedigi denetlenebilir olmali.
+  | 'affiliate_odeme_create'
+  | 'affiliate_odeme_update'
   | 'logout'
   | 'lead_create'
   | 'lead_update'

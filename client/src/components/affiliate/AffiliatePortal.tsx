@@ -161,6 +161,8 @@ function OzetPanosu({ onCikis }: { onCikis: () => void }) {
   if (!veri?.ok) return null;
 
   const { ortak, toplam, komisyon, satirlar, aralik } = veri;
+  const odemeler = veri.odemeler ?? [];
+  const odemeOzeti = veri.odemeOzeti;
   const satir = satirlar[0];
 
   const kartlar = [
@@ -252,6 +254,57 @@ function OzetPanosu({ onCikis }: { onCikis: () => void }) {
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-10 text-center text-sm text-white/50">
             Bu dönem için BTag <span className="font-mono text-white/70">{ortak.bTag}</span> altında kayıtlı trafik
             bulunmuyor.
+          </div>
+        )}
+
+        {/* Odeme gecmisi.
+            Hakedis hesaplaniyordu ama "odendi mi" hicbir yerde yoktu;
+            ortak "gecen ay ne aldim" sorusuna cevap bulamiyordu. */}
+        {odemeler.length > 0 && (
+          <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 px-5 py-4">
+              <h2 className="text-sm font-bold text-white">Ödeme geçmişi</h2>
+              {odemeOzeti && (
+                <div className="flex items-center gap-4 text-xs">
+                  <span className="text-white/50">
+                    Ödenen <span className="ml-1 font-semibold tabular-nums text-emerald-300">{tl(odemeOzeti.odenmis)}</span>
+                  </span>
+                  {odemeOzeti.bekleyen > 0 && (
+                    <span className="text-white/50">
+                      Bekleyen <span className="ml-1 font-semibold tabular-nums text-amber-300">{tl(odemeOzeti.bekleyen)}</span>
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+            <ul className="divide-y divide-white/5">
+              {odemeler.map((o) => (
+                <li key={`${o.donem}-${o.durum}`} className="flex items-center justify-between gap-4 px-5 py-3.5">
+                  <span className="min-w-0">
+                    <span className="block text-sm font-semibold text-white">{o.donem}</span>
+                    {o.odenmeTarihi && (
+                      <span className="block text-[11px] text-white/40">
+                        {new Date(o.odenmeTarihi).toLocaleDateString('tr-TR')} tarihinde ödendi
+                      </span>
+                    )}
+                  </span>
+                  <span className="flex shrink-0 items-center gap-3">
+                    <span className="text-sm font-semibold tabular-nums text-white">{tl(o.tutar)}</span>
+                    <span
+                      className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest ${
+                        o.durum === 'odendi'
+                          ? 'bg-emerald-500/10 text-emerald-300'
+                          : o.durum === 'iptal'
+                            ? 'bg-rose-500/10 text-rose-300'
+                            : 'bg-amber-500/10 text-amber-300'
+                      }`}
+                    >
+                      {o.durum === 'odendi' ? 'Ödendi' : o.durum === 'iptal' ? 'İptal' : 'Bekliyor'}
+                    </span>
+                  </span>
+                </li>
+              ))}
+            </ul>
           </div>
         )}
 

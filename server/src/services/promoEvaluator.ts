@@ -8,6 +8,7 @@ import type { PromoSpec, RulesConfig } from './rulesService.js';
 import type { AccountSnapshot, ChecklistItem, PromoChecklist } from './withdrawalEngine.js';
 import type { BCBonus, TransactionTypeSummary } from '../types/betconstruct.js';
 import { telegramUyeligiKontrolEt } from './telegramEligibility.js';
+import { kullanimSayisi, nakitKullanimlari } from './nakitBonusGecmisi.js';
 
 /** Profil işlemlerinde yatırım olarak kabul edilen doküman türleri. */
 const DEPOSIT_TYPE_KEYS = ['Yatırım', 'Deposit', 'Yatırım Talebi Ödemesi'];
@@ -163,8 +164,33 @@ function checkUsageLimits(account: AccountSnapshot, spec: PromoSpec | undefined,
   };
 
   const matched = bonuses.filter(matchesPromo);
-  const dayCount = matched.filter((b) => parseBonusTime(b) >= dayAgo).length;
-  const weekCount = matched.filter((b) => parseBonusTime(b) >= weekAgo).length;
+
+  /**
+   * NAKIT bonuslarda kullanim sayisi DUZELTMELERDEN gelir.
+   *
+   * Nakit bonus Lynon'a kampanya olarak atanmiyor; Player Main hesabina
+   * `crediting` bakiye duzeltmesi yaziliyor. `bonuses` listesi kampanya
+   * atamalarinin listesi — duzeltmeler orada HIC gorunmuyor.
+   *
+   * Bu ayrim yapilmadigi icin nakit bonuslarda perDayLimit/perWeekLimit
+   * her zaman "0 kullanim" goruyor ve hicbir seyi engellemiyordu. Oyuncu
+   * bonusu alip kaybediyor, bakiye tekrar esigin altina dusuyor ve ayni
+   * bonusu tekrar aliyordu; her turda yeni bir correction olusuyordu.
+   */
+  const nakitKural = String((spec as { type?: unknown } | undefined)?.type ?? '').toLocaleLowerCase('tr-TR') === 'cash';
+  // Charge yolu notu `Bonus <promo.id> / <kullanici>` biciminde yaziyor;
+  // sanal nakit bonuslarda promo.id kural anahtarinin kendisi.
+  const kuralAnahtari = String(promo.id ?? '');
+  const nakitKullanim = nakitKural
+    ? nakitKullanimlari(((account as unknown as { balanceCorrections?: unknown }).balanceCorrections ?? []) as never)
+    : [];
+
+  const dayCount = nakitKural
+    ? kullanimSayisi(nakitKullanim, kuralAnahtari, dayAgo)
+    : matched.filter((b) => parseBonusTime(b) >= dayAgo).length;
+  const weekCount = nakitKural
+    ? kullanimSayisi(nakitKullanim, kuralAnahtari, weekAgo)
+    : matched.filter((b) => parseBonusTime(b) >= weekAgo).length;
 
   if (spec!.perDayLimit != null) {
     const ok = dayCount < spec!.perDayLimit;

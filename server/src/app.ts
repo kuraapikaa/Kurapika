@@ -92,7 +92,20 @@ export async function buildApp() {
         baseUri: ["'self'"],
         objectSrc: ["'none'"],
         frameAncestors: frameAncestorsDirective,
-        scriptSrc: ["'self'", "'unsafe-inline'"],
+        /**
+         * scriptSrc'de 'unsafe-inline' YOK — bilerek.
+         *
+         * Panelde admin tarafindan girilen HTML uc yerde ham olarak
+         * render ediliyor (bonus detailHtml: BonusTalepSayfasi,
+         * PromoDetailModal, RulesManager). 'unsafe-inline' acikken bu
+         * alanlara yazilan <script> ya da onerror= calisirdi.
+         *
+         * Derlenmis cikti yalnizca harici <script src> kullaniyor
+         * (index.html ve ortak.html'de inline script/olay isleyici yok),
+         * dolayisiyla kaldirmak mesru hicbir seyi bozmuyor.
+         */
+        scriptSrc: ["'self'"],
+        // styleSrc'de kaliyor: React satir ici stil (style={{...}}) uretiyor.
         styleSrc: ["'self'", "'unsafe-inline'", 'https:'],
         imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
         fontSrc: ["'self'", 'data:', 'https:'],

@@ -1,4 +1,5 @@
 import { config } from '../config.js';
+import { kayipTabani } from './kayipTabaniService.js';
 import { isLynonConfigured, lynonRequest, LynonHttpError, LynonAuthError } from '../lib/lynonAuth.js';
 import { getCachedJson, setCachedJson } from '../lib/redisClient.js';
 
@@ -2595,11 +2596,52 @@ export async function lynonBuildBonusEligibilitySnapshot(input: { login?: string
     profileTransactionsByType,
     profileTransactionsCount: profileTransactions.length,
     financialMovementCount: financialMovements.length,
+    /**
+     * Bakiye duzeltmeleri — nakit bonus limitleri icin.
+     *
+     * Nakit bonuslar kampanya olarak atanmiyor, `crediting` duzeltmesi
+     * olarak yaziliyor; `bonuses` listesinde hic gorunmuyorlar. Limit
+     * kontrolleri oradan saydigi icin nakit bonuslarda YAPISAL OLARAK
+     * kordu ve ayni bonus tekrar tekrar alinabiliyordu.
+     */
+    balanceCorrections: financialMovements.map((row) => ({
+      not: String(row.Note ?? row.note ?? row.Info ?? ''),
+      tutar: numberFrom(row.Amount ?? row.amount),
+      tarih: String(row.CreatedLocal ?? row.createdAt ?? ''),
+      tur: String(row.CorrectionType ?? row.correctionType ?? ''),
+    })),
     paymentTransactionCount: paymentTransactions.length,
     recentGames: casinoBets.map((row) => firstNonEmpty(row.gameName, row.game?.name)).filter(Boolean),
     recentGameProviders: casinoBets.map((row) => firstNonEmpty(recordOf(row.round).providerName, row.providerName, row.game?.providerName)).filter(Boolean),
     totalKpi: numberFrom(kpi.GamingProfitAndLose),
-    netLoss: numberFrom(kpi.GamingProfitAndLose),
+    /**
+     * KAYIP TABANI = YATIRIM - CEKIM (son odenen cekimden itibaren).
+     *
+     * Onceden `kpi.GamingProfitAndLose` idi: bahis eksi kazanc. O sayi
+     * paranin kimden geldigine bakmiyor; bonusla ve MANUEL DUZELTMEYLE
+     * verilen parayla yapilan kayiplar da iceride.
+     *
+     * Gozlenen vaka: 10.000 kendi parasi + 2x manuel duzeltme (20.000)
+     * -> GGR ~23.000 -> %30 diliminden 7.000 kayip bonusu. Kasa kendi
+     * verdigi paranin kaybini geri odemis oldu.
+     *
+     * Ayrinti ve donem penceresi gerekcesi: kayipTabaniService.
+     */
+    ...(() => {
+      const taban = kayipTabani(
+        playerPayments.map((row) => ({
+          tur: String(row.transactionType ?? ''),
+          durum: String(row.status ?? ''),
+          tutar: numberFrom(row.amount),
+          tarih: String(row.createdAt ?? ''),
+        })),
+      );
+      return {
+        netLoss: taban.netLoss,
+        // Denetim icin: tabanin nasil olustugu panelden gorulebilsin.
+        kayipTabaniDetay: taban,
+      };
+    })(),
     rawKpi: kpi,
     dataCompleteness: { kpi: true, payments: true, financialMovements: true, bonuses: true, casino: true, sport: true },
   };

@@ -19,6 +19,7 @@ import { readTournamentSettings, writeTournamentSettings } from '../services/tur
 import { evaluateForAccount, evaluateWithdrawalRules, evaluateRiskAnalysis, evaluateWagerSummary, evaluateBonusRules, refreshRules, getRulesForTenant } from '../services/withdrawalEngine.js';
 import { buildAccountSnapshotFromClientId } from '../services/accountSnapshotService.js';
 import { assignmentValuesForPromoSpec, getRules, saveRules, type RulesConfig } from '../services/rulesService.js';
+import { istekKimligi, oyuncuVerisineErisebilir } from '../lib/istekKimligi.js';
 import { getPromoOverrides, setPromoOverride } from '../services/promoOverridesService.js';
 import { detectOppositeBetting, getPlayedGameNames } from '../services/oppositeBettingService.js';
 import { getSameIPClientsCount } from '../services/sameIPCheckService.js';
@@ -1724,6 +1725,30 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
       const { login, bonusId, bonusName } = request.body;
       if (!login) return reply.status(400).send({ HasError: true, AlertMessage: 'Login gerekli' });
 
+      /**
+       * KIMLIK KONTROLU.
+       *
+       * Bu uc hem panel operatoru hem oyuncu tarafindan cagrilabiliyor
+       * (authGuard BONUS_PANEL_PATHS). Onceden `login` yalnizca istek
+       * govdesinden okunuyordu; bir oyuncu oturumu baska bir oyuncunun
+       * kullanici adini gonderip o kisinin bakiyesini, yatirim gecmisini,
+       * dogrulama durumunu, son giris IP'sini, operator notlarini ve risk
+       * analizini okuyabiliyordu.
+       *
+       * Operator herkesi gorebilir; oyuncu yalnizca kendini.
+       */
+      const kimlik = istekKimligi(request);
+      if (!oyuncuVerisineErisebilir(kimlik, login)) {
+        request.log.warn(
+          { istekSahibi: kimlik?.kimlik ?? 'bilinmiyor', hedef: login },
+          'Baska oyuncunun bonus uygunluk verisi istendi; reddedildi.',
+        );
+        return reply.status(403).send({
+          HasError: true,
+          AlertMessage: 'Yalnızca kendi hesabınız için sorgulama yapabilirsiniz.',
+        });
+      }
+
       const token = getBackofficeToken();
       if (shouldUseLynon(request)) {
         try {
@@ -1742,8 +1767,11 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
                 ? { overallOk: false, items: [{ id: 'missing-partner-bonus-id', ok: false, label: 'Partner Bonus ID eksik; bonus ataması güvenli biçimde durduruldu.' }] }
                 : await evaluateForAccount(account as any, { id: bonusId, title: bonusName || String(bonusId), ...spec } as any, specs, tenantKey, 'bonus');
           if (bonusId && specificBonusCheck.overallOk && hasCompleteEligibilityData(account)) {
-            const username = (request.session as any)?.user?.username ?? 'anonymous';
-            const permitKey = bonusAssignmentPermitKey(tenantKey, username, account.ClientId, bonusId);
+            // Izin anahtari, charge ile AYNI kimlik dizesini kullanmali.
+            // Onceden burada 'anonymous', charge'da 'system' uretiliyordu;
+            // anahtarlar eslesmedigi icin oyuncu oturumu bonus atamasini
+            // tamamlayamiyordu — tasarim degil, tesadufi bir engeldi.
+            const permitKey = bonusAssignmentPermitKey(tenantKey, kimlik!.kimlik, account.ClientId, bonusId);
             validatedBonusAssignments.set(permitKey, { expiresAt: Date.now() + BONUS_ASSIGNMENT_PERMIT_TTL });
           }
           return reply.send({
@@ -1880,8 +1908,11 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
     async (request, reply) => {
       const session = request.session as any;
       const user = session?.user;
+      // Denetim kaydi icin gorunen ad; izin anahtari icin AYRI ve
+      // belirlenimli kimlik kullanilir (bkz. chargeKimligi).
       const username = user?.username ?? 'system';
       const role = user?.role ?? 'admin';
+      const chargeKimligi = istekKimligi(request);
       const { ClientId, BonusId, Amount = 0 } = request.body;
 
       if (shouldUseLynon(request)) {
@@ -1890,7 +1921,10 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
             return reply.status(400).send({ HasError: true, AlertMessage: 'Geçerli oyuncu ve kampanya bilgisi gerekli.' });
           }
           const tenantKey = await getTenantKeyForAdmin(request as any);
-          const permitKey = bonusAssignmentPermitKey(tenantKey, username, ClientId, BonusId);
+          if (!chargeKimligi) {
+            return reply.status(401).send({ HasError: true, AlertMessage: 'Oturum bulunamadı.' });
+          }
+          const permitKey = bonusAssignmentPermitKey(tenantKey, chargeKimligi.kimlik, ClientId, BonusId);
           const permit = validatedBonusAssignments.get(permitKey);
           if (!permit || permit.expiresAt < Date.now()) {
             validatedBonusAssignments.delete(permitKey);
@@ -1948,11 +1982,49 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
             if (!Number.isFinite(effectiveAmount) || effectiveAmount <= 0) {
               return reply.status(422).send({ HasError: true, AlertMessage: 'Nakit bonus tutarı pozitif olmalıdır.' });
             }
+
+            /**
+             * MUKERRER KORUMASI.
+             *
+             * Nakit bonus bakiye duzeltmesi olarak yaziliyor; Lynon'un bonus
+             * listesinde gorunmuyor. Bu yolda "bugun verildi mi" diye bakan
+             * HICBIR kontrol yoktu — ertesi gun isinde vardi (cashAlreadyCredited),
+             * oyuncuya acik charge yolunda yoktu.
+             *
+             * Sonuc: oyuncu bonusu aliyor, kaybediyor, bakiye tekrar esigin
+             * altina dusuyor ve ayni bonusu tekrar aliyordu. Her turda yeni
+             * bir correction; oyuncu defalarca bedava bakiye kazaniyordu.
+             *
+             * Kural allowSameDayRepeat ile acikca izin vermedikce ayni kural
+             * ayni oyuncuya gunde bir kez verilir.
+             */
+            const kuralAnahtari = String(resolvedRule?.key ?? BonusId);
+            if ((spec as { allowSameDayRepeat?: boolean }).allowSameDayRepeat !== true) {
+              const { bugunVerilmisMi, nakitKullanimlari } = await import('../services/nakitBonusGecmisi.js');
+              const gunBaslangici = Date.now() - 24 * 60 * 60 * 1000;
+              const kullanimlar = nakitKullanimlari(
+                ((currentAccount as unknown as { balanceCorrections?: unknown }).balanceCorrections ?? []) as never,
+              );
+              if (bugunVerilmisMi(kullanimlar, kuralAnahtari, gunBaslangici)) {
+                request.log.warn(
+                  { ClientId, kuralAnahtari },
+                  'Nakit bonus mukerrer talep engellendi.',
+                );
+                return reply.status(409).send({
+                  HasError: true,
+                  AlertMessage: 'Bu bonus bu oyuncuya son 24 saatte zaten tanımlanmış.',
+                });
+              }
+            }
+
             const result = await lynonAdjustPlayerMainAccount({
               playerId: ClientId,
               amount: effectiveAmount,
               correctionType: 'crediting',
-              note: `Bonus ${resolvedRule?.key ?? BonusId} / ${username}`.slice(0, 50),
+              // Not bicimi SABIT: `Bonus <kuralAnahtari> / <kullanici>`.
+              // nakitBonusGecmisi bu bicimden kural anahtarini cikariyor;
+              // degistirilirse mukerrer korumasi kor kalir.
+              note: `Bonus ${kuralAnahtari} / ${username}`.slice(0, 50),
             });
             audit(username, role, 'bonus_charge_as_cash', String(ClientId), `RuleId: ${resolvedRule?.key ?? BonusId}, Amount: ${effectiveAmount}`);
             return reply.send({
@@ -2233,6 +2305,35 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
       return reply.status(500).send({ HasError: true, AlertMessage: (err as Error).message });
     }
   });
+
+  /**
+   * Ertesi gun bonusunu KURU calistirir — hicbir sey yazmaz.
+   *
+   * Is yalnizca Turkiye saatiyle 00:15-00:19 arasinda calisiyor. O 5 dakikalik
+   * pencere disinda "neden eklenmedi" sorusunu cevaplamanin yolu yoktu; kural
+   * degistirip ertesi geceye kadar beklemek gerekiyordu.
+   *
+   * Bu uc isin ayni kapilarindan gecer ve her birinin sonucunu doner.
+   * Zaman penceresi ve idempotency KASITLI atlanir: "su anda calissaydi ne
+   * olurdu" sorusunu cevapliyoruz.
+   */
+  fastify.post<{ Body: { playerId?: string | number } }>(
+    '/admin/bonus/next-day/dry-run',
+    async (request, reply) => {
+      const playerId = request.body?.playerId;
+      if (playerId == null || String(playerId).trim() === '') {
+        return reply.status(400).send({ HasError: true, AlertMessage: 'playerId gerekli.' });
+      }
+      try {
+        const { nextDayBonusKuruCalistir } = await import('../jobs/nextDayBonusJob.js');
+        const sonuc = await nextDayBonusKuruCalistir(playerId);
+        return reply.send({ HasError: false, Data: sonuc });
+      } catch (err) {
+        request.log.warn({ err, playerId }, 'Ertesi gun kuru calistirma basarisiz.');
+        return sendLynonError(reply, err);
+      }
+    },
+  );
 
   fastify.post('/admin/bonus/partner-list', async (request, reply) => {
     if (shouldUseLynon(request)) {
