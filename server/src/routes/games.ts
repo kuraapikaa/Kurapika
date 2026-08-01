@@ -1822,6 +1822,140 @@ const selectedSlice = selected.slice;
     return reply.send({ ok: false, message: 'Geçersiz veya kullanılmış kod.' });
   });
 
+  /**
+   * Oyun haklarini GERIYE DONUK isletir.
+   *
+   * "Bir yatirim = bir hak" kurali yerel oynama kayitlarina bakiyor.
+   * Kural yururluge girmeden ONCE oynanan turlar bu kaydi tasimadigi
+   * icin eski yatirimlar "kullanilmamis" gorunuyor ve her oyuncu son
+   * yatirimiyla bir kez daha oynayabiliyor.
+   *
+   * Bu uc gecmis oynamalari yatirimlarla ZAMANA gore eslestirip
+   * kayitlara depositId yaziyor. Tekrar calistirilabilir: zaten bagli
+   * kayda dokunmuyor.
+   *
+   * Varsayilan KURU calisir; yazmak icin `uygula: true` gerekir.
+   *
+   * KAPSAM SINIRI: kazi kazanda oynama kaydi hic tutulmuyordu. Kazanan
+   * turlar Lynon kampanya atamasi biraktigi icin kurtarilabilir, KAYBEDEN
+   * turlar hicbir yerde iz birakmiyor. Yanit bunu acikca bildiriyor.
+   */
+  app.post('/games/oyun-haklari/geriye-donuk', async (request: any, reply) => {
+    const panelUser = request.session?.user;
+    if (!panelUser?.username) {
+      return reply.status(401).send({ ok: false, message: 'Panel oturumu gerekli.' });
+    }
+    if (!isLynonConfigured()) {
+      return reply.status(503).send({ ok: false, message: 'Yatırım geçmişi için Lynon bağlantısı gerekli.' });
+    }
+
+    const uygula = request.body?.uygula === true;
+    const tenantKey = await resolveTenantKeyForRequest(request);
+    const { gecmisiEslestir } = await import('../services/oyunHakkiGecmisi.js');
+
+    try {
+      const wheelClaims = await readWheelClaims(tenantKey);
+      const engagement = await readEngagementClaims(tenantKey);
+
+      // Islenecek kayitlar: cark + kazi kazan, henuz baglanmamis olanlar.
+      const hedefler: Array<{ liste: any[]; oyun: 'cark' | 'kazikazan' }> = [
+        { liste: wheelClaims as any[], oyun: 'cark' },
+        { liste: engagement.scratch as any[], oyun: 'kazikazan' },
+      ];
+
+      const oyuncular = new Set<string>();
+      for (const { liste } of hedefler) {
+        for (const kayit of liste) {
+          if (kayit?.username && String(kayit.depositId ?? '').trim() === '') {
+            oyuncular.add(String(kayit.username));
+          }
+        }
+      }
+
+      const ozet: any[] = [];
+      let toplamEslesen = 0;
+      let toplamEslesmeyen = 0;
+      let toplamAtlanan = 0;
+
+      for (const login of oyuncular) {
+        // Oyuncunun yatirim gecmisi — eslestirmenin dayanagi.
+        let yatirimlar: Array<{ id: string; tarih: string }> = [];
+        try {
+          const snapshot: any = await lynonBuildBonusEligibilitySnapshot({ login });
+          // sameDayDeposits yalnizca BUGUNU kapsiyor; geriye donuk
+          // eslestirme tum gecmise bakmali, o yuzden odeme hareketleri.
+          const hareketler = (snapshot.profileTransactions ?? []) as any[];
+          yatirimlar = hareketler
+            .filter((t) => String(t.DocumentTypeName ?? '') === 'Yatırım')
+            .map((t) => ({ id: String(t.Id ?? t.ExternalId ?? ''), tarih: String(t.CreatedLocal ?? '') }))
+            .filter((t) => t.id !== '' && t.tarih !== '');
+        } catch (err) {
+          ozet.push({ login, hata: err instanceof Error ? err.message : 'Yatırım geçmişi alınamadı' });
+          continue;
+        }
+
+        for (const { liste, oyun } of hedefler) {
+          const oynamalar = liste
+            .filter((k: any) => k?.username === login)
+            .map((k: any) => ({
+              id: String(k.id ?? `${k.username}-${k.dateKey ?? k.playedAt ?? ''}`),
+              username: login,
+              tarih: String(k.playedAt ?? k.createdAt ?? k.dateKey ?? ''),
+              depositId: k.depositId,
+            }));
+          if (oynamalar.length === 0) continue;
+
+          const sonuc = gecmisiEslestir(oynamalar, yatirimlar);
+          toplamEslesen += sonuc.eslesen;
+          toplamEslesmeyen += sonuc.eslesmeyen;
+          toplamAtlanan += sonuc.atlanan;
+
+          if (uygula) {
+            const eslesmeler = new Map(sonuc.satirlar.filter((x) => x.depositId).map((x) => [x.oynamaId, x.depositId!]));
+            for (const kayit of liste) {
+              if (kayit?.username !== login) continue;
+              const kayitId = String(kayit.id ?? `${kayit.username}-${kayit.dateKey ?? kayit.playedAt ?? ''}`);
+              const yeni = eslesmeler.get(kayitId);
+              if (!yeni) continue;
+              kayit.depositId = yeni;
+              if (!kayit.oyun) kayit.oyun = oyun;
+            }
+          }
+
+          ozet.push({
+            login,
+            oyun,
+            eslesen: sonuc.eslesen,
+            eslesmeyen: sonuc.eslesmeyen,
+            atlanan: sonuc.atlanan,
+            tuketilenYatirimlar: sonuc.tuketilenYatirimlar,
+          });
+        }
+      }
+
+      if (uygula) {
+        await writeWheelClaims(wheelClaims, tenantKey);
+        await writeEngagementClaims(engagement, tenantKey);
+      }
+
+      return reply.send({
+        ok: true,
+        data: {
+          uygulandi: uygula,
+          oyuncu: oyuncular.size,
+          eslesen: toplamEslesen,
+          eslesmeyen: toplamEslesmeyen,
+          atlanan: toplamAtlanan,
+          ozet,
+          uyari: 'Kazı kazanda kaybeden turlar hiçbir yerde kayıtlı değil; yalnızca kayıtlı oynamalar bağlanabilir.',
+        },
+      });
+    } catch (err) {
+      request.log.warn({ err }, 'Geriye donuk oyun hakki islemi basarisiz.');
+      return reply.status(500).send({ ok: false, message: err instanceof Error ? err.message : 'İşlem başarısız.' });
+    }
+  });
+
   app.post('/games/scratch/play', async (request: any, reply) => {
     const bonusPanelUser = request.session?.bonusPanelUser;
     if (!bonusPanelUser?.login) {
