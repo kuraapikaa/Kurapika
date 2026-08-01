@@ -7,6 +7,7 @@ import { config } from '../config.js';
 import { getBackofficeToken } from '../lib/authStore.js';
 import { resolveTenantKeyForRequest, safeTenantKey } from '../lib/tenant.js';
 import { readStoredDocument, writeStoredDocument } from '../lib/documentStore.js';
+import { kilitle, odulAnahtari } from '../lib/odulKilidi.js';
 import { isLynonConfigured, lynonAssignCampaignToPlayer, lynonBuildBonusEligibilitySnapshot, lynonCreditPlayerMainAccount, lynonFindPlayerByLogin, lynonPlayerActivity } from '../services/lynonBackofficeService.js';
 import { loginAnahtari, oyuncuAktivitesi, oyuncuRaporu, siralamaOlustur, type SiralamaMetrigi } from '../services/oyuncuRaporService.js';
 import { readTournamentSettings } from '../services/turnuvaAyarService.js';
@@ -1901,6 +1902,8 @@ const selectedSlice = selected.slice;
       return reply.status(503).send({ ok: false, message: 'Telegram kanal/grup kimliği yapılandırılmamış.' });
     }
 
+    // Ayni desen: kontrol ile verme arasinda yaris penceresi var.
+    return kilitle(odulAnahtari(login, 'telegram', 'bonus'), async () => {
     const claims = await readTelegramClaims(tenantKey);
     if (claims.some((c: any) => c.username === login && c.ok === true)) {
       return reply.status(409).send({ ok: false, message: 'Telegram bonusunu zaten aldınız.' });
@@ -1953,6 +1956,7 @@ const selectedSlice = selected.slice;
       ok: grant?.ok === true,
       message: grant?.message,
       chargeStatus: grant,
+    });
     });
   });
 
@@ -2371,6 +2375,14 @@ const selectedSlice = selected.slice;
       return reply.status(400).send({ ok: false, message: 'Bu görev henüz tamamlanmadı.', value, target });
     }
 
+    /**
+     * KILIT: kontrol ve verme tek parca olmali.
+     *
+     * Kayit sirasini duzeltmek (once rezerve et) tek basina YETMIYOR —
+     * olculdu: iki es zamanli istek okuma asamasini birlikte gecip ayni
+     * odulu iki kez veriyor. Kilit yarisi kapatiyor.
+     */
+    return kilitle(odulAnahtari(bonusPanelUser.login, 'gorev', `${dateKey}:${task.id}`), async () => {
     const claims = await readEngagementClaims(tenantKey);
     const alreadyClaimed = claims.daily.some((claim: any) =>
       claim.username === bonusPanelUser.login && claim.dateKey === dateKey && claim.taskId === task.id
@@ -2378,11 +2390,21 @@ const selectedSlice = selected.slice;
     if (alreadyClaimed) return reply.status(400).send({ ok: false, message: 'Bu görev ödülü bugün zaten alındı.' });
 
     const reward = dailyTaskReward(task);
-    const chargeStatus: any = await grantReward(bonusPanelUser.login, reward);
-    if (!chargeStatus.ok) return reply.status(502).send({ ok: false, message: chargeStatus.message || 'Ödül yüklenemedi.', chargeStatus });
 
-    claims.daily.push({
-      id: `${dateKey}-${task.id}-${Date.now()}`,
+    /**
+     * ONCE REZERVE ET, SONRA VER.
+     *
+     * Onceden once grantReward cagriliyor, kayit SONRA yaziliyordu.
+     * Arada kayit olmadigi icin ikinci bir istek (cift tiklama, istemci
+     * yeniden denemesi, iki sekme) `alreadyClaimed` kontrolunden de
+     * geciyor ve ayni gorev icin ikinci bir bonus daha taniml aniyordu.
+     *
+     * Cark bu deseni zaten dogru uyguluyor: pending yaz -> odulu ver ->
+     * kaydi tamamla. Burada da ayni sira kullaniliyor.
+     */
+    const claimId = `${dateKey}-${task.id}-${Date.now()}`;
+    const kayit: any = {
+      id: claimId,
       username: bonusPanelUser.login,
       taskId: task.id,
       taskTitle: task.title,
@@ -2390,14 +2412,29 @@ const selectedSlice = selected.slice;
       xp: Number(task.xp || 0),
       reward,
       claimedAt: new Date().toISOString(),
-      chargeStatus
-    });
+      status: 'pending',
+    };
+    claims.daily.push(kayit);
+    await writeEngagementClaims(claims, tenantKey);
+
+    const chargeStatus: any = await grantReward(bonusPanelUser.login, reward);
+    if (!chargeStatus.ok) {
+      // Odul verilemedi: rezervasyonu KALDIR ki oyuncu tekrar deneyebilsin.
+      const guncel = await readEngagementClaims(tenantKey);
+      guncel.daily = guncel.daily.filter((c: any) => c.id !== claimId);
+      await writeEngagementClaims(guncel, tenantKey);
+      return reply.status(502).send({ ok: false, message: chargeStatus.message || 'Ödül yüklenemedi.', chargeStatus });
+    }
+
+    kayit.status = 'granted';
+    kayit.chargeStatus = chargeStatus;
     await writeEngagementClaims(claims, tenantKey);
 
     return reply.send({
       ok: true,
       chargeStatus,
       data: buildDailyTasksPayload(settings, claims, activity, bonusPanelUser.login)
+    });
     });
   });
 
@@ -2452,6 +2489,7 @@ const selectedSlice = selected.slice;
     const activity = await buildPlayerActivity(bonusPanelUser.login, from, to) as any;
     if (!activity.ok) return reply.status(activity.status || 500).send(activity);
 
+    return kilitle(odulAnahtari(bonusPanelUser.login, 'battlepass', `${requestedLevel}:${track}`), async () => {
     const claims = await readEngagementClaims(tenantKey);
     const payload = buildBattlePassPayload(settings, claims, activity, bonusPanelUser.login);
     const levelItem = payload.levels.find((item: any) => Number(item.level) === requestedLevel);
@@ -2467,25 +2505,41 @@ const selectedSlice = selected.slice;
     if (alreadyClaimed) return reply.status(400).send({ ok: false, message: 'Bu sezon ödülü zaten alındı.' });
 
     const reward = levelReward(levelItem, track);
-    const chargeStatus: any = await grantReward(bonusPanelUser.login, reward);
-    if (!chargeStatus.ok) return reply.status(502).send({ ok: false, message: chargeStatus.message || 'Ödül yüklenemedi.', chargeStatus });
 
-    claims.battlePass.push({
-      id: `${payload.seasonId}-${requestedLevel}-${track}-${Date.now()}`,
+    // Gunluk gorevle ayni gerekce: once rezerve et, sonra ver.
+    // Kayit sonra yazilirsa iki es zamanli istek ayni seviye icin iki
+    // bonus uretiyor.
+    const bpClaimId = `${payload.seasonId}-${requestedLevel}-${track}-${Date.now()}`;
+    const bpKayit: any = {
+      id: bpClaimId,
       username: bonusPanelUser.login,
       seasonId: payload.seasonId,
       level: requestedLevel,
       track,
       reward,
       claimedAt: new Date().toISOString(),
-      chargeStatus
-    });
+      status: 'pending',
+    };
+    claims.battlePass.push(bpKayit);
+    await writeEngagementClaims(claims, tenantKey);
+
+    const chargeStatus: any = await grantReward(bonusPanelUser.login, reward);
+    if (!chargeStatus.ok) {
+      const guncel = await readEngagementClaims(tenantKey);
+      guncel.battlePass = guncel.battlePass.filter((c: any) => c.id !== bpClaimId);
+      await writeEngagementClaims(guncel, tenantKey);
+      return reply.status(502).send({ ok: false, message: chargeStatus.message || 'Ödül yüklenemedi.', chargeStatus });
+    }
+
+    bpKayit.status = 'granted';
+    bpKayit.chargeStatus = chargeStatus;
     await writeEngagementClaims(claims, tenantKey);
 
     return reply.send({
       ok: true,
       chargeStatus,
       data: buildBattlePassPayload(settings, claims, activity, bonusPanelUser.login)
+    });
     });
   });
 
