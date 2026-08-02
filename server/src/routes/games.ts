@@ -1629,11 +1629,47 @@ export async function gamesRoutes(app: FastifyInstance) {
     return reply.send({ ok: true });
   });
 
+  /**
+   * Cark odul teslimatlari.
+   *
+   * ── Iki ayri sorun vardi ──────────────────────────────────────────
+   *
+   * 1. KAYIP TURLARI LISTEYI DOLDURUYORDU. Varsayilan carkta kayip
+   *    dilimi ("Tekrar Dene") %97 olasilikla geliyor ve her tur bir
+   *    kayit yaziyor. Teslimat ekrani bir IS KUYRUGU; %97'si "odul
+   *    cikmadi" olan bir kuyruk okunamaz.
+   *
+   * 2. `.slice(0, 500)` SUZMEDEN ONCE calisiyordu. Yeterince tur
+   *    oynandiginda son 500 kaydin neredeyse hepsi kayip oluyor ve
+   *    GERCEK teslimatlar listeden tamamen dusuyordu — teslim
+   *    bekleyen fiziksel odul gorunmez hale geliyordu.
+   *
+   * Kayit SILINMIYOR: `yatirimHakki` bu kayitlardan "bu yatirimla
+   * oynandi mi" sorusunu cevapliyor. Kayip kaydini atmak ayni
+   * yatirimla tekrar oynamayi acardi. Yalnizca gorunum suzuluyor.
+   */
   app.get('/admin/games/wheel/claims', async (request: any, reply) => {
     if (!request.session?.user) return reply.status(401).send({ error: 'Yetkisiz' });
     const tenantKey = await resolveTenantKeyForRequest(request);
-    const claims = (await readWheelClaims(tenantKey)).slice(0, 500);
-    return reply.send({ ok: true, data: claims, count: claims.length });
+    const hepsi = await readWheelClaims(tenantKey);
+
+    const kayipMi = (kayit: any) =>
+      kayit?.rewardType === 'none' || kayit?.isLoss === true || kayit?.status === 'completed';
+
+    const kayiplarDahil = String(request.query?.kayiplar ?? '') === 'dahil';
+    const suzulmus = kayiplarDahil ? hepsi : hepsi.filter((kayit: any) => !kayipMi(kayit));
+
+    // Kirpma SUZMEDEN SONRA; gercek teslimatlar kayip yiginina gomulmesin.
+    const data = suzulmus.slice(0, 500);
+
+    return reply.send({
+      ok: true,
+      data,
+      count: data.length,
+      toplam: hepsi.length,
+      kayipSayisi: hepsi.filter(kayipMi).length,
+      kayiplarDahil,
+    });
   });
 
   app.post('/admin/games/wheel/claims/:claimId/fulfillment', async (request: any, reply) => {
