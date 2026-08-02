@@ -930,24 +930,28 @@ export default function App() {
                             </button>
                           ))}
                         </div>
+                        {/*
+                          * Pano ritmi TEK: bölümler arası space-y-3, ızgara
+                          * içi gap-3. Önceden space-y-3 / gap-8 / space-y-8
+                          * karışıktı ve parçalar farklı ekranlardan
+                          * toplanmış gibi duruyordu.
+                          */}
                         {(dashboardSubTab === 'all' || dashboardSubTab === 'financial') && (
                           <div className="space-y-3">
                             <SummaryCards data={summary.data} isLoading={summary.isLoading ?? false} error={summary.error ?? null} />
-                            <Suspense fallback={<div className="h-64 animate-pulse rounded-xl bg-[color:var(--panel-surface,rgba(242,244,248,0.028))]" />}>
+                            <Suspense fallback={<div className="h-64 animate-pulse rounded-xl border border-white/[0.07] bg-white/[0.025]" />}>
                               <DashboardCharts data={partnerProfit?.data?.Data} />
                             </Suspense>
                           </div>
                         )}
                         {(dashboardSubTab === 'all' || dashboardSubTab === 'partner') && (
-                          <div className="grid grid-cols-1 gap-8">
-                            <div className="space-y-8">
-                              <PartnerProfit data={partnerProfit?.data} isLoading={partnerProfit?.isLoading ?? false} error={partnerProfit?.error ?? null} />
-                              <SportbookOverview data={sportbook?.data} isLoading={sportbook?.isLoading ?? false} error={sportbook?.error ?? null} />
-                            </div>
+                          <div className="space-y-3">
+                            <PartnerProfit data={partnerProfit?.data} isLoading={partnerProfit?.isLoading ?? false} error={partnerProfit?.error ?? null} />
+                            <SportbookOverview data={sportbook?.data} isLoading={sportbook?.isLoading ?? false} error={sportbook?.error ?? null} />
                           </div>
                         )}
                         {(dashboardSubTab === 'all' || dashboardSubTab === 'sportbook') && (
-                          <div className="grid grid-cols-1 gap-8 xl:grid-cols-2">
+                          <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
                             <TopSports data={topSports?.data} isLoading={topSports?.isLoading ?? false} error={topSports?.error ?? null} />
                             <TopCasinoGames data={topCasino?.data} isLoading={topCasino?.isLoading ?? false} error={topCasino?.error ?? null} />
                           </div>
