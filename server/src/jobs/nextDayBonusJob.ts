@@ -221,7 +221,7 @@ export async function nextDayBonusKuruCalistir(
     const account = await lynonBuildBonusEligibilitySnapshot({ playerId });
     const promoId = rule.group === 'id' && Number.isFinite(Number(rule.key)) ? Number(rule.key) : campaignId;
     const promoTitle = rule.group === 'title' ? rule.key : String(campaign?.Name ?? rule.key);
-    const check = await evaluateForAccount(account as any, { id: promoId, title: promoTitle, ...rule.spec } as any, rules, 'default', 'bonus');
+    const check = await evaluateForAccount(account as any, { id: promoId, title: promoTitle, kuralAnahtari: rule.key, ...rule.spec } as any, rules, 'default', 'bonus');
 
     const dusenler = check.items.filter((item) => !item.ok);
     ekle(
@@ -301,7 +301,7 @@ export async function runNextDayBonusJob(now = new Date()): Promise<{
 
         const promoId = rule.group === 'id' && Number.isFinite(Number(rule.key)) ? Number(rule.key) : campaignId;
         const promoTitle = rule.group === 'title' ? rule.key : String(campaign?.Name ?? rule.key);
-        const check = await evaluateForAccount(account as any, { id: promoId, title: promoTitle, ...rule.spec } as any, rules, 'default', 'bonus');
+        const check = await evaluateForAccount(account as any, { id: promoId, title: promoTitle, kuralAnahtari: rule.key, ...rule.spec } as any, rules, 'default', 'bonus');
         if (!check.overallOk) {
           state.records[key] = {
             status: 'ineligible',

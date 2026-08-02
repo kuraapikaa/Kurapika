@@ -1611,6 +1611,14 @@ function mapFinancialMovement(row: AnyRecord): AnyRecord {
     State: 'success',
     UserName: firstNonEmpty(row.userName, 'Lynon Backoffice'),
     Note: firstNonEmpty(row.note, row.accountFrom && row.accountTo ? `${row.accountFrom} → ${row.accountTo}` : null),
+    /**
+     * Duzeltme yonu. Bu alan HIC uretilmiyordu; snapshot
+     * `row.CorrectionType ?? row.correctionType` okudugu icin
+     * balanceCorrections'ta `tur` her zaman bos kaliyordu. Tutar da
+     * Math.abs ile yaziliyor, yani isaret de kayip. Sonuc: geri ALINAN
+     * (debiting) duzeltmeler bonus kullanimi sayiliyordu.
+     */
+    CorrectionType: isCredit ? 'crediting' : 'debiting',
     AccountName: firstNonEmpty(row.accountName, row.accountFrom),
   };
 }

@@ -179,9 +179,11 @@ function checkUsageLimits(account: AccountSnapshot, spec: PromoSpec | undefined,
    * bonusu tekrar aliyordu; her turda yeni bir correction olusuyordu.
    */
   const nakitKural = String((spec as { type?: unknown } | undefined)?.type ?? '').toLocaleLowerCase('tr-TR') === 'cash';
-  // Charge yolu notu `Bonus <promo.id> / <kullanici>` biciminde yaziyor;
-  // sanal nakit bonuslarda promo.id kural anahtarinin kendisi.
-  const kuralAnahtari = String(promo.id ?? '');
+  // Charge yolu notu `Bonus <resolvedRule.key> / <kullanici>` biciminde
+  // yaziyor. O anahtar promo.id ile ayni OLMAYABILIR (resolveBonusRule
+  // kurali partnerBonusId uzerinden de bulabiliyor); ayrildiklarinda
+  // kontrol hicbir kullanim goremiyordu.
+  const kuralAnahtari = String(promo.kuralAnahtari ?? promo.id ?? '');
   const nakitKullanim = nakitKural
     ? nakitKullanimlari(((account as unknown as { balanceCorrections?: unknown }).balanceCorrections ?? []) as never)
     : [];
@@ -256,7 +258,7 @@ function checkDepositScopedUsage(
     atamalar: ((account.bonuses as BCBonus[]) ?? []) as never,
     nakit,
     yatirimlar: ((account.profileTransactions ?? []) as unknown[]) as never,
-    promo: { id: promo.id, title: promo.title, kuralAnahtari: promo.id },
+    promo: { id: promo.id, title: promo.title, kuralAnahtari: promo.kuralAnahtari ?? promo.id },
     coz: parseDateToTime,
   });
 
