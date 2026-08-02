@@ -88,6 +88,10 @@ interface WheelManagerProps {
   onCodesUpdate: (newCodes: any[]) => void;
   claims: WheelClaim[];
   claimsLoading: boolean;
+  /** Gizlenen kayip turu sayisi — kuyrukta gorunmuyorlar. */
+  kayipSayisi?: number;
+  kayiplariGoster?: boolean;
+  onKayiplariGosterChange?: (deger: boolean) => void;
   updatingClaimId?: string;
   onUpdateClaim: (claimId: string, status: 'fulfilled' | 'cancelled', note?: string) => void;
 }
@@ -451,6 +455,9 @@ export function WheelManager({
   onCodesUpdate,
   claims,
   claimsLoading,
+  kayipSayisi = 0,
+  kayiplariGoster = false,
+  onKayiplariGosterChange,
   updatingClaimId,
   onUpdateClaim
 }: WheelManagerProps) {
@@ -908,9 +915,32 @@ export function WheelManager({
                   <h2 className="text-base font-semibold text-white">Çark Ödül Teslimatları</h2>
                   <p className="mt-1 text-xs font-medium text-[color:var(--panel-muted,#8a919c)]">Lynon bonusu ve nakit ödüller otomatik; fiziksel ödüller onay kuyruğunda ilerler.</p>
                 </div>
-                <span className="rounded-md border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.03] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">
-                  {claims.length} kayıt
-                </span>
+                <div className="flex items-center gap-2">
+                  {/*
+                    * Kayip turlari varsayilan olarak gizli. Varsayilan carkta
+                    * kayip dilimi %97 olasilikla geliyor; teslimat ekrani bir
+                    * IS KUYRUGU ve %97'si "ödül çıkmadı" olan bir kuyruk
+                    * okunamaz. Kayitlar siliniyor degil, yalnizca suzuluyor.
+                    */}
+                  {(kayipSayisi > 0 || kayiplariGoster) && onKayiplariGosterChange && (
+                    <button
+                      type="button"
+                      onClick={() => onKayiplariGosterChange(!kayiplariGoster)}
+                      className={cn(
+                        'rounded-md border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-widest transition-colors',
+                        kayiplariGoster
+                          ? 'border-amber-400/20 bg-amber-400/10 text-amber-200'
+                          : 'border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.03] text-[color:var(--panel-muted,#8a919c)] hover:text-white'
+                      )}
+                      title="Ödül çıkmayan turlar kayıt olarak duruyor; bu düğme yalnızca görünümü değiştirir."
+                    >
+                      {kayiplariGoster ? 'Kayıp turları gizle' : `${kayipSayisi} kayıp tur gizli`}
+                    </button>
+                  )}
+                  <span className="rounded-md border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.03] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">
+                    {claims.length} kayıt
+                  </span>
+                </div>
               </div>
 
               {claimsLoading ? (
@@ -919,8 +949,14 @@ export function WheelManager({
                 <div className="flex flex-col items-center gap-3 py-16 text-center">
                   <PackageCheck size={34} className="text-[color:var(--panel-faint,#5c6470)]" />
                   <div>
-                    <div className="font-semibold text-white">Henüz ödül kaydı yok</div>
-                    <div className="mt-1 text-sm text-[color:var(--panel-muted,#8a919c)]">Çark kullanımları burada denetlenebilir olarak listelenecek.</div>
+                    <div className="font-semibold text-white">
+                      {kayipSayisi > 0 && !kayiplariGoster ? 'Teslim edilecek ödül yok' : 'Henüz ödül kaydı yok'}
+                    </div>
+                    <div className="mt-1 text-sm text-[color:var(--panel-muted,#8a919c)]">
+                      {kayipSayisi > 0 && !kayiplariGoster
+                        ? `${kayipSayisi} tur oynanmış ama hiçbirinden ödül çıkmamış.`
+                        : 'Çark kullanımları burada denetlenebilir olarak listelenecek.'}
+                    </div>
                   </div>
                 </div>
               ) : (

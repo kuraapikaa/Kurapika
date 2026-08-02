@@ -62,9 +62,14 @@ export function AdminGames({ initialTab }: AdminGamesProps = {}) {
     queryFn: () => dashboardApi.freebetBonuses()
   });
 
+  // Kayip turlari ("Tekrar Dene") varsayilan olarak gizli: varsayilan
+  // carkta %97 olasilikla geliyorlar ve teslimat kuyrugunu okunmaz hale
+  // getiriyorlar. Kayitlar duruyor, yalnizca gorunum suzuluyor.
+  const [kayiplariGoster, setKayiplariGoster] = useState(false);
+
   const wheelClaimsQuery = useQuery({
-    queryKey: ['admin-wheel-claims'],
-    queryFn: () => gamesApi.wheelClaims(),
+    queryKey: ['admin-wheel-claims', kayiplariGoster],
+    queryFn: () => gamesApi.wheelClaims(kayiplariGoster),
     enabled: mainTab === 'wheel',
     refetchInterval: mainTab === 'wheel' ? 30_000 : false
   });
@@ -214,6 +219,9 @@ export function AdminGames({ initialTab }: AdminGamesProps = {}) {
           onCodesUpdate={(newCodes) => setConfig({ ...config, codes: newCodes })}
           claims={wheelClaimsQuery.data?.data || []}
           claimsLoading={wheelClaimsQuery.isLoading}
+          kayipSayisi={wheelClaimsQuery.data?.kayipSayisi ?? 0}
+          kayiplariGoster={kayiplariGoster}
+          onKayiplariGosterChange={setKayiplariGoster}
           updatingClaimId={wheelClaimMutation.isPending ? wheelClaimMutation.variables?.claimId : undefined}
           onUpdateClaim={(claimId, status, note) => wheelClaimMutation.mutate({ claimId, status, note })}
         />

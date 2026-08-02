@@ -144,6 +144,24 @@ export function istanbulDayBoundsUtc(dateKey: string): { from: string; to: strin
   };
 }
 
+/**
+ * TARIH SAAT DILIMI — bildirilen "tarih ayarı yanlış" hatasinin kaynagi.
+ *
+ * Panelden gelen `2026-08-02` bir TURKIYE IS GUNU. Burada UTC olarak
+ * yorumlaniyordu:
+ *
+ *   gunBasi(text)   ->  Turkiye saatiyle 03:00
+ *
+ * Yani pencere 3 saat kayiyordu: o gunun 00:00-03:00 arasindaki
+ * yatirim/cekimleri DISARIDA kaliyor, ertesi gunun 00:00-03:00 arasi
+ * ICERI siziyordu. Ayni yanlis pencere sunucu tarafindaki ikinci
+ * suzgecte de kullanildigi icin kayitlar iki kez eleniyordu.
+ *
+ * Dogrusu gunu Istanbul sinirlariyla almak; `istanbulDayBoundsUtc` zaten
+ * bunu yapiyordu ama yalnizca ertesi gun isinde kullaniliyordu.
+ */
+const ISTANBUL_OFSET = '+03:00';
+
 function toIsoDateTime(value: unknown, endOfDay = false): string | null {
   if (value === null || value === undefined || value === '') return null;
   const text = String(value).trim();
@@ -153,39 +171,68 @@ function toIsoDateTime(value: unknown, endOfDay = false): string | null {
   if (dmy) {
     const [, day, month, year, hh, mm, ss] = dmy;
     const fullYear = year.length === 2 ? 2000 + Number(year) : Number(year);
-    const date = new Date(Date.UTC(
-      fullYear,
-      Number(month) - 1,
-      Number(day),
-      hh ? Number(hh) : endOfDay ? 23 : 0,
-      mm ? Number(mm) : endOfDay ? 59 : 0,
-      ss ? Number(ss) : endOfDay ? 59 : 0,
-      endOfDay ? 999 : 0
-    ));
-    return date.toISOString();
+    const p = (n: number) => String(n).padStart(2, '0');
+    const saat = hh ? Number(hh) : endOfDay ? 23 : 0;
+    const dakika = mm ? Number(mm) : endOfDay ? 59 : 0;
+    const saniye = ss ? Number(ss) : endOfDay ? 59 : 0;
+    const salise = hh || mm || ss ? '000' : endOfDay ? '999' : '000';
+    // Operatorun girdigi gun/saat TURKIYE saatidir.
+    const iso = `${fullYear}-${p(Number(month))}-${p(Number(day))}T${p(saat)}:${p(dakika)}:${p(saniye)}.${salise}${ISTANBUL_OFSET}`;
+    const zaman = Date.parse(iso);
+    return Number.isNaN(zaman) ? null : new Date(zaman).toISOString();
   }
 
   if (/^\d{4}-\d{2}-\d{2}$/.test(text)) {
-    return `${text}T${endOfDay ? '23:59:59.999' : '00:00:00.000'}Z`;
+    return new Date(
+      `${text}T${endOfDay ? '23:59:59.999' : '00:00:00.000'}${ISTANBUL_OFSET}`,
+    ).toISOString();
   }
 
   const parsed = Date.parse(text);
   return Number.isNaN(parsed) ? null : new Date(parsed).toISOString();
 }
 
+/**
+ * Gun anahtari (YYYY-MM-DD) — TURKIYE gunune gore.
+ *
+ * Onceden `toIsoDateTime(...).slice(0, 10)` idi. Artik toIsoDateTime
+ * Istanbul sinirlarina cevirdigi icin `2026-08-02` girdisi
+ * `2026-08-01T21:00:00Z` uretiyor; ham dilimleme gunu BIR GERI alirdi.
+ * Bu yuzden gun anahtari UTC'den degil Istanbul'dan okunuyor.
+ */
 function dateOnly(value: unknown): string | null {
+  if (value === null || value === undefined || value === '') return null;
+  const text = String(value).trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(text)) return text;
   const iso = toIsoDateTime(value);
-  return iso ? iso.slice(0, 10) : null;
+  return iso ? istanbulDateKey(new Date(iso)) : null;
 }
 
+/**
+ * Bir TURKIYE gununun UTC sinirlari.
+ *
+ * Kod boyunca gunBasi(ymd) / gunSonu(ymd) elle
+ * kuruluyordu; hepsi gunu UTC sanip pencereyi 3 saat kaydiriyordu.
+ * Tek kaynak burasi.
+ */
+function gunBasi(ymd: string): string {
+  return new Date(`${ymd}T00:00:00.000${ISTANBUL_OFSET}`).toISOString();
+}
+
+function gunSonu(ymd: string): string {
+  return new Date(`${ymd}T23:59:59.999${ISTANBUL_OFSET}`).toISOString();
+}
+
+/** Bugun — TURKIYE gunu. UTC ile 21:00-24:00 arasi bir gun sapiyordu. */
 function todayYmd(): string {
-  return new Date().toISOString().slice(0, 10);
+  return istanbulDateKey(new Date());
 }
 
+/** Bir yil once — TURKIYE gunune gore. */
 function yearAgoYmd(): string {
-  const date = new Date();
-  date.setUTCFullYear(date.getUTCFullYear() - 1);
-  return date.toISOString().slice(0, 10);
+  const bugun = todayYmd();
+  const [yil, ay, gun] = bugun.split('-');
+  return `${Number(yil) - 1}-${ay}-${gun}`;
 }
 
 function dateRangeFromBody(body: AnyRecord = {}): { from?: string; to?: string } {
@@ -752,8 +799,8 @@ export async function lynonTopCasinoGames(startDate: string, endDate: string, to
 
 async function lynonDashboardSportRows(startDate: string, endDate: string): Promise<AnyRecord[]> {
   return cachedLynon(`dashboard-sport-rows:${config.lynon.siteId}:${startDate}:${endDate}`, DASHBOARD_CACHE_TTL_MS, async () => {
-    const from = `${startDate}T00:00:00.000Z`;
-    const to = `${endDate}T23:59:59.999Z`;
+    const from = gunBasi(startDate);
+    const to = gunSonu(endDate);
     return (await lynonSportBets({ startDate: from, endDate: to, countPerPage: 500 })).map(mapSportBet);
   });
 }
@@ -1714,8 +1761,8 @@ export async function lynonReportByName(
 
   const data = recordOf(await lynonRequest(`/api/report/api/v1.0/reportData/summarized/${report.id}`, {
     query: {
-      startDate: `${range.startDate ?? yearAgoYmd()}T00:00:00Z`,
-      endDate: `${range.endDate ?? todayYmd()}T23:59:59Z`,
+      startDate: gunBasi(range.startDate ?? yearAgoYmd()),
+      endDate: gunSonu(range.endDate ?? todayYmd()),
       currency: range.currency ?? config.lynon.currency,
     },
   }));
@@ -1745,8 +1792,8 @@ export async function lynonReportById(
 ): Promise<AnyRecord> {
   const data = recordOf(await lynonRequest(`/api/report/api/v1.0/reportData/summarized/${reportId}`, {
     query: {
-      startDate: `${range.startDate ?? yearAgoYmd()}T00:00:00.000Z`,
-      endDate: `${range.endDate ?? todayYmd()}T23:59:59.999Z`,
+      startDate: gunBasi(range.startDate ?? yearAgoYmd()),
+      endDate: gunSonu(range.endDate ?? todayYmd()),
       'tz-id': '13',
       currency: range.currency ?? config.lynon.currency,
     },
@@ -1825,8 +1872,8 @@ export async function lynonCasinoOperations(params: {
       query: {
         page,
         countPerPage,
-        startCreateDate: params.startDate ?? `${yearAgoYmd()}T00:00:00.000Z`,
-        endCreateDate: params.endDate ?? `${todayYmd()}T23:59:59.999Z`,
+        startCreateDate: params.startDate ?? gunBasi(yearAgoYmd()),
+        endCreateDate: params.endDate ?? gunSonu(todayYmd()),
       },
     }));
   }
@@ -1834,8 +1881,8 @@ export async function lynonCasinoOperations(params: {
     query: {
       page,
       countPerPage,
-      startCreateDate: params.startDate ?? `${todayYmd()}T00:00:00.000Z`,
-      endCreateDate: params.endDate ?? `${todayYmd()}T23:59:59.999Z`,
+      startCreateDate: params.startDate ?? gunBasi(todayYmd()),
+      endCreateDate: params.endDate ?? gunSonu(todayYmd()),
       siteId: config.lynon.siteId,
     },
   }));
@@ -1871,8 +1918,8 @@ export async function lynonBetReport(body: AnyRecord = {}): Promise<AnyRecord> {
   const sportRows = (await lynonSportBets({
     page,
     countPerPage,
-    startDate: `${range.startDate}T00:00:00.000Z`,
-    endDate: `${range.endDate}T23:59:59.999Z`,
+    startDate: gunBasi(range.startDate),
+    endDate: gunSonu(range.endDate),
   })).map(mapSportBet);
   return betReportResponse(sportRows);
 }
@@ -2009,15 +2056,15 @@ export async function lynonClientBonusReport(body: AnyRecord = {}): Promise<AnyR
 export async function lynonRegistrationStats(body: AnyRecord = {}): Promise<AnyRecord> {
   const { startDate, endDate } = dateRangeFromDashboardBody(body);
   const playersRes = await lynonPlayers({
-    MinCreatedLocal: `${startDate}T00:00:00.000Z`,
-    MaxCreatedLocal: `${endDate}T23:59:59.999Z`,
+    MinCreatedLocal: gunBasi(startDate),
+    MaxCreatedLocal: gunSonu(endDate),
     MaxRows: 500,
     SkeepRows: 0,
   });
   const players = arrayOf(recordOf(playersRes.Data).Objects);
   const deposits = await lynonPaymentTransactions({
-    FromCreatedDateLocal: `${startDate}T00:00:00.000Z`,
-    ToCreatedDateLocal: `${endDate}T23:59:59.999Z`,
+    FromCreatedDateLocal: gunBasi(startDate),
+    ToCreatedDateLocal: gunSonu(endDate),
     MaxRows: 500,
     SkeepRows: 0,
   }, { transactionTypes: 'deposit', status: ['success'] }).catch(() => []);
@@ -2055,15 +2102,15 @@ export async function lynonRegistrationStats(body: AnyRecord = {}): Promise<AnyR
 export async function lynonRegistrationStatsDetails(body: AnyRecord = {}): Promise<AnyRecord> {
   const { startDate, endDate } = dateRangeFromDashboardBody(body);
   const playersRes = await lynonPlayers({
-    MinCreatedLocal: `${startDate}T00:00:00.000Z`,
-    MaxCreatedLocal: `${endDate}T23:59:59.999Z`,
+    MinCreatedLocal: gunBasi(startDate),
+    MaxCreatedLocal: gunSonu(endDate),
     MaxRows: 500,
     SkeepRows: 0,
   });
   const players = arrayOf(recordOf(playersRes.Data).Objects);
   const deposits = await lynonPaymentTransactions({
-    FromCreatedDateLocal: `${startDate}T00:00:00.000Z`,
-    ToCreatedDateLocal: `${endDate}T23:59:59.999Z`,
+    FromCreatedDateLocal: gunBasi(startDate),
+    ToCreatedDateLocal: gunSonu(endDate),
     MaxRows: 500,
     SkeepRows: 0,
   }, { transactionTypes: 'deposit', status: ['success'] }).catch(() => []);
@@ -2127,8 +2174,8 @@ export async function lynonClientDetailedReport(body: AnyRecord = {}): Promise<A
     lynonPlayerDetail(clientId),
     lynonPlayerKpi(clientId),
     lynonPlayerAccounts(clientId),
-    lynonSportBets({ userId: clientId, startDate: `${range.startDate}T00:00:00.000Z`, endDate: `${range.endDate}T23:59:59.999Z`, countPerPage: 500 }),
-    lynonCasinoOperations({ userId: clientId, startDate: `${range.startDate}T00:00:00.000Z`, endDate: `${range.endDate}T23:59:59.999Z`, countPerPage: 500 }),
+    lynonSportBets({ userId: clientId, startDate: gunBasi(range.startDate), endDate: gunSonu(range.endDate), countPerPage: 500 }),
+    lynonCasinoOperations({ userId: clientId, startDate: gunBasi(range.startDate), endDate: gunSonu(range.endDate), countPerPage: 500 }),
   ]);
 
   const detail = detailResult.status === 'fulfilled' ? recordOf(detailResult.value.Data) : {};

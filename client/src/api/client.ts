@@ -912,7 +912,8 @@ export const bonusPanelApi = {
 export const gamesApi = {
   config: () => get<any>('/games/config'),
   saveConfig: (body: any) => post<any>('/admin/games/config', body),
-  wheelClaims: () => get<any>('/admin/games/wheel/claims'),
+  wheelClaims: (kayiplarDahil = false) =>
+    get<any>(`/admin/games/wheel/claims${kayiplarDahil ? '?kayiplar=dahil' : ''}`),
   updateWheelClaim: (claimId: string, status: 'fulfilled' | 'cancelled', note?: string) =>
     post<any>(`/admin/games/wheel/claims/${encodeURIComponent(claimId)}/fulfillment`, { status, note }),
   playWheel: (code?: string) => post<any>('/games/wheel/play', { code }),
