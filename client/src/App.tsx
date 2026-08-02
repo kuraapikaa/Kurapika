@@ -14,13 +14,10 @@ import {
   ListOrdered,
   Zap,
   Radar,
-  UserPlus,
   UserCog,
   LogOut,
   Menu,
   X,
-  Settings,
-  FileText,
   Gamepad2,
   ListChecks,
   Mailbox,
@@ -36,6 +33,13 @@ import {
   Crown,
   Handshake,
   Activity,
+  LineChart,
+  ShieldAlert,
+  SlidersHorizontal,
+  ClipboardList,
+  ScrollText,
+  BookOpen,
+  Sparkles,
   type LucideIcon, ChevronLeft, ChevronRight, Search} from 'lucide-react';
 import { cn } from './lib/utils';
 import { LoadingState } from './components/ui/LoadingState';
@@ -238,6 +242,35 @@ const TAB_DESCRIPTIONS: Record<TabId, string> = {
 
 
 
+/**
+ * Sol menü.
+ *
+ * ── Önceki gruplama ───────────────────────────────────────────────────
+ *
+ * Gruplar özelliğin TÜRÜNE göreydi (Genel / Finans / Analiz / Deneyim /
+ * Oyun Yönetimi / Sistem) ve aynı iş üç ayrı yere dağılmıştı:
+ *
+ *   Bonus merkezi   → Deneyim
+ *   Bonus raporu    → Analiz
+ *   Bonus kuralları → Sistem
+ *
+ * Bonus sızıntısı araştırırken operatör üç farklı grup arasında gidip
+ * geliyordu. Aynı şey raporlar için de geçerliydi: sağlayıcı raporu
+ * Analiz'de, Lynon API dökümanı ve API trafiği Sistem'deydi.
+ *
+ * Yeni gruplama operatörün İŞİNE göre: bir konuyla uğraşırken ihtiyacın
+ * olan her şey tek grupta.
+ *
+ * ── İkonlar ───────────────────────────────────────────────────────────
+ *
+ * Üç ikon çift kullanılıyordu — Gift (bonus merkezi + bonus raporu),
+ * Crown (kazanç vitrini + VIP), FileText (audit + Lynon dökümanı). Aynı
+ * ikon iki ayrı yere gidiyorsa ikon iş görmüyor demektir. Hepsi tekil.
+ *
+ * Ayrıca RİSK ANALİZİ ekranının menüde girişi hiç yoktu; sayfa vardı,
+ * `/risk-analizi` çalışıyordu ama oraya ancak adresi bilerek
+ * gidilebiliyordu.
+ */
 type SidebarItem = {
   id: TabId;
   label: string;
@@ -248,61 +281,70 @@ type SidebarItem = {
 
 const NAV_GROUPS: Array<{ label: string; items: SidebarItem[] }> = [
   {
-    label: 'Genel',
+    label: 'Bugün',
     items: [
       { id: 'dashboard', label: 'Genel görünüm', path: '/', icon: LayoutDashboard, end: true },
-      { id: 'players', label: 'Oyuncular', path: '/oyuncular', icon: Users },
-      { id: 'registrationStats', label: 'Kayıt analizi', path: '/kayit-istatistikleri', icon: UserPlus },
+      { id: 'liveRadar', label: 'Canlı radar', path: '/canli-radar', icon: Radar },
+      { id: 'registrationStats', label: 'Kayıt analizi', path: '/kayit-istatistikleri', icon: LineChart },
+    ],
+  },
+  {
+    label: 'Para',
+    items: [
+      { id: 'deposits', label: 'Yatırımlar', path: '/para-yatirmalar', icon: ArrowDownToLine },
+      { id: 'withdrawals', label: 'Çekim talepleri', path: '/para-cekme-talepleri', icon: ArrowUpFromLine },
+      { id: 'autoWithdraw', label: 'Otomatik çekim', path: '/admin/auto-withdraw', icon: Zap },
+      { id: 'transactions', label: 'Tüm işlemler', path: '/islemler', icon: ListOrdered },
+    ],
+  },
+  {
+    label: 'Oyuncular',
+    items: [
+      { id: 'players', label: 'Oyuncu listesi', path: '/oyuncular', icon: Users },
+      { id: 'riskAnalizi', label: 'Risk analizi', path: '/risk-analizi', icon: ShieldAlert },
+      { id: 'userSystem', label: 'Kullanıcı sistemi', path: '/admin/kullanici-sistemi', icon: UserCog },
       { id: 'affiliate', label: 'Affiliate merkezi', path: '/affiliate', icon: Handshake },
     ],
   },
   {
-    label: 'Finans',
-    items: [
-      { id: 'deposits', label: 'Yatırımlar', path: '/para-yatirmalar', icon: ArrowUpFromLine },
-      { id: 'withdrawals', label: 'Çekim talepleri', path: '/para-cekme-talepleri', icon: ArrowDownToLine },
-      { id: 'transactions', label: 'Tüm işlemler', path: '/islemler', icon: ListOrdered },
-      { id: 'autoWithdraw', label: 'Otomatik çekim', path: '/admin/auto-withdraw', icon: Zap },
-    ],
-  },
-  {
-    label: 'Analiz',
-    items: [
-      { id: 'providerReport', label: 'Sağlayıcılar', path: '/saglayici-raporu', icon: BarChart2 },
-      { id: 'bonusReport', label: 'Bonus raporu', path: '/tum-bonus-raporu', icon: Gift },
-      { id: 'liveRadar', label: 'Canlı radar', path: '/canli-radar', icon: Radar },
-      { id: 'audit', label: 'Audit kayıtları', path: '/audit', icon: FileText },
-    ],
-  },
-  {
-    label: 'Deneyim',
+    // Bonusla ilgili her sey TEK grupta: verme, kural, rapor.
+    label: 'Bonus',
     items: [
       { id: 'bonuses', label: 'Bonus merkezi', path: '/bonuslar', icon: Gift },
-      { id: 'tournament', label: 'Turnuvalar', path: '/turnuva-ayarlari', icon: Trophy },
-      { id: 'games', label: 'Oyun ayarları', path: '/admin/oyun-ayarlari', icon: Gamepad2 },
+      { id: 'rules', label: 'Kural merkezi', path: '/bonus-kurallari', icon: SlidersHorizontal },
+      { id: 'bonusReport', label: 'Bonus raporu', path: '/tum-bonus-raporu', icon: ClipboardList },
       { id: 'loyaltySettings', label: 'Sadakat sistemi', path: '/loyalty-ayarlari', icon: Star },
+      { id: 'vipSettings', label: 'VIP ayarları', path: '/admin/vip-ayarlari', icon: Crown },
     ],
   },
   {
-    label: 'Oyun Yönetimi',
+    label: 'Oyunlar',
     items: [
-      { id: 'wheelManager', label: 'Şans Çarkı', path: '/admin/sans-carki', icon: Target },
-      { id: 'scratchManager', label: 'Kazı Kazan', path: '/admin/kazi-kazan-yonetimi', icon: Ticket },
-      { id: 'predictionLeague', label: 'Skor Tahmin', path: '/admin/skor-tahmin-yonetimi', icon: CalendarDays },
-      { id: 'millionaireShowcase', label: 'Kazanç Vitrini', path: '/admin/kazanc-vitrini', icon: Crown },
-      { id: 'dailyTasks', label: 'Günlük Görevler', path: '/admin/gunluk-gorevler', icon: ListChecks },    ],
+      { id: 'wheelManager', label: 'Şans çarkı', path: '/admin/sans-carki', icon: Target },
+      { id: 'scratchManager', label: 'Kazı kazan', path: '/admin/kazi-kazan-yonetimi', icon: Ticket },
+      { id: 'predictionLeague', label: 'Skor tahmin', path: '/admin/skor-tahmin-yonetimi', icon: CalendarDays },
+      { id: 'millionaireShowcase', label: 'Kazanç vitrini', path: '/admin/kazanc-vitrini', icon: Sparkles },
+      { id: 'dailyTasks', label: 'Günlük görevler', path: '/admin/gunluk-gorevler', icon: ListChecks },
+      { id: 'tournament', label: 'Turnuvalar', path: '/turnuva-ayarlari', icon: Trophy },
+      { id: 'games', label: 'Oyun ayarları', path: '/admin/oyun-ayarlari', icon: Gamepad2 },
+    ],
   },
   {
-    label: 'Sistem',
+    // Denetim ve teshis: "ne oldu" sorusunun sorulacagi yer.
+    label: 'Denetim',
     items: [
-      { id: 'lobbyDesign', label: 'Lobi Tasarımı', path: '/admin/lobi-tasarimi', icon: Palette },
-      { id: 'vipSettings', label: 'VIP ayarları', path: '/admin/vip-ayarlari', icon: Crown },
+      { id: 'providerReport', label: 'Sağlayıcı raporu', path: '/saglayici-raporu', icon: BarChart2 },
+      { id: 'audit', label: 'Audit kayıtları', path: '/audit', icon: ScrollText },
+      { id: 'apiTrafik', label: 'API trafiği', path: '/api-trafigi', icon: Activity },
+      { id: 'lynonDocs', label: 'Lynon API dökümanı', path: '/lynon-docs', icon: BookOpen },
+    ],
+  },
+  {
+    label: 'Site',
+    items: [
+      { id: 'lobbyDesign', label: 'Lobi tasarımı', path: '/admin/lobi-tasarimi', icon: Palette },
       { id: 'forms', label: 'Talep formları', path: '/admin/formlar', icon: Mailbox },
-      { id: 'userSystem', label: 'Kullanıcı sistemi', path: '/admin/kullanici-sistemi', icon: UserCog },
       { id: 'iframeGen', label: 'iFrame entegrasyonu', path: '/admin/iframe-generator', icon: Code2 },
-      { id: 'rules', label: 'Bonus kuralları', path: '/bonus-kurallari', icon: Settings },
-      { id: 'lynonDocs', label: 'Lynon API Dökümanı', path: '/lynon-docs', icon: FileText },
-      { id: 'apiTrafik', label: 'API Trafiği', path: '/api-trafigi', icon: Activity },
     ],
   },
 ];
@@ -706,13 +748,16 @@ export default function App() {
           />
 
           <aside
-            style={{ ['--nav-w' as any]: navCollapsed ? '56px' : '200px' }}
+            // 29 menu ogesi 7 grupta; 200px'te uzun etiketler kirpiliyordu
+            // ("Lynon API Dökümanı", "iFrame entegrasyonu"). 260px hepsini
+            // tek satirda tutuyor.
+            style={{ ['--nav-w' as any]: navCollapsed ? '64px' : '260px' }}
             className={cn(
-              "premium-sidebar fixed left-0 top-0 z-50 flex h-full w-[204px] flex-col transition-[transform,width] duration-200 ease-out md:w-[var(--nav-w)] md:translate-x-0",
+              "premium-sidebar fixed left-0 top-0 z-50 flex h-full w-[268px] flex-col transition-[transform,width] duration-200 ease-out md:w-[var(--nav-w)] md:translate-x-0",
               sidebarOpen ? "translate-x-0" : "-translate-x-full"
             )}
           >
-            <div className="sidebar-brand flex h-[52px] shrink-0 items-center justify-between gap-3 border-b border-white/[0.06] px-3">
+            <div className="sidebar-brand flex h-[60px] shrink-0 items-center justify-between gap-3 border-b border-white/[0.06] px-4">
               <div className="flex min-w-0 flex-1 items-center gap-2.5">
                 <span className="grid h-8 w-8 shrink-0 grid-cols-2 gap-1 rounded-lg border border-blue-300/20 bg-blue-300/[0.09] p-2">
                   <i className="rounded-[2px] bg-blue-300" /><i className="rounded-[2px] bg-blue-300" />
@@ -743,28 +788,38 @@ export default function App() {
               </button>
             </div>
             {!navCollapsed && (
-              <div className="shrink-0 px-2 pt-2.5">
+              <div className="shrink-0 px-3 pt-3">
                 <div className="relative">
-                  <Search size={13} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-600" />
+                  <Search size={14} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-600" />
                   <input
                     type="text"
                     value={navQuery}
                     onChange={(e) => setNavQuery(e.target.value)}
                     placeholder="Menüde ara"
                     aria-label="Menüde ara"
-                    className="h-8 w-full rounded-lg border border-white/[0.07] bg-black/25 pl-7 pr-2 text-[11px] font-medium text-white outline-none transition placeholder:text-slate-600 focus:border-blue-300/40"
+                    className="h-9 w-full rounded-lg border border-white/[0.07] bg-black/25 pl-8 pr-2.5 text-[12px] font-medium text-white outline-none transition placeholder:text-slate-600 focus:border-blue-300/40"
                   />
                 </div>
               </div>
             )}
-            <nav className="flex-1 overflow-y-auto px-1.5 py-1.5" aria-label="Menü">
-              <div ref={sidebarNavRef} className="space-y-2" onKeyDown={handleSidebarKeyDown} role="menu">
+            <nav className="flex-1 overflow-y-auto px-2.5 py-2.5" aria-label="Menü">
+              <div ref={sidebarNavRef} className="space-y-4" onKeyDown={handleSidebarKeyDown} role="menu">
                 {filteredNavGroups.length === 0 && (
                   <p className="px-2 py-4 text-center text-[11px] text-slate-600">Eşleşen menü yok.</p>
                 )}
                 {filteredNavGroups.map((group) => (
                   <section key={group.label} className="sidebar-nav-group">
-                    <p className={cn("sidebar-section-label", navCollapsed && "md:hidden")}>{group.label}</p>
+                    {/*
+                      * Daraltilmis modda grup adi gizleniyordu ve 29 oge
+                      * tek bir simge yiginina donuyordu. Artik yerine ince
+                      * bir ayirici geliyor; gruplar dar modda da okunuyor.
+                      */}
+                    <p className={cn("sidebar-section-label flex items-center gap-2", navCollapsed && "md:hidden")}>
+                      <span>{group.label}</span>
+                      <span className="h-px flex-1 bg-white/[0.05]" />
+                      <span className="tabular-nums text-[9px] font-semibold text-slate-700">{group.items.length}</span>
+                    </p>
+                    {navCollapsed && <span className="mx-auto mb-2 hidden h-px w-6 bg-white/[0.07] md:block" />}
                     <div className="space-y-0.5">
                       {group.items.map((item) => {
                         const Icon = item.icon;
@@ -780,9 +835,9 @@ export default function App() {
                               <>
                                 {isActive && <ActiveTabIndicator />}
                                 <span className="sidebar-link-icon relative z-10">
-                                  <Icon size={14} strokeWidth={1.9} />
+                                  <Icon size={15} strokeWidth={1.85} />
                                 </span>
-                                <span className={cn('relative z-10 min-w-0 flex-1 truncate', navCollapsed && 'md:hidden')}>{item.label}</span>
+                                <span className={cn('relative z-10 min-w-0 flex-1 truncate text-[12.5px]', navCollapsed && 'md:hidden')}>{item.label}</span>
                                 {isActive && <span className={cn('relative z-10 h-1.5 w-1.5 rounded-full bg-blue-300', navCollapsed && 'md:hidden')} />}
                               </>
                             )}
@@ -823,7 +878,7 @@ export default function App() {
           {/* Content */}
           <div className={cn(
             "relative z-10 flex min-w-0 flex-1 flex-col pl-0 transition-[padding] duration-200 ease-out",
-            navCollapsed ? "md:pl-[64px]" : "md:pl-[224px]"
+            navCollapsed ? "md:pl-[64px]" : "md:pl-[260px]"
           )}>
             <header className="app-header relative z-40 w-full flex-shrink-0 px-3 md:px-4">
               <div className="mx-auto flex h-[58px] max-w-[1900px] items-center justify-between gap-3">

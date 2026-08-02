@@ -137,11 +137,11 @@
   }
 
   .sidebar-section-label {
-    @apply mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.26em] text-slate-600;
+    @apply mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500;
   }
 
   .sidebar-link-icon {
-    @apply flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-transparent bg-transparent text-slate-400 transition duration-200;
+    @apply flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-transparent bg-white/[0.03] text-slate-400 transition duration-200;
   }
 
   .sidebar-nav-group a:hover .sidebar-link-icon {
@@ -1000,24 +1000,37 @@
   background: transparent;
 }
 
+/*
+ * Menu 200px'ten 260px'e cikti; sikistirilmis olculer artik gereksiz.
+ * Grup basligi 8px'te okunmuyordu.
+ */
 .app-shell .sidebar-section-label {
-  margin-bottom: 2px !important;
-  padding: 0 9px !important;
+  margin-bottom: 6px !important;
+  padding: 0 10px !important;
   color: var(--panel-faint, #5c6470) !important;
-  font-size: 8px !important;
+  font-size: 9.5px !important;
   font-weight: 700 !important;
-  letter-spacing: 0.14em !important;
+  letter-spacing: 0.18em !important;
 }
 
 .app-shell .sidebar-link-icon {
-  width: 21px !important;
-  height: 21px !important;
-  border-radius: 7px !important;
+  width: 26px !important;
+  height: 26px !important;
+  border-radius: 8px !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+}
+
+.app-shell .sidebar-nav-group a[aria-current='page'] .sidebar-link-icon {
+  background: rgba(59, 130, 246, 0.18) !important;
+  border-color: rgba(59, 130, 246, 0.28) !important;
 }
 
 .app-shell .sidebar-nav-group a {
-  min-height: 29px !important;
-  border-radius: 8px !important;
+  min-height: 34px !important;
+  gap: 9px !important;
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+  border-radius: 9px !important;
   border: 1px solid transparent !important;
   transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease !important;
 }

@@ -58,6 +58,38 @@ function kucuk(value: unknown): string {
   return String(value ?? '').trim().toLocaleLowerCase('tr-TR');
 }
 
+/**
+ * AD ESLESTIRME — bildirilen "2x bonusu alınamıyor" hatasinin kaynagi.
+ *
+ * Ilk surumde adlar ALT DIZE ile karsilastiriliyordu:
+ *
+ *   ad.includes(promoBaslik) || promoBaslik.includes(ad)
+ *
+ * Ikinci yon olduruyordu: DAHA GENEL adli bir bonus, ozel olani yutuyor.
+ * "2x Yatırım Bonusu" talebi, oyuncuya daha once verilmis "Yatırım
+ * Bonusu" yuzunden engelleniyordu — bunlar AYRI bonuslar. Ayni sekilde
+ * "2x Bonus" talebini adi sadece "Bonus" olan herhangi bir atama
+ * kapatiyordu.
+ *
+ * Tam esitlik de calismiyor: Lynon'da kampanya adi ile bonus adi
+ * ayrisabiliyor ("100 FS - Telegram Katıl Bonusu" / "100 FS Telegram
+ * Katıl Bonusu" — tek fark tire).
+ *
+ * Cozum: harf ve rakam disindaki her seyi atip TAM ESITLIK ara. Tire,
+ * bosluk ve noktalama farki tolere edilir; farkli bonuslar birbirine
+ * karismaz.
+ */
+function adAnahtari(value: unknown): string {
+  return kucuk(value)
+    .replace(/ı/g, 'i')
+    .replace(/ş/g, 's')
+    .replace(/ğ/g, 'g')
+    .replace(/ü/g, 'u')
+    .replace(/ö/g, 'o')
+    .replace(/ç/g, 'c')
+    .replace(/[^a-z0-9]/g, '');
+}
+
 function zaman(value: unknown, coz: (s: string) => number): number {
   const s = String(value ?? '').trim();
   if (!s) return 0;
@@ -92,7 +124,7 @@ export function yeniYatirimGerekiyorMu(input: {
   const { atamalar, nakit, yatirimlar, promo, coz } = input;
 
   const promoId = promo.id != null && String(promo.id).trim() !== '' ? Number(promo.id) : null;
-  const promoBaslik = kucuk(promo.title);
+  const promoBaslik = adAnahtari(promo.title);
   const kuralAnahtari = kucuk(promo.kuralAnahtari ?? promo.id);
 
   // Ayni bonusun onceki verilislerini bul — iki kaynaktan.
@@ -100,11 +132,13 @@ export function yeniYatirimGerekiyorMu(input: {
 
   for (const satir of atamalar ?? []) {
     if (!satir) continue;
-    const ad = kucuk(satir.Name);
+    const ad = adAnahtari(satir.Name);
     const id = satir.Id != null && String(satir.Id).trim() !== '' ? Number(satir.Id) : null;
     const eslesir =
       (promoId != null && Number.isFinite(promoId) && id != null && Number.isFinite(id) && id === promoId) ||
-      (promoBaslik !== '' && ad !== '' && (ad.includes(promoBaslik) || promoBaslik.includes(ad)));
+      // TAM ESITLIK: alt dize karsilastirmasi genel adli bir bonusun
+      // ozel olani engellemesine yol aciyordu.
+      (promoBaslik !== '' && ad !== '' && ad === promoBaslik);
     if (!eslesir) continue;
     const t = zaman(satir.CreatedLocal, coz);
     if (t > 0) zamanlar.push(t);

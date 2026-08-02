@@ -275,3 +275,69 @@ describe('kapsam ayrımı — çekimi engellemez', () => {
     expect(r.items.find((i: any) => i.id === 'deposit-scoped-usage')).toBeUndefined();
   });
 });
+
+/**
+ * "2X BONUSU ALINAMIYOR" REGRESYON TESTI.
+ *
+ * Ilk surum adlari ALT DIZE ile karsilastiriyordu:
+ *   ad.includes(promoBaslik) || promoBaslik.includes(ad)
+ *
+ * Ikinci yon olduruyordu: DAHA GENEL adli bir bonus ozel olani yutuyor.
+ * "2x Yatırım Bonusu" talebi, oyuncuya daha once verilmis "Yatırım
+ * Bonusu" yuzunden engelleniyordu — bunlar AYRI bonuslar.
+ */
+describe('ad eşleştirme — bildirilen "2x alınamıyor"', () => {
+  const iki = (atamaAdi: string) =>
+    yeniYatirimGerekiyorMu({
+      atamalar: [{ Name: atamaAdi, CreatedLocal: gunOnce(1) }],
+      nakit: [],
+      yatirimlar: [],
+      promo: { title: '2x Yatırım Bonusu' },
+      coz,
+    });
+
+  it('GENEL adlı başka bonus 2x’i ENGELLEMEZ', () => {
+    expect(iki('Yatırım Bonusu').uygun).toBe(true);
+  });
+
+  it('sadece "Bonus" adlı atama da engellemez', () => {
+    expect(iki('Bonus').uygun).toBe(true);
+  });
+
+  it('gerçekten aynı bonus engeller', () => {
+    expect(iki('2x Yatırım Bonusu').uygun).toBe(false);
+  });
+
+  it('tire/boşluk farkı tolere edilir — Lynon kampanya ve bonus adı ayrışabiliyor', () => {
+    const sonuc = yeniYatirimGerekiyorMu({
+      atamalar: [{ Name: '100 FS Telegram Katıl Bonusu', CreatedLocal: gunOnce(1) }],
+      nakit: [],
+      yatirimlar: [],
+      promo: { title: '100 FS - Telegram Katıl Bonusu' },
+      coz,
+    });
+    expect(sonuc.uygun).toBe(false);
+  });
+
+  it('Türkçe karakter farkı eşleşmeyi bozmaz', () => {
+    const sonuc = yeniYatirimGerekiyorMu({
+      atamalar: [{ Name: 'KAYIP BONUSU', CreatedLocal: gunOnce(1) }],
+      nakit: [],
+      yatirimlar: [],
+      promo: { title: 'Kayıp Bonusu' },
+      coz,
+    });
+    expect(sonuc.uygun).toBe(false);
+  });
+
+  it('kimlik eşleşmesi ada bakmadan çalışır', () => {
+    const sonuc = yeniYatirimGerekiyorMu({
+      atamalar: [{ Id: 1885, Name: 'Bambaşka', CreatedLocal: gunOnce(1) }],
+      nakit: [],
+      yatirimlar: [],
+      promo: { id: 1885, title: '2x Yatırım Bonusu' },
+      coz,
+    });
+    expect(sonuc.uygun).toBe(false);
+  });
+});

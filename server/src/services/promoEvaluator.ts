@@ -151,12 +151,29 @@ function checkUsageLimits(account: AccountSnapshot, spec: PromoSpec | undefined,
   const promoTitle = String(promo.title ?? '').toLowerCase();
   const promoId = promo.id != null ? Number(promo.id) : null;
 
+  /**
+   * AYNI AD ESLESTIRME KUSURU BURADA DA VARDI.
+   *
+   * `promoTitle.includes(name)` yonu, DAHA GENEL adli bir bonusun ozel
+   * olani engellemesine yol aciyordu: "2x Yatırım Bonusu" limiti,
+   * oyuncuya verilmis "Yatırım Bonusu" atamasini kendi kullanimi
+   * sayiyordu. Artik harf/rakam disi karakterler atilip TAM ESITLIK
+   * araniyor; tire ve bosluk farki tolere edilir, farkli bonuslar
+   * karismaz.
+   */
+  const adAnahtari = (value: unknown) =>
+    String(value ?? '')
+      .toLocaleLowerCase('tr-TR')
+      .replace(/ı/g, 'i').replace(/ş/g, 's').replace(/ğ/g, 'g')
+      .replace(/ü/g, 'u').replace(/ö/g, 'o').replace(/ç/g, 'c')
+      .replace(/[^a-z0-9]/g, '');
+  const promoAnahtari = adAnahtari(promo.title);
+
   const matchesPromo = (b: BCBonus) => {
-    const name = String(b?.Name ?? '').toLowerCase();
     const id = b?.Id != null ? Number(b.Id) : null;
     if (promoId != null && id != null && id === promoId) return true;
-    if (!promoTitle) return false;
-    return name.includes(promoTitle) || promoTitle.includes(name);
+    if (!promoAnahtari) return false;
+    return adAnahtari(b?.Name) === promoAnahtari;
   };
 
   const parseBonusTime = (b: BCBonus) => {
