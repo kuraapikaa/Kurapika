@@ -2043,10 +2043,21 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
             ...ruleAssignmentValues,
             ...(effectiveAmount > 0 && suppliedValues.BonusMoneyAmount == null && ruleAssignmentValues.BonusMoneyAmount == null ? { BonusMoneyAmount: effectiveAmount } : {}),
           };
+          const { atamaNotu } = await import('../services/bonusAtamaNotu.js');
           const result = await lynonAssignCampaignToPlayer({
             campaignId: partnerBonusId,
             playerId: ClientId,
-            assignmentReason: `Narcosbahis panel talebi / ${username}`,
+            // Not artik kural, talep eden, yatirim ve tutari tasiyor;
+            // "bu bonus neden verilmis" sorusu koda bakmadan yanitlanabilsin.
+            assignmentReason: atamaNotu({
+              kaynak: 'panel',
+              kuralAnahtari: resolvedRule?.key ?? BonusId,
+              baslik: (spec as { title?: unknown })?.title,
+              talepEden: username,
+              yatirimId: (currentAccount as { lastDeposit?: { id?: unknown } })?.lastDeposit?.id,
+              yatirimTutari: (currentAccount as { lastDeposit?: { amount?: unknown } })?.lastDeposit?.amount,
+              tutar: effectiveAmount,
+            }),
             assignmentValues,
           });
           audit(username, role, 'lynon_campaign_assignment', String(ClientId), `CampaignId: ${partnerBonusId}, RuleId: ${resolvedRule?.key ?? BonusId}`);
