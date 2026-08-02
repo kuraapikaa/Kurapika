@@ -23,6 +23,7 @@ import {
   Eye,
   EyeOff,
   ListTree,
+  Radar,
   RefreshCw,
   Search,
   Trash2,
@@ -203,6 +204,138 @@ function BaslikTablosu({ baslik, satirlar }: { baslik: string; satirlar: Record<
               <span className={`break-all ${deger === '***' ? 'text-rose-400/70' : 'text-[color:var(--panel-muted,#8a919c)]'}`}>{deger}</span>
             </div>
           ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Otomatik tarama ─────────────────────────────────────────────────────
+
+interface TaramaSatiri {
+  taranabilir: boolean;
+  method: string;
+  url: string;
+  neden?: string;
+}
+
+interface TaramaSonucu {
+  tamamlanan: number;
+  toplam: number;
+  basarili: number;
+  hatali: number;
+  suanki: string | null;
+  bitti: boolean;
+}
+
+/**
+ * Panelin bütün GET uçlarını sırayla çağırır.
+ *
+ * MUTASYON UÇLARI HİÇ ÇAĞRILMAZ. Bu panelde POST/PUT/DELETE uçları bonus
+ * veriyor, bakiye düzeltiyor ve çekim sonuçlandırıyor; bir tarama onları
+ * çağırırsa gerçek para hareketi yaratır. Sunucudaki plan yalnızca GET
+ * döner, burada da ikinci kez süzülüyor — iki kapı birden.
+ *
+ * Çağrılar tarayıcıdan gittiği için hem gelen kayıt hem de sunucunun
+ * tetiklediği giden Lynon istekleri kendiliğinden kaydedilir.
+ */
+function useTarama(onBitti: () => void) {
+  const [durum, setDurum] = useState<TaramaSonucu | null>(null);
+  const [calisiyor, setCalisiyor] = useState(false);
+
+  const basla = useCallback(async () => {
+    setCalisiyor(true);
+    try {
+      // 1. Yakalamayı aç — kullanıcının elle açması gerekmesin.
+      const yak = await fetch('/api/admin/api-trafik/yakalama', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ac: true }),
+      });
+      if (!yak.ok) throw new Error('Gövde yakalama açılamadı.');
+
+      // 2. Planı al.
+      const planRes = await fetch('/api/admin/api-trafik/tarama-plani');
+      const planJson = await planRes.json();
+      if (!planRes.ok || !planJson?.ok) throw new Error(planJson?.message || 'Tarama planı alınamadı.');
+
+      const hedefler: TaramaSatiri[] = (planJson.data.satirlar as TaramaSatiri[]).filter(
+        (s) => s.taranabilir && s.method === 'GET',
+      );
+
+      setDurum({ tamamlanan: 0, toplam: hedefler.length, basarili: 0, hatali: 0, suanki: null, bitti: false });
+
+      let basarili = 0;
+      let hatali = 0;
+
+      // 3. Sırayla çağır. Paralel gitmiyoruz: bu uçların çoğu Lynon'a
+      //    çıkıyor ve eşzamanlı yük dış servisi hız sınırına sokabilir.
+      for (let i = 0; i < hedefler.length; i += 1) {
+        const hedef = hedefler[i];
+        setDurum((d) => (d ? { ...d, suanki: hedef.url } : d));
+        try {
+          const res = await fetch(hedef.url, { headers: { 'X-Api-Tarama': '1' } });
+          if (res.ok) basarili += 1;
+          else hatali += 1;
+        } catch {
+          hatali += 1;
+        }
+        setDurum((d) => (d ? { ...d, tamamlanan: i + 1, basarili, hatali } : d));
+      }
+
+      setDurum((d) => (d ? { ...d, suanki: null, bitti: true } : d));
+      toast.success(`Tarama bitti — ${basarili} uç yanıtladı, ${hatali} uçta hata.`);
+      onBitti();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Tarama başarısız.');
+      setDurum(null);
+    } finally {
+      setCalisiyor(false);
+    }
+  }, [onBitti]);
+
+  return { durum, calisiyor, basla };
+}
+
+function TaramaKarti({ onBitti }: { onBitti: () => void }) {
+  const { durum, calisiyor, basla } = useTarama(onBitti);
+  const yuzde = durum && durum.toplam > 0 ? Math.round((durum.tamamlanan / durum.toplam) * 100) : 0;
+
+  return (
+    <div className="mt-4 p-4 rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface-2,rgba(242,244,248,0.05))]">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="flex items-start gap-3">
+          <Radar size={16} className="text-blue-400 mt-0.5" />
+          <div>
+            <p className="text-xs font-semibold text-white">Paneli otomatik tara</p>
+            <p className="text-[11px] text-[color:var(--panel-faint,#5c6470)] mt-0.5 max-w-2xl">
+              Gövde yakalamayı açar ve panelin tüm okuma uçlarını sırayla çağırır; her uç için
+              headers, payload, preview ve response dolar.{' '}
+              <span className="text-amber-400/90">
+                Veri değiştiren uçlar (bonus, bakiye, çekim) taranmaz.
+              </span>
+            </p>
+          </div>
+        </div>
+        <Button variant="primary" onClick={basla} disabled={calisiyor} className="h-9 px-4 text-xs shrink-0">
+          {calisiyor ? 'Taranıyor…' : 'Taramayı başlat'}
+        </Button>
+      </div>
+
+      {durum && (
+        <div className="mt-4 space-y-2">
+          <div className="h-1.5 rounded-full bg-[color:var(--panel-border,rgba(242,244,248,0.1))] overflow-hidden">
+            <div className="h-full bg-blue-500 transition-all duration-300" style={{ width: `${yuzde}%` }} />
+          </div>
+          <div className="flex items-center justify-between text-[11px]">
+            <span className="text-[color:var(--panel-muted,#8a919c)] font-mono truncate max-w-[60%]">
+              {durum.suanki ?? (durum.bitti ? 'Tamamlandı' : '…')}
+            </span>
+            <span className="text-[color:var(--panel-faint,#5c6470)]">
+              {durum.tamamlanan}/{durum.toplam} · {durum.basarili} başarılı
+              {durum.hatali > 0 && <span className="text-rose-400"> · {durum.hatali} hata</span>}
+            </span>
+          </div>
         </div>
       )}
     </div>
@@ -405,6 +538,15 @@ export function ApiTrafik() {
             {yakalamaAcik ? 'Kapat' : 'Yakalamayı aç'}
           </Button>
         </div>
+
+        {/*
+          * Tarama, yakalama anahtarının hemen altında: sıra doğal olarak
+          * "yakalamayı aç → panelde gez". Tarama ilk adımı da kendisi
+          * yapıyor, operatörün elle açması gerekmiyor.
+          */}
+        <TaramaKarti
+          onBitti={() => queryClient.invalidateQueries({ queryKey: ['api-trafik'] })}
+        />
       </Card>
 
       {gorunum === 'katalog' ? (
@@ -497,7 +639,9 @@ export function ApiTrafik() {
                     <div className="p-3 rounded-lg bg-amber-500/5 border border-amber-500/20 flex items-start gap-2">
                       <EyeOff size={14} className="text-amber-400 mt-0.5 shrink-0" />
                       <p className="text-[11px] text-amber-300/90">
-                        Bu istek kaydedilirken gövde yakalama kapalıydı. Yakalamayı açıp isteği tekrarlayın.
+                        Bu istek kaydedilirken gövde yakalama kapalıydı. Yukarıdaki{' '}
+                        <strong className="font-semibold">Taramayı başlat</strong> düğmesi yakalamayı
+                        açıp tüm okuma uçlarını yeniden çağırır; elle tekrarlamanız gerekmez.
                       </p>
                     </div>
                   )}

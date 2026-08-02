@@ -10,6 +10,7 @@ import {
   kayitlar,
   temizle,
   ucKatalogu,
+  taramaPlani,
   ucKaydet,
   ucOzetleri,
   urlAyir,
@@ -266,5 +267,55 @@ describe('uç kataloğu', () => {
     ucKaydet('GET', '/api/tekrar');
     ucKaydet('get', '/api/tekrar');
     expect(ucKatalogu().filter((u) => u.url === '/api/tekrar')).toHaveLength(1);
+  });
+});
+
+describe('tarama planı — para güvenliği', () => {
+  /**
+   * Bu panelde POST/PUT/DELETE uclari bonus veriyor, bakiye duzeltiyor
+   * ve cekim sonuclandiriyor. Tarama onlari cagirirsa GERCEK PARA
+   * HAREKETI olur. Bu testler o kapinin kapali kaldigini dogruluyor.
+   */
+  it('mutasyon metotları taranabilir DEĞİL', () => {
+    ucKaydet('POST', '/api/admin/bonus/charge');
+    ucKaydet('DELETE', '/api/admin/kayit');
+    ucKaydet('PUT', '/api/admin/guncelle');
+
+    const plan = taramaPlani();
+    for (const yol of ['/api/admin/bonus/charge', '/api/admin/kayit', '/api/admin/guncelle']) {
+      const satir = plan.find((s) => s.url === yol)!;
+      expect(satir.taranabilir).toBe(false);
+      expect((satir as any).neden).toContain('Veri değiştirebilir');
+    }
+  });
+
+  it('GET uçları taranabilir', () => {
+    ucKaydet('GET', '/api/admin/rules');
+    expect(taramaPlani().find((s) => s.url === '/api/admin/rules')?.taranabilir).toBe(true);
+  });
+
+  it('yol parametreli uç değer olmadan taranmaz', () => {
+    ucKaydet('GET', '/api/player/:id');
+    const satir = taramaPlani().find((s) => s.url === '/api/player/:id')!;
+    expect(satir.taranabilir).toBe(false);
+    expect((satir as any).neden).toContain('parametre');
+  });
+
+  it('joker yollu uç taranmaz', () => {
+    ucKaydet('GET', '/api/dosya/*');
+    expect(taramaPlani().find((s) => s.url === '/api/dosya/*')?.taranabilir).toBe(false);
+  });
+
+  it('trafik ekranının kendi uçları taranmaz — kendini besleyen döngü olurdu', () => {
+    ucKaydet('GET', '/api/admin/api-trafik');
+    ucKaydet('GET', '/api/admin/api-trafik/katalog');
+    const plan = taramaPlani();
+    expect(plan.find((s) => s.url === '/api/admin/api-trafik')?.taranabilir).toBe(false);
+    expect(plan.find((s) => s.url === '/api/admin/api-trafik/katalog')?.taranabilir).toBe(false);
+  });
+
+  it('atlananlar listeden düşürülmez — neden görünür kalmalı', () => {
+    ucKaydet('POST', '/api/atlanan-uc');
+    expect(taramaPlani().some((s) => s.url === '/api/atlanan-uc')).toBe(true);
   });
 });
