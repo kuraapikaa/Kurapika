@@ -3,6 +3,19 @@ import { JSDOM } from 'jsdom';
 export interface NormalizedPromo {
   id: number;
   title: string;
+  /**
+   * Kuralin PROMO_SPECS / PROMO_TITLE_SPECS icindeki anahtari.
+   *
+   * `id` ile AYNI OLMAYABILIR: resolveBonusRule bir kurali
+   * `partnerBonusId` uzerinden de bulabiliyor, o zaman anahtar bir
+   * BASLIK anahtari olurken `id` sayisal kampanya kimligi kalir.
+   *
+   * Nakit bonuslarin mukerrer kontrolu bakiye duzeltmesi notundan kural
+   * anahtarini okuyor (`Bonus <anahtar> / <kullanici>`); not
+   * `resolvedRule.key` ile YAZILIP `promo.id` ile ARANDIGI icin bu iki
+   * deger ayrildiginda kontrol hicbir kullanim goremiyordu.
+   */
+  kuralAnahtari?: string;
   minDeposit?: number;
   maxBonus?: number;
   bonusPercent?: number;

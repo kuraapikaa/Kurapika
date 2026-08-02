@@ -1765,7 +1765,7 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
               ? { overallOk: false, items: [{ id: 'disabled-rule', ok: false, label: 'Bu kampanya bonus taleplerinde pasif durumda.' }] }
               : missingPartnerBonusId
                 ? { overallOk: false, items: [{ id: 'missing-partner-bonus-id', ok: false, label: 'Partner Bonus ID eksik; bonus ataması güvenli biçimde durduruldu.' }] }
-                : await evaluateForAccount(account as any, { id: bonusId, title: bonusName || String(bonusId), ...spec } as any, specs, tenantKey, 'bonus');
+                : await evaluateForAccount(account as any, { id: bonusId, title: bonusName || String(bonusId), kuralAnahtari: resolvedRule?.key, ...spec } as any, specs, tenantKey, 'bonus');
           if (bonusId && specificBonusCheck.overallOk && hasCompleteEligibilityData(account)) {
             // Izin anahtari, charge ile AYNI kimlik dizesini kullanmali.
             // Onceden burada 'anonymous', charge'da 'system' uretiliyordu;
@@ -1964,6 +1964,9 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
           const currentCheck = await evaluateForAccount(currentAccount as any, {
             id: Number(BonusId),
             title: (spec as any).title || String(BonusId),
+            // Mukerrer kontrolu notu bu anahtarla ariyor; asagida not da
+            // bununla yaziliyor. Ikisi ayrilirsa kontrol kor kalir.
+            kuralAnahtari: resolvedRule?.key ?? String(BonusId),
             ...spec,
           } as any, rules, tenantKey, 'bonus');
           if (!currentCheck.overallOk) {

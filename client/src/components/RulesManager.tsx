@@ -15,6 +15,13 @@ import { dashboardApi } from '../api/client';
 interface PromoSpec {
     enabled?: boolean;
     // Basic Info
+    /**
+     * Kuralin gorunen adi. Sunucu tarafinda hep vardi ama istemci tipinde
+     * modellenmemisti; bu yuzden Kural Merkezi'nde hic duzenlenemiyordu.
+     * Nakit bonuslarin Lynon'da kampanyasi olmadigi icin baska ad kaynagi
+     * da yok — kartlarda yalnizca ham anahtar goruluyordu.
+     */
+    title?: string;
     type?: 'partner' | 'cash' | 'wheel';
     partnerBonusId?: string;
 
@@ -341,10 +348,11 @@ export function RulesManager() {
 
         const needle = searchTerm.toLocaleLowerCase('tr-TR').trim();
         return Array.from(merged.entries())
-            .filter(([key]) => {
+            .filter(([key, spec]) => {
                 if (!needle) return true;
+                // Kuralin kendi adi da aranabilmeli; nakit bonuslarda tek ad odur.
                 const title = getPromoTitleForRuleKey(key) ?? '';
-                return `${key} ${title}`.toLocaleLowerCase('tr-TR').includes(needle);
+                return `${key} ${title} ${spec?.title ?? ''}`.toLocaleLowerCase('tr-TR').includes(needle);
             })
             .sort((a, b) => Number(a[0]) - Number(b[0]) || a[0].localeCompare(b[0], 'tr'));
     }, [config, activeTab, searchTerm, promos, promoTitleByNormalizedTitle]);
@@ -582,6 +590,29 @@ export function RulesManager() {
                                                             description="Bu bonusun uygunluk kontrollerinde ve ödül atamalarında kullanılmasını belirler."
                                                             value={editValue?.enabled}
                                                             onChange={(value) => setEditValue({ ...editValue, enabled: value })}
+                                                        />
+                                                    </div>
+                                                    {/*
+                                                      * BONUS ADI.
+                                                      *
+                                                      * Kart basligi kurala Lynon kampanya katalogundan isim
+                                                      * ariyordu (getPromoTitleForRuleKey). Nakit bonuslarin
+                                                      * Lynon'da kampanyasi YOK, dolayisiyla adi hic
+                                                      * gorunmuyordu ve degistirilemiyordu — kartta yalnizca
+                                                      * ham anahtar kaliyordu.
+                                                      */}
+                                                    <div className="mb-4 space-y-2">
+                                                        <label className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest block pl-1">Bonus Adı</label>
+                                                        <p className="text-[10px] text-[color:var(--panel-faint,#5c6470)] font-medium pl-1 mb-1">
+                                                            Panelde ve oyuncu tarafında görünen ad. Boş bırakılırsa
+                                                            {activeTab === 'id' ? ' Lynon kampanya adı' : ' kural anahtarı'} kullanılır.
+                                                        </p>
+                                                        <input
+                                                            type="text"
+                                                            value={editValue?.title ?? ''}
+                                                            onChange={(e) => setEditValue({ ...editValue, title: e.target.value })}
+                                                            placeholder={getPromoTitleForRuleKey(key) ?? key}
+                                                            className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all outline-none font-bold"
                                                         />
                                                     </div>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1431,13 +1462,20 @@ export function RulesManager() {
                                     ) : (
                                         <motion.div key="view" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                                             <div className="space-y-4 flex-1">
+                                                {/*
+                                                  * Baslik once kuralin KENDI adini gosterir. Onceden yalnizca
+                                                  * Lynon kampanya katalogundan isim araniyordu; nakit
+                                                  * bonuslarin kampanyasi olmadigi icin adsiz kaliyorlardi.
+                                                  */}
                                                 <div className="space-y-1">
-                                                    <span className="text-lg font-semibold text-white tracking-tight">{key}</span>
-                                                    {getPromoTitleForRuleKey(key) && (
-                                                        <p className="text-[11px] font-semibold text-emerald-300">
-                                                            {getPromoTitleForRuleKey(key)}
-                                                        </p>
-                                                    )}
+                                                    <span className="text-lg font-semibold text-white tracking-tight">
+                                                        {spec.title?.trim() || getPromoTitleForRuleKey(key) || key}
+                                                    </span>
+                                                    <p className="text-[11px] font-semibold text-emerald-300">
+                                                        {spec.title?.trim() && getPromoTitleForRuleKey(key) && getPromoTitleForRuleKey(key) !== spec.title.trim()
+                                                            ? `${key} · ${getPromoTitleForRuleKey(key)}`
+                                                            : key}
+                                                    </p>
                                                 </div>
                                                 <div className="flex flex-wrap gap-8">
                                                     {spec.type && (
