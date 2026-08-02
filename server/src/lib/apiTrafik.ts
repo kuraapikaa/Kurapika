@@ -285,6 +285,107 @@ export type UcOzeti = {
   sonDurum: number | null;
 };
 
+/**
+ * URL'i SABLONA cevirir: degisken parcalar `{id}` olur.
+ *
+ *   /api/.../CampaignAssignment/site/137/player/2496091
+ *   -> /api/.../CampaignAssignment/site/{id}/player/{id}
+ *
+ * Bu olmadan her oyuncu ve her kampanya AYRI BIR UC gorunur; belgesiz
+ * uc listesi binlerce satira cikar ve hicbir sey anlatmaz. Gruplamanin
+ * dogru birimi uc sablonudur, tek tek cagrilar degil.
+ */
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export function sablonla(url: string): string {
+  return String(url ?? '')
+    .split('/')
+    .map((parca) => {
+      // Yalnizca tamamen sayisal parcalar ve UUID'ler degisken sayilir.
+      // Daha genis bir kural ("icinde rakam varsa") farkli uclari
+      // birlestirip gizlerdi.
+      if (parca === '') return parca;
+      if (/^\d+$/.test(parca)) return '{id}';
+      if (UUID.test(parca)) return '{id}';
+      return parca;
+    })
+    .join('/');
+}
+
+/** Sablon bazinda giden uc ozeti; her satir son kaydina baglanir. */
+export type GidenUcOzeti = {
+  method: string;
+  sablon: string;
+  /** Gozlenen son gercek URL — ornek olarak gosterilir. */
+  ornekUrl: string;
+  cagri: number;
+  hata: number;
+  ortalamaSure: number;
+  sonCagri: string;
+  sonDurum: number | null;
+  /** Son kaydin kimligi; dort sekmenin verisi oradan okunur. */
+  sonKayitId: number;
+  /** Son kayitta govde tutulmus mu? */
+  govdeVar: boolean;
+};
+
+/**
+ * Giden ucleri sablona gore gruplar.
+ *
+ * POST'lar DAHIL: bunlari cagirmiyoruz, yalnizca panel normal
+ * kullanilirken gecen trafigi kaydediyoruz. Bu yuzden mutasyon uclarinin
+ * gercek govdesi ve yaniti da belgeye girebiliyor -- taramanin
+ * yapamayacagi sey.
+ */
+export function gidenUcOzetleri(): GidenUcOzeti[] {
+  const harita = new Map<string, GidenUcOzeti & { toplamSure: number }>();
+
+  for (const kayit of halka) {
+    if (kayit.yon !== 'giden') continue;
+    const sablon = sablonla(kayit.url);
+    const anahtar = `${kayit.method} ${sablon}`;
+
+    const mevcut = harita.get(anahtar) ?? {
+      method: kayit.method,
+      sablon,
+      ornekUrl: kayit.url,
+      cagri: 0,
+      hata: 0,
+      ortalamaSure: 0,
+      toplamSure: 0,
+      sonCagri: kayit.zaman,
+      sonDurum: kayit.durum,
+      sonKayitId: kayit.id,
+      govdeVar: false,
+    };
+
+    mevcut.cagri += 1;
+    mevcut.toplamSure += kayit.sure;
+    if (kayit.hata || (kayit.durum ?? 0) >= 400) mevcut.hata += 1;
+
+    // Son kayit olarak GOVDESI OLANI tercih et: belgelemek istedigimiz
+    // sey govde. En yeni kayit govdesizse (yakalama kapaliyken gecmisse)
+    // govdeli bir onceki daha degerli.
+    const govdeli = kayit.istekGovdesi != null || kayit.yanitGovdesi != null;
+    if (kayit.zaman >= mevcut.sonCagri && (govdeli || !mevcut.govdeVar)) {
+      mevcut.sonCagri = kayit.zaman;
+      mevcut.sonDurum = kayit.durum;
+      mevcut.sonKayitId = kayit.id;
+      mevcut.ornekUrl = kayit.url;
+      mevcut.govdeVar = govdeli;
+    }
+
+    harita.set(anahtar, mevcut);
+  }
+
+  return [...harita.values()]
+    .map(({ toplamSure, ...ozet }) => ({
+      ...ozet,
+      ortalamaSure: ozet.cagri > 0 ? Math.round(toplamSure / ozet.cagri) : 0,
+    }))
+    .sort((a, b) => b.cagri - a.cagri);
+}
+
 export function ucOzetleri(): UcOzeti[] {
   const harita = new Map<string, UcOzeti & { toplamSure: number }>();
 
