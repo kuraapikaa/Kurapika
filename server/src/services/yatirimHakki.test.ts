@@ -172,3 +172,48 @@ describe('kazı kazan: sınırsız oynamadan tek hakka', () => {
     expect(yatirimHakki(kayitlar, 'ayse', 'kazikazan', 'D1').uygun).toBe(true);
   });
 });
+
+/**
+ * GUNLUK SINIR KALDIRILDI.
+ *
+ * Onceden iki sinir birden vardi: gunluk limit (varsayilan 1) VE yatirim
+ * basina hak. Bunlar celisiyordu — gunde uc yatirim yapan oyuncu uc hak
+ * kaziniyor ama gunluk limit yuzunden yalnizca birini kullanabiliyordu;
+ * kazanilmis hak sessizce yaniyordu.
+ *
+ * Artik tek kural yatirim. Bu testler o kuralin gun icinde kac kez
+ * olursa olsun isledigini ve ayni yatirimin iki kez oynatmadigini
+ * birlikte dogruluyor.
+ */
+describe('aynı gün birden fazla yatırım', () => {
+  const oyna = (kayitlar: OyunKaydi[], depositId: string) =>
+    yatirimHakki(kayitlar, 'ayse', 'cark', depositId);
+
+  it('üç ayrı yatırım üç hak verir', () => {
+    const kayitlar: OyunKaydi[] = [];
+    for (const id of ['d1', 'd2', 'd3']) {
+      const hak = oyna(kayitlar, id);
+      expect(hak.uygun).toBe(true);
+      kayitlar.push({ username: 'ayse', oyun: 'cark', depositId: id, status: 'granted' });
+    }
+    expect(kayitlar).toHaveLength(3);
+  });
+
+  it('gün içinde de olsa aynı yatırım ikinci kez oynatmaz', () => {
+    const kayitlar: OyunKaydi[] = [
+      { username: 'ayse', oyun: 'cark', depositId: 'd1', status: 'granted' },
+    ];
+    expect(oyna(kayitlar, 'd1').uygun).toBe(false);
+    // Ama yeni yatirim hemen hak veriyor — gun degismesi beklenmiyor.
+    expect(oyna(kayitlar, 'd2').uygun).toBe(true);
+  });
+
+  it('önceki günün yatırımı tekrar oynatmaz', () => {
+    // Gunluk limit kalkti diye eski yatirim yeniden canlanmiyor;
+    // hak GUNE degil YATIRIMA bagli.
+    const kayitlar: OyunKaydi[] = [
+      { username: 'ayse', oyun: 'cark', depositId: 'dun-1', status: 'completed' },
+    ];
+    expect(oyna(kayitlar, 'dun-1').uygun).toBe(false);
+  });
+});

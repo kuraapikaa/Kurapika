@@ -89,3 +89,43 @@ describe('önek korunması', () => {
     expect(oyunOduluMu(atamaNotu({ kaynak: 'panel', kuralAnahtari: 'x' }, t))).toBe(false);
   });
 });
+
+/**
+ * ODUL KAYNAGI AYRIMI.
+ *
+ * Bes ayri ozellik ayni notu yaziyordu: `Kaynak: oyun`. Ayni kampanya
+ * birden fazla kanala baglandiginda (1885 "Telegram Katıl" ornegi)
+ * bonusun HANGI kapidan verildigi notlardan anlasilamiyordu. Her kanalin
+ * kendi hak sayaci oldugu icin bu, sizinti arastirmasinda kor noktaydi.
+ */
+describe('ödül kaynağı ayrımı', () => {
+  const kaynaklar = ['çark', 'kazı kazan', 'telegram', 'günlük görev', 'battle pass', 'skor tahmin'];
+
+  it('her kaynak nota ayrı yazılır', () => {
+    for (const kaynak of kaynaklar) {
+      expect(atamaNotu({ onek: 'Narcosbahis oyun ödülü: X', kaynak }, t)).toContain(`Kaynak: ${kaynak}`);
+    }
+  });
+
+  it('kaynaklar birbirinden ayırt edilebilir', () => {
+    const notlar = kaynaklar.map((kaynak) => atamaNotu({ onek: 'Narcosbahis oyun ödülü: X', kaynak }, t));
+    expect(new Set(notlar).size).toBe(kaynaklar.length);
+  });
+
+  it('kaynak ayrımı oyun ödülü önekini bozmaz', () => {
+    // oyunHakkiGecmisi.oyunOduluMu bu oneki ariyor; geriye donuk
+    // eslestirme buna dayaniyor.
+    for (const kaynak of kaynaklar) {
+      expect(oyunOduluMu(atamaNotu({ onek: 'Narcosbahis oyun ödülü: X', kaynak }, t))).toBe(true);
+    }
+  });
+
+  it('çark ile telegram aynı kampanyada bile ayrışır', () => {
+    const ortak = { onek: 'Narcosbahis oyun ödülü: 100 FS - Telegram Katıl Bonusu', talepEden: 'ayse', tutar: 100 };
+    const cark = atamaNotu({ ...ortak, kaynak: 'çark' }, t);
+    const telegram = atamaNotu({ ...ortak, kaynak: 'telegram' }, t);
+    expect(cark).not.toBe(telegram);
+    expect(cark).toContain('Kaynak: çark');
+    expect(telegram).toContain('Kaynak: telegram');
+  });
+});

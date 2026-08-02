@@ -455,7 +455,6 @@ const DEFAULT_GAME_SETTINGS = {
     glowStrength: 0,
     glossy: true
   },
-  wheelDailyLimit: 1,
   wheel: [
     { id: 'wheel-pass', label: 'Tekrar Dene', bgColor: '#111827', textColor: '#ffffff', probability: 97, type: 'none', bonusId: null, amount: 0, isLoss: true },
     { id: 'wheel-fs-sweet-100', label: '100 Freespin', detail: 'Sweet Bonanza · 1 ₺ spin', bgColor: '#b7791f', textColor: '#ffffff', probability: 0, type: 'bonus', rewardKind: 'freespin', bonusId: null, amount: 100, gameName: 'Sweet Bonanza', spinValue: 1, spinCount: 100, requiresConfiguration: true, isLoss: false },
@@ -1221,10 +1220,10 @@ function levelReward(level: any, track: string) {
   };
 }
 
-async function grantReward(login: string, reward: { label?: string; bonusId?: any; amount?: number }) {
+async function grantReward(login: string, reward: { label?: string; bonusId?: any; amount?: number }, kaynak: OdulKaynagi) {
   const hasReward = reward?.label || reward?.bonusId || Number(reward?.amount || 0) > 0;
   if (!hasReward) return { ok: true, skipped: true };
-  return chargeBonusToPlayer(login, reward.bonusId ? Number(reward.bonusId) : null, reward.label || '', reward.amount);
+  return chargeBonusToPlayer(login, reward.bonusId ? Number(reward.bonusId) : null, reward.label || '', reward.amount, {}, kaynak);
 }
 
 function buildDailyTasksPayload(settings: any, claims: any, activity: any, username: string) {
@@ -1419,7 +1418,35 @@ async function getActiveBonusDefinitions() {
     }
 }
 
-async function chargeBonusToPlayer(login: string, bonusId: number | null, label: string = '', explicitAmount?: number, explicitAssignmentValues: Record<string, unknown> = {}) {
+/**
+ * ODUL KAYNAGI.
+ *
+ * Bu fonksiyondan BES ayri ozellik geciyor: cark, kazi kazan, Telegram
+ * katilim, gunluk gorev/battle pass ve skor tahmin. Hepsi ayni notu
+ * yaziyordu:
+ *
+ *   "Narcosbahis oyun ödülü: <etiket> | Kaynak: oyun | ..."
+ *
+ * `Kaynak: oyun` hicbir seyi ayirt etmiyordu. Ayni kampanya birden fazla
+ * kanala baglandiginda -- 1885 "Telegram Katıl" ornegindeki gibi --
+ * bonusun HANGI kapidan verildigi notlardan anlasilamiyordu; her
+ * kanalin kendi hak sayaci oldugu icin bu, sizinti arastirmasinda
+ * dogrudan kor nokta.
+ *
+ * Artik her cagri kendi kaynagini bildiriyor.
+ */
+type OdulKaynagi = 'cark' | 'kazikazan' | 'telegram' | 'gorev' | 'battlepass' | 'tahmin';
+
+const KAYNAK_ADI: Record<OdulKaynagi, string> = {
+  cark: 'çark',
+  kazikazan: 'kazı kazan',
+  telegram: 'telegram',
+  gorev: 'günlük görev',
+  battlepass: 'battle pass',
+  tahmin: 'skor tahmin',
+};
+
+async function chargeBonusToPlayer(login: string, bonusId: number | null, label: string = '', explicitAmount?: number, explicitAssignmentValues: Record<string, unknown> = {}, kaynak: OdulKaynagi = 'cark') {
     if (isLynonConfigured()) {
         if (!bonusId || !Number.isFinite(Number(bonusId))) {
             return { ok: false, message: 'Bu ödül için Lynon kampanyası seçilmemiş.' };
@@ -1433,7 +1460,7 @@ async function chargeBonusToPlayer(login: string, bonusId: number | null, label:
                 // Onek KORUNUYOR: oyunHakkiGecmisi.oyunOduluMu bunu ariyor.
                 assignmentReason: atamaNotu({
                   onek: `Narcosbahis oyun ödülü: ${label || 'Ödül'}`,
-                  kaynak: 'oyun',
+                  kaynak: KAYNAK_ADI[kaynak],
                   talepEden: login,
                   tutar: explicitAmount,
                 }),
@@ -1583,7 +1610,8 @@ async function deliverWheelReward(login: string, slice: any) {
       slice.bonusId ? Number(slice.bonusId) : null,
       slice.label,
       slice.amount,
-      slice.assignmentValues || {}
+      slice.assignmentValues || {},
+      'cark',
     );
   }
 
@@ -1713,26 +1741,32 @@ export async function gamesRoutes(app: FastifyInstance) {
 
       const claims = await readWheelClaims(tenantKey);
       const dateKey = toDateKey();
-      const dailyLimit = Math.max(1, Math.min(20, Number(settings.wheelDailyLimit || 1)));
-      const usedToday = claims.filter((claim: any) =>
-        claim.username === login &&
-        claim.dateKey === dateKey &&
-        ['pending', 'completed', 'granted', 'fulfillment_pending'].includes(String(claim.status))
-      ).length;
-      if (usedToday >= dailyLimit) {
-        return reply.status(429).send({ ok: false, message: `Günlük çark hakkınızı kullandınız. Limit: ${dailyLimit}` });
-      }
 
       /**
-       * BIR YATIRIM = BIR HAK.
+       * BIR YATIRIM = BIR HAK. GUNLUK SINIR YOK.
        *
-       * Onceden yalnizca gunluk limit vardi ve minimum tutara bakiliyordu,
-       * ama hangi yatirim oldugu KAYDEDILMIYORDU. Oyuncu tek yatirimla her
-       * gun yeniden cevirebiliyordu — gun degisince limit sifirlaniyor,
-       * yatirim ayni kaliyordu.
+       * ── Once ──────────────────────────────────────────────────────
+       * Iki sinir birden vardi: gunluk limit (varsayilan 1) VE yatirim
+       * basina hak. Bunlar birbiriyle celisiyordu — gunde uc yatirim
+       * yapan oyuncu uc hak kazaniyor ama gunluk limit yuzunden
+       * yalnizca birini kullanabiliyordu. Kazanilmis hak sessizce
+       * yaniyordu.
        *
-       * Cark KODU bu kurala girmez: kod yatirimdan bagimsiz, operatorun
-       * verdigi tek kullanimlik ayri bir haktir.
+       * ── Simdi ─────────────────────────────────────────────────────
+       * Tek kural yatirim: her basarili yatirim bir cevirme hakki
+       * veriyor, gun icinde kac kez olursa olsun.
+       *
+       * Sinirsiz birakmak guvenli, cunku iki kapi da kapali:
+       *   - Yatirim yolu `yatirimHakki` ile yatirim KIMLIGINE bagli;
+       *     ayni yatirim iki kez oynatmiyor.
+       *   - Kod yolu tek kullanimlik; kod basarili teslimattan sonra
+       *     `used: true` isaretleniyor.
+       *
+       * `wheelDailyLimit` ayari kaldirildi: duran ama hicbir sey
+       * yapmayan bir ayar, operatoru yanlis yonlendirir.
+       *
+       * Cark KODU yatirim kuralina girmez: kod yatirimdan bagimsiz,
+       * operatorun verdigi ayri bir haktir.
        */
       let carkDepositId: string | null = null;
       const minInvestment = Number(settings.wheelMinInvestment || 0);
@@ -2078,7 +2112,7 @@ const selectedSlice = selected.slice;
     }
 
     if (selectedReward) {
-       chargeStatus = await chargeBonusToPlayer(bonusPanelUser.login, selectedReward.bonusId ? Number(selectedReward.bonusId) : null, selectedReward.label, selectedReward.amount, selectedReward.assignmentValues || {});
+       chargeStatus = await chargeBonusToPlayer(bonusPanelUser.login, selectedReward.bonusId ? Number(selectedReward.bonusId) : null, selectedReward.label, selectedReward.amount, selectedReward.assignmentValues || {}, 'kazikazan');
     }
 
     scratchKaydi.status = 'granted';
@@ -2202,6 +2236,7 @@ const selectedSlice = selected.slice;
       telegramBonus.bonusLabel,
       telegramBonus.amount,
       telegramBonus.assignmentValues || {},
+      'telegram',
     );
 
     // `belirsiz`: Lynon cagrildi ama hata dondu — atama gerceklesmis
@@ -2332,7 +2367,7 @@ const selectedSlice = selected.slice;
           continue;
         }
         const assignmentValues = period === 'monthly' ? (league.monthlyRewardAssignmentValues || {}) : (league.weeklyRewardAssignmentValues || {});
-        const grant = await chargeBonusToPlayer(winner.username, campaignId, label, amount, assignmentValues);
+        const grant = await chargeBonusToPlayer(winner.username, campaignId, label, amount, assignmentValues, 'tahmin');
         const record = {
           ...winner,
           period,
@@ -2684,7 +2719,7 @@ const selectedSlice = selected.slice;
     claims.daily.push(kayit);
     await writeEngagementClaims(claims, tenantKey);
 
-    const chargeStatus: any = await grantReward(bonusPanelUser.login, reward);
+    const chargeStatus: any = await grantReward(bonusPanelUser.login, reward, 'gorev');
     if (!chargeStatus.ok) {
       // Odul verilemedi: rezervasyonu KALDIR ki oyuncu tekrar deneyebilsin.
       const guncel = await readEngagementClaims(tenantKey);
@@ -2790,7 +2825,7 @@ const selectedSlice = selected.slice;
     claims.battlePass.push(bpKayit);
     await writeEngagementClaims(claims, tenantKey);
 
-    const chargeStatus: any = await grantReward(bonusPanelUser.login, reward);
+    const chargeStatus: any = await grantReward(bonusPanelUser.login, reward, 'battlepass');
     if (!chargeStatus.ok) {
       const guncel = await readEngagementClaims(tenantKey);
       guncel.battlePass = guncel.battlePass.filter((c: any) => c.id !== bpClaimId);
