@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import { readStoredDocument, writeStoredDocument } from '../lib/documentStore.js';
 import { evaluateForAccount } from '../services/promoEvaluator.js';
 import { assignmentValuesForPromoSpec, getRules, type PromoSpec, type RulesConfig } from '../services/rulesService.js';
+import { atamaNotu } from '../services/bonusAtamaNotu.js';
 import {
   isLynonConfigured,
   istanbulDateKey,
@@ -330,7 +331,13 @@ export async function runNextDayBonusJob(now = new Date()): Promise<{
           await lynonAssignCampaignToPlayer({
             campaignId,
             playerId,
-            assignmentReason: `Ertesi gün otomasyonu ${previousDateKey}`,
+            assignmentReason: atamaNotu({
+              onek: `Ertesi gün otomasyonu ${previousDateKey}`,
+              kaynak: 'otomasyon',
+              kuralAnahtari: rule.key,
+              baslik: rule.spec?.title,
+              tutar: calculatedAmount,
+            }),
             assignmentValues,
           });
         } else {

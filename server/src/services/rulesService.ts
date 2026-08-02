@@ -41,6 +41,15 @@ export type PromoSpec = {
      * bu bayrak acikca acilmali.
      */
     allowSameDayRepeat?: boolean;
+    /**
+     * Ayni bonusun, araya yeni yatirim girmeden tekrar verilmesine izin
+     * verir. VARSAYILAN KAPALI: bir yatirim = ayni bonustan bir kez.
+     *
+     * Cark odulleri bu kurala zaten girmiyor (kural degerlendirmesinden
+     * gecmiyorlar); bayrak, bilerek tekrarlanabilir olmasi gereken baska
+     * bir bonus icin.
+     */
+    allowMultiplePerDeposit?: boolean;
     /** Haftalık kullanım limiti (bonus adı/ID eşleşmesine göre). */
     perWeekLimit?: number;
     /** İlk yatırım bonusu mu? true ise yalnızca ilk yatırımda/ilk yatırımlar arasında geçerli. */

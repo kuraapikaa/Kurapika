@@ -9,6 +9,7 @@ import { resolveTenantKeyForRequest, safeTenantKey } from '../lib/tenant.js';
 import { readStoredDocument, writeStoredDocument } from '../lib/documentStore.js';
 import { kilitle, odulAnahtari } from '../lib/odulKilidi.js';
 import { atamaDurumu, telegramBonusuAlinmis } from '../services/telegramBonusHakki.js';
+import { atamaNotu } from '../services/bonusAtamaNotu.js';
 import { yatirimHakki } from '../services/yatirimHakki.js';
 import { isLynonConfigured, lynonAssignCampaignToPlayer, lynonBuildBonusEligibilitySnapshot, lynonCreditPlayerMainAccount, lynonFindPlayerByLogin, lynonPlayerActivity } from '../services/lynonBackofficeService.js';
 import { loginAnahtari, oyuncuAktivitesi, oyuncuRaporu, siralamaOlustur, type SiralamaMetrigi } from '../services/oyuncuRaporService.js';
@@ -1429,7 +1430,13 @@ async function chargeBonusToPlayer(login: string, bonusId: number | null, label:
             const result = await lynonAssignCampaignToPlayer({
                 campaignId: Number(bonusId),
                 playerId: player.Id,
-                assignmentReason: `Narcosbahis oyun ödülü: ${label || 'Ödül'}`,
+                // Onek KORUNUYOR: oyunHakkiGecmisi.oyunOduluMu bunu ariyor.
+                assignmentReason: atamaNotu({
+                  onek: `Narcosbahis oyun ödülü: ${label || 'Ödül'}`,
+                  kaynak: 'oyun',
+                  talepEden: login,
+                  tutar: explicitAmount,
+                }),
                 assignmentValues: { ...(Number(explicitAmount) > 0 ? { BonusMoneyAmount: Number(explicitAmount) } : {}), ...explicitAssignmentValues },
             });
             return { ok: true, lynon: true, data: result, message: 'Ödül Lynon kampanyası olarak tanımlandı.' };

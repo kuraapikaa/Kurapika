@@ -9,6 +9,7 @@ import type { AccountSnapshot, ChecklistItem, PromoChecklist } from './withdrawa
 import type { BCBonus, TransactionTypeSummary } from '../types/betconstruct.js';
 import { telegramUyeligiKontrolEt } from './telegramEligibility.js';
 import { kullanimSayisi, nakitKullanimlari } from './nakitBonusGecmisi.js';
+import { yeniYatirimGerekiyorMu } from './bonusYatirimHakki.js';
 
 /** Profil işlemlerinde yatırım olarak kabul edilen doküman türleri. */
 const DEPOSIT_TYPE_KEYS = ['Yatırım', 'Deposit', 'Yatırım Talebi Ödemesi'];
@@ -212,6 +213,65 @@ function checkUsageLimits(account: AccountSnapshot, spec: PromoSpec | undefined,
   }
 
   return items;
+}
+
+/**
+ * BIR YATIRIM = AYNI BONUSTAN BIR KEZ. Varsayilan olarak ACIK.
+ *
+ * Kampanya atama yolunda hicbir mukerrer korumasi yoktu; tek engel
+ * perDayLimit/perWeekLimit idi, onlar da kuralda acikca ayarlanmadikca
+ * calismiyor. "100 FS - Telegram Katil Bonusu" gibi tek sarti
+ * `requiresTelegramMember` olan bir kuralda sart bir kez saglandiktan
+ * sonra sonsuza kadar dogru kaliyor ve oyuncu bonusu istedigi kadar
+ * aliyordu.
+ *
+ * Kural: ayni bonus ikinci kez ancak araya YENI BIR BASARILI YATIRIM
+ * girdiyse verilir. Yatirim sarti olmayan bonuslarda bu dogal olarak
+ * "omurde bir kez"e doner.
+ *
+ * Cark bu kurala girmez — odulleri kural degerlendirmesinden hic
+ * gecmiyor, kendi hak sayaci var (`yatirimHakki`). Kural bazinda
+ * `allowMultiplePerDeposit: true` ile muafiyet verilebilir.
+ */
+function checkDepositScopedUsage(
+  account: AccountSnapshot,
+  spec: PromoSpec | undefined,
+  promo: NormalizedPromo,
+  kapsam: DegerlendirmeKapsami,
+): ChecklistItem[] {
+  /**
+   * YALNIZCA BONUS TALEBINDE. Cekim kapsaminda calistirilmamali:
+   * autoWithdrawJob `checklists.every((c) => c.overallOk)` istiyor, yani
+   * bu madde orada da dusseydi bonusunu almis her oyuncunun otomatik
+   * cekimi bloke olurdu. Bu bir VERME kurali, odeme kurali degil.
+   */
+  if (kapsam !== 'bonus') return [];
+  if ((spec as { allowMultiplePerDeposit?: boolean } | undefined)?.allowMultiplePerDeposit === true) return [];
+
+  const nakit = nakitKullanimlari(
+    ((account as unknown as { balanceCorrections?: unknown }).balanceCorrections ?? []) as never,
+  );
+
+  const sonuc = yeniYatirimGerekiyorMu({
+    atamalar: ((account.bonuses as BCBonus[]) ?? []) as never,
+    nakit,
+    yatirimlar: ((account.profileTransactions ?? []) as unknown[]) as never,
+    promo: { id: promo.id, title: promo.title, kuralAnahtari: promo.id },
+    coz: parseDateToTime,
+  });
+
+  return [
+    {
+      id: 'deposit-scoped-usage',
+      label: 'Tek Yatırım - Tek Bonus (aynı bonus tekrarı)',
+      ok: sonuc.uygun,
+      reason: sonuc.uygun
+        ? sonuc.sonVerme
+          ? 'UYGUN: Son verilişten sonra yeni yatırım yapılmış'
+          : 'UYGUN: Bu bonus daha önce alınmamış'
+        : sonuc.neden,
+    },
+  ];
 }
 
 /**
@@ -472,6 +532,9 @@ export async function evaluateForAccount(
 
   // 1.e Kullanım limitleri
   items.push(...checkUsageLimits(account, spec, promo));
+
+  // 1.f Bir yatırım = aynı bonustan bir kez (VARSAYILAN AÇIK)
+  items.push(...checkDepositScopedUsage(account, spec, promo, kapsam));
 
   // 2. Çevrim Şartı (Anapara + Bonus)
   const lastDepAmount = depositBasis(account, spec);
