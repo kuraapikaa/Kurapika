@@ -33,6 +33,10 @@ export type AuditAction =
   | 'bonus_check'
   | 'bonus_charge_as_cash'
   | 'manual_adjustment'
+  // Trafik kaydinda govde yakalama oyuncu verisini gorunur kiliyor;
+  // kimin ne zaman actigi denetlenebilir olmali.
+  | 'api_trafik_yakalama'
+  | 'api_trafik_temizle'
   | 'withdrawal_resolve';
 
 export interface AuditEntry {
