@@ -1,5 +1,5 @@
 import { config } from '../config.js';
-import { netGelir, panoMetrikleri, taninmayanAlanlar } from './lynonPanoMetrikleri.js';
+import { metrikSayisi, netGelir, panoMetrikleri, taninmayanAlanlar } from './lynonPanoMetrikleri.js';
 import { kayipTabani } from './kayipTabaniService.js';
 import { isLynonConfigured, lynonRequest, LynonHttpError, LynonAuthError } from '../lib/lynonAuth.js';
 import { getCachedJson, setCachedJson } from '../lib/redisClient.js';
@@ -727,7 +727,7 @@ export async function lynonPartnerProfit(startDate: string, endDate: string): Pr
   return cachedLynon(`partner-profit:${config.lynon.siteId}:${startDate}:${endDate}:${config.lynon.currency}`, DASHBOARD_CACHE_TTL_MS, async () => {
     const [summaryResult, gameTypeResult] = await Promise.allSettled([
       lynonDashboardSummary(startDate, endDate),
-      lynonReportByName('Report By Game Type', { startDate, endDate, currency: config.lynon.currency }),
+      raporGetir(NARCOS_REPORT_IDS.gameType, 'Report By Game Type', { startDate, endDate, currency: config.lynon.currency }),
     ]);
 
     const summaryData = summaryResult.status === 'fulfilled' ? recordOf(summaryResult.value.Data) : {};
@@ -739,6 +739,26 @@ export async function lynonPartnerProfit(startDate: string, endDate: string): Pr
     const sportTurnover = sport ? pickAmount(sport, ['Total Bets (TRY)', 'Total Bets']) : numberFrom(raw['SPORT REAL BETS']);
     const sportWinning = sport ? pickAmount(sport, ['Total Wins (TRY)', 'Total Wins']) : numberFrom(raw['SPORT REAL WINS']);
 
+    /**
+     * METRIKLER ARASI SESSIZ GERI DUSUS YOK.
+     *
+     * Onceden:
+     *   Bonus: raw['TOTAL BONUS BET'] ?? raw['TOTAL Bonus PayOut'] ?? raw['TOTAL Cashback']
+     *
+     * Bunlar UC AYRI olcu. Bonus bahis (oyuncunun bonusla oynadigi
+     * tutar), bonus odemesi (kasadan cikan) ve cashback birbirinin
+     * yerine gecmez; ilki yoksa ikincisini "Bonus" etiketiyle
+     * gostermek rakami hem buyutuyor hem anlamini degistiriyordu.
+     *
+     * Ayrica `RAKE` alani yanitta hic yok; `numberFrom` onu 0 yapiyor
+     * ve ekranda "Rake: 0" gorunuyordu -- olcum yoklugu sifir diye
+     * cizilmis oluyordu.
+     */
+    const alan = (ad: string): number | null =>
+      Object.prototype.hasOwnProperty.call(raw, ad) ? metrikSayisi(raw[ad]) : null;
+
+    const gameTypeRows = rowsFromReportData(gameTypeData);
+
     return {
       HasError: false,
       Data: {
@@ -746,10 +766,27 @@ export async function lynonPartnerProfit(startDate: string, endDate: string): Pr
         SportWinning: sportWinning,
         CasinoTurnover: casinoTurnover,
         CasinoWinning: casinoWinning,
-        Rake: numberFrom(raw.RAKE),
-        TournamentCost: numberFrom(raw['TOURNAMENT COST']),
-        Bonus: numberFrom(raw['TOTAL BONUS BET'] ?? raw['TOTAL Bonus PayOut'] ?? raw['TOTAL Cashback']),
-        raw: { dashboard: raw, gameTypes: rowsFromReportData(gameTypeData) },
+        Rake: alan('RAKE'),
+        TournamentCost: alan('TOURNAMENT COST'),
+        /** Uc olcu AYRI doner; ekran hangisini gosterdigini bilir. */
+        BonusBet: alan('TOTAL BONUS BET'),
+        BonusPayout: alan('TOTAL Bonus PayOut'),
+        Cashback: alan('TOTAL Cashback'),
+        FreespinWin: alan('TOTAL FREESPIN WIN'),
+        /**
+         * Oyun turu kirilimi (rapor 1846) — Slot / Live Casino / Sport…
+         * Her satirda bahis adedi, ciro, kazanc ve GGR var.
+         */
+        oyunTurleri: gameTypeRows.map((row) => ({
+          tur: firstNonEmpty(row['Game Type'], row.GameType, 'Bilinmiyor'),
+          bahisAdedi: metrikSayisi(row['Bet Count'] ?? row['Bets Count']),
+          ciro: metrikSayisi(row['Total Bets (TRY)'] ?? row['Total Bets']),
+          kazanc: metrikSayisi(row['Total Wins (TRY)'] ?? row['Total Wins']),
+          ggr: metrikSayisi(row['GGR (TRY)'] ?? row.GGR),
+        })),
+        /** Oyun turu raporu alinabildi mi — sessiz bosluk gorunur olsun. */
+        oyunTuruKaynagi: gameTypeResult.status === 'fulfilled' ? 'rapor-1846' : 'alinamadi',
+        raw: { dashboard: raw, gameTypes: gameTypeRows },
       },
     };
   });
@@ -1776,6 +1813,35 @@ export async function lynonReportCatalog(force = false): Promise<AnyRecord[]> {
   return data;
 }
 
+/**
+ * RAPOR KIMLIGI ONCE, AD SONRA.
+ *
+ * Raporlar `lynonReportByName('Report By Provider')` gibi ADLA
+ * cagriliyordu. Ad, Lynon katalogundaki serbest metin: bir harf
+ * degisirse ya da rapor yeniden adlandirilirsa arama 404 doner.
+ * Sonuclari sessiz degil ama gorunmez oluyordu:
+ *
+ *   - Saglayici raporu: hata firlatiyor, ekran "Tekrar Dene" gosteriyor.
+ *   - Partner kar: `Promise.allSettled` icinde oldugu icin hata
+ *     yutuluyor ve kod pano ham alanlarina geri dusuyor -- ekranda
+ *     rakam VAR ama yanlis kaynaktan.
+ *
+ * Kimlikler sabit (NARCOS_REPORT_IDS). Once kimlikle denenir, kimlik
+ * calismazsa ada dusulur; boylece Lynon rapor kimliklerini degistirirse
+ * de calismaya devam eder.
+ */
+async function raporGetir(
+  reportId: number,
+  reportName: string,
+  range: { startDate?: string; endDate?: string; currency?: string } = {},
+): Promise<AnyRecord> {
+  try {
+    return await lynonReportById(reportId, range);
+  } catch (err) {
+    return lynonReportByName(reportName, range);
+  }
+}
+
 export async function lynonReportByName(
   reportName: string,
   range: { startDate?: string; endDate?: string; currency?: string } = {}
@@ -2031,15 +2097,14 @@ export async function lynonBetSelections(body: AnyRecord = {}): Promise<AnyRecor
 
 export async function lynonProviderReport(body: AnyRecord = {}): Promise<AnyRecord> {
   const range = reportDateRangeFromBody(body);
-  const report = await lynonReportByName('Report By Provider', range);
+  const report = await raporGetir(NARCOS_REPORT_IDS.provider, 'Report By Provider', range);
   const data = recordOf(report.Data);
   return providerReportResponse(rowsFromReportData(data), summaryFromReportData(data));
 }
 
 export async function lynonClientBonusReport(body: AnyRecord = {}): Promise<AnyRecord> {
   const range = reportDateRangeFromBody(body);
-  const report = await lynonReportById(NARCOS_REPORT_IDS.bonus, range)
-    .catch(async () => lynonReportByName('Report By Bonus', range));
+  const report = await raporGetir(NARCOS_REPORT_IDS.bonus, 'Report By Bonus', range);
   const rows = rowsFromReportData(recordOf(report.Data));
   const objects = rows.map((row, index) => {
     const amount = pickAmount(row, ['Bonus Amount (TRY)', 'Bonus Amount', 'bonus_amount', 'Amount']);
@@ -2174,7 +2239,7 @@ export async function lynonRegistrationStatsDetails(body: AnyRecord = {}): Promi
 
 export async function lynonClientTurnoverPaging(body: AnyRecord = {}): Promise<AnyRecord> {
   const range = reportDateRangeFromBody(body);
-  const report = await lynonReportByName('Report By Player', range);
+  const report = await raporGetir(NARCOS_REPORT_IDS.playersOverview, 'Report By Player', range);
   const rows = rowsFromReportData(recordOf(report.Data)).map((row) => ({
     ...row,
     ClientId: numberFrom(row.player_id ?? row['Player ID'], 0),

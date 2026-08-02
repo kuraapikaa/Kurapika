@@ -10,6 +10,8 @@ import { readStoredDocument, writeStoredDocument } from '../lib/documentStore.js
 import { kilitle, odulAnahtari } from '../lib/odulKilidi.js';
 import { atamaDurumu, telegramBonusuAlinmis } from '../services/telegramBonusHakki.js';
 import { atamaNotu } from '../services/bonusAtamaNotu.js';
+import { bonusDenetimAciklamasi } from '../services/bonusDenetimAciklamasi.js';
+import { audit } from '../lib/auditLog.js';
 import { yatirimHakki } from '../services/yatirimHakki.js';
 import { isLynonConfigured, lynonAssignCampaignToPlayer, lynonBuildBonusEligibilitySnapshot, lynonCreditPlayerMainAccount, lynonFindPlayerByLogin, lynonPlayerActivity } from '../services/lynonBackofficeService.js';
 import { loginAnahtari, oyuncuAktivitesi, oyuncuRaporu, siralamaOlustur, type SiralamaMetrigi } from '../services/oyuncuRaporService.js';
@@ -1220,10 +1222,44 @@ function levelReward(level: any, track: string) {
   };
 }
 
+/**
+ * Oyun odullerini denetime yazar.
+ *
+ * `games.ts` icinde tek bir `audit()` cagrisi YOKTU: cark, kazi kazan,
+ * Telegram katilim, gunluk gorev ve skor tahmin odullerinin hicbiri
+ * denetlenebilir degildi. Bir oyuncunun ayni bonusu defalarca almasi
+ * durumunda bakilacak tek kayit Lynon tarafiydi ve orada kimin hangi
+ * kapidan verdigi gorunmuyordu.
+ *
+ * Basarisiz denemeler de yazilir: "verilmedi" bilgisi, "verildi"
+ * kadar denetim degeri tasiyor.
+ */
+function odulDenetimi(
+  login: string,
+  kaynak: OdulKaynagi,
+  baslik: unknown,
+  bonusId: unknown,
+  tutar: unknown,
+  sonuc: { ok?: unknown; lynon?: unknown; message?: unknown } | null | undefined,
+): void {
+  const durum = sonuc?.ok === true ? 'basarili' : sonuc?.lynon === true ? 'belirsiz' : 'basarisiz';
+  audit('sistem', 'oyun', 'oyun_odulu', login, bonusDenetimAciklamasi({
+    tur: 'oyun',
+    kaynak: KAYNAK_ADI[kaynak],
+    baslik,
+    kampanyaId: bonusId,
+    tutar,
+    sonuc: durum,
+    mesaj: sonuc?.message,
+  }));
+}
+
 async function grantReward(login: string, reward: { label?: string; bonusId?: any; amount?: number }, kaynak: OdulKaynagi) {
   const hasReward = reward?.label || reward?.bonusId || Number(reward?.amount || 0) > 0;
   if (!hasReward) return { ok: true, skipped: true };
-  return chargeBonusToPlayer(login, reward.bonusId ? Number(reward.bonusId) : null, reward.label || '', reward.amount, {}, kaynak);
+  const sonuc: any = await chargeBonusToPlayer(login, reward.bonusId ? Number(reward.bonusId) : null, reward.label || '', reward.amount, {}, kaynak);
+  odulDenetimi(login, kaynak, reward.label, reward.bonusId, reward.amount, sonuc);
+  return sonuc;
 }
 
 function buildDailyTasksPayload(settings: any, claims: any, activity: any, username: string) {
@@ -1851,6 +1887,7 @@ const selectedSlice = selected.slice;
       } catch (error) {
         delivery = { ok: false, message: error instanceof Error ? error.message : 'Ödül teslim edilemedi.' };
       }
+      odulDenetimi(login, 'cark', selectedSlice.label, selectedSlice.bonusId, selectedSlice.amount, delivery);
 
       claim.status = delivery?.ok === true
         ? delivery.manualFulfillment
@@ -2113,6 +2150,7 @@ const selectedSlice = selected.slice;
 
     if (selectedReward) {
        chargeStatus = await chargeBonusToPlayer(bonusPanelUser.login, selectedReward.bonusId ? Number(selectedReward.bonusId) : null, selectedReward.label, selectedReward.amount, selectedReward.assignmentValues || {}, 'kazikazan');
+       odulDenetimi(bonusPanelUser.login, 'kazikazan', selectedReward.label, selectedReward.bonusId, selectedReward.amount, chargeStatus);
     }
 
     scratchKaydi.status = 'granted';
@@ -2241,6 +2279,8 @@ const selectedSlice = selected.slice;
 
     // `belirsiz`: Lynon cagrildi ama hata dondu — atama gerceklesmis
     // olabilir. Kayit hakki tuketmeye devam eder; operator bakar.
+    odulDenetimi(login, 'telegram', telegramBonus.bonusLabel, telegramBonus.bonusId, telegramBonus.amount, grant);
+
     kayit.durum = atamaDurumu(grant);
     kayit.ok = grant?.ok === true;
     kayit.message = grant?.message;
@@ -2368,6 +2408,7 @@ const selectedSlice = selected.slice;
         }
         const assignmentValues = period === 'monthly' ? (league.monthlyRewardAssignmentValues || {}) : (league.weeklyRewardAssignmentValues || {});
         const grant = await chargeBonusToPlayer(winner.username, campaignId, label, amount, assignmentValues, 'tahmin');
+        odulDenetimi(winner.username, 'tahmin', label, campaignId, amount, grant);
         const record = {
           ...winner,
           period,
