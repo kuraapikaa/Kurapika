@@ -1,4 +1,5 @@
 import { config } from '../config.js';
+import { netGelir, panoMetrikleri, taninmayanAlanlar } from './lynonPanoMetrikleri.js';
 import { kayipTabani } from './kayipTabaniService.js';
 import { isLynonConfigured, lynonRequest, LynonHttpError, LynonAuthError } from '../lib/lynonAuth.js';
 import { getCachedJson, setCachedJson } from '../lib/redisClient.js';
@@ -150,7 +151,7 @@ export function istanbulDayBoundsUtc(dateKey: string): { from: string; to: strin
  * Panelden gelen `2026-08-02` bir TURKIYE IS GUNU. Burada UTC olarak
  * yorumlaniyordu:
  *
- *   gunBasi(text)   ->  Turkiye saatiyle 03:00
+ *   `${text}T00:00:00.000Z`   ->  Turkiye saatiyle 03:00
  *
  * Yani pencere 3 saat kayiyordu: o gunun 00:00-03:00 arasindaki
  * yatirim/cekimleri DISARIDA kaliyor, ertesi gunun 00:00-03:00 arasi
@@ -211,7 +212,7 @@ function dateOnly(value: unknown): string | null {
 /**
  * Bir TURKIYE gununun UTC sinirlari.
  *
- * Kod boyunca gunBasi(ymd) / gunSonu(ymd) elle
+ * Kod boyunca `${ymd}T00:00:00.000Z` / `${ymd}T23:59:59.999Z` elle
  * kuruluyordu; hepsi gunu UTC sanip pencereyi 3 saat kaydiriyordu.
  * Tek kaynak burasi.
  */
@@ -672,22 +673,49 @@ export async function lynonDashboardSummary(startDate: string, endDate: string):
       query: { startDate, endDate },
     }));
 
+    /**
+     * METRIK ESLEME.
+     *
+     * Onceden farkli metrikler arasinda SESSIZ GERI DUSUS vardi:
+     *
+     *   DepositCount: data['TOTAL DEPOSITS COUNT'] ?? data['UNIQUE PLAYER DEPOSITS']
+     *
+     * Ilk alan yanitta yok; ikinciye dusuyor ve ekranda "2 işlem ·
+     * 2 oyuncu" yaziyordu — ayni sayi iki ayri etiketle. `PLAYERS LOGGED
+     * IN` ve `LOGIN COUNT` alanlari yanitta hic olmadigi icin "Aktif
+     * Oyuncu" ve "Günlük Girişler" surekli 0 gorunuyordu.
+     *
+     * `Profit` ise PROFIT yoksa GGR'ye dusuyordu; bunlar AYRI metrikler
+     * (ornek gunde -52.984,08 ve +14.668,99), biri digerinin yerine
+     * konunca isaret bile ters donebiliyor.
+     *
+     * Artik olmayan alan `null` — sifir degil. Ekran "—" gosterir.
+     */
+    const metrikler = panoMetrikleri(data);
+    const m = (anahtar: string) => metrikler.find((x) => x.anahtar === anahtar)?.deger ?? null;
+
     const summary = {
-      Deposits: numberFrom(data['TOTAL DEPOSITS AMOUNT']),
-      DepositCount: numberFrom(data['TOTAL DEPOSITS COUNT'] ?? data['UNIQUE PLAYER DEPOSITS'] ?? data['FIRST DEPOSIT COUNT']),
-      Withdrawals: numberFrom(data['TOTAL WITHDRAWALS AMOUNT']),
-      WithdrawalCount: numberFrom(data['TOTAL WITHDRAWALS COUNT'] ?? data['UNIQUE PLAYER WITHDRAWALS']),
-      PlayersLoggedIn: numberFrom(data['PLAYERS LOGGED IN']),
-      PlayersRegistered: numberFrom(data['PLAYERS REGISTERED']),
-      Profit: numberFrom(data.PROFIT ?? data.GGR),
-      PlayersBalance: numberFrom(data['USERS REAL BALANCE']),
-      PlayersBonusBalance: numberFrom(data['USERS BONUS BALANCE']),
+      Deposits: m('yatirim'),
+      Withdrawals: m('cekim'),
+      DepositClientCount: m('yatirimOyuncu'),
+      WithdrawalClientCount: m('cekimOyuncu'),
+      FirstDepositCount: m('ilkYatirim'),
+      PlayersRegistered: m('yeniKayit'),
+      PlayersBalance: m('gercekBakiye'),
+      PlayersBonusBalance: m('bonusBakiye'),
+      /** GGR ve PROFIT AYRI tutulur; birbirinin yerine gecmez. */
+      GGR: m('ggr'),
+      Profit: m('kar'),
+      NetGelir: netGelir(metrikler),
+      /** Yanitta bulunmayan alanlar: null kalir, 0'a cevrilmez. */
+      PlayersLoggedIn: m('bahisOyuncu'),
       CorrectionsUp: numberFrom(data['CORRECTIONS UP']),
       CorrectionsDown: numberFrom(data['CORRECTIONS DOWN']),
-      DepositClientCount: numberFrom(data['UNIQUE PLAYER DEPOSITS']),
-      WithdrawalClientCount: numberFrom(data['UNIQUE PLAYER WITHDRAWALS']),
       TournamentCost: numberFrom(data['TOURNAMENT COST']),
-      LoginCount: numberFrom(data['LOGIN COUNT'] ?? data['PLAYERS LOGGED IN']),
+      /** Etiketli, gruplu tam liste — pano bunu ciziyor. */
+      metrikler,
+      /** Lynon yeni alan eklerse sessizce kaybolmasin. */
+      taninmayanAlanlar: taninmayanAlanlar(data),
       raw: data,
     };
 
