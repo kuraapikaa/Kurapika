@@ -33,6 +33,10 @@ export type AuditAction =
   | 'bonus_check'
   | 'bonus_charge_as_cash'
   | 'manual_adjustment'
+  // Oyun odulleri (cark, kazi kazan, Telegram, gorev, skor tahmin)
+  // denetime HIC yazilmiyordu; para sizintilarinin cogu o yollardan
+  // gecti ve geriye donuk bakilacak tek kayit Lynon tarafiydi.
+  | 'oyun_odulu'
   // Trafik kaydinda govde yakalama oyuncu verisini gorunur kiliyor;
   // kimin ne zaman actigi denetlenebilir olmali.
   | 'api_trafik_yakalama'

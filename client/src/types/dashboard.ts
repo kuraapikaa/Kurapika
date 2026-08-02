@@ -45,6 +45,14 @@ export interface SummaryData {
   taninmayanAlanlar?: string[];
 }
 
+export interface OyunTuruSatiri {
+  tur: string;
+  bahisAdedi: number | null;
+  ciro: number | null;
+  kazanc: number | null;
+  ggr: number | null;
+}
+
 export interface PartnerProfitData {
   SportTurnover: number | null;
   SportWinning: number | null;
@@ -52,7 +60,18 @@ export interface PartnerProfitData {
   CasinoWinning: number | null;
   Rake: number | null;
   TournamentCost: number | null;
-  Bonus: number | null;
+  /**
+   * Onceden tek bir `Bonus` alani vardi ve su sirayla dolduruluyordu:
+   *   TOTAL BONUS BET ?? TOTAL Bonus PayOut ?? TOTAL Cashback
+   * Bunlar UC AYRI olcu; biri digerinin yerine gecmez. Artik ayri.
+   */
+  BonusBet: number | null;
+  BonusPayout: number | null;
+  Cashback: number | null;
+  FreespinWin: number | null;
+  /** Rapor 1846 kirilimi: Slot / Live Casino / Sport… */
+  oyunTurleri?: OyunTuruSatiri[];
+  oyunTuruKaynagi?: 'rapor-1846' | 'alinamadi';
 }
 
 export interface TopSportItem {

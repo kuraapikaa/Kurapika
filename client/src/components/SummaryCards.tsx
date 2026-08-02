@@ -13,7 +13,7 @@ interface SummaryCardsProps {
   onRetry?: () => void;
 }
 
-type Accent = 'neutral' | 'emerald' | 'sky';
+type Accent = 'neutral' | 'emerald' | 'sky' | 'amber' | 'violet';
 
 export interface PanoMetrigi {
   anahtar: string;
@@ -35,6 +35,13 @@ export interface PanoMetrigi {
 function sayi(deger: number | null | undefined): string {
   return deger == null ? '—' : formatNumber(deger);
 }
+
+const GRUP_NOKTA: Record<PanoMetrigi['grup'], string> = {
+  finans: 'bg-emerald-400',
+  oyun: 'bg-sky-400',
+  bonus: 'bg-violet-400',
+  oyuncu: 'bg-amber-400',
+};
 
 const GRUP_ADI: Record<PanoMetrigi['grup'], string> = {
   finans: 'Finans',
@@ -60,13 +67,21 @@ function LynonMetrikleri({ metrikler }: { metrikler: PanoMetrigi[] }) {
     <div className="space-y-3">
       {gruplar.map((grup) => (
         <AdminCard key={grup} className="p-4">
-          <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-[color:var(--panel-muted,#8a919c)]">
-            {GRUP_ADI[grup]}
-          </p>
+          <div className="mb-3.5 flex items-center gap-2.5">
+            <span className={cn('h-1.5 w-1.5 rounded-full', GRUP_NOKTA[grup])} />
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[color:var(--panel-muted,#8a919c)]">
+              {GRUP_ADI[grup]}
+            </p>
+            <span className="h-px flex-1 bg-white/[0.06]" />
+          </div>
           <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3 xl:grid-cols-5">
             {metrikler.filter((m) => m.grup === grup).map((m) => (
-              <div key={m.anahtar} title={m.aciklama}>
-                <p className="text-[10px] font-medium text-[color:var(--panel-faint,#5c6470)] leading-tight">
+              <div
+                key={m.anahtar}
+                title={m.aciklama}
+                className="rounded-lg border border-transparent px-2 py-1.5 transition-colors hover:border-white/[0.07] hover:bg-white/[0.02]"
+              >
+                <p className="text-[10px] font-medium leading-tight text-[color:var(--panel-faint,#5c6470)]">
                   {m.etiket}
                   {m.aciklama && <span className="ml-1 text-[color:var(--panel-muted,#8a919c)]">ⓘ</span>}
                 </p>
@@ -91,6 +106,21 @@ const ACCENT_CHIP: Record<Accent, string> = {
   neutral: 'border-white/[0.08] bg-white/[0.04] text-[color:var(--panel-text-dim,#c8cdd5)]',
   emerald: 'border-emerald-400/20 bg-emerald-400/[0.08] text-emerald-300',
   sky: 'border-sky-400/20 bg-[color:var(--panel-accent,#0a84ff)]/[0.08] text-sky-300',
+  amber: 'border-amber-400/20 bg-amber-400/[0.08] text-amber-300',
+  violet: 'border-violet-400/20 bg-violet-400/[0.08] text-violet-300',
+};
+
+/**
+ * Karti tanimlayan ince ust seridi. Dort ana kart bakisla ayrilsin diye;
+ * onceden hepsi ayni gri kenarliktaydi ve pano tek bir gri blok gibi
+ * okunuyordu.
+ */
+const ACCENT_SERIT: Record<Accent, string> = {
+  neutral: 'from-white/20 to-transparent',
+  emerald: 'from-emerald-400/60 to-transparent',
+  sky: 'from-sky-400/60 to-transparent',
+  amber: 'from-amber-400/60 to-transparent',
+  violet: 'from-violet-400/60 to-transparent',
 };
 
 function MetricCard({
@@ -109,16 +139,17 @@ function MetricCard({
   delay?: number;
 }) {
   return (
-    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay }}>
-      <AdminCard className="flex min-h-[112px] flex-col justify-between p-4 transition-colors hover:border-white/[0.12]">
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay, duration: 0.25 }}>
+      <AdminCard className="relative flex min-h-[118px] flex-col justify-between overflow-hidden p-4 transition-all hover:border-white/[0.14] hover:bg-white/[0.02]">
+        <span className={cn('absolute inset-x-0 top-0 h-px bg-gradient-to-r', ACCENT_SERIT[accent])} />
         <div className="flex items-start justify-between gap-3">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[color:var(--panel-muted,#8a919c)]">{label}</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[color:var(--panel-muted,#8a919c)]">{label}</p>
           <span className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border', ACCENT_CHIP[accent])}>
             {icon}
           </span>
         </div>
         <div className="mt-4">
-          <p className="text-[22px] font-semibold leading-none tracking-[-0.03em] tabular-nums text-white">{value}</p>
+          <p className="text-[24px] font-semibold leading-none tracking-[-0.035em] tabular-nums text-white">{value}</p>
           {meta && <p className="mt-2 text-[11px] font-medium text-[color:var(--panel-muted,#8a919c)]">{meta}</p>}
         </div>
       </AdminCard>
@@ -190,6 +221,7 @@ export function SummaryCards({ data, isLoading, error, onRetry }: SummaryCardsPr
           value={sayi(d.PlayersLoggedIn)}
           meta={`${sayi(metrikler.find((m) => m.anahtar === 'bahisAdedi')?.deger)} bahis`}
           icon={<Users size={16} />}
+          accent="violet"
           delay={0.12}
         />
       </div>
@@ -197,7 +229,7 @@ export function SummaryCards({ data, isLoading, error, onRetry }: SummaryCardsPr
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         {[
           // "Günlük Girişler" (LOGIN COUNT) yanitta yok; yerine GGR.
-          { label: 'GGR', value: d.GGR, icon: <LogIn size={15} />, accent: 'neutral' as Accent },
+          { label: 'GGR', value: d.GGR, icon: <LogIn size={15} />, accent: 'amber' as Accent },
           { label: 'Yeni Kayıtlar', value: d.PlayersRegistered, icon: <UserPlus size={15} />, accent: 'sky' as Accent },
           { label: 'Bonus Bakiyesi', value: d.PlayersBonusBalance, icon: <Gift size={15} />, accent: 'emerald' as Accent },
         ].map((item, i) => (

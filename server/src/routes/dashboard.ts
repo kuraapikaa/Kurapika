@@ -28,6 +28,7 @@ import { buildBonusControlReportCsv } from '../services/bonusControlReportServic
 import { analyzeTransactionAnomalies } from '../services/transactionAnomalyService.js';
 import { identifyMultiAccountClusters, calculateTrustScore, generateBusinessInsights } from '../services/intelligenceService.js';
 import { resolveTenantKeyForRequest, resolveTenantKeyFromHost, safeTenantKey } from '../lib/tenant.js';
+import { bonusDenetimAciklamasi } from '../services/bonusDenetimAciklamasi.js';
 import { readStoredDocument, writeStoredDocument } from '../lib/documentStore.js';
 import { findNarcosBonusByCampaignTitle, NARCOS_BONUSES } from '../lib/narcosBonusCatalog.js';
 import { buildPromoRuleState, resolvePromoTitle } from '../lib/promoCatalog.js';
@@ -2029,7 +2030,17 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
               // degistirilirse mukerrer korumasi kor kalir.
               note: `Bonus ${kuralAnahtari} / ${username}`.slice(0, 50),
             });
-            audit(username, role, 'bonus_charge_as_cash', String(ClientId), `RuleId: ${resolvedRule?.key ?? BonusId}, Amount: ${effectiveAmount}`);
+            // Denetim kaydi artik bonusun KENDISINI anlatiyor: adi, turu,
+            // tutarin nereden geldigi ve hangi yatirima karsilik verildigi.
+            audit(username, role, 'bonus_charge_as_cash', String(ClientId), bonusDenetimAciklamasi({
+              tur: 'nakit',
+              baslik: (spec as { title?: unknown })?.title,
+              kuralAnahtari: kuralAnahtari,
+              tutar: effectiveAmount,
+              tutarKaynagi: calculatedAmount > 0 ? 'kural' : 'elle',
+              yatirimId: (currentAccount as { lastDeposit?: { id?: unknown } })?.lastDeposit?.id,
+              yatirimTutari: (currentAccount as { lastDeposit?: { amount?: unknown } })?.lastDeposit?.amount,
+            }));
             return reply.send({
               HasError: false,
               AlertType: 'success',
@@ -2063,7 +2074,16 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
             }),
             assignmentValues,
           });
-          audit(username, role, 'lynon_campaign_assignment', String(ClientId), `CampaignId: ${partnerBonusId}, RuleId: ${resolvedRule?.key ?? BonusId}`);
+          audit(username, role, 'lynon_campaign_assignment', String(ClientId), bonusDenetimAciklamasi({
+            tur: 'kampanya',
+            baslik: (spec as { title?: unknown })?.title,
+            kuralAnahtari: resolvedRule?.key ?? BonusId,
+            kampanyaId: partnerBonusId,
+            tutar: effectiveAmount,
+            tutarKaynagi: calculatedAmount > 0 ? 'kural' : 'elle',
+            yatirimId: (currentAccount as { lastDeposit?: { id?: unknown } })?.lastDeposit?.id,
+            yatirimTutari: (currentAccount as { lastDeposit?: { amount?: unknown } })?.lastDeposit?.amount,
+          }));
           return reply.send({ HasError: false, AlertType: 'success', AlertMessage: 'Bonus talebi Lynon Backoffice’e işlendi.', Data: result, lynon: true });
         } catch (err) {
           const response = lynonErrorResponse(err);
@@ -2128,7 +2148,12 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
 
               const result = await proxyManualAdjustment(request as any, reply, getBackofficeToken());
               const { audit } = await import('../lib/auditLog.js');
-              audit(username, role, 'bonus_charge_as_cash', String(ClientId), `BonusId: ${BonusId}, Amount: ${Amount}`);
+              audit(username, role, 'bonus_charge_as_cash', String(ClientId), bonusDenetimAciklamasi({
+                tur: 'nakit',
+                kuralAnahtari: BonusId,
+                tutar: Amount,
+                tutarKaynagi: 'elle',
+              }));
               return result;
           }
       } catch (err) {
