@@ -124,7 +124,7 @@ export function CarkSayfasi() {
       }, 5100);
     } catch (err) {
       setSpinning(false);
-      // Sunucu sebebi zaten yazıyor ("Günlük çark hakkınızı kullandınız",
+      // Sunucu sebebi zaten yazıyor ("Bu yatırım için hakkınızı kullandınız",
       // "Çark olasılıkları henüz etkinleştirilmemiş" ...). Her hatayı oturum
       // hatasına indirgemek oyuncuyu da bizi de yanlış yönlendiriyordu;
       // oturum metnini yalnızca gerçekten yetkisizken gösteriyoruz.
