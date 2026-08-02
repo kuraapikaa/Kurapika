@@ -22,6 +22,7 @@ import {
   Copy,
   Eye,
   EyeOff,
+  FileWarning,
   ListTree,
   Radar,
   RefreshCw,
@@ -70,7 +71,7 @@ interface KatalogSatiri {
 }
 
 type Sekme = 'headers' | 'payload' | 'preview' | 'response';
-type Gorunum = 'akis' | 'katalog';
+type Gorunum = 'akis' | 'katalog' | 'belgesiz';
 
 const SEKME_ADI: Record<Sekme, string> = {
   headers: 'Headers',
@@ -342,6 +343,243 @@ function TaramaKarti({ onBitti }: { onBitti: () => void }) {
   );
 }
 
+// ─── Belgesiz uçlar ──────────────────────────────────────────────────────
+
+interface GidenUcOzeti {
+  method: string;
+  sablon: string;
+  ornekUrl: string;
+  cagri: number;
+  hata: number;
+  ortalamaSure: number;
+  sonCagri: string;
+  sonDurum: number | null;
+  sonKayitId: number;
+  govdeVar: boolean;
+}
+
+/**
+ * Tek bir belgesiz ucun dort sekmesi.
+ *
+ * Kayit yalnizca acilinca cekiliyor: belgesiz uc sayisi yuksek
+ * olabiliyor ve hepsinin govdesini pesin indirmek hem gereksiz hem de
+ * oyuncu verisini ekrana gereksiz yere tasirdi.
+ */
+function BelgesizUcKarti({ uc }: { uc: GidenUcOzeti }) {
+  const [acik, setAcik] = useState(false);
+  const [sekme, setSekme] = useState<Sekme>('payload');
+
+  const { data: kayit, isLoading } = useQuery({
+    queryKey: ['api-trafik-kayit', uc.sonKayitId],
+    enabled: acik,
+    queryFn: async () => {
+      const res = await fetch(`/api/admin/api-trafik/${uc.sonKayitId}`);
+      const json = await res.json();
+      if (!res.ok || !json?.ok) throw new Error(json?.message || 'Kayıt okunamadı');
+      return json.data as TrafikKaydi;
+    },
+  });
+
+  return (
+    <div className="border-t border-[color:var(--panel-border,rgba(242,244,248,0.06))] first:border-t-0">
+      <button
+        type="button"
+        onClick={() => setAcik((v) => !v)}
+        className="w-full px-5 py-3 flex items-center gap-3 text-left hover:bg-[color:var(--panel-surface-2,rgba(242,244,248,0.05))] transition-colors"
+      >
+        <ChevronRight size={12} className={`shrink-0 transition-transform ${acik ? 'rotate-90' : ''}`} />
+        <span className={`px-1.5 py-0.5 rounded border text-[9px] font-bold shrink-0 ${metotRengi(uc.method)}`}>
+          {uc.method}
+        </span>
+        <span className="text-[11px] font-mono text-[color:var(--panel-muted,#8a919c)] break-all flex-1">
+          {uc.sablon}
+        </span>
+        {!uc.govdeVar && (
+          <span className="text-[10px] text-amber-400/80 shrink-0" title="Bu uç yakalama kapalıyken geçmiş">
+            gövdesiz
+          </span>
+        )}
+        <span className="text-[10px] text-[color:var(--panel-faint,#5c6470)] shrink-0">{uc.cagri} çağrı</span>
+        <span className={`text-[10px] font-bold shrink-0 w-8 text-right ${durumRengi(uc.sonDurum, null)}`}>
+          {uc.sonDurum ?? '—'}
+        </span>
+      </button>
+
+      {acik && (
+        <div className="px-5 pb-5">
+          {isLoading && <Bos>Kayıt yükleniyor…</Bos>}
+          {!isLoading && !kayit && (
+            <Bos>Son kayıt halkadan düşmüş. Bu ucu tekrar çağırın, kaydı yeniden oluşsun.</Bos>
+          )}
+          {kayit && (
+            <>
+              <div className="mb-4 space-y-1">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--panel-muted,#8a919c)]">
+                  Request URL
+                </p>
+                <p className="text-[11px] font-mono text-white break-all">{kayit.url}</p>
+              </div>
+
+              <div className="flex border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] mb-4">
+                {(Object.keys(SEKME_ADI) as Sekme[]).map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => setSekme(s)}
+                    className={`px-3 h-9 text-[11px] font-semibold transition-all border-b-2 ${
+                      sekme === s
+                        ? 'border-blue-500 text-white'
+                        : 'border-transparent text-[color:var(--panel-muted,#8a919c)] hover:text-white'
+                    }`}
+                  >
+                    {SEKME_ADI[s]}
+                  </button>
+                ))}
+              </div>
+
+              {kayit.govdelerAtlandi && sekme !== 'headers' && (
+                <div className="mb-3 p-3 rounded-lg bg-amber-500/5 border border-amber-500/20 flex items-start gap-2">
+                  <EyeOff size={14} className="text-amber-400 mt-0.5 shrink-0" />
+                  <p className="text-[11px] text-amber-300/90">
+                    Bu çağrı gövde yakalama kapalıyken geçmiş. Yakalamayı açıp bu ucu kullanan ekranı
+                    bir kez açın; gövde bir sonraki çağrıda kaydedilir.
+                  </p>
+                </div>
+              )}
+
+              {sekme === 'headers' && (
+                <div className="space-y-5">
+                  <BaslikTablosu
+                    baslik="Genel"
+                    satirlar={{
+                      'İstek URL': kayit.url,
+                      'İstek metodu': kayit.method,
+                      'Durum kodu': String(kayit.durum ?? '—'),
+                      Süre: `${kayit.sure} ms`,
+                      'Çağrı sayısı': String(uc.cagri),
+                      'Ortalama süre': `${uc.ortalamaSure} ms`,
+                    }}
+                  />
+                  <BaslikTablosu baslik="Yanıt başlıkları" satirlar={kayit.yanitBasliklari} />
+                  <BaslikTablosu baslik="İstek başlıkları" satirlar={kayit.istekBasliklari} />
+                </div>
+              )}
+
+              {sekme === 'payload' && (
+                <div className="space-y-4">
+                  {Object.keys(kayit.sorgu).length > 0 && (
+                    <BaslikTablosu baslik="Sorgu dizesi parametreleri" satirlar={kayit.sorgu} />
+                  )}
+                  {kayit.istekGovdesi ? <Kod>{kayit.istekGovdesi}</Kod> : <Bos>İstek gövdesi yok.</Bos>}
+                </div>
+              )}
+
+              {sekme === 'preview' && <Onizleme govde={kayit.yanitGovdesi} />}
+
+              {sekme === 'response' && (
+                kayit.yanitGovdesi ? <Kod>{kayit.yanitGovdesi}</Kod> : <Bos>Yanıt gövdesi kaydedilmedi.</Bos>
+              )}
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function BelgesizGorunumu({ arama }: { arama: string }) {
+  const { data, isLoading } = useQuery({
+    queryKey: ['api-trafik-belgesiz'],
+    queryFn: async () => {
+      const res = await fetch('/api/admin/api-trafik/belgesiz');
+      const json = await res.json();
+      if (!res.ok || !json?.ok) throw new Error(json?.message || 'Liste okunamadı');
+      return json.data as {
+        belgesiz: GidenUcOzeti[];
+        belgeli: GidenUcOzeti[];
+        yakalama: { acik: boolean };
+        toplam: { gozlenen: number; belgesiz: number; belgeli: number; belgelenmisYol: number; govdesiz: number };
+      };
+    },
+  });
+
+  const q = arama.trim();
+  const suz = (liste: GidenUcOzeti[]) =>
+    liste.filter((u) => !q || matchesAnyTr([u.sablon, u.method], q));
+
+  if (isLoading) return <Card className="p-8"><Bos>Yükleniyor…</Bos></Card>;
+  if (!data) return <Card className="p-8"><Bos>Liste alınamadı.</Bos></Card>;
+
+  const belgesiz = suz(data.belgesiz);
+  const belgeli = suz(data.belgeli);
+
+  return (
+    <div className="space-y-6">
+      {data.toplam.gozlenen === 0 && (
+        <Card className="p-6">
+          <p className="text-xs text-[color:var(--panel-muted,#8a919c)]">
+            Henüz dış servis çağrısı gözlenmedi. Panelde gezinin ya da{' '}
+            <strong className="text-white">Canlı Akış</strong> sekmesinden taramayı başlatın.
+          </p>
+        </Card>
+      )}
+
+      <Card className="p-0 overflow-hidden">
+        <div className="px-5 py-4 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
+          <div className="flex items-center gap-2">
+            <FileWarning size={15} className="text-amber-400" />
+            <h4 className="text-xs font-semibold text-white">Belgelenmemiş uçlar</h4>
+            <span className="ml-auto text-[11px] text-[color:var(--panel-faint,#5c6470)]">
+              {data.toplam.belgesiz} / {data.toplam.gozlenen} gözlenen uç
+            </span>
+          </div>
+          <p className="text-[11px] text-[color:var(--panel-faint,#5c6470)] mt-1.5 max-w-3xl">
+            Lynon API Dökümanı ekranında karşılığı olmayan uçlar. Her satır son <em>gerçek</em> çağrısına
+            bağlı — örnek gövde değil, kaydedilmiş trafik. POST istekleri dahildir; bunlar çağrılmıyor,
+            panel normal kullanılırken kaydediliyor.
+            {data.toplam.govdesiz > 0 && (
+              <>
+                {' '}
+                <span className="text-amber-400/90">
+                  {data.toplam.govdesiz} uçta gövde yok — o çağrılar yakalama kapalıyken geçmiş.
+                </span>
+              </>
+            )}
+          </p>
+        </div>
+        <div className="max-h-[34rem] overflow-y-auto">
+          {belgesiz.map((uc) => <BelgesizUcKarti key={`${uc.method} ${uc.sablon}`} uc={uc} />)}
+          {belgesiz.length === 0 && (
+            <Bos>
+              {data.toplam.gozlenen > 0
+                ? 'Gözlenen tüm uçların dökümantasyonda karşılığı var.'
+                : 'Henüz gözlem yok.'}
+            </Bos>
+          )}
+        </div>
+      </Card>
+
+      <Card className="p-0 overflow-hidden">
+        <div className="px-5 py-4 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
+          <div className="flex items-center gap-2">
+            <Check size={15} className="text-emerald-400" />
+            <h4 className="text-xs font-semibold text-white">Dökümantasyonda olan uçlar</h4>
+            <span className="ml-auto text-[11px] text-[color:var(--panel-faint,#5c6470)]">
+              {data.toplam.belgeli} gözlendi · {data.toplam.belgelenmisYol} belgeli yol
+            </span>
+          </div>
+          <p className="text-[11px] text-[color:var(--panel-faint,#5c6470)] mt-1.5">
+            Bunların da gerçek istek/yanıtı burada; dökümandaki örneklerle karşılaştırabilirsiniz.
+          </p>
+        </div>
+        <div className="max-h-[24rem] overflow-y-auto">
+          {belgeli.map((uc) => <BelgesizUcKarti key={`${uc.method} ${uc.sablon}`} uc={uc} />)}
+          {belgeli.length === 0 && <Bos>Belgelenmiş uçlardan henüz çağrı gözlenmedi.</Bos>}
+        </div>
+      </Card>
+    </div>
+  );
+}
+
 // ─── Ana bileşen ─────────────────────────────────────────────────────────
 
 export function ApiTrafik() {
@@ -450,7 +688,7 @@ export function ApiTrafik() {
       <Card className="p-5">
         <div className="flex flex-col xl:flex-row xl:items-center gap-4">
           <div className="flex gap-1 p-1 rounded-xl bg-[color:var(--panel-surface-2,rgba(242,244,248,0.05))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
-            {([['akis', 'Canlı Akış'], ['katalog', 'Uç Kataloğu']] as const).map(([id, ad]) => (
+            {([['akis', 'Canlı Akış'], ['katalog', 'Uç Kataloğu'], ['belgesiz', 'Belgesiz Uçlar']] as const).map(([id, ad]) => (
               <button
                 key={id}
                 onClick={() => setGorunum(id)}
@@ -549,7 +787,9 @@ export function ApiTrafik() {
         />
       </Card>
 
-      {gorunum === 'katalog' ? (
+      {gorunum === 'belgesiz' ? (
+        <BelgesizGorunumu arama={arama} />
+      ) : gorunum === 'katalog' ? (
         <KatalogGorunumu katalog={katalog} arama={arama} />
       ) : (
         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,26rem)_1fr] gap-6">

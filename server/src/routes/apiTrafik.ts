@@ -5,7 +5,9 @@
  * tasiyabiliyor; operator rolu bunlari gormemeli.
  */
 import type { FastifyInstance } from 'fastify';
+import { belgelenmisMi, belgelenmisYollar } from '../lib/belgelenmisUclar.js';
 import {
+  gidenUcOzetleri,
   govdeYakalamaKapat,
   govdeYakalamaKur,
   kaydiGetir,
@@ -95,6 +97,41 @@ export async function apiTrafikRoutes(app: FastifyInstance): Promise<void> {
         toplam: {
           taranabilir: plan.filter((s) => s.taranabilir).length,
           atlanan: plan.filter((s) => !s.taranabilir).length,
+        },
+      },
+    });
+  });
+
+  /**
+   * BELGESIZ UCLER — `LynonApiDocs`'ta karsiligi olmayan giden ucler.
+   *
+   * Her satir son GERCEK kaydina baglanir; istemci o kaydi cekip
+   * Request URL / payload / preview / response'u gosterir. Elle yazilmis
+   * ornek govdeler yerine gozlenen trafik.
+   *
+   * POST'lar DAHIL. Bunlari cagirmiyoruz — panel normal kullanilirken
+   * gecen trafigi kaydediyoruz. Bu yuzden bonus atama, bakiye duzeltme
+   * gibi mutasyon uclarinin gercek govdesi de belgeye girebiliyor;
+   * otomatik taramanin guvenle yapamayacagi sey tam olarak buydu.
+   */
+  app.get('/admin/api-trafik/belgesiz', async (_request, reply) => {
+    const hepsi = gidenUcOzetleri();
+    const belgesiz = hepsi.filter((uc) => !belgelenmisMi(uc.sablon));
+    const belgeli = hepsi.filter((uc) => belgelenmisMi(uc.sablon));
+
+    return reply.send({
+      ok: true,
+      data: {
+        belgesiz,
+        belgeli,
+        yakalama: yakalamaDurumu(),
+        toplam: {
+          gozlenen: hepsi.length,
+          belgesiz: belgesiz.length,
+          belgeli: belgeli.length,
+          belgelenmisYol: belgelenmisYollar().length,
+          // Govdesi olmayan satirlar: o uc yakalama kapaliyken gecmis.
+          govdesiz: belgesiz.filter((uc) => !uc.govdeVar).length,
         },
       },
     });
