@@ -338,3 +338,54 @@ export function ucKaydet(method: string | string[], url: string): void {
 export function ucKatalogu(): KatalogSatiri[] {
   return [...katalog].sort((a, b) => a.url.localeCompare(b.url, 'tr') || a.method.localeCompare(b.method));
 }
+
+// ─── Otomatik tarama plani ──────────────────────────────────────────────
+
+/**
+ * TARAMA GUVENLIGI.
+ *
+ * Tarama, katalogdaki uclari sirayla cagirip trafigi doldurur. Bu panelde
+ * POST/PUT/DELETE ucları BONUS VERIYOR, BAKIYE DUZELTIYOR ve CEKIM
+ * SONUCLANDIRIYOR. Bir tarama bunlari cagirirsa gercek para hareketi
+ * yaratir.
+ *
+ * Bu yuzden kural tek yonlu: YALNIZCA GET taranir. Liste "guvenli
+ * saydiklarim" degil, "mutasyon ihtimali olmayan metot" uzerine kurulu;
+ * yeni bir uc eklendiginde varsayilan olarak taramaya GIRMEZ.
+ */
+const TARANABILIR_METOTLAR = new Set(['GET', 'HEAD']);
+
+/** Yol parametresi iceren rotalar deger olmadan cagrilamaz. */
+const PARAMETRELI = /[:*]/;
+
+/** Tarama uclarinin kendisi taranmaz; kendini besleyen dongu olur. */
+const TARAMA_DISI = /^\/api\/admin\/api-trafik/;
+
+export type TaramaSatiri =
+  | { taranabilir: true; method: string; url: string }
+  | { taranabilir: false; method: string; url: string; neden: string };
+
+/**
+ * Katalogdaki her ucu siniflandirir.
+ *
+ * Atlananlar da doner — "neden taranmadi" sorusu ekranda yanitlanabilsin
+ * diye. Sessizce dusurmek, kapsamin eksik oldugunu gizler.
+ */
+export function taramaPlani(): TaramaSatiri[] {
+  return ucKatalogu().map((satir) => {
+    if (!TARANABILIR_METOTLAR.has(satir.method)) {
+      return {
+        taranabilir: false,
+        ...satir,
+        neden: 'Veri değiştirebilir (bonus/bakiye/çekim) — tarama yalnızca GET çağırır.',
+      };
+    }
+    if (TARAMA_DISI.test(satir.url)) {
+      return { taranabilir: false, ...satir, neden: 'Trafik ekranının kendi ucu.' };
+    }
+    if (PARAMETRELI.test(satir.url)) {
+      return { taranabilir: false, ...satir, neden: 'Yol parametresi gerekiyor; örnek değer verilmeli.' };
+    }
+    return { taranabilir: true, ...satir };
+  });
+}

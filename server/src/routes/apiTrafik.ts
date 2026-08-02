@@ -10,6 +10,7 @@ import {
   govdeYakalamaKur,
   kaydiGetir,
   kayitlar,
+  taramaPlani,
   temizle,
   ucKatalogu,
   ucOzetleri,
@@ -71,6 +72,30 @@ export async function apiTrafikRoutes(app: FastifyInstance): Promise<void> {
         panelUclari,
         gidenUcler: gozlenenGiden,
         toplam: { panel: panelUclari.length, giden: gozlenenGiden.length },
+      },
+    });
+  });
+
+  /**
+   * Otomatik tarama plani.
+   *
+   * Taramayi SUNUCU yapmiyor: plani doner, cagrilari tarayici kendi
+   * oturumuyla yapar. Sebep tek degil —
+   *   1. Sunucu tarafindan cagirmak oturum/cerez taklidi gerektirirdi;
+   *      yetki sinirlarini asan bir yol acmak istemedim.
+   *   2. Tarayicidan gidince istekler GERCEK trafik olur: gelen kayit da,
+   *      onun tetikledigi giden Lynon cagrilari da kendiliginden dusar.
+   */
+  app.get('/admin/api-trafik/tarama-plani', async (_request, reply) => {
+    const plan = taramaPlani();
+    return reply.send({
+      ok: true,
+      data: {
+        satirlar: plan,
+        toplam: {
+          taranabilir: plan.filter((s) => s.taranabilir).length,
+          atlanan: plan.filter((s) => !s.taranabilir).length,
+        },
       },
     });
   });
