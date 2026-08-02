@@ -7,22 +7,42 @@ export interface ApiResponse<T> {
   ModelErrors?: unknown;
 }
 
+/**
+ * Pano ozeti.
+ *
+ * Alanlar `number | null`: Lynon yanitinda BULUNMAYAN olcu artik 0 degil
+ * null geliyor. Eskiden olmayan alanlar 0 cizildigi icin operator o
+ * gunun gercekten sifir oldugunu saniyordu; "dashboard yanlış gösteriyor"
+ * sikayetinin bir parcasi buydu.
+ */
 export interface SummaryData {
-  Deposits: number;
-  DepositCount: number;
-  Withdrawals: number;
-  WithdrawalCount: number;
-  PlayersLoggedIn: number;
-  PlayersRegistered: number;
-  Profit: number;
-  PlayersBalance: number;
-  PlayersBonusBalance: number;
-  CorrectionsUp: number;
-  CorrectionsDown: number;
-  DepositClientCount: number;
-  WithdrawalClientCount: number;
-  TournamentCost: number;
-  LoginCount: number;
+  Deposits: number | null;
+  Withdrawals: number | null;
+  DepositClientCount: number | null;
+  WithdrawalClientCount: number | null;
+  FirstDepositCount: number | null;
+  PlayersRegistered: number | null;
+  PlayersBalance: number | null;
+  PlayersBonusBalance: number | null;
+  /** GGR ve Profit AYRI olculer; biri digerinin yerine gecmez. */
+  GGR: number | null;
+  Profit: number | null;
+  NetGelir: number | null;
+  PlayersLoggedIn: number | null;
+  CorrectionsUp: number | null;
+  CorrectionsDown: number | null;
+  TournamentCost: number | null;
+  /** Etiketli, gruplu tam olcu listesi. */
+  metrikler?: Array<{
+    anahtar: string;
+    etiket: string;
+    deger: number | null;
+    birim: 'para' | 'adet' | 'oyuncu';
+    grup: 'finans' | 'oyun' | 'bonus' | 'oyuncu';
+    veriYok: boolean;
+    aciklama?: string;
+  }>;
+  taninmayanAlanlar?: string[];
 }
 
 export interface PartnerProfitData {
