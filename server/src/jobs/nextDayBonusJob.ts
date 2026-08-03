@@ -5,6 +5,8 @@ import { readStoredDocument, writeStoredDocument } from '../lib/documentStore.js
 import { evaluateForAccount } from '../services/promoEvaluator.js';
 import { assignmentValuesForPromoSpec, getRules, type PromoSpec, type RulesConfig } from '../services/rulesService.js';
 import { atamaNotu } from '../services/bonusAtamaNotu.js';
+import { bonusDenetimAciklamasi } from '../services/bonusDenetimAciklamasi.js';
+import { audit } from '../lib/auditLog.js';
 import {
   isLynonConfigured,
   istanbulDateKey,
@@ -340,6 +342,24 @@ export async function runNextDayBonusJob(now = new Date()): Promise<{
             }),
             assignmentValues,
           });
+          /**
+           * DENETIM KAYDI.
+           *
+           * Bu is oyunculara otomatik bonus veriyordu ve denetime HICBIR
+           * SEY yazmiyordu. Geriye donuk "bu bonus kime, neden, hangi
+           * kuralla verildi" sorusu yalnizca Lynon tarafindan
+           * cevaplanabiliyordu; panelin kendi kaydi bostu.
+           */
+          audit('sistem', 'job', 'lynon_campaign_assignment', String(playerId), bonusDenetimAciklamasi({
+            tur: 'kampanya',
+            kaynak: `ertesi gün otomasyonu ${previousDateKey}`,
+            baslik: rule.spec?.title,
+            kuralAnahtari: rule.key,
+            kampanyaId: campaignId,
+            tutar: calculatedAmount,
+            tutarKaynagi: 'kural',
+            sonuc: 'basarili',
+          }));
         } else {
           const amount = Number(check.calculatedAmount ?? rule.spec.fixedAmount ?? 0);
           if (!Number.isFinite(amount) || amount <= 0) throw new Error('Otomatik nakit bonus tutarı pozitif değil.');
@@ -350,6 +370,25 @@ export async function runNextDayBonusJob(now = new Date()): Promise<{
             continue;
           }
           await lynonAdjustPlayerMainAccount({ playerId, amount, correctionType: 'crediting', note });
+          /**
+           * NAKIT BONUS DA DENETIME DUSER.
+           *
+           * Nakit bonus Lynon'da kampanya atamasi olarak degil BAKIYE
+           * DUZELTMESI olarak yaziliyor. Panelin denetim kaydinda yalnizca
+           * kampanya atamalari gorunuyordu; oyuncunun bakiyesine dogrudan
+           * para ekleyen bu yol tamamen kayit disiydi. Para hareketi
+           * denetlenebilir olmali.
+           */
+          audit('sistem', 'job', 'bonus_charge_as_cash', String(playerId), bonusDenetimAciklamasi({
+            tur: 'nakit',
+            kaynak: `ertesi gün otomasyonu ${previousDateKey}`,
+            baslik: rule.spec?.title,
+            kuralAnahtari: rule.key,
+            tutar: amount,
+            tutarKaynagi: 'kural',
+            sonuc: 'basarili',
+            mesaj: note,
+          }));
         }
 
         granted += 1;

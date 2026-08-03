@@ -1,5 +1,6 @@
 import { createHash, createHmac } from 'crypto';
 import { config } from '../config.js';
+import { LYNON_SL_TIMEZONE } from './istanbulGunu.js';
 
 type JsonValue = unknown;
 
@@ -174,12 +175,41 @@ function originOf(url: string): string {
   return new URL(url).origin;
 }
 
+/**
+ * SITE VE SAAT DILIMI BASLIKLARI.
+ *
+ * Lynon backoffice arayuzu her istekte `sl-id` ve `sl-timezone`
+ * gonderiyor; panel ikisini de HIC gondermiyordu.
+ *
+ * `sl-timezone` eksikligi olculebilir bir hataya yol aciyordu: Lynon,
+ * tarih-only parametreleri (`startDate=2026-08-03`) baslik yokken UTC
+ * sayiyor ve pencere Turkiye saatiyle 03:00'te basliyor. Ayni gun icin
+ * Lynon arayuzu 12.010 TL yatirim / 3.400 TL cekim gosterirken panel
+ * 1.010 TL / 0 TL donduruyordu — fark tam olarak 00:00-03:00 arasindaki
+ * islemlerdi.
+ *
+ * Deger `LYNON_SL_TIMEZONE` icinde tek kaynaktan geliyor; isaret kurali
+ * orada anlatiliyor. `LYNON_TIMEZONE_OFFSET` ile ezilebilir (baska bir
+ * dilimde calisan bir site icin).
+ */
+export function siteHeaders(): Record<string, string> {
+  const ofset = process.env.LYNON_TIMEZONE_OFFSET?.trim();
+  const dilim = ofset && ofset !== '' && Number.isFinite(Number(ofset))
+    ? Number(ofset)
+    : LYNON_SL_TIMEZONE;
+  return {
+    'sl-id': String(config.lynon.siteId),
+    'sl-timezone': String(dilim),
+  };
+}
+
 function commonHeaders(baseUrl: string): Record<string, string> {
   const origin = originOf(baseUrl);
   return {
     Accept: 'application/json, text/plain, */*',
     Origin: origin,
     Referer: `${origin}/`,
+    ...siteHeaders(),
     'User-Agent':
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36',
   };

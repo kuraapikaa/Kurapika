@@ -1,4 +1,5 @@
-import { useId, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
+import { dashboardApi } from '../../api/client';
 import {
   AlertTriangle,
   BadgePlus,
@@ -490,6 +491,31 @@ export function WheelManager({
     };
   }, [wheel]);
 
+  /**
+   * Çarkın GERÇEK olasılık davranışı.
+   *
+   * Sunucudan alınır çünkü kurallar çekiliş motoruyla birebir aynı
+   * kalmak zorunda; istemciye kopyalanan bir kopya zamanla ayrışır.
+   * Henüz KAYDEDİLMEMİŞ dilimler gövdeyle gönderilir, böylece operatör
+   * kaydetmeden önce sonucu görür.
+   */
+  const [analiz, setAnaliz] = useState<any>(null);
+  useEffect(() => {
+    let iptal = false;
+    const zamanlayici = setTimeout(async () => {
+      try {
+        const json = await dashboardApi.carkAnalizi(wheel);
+        if (!iptal) setAnaliz(json?.data ?? null);
+      } catch {
+        // Analiz gösterilemezse ekran çalışmaya devam eder; sessizce geç.
+      }
+    }, 400);
+    return () => {
+      iptal = true;
+      clearTimeout(zamanlayici);
+    };
+  }, [wheel]);
+
   const updateAppearance = (values: Partial<WheelAppearance>) => {
     onAppearanceChange({ ...wheelAppearance, ...values });
   };
@@ -636,6 +662,53 @@ export function WheelManager({
           )}
           {stats.agirliksiz > 0 && (
             <Uyari tur="dikkat">{stats.agirliksiz} dilimin olasılığı 0; bu dilimler hiç gelmez.</Uyari>
+          )}
+
+          {/*
+            * GERÇEK OLASILIK.
+            *
+            * Yukarıdaki "kazanma payı" operatörün GİRDİĞİ olasılıklardan
+            * hesaplanıyor. Çekiliş motoru ise teslim edilemeyecek
+            * dilimleri (Lynon'a bağlanmamış, fiziksel, yüksek nakit)
+            * çekilişten atıyor ve o dilimlere ayrılan pay kalanlara —
+            * ağırlıklı olarak kayıp dilimine — dağılıyor.
+            *
+            * Yani bir ödülün olasılığını artırmak pas oranını
+            * YÜKSELTEBİLİYOR ve panel bunu hiç söylemiyordu. "Çark neden
+            * sürekli pas dönüyor" sorusunun cevabı burada.
+            */}
+          {analiz && (
+            <div className="space-y-2 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20 p-3">
+              <div className="flex items-baseline justify-between gap-3">
+                <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[color:var(--panel-muted,#8a919c)]">
+                  Gerçek pas oranı
+                </span>
+                <span
+                  className={`text-lg font-semibold tabular-nums ${
+                    (analiz.gercekPasYuzdesi ?? 0) >= 90 ? 'text-rose-300' : 'text-white'
+                  }`}
+                >
+                  {analiz.gercekPasYuzdesi === null ? '—' : `%${analiz.gercekPasYuzdesi.toFixed(1)}`}
+                </span>
+              </div>
+              <p className="text-[10px] text-[color:var(--panel-muted,#8a919c)]">
+                Çekilişe giren {analiz.etkinDilim} dilim. Motorun uyguladığı oran budur; yukarıdaki
+                yüzdeler girdiğiniz değerlerden hesaplanıyor.
+              </p>
+              {analiz.uyarilar.map((uyari: string) => (
+                <Uyari key={uyari} tur="dikkat">{uyari}</Uyari>
+              ))}
+              {analiz.disaridaKalanlar.length > 0 && (
+                <ul className="space-y-1 border-t border-white/[0.06] pt-2">
+                  {analiz.disaridaKalanlar.map((dis: any) => (
+                    <li key={dis.id} className="text-[10px] text-[color:var(--panel-text-dim,#c8cdd5)]">
+                      <span className="font-semibold text-amber-300">{dis.label}</span>{' '}
+                      <span className="tabular-nums">%{dis.ayarlananOlasilik}</span> — {dis.aciklama}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           )}
         </aside>
       </div>

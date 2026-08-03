@@ -26,10 +26,13 @@ import {
   lynonWithdrawalRequests,
 } from '../services/lynonBackofficeService.js';
 import {
+  bildirilecekYatirimMi,
   bonusMesaji,
   bosImlec,
   cekimMesaji,
+  cekimOlayKimligi,
   correctionMesaji,
+  islemDurumu,
   kasaMesaji,
   ozetZamaniMi,
   tasanMesaji,
@@ -49,14 +52,25 @@ export type TelegramRaporSonucu = {
   ozetGonderildi: boolean;
 };
 
-/** Bir akisin tanimi: adi, satirlari nereden gelir, kimligi ve mesaji nasil yazilir. */
+/**
+ * Bir akisin tanimi.
+ *
+ * `sohbet` her SATIR icin ayri secilebiliyor: cekim akisi tek kaynak ama
+ * onaylanan ve reddedilen cekimler AYRI sohbetlere gidiyor.
+ */
 type Akis = {
   ad: string;
   etiket: string;
   satirlar: () => Promise<AnyRecord[]>;
   kimlik: (satir: AnyRecord) => string;
   mesaj: (satir: AnyRecord) => string;
+  sohbet: (satir: AnyRecord) => string;
 };
+
+/** Akisin sohbeti; tanimli degilse varsayilana duser. */
+function sohbetSec(anahtar: keyof typeof config.telegram.raporChatIdleri): string {
+  return config.telegram.raporChatIdleri[anahtar] || config.telegram.raporChatId;
+}
 
 /** Bugunun Turkiye gunu — akislar gun icini tarar. */
 function bugun(): string {
@@ -73,10 +87,19 @@ function akislar(): Akis[] {
       etiket: 'Yatırım',
       satirlar: async () => {
         const yanit = await lynonDeposits({ ...aralik, MaxRows: 200 });
-        return yanit?.Data?.Documents?.Objects ?? [];
+        const hepsi: AnyRecord[] = yanit?.Data?.Documents?.Objects ?? [];
+        /**
+         * YALNIZCA BASARILI YATIRIMLAR.
+         *
+         * Uc bekleyen ve basarisiz yatirimlari da donduruyor. Bekleyen bir
+         * yatirimi "YATIRIM" diye bildirmek, kasaya girmemis parayi girmis
+         * gostermek olur; operator ona gore bonus verir.
+         */
+        return hepsi.filter(bildirilecekYatirimMi);
       },
       kimlik: (satir) => String(satir.Id ?? satir.DocumentId ?? satir.ReferenceNo ?? ''),
       mesaj: yatirimMesaji,
+      sohbet: () => sohbetSec('yatirim'),
     },
     {
       ad: 'cekim',
@@ -85,8 +108,21 @@ function akislar(): Akis[] {
         const yanit = await lynonWithdrawalRequests({ ...aralik, MaxRows: 200 });
         return yanit?.Data?.ClientRequests ?? [];
       },
-      kimlik: (satir) => String(satir.Id ?? satir.DocumentId ?? satir.ReferenceNo ?? ''),
+      /**
+       * Kimlige DURUM da katiliyor: ayni cekimin "bekliyor" ve "onay"
+       * halleri AYRI olay. Yalnizca kimlik kullanilsaydi talep bildirilir,
+       * onayi hic bildirilmezdi.
+       */
+      kimlik: cekimOlayKimligi,
       mesaj: cekimMesaji,
+      // Onaylanan ve reddedilen cekimler ayri sohbetlere; digerleri
+      // varsayilana.
+      sohbet: (satir) => {
+        const durum = islemDurumu(satir);
+        if (durum === 'onay') return sohbetSec('cekimOnay');
+        if (durum === 'red') return sohbetSec('cekimRed');
+        return config.telegram.raporChatId || sohbetSec('cekimOnay');
+      },
     },
     {
       ad: 'correction',
@@ -97,6 +133,7 @@ function akislar(): Akis[] {
       },
       kimlik: (satir) => String(satir.Id ?? satir.id ?? ''),
       mesaj: correctionMesaji,
+      sohbet: () => sohbetSec('correction'),
     },
     {
       ad: 'bonus',
@@ -107,6 +144,7 @@ function akislar(): Akis[] {
       },
       kimlik: (satir) => String(satir.BonusSessionId ?? satir.Id ?? ''),
       mesaj: bonusMesaji,
+      sohbet: () => sohbetSec('bonus'),
     },
   ];
 }
@@ -130,10 +168,21 @@ async function ozetGonder(chatId: string): Promise<void> {
 
 export async function runTelegramRaporJob(tenantKey = 'default'): Promise<TelegramRaporSonucu> {
   const sonuc: TelegramRaporSonucu = { gonderilen: 0, hata: 0, ozetGonderildi: false };
-  const chatId = config.telegram.raporChatId;
 
   if (!isTelegramConfigured()) return { ...sonuc, atlandi: 'TELEGRAM_BOT_TOKEN tanımlı değil.' };
-  if (!chatId) return { ...sonuc, atlandi: 'TELEGRAM_RAPOR_CHAT_ID tanımlı değil.' };
+
+  /**
+   * Her akisin kendi sohbeti olabiliyor; varsayilan bos olsa bile
+   * akislarindan biri tanimliysa bot calisir. Hicbiri yoksa susar —
+   * varsayilan bir sohbete kasa raporu gondermek en kotu turden hata.
+   */
+  const tanimliSohbet =
+    config.telegram.raporChatId ||
+    Object.values(config.telegram.raporChatIdleri).find(Boolean) ||
+    '';
+  if (!tanimliSohbet) {
+    return { ...sonuc, atlandi: 'Hiçbir Telegram sohbet kimliği tanımlı değil.' };
+  }
 
   const imlec = await readStoredDocument<RaporImleci>({
     tenantKey,
@@ -151,11 +200,16 @@ export async function runTelegramRaporJob(tenantKey = 'default'): Promise<Telegr
       // Imlec, GONDERIM BASARILI OLDUKTAN sonra yazilir; Telegram
       // dusukse kayitlar bir sonraki turda tekrar denenir.
       for (const satir of yeniler) {
-        await sendTelegramMessage(chatId, akis.mesaj(satir));
+        // Sohbet SATIR BASINA seciliyor: onaylanan ve reddedilen cekimler
+        // ayni akistan gelip farkli sohbetlere gidiyor.
+        const hedef = akis.sohbet(satir);
+        if (!hedef) continue;
+        await sendTelegramMessage(hedef, akis.mesaj(satir));
         sonuc.gonderilen += 1;
       }
       if (tasan > 0) {
-        await sendTelegramMessage(chatId, tasanMesaji(akis.etiket, tasan));
+        const hedef = akis.sohbet(yeniler[0] ?? {}) || tanimliSohbet;
+        await sendTelegramMessage(hedef, tasanMesaji(akis.etiket, tasan));
         sonuc.gonderilen += 1;
       }
 
@@ -167,9 +221,10 @@ export async function runTelegramRaporJob(tenantKey = 'default'): Promise<Telegr
     }
   }
 
-  if (ozetZamaniMi(imlec.sonOzet, config.telegram.raporOzetAralikMs)) {
+  const kasaSohbeti = sohbetSec('kasa');
+  if (kasaSohbeti && ozetZamaniMi(imlec.sonOzet, config.telegram.raporOzetAralikMs)) {
     try {
-      await ozetGonder(chatId);
+      await ozetGonder(kasaSohbeti);
       imlec.sonOzet = new Date().toISOString();
       sonuc.ozetGonderildi = true;
       degisti = true;
