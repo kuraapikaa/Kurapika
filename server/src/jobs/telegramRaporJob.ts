@@ -1,15 +1,15 @@
 /**
  * Anlik rapor Telegram botu — is akisi.
  *
- * Bes akis: kasa ozeti, yatirim, cekim talebi, bakiye duzeltmesi
- * (correction) ve bonus verilisi. Karar ve bicimleme
+ * Bes akis: kasa ozeti, basarili yatirim, cekim (onay/red ayri), manuel
+ * bakiye duzeltmesi ve bonus verilisi. Karar ve bicimleme
  * `services/telegramRaporu` icinde ve testli; burada yalnizca "cek,
  * karsilastir, gonder, imleci yaz" var.
  *
  * ── Sessiz kalma kurallari ────────────────────────────────────────────
  *
- *   • `TELEGRAM_RAPOR_CHAT_ID` bos ise bot HIC calismaz. Varsayilan bir
- *     sohbet uydurmak, kasa raporunu yanlis yere gondermek olur.
+ *   • Hicbir sohbet kimligi tanimli degilse bot HIC calismaz. Varsayilan
+ *     bir sohbet uydurmak, kasa raporunu yanlis yere gondermek olur.
  *   • Ilk turda hicbir sey gonderilmez; yalnizca mevcut durum ogrenilir.
  *   • Bir akis hata verirse digerleri calismaya devam eder. Yatirim ucu
  *     dustugu icin cekim bildirimleri de susmamali.
@@ -20,9 +20,9 @@ import { isTelegramConfigured, sendTelegramMessage } from '../services/telegramS
 import {
   istanbulDateKey,
   lynonClientBonusReport,
-  lynonCorrectionHistory,
   lynonDashboardSummary,
   lynonDeposits,
+  lynonManuelDuzeltmeler,
   lynonWithdrawalRequests,
 } from '../services/lynonBackofficeService.js';
 import {
@@ -31,9 +31,9 @@ import {
   bosImlec,
   cekimMesaji,
   cekimOlayKimligi,
-  correctionMesaji,
   islemDurumu,
   kasaMesaji,
+  manuelDuzeltmeMesaji,
   ozetZamaniMi,
   tasanMesaji,
   yatirimMesaji,
@@ -125,14 +125,28 @@ function akislar(): Akis[] {
       },
     },
     {
-      ad: 'correction',
-      etiket: 'Düzeltme',
+      /**
+       * MANUEL BAKIYE DUZELTMELERI.
+       *
+       * Kaynak `lynonCorrectionHistory` (finansal hareket ucu) yerine
+       * `CorrectionHistory/sites/{siteId}`. Ikisi AYNI olaylari donuyor,
+       * bu yuzden ikisi birden akmiyor — mukerrer bildirim olurdu.
+       *
+       * Yeni uc tercih ediliyor cunku `userName` alanini tasiyor:
+       * duzeltmeyi YAPAN yonetici. Panelin kendi denetim kaydi yalnizca
+       * PANELDEN yapilanlari goruyor; Lynon arayuzunden elle yapilan
+       * bakiye eklemeleri oraya hic dusmuyordu. Kasadan para cikaran bu
+       * ikinci yol artik anlik bildiriliyor ve gerekce notu yoksa
+       * mesajda isaretleniyor.
+       */
+      ad: 'manuelDuzeltme',
+      etiket: 'Manuel düzeltme',
       satirlar: async () => {
-        const yanit = await lynonCorrectionHistory({ ...aralik, countPerPage: 200 });
-        return yanit?.Data?.Objects ?? [];
+        const yanit = await lynonManuelDuzeltmeler(aralik);
+        return yanit?.Data?.Satirlar ?? [];
       },
-      kimlik: (satir) => String(satir.Id ?? satir.id ?? ''),
-      mesaj: correctionMesaji,
+      kimlik: (satir) => String(satir.Id ?? ''),
+      mesaj: manuelDuzeltmeMesaji,
       sohbet: () => sohbetSec('correction'),
     },
     {

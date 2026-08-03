@@ -241,6 +241,35 @@ export function correctionMesaji(satir: AnyRecord): string {
   ].filter(Boolean).join('\n');
 }
 
+const DUZELTME_YON_BASLIGI: Record<string, string> = {
+  giris: '⚖️ MANUEL BAKİYE EKLEME',
+  cikis: '⚖️ MANUEL BAKİYE ÇIKARMA',
+  bilinmiyor: '⚖️ MANUEL DÜZELTME',
+};
+
+/**
+ * Manuel duzeltme bildirimi.
+ *
+ * Kritik alan `Yapan`: bu hareketi hangi yonetici yapti. Panelden
+ * yapilan islemler denetim kaydina dusuyor ama Lynon arayuzunden elle
+ * yapilanlar dusmuyordu; bot bu boslugu anlik olarak kapatiyor.
+ *
+ * NOTSUZ hareket ayrica isaretleniyor — manuel para hareketinin
+ * gerekcesi olmali.
+ */
+export function manuelDuzeltmeMesaji(satir: AnyRecord): string {
+  const yon = String(satir.Yon ?? 'bilinmiyor');
+  return [
+    DUZELTME_YON_BASLIGI[yon] ?? DUZELTME_YON_BASLIGI.bilinmiyor,
+    oyuncuYaz(satir.ClientLogin, satir.ClientId),
+    paraYaz(satir.Tutar, satir.ParaBirimi ?? 'TRY'),
+    satir.Hesap ? `Hesap: ${satir.Hesap}` : null,
+    `Yapan: ${satir.Yapan || 'bilinmiyor'}`,
+    satir.NotAnlamli ? `Not: ${satir.Not}` : '⚠️ Gerekçe notu yok',
+    saatYaz(satir.CreatedLocal),
+  ].filter(Boolean).join('\n');
+}
+
 export function bonusMesaji(satir: AnyRecord): string {
   return [
     '🎁 BONUS VERİLDİ',

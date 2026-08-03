@@ -14,6 +14,16 @@ import {
 } from './bonusOturumRaporu.js';
 import { izinliKisitMi, kisitGovdeleri, type Kisit } from './hedefBakiyeKilidi.js';
 import {
+  duzeltmeSatiri,
+  duzeltmeToplami,
+  hesapBazindaOzet,
+  tarihAraligindakiDuzeltmeler,
+  tarihineGoreSirala,
+  yapanBazindaOzet,
+  type HamDuzeltme,
+  type OyuncuAdlari as DuzeltmeAdlari,
+} from './manuelDuzeltmeRaporu.js';
+import {
   kategoriGovdeleri,
   kategoriOnerileri,
   merdivenBosluklari,
@@ -2690,6 +2700,98 @@ export async function lynonKategoriler(): Promise<AnyRecord[]> {
   return arrayOf(await lynonRequest('/api/user/api/v1.0/categories', {
     query: { page: 1, countPerPage: 100, siteId: config.lynon.siteId },
   }));
+}
+
+/** Manuel duzeltmelerde tek sayfadaki satir sayisi. */
+const DUZELTME_SAYFA = 100;
+/** En fazla kac sayfa okunur. */
+const DUZELTME_AZAMI_SAYFA = 30;
+/** Onbellek omru; iki dakika hem bot hem ekran icin yeterli. */
+const DUZELTME_CACHE_TTL_MS = Number(process.env.DUZELTME_CACHE_MS) || 2 * 60 * 1000;
+
+/**
+ * Site genelindeki manuel bakiye duzeltmeleri.
+ *
+ *   GET /api/platform/api/v1.0/CorrectionHistory/sites/{siteId}
+ *
+ * Bu uc, `lynonCorrectionHistory`in kullandigi finansal hareket ucunde
+ * OLMAYAN bir alan tasiyor: `userName` — duzeltmeyi yapan yonetici.
+ * Panelin kendi denetim kaydi yalnizca PANELDEN yapilanlari goruyor;
+ * Lynon arayuzunden elle yapilan bakiye eklemeleri oraya hic dusmuyor.
+ *
+ * Onbellekli: hem rapor ekrani hem Telegram botu ayni cekimi paylasir.
+ */
+export async function manuelDuzeltmeleriTopla(): Promise<{ kayitlar: AnyRecord[]; kirpildi: boolean }> {
+  return cachedLynon(
+    `manuel-duzeltmeler:${config.lynon.siteId}`,
+    DUZELTME_CACHE_TTL_MS,
+    async () => {
+      const kayitlar: AnyRecord[] = [];
+      for (let sayfa = 1; sayfa <= DUZELTME_AZAMI_SAYFA; sayfa += 1) {
+        const parca = arrayOf(
+          await lynonRequest(`/api/platform/api/v1.0/CorrectionHistory/sites/${config.lynon.siteId}`, {
+            query: { page: sayfa, countPerPage: DUZELTME_SAYFA },
+          }),
+        );
+        kayitlar.push(...parca);
+        if (parca.length < DUZELTME_SAYFA) return { kayitlar, kirpildi: false };
+      }
+      return { kayitlar, kirpildi: true };
+    },
+  );
+}
+
+/**
+ * Manuel duzeltmeler raporu.
+ *
+ * Uc tarih filtresi kabul etmedigi icin suzme sunucuda yapiliyor; sayfa
+ * tavanina varilirsa kapsanan en eski gun yanitla tasiniyor. Bos rapor
+ * ile "o gunun verisi elimizde yok" ayirt edilebilmeli.
+ */
+export async function lynonManuelDuzeltmeler(body: AnyRecord = {}): Promise<AnyRecord> {
+  const range = reportDateRangeFromBody(body);
+  const [{ kayitlar, kirpildi }, overviewMap] = await Promise.all([
+    manuelDuzeltmeleriTopla(),
+    lynonPlayerOverviewMap().catch(() => new Map<string, AnyRecord>()),
+  ]);
+
+  const adlar: DuzeltmeAdlari = new Map();
+  for (const [kimlik, satir] of overviewMap) {
+    if (!kimlik) continue;
+    const login = firstNonEmpty(satir['User Name'], satir.Username, satir.username);
+    const adSoyad = firstNonEmpty(satir.FullName, satir['Full Name']);
+    if (!login && !adSoyad) continue;
+    adlar.set(kimlik, { login: login || null, adSoyad: adSoyad || null });
+  }
+
+  const kapsam = tarihAraligindakiDuzeltmeler(kayitlar as HamDuzeltme[], {
+    startDate: range.startDate,
+    endDate: range.endDate,
+  });
+  const satirlar = tarihineGoreSirala(kapsam.map((kayit) => duzeltmeSatiri(kayit, adlar)));
+
+  const gunler = kayitlar
+    .map((kayit) => istanbulDateKey(String(kayit?.createdAt ?? '')))
+    .filter(Boolean)
+    .sort();
+  const kapsananEnEskiGun = gunler[0] ?? null;
+
+  return {
+    HasError: false,
+    Data: {
+      Satirlar: satirlar,
+      Toplam: duzeltmeToplami(satirlar),
+      YapanOzeti: yapanBazindaOzet(satirlar),
+      HesapOzeti: hesapBazindaOzet(satirlar),
+      Kirpildi: kirpildi,
+      KapsananEnEskiGun: kapsananEnEskiGun,
+      VeriEksik: Boolean(
+        kirpildi && kapsananEnEskiGun && range.startDate && range.startDate < kapsananEnEskiGun,
+      ),
+      Range: range,
+      Kaynak: `CorrectionHistory/sites/${config.lynon.siteId}`,
+    },
+  };
 }
 
 /**

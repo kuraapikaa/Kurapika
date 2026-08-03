@@ -9,6 +9,7 @@ import {
   correctionMesaji,
   islemDurumu,
   kasaMesaji,
+  manuelDuzeltmeMesaji,
   oyuncuYaz,
   ozetZamaniMi,
   paraYaz,
@@ -206,6 +207,39 @@ describe('çekim onay / red ayrımı', () => {
     const imlec: AkisImleci = { baslatildi: true, gorulen: ['500:bekliyor'] };
     const sonuc = yeniOlaylar([{ Id: 500, status: 'success' }], imlec, cekimOlayKimligi);
     expect(sonuc.yeniler).toHaveLength(1);
+  });
+});
+
+describe('manuel düzeltme mesajı', () => {
+  /** `manuelDuzeltmeRaporu.duzeltmeSatiri` ciktisiyla ayni sekil. */
+  const SATIR = {
+    Id: 74803, ClientId: 2502959, ClientLogin: 'sarp61',
+    Hesap: 'PlayerUnusedBalance', Yon: 'giris', Tutar: 1000, ParaBirimi: 'TRY',
+    Yapan: 'destek@narcosbahis.com', Not: 'info sarp', NotAnlamli: true,
+    CreatedLocal: '2026-08-03T15:35:05.448579Z',
+  };
+
+  it('yönü başlıkta ayırır', () => {
+    expect(manuelDuzeltmeMesaji(SATIR)).toContain('MANUEL BAKİYE EKLEME');
+    expect(manuelDuzeltmeMesaji({ ...SATIR, Yon: 'cikis' })).toContain('MANUEL BAKİYE ÇIKARMA');
+  });
+
+  it('yapan yöneticiyi her zaman yazar', () => {
+    // Bu alan panelin kendi denetim kaydinda yok; mesajin varlik sebebi.
+    expect(manuelDuzeltmeMesaji(SATIR)).toContain('Yapan: destek@narcosbahis.com');
+  });
+
+  it('hesap türünü yazar', () => {
+    expect(manuelDuzeltmeMesaji(SATIR)).toContain('PlayerUnusedBalance');
+  });
+
+  it('gerekçesiz hareketi işaretler', () => {
+    const mesaj = manuelDuzeltmeMesaji({ ...SATIR, Not: '', NotAnlamli: false });
+    expect(mesaj).toContain('Gerekçe notu yok');
+  });
+
+  it('yönü bilinmeyen hareket için nötr başlık', () => {
+    expect(manuelDuzeltmeMesaji({ ...SATIR, Yon: 'bilinmiyor' })).toContain('MANUEL DÜZELTME');
   });
 });
 
