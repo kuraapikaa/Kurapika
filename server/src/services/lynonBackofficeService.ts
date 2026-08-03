@@ -3,6 +3,24 @@ import { metrikSayisi, netGelir, panoMetrikleri, taninmayanAlanlar } from './lyn
 import { kayipTabani } from './kayipTabaniService.js';
 import { isLynonConfigured, lynonRequest, LynonHttpError, LynonAuthError } from '../lib/lynonAuth.js';
 import { getCachedJson, setCachedJson } from '../lib/redisClient.js';
+import { istanbulDateKey } from '../lib/istanbulGunu.js';
+import {
+  bonusOturumSatiri,
+  bonusOzeti,
+  mukerrerVerilisler,
+  tarihAraligindakiOturumlar,
+  type OyuncuAdlari,
+} from './bonusOturumRaporu.js';
+import { izinliKisitMi, kisitGovdeleri, type Kisit } from './hedefBakiyeKilidi.js';
+import {
+  kategoriGovdeleri,
+  kategoriOnerileri,
+  merdivenBosluklari,
+  seviyeMerdiveni,
+  varsayilanSeviye,
+  type LynonKategori,
+  type OyuncuProfili,
+} from './oyuncuKategorileme.js';
 
 type AnyRecord = Record<string, any>;
 
@@ -116,18 +134,14 @@ function pageFromBody(body: AnyRecord = {}): PageParams {
   return { page, countPerPage };
 }
 
-export function istanbulDateKey(value: Date | string | number = new Date()): string {
-  const date = value instanceof Date ? value : new Date(value);
-  if (!Number.isFinite(date.getTime())) return '';
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'Europe/Istanbul',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).formatToParts(date);
-  const pick = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value ?? '';
-  return `${pick('year')}-${pick('month')}-${pick('day')}`;
-}
+/**
+ * Turkiye gun anahtari.
+ *
+ * Govde `lib/istanbulGunu.ts`e tasindi; saat dilimi donusumunun tek bir
+ * kaynagi olsun diye. Buradan yeniden disari veriliyor cunku panelin
+ * yarisi bu modulden aliyor.
+ */
+export { istanbulDateKey };
 
 export function previousIstanbulDateKey(value: Date | string | number = new Date()): string {
   const currentKey = istanbulDateKey(value);
@@ -716,6 +730,15 @@ export async function lynonDashboardSummary(startDate: string, endDate: string):
       metrikler,
       /** Lynon yeni alan eklerse sessizce kaybolmasin. */
       taninmayanAlanlar: taninmayanAlanlar(data),
+      /**
+       * HANGI GUN SORULDU.
+       *
+       * "Dashboard yanlis gosteriyor" sikayetinin buyuk kismi rakam
+       * hatasi degil, PENCERE hatasiydi: pano dunu soruyor, operator
+       * bugunu bekliyordu. Sorulan araligi yanitla birlikte tasimak bu
+       * ayrimi ekranda gorulur kilar — tahmin edilecek bir sey kalmaz.
+       */
+      Aralik: { startDate, endDate },
       raw: data,
     };
 
@@ -1006,6 +1029,68 @@ export async function lynonPlayerDetail(userId: string | number): Promise<AnyRec
 export async function lynonPlayerAccounts(userId: string | number): Promise<AnyRecord> {
   const rows = arrayOf(await lynonRequest(`/api/platform/api/v1.0/BackofficeAccounts/${userId}`));
   return wrapObjects(rows);
+}
+
+/**
+ * Oyuncunun ANA (gercek para) bakiyesi.
+ *
+ * `pickMainAccount` yalnizca `playerAccount` turunu secer; genis bir
+ * regex once `playerFrozenAccount`'a carpip yanlis bakiye donduruyordu.
+ * Okunamazsa null — sifir DEGIL; hedef bakiye kurali bu ayrima dayaniyor.
+ */
+export async function lynonPlayerMainBalance(userId: string | number): Promise<number | null> {
+  const rows = arrayOf(await lynonRequest(`/api/platform/api/v1.0/BackofficeAccounts/${userId}`));
+  const main = pickMainAccount(rows);
+  if (!main) return null;
+  const bakiye = numberFrom(main.balance ?? main.amount, NaN);
+  return Number.isFinite(bakiye) ? bakiye : null;
+}
+
+/** Oyuncunun bahis/cekim/yatirim kisitlari. */
+export async function lynonPlayerRestrictions(userId: string | number): Promise<Kisit[]> {
+  const yanit = recordOf(
+    await lynonRequest(`/api/limit/api/v1.0/userSettings/userSettings/${config.lynon.siteId}/${userId}/restrictions`),
+  );
+  return arrayOf(yanit.restrictions) as Kisit[];
+}
+
+/**
+ * Kisit ac/kapat.
+ *
+ * Yazma sozlesmesi Lynon dokumaninda YOK; GET yanitinin sekli tek
+ * ipucu. Bu yuzden `kisitGovdeleri` iki aday govde uretiyor ve ilki
+ * 4xx alirsa ikincisi deneniyor. Ikisi de basarisiz olursa hata
+ * yukselir — sessizce "yapildi" denmez.
+ *
+ * Cekim ve yatirim bu yoldan KAPATILAMAZ; beyaz liste `IZINLI_KISITLAR`.
+ */
+export async function lynonSetPlayerRestriction(input: {
+  userId: string | number;
+  restriction: string;
+  isRestricted: boolean;
+  note: string;
+}): Promise<{ govde: Record<string, unknown>; yanit: unknown }> {
+  const { userId, restriction, isRestricted, note } = input;
+  if (!izinliKisitMi(restriction)) {
+    throw new LynonHttpError(`Bu akıştan '${restriction}' kısıtı değiştirilemez.`, 422, { restriction });
+  }
+
+  const yol = `/api/limit/api/v1.0/userSettings/userSettings/${config.lynon.siteId}/${userId}/restrictions`;
+  const adaylar = kisitGovdeleri(restriction, isRestricted, note);
+  let sonHata: unknown = null;
+
+  for (const govde of adaylar) {
+    try {
+      const yanit = await lynonRequest(yol, { method: 'PUT', body: govde });
+      return { govde, yanit };
+    } catch (err) {
+      sonHata = err;
+      // 4xx govde sekli yanlis demek olabilir; digerini dene.
+      const durum = (err as { status?: number })?.status ?? 0;
+      if (durum < 400 || durum >= 500) throw err;
+    }
+  }
+  throw sonHata ?? new LynonHttpError('Kısıt güncellenemedi.', 500, { userId, restriction });
 }
 
 export type LynonBalanceCorrectionType = 'crediting' | 'debiting';
@@ -2102,36 +2187,66 @@ export async function lynonProviderReport(body: AnyRecord = {}): Promise<AnyReco
   return providerReportResponse(rowsFromReportData(data), summaryFromReportData(data));
 }
 
+/** Bonus oturumlarinda tek seferde cekilecek satir sayisi. */
+const BONUS_OTURUM_SAYFA = 100;
+/** En fazla kac sayfa okunur — "tum zamanlar" secildiginde ucu bogmamak icin. */
+const BONUS_OTURUM_AZAMI_SAYFA = 50;
+
+/**
+ * Site genelindeki tum bonus oturumlari.
+ *
+ * Uc sayfali; sayfa boyundan kisa bir sayfa gelene ya da tavana
+ * varilana kadar okunur. Tavana varilirsa bu bilgi yanitla birlikte
+ * tasinir — sessizce kirpilan rapor, yanlis rapordur.
+ */
+export async function bonusOturumlariniTopla(): Promise<{ oturumlar: AnyRecord[]; kirpildi: boolean }> {
+  const oturumlar: AnyRecord[] = [];
+  for (let sayfa = 1; sayfa <= BONUS_OTURUM_AZAMI_SAYFA; sayfa += 1) {
+    const parca = arrayOf(
+      await lynonRequest(`/api/bonusenginev2/api/v1/Report/bonusSessions/site/${config.lynon.siteId}`, {
+        query: { page: sayfa, countPerPage: BONUS_OTURUM_SAYFA },
+      }),
+    );
+    oturumlar.push(...parca);
+    if (parca.length < BONUS_OTURUM_SAYFA) return { oturumlar, kirpildi: false };
+  }
+  return { oturumlar, kirpildi: true };
+}
+
+/**
+ * Tum bonus raporu.
+ *
+ * Kaynak `Report By Bonus` (1844) OZET raporundan bonus OTURUMLARINA
+ * tasindi. Ozet rapor bonus turune gore toplam donduruyordu; ekranin
+ * "Oyuncu" sutunu doldurulamiyordu ve "bu uye kac kez ayni bonusu
+ * aldi" sorusu rapordan cevaplanamiyordu.
+ *
+ * Kullanici adi oyuncu genel bakis raporundan eslenir; esleme yoksa ad
+ * bos kalir (bkz. `bonusOturumRaporu`).
+ */
 export async function lynonClientBonusReport(body: AnyRecord = {}): Promise<AnyRecord> {
   const range = reportDateRangeFromBody(body);
-  const report = await raporGetir(NARCOS_REPORT_IDS.bonus, 'Report By Bonus', range);
-  const rows = rowsFromReportData(recordOf(report.Data));
-  const objects = rows.map((row, index) => {
-    const amount = pickAmount(row, ['Bonus Amount (TRY)', 'Bonus Amount', 'bonus_amount', 'Amount']);
-    const bonusType = firstNonEmpty(row.BonusType, row['Bonus Type'], row['Bonus Name'], row.bonus_name, row.Name, 'Bonus');
-    const isPayout = /payout|pay\s*out|win|kazanç|kazanc/i.test(bonusType);
-    const externalPlayerId = firstNonEmpty(row.PlayerExternalId, row['Player ID'], row.player_id, row.ClientId);
-    return {
-      ...row,
-      Id: numberFrom(row.Id ?? row.id, index + 1),
-      ClientId: numberFrom(externalPlayerId, 0),
-      ClientLogin: firstNonEmpty(row.UserName, row.username, row['User Name'], externalPlayerId),
-      ClientName: firstNonEmpty(row.FullName, row.ClientName),
-      Name: bonusType,
-      Description: bonusType,
-      Amount: amount,
-      RealAmount: amount,
-      WinAmount: isPayout ? amount : 0,
-      TotalPaidAmount: isPayout ? amount : 0,
-      WageredAmount: pickAmount(row, ['Wagered Amount (TRY)', 'Wagered Amount', 'WageredAmount']),
-      ToWagerAmount: pickAmount(row, ['To Wager Amount (TRY)', 'To Wager Amount', 'ToWagerAmount']),
-      ResultType: isPayout ? 1 : 0,
-      AcceptanceType: 'Lynon',
-      CreatedByUserName: 'Lynon Bonus Engine',
-      CreatedLocal: firstNonEmpty(row.CreatedAt, row['Created at'], row.createdAt, row.CreatedLocal),
-      ClientCurrency: firstNonEmpty(row.Currency, row.currency, config.lynon.currency),
-    };
+  const [{ oturumlar, kirpildi }, overviewMap] = await Promise.all([
+    bonusOturumlariniTopla(),
+    lynonPlayerOverviewMap().catch(() => new Map<string, AnyRecord>()),
+  ]);
+
+  const adlar: OyuncuAdlari = new Map();
+  for (const [kimlik, satir] of overviewMap) {
+    if (!kimlik) continue;
+    const login = firstNonEmpty(satir['User Name'], satir.Username, satir.username);
+    const adSoyad = firstNonEmpty(satir.FullName, satir['Full Name']);
+    if (!login && !adSoyad) continue;
+    adlar.set(kimlik, { login: login || null, adSoyad: adSoyad || null });
+  }
+
+  const kapsam = tarihAraligindakiOturumlar(oturumlar, {
+    startDate: range.startDate,
+    endDate: range.endDate,
   });
+  const objects = kapsam.map((oturum, index) => bonusOturumSatiri(oturum, adlar, index));
+  objects.sort((a, b) => String(b.CreatedLocal ?? '').localeCompare(String(a.CreatedLocal ?? '')));
+
   return {
     HasError: false,
     AlertType: 'success',
@@ -2141,8 +2256,18 @@ export async function lynonClientBonusReport(body: AnyRecord = {}): Promise<AnyR
         Count: objects.length,
         Objects: objects,
       },
-      Summary: summaryFromReportData(recordOf(report.Data)),
+      /** Bonus adina gore toplamlar — ekrandaki analiz kartlari. */
+      BonusOzeti: bonusOzeti(objects),
+      /**
+       * Ayni oyuncuya ayni bonusun tekrari. "Bu uye nasil bir suru
+       * telegram bonusu almis?" sorusu artik raporda gorunur.
+       */
+      MukerrerVerilisler: mukerrerVerilisler(objects),
+      /** Adi eslenemeyen oyuncu sayisi — eksiklik gizlenmiyor. */
+      AdsizOyuncu: objects.filter((satir) => !satir.ClientLogin).length,
+      Kirpildi: kirpildi,
       Range: range,
+      Kaynak: `bonusSessions/site/${config.lynon.siteId}`,
     },
   };
 }
@@ -2456,6 +2581,132 @@ export async function lynonClientsByIp(body: AnyRecord = {}): Promise<AnyRecord>
     LastLoginLocalDate: row.lastLoginDate ?? null,
     IsVerified: String(row.kycStatus ?? '').toLowerCase() === 'verified',
   })));
+}
+
+// ─── Otomatik oyuncu kategorileme ────────────────────────────────────────
+
+/** Sitenin kategori merdiveni. Esikler aciklama alaninda yaziyor. */
+export async function lynonKategoriler(): Promise<AnyRecord[]> {
+  return arrayOf(await lynonRequest('/api/user/api/v1.0/categories', {
+    query: { page: 1, countPerPage: 100, siteId: config.lynon.siteId },
+  }));
+}
+
+/**
+ * Risk ve aktiviteye gore kategori onerileri.
+ *
+ * Iki asamali:
+ *
+ *   1. UCUZ TARAMA — tum oyuncular icin yatirim bandina gore aday
+ *      degisiklikleri bulunur. Bu asamada coklu hesap OLCULMEZ; her
+ *      oyuncu icin IP sorgusu atmak yuzlerce istek demek olurdu.
+ *   2. ZENGINLESTIRME — yalnizca kategorisi degisecek oyuncular icin
+ *      IP sorgusu yapilir ve risk yeniden hesaplanir.
+ *
+ * Tek asamali yapsaydik ya cok yavas olurdu ya da risk hic olculemez,
+ * kritik riskli oyuncular sessizce terfi ederdi.
+ */
+export async function lynonKategoriOnerileri(body: AnyRecord = {}): Promise<AnyRecord> {
+  const enFazlaOyuncu = Math.min(1000, numberFrom(body.MaxRows ?? body.limit, 500));
+  const zenginlestirmeTavani = Math.min(60, numberFrom(body.enrichLimit, 40));
+
+  const [kategoriler, playersRes] = await Promise.all([
+    lynonKategoriler(),
+    lynonPlayers({ MaxRows: enFazlaOyuncu, SkeepRows: 0 }),
+  ]);
+
+  const merdiven = seviyeMerdiveni(kategoriler as LynonKategori[]);
+  const oyuncular = arrayOf(recordOf(playersRes.Data).Objects);
+
+  const profiller: OyuncuProfili[] = oyuncular.map((oyuncu) => ({
+    playerId: numberFrom(oyuncu.Id, 0),
+    login: String(oyuncu.Login ?? ''),
+    toplamYatirim: nullableNumber(oyuncu.TotalDeposit),
+    netKarZarar: nullableNumber(oyuncu.ProfitAndLose),
+    sonYatirim: (oyuncu.LastDepositDate as string | null) ?? null,
+    // Ucuz taramada olculmez; asama 2'de doldurulur.
+    ayniIpHesapSayisi: null,
+    mevcutKategoriId: nullableNumber(oyuncu.CategoryId),
+  }));
+
+  const adaylar = kategoriOnerileri(profiller, merdiven);
+  const zenginlestirilecek = adaylar.slice(0, zenginlestirmeTavani);
+
+  const ipSayisi = new Map<number, number>();
+  await Promise.all(
+    zenginlestirilecek.map(async (oneri) => {
+      const oyuncu = oyuncular.find((o) => numberFrom(o.Id, -1) === oneri.playerId);
+      const ip = firstNonEmpty(oyuncu?.LastLoginIp);
+      if (!ip) return;
+      try {
+        const yanit = await lynonClientsByIp({ LoginIP: ip });
+        ipSayisi.set(oneri.playerId, arrayOf(recordOf(yanit.Data).Objects).length);
+      } catch {
+        // IP okunamadi: sayi bilinmiyor kalir, risk uydurulmaz.
+      }
+    }),
+  );
+
+  const zenginProfiller = profiller
+    .filter((profil) => ipSayisi.has(profil.playerId))
+    .map((profil) => ({ ...profil, ayniIpHesapSayisi: ipSayisi.get(profil.playerId) ?? null }));
+  const yenidenHesaplanan = new Map(
+    kategoriOnerileri(zenginProfiller, merdiven).map((oneri) => [oneri.playerId, oneri]),
+  );
+
+  const oneriler = adaylar.map((oneri) => yenidenHesaplanan.get(oneri.playerId) ?? oneri);
+
+  return {
+    HasError: false,
+    Data: {
+      Oneriler: oneriler,
+      /** Otomatik uygulanabilir olanlar: bekletme sebebi olmayanlar. */
+      Uygulanabilir: oneriler.filter((oneri) => !oneri.bekletme).length,
+      Merdiven: merdiven,
+      /** Esigi cozulemeyen kategoriler — bant olarak kullanilamaz. */
+      EsiksizKategoriler: merdiven.filter((seviye) => !seviye.esik).map((seviye) => seviye.ad),
+      /**
+       * Hicbir bandin kapsamadigi tutar araliklari.
+       *
+       * Sitede gercek bir bosluk var: bantlar 10.000 TL'den basliyor,
+       * 0 – 9.999 arasi acikta. Varsayilan kategori bunu kapatiyor ama
+       * boslugun kendisi gorunur olmali — bilerek mi birakildi?
+       */
+      Bosluklar: merdivenBosluklari(merdiven),
+      VarsayilanKategori: varsayilanSeviye(merdiven),
+      TarananOyuncu: profiller.length,
+      RiskOlculen: ipSayisi.size,
+    },
+  };
+}
+
+/**
+ * Oyuncunun kategorisini yaz.
+ *
+ * Yazma sozlesmesi belgelenmemis; `kategoriGovdeleri` uc aday sekil
+ * uretiyor ve ilki 4xx alirsa digeri deneniyor. Hepsi basarisiz olursa
+ * hata yukselir — sessizce "uygulandi" denmez.
+ */
+export async function lynonKategoriUygula(playerId: number, kategoriId: number): Promise<AnyRecord> {
+  const yollar = [
+    `/api/user/api/v1.0/userBackOffice/users/${playerId}/category`,
+    `/api/user/api/v1.0/userBackOffice/users/${playerId}`,
+  ];
+  let sonHata: unknown = null;
+
+  for (const yol of yollar) {
+    for (const govde of kategoriGovdeleri(playerId, kategoriId)) {
+      try {
+        const yanit = await lynonRequest(yol, { method: 'PUT', body: govde });
+        return { HasError: false, Data: { playerId, kategoriId, yol, govde, yanit } };
+      } catch (err) {
+        sonHata = err;
+        const durum = (err as { status?: number })?.status ?? 0;
+        if (durum < 400 || durum >= 500) throw err;
+      }
+    }
+  }
+  throw sonHata ?? new LynonHttpError('Kategori güncellenemedi.', 500, { playerId, kategoriId });
 }
 
 export async function lynonPlayerActivity(login: string, from: Date, to: Date): Promise<AnyRecord> {

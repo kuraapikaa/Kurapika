@@ -43,6 +43,8 @@ export interface SummaryData {
     aciklama?: string;
   }>;
   taninmayanAlanlar?: string[];
+  /** Sunucunun Lynon'a gerçekten sorduğu pencere — ekranda gösterilir. */
+  Aralik?: { startDate: string; endDate: string };
 }
 
 export interface OyunTuruSatiri {

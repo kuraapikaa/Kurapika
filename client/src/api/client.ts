@@ -503,6 +503,28 @@ export const dashboardApi = {
     });
   },
 
+  /**
+   * Otomatik oyuncu kategorileme önerileri: POST /lynon/oyuncu-kategorileme
+   *
+   * Eşikler panelde değil, sitenin kendi kategori açıklamalarında tanımlı;
+   * sunucu onları okuyup öneri üretir.
+   */
+  kategoriOnerileri: (secenek?: { MaxRows?: number; enrichLimit?: number }) =>
+    post<any>('/lynon/oyuncu-kategorileme', secenek ?? {}),
+
+  kategoriUygula: (playerId: number, kategoriId: number) =>
+    post<any>('/lynon/oyuncu-kategorileme/uygula', { playerId, kategoriId }),
+
+  /** Bahis kısıtını aç/kapat: POST /lynon/oyuncu-kisitlari/:userId */
+  oyuncuKisitiYaz: (userId: number | string, restriction: string, isRestricted: boolean, note?: string) =>
+    post<any>(`/lynon/oyuncu-kisitlari/${userId}`, { restriction, isRestricted, note }),
+
+  /** Hedef bakiye taramasını elle çalıştır. */
+  hedefBakiyeTara: () => post<any>('/lynon/hedef-bakiye/tara', {}),
+
+  /** Kasa özetini şimdi Telegram'a gönder. */
+  telegramKasaOzeti: () => post<any>('/lynon/telegram-rapor/ozet', {}),
+
   /** Tüm Oyuncuların Bonus Raporu: POST /client-bonus-report */
   bonusReport: (dateRange: DateRange) =>
     post<any>('/client-bonus-report', {

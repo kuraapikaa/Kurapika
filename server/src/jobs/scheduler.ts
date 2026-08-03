@@ -193,6 +193,80 @@ export async function registerNextDayBonusJob(): Promise<void> {
   });
 }
 
+/**
+ * Hedef bakiyeye ulaşan Telegram FS oyuncusunun bahis yetkisini kapatır.
+ *
+ * Gerçek oyuncuyu etkileyen bir iş; kapsamı hedef kampanyanın son
+ * birkaç günkü alıcılarıyla sınırlı ve `HEDEF_BAKIYE_KURU=1` ile
+ * yazmadan izlenebilir.
+ */
+export async function registerHedefBakiyeJob(): Promise<void> {
+  if (!config.lynon.enabled) {
+    console.log('[scheduler] Hedef bakiye kilidi Lynon kapalı olduğu için atlandı.');
+    return;
+  }
+  if (!config.hedefBakiye.aktif) {
+    console.log('[scheduler] Hedef bakiye kilidi kapalı (HEDEF_BAKIYE_KILIDI=0).');
+    return;
+  }
+  const { runHedefBakiyeJob } = await import('./hedefBakiyeJob.js');
+  scheduler.register('hedef-bakiye-kilidi', config.hedefBakiye.aralikMs, async () => {
+    const sonuc = await runHedefBakiyeJob();
+    if (sonuc.kapatilan > 0 || sonuc.hata > 0) {
+      console.log(`[hedef-bakiye] ${sonuc.kontrol} kontrol, ${sonuc.kapatilan} kapatıldı, ${sonuc.hata} hata`);
+    }
+  });
+}
+
+/**
+ * Otomatik oyuncu kategorileme (saatte bir).
+ *
+ * Yazma varsayılan olarak KAPALI: kategori yazma ucu henüz
+ * gözlemlenmedi. `OTOMATIK_KATEGORI=1` ile açılır; kapalıyken de
+ * öneriler üretilip panelde görünür.
+ */
+export async function registerOtomatikKategoriJob(): Promise<void> {
+  if (!config.lynon.enabled) {
+    console.log('[scheduler] Otomatik kategorileme Lynon kapalı olduğu için atlandı.');
+    return;
+  }
+  const { runOtomatikKategoriJob, yazmaAcikMi } = await import('./otomatikKategoriJob.js');
+  if (!yazmaAcikMi()) {
+    console.log('[scheduler] Otomatik kategorileme yazması kapalı (OTOMATIK_KATEGORI=1 ile açılır).');
+    return;
+  }
+  scheduler.register('otomatik-kategori', 60 * 60 * 1000, async () => {
+    const sonuc = await runOtomatikKategoriJob();
+    if (sonuc.uygulanan > 0 || sonuc.hata > 0) {
+      console.log(`[otomatik-kategori] ${sonuc.uygulanan} uygulandı, ${sonuc.hata} hata (${sonuc.oneri} öneri)`);
+    }
+  });
+}
+
+/**
+ * Anlık rapor Telegram botu: kasa özeti, yatırım, çekim, düzeltme, bonus.
+ *
+ * Sohbet kimliği tanımlı değilse kaydedilmez — varsayılan bir sohbete
+ * kasa raporu göndermek en kötü türden hata olurdu.
+ */
+export async function registerTelegramRaporJob(): Promise<void> {
+  if (!config.lynon.enabled) {
+    console.log('[scheduler] Telegram rapor botu Lynon kapalı olduğu için atlandı.');
+    return;
+  }
+  if (!config.telegram.botToken || !config.telegram.raporChatId) {
+    console.log('[scheduler] Telegram rapor botu kapalı (TELEGRAM_RAPOR_CHAT_ID tanımlı değil).');
+    return;
+  }
+  const { runTelegramRaporJob } = await import('./telegramRaporJob.js');
+  scheduler.register('telegram-rapor', config.telegram.raporAralikMs, async () => {
+    const sonuc = await runTelegramRaporJob();
+    if (sonuc.gonderilen > 0 || sonuc.hata > 0) {
+      console.log(`[telegram-rapor] ${sonuc.gonderilen} mesaj, ${sonuc.hata} hata`);
+    }
+  });
+}
+
 /** Ard arda giriş yapmayan sadakat oyuncuları için 2. gün SMS, 3. gün puan silme kontrolü (her 6 saatte bir). */
 export async function registerLoyaltyRetentionJob(): Promise<void> {
   const { runLoyaltyRetentionSweep } = await import('./loyaltyRetentionJob.js');

@@ -95,6 +95,36 @@ export const config = {
     botToken: (process.env.TELEGRAM_BOT_TOKEN || '').trim(),
     botUsername: (process.env.TELEGRAM_BOT_USERNAME || '').trim(),
     webhookSecret: (process.env.TELEGRAM_WEBHOOK_SECRET || '').trim(),
+    /**
+     * Anlık rapor botunun yazacağı sohbet. BOŞSA BOT ÇALIŞMAZ — varsayılan
+     * bir sohbet kimliği uydurmak, kasa raporunu yanlış yere göndermek
+     * demektir.
+     */
+    raporChatId: (process.env.TELEGRAM_RAPOR_CHAT_ID || '').trim(),
+    /** Kasa özetinin gönderilme sıklığı. 0 = özet kapalı, olaylar devam eder. */
+    raporOzetAralikMs: Number(process.env.TELEGRAM_RAPOR_OZET_MS) || 60 * 60 * 1000,
+    /** Olay taraması sıklığı. */
+    raporAralikMs: Number(process.env.TELEGRAM_RAPOR_ARALIK_MS) || 60_000,
+  },
+  /**
+   * Hedef bakiye kilidi.
+   *
+   * 100 FS Telegram Katıl Bonusu alan oyuncunun bakiyesi eşiği geçtiğinde
+   * bahis yetkisi kapanır. Çekim ve yatırım ASLA kapatılmaz.
+   */
+  hedefBakiye: {
+    aktif: process.env.HEDEF_BAKIYE_KILIDI !== '0',
+    /** 1 ise karar verilir, loglanır ama Lynon'a yazılmaz. */
+    kuruCalisma: process.env.HEDEF_BAKIYE_KURU === '1',
+    esik: Number(process.env.HEDEF_BAKIYE_ESIGI) || 2500,
+    kisit: (process.env.HEDEF_BAKIYE_KISITI || 'casinoBet').trim(),
+    kampanyaId: Number(process.env.TELEGRAM_FS_KAMPANYA_ID) || 1885,
+    bonusId: Number(process.env.TELEGRAM_FS_BONUS_ID) || 1687,
+    /** Kaç gün geriye bakılacağı; geçmişe dönük toplu kısıtlamayı engeller. */
+    gunPenceresi: Number(process.env.HEDEF_BAKIYE_GUN) || 3,
+    aralikMs: Number(process.env.HEDEF_BAKIYE_ARALIK_MS) || 60_000,
+    /** Tek turda kaç oyuncunun bakiyesi okunur; uca yüklenmemek için. */
+    turBasinaOyuncu: Number(process.env.HEDEF_BAKIYE_TUR_LIMITI) || 40,
   },
   /** Bonus listesi: POST rgs-webadminapi.betconstruct.com/api/Bonus/GetBonusDefinitions */
   bonusApi: {
