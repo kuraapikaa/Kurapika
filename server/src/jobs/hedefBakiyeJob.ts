@@ -82,11 +82,21 @@ export async function runHedefBakiyeJob(tenantKey = 'default'): Promise<HedefBak
   for (const playerId of sira) {
     sonuc.kontrol += 1;
     try {
-      const [bakiye, kisitlar] = await Promise.all([
-        lynonPlayerMainBalance(playerId),
-        lynonPlayerRestrictions(playerId),
-      ]);
+      /**
+       * ONCE BAKIYE, SONRA KISIT.
+       *
+       * Ilk surum ikisini `Promise.all` ile birlikte okuyordu. Adaylarin
+       * ezici cogunlugu esigin ALTINDA; onlar icin kisit yanitina hic
+       * bakilmiyordu ama istek yine de atiliyordu. Her turda aday sayisi
+       * kadar bosa istek demekti — dakikada bir calisan bir iste bu,
+       * gunde on binlerce cagri ve dogrudan Railway faturasi.
+       *
+       * Kisit yalnizca bakiye esigi GECTIGINDE okunur.
+       */
+      const bakiye = await lynonPlayerMainBalance(playerId);
+      if (!hedefKarari({ bakiye, esik: ayar.esik, zatenKisitli: false }).kapat) continue;
 
+      const kisitlar = await lynonPlayerRestrictions(playerId);
       const zatenKisitli = kisitliMi(kisitlar, ayar.kisit);
       const karar = hedefKarari({ bakiye, esik: ayar.esik, zatenKisitli });
 

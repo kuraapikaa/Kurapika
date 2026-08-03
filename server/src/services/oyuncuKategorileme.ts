@@ -31,6 +31,14 @@
  * kararlar once panelde gorunur oluyor.
  */
 
+import {
+  DAVRANIS_KATEGORILERI,
+  adAnahtari,
+  davranisKarari,
+  otomatikDavranislar,
+  type DavranisKimligi,
+} from './davranisKategorileri.js';
+
 export type LynonKategori = {
   id?: unknown;
   name?: unknown;
@@ -61,6 +69,22 @@ function kucuk(deger: unknown): string {
 }
 
 /**
+ * Kategori adi karsilastirmasi.
+ *
+ * `kucuk()` (tr-TR) KULLANILMAZ: kategori adlarinin bir kismi Ingilizce
+ * ("High Risk") ve Turkce kucultme `I`yi noktasiz `ı`ya cevirip
+ * eslesmeyi bozar. Ayrinti `davranisKategorileri.adAnahtari` icinde.
+ */
+function adEsit(a: unknown, b: unknown): boolean {
+  return adAnahtari(a) === adAnahtari(b);
+}
+
+/** Bu ad bir DAVRANIS etiketi mi (deger merdiveni basamagi degil)? */
+function davranisKategorisiMi(ad: unknown): boolean {
+  return DAVRANIS_KATEGORILERI.some((tanim) => adEsit(tanim.name, ad));
+}
+
+/**
  * Turkce bicimli sayilari cozer: "500.000" → 500000, "1.250,75" → 1250.75.
  *
  * Nokta binlik ayraci, virgul ondalik. Ingilizce varsayimla cozmek
@@ -76,15 +100,34 @@ export function turkceSayi(metin: string): number | null {
  * Aciklamadan esik cikarir.
  *
  *   "[500.000 TL ve üzeri]"     → { min: 500000, max: null }
- *   "[100.000 TL - 499.999 TL]" → { min: 100000, max: 499999 }
+ *   "[250.000 TL - 499.999 TL]" → { min: 250000, max: 499999 }
  *   "[10.000 TL altı]"          → { min: null,   max: 10000 }
  *
- * Cozulemezse null — uydurulmus bir esikle oyuncu terfi ettirmektense
- * o kategoriyi merdivenden cikarmak dogru.
+ * ── Neden bu kadar secici ─────────────────────────────────────────────
+ *
+ * Ilk surum aciklamadaki HER SAYIYI esik sayiyordu. Deger merdiveninin
+ * yani sira davranis kategorileri de eklenince ("Bonus avcısı: son 30
+ * günde 5+ bonus almış") bu, kategoriyi 5 – 30 TL bandi olarak
+ * merdivene sokardi ve neredeyse her oyuncu oraya duserdi.
+ *
+ * Sitedeki gercek bantlarin tamami `[... TL ...]` bicimini kullaniyor;
+ * varsayilan kategori ise duz metin ("Default Category"). Bu yuzden bir
+ * aciklama ancak KOSELI PARANTEZ icinde PARA BIRIMI ile birlikte sayi
+ * tasiyorsa bant sayilir. Bant olmayan kategoriler merdivenden duser
+ * ama ekranda "bant olarak kullanilmiyor" diye listelenir; sessiz
+ * degil.
  */
 export function esikCoz(description: unknown): Esik | null {
-  const metin = kucuk(description);
-  if (!metin) return null;
+  const tam = kucuk(description);
+  if (!tam) return null;
+
+  // Bant yalnizca koseli parantez icinde tanimlanir.
+  const parantez = tam.match(/\[([^\]]*)\]/);
+  if (!parantez) return null;
+  const metin = parantez[1];
+
+  // Para birimi isareti olmadan sayilar esik degildir.
+  if (!/\b(tl|try)\b|₺/.test(metin)) return null;
 
   const sayilar = (metin.match(/\d[\d.]*(?:,\d+)?/g) ?? [])
     .map(turkceSayi)
@@ -148,6 +191,8 @@ export type OyuncuProfili = {
   /** Ayni IP'de gorulen hesap sayisi — oyuncunun kendisi dahil. */
   ayniIpHesapSayisi: number | null;
   mevcutKategoriId: number | null;
+  /** Bugune kadar aldigi bonus adedi. Bilinmiyorsa null. */
+  bonusAdedi?: number | null;
 };
 
 export const KATEGORI_ESIKLERI = {
@@ -257,6 +302,8 @@ export type KategoriOnerisi = {
   gerekce: string;
   /** Dolu ise oneri OTOMATIK uygulanmaz; operator karar verir. */
   bekletme: string | null;
+  /** Deger merdiveni yerine bir davranis etiketi onerildiyse hangisi. */
+  davranis: DavranisKimligi | null;
 };
 
 /**
@@ -269,13 +316,57 @@ export function kategoriOnerisi(
   profil: OyuncuProfili,
   merdiven: Seviye[],
   simdi = Date.now(),
+  otomatik: Set<DavranisKimligi> = otomatikDavranislar(),
 ): KategoriOnerisi | null {
+  const risk = kategoriRiski(profil);
+  const durgunGun = durgunlukGunu(profil.sonYatirim, simdi);
+
+  /**
+   * DAVRANIS KATMANI MERDIVENIN ONUNDE.
+   *
+   * Lynon'da oyuncu basina tek kategori slotu var. "High Risk" ya da
+   * "Bonus Avcısı" bir oyuncunun seviyesinden daha acil bir bilgi;
+   * operator listede once onu gormeli. Hangi etiketlerin otomatik
+   * atanacagi `otomatik` kumesiyle sinirli — "Aktif Üye" gibi neredeyse
+   * herkese uyan etiketler varsayilan olarak disarida, yoksa merdiveni
+   * tamamen silerlerdi.
+   */
+  const davranis = davranisKarari({
+    netKarZarar: profil.netKarZarar,
+    ayniIpHesapSayisi: profil.ayniIpHesapSayisi,
+    toplamYatirim: profil.toplamYatirim,
+    bonusAdedi: profil.bonusAdedi ?? null,
+    durgunGun,
+    onemliKazanc: KATEGORI_ESIKLERI.onemliKazanc,
+  });
+
+  if (davranis && otomatik.has(davranis.kimlik)) {
+    const etiket = merdiven.find((seviye) => adEsit(seviye.ad, davranis.ad));
+    // Kategori sitede yoksa oneri uretilmez; olmayan kimlige yazilamaz.
+    if (etiket) {
+      if (profil.mevcutKategoriId === etiket.id) return null;
+      return {
+        playerId: profil.playerId,
+        login: profil.login,
+        mevcutKategoriId: profil.mevcutKategoriId,
+        hedefKategoriId: etiket.id,
+        hedefKategoriAdi: etiket.ad,
+        toplamYatirim: profil.toplamYatirim,
+        risk,
+        durgunGun,
+        gerekce: `${davranis.ad}: ${davranis.gerekce}`,
+        // Davranis etiketi seviye merdivenini ezer; bu bir "dusurme"
+        // degil, farkli bir eksende siniflandirma. Bekletilmez.
+        bekletme: null,
+        davranis: davranis.kimlik,
+      };
+    }
+  }
+
   const hedef = hedefSeviye(merdiven, profil.toplamYatirim);
   if (!hedef) return null;
   if (profil.mevcutKategoriId !== null && profil.mevcutKategoriId === hedef.id) return null;
 
-  const risk = kategoriRiski(profil);
-  const durgunGun = durgunlukGunu(profil.sonYatirim, simdi);
   const yatirim = profil.toplamYatirim ?? 0;
 
   const mevcut = merdiven.find((seviye) => seviye.id === profil.mevcutKategoriId) ?? null;
@@ -304,6 +395,20 @@ export function kategoriOnerisi(
   let bekletme: string | null = null;
   if (risk === 'KRİTİK') {
     bekletme = 'Kritik risk: çoklu hesap ve yüksek kazanç birlikte görüldü, manuel inceleme gerekiyor.';
+  } else if (davranisKategorisiMi(mevcut?.ad)) {
+    /**
+     * DAVRANIS ETIKETI OTOMATIK KALDIRILMAZ.
+     *
+     * Oyuncu su an "High Risk" ya da "Bonus Avcısı" ise ve bu turda
+     * kural tetiklenmediyse, deger merdiveni onu sessizce Seviye 3'e
+     * tasirdi — yani risk bayragini kaldirirdi.
+     *
+     * Kural tetiklenmemis olmasi "risk bitti" demek DEGIL. IP sorgusu
+     * bir turda basarisiz olursa `ayniIpHesapSayisi` null gelir, coklu
+     * hesap olculemez ve etiket kendiliginden dusrerdi. Bayragi
+     * kaldirmak insan karari.
+     */
+    bekletme = `Davranış etiketi kaldırılıyor: ${mevcut?.ad} → ${hedef.ad}. Etiketin düşmesi otomatik yapılmaz, onay gerekiyor.`;
   } else if (dususMu) {
     /**
      * SEVIYE DUSURME OTOMATIK YAPILMAZ.
@@ -330,19 +435,29 @@ export function kategoriOnerisi(
     durgunGun,
     gerekce: gerekceler.join(' · '),
     bekletme,
+    davranis: null,
   };
 }
 
-/** Toplu oneri. Onerisi olmayan oyuncular listede yer almaz. */
+/**
+ * Toplu oneri. Onerisi olmayan oyuncular listede yer almaz.
+ *
+ * Davranis etiketli oneriler basa alinir: "High Risk" bir oyuncunun
+ * yatirim tutarindan once gorulmeli.
+ */
 export function kategoriOnerileri(
   profiller: OyuncuProfili[] | null | undefined,
   merdiven: Seviye[],
   simdi = Date.now(),
+  otomatik: Set<DavranisKimligi> = otomatikDavranislar(),
 ): KategoriOnerisi[] {
   return (profiller ?? [])
-    .map((profil) => kategoriOnerisi(profil, merdiven, simdi))
+    .map((profil) => kategoriOnerisi(profil, merdiven, simdi, otomatik))
     .filter((oneri): oneri is KategoriOnerisi => oneri !== null)
-    .sort((a, b) => (b.toplamYatirim ?? 0) - (a.toplamYatirim ?? 0));
+    .sort((a, b) => {
+      if (Boolean(a.davranis) !== Boolean(b.davranis)) return a.davranis ? -1 : 1;
+      return (b.toplamYatirim ?? 0) - (a.toplamYatirim ?? 0);
+    });
 }
 
 /**

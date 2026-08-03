@@ -1,6 +1,7 @@
 import Fastify from 'fastify';
 import helmet from '@fastify/helmet';
 import cors from '@fastify/cors';
+import compress from '@fastify/compress';
 import fastifyCookie from '@fastify/cookie';
 import fastifySession from '@fastify/session';
 import rateLimit from '@fastify/rate-limit';
@@ -125,6 +126,26 @@ export async function buildApp() {
   await app.register(cors, {
     origin: corsConfig.origin as boolean | string | RegExp,
     credentials: true,
+  });
+
+  /**
+   * YANIT SIKISTIRMA.
+   *
+   * Panel sikistirmasiz JSON gonderiyordu. Bonus raporu binlerce satir,
+   * oyuncu listesi yuzlerce kayit, istemci paketi 1 MB'in uzerinde —
+   * hepsi ham. JSON ve JS metinsel oldugu icin gzip tipik olarak 5-10
+   * kat kuculuyor.
+   *
+   * Railway giden trafigi faturaliyor; bu tek satir en dogrudan
+   * tasarruf kalemi. Ayrica Cloudflare'in arkasindaki gecikme de duser.
+   *
+   * `threshold` altindaki kucuk yanitlar sikistirilmaz: 200 baytlik bir
+   * govdeyi sikistirmak CPU harcar, kazanc getirmez.
+   */
+  await app.register(compress, {
+    global: true,
+    threshold: 1024,
+    encodings: ['br', 'gzip', 'deflate'],
   });
 
   // ─── Request ID (Correlation) ─────────────────────────────────────────────

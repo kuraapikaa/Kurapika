@@ -10,6 +10,7 @@ import {
   lynonCasinoOperations,
   lynonCorrectionHistory,
   lynonDashboardSummary,
+  lynonDavranisKategorileriniOlustur,
   lynonDeposits,
   lynonDictionaries,
   lynonErrorResponse,
@@ -317,6 +318,27 @@ export async function lynonRoutes(app: FastifyInstance) {
       }
     },
   );
+
+  /**
+   * Davranış kategorilerini oluştur: High Risk, Bonus Avcısı, VIP Üye, Aktif Üye.
+   *
+   * İdempotent — sitede aynı adla kategori varsa atlanır. Bu kontrol
+   * olmadan düğmeye ikinci basış kopya üretirdi.
+   */
+  app.post('/lynon/oyuncu-kategorileme/kategorileri-olustur', async (request, reply) => {
+    const kullanici = (request.session as any)?.user;
+    try {
+      const sonuc = await lynonDavranisKategorileriniOlustur();
+      const olusturulan = sonuc?.Data?.Olusturulan ?? [];
+      if (olusturulan.length > 0) {
+        audit(kullanici?.username ?? 'bilinmeyen', kullanici?.role ?? '-', 'manual_adjustment',
+          'kategoriler', `Davranış kategorileri oluşturuldu: ${olusturulan.map((o: any) => o.ad).join(', ')}`);
+      }
+      return reply.send(sonuc);
+    } catch (err) {
+      return sendError(reply, err);
+    }
+  });
 
   /**
    * Öneriyi uygula.

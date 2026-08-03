@@ -158,6 +158,26 @@ describe('net gelir', () => {
   });
 });
 
+describe('izlenebilirlik', () => {
+  it('her ölçü kendi Lynon alan adını taşır', () => {
+    // "Pano yanlış gösteriyor" sikayeti, hangi sayinin nereden geldigi
+    // gorunmedigi surece adreslenemiyor.
+    expect(bul(GERCEK, 'yatirim').alan).toBe('TOTAL DEPOSITS AMOUNT');
+    expect(bul(GERCEK, 'kar').alan).toBe('PROFIT');
+  });
+
+  it('ham değeri olduğu gibi taşır', () => {
+    const yatirim = bul({ 'TOTAL DEPOSITS AMOUNT': '11000 TRY' }, 'yatirim');
+    expect(yatirim.hamDeger).toBe('11000 TRY');
+    expect(yatirim.deger).toBe(11000);
+  });
+
+  it('yanıtta olmayan alanın ham değeri null', () => {
+    // "(yanıtta yok)" ile "boş metin geldi" ayri seyler.
+    expect(bul({}, 'yatirim').hamDeger).toBeNull();
+  });
+});
+
 describe('bozuk girdi', () => {
   it('null ve undefined çökmez', () => {
     expect(panoMetrikleri(null)).toHaveLength(panoMetrikleri({}).length);

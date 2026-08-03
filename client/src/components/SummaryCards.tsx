@@ -46,6 +46,10 @@ export interface PanoMetrigi {
   grup: 'finans' | 'oyun' | 'bonus' | 'oyuncu';
   veriYok: boolean;
   aciklama?: string;
+  /** Değerin geldiği Lynon alan adı — "pano yanlış" şikâyetini izlenebilir kılar. */
+  alan?: string;
+  /** Uçtan gelen ham değer ("11000 TRY" gibi). */
+  hamDeger?: string | null;
 }
 
 const GRUP_ADI: Record<PanoMetrigi['grup'], string> = {
@@ -185,7 +189,18 @@ export function SummaryCards({ data, isLoading, error, onRetry }: SummaryCardsPr
                   key={m.anahtar}
                   etiket={m.etiket}
                   deger={sayiYaz(m.deger, m.birim)}
-                  aciklama={m.aciklama}
+                  /*
+                   * IZLENEBILIRLIK.
+                   *
+                   * "Pano yanlış gösteriyor" şikâyeti, hangi sayının
+                   * nereden geldiği görünmediği sürece adreslenemiyor.
+                   * Her ölçü artık Lynon alan adını ve ham değerini
+                   * taşıyor; üzerine gelince eşleme hatası ile ucun
+                   * kendi verisi bir bakışta ayrılıyor.
+                   */
+                  aciklama={[m.aciklama, m.alan ? `Lynon alanı: ${m.alan} = ${m.hamDeger ?? '(yanıtta yok)'}` : null]
+                    .filter(Boolean)
+                    .join('\n')}
                   veriYok={m.veriYok}
                 />
               ))}

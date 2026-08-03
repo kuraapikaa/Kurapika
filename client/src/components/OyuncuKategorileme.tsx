@@ -90,11 +90,20 @@ export function OyuncuKategorileme() {
   const esiksiz: string[] = veri.EsiksizKategoriler ?? [];
   const bosluklar: Array<{ min: number; max: number | null }> = veri.Bosluklar ?? [];
   const varsayilan: Seviye | null = veri.VarsayilanKategori ?? null;
+  const eksikDavranis: string[] = veri.EksikDavranisKategorileri ?? [];
+  const davranisTanimlari: Array<{ kimlik: string; ad: string; aciklama: string; renk: string; otomatik: boolean }> =
+    veri.DavranisTanimlari ?? [];
+  const bonusOlculdu: boolean = veri.BonusOlculdu !== false;
 
   const suzulmus = useMemo(
     () => oneriler.filter((o) => matchesAnyTr([String(o.playerId), o.login, o.hedefKategoriAdi], arama)),
     [oneriler, arama],
   );
+
+  const kategorileriOlustur = useMutation({
+    mutationFn: () => dashboardApi.davranisKategorileriniOlustur(),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['oyuncu-kategorileme'] }),
+  });
 
   const uygula = useMutation({
     mutationFn: (oneri: Oneri) => dashboardApi.kategoriUygula(oneri.playerId, oneri.hedefKategoriId),
@@ -198,6 +207,68 @@ export function OyuncuKategorileme() {
             <p className="text-[11px] text-[color:var(--panel-muted,#8a919c)]">
               Eşiği okunamayan kategoriler bant olarak kullanılmaz: {esiksiz.join(', ')}. Bant olmasını
               istiyorsanız Lynon'daki açıklamayı "[100.000 TL - 249.999 TL]" biçimine getirin.
+            </p>
+          )}
+        </PanoKart>
+      )}
+
+      {/*
+        * DAVRANIŞ KATEGORİLERİ.
+        *
+        * Lynon'da oyuncu başına TEK kategori alanı var; davranış
+        * etiketleri değer merdiveniyle aynı slotu paylaşıyor. Bu yüzden
+        * hepsi otomatik atanmaz: "Aktif Üye" neredeyse her canlı
+        * oyuncuya uyar ve atanırsa merdiveni tamamen siler. Dördü de
+        * oluşturulur (elle atama ve CRM filtresi için), otomatik atanan
+        * yalnızca istisna etiketleridir.
+        */}
+      {davranisTanimlari.length > 0 && (
+        <PanoKart>
+          <PanoBaslik
+            baslik="Davranış etiketleri"
+            ipucu="Lynon'da oyuncu başına tek kategori var; bu etiketler değer merdiveniyle aynı alanı paylaşır."
+            simge={<ShieldAlert size={15} />}
+            vurgu="maliyet"
+          />
+          <div className="flex flex-wrap items-center gap-2 px-4 pb-3">
+            {davranisTanimlari.map((tanim) => (
+              <span
+                key={tanim.kimlik}
+                title={`${tanim.aciklama}\n${tanim.otomatik ? 'Otomatik atanır.' : 'Yalnızca elle atanır.'}`}
+                className="flex cursor-help items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold"
+                style={{ borderColor: `${tanim.renk}55`, backgroundColor: `${tanim.renk}18`, color: tanim.renk }}
+              >
+                <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: tanim.renk }} />
+                {tanim.ad}
+                <span className="opacity-60">{tanim.otomatik ? 'otomatik' : 'elle'}</span>
+                {eksikDavranis.includes(tanim.ad) && <span className="text-rose-300">· yok</span>}
+              </span>
+            ))}
+          </div>
+          {eksikDavranis.length > 0 && (
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.06] px-4 py-3">
+              <p className="text-[11px] text-amber-400/90">
+                {eksikDavranis.length} kategori sitede yok: {eksikDavranis.join(', ')}. Oluşturulmadan bu
+                etiketler hiçbir oyuncuya atanamaz.
+              </p>
+              <button
+                type="button"
+                onClick={() => kategorileriOlustur.mutate()}
+                disabled={kategorileriOlustur.isPending}
+                className="h-9 shrink-0 rounded-lg bg-[color:var(--panel-accent,#0a84ff)] px-3 text-xs font-semibold text-white hover:brightness-110 disabled:opacity-40"
+              >
+                {kategorileriOlustur.isPending ? 'Oluşturuluyor…' : 'Eksik kategorileri oluştur'}
+              </button>
+            </div>
+          )}
+          {kategorileriOlustur.isError && (
+            <p className="px-4 pb-3 text-[11px] text-rose-300">
+              {(kategorileriOlustur.error as Error).message}
+            </p>
+          )}
+          {!bonusOlculdu && (
+            <p className="px-4 pb-3 text-[11px] text-amber-400/90">
+              Bonus geçmişi okunamadı; "Bonus Avcısı" kuralı bu turda hiç çalışmadı.
             </p>
           )}
         </PanoKart>

@@ -64,13 +64,34 @@ function cacheKey(key: string): string {
 }
 
 export async function getCachedJson<T>(key: string): Promise<T | undefined> {
+  return (await getCachedJsonWithTtl<T>(key))?.value;
+}
+
+/**
+ * Onbellek degeri + KALAN omru.
+ *
+ * ── Neden kalan omur gerekiyor ────────────────────────────────────────
+ *
+ * `cachedLynon` Redis'ten aldigi degeri kendi bellek onbellegine TAM
+ * SURE ile yaziyordu. Redis'teki kaydin omrunun 30 saniyesi kalmis olsa
+ * bile bellekte 5 dakika daha yasiyordu; yani bayatlik ikiye katlanip
+ * ~10 dakikaya cikabiliyordu. Operator canli rakama bakarken bu, "pano
+ * guncellenmiyor" demek.
+ *
+ * Kalan omru dondurerek bellek kaydi Redis kaydiyla AYNI ANDA olur.
+ */
+export async function getCachedJsonWithTtl<T>(key: string): Promise<{ value: T; ttlMs: number } | undefined> {
   if (!isRedisReady() || !client) return undefined;
-  const raw = await client.get(cacheKey(key));
+  const tam = cacheKey(key);
+  const raw = await client.get(tam);
   if (!raw) return undefined;
   try {
-    return JSON.parse(raw) as T;
+    const value = JSON.parse(raw) as T;
+    // PTTL: -1 = omur yok, -2 = anahtar yok. Ikisi de "bilinmiyor" sayilir.
+    const pttl = await client.pTTL(tam).catch(() => -1);
+    return { value, ttlMs: pttl > 0 ? pttl : 0 };
   } catch {
-    await client.del(cacheKey(key));
+    await client.del(tam);
     return undefined;
   }
 }

@@ -26,13 +26,12 @@ Cloudflare Workers/Pages bu uygulamayı **çalıştıramaz**. Sunucu şunlara ih
 |---|---|---|
 | PostgreSQL | `DATABASE_URL production ortamında zorunludur` | `server/src/lib/database.ts` |
 | Redis | `Production session store için Redis bağlantısı zorunludur` | `server/src/app.ts` |
-| Chromium | `whatsapp-web.js` (Puppeteer) | `Dockerfile` |
-| Kalıcı disk | `WHATSAPP_DATA_DIR` oturum verisi | `Dockerfile` |
+| ~~Chromium~~ | Kaldırıldı — `whatsapp-web.js` hiçbir yerde import edilmiyordu | `Dockerfile` |
 
 Bunların hiçbiri Workers runtime'ında mümkün değil. Doğru dağılım:
 
 ```
-Kullanıcı → Cloudflare (DNS + SSL + WAF/proxy) → Railway (Docker: Node + Chromium)
+Kullanıcı → Cloudflare (DNS + SSL + WAF/proxy) → Railway (Docker: Node)
                                                     ├── Railway PostgreSQL
                                                     └── Railway Redis
 ```
@@ -65,10 +64,7 @@ REDIS_URL=${{Redis.REDIS_URL}}
 
 ### 1.3 Kalıcı disk
 
-Uygulama servisi → **Settings → Volumes → New Volume**
-- Mount path: `/data`
-
-`Dockerfile` zaten `WHATSAPP_DATA_DIR=/data` tanımlıyor. Volume olmazsa her deploy'da WhatsApp oturumu sıfırlanır.
+**Gerekmiyor.** Kalıcı veri PostgreSQL'de tutuluyor; `/data` volume'u yalnızca hiç uygulanmamış WhatsApp modülü içindi. Bağlıysa kaldırabilirsin.
 
 ### 1.4 Değişkenler
 
@@ -245,5 +241,6 @@ Bunlar yanlışsa panel açılır ama API çağrıları CORS'tan düşer.
 ## Notlar
 
 - **Cloudflare Pages kullanma.** Client'ı ayrı Pages'e koymak API'yi çapraz-origin yapar; sunucu zaten `client/dist`'i kendisi servis ediyor. Tek servis daha basit ve CORS sorunu çıkarmaz.
-- **Chromium ~300 MB.** Railway imajı buna göre büyük; WhatsApp özelliğini kullanmıyorsan `Dockerfile`'dan `apk add chromium` satırını ve `whatsapp-web.js` bağımlılığını çıkarmak imajı ciddi küçültür.
+- **Chromium kaldırıldı.** Imaj `apk add chromium` ile ~300 MB Chromium kuruyor ve `whatsapp-web.js` taşıyordu; kaynak kodda o paketi import eden tek satır yoktu. WhatsApp modülü gerçekten yazılırsa `Dockerfile` içindeki yorumda geri alınacak satırlar listeli.
+- **Yanıt sıkıştırma açık.** `@fastify/compress` global; ölçülen kazanç 580 KB → 17,8 KB (gzip) / 7,7 KB (brotli). Cloudflare zaten sıkıştırıyorsa da origin→Cloudflare bacağı Railway giden trafiği olarak faturalanıyor, bu yüzden origin'de de açık olmalı.
 - **Yalnızca `main` deploy edilsin.** Railway → Settings → Source → Branch: `main`. Aksi halde her PR dalı production'a gider.
