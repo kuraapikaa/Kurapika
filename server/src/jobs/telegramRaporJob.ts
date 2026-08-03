@@ -15,6 +15,7 @@
  *     dustugu icin cekim bildirimleri de susmamali.
  */
 import { config } from '../config.js';
+import { audit } from '../lib/auditLog.js';
 import { readStoredDocument, writeStoredDocument } from '../lib/documentStore.js';
 import { isTelegramConfigured, sendTelegramMessage } from '../services/telegramService.js';
 import {
@@ -23,6 +24,7 @@ import {
   lynonDashboardSummary,
   lynonDeposits,
   lynonManuelDuzeltmeler,
+  lynonResolveWithdrawal,
   lynonWithdrawalRequests,
 } from '../services/lynonBackofficeService.js';
 import {
@@ -40,6 +42,9 @@ import {
   yeniOlaylar,
   type RaporImleci,
 } from '../services/telegramRaporu.js';
+import { cekimBaglamMesaji } from '../services/cekimDegerlendirmesi.js';
+import { cekimBaglamiTopla } from '../services/cekimBaglamServisi.js';
+import { cekimButonlari, klavye, yetkiliKullanicilar } from '../services/telegramButonlari.js';
 
 const NAMESPACE = 'telegram-rapor-imleci';
 
@@ -65,6 +70,15 @@ type Akis = {
   kimlik: (satir: AnyRecord) => string;
   mesaj: (satir: AnyRecord) => string;
   sohbet: (satir: AnyRecord) => string;
+  /**
+   * Zenginlestirilmis gonderim.
+   *
+   * Tanimliysa `mesaj`/`sohbet` yerine bu kullanilir. Cekim akisi bunu
+   * kullaniyor: her satir icin oyuncu baglami cekiliyor, gerekirse
+   * otomatik ret uygulaniyor ve mesaja butonlar ekleniyor. `null`
+   * donmek "bu satiri gonderme" demektir.
+   */
+  olayIsle?: (satir: AnyRecord) => Promise<{ metin: string; klavye?: unknown; hedef: string } | null>;
 };
 
 /** Akisin sohbeti; tanimli degilse varsayilana duser. */
@@ -75,6 +89,97 @@ function sohbetSec(anahtar: keyof typeof config.telegram.raporChatIdleri): strin
 /** Bugunun Turkiye gunu — akislar gun icini tarar. */
 function bugun(): string {
   return istanbulDateKey(new Date());
+}
+
+/** Cekim akisinin o turdaki tam listesi; gunluk sayim icin paylasilir. */
+let gunlukCekimler: AnyRecord[] = [];
+
+function cekimSohbeti(satir: AnyRecord): string {
+  const durum = islemDurumu(satir);
+  if (durum === 'onay') return sohbetSec('cekimOnay');
+  if (durum === 'red') return sohbetSec('cekimRed');
+  // Bekleyen talep: karar verilecek yer onay grubu.
+  return sohbetSec('cekimOnay') || config.telegram.raporChatId;
+}
+
+/**
+ * OTOMATIK CEKIM REDDI varsayilan olarak KAPALI.
+ *
+ * Istenen kural ("gunde 3 cekimi olan otomatik reddedilsin") uygulandi
+ * ama varsayilan kapali, cunku bu satirlarla birlikte `resolve` ucunun
+ * istek govdesi de DUZELTILDI — daha once yanit sekli gonderiliyordu,
+ * yani bu yol uretimde hic dogru calismadi. Dogrulanmamis bir yazma
+ * yolunu otomatik para reddine baglamak, yanlis reddedilen musteri
+ * demek.
+ *
+ * Kapaliyken de kural GORUNUR: "bugunku 3. talep" mesajda yaziyor ve
+ * operator tek dokunusla reddedebiliyor. `OTOMATIK_CEKIM_RED=1` ile
+ * acilir.
+ */
+function otomatikRedAcikMi(): boolean {
+  return process.env.OTOMATIK_CEKIM_RED === '1';
+}
+
+/**
+ * Bir cekim olayini isle.
+ *
+ * Bekleyen talep: baglam toplanir, gerekirse otomatik reddedilir, aksi
+ * halde butonlu zengin mesaj gider. Sonuclanmis talep (onay/red):
+ * butonsuz sonuc mesaji ilgili gruba gider.
+ */
+async function cekimOlayiniIsle(
+  satir: AnyRecord,
+  liste: AnyRecord[],
+): Promise<{ metin: string; klavye?: unknown; hedef: string } | null> {
+  const durum = islemDurumu(satir);
+  const hedef = cekimSohbeti(satir);
+  if (!hedef) return null;
+
+  // Sonuclanmis talep: yalnizca sonucu bildir, buton gosterme.
+  if (durum === 'onay' || durum === 'red') {
+    return { metin: cekimMesaji(satir), hedef };
+  }
+
+  let baglam;
+  try {
+    baglam = await cekimBaglamiTopla(satir, liste);
+  } catch (err) {
+    // Baglam alinamadiysa bildirim YINE gitmeli; sade mesaja duser.
+    console.error('[telegram-rapor] çekim bağlamı:', err instanceof Error ? err.message : err);
+    return { metin: cekimMesaji(satir), hedef };
+  }
+
+  const islemId = satir?.Id ?? satir?.DocumentId ?? satir?.ReferenceNo;
+
+  if (baglam.otomatikRed.reddet && otomatikRedAcikMi()) {
+    try {
+      await lynonResolveWithdrawal({ transactionId: islemId, status: 'rejected' });
+      audit('sistem', 'job', 'withdrawal_resolve', `islem:${islemId}`,
+        `Çekim otomatik reddedildi. ${baglam.otomatikRed.neden} Oyuncu: ${baglam.playerId}.`);
+      return {
+        metin: cekimBaglamMesaji('⛔ ÇEKİM OTOMATİK REDDEDİLDİ', baglam),
+        hedef: sohbetSec('cekimRed') || hedef,
+      };
+    } catch (err) {
+      const mesaj = err instanceof Error ? err.message : String(err);
+      // Otomatik ret basarisiz: talep ACIK kaldi, operator gormeli.
+      return {
+        metin: `${cekimBaglamMesaji('⚠️ OTOMATİK RET BAŞARISIZ — TALEP AÇIK', baglam)}\n\nHata: ${mesaj}`,
+        klavye: klavye(cekimButonlari({
+          islemId, oyuncuId: baglam.playerId, sonuclanmis: false, yetkililer: yetkiliKullanicilar(),
+        })),
+        hedef,
+      };
+    }
+  }
+
+  return {
+    metin: cekimBaglamMesaji('🏧 ÇEKİM TALEBİ', baglam),
+    klavye: klavye(cekimButonlari({
+      islemId, oyuncuId: baglam.playerId, sonuclanmis: false, yetkililer: yetkiliKullanicilar(),
+    })),
+    hedef,
+  };
 }
 
 function akislar(): Akis[] {
@@ -105,8 +210,12 @@ function akislar(): Akis[] {
       ad: 'cekim',
       etiket: 'Çekim',
       satirlar: async () => {
-        const yanit = await lynonWithdrawalRequests({ ...aralik, MaxRows: 200 });
-        return yanit?.Data?.ClientRequests ?? [];
+        const yanit = await lynonWithdrawalRequests({ ...aralik, MaxRows: 300 });
+        const liste: AnyRecord[] = yanit?.Data?.ClientRequests ?? [];
+        // Gunluk sayim icin tam liste saklanir; her satir icin tekrar
+        // istek atmamak adina.
+        gunlukCekimler = liste;
+        return liste;
       },
       /**
        * Kimlige DURUM da katiliyor: ayni cekimin "bekliyor" ve "onay"
@@ -115,14 +224,8 @@ function akislar(): Akis[] {
        */
       kimlik: cekimOlayKimligi,
       mesaj: cekimMesaji,
-      // Onaylanan ve reddedilen cekimler ayri sohbetlere; digerleri
-      // varsayilana.
-      sohbet: (satir) => {
-        const durum = islemDurumu(satir);
-        if (durum === 'onay') return sohbetSec('cekimOnay');
-        if (durum === 'red') return sohbetSec('cekimRed');
-        return config.telegram.raporChatId || sohbetSec('cekimOnay');
-      },
+      sohbet: (satir) => cekimSohbeti(satir),
+      olayIsle: async (satir) => cekimOlayiniIsle(satir, gunlukCekimler),
     },
     {
       /**
@@ -167,8 +270,16 @@ async function ozetGonder(chatId: string): Promise<void> {
   const gun = bugun();
   const yanit = await lynonDashboardSummary(gun, gun);
   const d = (yanit?.Data ?? {}) as AnyRecord;
+  // Etiketli olcu listesinden oku; ana alanlarda karsiligi olmayanlar
+  // yalnizca burada var.
+  const metrikler: AnyRecord[] = Array.isArray(d.metrikler) ? d.metrikler : [];
+  const m = (anahtar: string) => metrikler.find((x) => x.anahtar === anahtar)?.deger ?? null;
+
   await sendTelegramMessage(chatId, kasaMesaji({
     gun,
+    saat: new Intl.DateTimeFormat('tr-TR', {
+      timeZone: 'Europe/Istanbul', hour: '2-digit', minute: '2-digit',
+    }).format(new Date()),
     yatirim: d.Deposits ?? null,
     cekim: d.Withdrawals ?? null,
     ggr: d.GGR ?? null,
@@ -177,6 +288,16 @@ async function ozetGonder(chatId: string): Promise<void> {
     yatirimOyuncu: d.DepositClientCount ?? null,
     cekimOyuncu: d.WithdrawalClientCount ?? null,
     oyuncuBakiyesi: d.PlayersBalance ?? null,
+    ilkYatirim: d.FirstDepositCount ?? null,
+    yatirimAdedi: m('yatirimAdedi'),
+    bahisAdedi: m('bahisAdedi'),
+    bahisOyuncu: m('bahisOyuncu'),
+    gercekBahis: m('gercekBahis'),
+    gercekKazanc: m('gercekKazanc'),
+    bonusBakiye: d.PlayersBonusBalance ?? null,
+    freespinKazanc: m('freespinKazanc'),
+    bonusOdeme: m('bonusOdeme'),
+    cashback: m('cashback'),
   }));
 }
 
@@ -214,6 +335,15 @@ export async function runTelegramRaporJob(tenantKey = 'default'): Promise<Telegr
       // Imlec, GONDERIM BASARILI OLDUKTAN sonra yazilir; Telegram
       // dusukse kayitlar bir sonraki turda tekrar denenir.
       for (const satir of yeniler) {
+        // Zenginlestirilmis akis (cekim) kendi mesajini, klavyesini ve
+        // hedefini uretir; digerleri sade mesaj + satir basina sohbet.
+        if (akis.olayIsle) {
+          const hazir = await akis.olayIsle(satir);
+          if (!hazir) continue;
+          await sendTelegramMessage(hazir.hedef, hazir.metin, { klavye: hazir.klavye });
+          sonuc.gonderilen += 1;
+          continue;
+        }
         // Sohbet SATIR BASINA seciliyor: onaylanan ve reddedilen cekimler
         // ayni akistan gelip farkli sohbetlere gidiyor.
         const hedef = akis.sohbet(satir);

@@ -267,6 +267,28 @@ export async function registerTelegramRaporJob(): Promise<void> {
   });
 }
 
+/**
+ * Aylık mutabakat: her gün Türkiye saatiyle 00:00'da tek sohbete.
+ *
+ * İş dakikada bir uyanıp saate bakar; gönderilen gün kaydedilir, böylece
+ * süreç yeniden başlasa da aynı gün ikinci kez gitmez.
+ */
+export async function registerMutabakatJob(): Promise<void> {
+  if (!config.lynon.enabled) {
+    console.log('[scheduler] Mutabakat Lynon kapalı olduğu için atlandı.');
+    return;
+  }
+  if (!config.telegram.botToken || !config.telegram.mutabakatChatId) {
+    console.log('[scheduler] Mutabakat kapalı (TELEGRAM_CHAT_MUTABAKAT tanımlı değil).');
+    return;
+  }
+  const { runMutabakatJob } = await import('./mutabakatJob.js');
+  scheduler.register('aylik-mutabakat', 60_000, async () => {
+    const sonuc = await runMutabakatJob();
+    if (sonuc.gonderildi) console.log(`[mutabakat] ${sonuc.gun} mutabakatı gönderildi.`);
+  });
+}
+
 /** Ard arda giriş yapmayan sadakat oyuncuları için 2. gün SMS, 3. gün puan silme kontrolü (her 6 saatte bir). */
 export async function registerLoyaltyRetentionJob(): Promise<void> {
   const { runLoyaltyRetentionSweep } = await import('./loyaltyRetentionJob.js');

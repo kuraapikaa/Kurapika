@@ -288,6 +288,8 @@ export function tasanMesaji(akisAdi: string, tasan: number): string {
 
 export type KasaOzeti = {
   gun: string;
+  /** Ozet kesildigi an — 20 dakikada bir gelen mesajlar karismasin. */
+  saat?: string | null;
   yatirim: number | null;
   cekim: number | null;
   ggr: number | null;
@@ -296,6 +298,17 @@ export type KasaOzeti = {
   yatirimOyuncu: number | null;
   cekimOyuncu: number | null;
   oyuncuBakiyesi: number | null;
+  // ── Genisletilmis olculer
+  ilkYatirim: number | null;
+  yatirimAdedi: number | null;
+  bahisAdedi: number | null;
+  bahisOyuncu: number | null;
+  gercekBahis: number | null;
+  gercekKazanc: number | null;
+  bonusBakiye: number | null;
+  freespinKazanc: number | null;
+  bonusOdeme: number | null;
+  cashback: number | null;
 };
 
 /**
@@ -309,20 +322,44 @@ export function kasaMesaji(ozet: KasaOzeti): string {
   const c = ozet.cekim;
   const net = y === null && c === null ? null : (y ?? 0) - (c ?? 0);
   const sayi = (v: number | null) => (v === null ? '—' : TL.format(v));
+  const p = (v: number | null) => (v === null ? '—' : paraYaz(v));
 
-  return [
-    `📊 KASA ÖZETİ · ${ozet.gun}`,
+  // Bonus maliyeti: kasadan cikan bonus kalemleri. Bilinmeyen alan
+  // toplama katilmaz; hepsi bilinmiyorsa "—".
+  const bonusKalemleri = [ozet.freespinKazanc, ozet.bonusOdeme, ozet.cashback];
+  const bonusMaliyeti = bonusKalemleri.some((v) => v !== null)
+    ? bonusKalemleri.reduce<number>((t, v) => t + (v ?? 0), 0)
+    : null;
+
+  const satirlar = [
+    `📊 KASA ÖZETİ · ${ozet.gun}${ozet.saat ? ` · ${ozet.saat}` : ''}`,
     '',
-    `Yatırım:   ${y === null ? '—' : paraYaz(y)}${ozet.yatirimOyuncu !== null ? ` · ${ozet.yatirimOyuncu} oyuncu` : ''}`,
-    `Çekim:     ${c === null ? '—' : paraYaz(c)}${ozet.cekimOyuncu !== null ? ` · ${ozet.cekimOyuncu} oyuncu` : ''}`,
-    `Net:       ${net === null ? '—' : paraYaz(net)}`,
+    'PARA',
+    `  Yatırım:  ${p(y)}${ozet.yatirimOyuncu !== null ? ` · ${ozet.yatirimOyuncu} oyuncu` : ''}${ozet.yatirimAdedi !== null ? ` · ${ozet.yatirimAdedi} işlem` : ''}`,
+    `  Çekim:    ${p(c)}${ozet.cekimOyuncu !== null ? ` · ${ozet.cekimOyuncu} oyuncu` : ''}`,
+    `  Net:      ${p(net)}`,
     '',
-    `GGR:       ${ozet.ggr === null ? '—' : paraYaz(ozet.ggr)}`,
-    `Kâr:       ${ozet.kar === null ? '—' : paraYaz(ozet.kar)}`,
+    'OYUN',
+    `  GGR:      ${p(ozet.ggr)}`,
+    `  Kâr:      ${p(ozet.kar)}`,
+    `  Bahis:    ${p(ozet.gercekBahis)}${ozet.bahisAdedi !== null ? ` · ${sayi(ozet.bahisAdedi)} bahis` : ''}`,
+    `  Kazanç:   ${p(ozet.gercekKazanc)}`,
     '',
-    `Yeni kayıt: ${sayi(ozet.yeniKayit)}`,
-    `Oyuncu bakiyesi: ${ozet.oyuncuBakiyesi === null ? '—' : paraYaz(ozet.oyuncuBakiyesi)}`,
-  ].join('\n');
+    'BONUS',
+    `  Maliyet:  ${p(bonusMaliyeti)}`,
+    `  Freespin: ${p(ozet.freespinKazanc)}`,
+    `  Ödeme:    ${p(ozet.bonusOdeme)}`,
+    `  Cashback: ${p(ozet.cashback)}`,
+    '',
+    'OYUNCU',
+    `  Yeni kayıt:     ${sayi(ozet.yeniKayit)}`,
+    `  İlk yatırım:    ${sayi(ozet.ilkYatirim)}`,
+    `  Bahis yapan:    ${sayi(ozet.bahisOyuncu)}`,
+    `  Gerçek bakiye:  ${p(ozet.oyuncuBakiyesi)}`,
+    `  Bonus bakiye:   ${p(ozet.bonusBakiye)}`,
+  ];
+
+  return satirlar.join('\n');
 }
 
 /** Ozet gonderme zamani geldi mi? */

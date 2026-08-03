@@ -118,7 +118,9 @@ export const config = {
       bonus: (process.env.TELEGRAM_CHAT_BONUS || '').trim(),
     },
     /** Kasa özetinin gönderilme sıklığı. 0 = özet kapalı, olaylar devam eder. */
-    raporOzetAralikMs: Number(process.env.TELEGRAM_RAPOR_OZET_MS) || 60 * 60 * 1000,
+    raporOzetAralikMs: Number(process.env.TELEGRAM_RAPOR_OZET_MS) || 20 * 60 * 1000,
+    /** Aylık mutabakatın gönderileceği tek sohbet. Boşsa mutabakat gönderilmez. */
+    mutabakatChatId: (process.env.TELEGRAM_CHAT_MUTABAKAT || '').trim(),
     /** Olay taraması sıklığı. */
     raporAralikMs: Number(process.env.TELEGRAM_RAPOR_ARALIK_MS) || 60_000,
   },

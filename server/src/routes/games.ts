@@ -17,6 +17,8 @@ import { isLynonConfigured, lynonAssignCampaignToPlayer, lynonBuildBonusEligibil
 import { loginAnahtari, oyuncuAktivitesi, oyuncuRaporu, siralamaOlustur, type SiralamaMetrigi } from '../services/oyuncuRaporService.js';
 import { readTournamentSettings } from '../services/turnuvaAyarService.js';
 import { carkAnalizi } from '../services/carkOlasiliklari.js';
+import { telegramCekimCallback, telegramNotYaniti } from '../services/telegramCekimEylemi.js';
+import { notIstegindenOyuncu } from '../services/telegramButonlari.js';
 import {
   kurallariCozumle,
   loginMaskele,
@@ -2355,10 +2357,58 @@ const selectedSlice = selected.slice;
       request.log.warn('[telegram] Webhook secret eşleşmedi; istek reddedildi.');
       return reply.status(401).send({ ok: false });
     }
+    /**
+     * BUTON BASIMI (callback_query).
+     *
+     * Cekim onay/ret butonlari buradan geliyor. Yetki kontrolu
+     * `telegramCekimCallback` icinde TEKRAR yapiliyor: buton eski bir
+     * mesajda durabilir ve istemciden gelen hicbir sey guvenilmez.
+     */
+    const callback = request.body?.callback_query;
+    if (callback) {
+      try {
+        const sonuc = await telegramCekimCallback(callback);
+        if (!sonuc.islendi) request.log.warn(`[telegram] callback işlenmedi: ${sonuc.mesaj}`);
+      } catch (err) {
+        request.log.error({ err }, '[telegram] callback hatası');
+      }
+      // Telegram'a her zaman 200 donulur; aksi halde update tekrar
+      // gonderilir ve ayni cekim ikinci kez cozumlenmeye calisilir.
+      return reply.send({ ok: true });
+    }
+
     const message = request.body?.message;
     const text = String(message?.text || '').trim();
     const fromId = message?.from?.id;
     const chatId = message?.chat?.id;
+
+    /**
+     * NOT YANITI.
+     *
+     * "Onayla + Not" akisinda bot bir soru soruyor, operator
+     * yanitliyor. Yanitlanan mesajin metninden oyuncu kimligi okunuyor.
+     */
+    const yanitlanan = message?.reply_to_message?.text;
+    if (yanitlanan && text && fromId && chatId) {
+      const oyuncuId = notIstegindenOyuncu(yanitlanan);
+      if (oyuncuId) {
+        try {
+          const sonuc = await telegramNotYaniti({
+            oyuncuId,
+            metin: text,
+            chatId,
+            messageId: Number(message?.message_id) || null,
+            kullaniciId: fromId,
+            kullaniciAdi: String(message?.from?.username ?? fromId),
+          });
+          if (!sonuc.islendi) request.log.warn(`[telegram] not eklenmedi: ${sonuc.mesaj}`);
+        } catch (err) {
+          request.log.error({ err }, '[telegram] not yanıtı hatası');
+        }
+        return reply.send({ ok: true });
+      }
+    }
+
     if (text.toLowerCase().startsWith('/start') && fromId && chatId) {
       const login = text.slice(6).trim();
       if (login) {

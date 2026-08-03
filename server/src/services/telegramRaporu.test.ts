@@ -17,6 +17,7 @@ import {
   yatirimMesaji,
   yeniOlaylar,
   type AkisImleci,
+  type KasaOzeti,
 } from './telegramRaporu.js';
 
 const kimlik = (satir: { id: string }) => satir.id;
@@ -244,9 +245,20 @@ describe('manuel düzeltme mesajı', () => {
 });
 
 describe('kasa özeti', () => {
+  /** Hicbir olcusu bilinmeyen taban; testler yalnizca ilgilendigini doldurur. */
+  const BOS_OZET: KasaOzeti = {
+    gun: '2026-08-03', saat: null,
+    yatirim: null, cekim: null, ggr: null, kar: null, yeniKayit: null,
+    yatirimOyuncu: null, cekimOyuncu: null, oyuncuBakiyesi: null,
+    ilkYatirim: null, yatirimAdedi: null, bahisAdedi: null, bahisOyuncu: null,
+    gercekBahis: null, gercekKazanc: null, bonusBakiye: null,
+    freespinKazanc: null, bonusOdeme: null, cashback: null,
+  };
+
   it('bildirilen günü doğru yazar', () => {
     const mesaj = kasaMesaji({
-      gun: '2026-08-03', yatirim: 11_000, cekim: 3_400, ggr: -24_737.14,
+      ...BOS_OZET,
+      yatirim: 11_000, cekim: 3_400, ggr: -24_737.14,
       kar: -58_973.17, yeniKayit: 19, yatirimOyuncu: 2, cekimOyuncu: 1,
       oyuncuBakiyesi: 66_573.17,
     });
@@ -256,13 +268,34 @@ describe('kasa özeti', () => {
   });
 
   it('ölçülemeyen alanı sıfır göstermez', () => {
-    const mesaj = kasaMesaji({
-      gun: '2026-08-03', yatirim: null, cekim: null, ggr: null,
-      kar: null, yeniKayit: null, yatirimOyuncu: null, cekimOyuncu: null,
-      oyuncuBakiyesi: null,
-    });
+    const mesaj = kasaMesaji(BOS_OZET);
     expect(mesaj).not.toContain('0 TRY');
     expect(mesaj).toContain('—');
+  });
+
+  it('genişletilmiş ölçüleri yazar', () => {
+    const mesaj = kasaMesaji({
+      ...BOS_OZET,
+      gercekBahis: 95_173.9, gercekKazanc: 119_505.74, bahisAdedi: 3475,
+      bahisOyuncu: 15, ilkYatirim: 3, freespinKazanc: 828.9,
+    });
+    expect(mesaj).toContain('95.173,9 TRY');
+    expect(mesaj).toContain('3.475 bahis');
+    expect(mesaj).toContain('828,9 TRY');
+  });
+
+  it('bonus maliyetini kalemlerden toplar', () => {
+    const mesaj = kasaMesaji({ ...BOS_OZET, freespinKazanc: 800, bonusOdeme: 200, cashback: 100 });
+    expect(mesaj).toContain('Maliyet:  1.100 TRY');
+  });
+
+  it('bonus kalemlerinin hiçbiri bilinmiyorsa maliyet uydurulmaz', () => {
+    // Bilinmeyeni sifir sayip "0 TRY maliyet" yazmak, bonus giderini yok gosterir.
+    expect(kasaMesaji(BOS_OZET)).toContain('Maliyet:  —');
+  });
+
+  it('saat verildiyse başlığa yazar — 20 dakikalık mesajlar karışmasın', () => {
+    expect(kasaMesaji({ ...BOS_OZET, saat: '14:20' })).toContain('· 14:20');
   });
 });
 

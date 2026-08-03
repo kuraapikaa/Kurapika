@@ -19,6 +19,9 @@ import {
   lynonKategoriUygula,
   lynonKycDocuments,
   lynonManuelDuzeltmeler,
+  lynonMutabakat,
+  mutabakatManuelKalemiEkle,
+  mutabakatManuelKalemiSil,
   lynonMe,
   lynonPaymentTransactions,
   lynonPaymentCounts,
@@ -318,6 +321,70 @@ export async function lynonRoutes(app: FastifyInstance) {
       }
     },
   );
+
+  // ─── Aylık mutabakat ───────────────────────────────────────────────────
+
+  /** Ayın başından bugüne mutabakat: ödeme yöntemi kırılımı + elle eklenenler. */
+  app.post<{ Body?: { bugun?: string } }>('/lynon/mutabakat', async (request, reply) => {
+    try {
+      return reply.send(await lynonMutabakat(request.body ?? {}));
+    } catch (err) {
+      return sendError(reply, err);
+    }
+  });
+
+  /**
+   * Elle yatırım/çekim kalemi ekle.
+   *
+   * Rapor yalnızca ödeme sağlayıcılarından geçen parayı görüyor; elden
+   * yapılan havaleler ve dengeleme kalemleri buradan giriliyor ve
+   * mutabakatta AYRI gösteriliyor.
+   */
+  app.post<{ Body: { gun?: string; tur?: string; tutar?: number; aciklama?: string } }>(
+    '/lynon/mutabakat/kalem',
+    async (request, reply) => {
+      const kullanici = (request.session as any)?.user;
+      const { gun, tur, tutar, aciklama } = request.body ?? {};
+      try {
+        const kalem = await mutabakatManuelKalemiEkle({
+          gun: String(gun ?? ''),
+          tur: tur === 'cekim' ? 'cekim' : 'yatirim',
+          tutar: Number(tutar),
+          aciklama: String(aciklama ?? ''),
+          ekleyen: kullanici?.username ?? 'bilinmeyen',
+        });
+        audit(kullanici?.username ?? 'bilinmeyen', kullanici?.role ?? '-', 'manual_adjustment',
+          'mutabakat', `Mutabakata elle ${kalem.tur} eklendi: ${kalem.tutar} TRY (${kalem.gun}) — ${kalem.aciklama}`);
+        return reply.send({ HasError: false, Data: kalem });
+      } catch (err) {
+        return sendError(reply, err);
+      }
+    },
+  );
+
+  app.delete<{ Params: { id: string } }>('/lynon/mutabakat/kalem/:id', async (request, reply) => {
+    const kullanici = (request.session as any)?.user;
+    try {
+      const silindi = await mutabakatManuelKalemiSil(request.params.id);
+      if (!silindi) return reply.status(404).send({ HasError: true, AlertMessage: 'Kalem bulunamadı.' });
+      audit(kullanici?.username ?? 'bilinmeyen', kullanici?.role ?? '-', 'manual_adjustment',
+        'mutabakat', `Mutabakat kalemi silindi: ${request.params.id}`);
+      return reply.send({ HasError: false });
+    } catch (err) {
+      return sendError(reply, err);
+    }
+  });
+
+  /** Mutabakatı şimdi Telegram'a gönder. */
+  app.post('/lynon/mutabakat/gonder', async (_request, reply) => {
+    try {
+      const { mutabakatiSimdiGonder } = await import('../jobs/mutabakatJob.js');
+      await mutabakatiSimdiGonder();
+      return reply.send({ HasError: false, AlertMessage: 'Mutabakat gönderildi.' });
+    } catch (err) {
+      return sendError(reply, err);
+    }
+  });
 
   // ─── Otomatik oyuncu kategorileme ──────────────────────────────────────
 

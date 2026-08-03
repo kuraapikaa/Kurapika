@@ -67,6 +67,7 @@ import {
   registerHedefBakiyeJob,
   registerTelegramRaporJob,
   registerOtomatikKategoriJob,
+  registerMutabakatJob,
 } from './jobs/scheduler.js';
 import { enforceEnvironment } from './lib/envValidator.js';
 import { watchConfigFile, getWatcherStatus } from './lib/configWatcher.js';
@@ -303,6 +304,7 @@ try {
   await registerHedefBakiyeJob();
   await registerTelegramRaporJob();
   await registerOtomatikKategoriJob();
+  await registerMutabakatJob();
   scheduler.start(10000);
 
   // ─── Config Hot-Reload ─────────────────────────────────────────────────────
