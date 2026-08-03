@@ -96,11 +96,27 @@ export const config = {
     botUsername: (process.env.TELEGRAM_BOT_USERNAME || '').trim(),
     webhookSecret: (process.env.TELEGRAM_WEBHOOK_SECRET || '').trim(),
     /**
-     * Anlık rapor botunun yazacağı sohbet. BOŞSA BOT ÇALIŞMAZ — varsayılan
-     * bir sohbet kimliği uydurmak, kasa raporunu yanlış yere göndermek
-     * demektir.
+     * Anlık rapor botunun varsayılan sohbeti. BOŞSA VE akışın kendi
+     * sohbeti de yoksa o akış susar — varsayılan bir sohbet kimliği
+     * uydurmak, kasa raporunu yanlış yere göndermek demektir.
      */
     raporChatId: (process.env.TELEGRAM_RAPOR_CHAT_ID || '').trim(),
+    /**
+     * AKIŞ BAŞINA SOHBET.
+     *
+     * Yatırım, onaylanan çekim, reddedilen çekim ve kasa özeti farklı
+     * ekipleri ilgilendiriyor; hepsini tek sohbete dökmek her birini
+     * okunamaz yapıyordu. Tanımlanmayan akış `raporChatId`'ye düşer,
+     * o da boşsa akış çalışmaz.
+     */
+    raporChatIdleri: {
+      yatirim: (process.env.TELEGRAM_CHAT_YATIRIM || '').trim(),
+      cekimOnay: (process.env.TELEGRAM_CHAT_CEKIM_ONAY || '').trim(),
+      cekimRed: (process.env.TELEGRAM_CHAT_CEKIM_RED || '').trim(),
+      kasa: (process.env.TELEGRAM_CHAT_KASA || '').trim(),
+      correction: (process.env.TELEGRAM_CHAT_CORRECTION || '').trim(),
+      bonus: (process.env.TELEGRAM_CHAT_BONUS || '').trim(),
+    },
     /** Kasa özetinin gönderilme sıklığı. 0 = özet kapalı, olaylar devam eder. */
     raporOzetAralikMs: Number(process.env.TELEGRAM_RAPOR_OZET_MS) || 60 * 60 * 1000,
     /** Olay taraması sıklığı. */

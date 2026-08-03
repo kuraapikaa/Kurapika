@@ -519,6 +519,16 @@ export const dashboardApi = {
   davranisKategorileriniOlustur: () =>
     post<any>('/lynon/oyuncu-kategorileme/kategorileri-olustur', {}),
 
+  /**
+   * Çarkın GERÇEK olasılık davranışı — henüz kaydedilmemiş dilimler için.
+   *
+   * Panelde girilen olasılıkla motorun uyguladığı olasılık ayrışabiliyor:
+   * teslim edilemeyecek dilimler çekilişten atılıyor ve payları kalanlara
+   * dağılıyor. Kural tek yerde (sunucuda) tutuluyor; kopyalanan bir
+   * istemci sürümü çekiliş motorundan zamanla ayrışırdı.
+   */
+  carkAnalizi: (wheel: unknown[]) => post<any>('/admin/games/wheel/analiz', { wheel }),
+
   /** Bahis kısıtını aç/kapat: POST /lynon/oyuncu-kisitlari/:userId */
   oyuncuKisitiYaz: (userId: number | string, restriction: string, isRestricted: boolean, note?: string) =>
     post<any>(`/lynon/oyuncu-kisitlari/${userId}`, { restriction, isRestricted, note }),

@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
   AZAMI_GORULEN,
+  bildirilecekYatirimMi,
   bonusMesaji,
   bosImlec,
   cekimMesaji,
+  cekimOlayKimligi,
   correctionMesaji,
+  islemDurumu,
   kasaMesaji,
   oyuncuYaz,
   ozetZamaniMi,
@@ -110,7 +113,13 @@ describe('biçimleme', () => {
   });
 
   it('çekim mesajı yatırımdan ayırt edilebilir', () => {
-    expect(cekimMesaji({ ClientId: 1, Amount: 3400 })).toContain('ÇEKİM TALEBİ');
+    expect(cekimMesaji({ ClientId: 1, Amount: 3400, status: 'pending' })).toContain('ÇEKİM TALEBİ');
+  });
+
+  it('yatırım mesajı yöntem ve entegrasyonu birlikte yazar', () => {
+    // Uc `method` ("Havale") ve `integration` ("HemenOde") olarak ayri doner.
+    const mesaj = yatirimMesaji({ ClientId: 1, Amount: 1000, method: 'Havale', integration: 'HemenOde' });
+    expect(mesaj).toContain('Havale · HemenOde');
   });
 
   it('correction yönünü yazar', () => {
@@ -125,6 +134,78 @@ describe('biçimleme', () => {
     });
     expect(mesaj).toContain('100 FS Telegram Katıl Bonusu');
     expect(mesaj).toContain('Kaynak: telegram');
+  });
+});
+
+/** Kullanicinin yapistirdigi gercek yatirim satiri. */
+const GERCEK_YATIRIM = {
+  id: 966358,
+  transactionType: 'deposit',
+  amount: 1000,
+  currency: 'TRY',
+  userId: '2502686',
+  status: 'success',
+  method: 'Havale',
+  integration: 'HemenOde',
+  ClientId: 2502686,
+  ClientLogin: 'demircin20',
+  Amount: 1000,
+};
+
+describe('işlem durumu', () => {
+  it('gerçek yatırım yanıtını başarılı sayar', () => {
+    expect(islemDurumu(GERCEK_YATIRIM)).toBe('onay');
+    expect(bildirilecekYatirimMi(GERCEK_YATIRIM)).toBe(true);
+  });
+
+  it('bekleyen yatırım bildirilmez', () => {
+    // Kasaya girmemis parayi girmis gostermek, operatore yanlis bonus verdirir.
+    expect(bildirilecekYatirimMi({ ...GERCEK_YATIRIM, status: 'pending' })).toBe(false);
+  });
+
+  it('reddedilen yatırım bildirilmez', () => {
+    expect(bildirilecekYatirimMi({ ...GERCEK_YATIRIM, status: 'rejected' })).toBe(false);
+  });
+
+  it('durumu okunamayan yatırım bildirilmez', () => {
+    expect(bildirilecekYatirimMi({ ...GERCEK_YATIRIM, status: '' })).toBe(false);
+  });
+
+  it('alan adı farklı gelse de durumu bulur', () => {
+    expect(islemDurumu({ DocumentState: 'Approved' })).toBe('onay');
+    expect(islemDurumu({ state: 'CANCELLED' })).toBe('red');
+    expect(islemDurumu({ Status: 'in progress' })).toBe('bekliyor');
+  });
+
+  it('tanınmayan durum sessizce elenmez', () => {
+    expect(islemDurumu({ status: 'gozden_geciriliyor' })).toBe('bilinmiyor');
+    expect(cekimMesaji({ ClientId: 1, Amount: 100, status: 'gozden_geciriliyor' }))
+      .toContain('gozden_geciriliyor');
+  });
+});
+
+describe('çekim onay / red ayrımı', () => {
+  it('onaylanan ve reddedilen çekim farklı başlık alır', () => {
+    expect(cekimMesaji({ ClientId: 1, Amount: 3400, status: 'success' })).toContain('ÇEKİM ONAYLANDI');
+    expect(cekimMesaji({ ClientId: 1, Amount: 3400, status: 'rejected' })).toContain('ÇEKİM REDDEDİLDİ');
+  });
+
+  it('aynı çekimin durum değişimi AYRI olaydır', () => {
+    // Yalnizca kimlik kullanilsaydi talep bildirilir, onayi hic bildirilmezdi.
+    const bekleyen = cekimOlayKimligi({ Id: 500, status: 'pending' });
+    const onayli = cekimOlayKimligi({ Id: 500, status: 'success' });
+    expect(bekleyen).not.toBe(onayli);
+    expect(onayli).toBe('500:onay');
+  });
+
+  it('kimliksiz satır olay üretmez', () => {
+    expect(cekimOlayKimligi({ status: 'success' })).toBe('');
+  });
+
+  it('durum değişimi imleçte yeni olay sayılır', () => {
+    const imlec: AkisImleci = { baslatildi: true, gorulen: ['500:bekliyor'] };
+    const sonuc = yeniOlaylar([{ Id: 500, status: 'success' }], imlec, cekimOlayKimligi);
+    expect(sonuc.yeniler).toHaveLength(1);
   });
 });
 

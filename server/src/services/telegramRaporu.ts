@@ -144,21 +144,88 @@ export function yatirimMesaji(satir: AnyRecord): string {
     '💰 YATIRIM',
     oyuncuYaz(satir.ClientLogin, satir.ClientId),
     paraYaz(satir.Amount, satir.CurrencyId ?? satir.currency ?? 'TRY'),
-    satir.PaymentSystemName ? `Yöntem: ${satir.PaymentSystemName}` : null,
-    satir.DocumentState ? `Durum: ${satir.DocumentState}` : null,
+    // Uc `method` ("Havale") ve `integration` ("HemenOde") olarak ayri
+    // doner; ikisi de operatore lazim.
+    satir.PaymentSystemName || satir.method
+      ? `Yöntem: ${[satir.method ?? satir.PaymentSystemName, satir.integration].filter(Boolean).join(' · ')}`
+      : null,
     saatYaz(satir.CreatedLocal ?? satir.createdAt),
   ].filter(Boolean).join('\n');
 }
 
+/**
+ * ISLEM DURUMU.
+ *
+ * Gozlemlenmis deger: yatirimda `"status": "success"`. Cekim tarafinin
+ * sozlugu belgelenmemis, bu yuzden liste GENIS tutuluyor ve taninmayan
+ * durum SESSIZCE ELENMIYOR — 'bilinmiyor' olarak isaretlenip ham
+ * degeriyle birlikte varsayilan sohbete dusuyor. Bir cekim bildirimini
+ * kaybetmek, onu biraz yanlis yere gondermekten kotudur.
+ */
+const ONAY_DURUMLARI = ['success', 'successful', 'approved', 'completed', 'complete', 'paid', 'done', 'finished'];
+const RED_DURUMLARI = ['rejected', 'declined', 'cancelled', 'canceled', 'failed', 'error', 'refused'];
+const BEKLEYEN_DURUMLAR = ['pending', 'new', 'waiting', 'processing', 'inprogress', 'in_progress', 'onhold', 'on_hold'];
+
+export type IslemDurumu = 'onay' | 'red' | 'bekliyor' | 'bilinmiyor';
+
+/** Satirin ham durum metni. Alan adi uctan uca degisebiliyor. */
+export function hamDurum(satir: AnyRecord): string {
+  return String(satir?.DocumentState ?? satir?.status ?? satir?.state ?? satir?.Status ?? '')
+    .trim()
+    .toLowerCase();
+}
+
+export function islemDurumu(satir: AnyRecord): IslemDurumu {
+  const durum = hamDurum(satir).replace(/[\s-]/g, '_');
+  if (!durum) return 'bilinmiyor';
+  if (ONAY_DURUMLARI.includes(durum)) return 'onay';
+  if (RED_DURUMLARI.includes(durum)) return 'red';
+  if (BEKLEYEN_DURUMLAR.includes(durum)) return 'bekliyor';
+  return 'bilinmiyor';
+}
+
+/**
+ * Yatirim BILDIRILECEK mi?
+ *
+ * Yalnizca basarili yatirimlar. Bekleyen ya da reddedilen bir yatirimi
+ * "YATIRIM" diye bildirmek, kasaya girmemis parayi girmis gostermek olur.
+ */
+export function bildirilecekYatirimMi(satir: AnyRecord): boolean {
+  return islemDurumu(satir) === 'onay';
+}
+
+const CEKIM_BASLIGI: Record<IslemDurumu, string> = {
+  onay: '✅ ÇEKİM ONAYLANDI',
+  red: '❌ ÇEKİM REDDEDİLDİ',
+  bekliyor: '🏧 ÇEKİM TALEBİ',
+  bilinmiyor: '🏧 ÇEKİM',
+};
+
 export function cekimMesaji(satir: AnyRecord): string {
+  const durum = islemDurumu(satir);
   return [
-    '🏧 ÇEKİM TALEBİ',
+    CEKIM_BASLIGI[durum],
     oyuncuYaz(satir.ClientLogin, satir.ClientId),
     paraYaz(satir.Amount, satir.CurrencyId ?? satir.currency ?? 'TRY'),
     satir.PaymentSystemName ? `Yöntem: ${satir.PaymentSystemName}` : null,
-    satir.DocumentState ? `Durum: ${satir.DocumentState}` : null,
+    // Durum taninmadiysa ham degeri goster; sessizce yutma.
+    durum === 'bilinmiyor' && hamDurum(satir) ? `Durum: ${hamDurum(satir)}` : null,
     saatYaz(satir.CreatedLocal ?? satir.createdAt),
   ].filter(Boolean).join('\n');
+}
+
+/**
+ * Cekim olayinin imlec kimligi.
+ *
+ * Kimlige DURUM da katiliyor: ayni cekim once "bekliyor" sonra "onay"
+ * olarak gorulecek ve ikisi AYRI olay. Yalnizca kimlik kullanilsaydi
+ * talep bildirilir, onayi hic bildirilmezdi — oysa istenen tam olarak
+ * onay ve red bildirimi.
+ */
+export function cekimOlayKimligi(satir: AnyRecord): string {
+  const id = String(satir?.Id ?? satir?.DocumentId ?? satir?.ReferenceNo ?? '');
+  if (!id) return '';
+  return `${id}:${islemDurumu(satir)}`;
 }
 
 export function correctionMesaji(satir: AnyRecord): string {

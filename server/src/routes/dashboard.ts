@@ -2208,7 +2208,22 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
             note,
           });
           const { audit } = await import('../lib/auditLog.js');
-          audit(username, role, 'manual_adjustment', String(ClientId), `Amount: ${Amount}, Info: ${note}`);
+          /**
+           * Nakit ekleme/cikarma da bonus denetimiyle AYNI dilde yazilir.
+           *
+           * Onceden burada "Amount: 500, Info: ..." gibi ham bir satir
+           * vardi; kampanya atamalari ise `bonusDenetimAciklamasi` ile
+           * okunabilir cumleler yaziyordu. Ayni denetim listesinde iki
+           * ayri dil, kaydi taramayi zorlastiriyordu.
+           */
+          audit(username, role, 'manual_adjustment', String(ClientId), bonusDenetimAciklamasi({
+            tur: 'nakit',
+            kaynak: `panel · ${correctionType === 'crediting' ? 'bakiye ekleme' : 'bakiye çıkarma'}`,
+            baslik: note,
+            tutar: Amount,
+            tutarKaynagi: 'elle',
+            sonuc: 'basarili',
+          }));
           return reply.send({
             HasError: false,
             AlertType: 'success',

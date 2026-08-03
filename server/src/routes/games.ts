@@ -16,6 +16,7 @@ import { yatirimHakki } from '../services/yatirimHakki.js';
 import { isLynonConfigured, lynonAssignCampaignToPlayer, lynonBuildBonusEligibilitySnapshot, lynonCreditPlayerMainAccount, lynonFindPlayerByLogin, lynonPlayerActivity } from '../services/lynonBackofficeService.js';
 import { loginAnahtari, oyuncuAktivitesi, oyuncuRaporu, siralamaOlustur, type SiralamaMetrigi } from '../services/oyuncuRaporService.js';
 import { readTournamentSettings } from '../services/turnuvaAyarService.js';
+import { carkAnalizi } from '../services/carkOlasiliklari.js';
 import {
   kurallariCozumle,
   loginMaskele,
@@ -1712,6 +1713,41 @@ export async function gamesRoutes(app: FastifyInstance) {
    * oynandi mi" sorusunu cevapliyor. Kayip kaydini atmak ayni
    * yatirimla tekrar oynamayi acardi. Yalnizca gorunum suzuluyor.
    */
+  /**
+   * Carkin GERCEK olasilik davranisi.
+   *
+   * "Cark neden surekli pas donderiyor?" sorusunun olculebilir cevabi.
+   * Panelde girilen olasilik ile motorun uyguladigi olasilik ayrisabiliyor:
+   * `cekilebilirMi` teslim edilemeyecek dilimleri cekilisten atiyor ve o
+   * dilimlere atanmis pay kalanlar arasinda — agirlikli olarak kayip
+   * dilimi arasinda — paylasiliyor. Yani bir odulun olasiligini artirmak
+   * pas oranini YUKSELTEBILIYOR ve panel bunu hic soylemiyordu.
+   */
+  app.get('/admin/games/wheel/analiz', async (request: any, reply) => {
+    if (!request.session?.user) return reply.status(401).send({ error: 'Yetkisiz' });
+    const tenantKey = await resolveTenantKeyForRequest(request);
+    const settings = await readGameSettings(tenantKey);
+    return reply.send({ ok: true, data: carkAnalizi(Array.isArray(settings.wheel) ? settings.wheel : []) });
+  });
+
+  /**
+   * HENUZ KAYDEDILMEMIS carkin analizi.
+   *
+   * Operator dilim olasiliklarini duzenlerken sonucu KAYDETMEDEN once
+   * gormeli; "kaydet, sonra bak" dongusunde yanlis yapilandirma
+   * uretimde ortaya cikiyor. Govdeyle gelen dilim listesi analiz edilir,
+   * hicbir sey yazilmaz.
+   *
+   * Analiz mantigi tek yerde (`carkOlasiliklari`) kaliyor; istemciye
+   * kopyalanmiyor, cunku bu kurallarin cekilis motoruyla ayni kalmasi
+   * sart.
+   */
+  app.post('/admin/games/wheel/analiz', async (request: any, reply) => {
+    if (!request.session?.user) return reply.status(401).send({ error: 'Yetkisiz' });
+    const dilimler = Array.isArray(request.body?.wheel) ? request.body.wheel : [];
+    return reply.send({ ok: true, data: carkAnalizi(dilimler) });
+  });
+
   app.get('/admin/games/wheel/claims', async (request: any, reply) => {
     if (!request.session?.user) return reply.status(401).send({ error: 'Yetkisiz' });
     const tenantKey = await resolveTenantKeyForRequest(request);
