@@ -47,6 +47,19 @@ export type PanoMetrigi = {
   veriYok: boolean;
   /** Operatore ne anlama geldigini soyler. */
   aciklama?: string;
+  /**
+   * IZLENEBILIRLIK — "pano yanlis gosteriyor" sikayetini adreslenebilir
+   * kilan sey.
+   *
+   * Bir sayinin yanlis oldugunu soylemek kolay, HANGI sayinin nereden
+   * geldigini gostermek zordu. Artik her olcu kendi Lynon alan adini ve
+   * ham degerini tasiyor; ekranda uzerine gelince "TOTAL DEPOSITS
+   * AMOUNT = 11000 TRY" yaziyor. Esleme hatasi ile ucun kendi hatasi
+   * boylece bir bakista ayrilir.
+   */
+  alan: string;
+  /** Ucun donderdigi ham deger; "11000 TRY" gibi metin olabilir. */
+  hamDeger: string | null;
 };
 
 /**
@@ -137,7 +150,8 @@ export function panoMetrikleri(ham: Record<string, unknown> | null | undefined):
   const kaynak = ham ?? {};
   return TANIMLAR.map((tanim) => {
     const varMi = Object.prototype.hasOwnProperty.call(kaynak, tanim.alan);
-    const deger = varMi ? metrikSayisi(kaynak[tanim.alan]) : null;
+    const ham = varMi ? kaynak[tanim.alan] : undefined;
+    const deger = varMi ? metrikSayisi(ham) : null;
     return {
       anahtar: tanim.anahtar,
       etiket: tanim.etiket,
@@ -146,6 +160,8 @@ export function panoMetrikleri(ham: Record<string, unknown> | null | undefined):
       grup: tanim.grup,
       veriYok: !varMi || deger === null,
       aciklama: tanim.aciklama,
+      alan: tanim.alan,
+      hamDeger: varMi ? String(ham ?? '') : null,
     };
   });
 }

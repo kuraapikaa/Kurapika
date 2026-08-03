@@ -515,6 +515,10 @@ export const dashboardApi = {
   kategoriUygula: (playerId: number, kategoriId: number) =>
     post<any>('/lynon/oyuncu-kategorileme/uygula', { playerId, kategoriId }),
 
+  /** Davranış kategorilerini oluştur (High Risk, Bonus Avcısı, VIP Üye, Aktif Üye). */
+  davranisKategorileriniOlustur: () =>
+    post<any>('/lynon/oyuncu-kategorileme/kategorileri-olustur', {}),
+
   /** Bahis kısıtını aç/kapat: POST /lynon/oyuncu-kisitlari/:userId */
   oyuncuKisitiYaz: (userId: number | string, restriction: string, isRestricted: boolean, note?: string) =>
     post<any>(`/lynon/oyuncu-kisitlari/${userId}`, { restriction, isRestricted, note }),

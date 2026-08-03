@@ -41,6 +41,10 @@ export interface SummaryData {
     grup: 'finans' | 'oyun' | 'bonus' | 'oyuncu';
     veriYok: boolean;
     aciklama?: string;
+    /** Değerin geldiği Lynon alan adı — ekranda izlenebilirlik için. */
+    alan?: string;
+    /** Uçtan gelen ham değer ("11000 TRY" gibi). */
+    hamDeger?: string | null;
   }>;
   taninmayanAlanlar?: string[];
   /** Sunucunun Lynon'a gerçekten sorduğu pencere — ekranda gösterilir. */

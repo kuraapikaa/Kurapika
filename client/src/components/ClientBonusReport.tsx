@@ -87,6 +87,8 @@ export function ClientBonusReport() {
   const mukerrer: MukerrerSatiri[] = veri?.MukerrerVerilisler ?? [];
   const adsizOyuncu: number = veri?.AdsizOyuncu ?? 0;
   const kirpildi: boolean = Boolean(veri?.Kirpildi);
+  const veriEksik: boolean = Boolean(veri?.VeriEksik);
+  const kapsananEnEskiGun: string | null = veri?.KapsananEnEskiGun ?? null;
 
   const suzulmus = useMemo(
     () =>
@@ -152,10 +154,30 @@ export function ClientBonusReport() {
         />
       </div>
 
-      {kirpildi && (
+      {/*
+        * KAPSAM UYARISI.
+        *
+        * Uç tarih filtresi kabul etmiyor; oturumlar çekilip sunucuda
+        * süzülüyor ve sayfa tavanı var. Seçilen aralık kapsamın dışına
+        * taşarsa rapor BOŞ görünür — "o gün bonus verilmemiş" ile
+        * "o günün verisi elimizde yok" aynı görünürdü. Artık ayrı.
+        */}
+      {veriEksik && (
+        <PanoKart vurgu="cikis" className="px-4 py-3">
+          <p className="text-[11px] font-semibold text-rose-300">Bu aralığın tamamı elimizde yok</p>
+          <p className="mt-1 text-[11px] text-[color:var(--panel-text-dim,#c8cdd5)]">
+            Lynon bonus oturumları uçtan tarih filtresiyle çekilemiyor; en fazla{' '}
+            {(veri?.ToplamOturum ?? 0).toLocaleString('tr-TR')} kayıt okunabiliyor ve bu kayıtların en eskisi{' '}
+            <span className="font-semibold text-white">{kapsananEnEskiGun}</span>. Seçtiğiniz aralık bundan
+            öncesine uzanıyor, o günler bu raporda görünmüyor. Daha dar bir aralık seçin.
+          </p>
+        </PanoKart>
+      )}
+      {kirpildi && !veriEksik && (
         <PanoKart className="px-4 py-3">
           <p className="text-[11px] text-amber-400/90">
-            Sayfa tavanına ulaşıldı; daha eski bonus oturumları bu listede yok. Aralığı daraltın.
+            Sayfa tavanına ulaşıldı. Seçilen aralık kapsam içinde ({kapsananEnEskiGun} ve sonrası), ama daha
+            eski günler için rapor eksik kalır.
           </p>
         </PanoKart>
       )}

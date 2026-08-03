@@ -21,6 +21,12 @@ import {
   type LynonKategori,
   type OyuncuProfili,
 } from './oyuncuKategorileme.js';
+import {
+  DAVRANIS_KATEGORILERI,
+  eksikKategoriler,
+  kategoriOlusturmaGovdesi,
+  otomatikDavranislar,
+} from './davranisKategorileri.js';
 
 type AnyRecord = Record<string, any>;
 
@@ -2191,6 +2197,28 @@ export async function lynonProviderReport(body: AnyRecord = {}): Promise<AnyReco
 const BONUS_OTURUM_SAYFA = 100;
 /** En fazla kac sayfa okunur — "tum zamanlar" secildiginde ucu bogmamak icin. */
 const BONUS_OTURUM_AZAMI_SAYFA = 50;
+/**
+ * Bonus oturumu onbellegi.
+ *
+ * ── Neden gerekti ─────────────────────────────────────────────────────
+ *
+ * Bu fonksiyon TEK CAGRIDA 50'ye kadar SIRALI HTTP istegi atiyor ve
+ * onbellegi yoktu. Cagiranlar:
+ *
+ *   • hedefBakiyeJob        — 60 saniyede bir
+ *   • telegramRaporJob      — 60 saniyede bir (bonus raporu uzerinden)
+ *   • lynonClientBonusReport — her rapor acilisinda
+ *   • lynonKategoriOnerileri — her kategori ekraninda + saatlik is
+ *
+ * Yalnizca iki periyodik is, dakikada ~100 istek yani GUNDE ~144.000
+ * Lynon istegi demekti. Railway faturasinin buyudugu yer burasi:
+ * surekli acik baglanti, surekli CPU, surekli giden trafik.
+ *
+ * Uc dakikalik onbellek butun cagiranlari tek cekime baglar. Islerin
+ * gorecegi gecikme en fazla uc dakika: aday kesfi icin fazlasiyla
+ * yeterli, cunku ADAYIN BAKIYESI her turda taze okunuyor.
+ */
+const BONUS_OTURUM_CACHE_TTL_MS = Number(process.env.BONUS_OTURUM_CACHE_MS) || 3 * 60 * 1000;
 
 /**
  * Site genelindeki tum bonus oturumlari.
@@ -2198,19 +2226,29 @@ const BONUS_OTURUM_AZAMI_SAYFA = 50;
  * Uc sayfali; sayfa boyundan kisa bir sayfa gelene ya da tavana
  * varilana kadar okunur. Tavana varilirsa bu bilgi yanitla birlikte
  * tasinir — sessizce kirpilan rapor, yanlis rapordur.
+ *
+ * Sonuc onbelleklidir; ayni anda gelen cagirilar ayni sozu paylasir
+ * (bkz. `cachedLynon`), yani iki is ayni anda uyanirsa uc yine tek kez
+ * taranir.
  */
 export async function bonusOturumlariniTopla(): Promise<{ oturumlar: AnyRecord[]; kirpildi: boolean }> {
-  const oturumlar: AnyRecord[] = [];
-  for (let sayfa = 1; sayfa <= BONUS_OTURUM_AZAMI_SAYFA; sayfa += 1) {
-    const parca = arrayOf(
-      await lynonRequest(`/api/bonusenginev2/api/v1/Report/bonusSessions/site/${config.lynon.siteId}`, {
-        query: { page: sayfa, countPerPage: BONUS_OTURUM_SAYFA },
-      }),
-    );
-    oturumlar.push(...parca);
-    if (parca.length < BONUS_OTURUM_SAYFA) return { oturumlar, kirpildi: false };
-  }
-  return { oturumlar, kirpildi: true };
+  return cachedLynon(
+    `bonus-oturumlari:${config.lynon.siteId}`,
+    BONUS_OTURUM_CACHE_TTL_MS,
+    async () => {
+      const oturumlar: AnyRecord[] = [];
+      for (let sayfa = 1; sayfa <= BONUS_OTURUM_AZAMI_SAYFA; sayfa += 1) {
+        const parca = arrayOf(
+          await lynonRequest(`/api/bonusenginev2/api/v1/Report/bonusSessions/site/${config.lynon.siteId}`, {
+            query: { page: sayfa, countPerPage: BONUS_OTURUM_SAYFA },
+          }),
+        );
+        oturumlar.push(...parca);
+        if (parca.length < BONUS_OTURUM_SAYFA) return { oturumlar, kirpildi: false };
+      }
+      return { oturumlar, kirpildi: true };
+    },
+  );
 }
 
 /**
@@ -2247,6 +2285,27 @@ export async function lynonClientBonusReport(body: AnyRecord = {}): Promise<AnyR
   const objects = kapsam.map((oturum, index) => bonusOturumSatiri(oturum, adlar, index));
   objects.sort((a, b) => String(b.CreatedLocal ?? '').localeCompare(String(a.CreatedLocal ?? '')));
 
+  /**
+   * KAPSAM DURUSTLUGU — bildirilen "bonus raporu hatali" hatasinin kaynagi.
+   *
+   * Uc tarih filtresi kabul etmiyor; butun oturumlar cekilip burada
+   * suzuluyor. Sayfa tavanina (50 x 100 = 5.000 kayit) varildiginda
+   * elimizdeki EN ESKI oturumdan onceki hicbir sey yok. Kullanici gecmis
+   * bir gunu sectiginde rapor bos ya da yarim geliyor, ustelik BOS BIR
+   * RAPOR ile "o gun bonus verilmemis" ayirt edilemiyordu.
+   *
+   * Artik kapsanan en eski gun hesaplanip yanitla tasiniyor; istenen
+   * aralik bunun disina tasiyorsa ekran bunu acikca soyluyor.
+   */
+  const gunler = oturumlar
+    .map((oturum) => istanbulDateKey(String(oturum?.assignedDate ?? '')))
+    .filter(Boolean)
+    .sort();
+  const kapsananEnEskiGun = gunler[0] ?? null;
+  const veriEksik = Boolean(
+    kirpildi && kapsananEnEskiGun && range.startDate && range.startDate < kapsananEnEskiGun,
+  );
+
   return {
     HasError: false,
     AlertType: 'success',
@@ -2266,6 +2325,12 @@ export async function lynonClientBonusReport(body: AnyRecord = {}): Promise<AnyR
       /** Adi eslenemeyen oyuncu sayisi — eksiklik gizlenmiyor. */
       AdsizOyuncu: objects.filter((satir) => !satir.ClientLogin).length,
       Kirpildi: kirpildi,
+      /** Ucun donebildigi en eski gun; bundan oncesi bu raporda YOK. */
+      KapsananEnEskiGun: kapsananEnEskiGun,
+      /** Istenen aralik kapsamin disina tasiyor mu? */
+      VeriEksik: veriEksik,
+      /** Suzmeden once elde olan toplam oturum sayisi. */
+      ToplamOturum: oturumlar.length,
       Range: range,
       Kaynak: `bonusSessions/site/${config.lynon.siteId}`,
     },
@@ -2593,6 +2658,46 @@ export async function lynonKategoriler(): Promise<AnyRecord[]> {
 }
 
 /**
+ * Davranis kategorilerini olustur.
+ *
+ * Uc dogrulandi:
+ *   POST /api/user/api/v1.0/categories
+ *   { name, description, siteId, color, textColor, isVisibleToPlayer }
+ *
+ * IDEMPOTENT: sitede ayni adla kategori varsa yeniden olusturulmaz.
+ * Bu kontrol olmadan "kategorileri oluştur" dugmesine ikinci kez
+ * basmak kopya uretirdi ve oyuncular iki farkli "High Risk" arasinda
+ * bolunurdu.
+ */
+export async function lynonDavranisKategorileriniOlustur(): Promise<AnyRecord> {
+  const mevcut = await lynonKategoriler();
+  const eksik = eksikKategoriler(mevcut as Array<{ name?: unknown }>);
+
+  const olusturulan: AnyRecord[] = [];
+  const hatalar: AnyRecord[] = [];
+
+  for (const tanim of eksik) {
+    const govde = kategoriOlusturmaGovdesi(tanim, config.lynon.siteId);
+    try {
+      const yanit = await lynonRequest('/api/user/api/v1.0/categories', { method: 'POST', body: govde });
+      olusturulan.push({ ad: tanim.name, kimlik: tanim.kimlik, yanit });
+    } catch (err) {
+      hatalar.push({ ad: tanim.name, mesaj: err instanceof Error ? err.message : String(err) });
+    }
+  }
+
+  return {
+    HasError: hatalar.length > 0 && olusturulan.length === 0,
+    Data: {
+      Olusturulan: olusturulan,
+      /** Zaten var olanlar — hata degil, yapilacak is yok demek. */
+      ZatenVar: DAVRANIS_KATEGORILERI.filter((t) => !eksik.includes(t)).map((t) => t.name),
+      Hatalar: hatalar,
+    },
+  };
+}
+
+/**
  * Risk ve aktiviteye gore kategori onerileri.
  *
  * Iki asamali:
@@ -2610,13 +2715,29 @@ export async function lynonKategoriOnerileri(body: AnyRecord = {}): Promise<AnyR
   const enFazlaOyuncu = Math.min(1000, numberFrom(body.MaxRows ?? body.limit, 500));
   const zenginlestirmeTavani = Math.min(60, numberFrom(body.enrichLimit, 40));
 
-  const [kategoriler, playersRes] = await Promise.all([
+  const [kategoriler, playersRes, bonusVerisi] = await Promise.all([
     lynonKategoriler(),
     lynonPlayers({ MaxRows: enFazlaOyuncu, SkeepRows: 0 }),
+    // Bonus avciligini olcmek icin site geneli bonus oturumlari.
+    // Basarisiz olursa bonus adedi "bilinmiyor" kalir ve o kural hic
+    // calismaz — sifir sayilmaz.
+    bonusOturumlariniTopla().catch(() => ({ oturumlar: [] as AnyRecord[], kirpildi: false })),
   ]);
 
   const merdiven = seviyeMerdiveni(kategoriler as LynonKategori[]);
   const oyuncular = arrayOf(recordOf(playersRes.Data).Objects);
+  const otomatik = otomatikDavranislar();
+
+  /** playerId → aldigi bonus adedi. */
+  const bonusAdetleri = new Map<string, number>();
+  for (const oturum of bonusVerisi.oturumlar) {
+    const kimlik = String(oturum?.playerId ?? '');
+    if (!kimlik) continue;
+    bonusAdetleri.set(kimlik, (bonusAdetleri.get(kimlik) ?? 0) + 1);
+  }
+  // Bonus verisi hic gelmediyse HERKESIN adedi "bilinmiyor" olmali;
+  // bos harita "herkes sifir bonus almis" anlamina gelirdi.
+  const bonusOlculdu = bonusVerisi.oturumlar.length > 0;
 
   const profiller: OyuncuProfili[] = oyuncular.map((oyuncu) => ({
     playerId: numberFrom(oyuncu.Id, 0),
@@ -2627,9 +2748,10 @@ export async function lynonKategoriOnerileri(body: AnyRecord = {}): Promise<AnyR
     // Ucuz taramada olculmez; asama 2'de doldurulur.
     ayniIpHesapSayisi: null,
     mevcutKategoriId: nullableNumber(oyuncu.CategoryId),
+    bonusAdedi: bonusOlculdu ? bonusAdetleri.get(String(numberFrom(oyuncu.Id, 0))) ?? 0 : null,
   }));
 
-  const adaylar = kategoriOnerileri(profiller, merdiven);
+  const adaylar = kategoriOnerileri(profiller, merdiven, Date.now(), otomatik);
   const zenginlestirilecek = adaylar.slice(0, zenginlestirmeTavani);
 
   const ipSayisi = new Map<number, number>();
@@ -2651,7 +2773,7 @@ export async function lynonKategoriOnerileri(body: AnyRecord = {}): Promise<AnyR
     .filter((profil) => ipSayisi.has(profil.playerId))
     .map((profil) => ({ ...profil, ayniIpHesapSayisi: ipSayisi.get(profil.playerId) ?? null }));
   const yenidenHesaplanan = new Map(
-    kategoriOnerileri(zenginProfiller, merdiven).map((oneri) => [oneri.playerId, oneri]),
+    kategoriOnerileri(zenginProfiller, merdiven, Date.now(), otomatik).map((oneri) => [oneri.playerId, oneri]),
   );
 
   const oneriler = adaylar.map((oneri) => yenidenHesaplanan.get(oneri.playerId) ?? oneri);
@@ -2676,6 +2798,19 @@ export async function lynonKategoriOnerileri(body: AnyRecord = {}): Promise<AnyR
       VarsayilanKategori: varsayilanSeviye(merdiven),
       TarananOyuncu: profiller.length,
       RiskOlculen: ipSayisi.size,
+      /** Bonus adedi olculemediyse "Bonus Avcısı" kurali hic calismaz. */
+      BonusOlculdu: bonusOlculdu,
+      /** Henuz sitede olmayan davranis kategorileri — olusturulmasi gerekiyor. */
+      EksikDavranisKategorileri: eksikKategoriler(kategoriler as Array<{ name?: unknown }>).map((t) => t.name),
+      /** Otomatik atanan davranis etiketleri; gerisi yalnizca elle. */
+      OtomatikDavranislar: [...otomatik],
+      DavranisTanimlari: DAVRANIS_KATEGORILERI.map((t) => ({
+        kimlik: t.kimlik,
+        ad: t.name,
+        aciklama: t.description,
+        renk: t.color,
+        otomatik: otomatik.has(t.kimlik),
+      })),
     },
   };
 }

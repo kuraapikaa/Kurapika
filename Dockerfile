@@ -18,15 +18,26 @@ RUN npm run build
 FROM node:20-alpine
 WORKDIR /app
 
-# Chromium for whatsapp-web.js (Puppeteer)
-RUN apk add --no-cache chromium
+# CHROMIUM KALDIRILDI.
+#
+# Imaj `apk add chromium` ile ~300 MB Chromium kuruyor ve `whatsapp-web.js`
+# (Puppeteer) bagimliligini tasiyordu. Kaynak kodda o paketi IMPORT EDEN
+# TEK BIR SATIR YOK: WhatsApp modulu yalnizca GELISTIRME-FIKIRLERI.md
+# icinde bir fikir olarak duruyor, uygulanmamis.
+#
+# Bedeli her deploy'da odeniyordu: buyuk imaj, uzun build (Railway build
+# dakikasi faturaliyor), fazladan disk ve indirme. DEPLOY-RAILWAY-
+# CLOUDFLARE.md zaten bunu oneriyordu, yapilmamisti.
+#
+# WhatsApp modulu gercekten yazilirsa geri gelmesi gerekenler:
+#   RUN apk add --no-cache chromium
+#   ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+#   ENV WHATSAPP_DATA_DIR=/data
+# ve `server/package.json` icine `whatsapp-web.js`.
 
 # Build arg and env
 ENV NODE_ENV=production
 ENV PORT=3750
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
-# Temsilci/lead verileri kalıcı olsun: volume mount ile /data kullanın (örn. -v whatsapp-data:/data)
-ENV WHATSAPP_DATA_DIR=/data
 
 # Copy server build and dependencies
 WORKDIR /app/server
@@ -42,7 +53,5 @@ COPY --from=client-builder /app/client/dist ./dist
 WORKDIR /app/server
 
 EXPOSE 3750
-
-# Kalıcı veri: Railway'de Volume ekleyip WHATSAPP_DATA_DIR mount path'ine ayarlayın (örn. /data)
 
 CMD ["node", "dist/index.js"]
