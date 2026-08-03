@@ -1,4 +1,5 @@
 import type { DateRange } from '../api/client';
+import { ayBasi, aySonu, gunEkle, haftaBasi, kasaGunKodu, oncekiAyBasi } from './kasaGunu';
 
 /**
  * TARIH SAAT DILIMI.
@@ -8,104 +9,77 @@ import type { DateRange } from '../api/client';
  * bir dilimdeyse (ya da isletim sistemi UTC ise) "Bugun" kasanin
  * bugununden farkli bir gun secip raporu yanlis gosteriyordu.
  *
- * Sunucu tarafi zaten `istanbulDateKey` ile Turkiye gununu kullaniyor;
- * istemci de ayni gunu uretmeli, yoksa iki taraf farkli gun konusur.
+ * Gun aritmetigi de yerel `Date` uzerinde yapiliyordu: yerel gece
+ * yarisini Istanbul dilimine geri cevirmek, Istanbul'un DOGUSUNDAKI
+ * tarayicilarda bir gun geri kaydiriyordu. Artik saat diliminden cikis
+ * yalnizca `kasaGunKodu()` icinde; gerisi "YYYY-MM-DD" metni uzerinde
+ * saf aritmetik ve tarayicinin diliminden bagimsiz.
  */
-const KASA_DILIMI = 'Europe/Istanbul';
+export type Onayar = { id: string; label: string; getRange: () => DateRange };
 
-/** Verilen ani TURKIYE gunune cevirir → YYYY-MM-DD */
-function toYMD(d: Date): string {
-  // en-CA bicimi zaten YYYY-MM-DD veriyor; elle parcalamaya gerek yok.
-  return new Intl.DateTimeFormat('en-CA', {
-    timeZone: KASA_DILIMI,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(d);
-}
+/** Tum zamanlar araliginin baslangici — kasadan onceki her sey. */
+const BASLANGIC = '2000-01-01';
 
-/** Turkiye gununu yerel bir Date'e cevirir; gun aritmetigi bunun uzerinde yapilir. */
-function kasaGunu(d: Date = new Date()): Date {
-  const [y, m, g] = toYMD(d).split('-').map(Number);
-  return new Date(y, m - 1, g);
-}
-
-function getMonday(d: Date): Date {
-  const copy = new Date(d);
-  const day = copy.getDay();
-  const diff = copy.getDate() - day + (day === 0 ? -6 : 1);
-  return new Date(copy.getFullYear(), copy.getMonth(), diff);
-}
-
-export function getPresetRanges(): { id: string; label: string; getRange: () => DateRange }[] {
+export function getPresetRanges(): Onayar[] {
   return [
     {
       id: 'today',
       label: 'Bugün',
       getRange: () => {
-        const t = kasaGunu();
-        const s = toYMD(t);
-        return { startDate: s, endDate: s };
+        const g = kasaGunKodu();
+        return { startDate: g, endDate: g };
       },
     },
     {
       id: 'yesterday',
       label: 'Dün',
       getRange: () => {
-        const t = kasaGunu();
-        t.setDate(t.getDate() - 1);
-        const s = toYMD(t);
-        return { startDate: s, endDate: s };
+        const g = gunEkle(kasaGunKodu(), -1);
+        return { startDate: g, endDate: g };
       },
     },
     {
       id: 'thisWeek',
       label: 'Bu hafta',
       getRange: () => {
-        const today = kasaGunu();
-        const monday = getMonday(today);
-        return { startDate: toYMD(monday), endDate: toYMD(today) };
+        const bugun = kasaGunKodu();
+        return { startDate: haftaBasi(bugun), endDate: bugun };
       },
     },
     {
       id: 'lastWeek',
       label: 'Geçen hafta',
       getRange: () => {
-        const today = kasaGunu();
-        const monday = getMonday(today);
-        const lastWeekEnd = new Date(monday);
-        lastWeekEnd.setDate(lastWeekEnd.getDate() - 1);
-        const lastWeekStart = getMonday(lastWeekEnd);
-        return { startDate: toYMD(lastWeekStart), endDate: toYMD(lastWeekEnd) };
+        const gecenHaftaSonu = gunEkle(haftaBasi(kasaGunKodu()), -1);
+        return { startDate: haftaBasi(gecenHaftaSonu), endDate: gecenHaftaSonu };
       },
     },
     {
       id: 'thisMonth',
       label: 'Bu ay',
       getRange: () => {
-        const t = kasaGunu();
-        const start = new Date(t.getFullYear(), t.getMonth(), 1);
-        return { startDate: toYMD(start), endDate: toYMD(t) };
+        const bugun = kasaGunKodu();
+        return { startDate: ayBasi(bugun), endDate: bugun };
       },
     },
     {
       id: 'lastMonth',
       label: 'Geçen ay',
       getRange: () => {
-        const t = kasaGunu();
-        const start = new Date(t.getFullYear(), t.getMonth() - 1, 1);
-        const end = new Date(t.getFullYear(), t.getMonth(), 0);
-        return { startDate: toYMD(start), endDate: toYMD(end) };
+        const gecenAy = oncekiAyBasi(kasaGunKodu());
+        return { startDate: gecenAy, endDate: aySonu(gecenAy) };
       },
     },
     {
       id: 'allTime',
       label: 'Tüm zamanlar',
-      getRange: () => {
-        const t = kasaGunu();
-        const start = new Date(2000, 0, 1);
-        return { startDate: toYMD(start), endDate: toYMD(t) };
-      },
+      getRange: () => ({ startDate: BASLANGIC, endDate: kasaGunKodu() }),
     },
   ];
+}
+
+/** Kimlikten hazir araligi bulur; bilinmeyen kimlik icin null. */
+export function onayarAraligi(id: string | null | undefined): DateRange | null {
+  if (!id) return null;
+  return getPresetRanges().find((o) => o.id === id)?.getRange() ?? null;
 }

@@ -672,7 +672,15 @@ export function PlayerProfile() {
                         >
                             {activeTab === 'overview' && (
                                 <div className="mt-3 space-y-4">
-                                    {<AIPlayerInsight data={kpi} ipData={clientsByIPData} />}
+                                    {/*
+                                      * Bonus geçmişi HENÜZ YÜKLENMEDİYSE
+                                      * `undefined` geçilir; karne o zaman
+                                      * bonus etiketini hiç üretmez. Boş dizi
+                                      * geçmek "hiç bonus almamış" demek olur
+                                      * ve yükleme sırasında yanlış rozet
+                                      * basardı.
+                                      */}
+                                    {<AIPlayerInsight data={kpi} ipData={clientsByIPData} bonuslar={isBonusesLoading ? undefined : allBonuses} />}
                                     <section>
                                         <div className="mb-3 flex items-center gap-3 text-left">
                                             <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-blue-500">Mali Performans</h3>

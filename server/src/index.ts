@@ -59,7 +59,15 @@ import { loyaltyRoutes } from './routes/loyalty.js';
 import { lynonRoutes } from './routes/lynon.js';
 import { apiTrafikRoutes } from './routes/apiTrafik.js';
 import { gelenTrafigiKaydet, gidenTrafigiKaydet } from './lib/apiTrafikKurulum.js';
-import { scheduler, registerAutoWithdrawJob, registerNextDayBonusJob, registerLoyaltyRetentionJob } from './jobs/scheduler.js';
+import {
+  scheduler,
+  registerAutoWithdrawJob,
+  registerNextDayBonusJob,
+  registerLoyaltyRetentionJob,
+  registerHedefBakiyeJob,
+  registerTelegramRaporJob,
+  registerOtomatikKategoriJob,
+} from './jobs/scheduler.js';
 import { enforceEnvironment } from './lib/envValidator.js';
 import { watchConfigFile, getWatcherStatus } from './lib/configWatcher.js';
 import { closeDatabase, getDatabaseStatus, initializeDatabase } from './lib/database.js';
@@ -292,6 +300,9 @@ try {
   await registerAutoWithdrawJob();
   await registerNextDayBonusJob();
   await registerLoyaltyRetentionJob();
+  await registerHedefBakiyeJob();
+  await registerTelegramRaporJob();
+  await registerOtomatikKategoriJob();
   scheduler.start(10000);
 
   // ─── Config Hot-Reload ─────────────────────────────────────────────────────

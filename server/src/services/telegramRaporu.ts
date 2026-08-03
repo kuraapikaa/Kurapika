@@ -1,0 +1,239 @@
+/**
+ * Anlik rapor botu — karar ve bicimleme.
+ *
+ * Istenen: "Anlik kasa raporu, anlik cekim bildirimi, anlik yatirim
+ * bildirimi, anlik correction raporu, anlik bonus raporu atacak bir
+ * Telegram botu."
+ *
+ * Bu dosya Telegram'a istek atmaz, Lynon'a bakmaz, saat okumaz. Yalnizca
+ * iki soruyu cevaplar:
+ *
+ *   1. Bu satirlardan hangileri YENI? (imlec mantigi)
+ *   2. Nasil yazilir? (mesaj bicimleri)
+ *
+ * ── Neden imlec ───────────────────────────────────────────────────────
+ *
+ * Uclar "son N kayit" donduruyor; her turda hepsi geliyor. Gorulmus
+ * kayitlarin listesi tutulmazsa bot ayni yatirimi dakikada bir tekrar
+ * bildirir.
+ *
+ * ── Ilk tur susar ─────────────────────────────────────────────────────
+ *
+ * Bot ilk kez ayaga kalktiginda gecmisteki yuzlerce kaydi arka arkaya
+ * gondermemeli. Bu yuzden akis basina AYRI bir `baslatildi` bayragi var:
+ * "gorulen listesi bos" ile "bu akis hic calismadi" ayri seylerdir. Ilki
+ * gercek bir bos akis olabilir ve oradaki ilk kayit BILDIRILMELIDIR.
+ */
+
+export type AkisImleci = {
+  /** Bu akis en az bir kez tarandi mi? */
+  baslatildi: boolean;
+  /** Son gorulen kayit kimlikleri. */
+  gorulen: string[];
+};
+
+export type RaporImleci = {
+  akislar: Record<string, AkisImleci>;
+  /** Son kasa ozetinin gonderildigi an (ISO). */
+  sonOzet: string | null;
+};
+
+export function bosImlec(): RaporImleci {
+  return { akislar: {}, sonOzet: null };
+}
+
+/** Imlecte tutulan azami kimlik sayisi. Uctan gelen sayfadan buyuk olmali. */
+export const AZAMI_GORULEN = 600;
+
+/**
+ * En fazla kac olay tek tek bildirilir.
+ *
+ * Kesintiden sonra biriken 300 kaydi tek tek atmak sohbeti kullanilamaz
+ * hale getirir; ustu tek satirda ozetlenir.
+ */
+export const AZAMI_MESAJ = 12;
+
+export type YeniOlaylar<T> = {
+  yeniler: T[];
+  /** Bildirilmeden ozetlenen kayit sayisi. */
+  tasan: number;
+  imlec: AkisImleci;
+};
+
+/**
+ * Yeni kayitlari ayikla ve imleci ilerlet.
+ *
+ * Kimligi cozulemeyen satir ATLANIR: kimliksiz kaydi "yeni" saymak her
+ * turda tekrar bildirmek demektir.
+ */
+export function yeniOlaylar<T>(
+  satirlar: T[] | null | undefined,
+  imlec: AkisImleci | undefined,
+  kimlik: (satir: T) => string,
+  azamiMesaj = AZAMI_MESAJ,
+): YeniOlaylar<T> {
+  const mevcut = imlec ?? { baslatildi: false, gorulen: [] };
+  const gorulenKume = new Set(mevcut.gorulen);
+
+  const kimlikli: Array<{ satir: T; id: string }> = [];
+  for (const satir of satirlar ?? []) {
+    const id = kimlik(satir);
+    if (!id) continue;
+    kimlikli.push({ satir, id });
+  }
+
+  const tumKimlikler = kimlikli.map((k) => k.id);
+  const yeniImlec: AkisImleci = {
+    baslatildi: true,
+    gorulen: [...new Set([...tumKimlikler, ...mevcut.gorulen])].slice(0, AZAMI_GORULEN),
+  };
+
+  // Ilk tur: mevcut durumu ogren, hicbir sey bildirme.
+  if (!mevcut.baslatildi) return { yeniler: [], tasan: 0, imlec: yeniImlec };
+
+  const yeniler = kimlikli.filter((k) => !gorulenKume.has(k.id)).map((k) => k.satir);
+  if (yeniler.length <= azamiMesaj) return { yeniler, tasan: 0, imlec: yeniImlec };
+
+  return {
+    yeniler: yeniler.slice(0, azamiMesaj),
+    tasan: yeniler.length - azamiMesaj,
+    imlec: yeniImlec,
+  };
+}
+
+// ─── Bicimleme ───────────────────────────────────────────────────────────
+
+const TL = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 2 });
+
+export function paraYaz(deger: unknown, kur = 'TRY'): string {
+  // `Number(null)` ve `Number('')` sifir verir. Olculmemis tutari "0 TRY"
+  // diye yazmak, panoda uzun uzun duzelttigimiz yalanin aynisi.
+  if (deger === null || deger === undefined || deger === '') return '—';
+  const sayi = Number(deger);
+  if (!Number.isFinite(sayi)) return '—';
+  return `${TL.format(sayi)} ${kur}`;
+}
+
+/** ISO → "03.08.2026 05:12" (Turkiye saati). */
+export function saatYaz(iso: unknown): string {
+  const t = Date.parse(String(iso ?? ''));
+  if (!Number.isFinite(t)) return '—';
+  return new Intl.DateTimeFormat('tr-TR', {
+    timeZone: 'Europe/Istanbul',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(t));
+}
+
+/** Oyuncu satiri: ad varsa ad, yoksa yalniz kimlik. Kimlik ada terfi etmez. */
+export function oyuncuYaz(login: unknown, clientId: unknown): string {
+  const ad = String(login ?? '').trim();
+  const kimlik = String(clientId ?? '').trim();
+  if (ad && kimlik) return `${ad} (${kimlik})`;
+  if (ad) return ad;
+  return kimlik || 'bilinmeyen oyuncu';
+}
+
+type AnyRecord = Record<string, any>;
+
+export function yatirimMesaji(satir: AnyRecord): string {
+  return [
+    '💰 YATIRIM',
+    oyuncuYaz(satir.ClientLogin, satir.ClientId),
+    paraYaz(satir.Amount, satir.CurrencyId ?? satir.currency ?? 'TRY'),
+    satir.PaymentSystemName ? `Yöntem: ${satir.PaymentSystemName}` : null,
+    satir.DocumentState ? `Durum: ${satir.DocumentState}` : null,
+    saatYaz(satir.CreatedLocal ?? satir.createdAt),
+  ].filter(Boolean).join('\n');
+}
+
+export function cekimMesaji(satir: AnyRecord): string {
+  return [
+    '🏧 ÇEKİM TALEBİ',
+    oyuncuYaz(satir.ClientLogin, satir.ClientId),
+    paraYaz(satir.Amount, satir.CurrencyId ?? satir.currency ?? 'TRY'),
+    satir.PaymentSystemName ? `Yöntem: ${satir.PaymentSystemName}` : null,
+    satir.DocumentState ? `Durum: ${satir.DocumentState}` : null,
+    saatYaz(satir.CreatedLocal ?? satir.createdAt),
+  ].filter(Boolean).join('\n');
+}
+
+export function correctionMesaji(satir: AnyRecord): string {
+  const yon = String(satir.CorrectionType ?? '').toLowerCase() === 'debiting' ? 'ÇIKIŞ' : 'GİRİŞ';
+  return [
+    `⚖️ BAKİYE DÜZELTMESİ · ${yon}`,
+    oyuncuYaz(satir.ClientLogin, satir.ClientId),
+    paraYaz(satir.Amount, satir.ClientCurrency ?? 'TRY'),
+    satir.AccountName ? `Hesap: ${satir.AccountName}` : null,
+    satir.Note ? `Not: ${satir.Note}` : null,
+    satir.UserName ? `Yapan: ${satir.UserName}` : null,
+    saatYaz(satir.CreatedLocal ?? satir.date),
+  ].filter(Boolean).join('\n');
+}
+
+export function bonusMesaji(satir: AnyRecord): string {
+  return [
+    '🎁 BONUS VERİLDİ',
+    oyuncuYaz(satir.ClientLogin, satir.ClientId),
+    String(satir.Name ?? 'Bonus'),
+    satir.TotalPaidAmount ? `Ödenen: ${paraYaz(satir.TotalPaidAmount, satir.ClientCurrency ?? 'TRY')}` : null,
+    satir.Description ? `Not: ${satir.Description}` : null,
+    saatYaz(satir.CreatedLocal),
+  ].filter(Boolean).join('\n');
+}
+
+/** Kesintiden sonra biriken kayitlarin ozet satiri. */
+export function tasanMesaji(akisAdi: string, tasan: number): string {
+  return `… ${akisAdi}: ${tasan} kayıt daha var, tek tek gönderilmedi.`;
+}
+
+export type KasaOzeti = {
+  gun: string;
+  yatirim: number | null;
+  cekim: number | null;
+  ggr: number | null;
+  kar: number | null;
+  yeniKayit: number | null;
+  yatirimOyuncu: number | null;
+  cekimOyuncu: number | null;
+  oyuncuBakiyesi: number | null;
+};
+
+/**
+ * Kasa ozeti.
+ *
+ * Olculemeyen alan "—" yazilir, sifir DEGIL. Panoda bu ayrimi kurmak
+ * icin ayri bir PR gerekti; ayni yalani Telegram'da tekrarlamiyoruz.
+ */
+export function kasaMesaji(ozet: KasaOzeti): string {
+  const y = ozet.yatirim;
+  const c = ozet.cekim;
+  const net = y === null && c === null ? null : (y ?? 0) - (c ?? 0);
+  const sayi = (v: number | null) => (v === null ? '—' : TL.format(v));
+
+  return [
+    `📊 KASA ÖZETİ · ${ozet.gun}`,
+    '',
+    `Yatırım:   ${y === null ? '—' : paraYaz(y)}${ozet.yatirimOyuncu !== null ? ` · ${ozet.yatirimOyuncu} oyuncu` : ''}`,
+    `Çekim:     ${c === null ? '—' : paraYaz(c)}${ozet.cekimOyuncu !== null ? ` · ${ozet.cekimOyuncu} oyuncu` : ''}`,
+    `Net:       ${net === null ? '—' : paraYaz(net)}`,
+    '',
+    `GGR:       ${ozet.ggr === null ? '—' : paraYaz(ozet.ggr)}`,
+    `Kâr:       ${ozet.kar === null ? '—' : paraYaz(ozet.kar)}`,
+    '',
+    `Yeni kayıt: ${sayi(ozet.yeniKayit)}`,
+    `Oyuncu bakiyesi: ${ozet.oyuncuBakiyesi === null ? '—' : paraYaz(ozet.oyuncuBakiyesi)}`,
+  ].join('\n');
+}
+
+/** Ozet gonderme zamani geldi mi? */
+export function ozetZamaniMi(sonOzet: string | null, aralikMs: number, simdi = Date.now()): boolean {
+  if (aralikMs <= 0) return false;
+  if (!sonOzet) return true;
+  const t = Date.parse(sonOzet);
+  if (!Number.isFinite(t)) return true;
+  return simdi - t >= aralikMs;
+}

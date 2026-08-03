@@ -34,6 +34,7 @@ import {
   Handshake,
   Activity,
   LineChart,
+  Layers,
   ShieldAlert,
   SlidersHorizontal,
   ClipboardList,
@@ -70,6 +71,7 @@ const PlayerProfile = lazy(() => import('./components/PlayerProfile').then(m => 
 const TransactionsList = lazy(() => import('./components/TransactionsList').then(m => ({ default: m.TransactionsList })));
 const AutoWithdrawPanel = lazy(() => import('./components/admin/AutoWithdrawPanel').then(m => ({ default: m.AutoWithdrawPanel })));
 const RiskAnalysisPage = lazy(() => import('./components/RiskAnalysisPage').then(m => ({ default: m.RiskAnalysisPage })));
+const OyuncuKategorileme = lazy(() => import('./components/OyuncuKategorileme').then(m => ({ default: m.OyuncuKategorileme })));
 const LiveRadar = lazy(() => import('./components/LiveRadar').then(m => ({ default: m.LiveRadar })));
 const RegistrationStats = lazy(() => import('./components/RegistrationStats').then(m => ({ default: m.RegistrationStats })));
 const ProviderReport = lazy(() => import('./components/ProviderReport').then(m => ({ default: m.ProviderReport })));
@@ -109,7 +111,7 @@ const MasterPanel = lazy(() => import('./components/master/MasterPanel').then(m 
 const LynonApiDocs = lazy(() => import('./components/LynonApiDocs').then(m => ({ default: m.LynonApiDocs })));
 const ApiTrafik = lazy(() => import('./components/ApiTrafik').then(m => ({ default: m.ApiTrafik })));
 
-type TabId = 'dashboard' | 'bonuses' | 'players' | 'withdrawals' | 'deposits' | 'profile' | 'transactions' | 'autoWithdraw' | 'riskAnalizi' | 'liveRadar' | 'registrationStats' | 'providerReport' | 'bonusReport' | 'audit' | 'rules' | 'games' | 'forms' | 'master' | 'tournament' | 'iframeGen' | 'loyaltySettings' | 'userSystem' | 'wheelManager' | 'scratchManager' | 'predictionLeague' | 'millionaireShowcase' | 'lobbyDesign' | 'dailyTasks' | 'vipSettings' | 'affiliate' | 'lynonDocs' | 'apiTrafik';
+type TabId = 'dashboard' | 'bonuses' | 'players' | 'withdrawals' | 'deposits' | 'profile' | 'transactions' | 'autoWithdraw' | 'riskAnalizi' | 'oyuncuKategorileme' | 'liveRadar' | 'registrationStats' | 'providerReport' | 'bonusReport' | 'audit' | 'rules' | 'games' | 'forms' | 'master' | 'tournament' | 'iframeGen' | 'loyaltySettings' | 'userSystem' | 'wheelManager' | 'scratchManager' | 'predictionLeague' | 'millionaireShowcase' | 'lobbyDesign' | 'dailyTasks' | 'vipSettings' | 'affiliate' | 'lynonDocs' | 'apiTrafik';
 
 function pathToTab(pathname: string): TabId {
   if (pathname === '/bonuslar') return 'bonuses';
@@ -121,6 +123,7 @@ function pathToTab(pathname: string): TabId {
   if (pathname === '/islemler') return 'transactions';
   if (pathname === '/admin/auto-withdraw') return 'autoWithdraw';
   if (pathname === '/risk-analizi') return 'riskAnalizi';
+  if (pathname === '/oyuncu-kategorileme') return 'oyuncuKategorileme';
   if (pathname === '/canli-radar') return 'liveRadar';
   if (pathname === '/kayit-istatistikleri') return 'registrationStats';
   if (pathname === '/saglayici-raporu') return 'providerReport';
@@ -182,6 +185,7 @@ const TAB_META: Record<TabId, { eyebrow: string; title: string }> = {
   transactions: { eyebrow: 'Operasyon', title: 'İşlemler' },
   autoWithdraw: { eyebrow: 'Otomasyon', title: 'Otomatik çekim' },
   riskAnalizi: { eyebrow: 'İstihbarat', title: 'Risk analizi' },
+  oyuncuKategorileme: { eyebrow: 'İstihbarat', title: 'Otomatik kategorileme' },
   liveRadar: { eyebrow: 'İstihbarat', title: 'Canlı radar' },
   registrationStats: { eyebrow: 'CRM', title: 'Kayıt istatistikleri' },
   providerReport: { eyebrow: 'Raporlar', title: 'Sağlayıcı performansı' },
@@ -216,6 +220,7 @@ const TAB_DESCRIPTIONS: Record<TabId, string> = {
   transactions: 'Tüm finansal hareketlerde gelişmiş filtrelerle detaylı inceleme yapın.',
   autoWithdraw: 'Otomatik çekim kurallarını ve operasyon kuyruğunu merkezi olarak yönetin.',
   riskAnalizi: 'Şüpheli davranışları ve finansal anomalileri öncelik sırasına göre inceleyin.',
+  oyuncuKategorileme: 'Seviye eşikleri Lynon kategori açıklamalarından okunur; risk ve durgunluk kararı bekletebilir.',
   liveRadar: 'Canlı oyuncu ve işlem sinyallerini anlık olarak takip edin.',
   registrationStats: 'Yeni kayıtların kaynak, zaman ve dönüşüm performansını karşılaştırın.',
   providerReport: 'Sağlayıcı cirolarını, RTP değerlerini ve tahmini maliyetleri analiz edin.',
@@ -302,6 +307,7 @@ const NAV_GROUPS: Array<{ label: string; items: SidebarItem[] }> = [
     items: [
       { id: 'players', label: 'Oyuncu listesi', path: '/oyuncular', icon: Users },
       { id: 'riskAnalizi', label: 'Risk analizi', path: '/risk-analizi', icon: ShieldAlert },
+      { id: 'oyuncuKategorileme', label: 'Otomatik kategori', path: '/oyuncu-kategorileme', icon: Layers },
       { id: 'userSystem', label: 'Kullanıcı sistemi', path: '/admin/kullanici-sistemi', icon: UserCog },
       { id: 'affiliate', label: 'Affiliate merkezi', path: '/affiliate', icon: Handshake },
     ],
@@ -375,6 +381,7 @@ const TAB_PERMISSION: Partial<Record<TabId, string>> = {
   bonusReport: 'reports',
   audit: 'reports',
   riskAnalizi: 'reports',
+  oyuncuKategorileme: 'reports',
   liveRadar: 'reports',
   iframeGen: 'system',
   userSystem: 'system',
@@ -1041,6 +1048,7 @@ export default function App() {
                   {activeTab === 'transactions' && <motion.div key="transactions"><TransactionsList dateRange={dateRange} /></motion.div>}
                   {activeTab === 'autoWithdraw' && <motion.div key="autoWithdraw" className="mt-4 min-h-0 flex-1"><AutoWithdrawPanel /></motion.div>}
                   {activeTab === 'riskAnalizi' && <motion.div key="riskAnalizi" className="mt-4 min-h-0 flex-1"><RiskAnalysisPage /></motion.div>}
+                  {activeTab === 'oyuncuKategorileme' && <motion.div key="oyuncuKategorileme" className="mt-4 min-h-0 flex-1"><OyuncuKategorileme /></motion.div>}
                   {activeTab === 'liveRadar' && <motion.div key="liveRadar" className="mt-4 min-h-0 flex-1"><LiveRadar /></motion.div>}
                   {activeTab === 'affiliate' && <motion.div key="affiliate" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}><AffiliatePanel /></motion.div>}
                   {activeTab === 'registrationStats' && <motion.div key="registrationStats"><RegistrationStats dateRange={dateRange} /></motion.div>}

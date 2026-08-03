@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { clearLynonSession, ensureLynonSession, getLynonAuthStatus, lynonRequest } from '../lib/lynonAuth.js';
+import { audit } from '../lib/auditLog.js';
 import {
   lynonActiveWheels,
   lynonBackofficeSettings,
@@ -13,6 +14,8 @@ import {
   lynonDictionaries,
   lynonErrorResponse,
   lynonGridLayout,
+  lynonKategoriOnerileri,
+  lynonKategoriUygula,
   lynonKycDocuments,
   lynonMe,
   lynonPaymentTransactions,
@@ -22,7 +25,9 @@ import {
   lynonPlayerCategories,
   lynonPlayerDetail,
   lynonPlayerKpi,
+  lynonPlayerRestrictions,
   lynonPlayers,
+  lynonSetPlayerRestriction,
   lynonPromoCodes,
   lynonReportByName,
   lynonReportCatalog,
@@ -288,6 +293,115 @@ export async function lynonRoutes(app: FastifyInstance) {
           userId: request.query.userId,
         }),
       });
+    } catch (err) {
+      return sendError(reply, err);
+    }
+  });
+
+  // ─── Otomatik oyuncu kategorileme ──────────────────────────────────────
+
+  /**
+   * Kategori önerileri.
+   *
+   * Eşikler kod içine gömülmez; sitenin kendi kategori açıklamalarından
+   * ("[500.000 TL ve üzeri]") okunur. Öneriler risk ve aktiviteyle
+   * birlikte döner; kritik riskli oyuncular `bekletme` ile işaretlenir.
+   */
+  app.post<{ Body?: { MaxRows?: number; enrichLimit?: number } }>(
+    '/lynon/oyuncu-kategorileme',
+    async (request, reply) => {
+      try {
+        return reply.send(await lynonKategoriOnerileri(request.body ?? {}));
+      } catch (err) {
+        return sendError(reply, err);
+      }
+    },
+  );
+
+  /**
+   * Öneriyi uygula.
+   *
+   * `bekletme` sebebi olan öneri buradan da geçebilir — ama bunu bir
+   * OPERATÖR yapar ve denetime düşer. Otomatik iş akışı bekletilenlere
+   * dokunmaz.
+   */
+  app.post<{ Body: { playerId?: number; kategoriId?: number } }>(
+    '/lynon/oyuncu-kategorileme/uygula',
+    async (request, reply) => {
+      const playerId = Number(request.body?.playerId);
+      const kategoriId = Number(request.body?.kategoriId);
+      if (!Number.isFinite(playerId) || !Number.isFinite(kategoriId)) {
+        return reply.status(400).send({ HasError: true, AlertMessage: 'playerId ve kategoriId gerekli.' });
+      }
+      const kullanici = (request.session as any)?.user;
+      try {
+        const sonuc = await lynonKategoriUygula(playerId, kategoriId);
+        audit(kullanici?.username ?? 'bilinmeyen', kullanici?.role ?? '-', 'manual_adjustment',
+          `player:${playerId}`, `Oyuncu kategorisi ${kategoriId} olarak güncellendi.`);
+        return reply.send(sonuc);
+      } catch (err) {
+        return sendError(reply, err);
+      }
+    },
+  );
+
+  // ─── Bahis/çekim kısıtları ─────────────────────────────────────────────
+
+  app.get<{ Params: { userId: string } }>('/lynon/oyuncu-kisitlari/:userId', async (request, reply) => {
+    try {
+      return reply.send({ HasError: false, Data: await lynonPlayerRestrictions(request.params.userId) });
+    } catch (err) {
+      return sendError(reply, err);
+    }
+  });
+
+  /**
+   * Kısıt aç/kapat.
+   *
+   * Yalnızca `casinoBet` ve `sportsBet`; çekim ve yatırım bu yoldan
+   * kapatılamaz (bkz. `hedefBakiyeKilidi.IZINLI_KISITLAR`).
+   */
+  app.post<{ Params: { userId: string }; Body: { restriction?: string; isRestricted?: boolean; note?: string } }>(
+    '/lynon/oyuncu-kisitlari/:userId',
+    async (request, reply) => {
+      const { restriction, isRestricted, note } = request.body ?? {};
+      if (!restriction || typeof isRestricted !== 'boolean') {
+        return reply.status(400).send({ HasError: true, AlertMessage: 'restriction ve isRestricted gerekli.' });
+      }
+      const kullanici = (request.session as any)?.user;
+      try {
+        const sonuc = await lynonSetPlayerRestriction({
+          userId: request.params.userId,
+          restriction,
+          isRestricted,
+          note: String(note ?? '').slice(0, 50) || 'Panel',
+        });
+        audit(kullanici?.username ?? 'bilinmeyen', kullanici?.role ?? '-', 'manual_adjustment',
+          `player:${request.params.userId}`,
+          `${restriction} kısıtı ${isRestricted ? 'açıldı' : 'kaldırıldı'}.`);
+        return reply.send({ HasError: false, Data: sonuc });
+      } catch (err) {
+        return sendError(reply, err);
+      }
+    },
+  );
+
+  /** Hedef bakiye taramasını elle çalıştır. */
+  app.post('/lynon/hedef-bakiye/tara', async (_request, reply) => {
+    try {
+      const { runHedefBakiyeJob } = await import('../jobs/hedefBakiyeJob.js');
+      return reply.send({ HasError: false, Data: await runHedefBakiyeJob() });
+    } catch (err) {
+      return sendError(reply, err);
+    }
+  });
+
+  /** Kasa özetini şimdi Telegram'a gönder. */
+  app.post('/lynon/telegram-rapor/ozet', async (_request, reply) => {
+    try {
+      const { telegramKasaOzetiGonder } = await import('../jobs/telegramRaporJob.js');
+      await telegramKasaOzetiGonder();
+      return reply.send({ HasError: false, AlertMessage: 'Kasa özeti gönderildi.' });
     } catch (err) {
       return sendError(reply, err);
     }

@@ -193,12 +193,31 @@ export function SummaryCards({ data, isLoading, error, onRetry }: SummaryCardsPr
         </PanoKart>
       ))}
 
-      {(d.PlayersBalance != null || (d.taninmayanAlanlar?.length ?? 0) > 0) && (
+      {(d.PlayersBalance != null || d.Aralik || (d.taninmayanAlanlar?.length ?? 0) > 0) && (
         <PanoKart className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
           <p className="text-[11px] text-[color:var(--panel-muted,#8a919c)]">
             Oyuncu gerçek bakiyesi{' '}
             <span className="font-semibold tabular-nums text-white">{sayiYaz(d.PlayersBalance, 'para')}</span>
           </p>
+          {/*
+            * SORULAN PENCERE.
+            *
+            * "Pano yanlış gösteriyor" şikâyetinin bir kısmı rakam değil
+            * TARİH hatasıydı: pano dünü soruyor, operatör bugünü
+            * bekliyordu. Sorulan aralığı yazmak bunu tartışılır olmaktan
+            * çıkarır.
+            */}
+          {d.Aralik && (
+            <p className="text-[11px] text-[color:var(--panel-muted,#8a919c)]">
+              Sorulan aralık{' '}
+              <span className="font-semibold tabular-nums text-white">
+                {d.Aralik.startDate === d.Aralik.endDate
+                  ? d.Aralik.startDate
+                  : `${d.Aralik.startDate} → ${d.Aralik.endDate}`}
+              </span>{' '}
+              <span className="opacity-60">(Türkiye saati)</span>
+            </p>
+          )}
           {(d.taninmayanAlanlar?.length ?? 0) > 0 && (
             <p className="text-[11px] text-amber-400/90">
               Lynon {d.taninmayanAlanlar!.length} yeni ölçü döndürdü: {d.taninmayanAlanlar!.join(', ')}
