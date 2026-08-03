@@ -515,6 +515,16 @@ export const dashboardApi = {
   kategoriUygula: (playerId: number, kategoriId: number) =>
     post<any>('/lynon/oyuncu-kategorileme/uygula', { playerId, kategoriId }),
 
+  /**
+   * Manuel bakiye düzeltmeleri: POST /lynon/manuel-duzeltmeler
+   *
+   * Panelin denetim kaydı yalnızca panelden yapılanları görüyor; bu uç
+   * Lynon arayüzünden elle yapılan hareketleri de, yapan yöneticiyle
+   * birlikte getiriyor.
+   */
+  manuelDuzeltmeler: (dateRange: DateRange) =>
+    post<any>('/lynon/manuel-duzeltmeler', { startDate: dateRange.startDate, endDate: dateRange.endDate }),
+
   /** Davranış kategorilerini oluştur (High Risk, Bonus Avcısı, VIP Üye, Aktif Üye). */
   davranisKategorileriniOlustur: () =>
     post<any>('/lynon/oyuncu-kategorileme/kategorileri-olustur', {}),

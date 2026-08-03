@@ -18,6 +18,7 @@ import {
   lynonKategoriOnerileri,
   lynonKategoriUygula,
   lynonKycDocuments,
+  lynonManuelDuzeltmeler,
   lynonMe,
   lynonPaymentTransactions,
   lynonPaymentCounts,
@@ -298,6 +299,25 @@ export async function lynonRoutes(app: FastifyInstance) {
       return sendError(reply, err);
     }
   });
+
+  /**
+   * Manuel bakiye düzeltmeleri raporu.
+   *
+   * Panelin kendi denetim kaydı yalnızca PANELDEN yapılan işlemleri
+   * görüyor. Lynon arayüzünden elle yapılan bakiye eklemeleri oraya hiç
+   * düşmüyordu — kasadan para çıkaran ikinci bir yol vardı ve panelde
+   * görünmüyordu. Bu uç `userName` alanıyla o boşluğu kapatıyor.
+   */
+  app.post<{ Body?: { startDate?: string; endDate?: string } }>(
+    '/lynon/manuel-duzeltmeler',
+    async (request, reply) => {
+      try {
+        return reply.send(await lynonManuelDuzeltmeler(request.body ?? {}));
+      } catch (err) {
+        return sendError(reply, err);
+      }
+    },
+  );
 
   // ─── Otomatik oyuncu kategorileme ──────────────────────────────────────
 
