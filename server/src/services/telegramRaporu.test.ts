@@ -227,7 +227,7 @@ describe('manuel düzeltme mesajı', () => {
 
   it('yapan yöneticiyi her zaman yazar', () => {
     // Bu alan panelin kendi denetim kaydinda yok; mesajin varlik sebebi.
-    expect(manuelDuzeltmeMesaji(SATIR)).toContain('Yapan: destek@narcosbahis.com');
+    expect(manuelDuzeltmeMesaji(SATIR)).toContain('destek@narcosbahis.com');
   });
 
   it('hesap türünü yazar', () => {

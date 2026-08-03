@@ -67,6 +67,8 @@ export function AIPlayerInsight({ data, ipData, bonuslar }: AIPlayerInsightProps
         // Bonus geçmişi gelmediyse null: "bilinmiyor" ile "hiç almamış" ayrı şeyler.
         bonusAdedi: Array.isArray(bonuslar) ? bonuslar.length : null,
         ayniIpHesapSayisi: Array.isArray(ipData?.Data?.Objects) ? ipData.Data.Objects.length : null,
+        // Uc durumlu: alan gelmediyse null kalir, "dogrulanmamis" denmez.
+        telefonDogrulandi: typeof data.IsPhoneVerified === 'boolean' ? data.IsPhoneVerified : null,
     };
 
     const etiketler = oyuncuEtiketleri(olculer);

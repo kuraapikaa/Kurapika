@@ -166,3 +166,25 @@ describe('kayıt tarihi', () => {
     expect(kimlikler(eski, simdi)).not.toContain('yeni-oyuncu');
   });
 });
+
+describe('telefon doğrulaması', () => {
+  it('doğrulanmamış telefon etiketi üretir', () => {
+    expect(kimlikler(olcu({ telefonDogrulandi: false }))).toContain('telefon-dogrulanmamis');
+  });
+
+  it('doğrulanmış telefon etiket üretmez', () => {
+    expect(kimlikler(olcu({ telefonDogrulandi: true }))).not.toContain('telefon-dogrulanmamis');
+  });
+
+  it('ölçülemediyse etiket üretmez', () => {
+    // `=== true` ile daraltmak, alani gelmeyen oyuncuyu "dogrulanmamis"
+    // gosterip yanlis etiket uretirdi.
+    expect(kimlikler(olcu({ telefonDogrulandi: null }))).not.toContain('telefon-dogrulanmamis');
+    expect(kimlikler(BOS)).not.toContain('telefon-dogrulanmamis');
+  });
+
+  it('kendi ailesinde; değer bandıyla yarışmaz', () => {
+    const etiketler = oyuncuEtiketleri(olcu({ telefonDogrulandi: false, yatirimTutari: 500_000 }));
+    expect(etiketler.map((e) => e.id)).toEqual(expect.arrayContaining(['vip', 'telefon-dogrulanmamis']));
+  });
+});
