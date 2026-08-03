@@ -138,6 +138,24 @@ export type CekimBaglami = {
   bonusOlculdu: boolean;
   notlar: OyuncuNotu[];
   otomatikRed: OtomatikRedKarari;
+  // ── Hesap bilgisi
+  kayitTarihi: string | null;
+  telefonDogrulandi: boolean | null;
+  epostaDogrulandi: boolean | null;
+  kimlikDogrulandi: boolean | null;
+  kategori: string | null;
+  // ── Oyun kirilimi (oyuncu pano ucundan)
+  yatirimAdedi: number | null;
+  cekimAdedi: number | null;
+  bonusBakiye: number | null;
+  casinoBahis: number | null;
+  casinoGgr: number | null;
+  sporBahis: number | null;
+  sporGgr: number | null;
+  /** Freespin + bonus kazanci + odeme + cashback. */
+  bonusKaynakliKazanc: number | null;
+  /** Hic yatirim yapmadan bakiye biriktirmis mi? */
+  yatirimsizBakiye: boolean;
 };
 
 function paraYaz(deger: number | null, kur = 'TRY'): string {
@@ -154,64 +172,120 @@ function saatYaz(iso: unknown): string {
   }).format(new Date(t));
 }
 
+/** Gun sayisi — "3 gün önce" gibi okunabilir yas bilgisi. */
+function gunFarki(iso: string | null, simdi: number): number | null {
+  const t = Date.parse(String(iso ?? ''));
+  if (!Number.isFinite(t)) return null;
+  return Math.floor((simdi - t) / 86_400_000);
+}
+
+function yasYaz(iso: string | null, simdi: number): string {
+  const gun = gunFarki(iso, simdi);
+  if (gun === null) return saatYaz(iso);
+  if (gun === 0) return `${saatYaz(iso)} (bugün)`;
+  if (gun === 1) return `${saatYaz(iso)} (dün)`;
+  return `${saatYaz(iso)} (${gun} gün önce)`;
+}
+
+/** Üç durumlu onay işareti: evet / hayır / ölçülemedi. */
+function onayYaz(deger: boolean | null): string {
+  if (deger === null) return '❔ bilinmiyor';
+  return deger ? '✅' : '❌';
+}
+
 /**
  * Zenginlestirilmis cekim bildirimi.
  *
- * Operatorun karar icin bakacagi her sey tek mesajda: kim, ne kadar,
- * kasaya karsi durumu, son yatirimi, o yatirimdan sonra aldigi
- * bonuslar, son cekimi, profil notlari ve gunluk talep sayisi.
+ * Operatorun karar icin bakacagi her sey tek mesajda, BOLUMLENMIS ve
+ * emojili: once uyarilar, sonra hesap, para, oyun, bonus ve notlar.
+ * Sirasi bilincli — riskli bir sey varsa ilk ekranda gorunmeli, telefon
+ * icin asagi kaydirmak gerekmemeli.
  *
- * Olculemeyen alan "—" yazilir, sifir DEGIL.
+ * Olculemeyen alan "—" ya da "bilinmiyor" yazilir; sifir DEGIL. Bir
+ * cekim kararinda "0 TL yatirim" ile "yatirim okunamadi" tamamen farkli
+ * iki durum.
  */
-export function cekimBaglamMesaji(baslik: string, b: CekimBaglami): string {
+export function cekimBaglamMesaji(baslik: string, b: CekimBaglami, simdi = Date.now()): string {
   const kazanc = b.netKarZarar === null ? null : -b.netKarZarar;
-  const satirlar: Array<string | null> = [
+  const satirlar: string[] = [
     baslik,
-    `${b.login || '(ad yok)'} (${b.playerId})`,
-    `Tutar: ${paraYaz(b.tutar, b.paraBirimi)}`,
-    '',
+    '━━━━━━━━━━━━━━━━━━',
+    `👤 ${b.login || '(ad yok)'} · ${b.playerId}`,
+    `💸 ${paraYaz(b.tutar, b.paraBirimi)}`,
   ];
 
-  if (riskNotuVarMi(b.notlar)) satirlar.push('🚨 PROFİLDE RİSK NOTU VAR');
-  if (vipNotuVarMi(b.notlar)) satirlar.push('⭐ VIP');
-  if (b.otomatikRed.reddet) satirlar.push(`⛔ ${b.otomatikRed.neden}`);
-  if (riskNotuVarMi(b.notlar) || vipNotuVarMi(b.notlar) || b.otomatikRed.reddet) satirlar.push('');
+  // ── Uyarilar en uste; riskli bir sey varsa kaydirmadan gorunmeli.
+  const uyarilar: string[] = [];
+  if (b.otomatikRed.reddet) uyarilar.push(`⛔ ${b.otomatikRed.neden}`);
+  if (riskNotuVarMi(b.notlar)) uyarilar.push('🚨 Profilde RİSK notu var');
+  if (b.yatirimsizBakiye) uyarilar.push('🎁 Hiç yatırım yok — bakiye bonustan');
+  if (b.telefonDogrulandi === false) uyarilar.push('📵 Telefon doğrulanmamış');
+  if (vipNotuVarMi(b.notlar)) uyarilar.push('⭐ VIP oyuncu');
+  if (uyarilar.length > 0) satirlar.push('', ...uyarilar);
 
+  // ── Hesap
   satirlar.push(
-    `Bakiye: ${paraYaz(b.bakiye)}`,
-    `Toplam yatırım: ${paraYaz(b.toplamYatirim)}`,
-    `Toplam çekim: ${paraYaz(b.toplamCekim)}`,
-    kazanc === null ? 'Kasaya karşı: —' : `Kasaya karşı: oyuncu ${kazanc >= 0 ? 'önde' : 'geride'} ${paraYaz(Math.abs(kazanc))}`,
     '',
-    `Son yatırım: ${paraYaz(b.sonYatirimTutari)} · ${saatYaz(b.sonYatirimZamani)}`,
-    `Son çekim: ${saatYaz(b.sonCekimZamani)}`,
-    `Bugünkü talep: ${b.gunlukCekim}`,
+    '🪪 HESAP',
+    `  Kayıt:    ${b.kayitTarihi ? yasYaz(b.kayitTarihi, simdi) : '—'}`,
+    `  Telefon:  ${onayYaz(b.telefonDogrulandi)}   E-posta: ${onayYaz(b.epostaDogrulandi)}   Kimlik: ${onayYaz(b.kimlikDogrulandi)}`,
+    `  Kategori: ${b.kategori || '—'}`,
   );
 
-  // "Bonus yok" ile "bonus olculemedi" ayri seyler.
+  // ── Para
+  satirlar.push(
+    '',
+    '💰 PARA',
+    `  Bakiye:   ${paraYaz(b.bakiye)}${b.bonusBakiye ? ` (+${paraYaz(b.bonusBakiye)} bonus)` : ''}`,
+    `  Yatırım:  ${paraYaz(b.toplamYatirim)}${b.yatirimAdedi !== null ? ` · ${b.yatirimAdedi} işlem` : ''}`,
+    `  Çekim:    ${paraYaz(b.toplamCekim)}${b.cekimAdedi !== null ? ` · ${b.cekimAdedi} işlem` : ''}`,
+    kazanc === null
+      ? '  Kasaya karşı: —'
+      : `  Kasaya karşı: oyuncu ${kazanc >= 0 ? '🔴 önde' : '🟢 geride'} ${paraYaz(Math.abs(kazanc))}`,
+    `  Son yatırım: ${b.sonYatirimZamani ? `${paraYaz(b.sonYatirimTutari)} · ${yasYaz(b.sonYatirimZamani, simdi)}` : '— (hiç yatırım yok)'}`,
+    `  Son çekim:   ${b.sonCekimZamani ? yasYaz(b.sonCekimZamani, simdi) : '— (ilk çekim)'}`,
+    `  Bugünkü talep: ${b.gunlukCekim}`,
+  );
+
+  // ── Oyun kirilimi; casino ile spor ayri, cunku risk deseni farkli.
+  if (b.casinoBahis !== null || b.sporBahis !== null) {
+    satirlar.push(
+      '',
+      '🎰 OYUN',
+      `  Casino: ${paraYaz(b.casinoBahis)} bahis · GGR ${paraYaz(b.casinoGgr)}`,
+      `  Spor:   ${paraYaz(b.sporBahis)} bahis · GGR ${paraYaz(b.sporGgr)}`,
+    );
+  }
+
+  // ── Bonus. "Yok" ile "olculemedi" ayri seyler.
+  satirlar.push('', '🎁 BONUS');
+  if (b.bonusKaynakliKazanc !== null) {
+    satirlar.push(`  Bonustan kazanç: ${paraYaz(b.bonusKaynakliKazanc)}`);
+  }
   if (!b.bonusOlculdu) {
-    satirlar.push('', 'Son yatırım sonrası bonus: ölçülemedi');
+    satirlar.push('  Son yatırım sonrası: ölçülemedi');
   } else if (b.sonYatirimBonuslari.length === 0) {
-    satirlar.push('', 'Son yatırım sonrası bonus: yok');
+    satirlar.push('  Son yatırım sonrası: bonus yok');
   } else {
-    satirlar.push('', `Son yatırım sonrası ${b.sonYatirimBonuslari.length} bonus:`);
+    satirlar.push(`  Son yatırım sonrası ${b.sonYatirimBonuslari.length} bonus:`);
     for (const bonus of b.sonYatirimBonuslari.slice(0, 6)) {
-      satirlar.push(`  • ${bonus.ad}${bonus.tutar ? ` (${paraYaz(bonus.tutar)})` : ''}`);
+      satirlar.push(`    • ${bonus.ad}${bonus.tutar ? ` (${paraYaz(bonus.tutar)})` : ''}`);
     }
     if (b.sonYatirimBonuslari.length > 6) {
-      satirlar.push(`  • … ${b.sonYatirimBonuslari.length - 6} bonus daha`);
+      satirlar.push(`    • … ${b.sonYatirimBonuslari.length - 6} bonus daha`);
     }
   }
 
+  // ── Notlar
+  satirlar.push('', '📝 NOTLAR');
   if (b.notlar.length > 0) {
-    satirlar.push('', 'Profil notları:');
     for (const not of b.notlar.slice(0, 5)) {
       satirlar.push(`  • [${String(not.noteType ?? '—')}] ${String(not.text ?? '')} — ${String(not.noteCreatedUserEmail ?? '')}`);
     }
     if (b.notlar.length > 5) satirlar.push(`  • … ${b.notlar.length - 5} not daha`);
   } else {
-    satirlar.push('', 'Profil notu yok.');
+    satirlar.push('  Profil notu yok.');
   }
 
-  return satirlar.filter((s) => s !== null).join('\n');
+  return satirlar.join('\n');
 }

@@ -33,7 +33,7 @@
 export type EtiketTonu = 'bilgi' | 'olumlu' | 'notr' | 'uyari' | 'tehlike';
 
 /** Aynı aileden en fazla bir etiket gösterilir. */
-export type EtiketAilesi = 'yasam' | 'deger' | 'risk' | 'desen' | 'kasa' | 'cekim' | 'bonus';
+export type EtiketAilesi = 'yasam' | 'deger' | 'risk' | 'desen' | 'kasa' | 'cekim' | 'bonus' | 'dogrulama';
 
 export type Etiket = {
   id: string;
@@ -65,6 +65,12 @@ export type OyuncuOlculeri = {
   bonusAdedi: number | null;
   /** Aynı IP'de görülen hesap sayısı — oyuncunun kendisi dahil. */
   ayniIpHesapSayisi: number | null;
+  /**
+   * Telefon doğrulaması. ÜÇ DURUMLU: `null` "ölçülemedi" demek.
+   * `=== true` ile daraltmak, alanı gelmeyen oyuncuyu "doğrulanmamış"
+   * gösterip yanlış etiket üretirdi.
+   */
+  telefonDogrulandi?: boolean | null;
 };
 
 /** Eşikler tek yerde; pazarlama değiştiğinde kod aranmaz. */
@@ -214,6 +220,21 @@ export function oyuncuEtiketleri(o: OyuncuOlculeri, simdi: number = Date.now()):
     aday.push({
       id: 'cekim-yatirimi-asti', etiket: 'Çekim > yatırım', aile: 'cekim', ton: 'uyari', agirlik: 45,
       aciklama: `Çekim ${Math.round(cekim).toLocaleString('tr-TR')} ₺, yatırım ${Math.round(yatirim).toLocaleString('tr-TR')} ₺.`,
+    });
+  }
+
+  /**
+   * Telefon doğrulanmamış.
+   *
+   * Çekim ve bonus kararlarında doğrudan işe yarayan bir sinyal; ayrı
+   * bir aile çünkü değer bandıyla ya da riskle yarışmamalı. Ölçülemedi
+   * ise etiket ÜRETİLMEZ.
+   */
+  if (o.telefonDogrulandi === false) {
+    aday.push({
+      id: 'telefon-dogrulanmamis', etiket: 'Telefon doğrulanmamış', aile: 'dogrulama',
+      ton: 'uyari', agirlik: 55,
+      aciklama: 'Profilde telefon numarası onaylanmamış.',
     });
   }
 

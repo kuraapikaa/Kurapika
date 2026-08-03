@@ -139,18 +139,28 @@ export function oyuncuYaz(login: unknown, clientId: unknown): string {
 
 type AnyRecord = Record<string, any>;
 
+/** Mesaj basliklarini ayiran ince cizgi; sohbette blok blok okunsun. */
+export const AYIRAC = '━━━━━━━━━━━━━━━━━━';
+
 export function yatirimMesaji(satir: AnyRecord): string {
+  const kisi = recordOf(satir.personalData);
   return [
     '💰 YATIRIM',
-    oyuncuYaz(satir.ClientLogin, satir.ClientId),
-    paraYaz(satir.Amount, satir.CurrencyId ?? satir.currency ?? 'TRY'),
+    AYIRAC,
+    `👤 ${oyuncuYaz(satir.ClientLogin ?? kisi.userName, satir.ClientId ?? satir.userId)}`,
+    `💵 ${paraYaz(satir.Amount ?? satir.amount, satir.CurrencyId ?? satir.currency ?? 'TRY')}`,
     // Uc `method` ("Havale") ve `integration` ("HemenOde") olarak ayri
     // doner; ikisi de operatore lazim.
     satir.PaymentSystemName || satir.method
-      ? `Yöntem: ${[satir.method ?? satir.PaymentSystemName, satir.integration].filter(Boolean).join(' · ')}`
+      ? `🏦 ${[satir.method ?? satir.PaymentSystemName, satir.integration].filter(Boolean).join(' · ')}`
       : null,
-    saatYaz(satir.CreatedLocal ?? satir.createdAt),
+    kisi.category?.name ? `🏷️ ${kisi.category.name}` : null,
+    `🕒 ${saatYaz(satir.CreatedLocal ?? satir.createdAt)}`,
   ].filter(Boolean).join('\n');
+}
+
+function recordOf(deger: unknown): AnyRecord {
+  return deger && typeof deger === 'object' ? (deger as AnyRecord) : {};
 }
 
 /**
@@ -205,12 +215,15 @@ export function cekimMesaji(satir: AnyRecord): string {
   const durum = islemDurumu(satir);
   return [
     CEKIM_BASLIGI[durum],
-    oyuncuYaz(satir.ClientLogin, satir.ClientId),
-    paraYaz(satir.Amount, satir.CurrencyId ?? satir.currency ?? 'TRY'),
-    satir.PaymentSystemName ? `Yöntem: ${satir.PaymentSystemName}` : null,
+    AYIRAC,
+    `👤 ${oyuncuYaz(satir.ClientLogin, satir.ClientId)}`,
+    `💸 ${paraYaz(satir.Amount, satir.CurrencyId ?? satir.currency ?? 'TRY')}`,
+    satir.PaymentSystemName || satir.method
+      ? `🏦 ${[satir.method ?? satir.PaymentSystemName, satir.integration].filter(Boolean).join(' · ')}`
+      : null,
     // Durum taninmadiysa ham degeri goster; sessizce yutma.
-    durum === 'bilinmiyor' && hamDurum(satir) ? `Durum: ${hamDurum(satir)}` : null,
-    saatYaz(satir.CreatedLocal ?? satir.createdAt),
+    durum === 'bilinmiyor' && hamDurum(satir) ? `❔ Durum: ${hamDurum(satir)}` : null,
+    `🕒 ${saatYaz(satir.CreatedLocal ?? satir.createdAt)}`,
   ].filter(Boolean).join('\n');
 }
 
@@ -259,25 +272,31 @@ const DUZELTME_YON_BASLIGI: Record<string, string> = {
  */
 export function manuelDuzeltmeMesaji(satir: AnyRecord): string {
   const yon = String(satir.Yon ?? 'bilinmiyor');
+  const isaret = yon === 'giris' ? '➕' : yon === 'cikis' ? '➖' : '❔';
   return [
     DUZELTME_YON_BASLIGI[yon] ?? DUZELTME_YON_BASLIGI.bilinmiyor,
-    oyuncuYaz(satir.ClientLogin, satir.ClientId),
-    paraYaz(satir.Tutar, satir.ParaBirimi ?? 'TRY'),
-    satir.Hesap ? `Hesap: ${satir.Hesap}` : null,
-    `Yapan: ${satir.Yapan || 'bilinmiyor'}`,
-    satir.NotAnlamli ? `Not: ${satir.Not}` : '⚠️ Gerekçe notu yok',
-    saatYaz(satir.CreatedLocal),
+    AYIRAC,
+    `👤 ${oyuncuYaz(satir.ClientLogin, satir.ClientId)}`,
+    `${isaret} ${paraYaz(satir.Tutar, satir.ParaBirimi ?? 'TRY')}`,
+    satir.Hesap ? `🏛️ ${satir.Hesap}` : null,
+    satir.Kategori ? `🏷️ ${satir.Kategori}` : null,
+    `👮 ${satir.Yapan || 'bilinmiyor'}`,
+    satir.NotAnlamli ? `📝 ${satir.Not}` : '⚠️ Gerekçe notu yok',
+    `🕒 ${saatYaz(satir.CreatedLocal)}`,
   ].filter(Boolean).join('\n');
 }
 
 export function bonusMesaji(satir: AnyRecord): string {
   return [
     '🎁 BONUS VERİLDİ',
-    oyuncuYaz(satir.ClientLogin, satir.ClientId),
-    String(satir.Name ?? 'Bonus'),
-    satir.TotalPaidAmount ? `Ödenen: ${paraYaz(satir.TotalPaidAmount, satir.ClientCurrency ?? 'TRY')}` : null,
-    satir.Description ? `Not: ${satir.Description}` : null,
-    saatYaz(satir.CreatedLocal),
+    AYIRAC,
+    `👤 ${oyuncuYaz(satir.ClientLogin, satir.ClientId)}`,
+    `🏆 ${String(satir.Name ?? 'Bonus')}`,
+    satir.TotalPaidAmount ? `💵 Ödenen: ${paraYaz(satir.TotalPaidAmount, satir.ClientCurrency ?? 'TRY')}` : null,
+    satir.Kategori ? `🏷️ ${satir.Kategori}` : null,
+    satir.Durum ? `📌 ${satir.Durum}` : null,
+    satir.Description ? `📝 ${satir.Description}` : null,
+    `🕒 ${saatYaz(satir.CreatedLocal)}`,
   ].filter(Boolean).join('\n');
 }
 
@@ -331,27 +350,30 @@ export function kasaMesaji(ozet: KasaOzeti): string {
     ? bonusKalemleri.reduce<number>((t, v) => t + (v ?? 0), 0)
     : null;
 
+  // Net yon isareti: kasaya para girdi mi cikti mi, bir bakista.
+  const netIsaret = net === null ? '' : net >= 0 ? ' 🟢' : ' 🔴';
+
   const satirlar = [
     `📊 KASA ÖZETİ · ${ozet.gun}${ozet.saat ? ` · ${ozet.saat}` : ''}`,
+    AYIRAC,
+    '💰 PARA',
+    `  ⬇️ Yatırım:  ${p(y)}${ozet.yatirimOyuncu !== null ? ` · ${ozet.yatirimOyuncu} oyuncu` : ''}${ozet.yatirimAdedi !== null ? ` · ${ozet.yatirimAdedi} işlem` : ''}`,
+    `  ⬆️ Çekim:    ${p(c)}${ozet.cekimOyuncu !== null ? ` · ${ozet.cekimOyuncu} oyuncu` : ''}`,
+    `  ⚖️ Net:      ${p(net)}${netIsaret}`,
     '',
-    'PARA',
-    `  Yatırım:  ${p(y)}${ozet.yatirimOyuncu !== null ? ` · ${ozet.yatirimOyuncu} oyuncu` : ''}${ozet.yatirimAdedi !== null ? ` · ${ozet.yatirimAdedi} işlem` : ''}`,
-    `  Çekim:    ${p(c)}${ozet.cekimOyuncu !== null ? ` · ${ozet.cekimOyuncu} oyuncu` : ''}`,
-    `  Net:      ${p(net)}`,
-    '',
-    'OYUN',
+    '🎰 OYUN',
     `  GGR:      ${p(ozet.ggr)}`,
     `  Kâr:      ${p(ozet.kar)}`,
     `  Bahis:    ${p(ozet.gercekBahis)}${ozet.bahisAdedi !== null ? ` · ${sayi(ozet.bahisAdedi)} bahis` : ''}`,
     `  Kazanç:   ${p(ozet.gercekKazanc)}`,
     '',
-    'BONUS',
+    '🎁 BONUS',
     `  Maliyet:  ${p(bonusMaliyeti)}`,
     `  Freespin: ${p(ozet.freespinKazanc)}`,
     `  Ödeme:    ${p(ozet.bonusOdeme)}`,
     `  Cashback: ${p(ozet.cashback)}`,
     '',
-    'OYUNCU',
+    '👥 OYUNCU',
     `  Yeni kayıt:     ${sayi(ozet.yeniKayit)}`,
     `  İlk yatırım:    ${sayi(ozet.ilkYatirim)}`,
     `  Bahis yapan:    ${sayi(ozet.bahisOyuncu)}`,

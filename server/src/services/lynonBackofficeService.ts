@@ -1355,6 +1355,14 @@ export async function lynonPlayerKpi(userId: string | number): Promise<AnyRecord
         Email: detail.email ?? player.Email ?? null,
         Phone: detail.phoneNumber ?? player.Phone ?? null,
         IsVerified: player.IsVerified,
+        // Dogrulama durumlari AYRI tasinir: "dogrulanmis" tek bayragi,
+        // telefonu onaylanmamis ama e-postasi onaylanmis bir oyuncuyu da
+        // dogrulanmis gosteriyordu. Cekim degerlendirmesinde telefon
+        // onayi ayri bir sinyal.
+        IsPhoneVerified: player.IsPhoneVerified,
+        IsEmailVerified: player.IsEmailVerified,
+        IsIdentityVerified: player.IsIdentityVerified,
+        VerificationStatus: player.VerificationStatus,
         IsTest: detail.isTest === true,
         BTag: detail.affiliateId ?? null,
         LastLoginIp: detail.lastLoginIp ?? null,

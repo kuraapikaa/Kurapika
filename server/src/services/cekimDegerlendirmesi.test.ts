@@ -125,6 +125,7 @@ describe('sonYatirimdanSonrakiBonuslar', () => {
 });
 
 describe('cekimBaglamMesaji', () => {
+  const SIMDI = Date.parse('2026-08-03T20:00:00Z');
   const taban: CekimBaglami = {
     playerId: 2503142, login: 'larac', tutar: 3000, paraBirimi: 'TRY',
     gunlukCekim: 1, netKarZarar: -5000, toplamYatirim: 20000, toplamCekim: 8000,
@@ -132,22 +133,28 @@ describe('cekimBaglamMesaji', () => {
     sonCekimZamani: '2026-08-02T10:00:00Z',
     sonYatirimBonuslari: [], bonusOlculdu: true, notlar: [],
     otomatikRed: { reddet: false, neden: '', gunlukSayi: 1 },
+    kayitTarihi: '2026-07-01T10:00:00Z',
+    telefonDogrulandi: true, epostaDogrulandi: true, kimlikDogrulandi: false,
+    kategori: 'Sicario (Seviye 1)',
+    yatirimAdedi: 4, cekimAdedi: 2, bonusBakiye: 0,
+    casinoBahis: 98.8, casinoGgr: 37.56, sporBahis: 0, sporGgr: 0,
+    bonusKaynakliKazanc: 47.4, yatirimsizBakiye: false,
   };
 
   it('temel alanları yazar', () => {
     const mesaj = cekimBaglamMesaji('❌ ÇEKİM REDDEDİLDİ', taban);
-    expect(mesaj).toContain('larac (2503142)');
+    expect(mesaj).toContain('larac · 2503142');
     expect(mesaj).toContain('3.000 TRY');
     expect(mesaj).toContain('Bugünkü talep: 1');
   });
 
   it('oyuncunun önde olduğunu yazar', () => {
-    expect(cekimBaglamMesaji('x', taban)).toContain('oyuncu önde');
+    expect(cekimBaglamMesaji('x', taban, SIMDI)).toContain('oyuncu 🔴 önde');
   });
 
   it('risk notunu en üste taşır', () => {
     const mesaj = cekimBaglamMesaji('x', { ...taban, notlar: [{ noteType: 'High Risk', text: 'şüpheli' }] });
-    expect(mesaj).toContain('PROFİLDE RİSK NOTU VAR');
+    expect(mesaj).toContain('Profilde RİSK notu var');
   });
 
   it('otomatik ret gerekçesini yazar', () => {
@@ -175,11 +182,65 @@ describe('cekimBaglamMesaji', () => {
     const mesaj = cekimBaglamMesaji('x', {
       ...taban, bakiye: null, toplamYatirim: null, toplamCekim: null, netKarZarar: null,
     });
-    expect(mesaj).toContain('Bakiye: —');
+    expect(mesaj).toContain('Bakiye:   —');
     expect(mesaj).toContain('Kasaya karşı: —');
   });
 
   it('not yoksa açıkça söyler', () => {
     expect(cekimBaglamMesaji('x', taban)).toContain('Profil notu yok');
+  });
+
+  it('kayıt tarihini ve yaşını yazar', () => {
+    expect(cekimBaglamMesaji('x', taban, SIMDI)).toContain('33 gün önce');
+  });
+
+  it('doğrulama durumlarını ayrı ayrı gösterir', () => {
+    const mesaj = cekimBaglamMesaji('x', taban, SIMDI);
+    expect(mesaj).toContain('Telefon:  ✅');
+    expect(mesaj).toContain('Kimlik: ❌');
+  });
+
+  it('doğrulanmamış telefonu uyarıya taşır', () => {
+    const mesaj = cekimBaglamMesaji('x', { ...taban, telefonDogrulandi: false }, SIMDI);
+    expect(mesaj).toContain('📵 Telefon doğrulanmamış');
+  });
+
+  it('doğrulama ölçülemediyse uyarı üretmez', () => {
+    // `=== true` ile daraltmak okunamayan alani "dogrulanmamis" gosterirdi.
+    const mesaj = cekimBaglamMesaji('x', { ...taban, telefonDogrulandi: null }, SIMDI);
+    expect(mesaj).not.toContain('📵');
+    expect(mesaj).toContain('bilinmiyor');
+  });
+
+  it('yatırımsız bakiyeyi en üste uyarı olarak koyar', () => {
+    // Cekim talebinde bakilmasi gereken ilk sey.
+    const mesaj = cekimBaglamMesaji('x', { ...taban, yatirimsizBakiye: true }, SIMDI);
+    expect(mesaj).toContain('Hiç yatırım yok — bakiye bonustan');
+  });
+
+  it('casino ve spor kırılımını ayrı yazar', () => {
+    const mesaj = cekimBaglamMesaji('x', taban, SIMDI);
+    expect(mesaj).toContain('Casino: 98,8 TRY');
+    expect(mesaj).toContain('Spor:   0 TRY');
+  });
+
+  it('oyun verisi hiç yoksa o bölümü yazmaz', () => {
+    const mesaj = cekimBaglamMesaji('x', {
+      ...taban, casinoBahis: null, sporBahis: null, casinoGgr: null, sporGgr: null,
+    }, SIMDI);
+    expect(mesaj).not.toContain('🎰 OYUN');
+  });
+
+  it('hiç yatırım yoksa son yatırımı boş bırakmaz, söyler', () => {
+    const mesaj = cekimBaglamMesaji('x', { ...taban, sonYatirimZamani: null }, SIMDI);
+    expect(mesaj).toContain('hiç yatırım yok');
+  });
+
+  it('ilk çekimi belirtir', () => {
+    expect(cekimBaglamMesaji('x', { ...taban, sonCekimZamani: null }, SIMDI)).toContain('ilk çekim');
+  });
+
+  it('bonus kaynaklı kazancı yazar', () => {
+    expect(cekimBaglamMesaji('x', taban, SIMDI)).toContain('Bonustan kazanç: 47,4 TRY');
   });
 });

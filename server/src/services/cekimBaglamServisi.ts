@@ -24,6 +24,7 @@ import {
   type CekimBaglami,
   type OyuncuNotu,
 } from './cekimDegerlendirmesi.js';
+import { bonusKaynakliKazanc, oyuncuPanosu, yatirimsizBakiyeMi } from './oyuncuPanoVerisi.js';
 
 type AnyRecord = Record<string, any>;
 
@@ -61,9 +62,17 @@ export async function cekimBaglamiTopla(
     lynonClientBonuses({ ClientId: playerId }),
   ]);
 
-  const kpi = kpiSonuc.status === 'fulfilled'
-    ? ((kpiSonuc.value as AnyRecord)?.Data?.[0] ?? {})
-    : {};
+  /**
+   * KPI govdesi IKI SEKILDE gelebiliyor.
+   *
+   * `lynonPlayerKpi` dogrudan uctan okuyabildiginde `Data` bir NESNE
+   * doner; rapor tablosuna dustugunde bazi cagirilar DIZI donduruyor.
+   * Ilk surumde yalnizca `Data[0]` okunuyordu ve asil yol nesne oldugu
+   * icin butun KPI alanlari bos kaliyordu: cekim mesajinda bakiye,
+   * yatirim, kar/zarar hepsi "—" gorunurdu.
+   */
+  const kpiGovde = kpiSonuc.status === 'fulfilled' ? (kpiSonuc.value as AnyRecord)?.Data : null;
+  const kpi: AnyRecord = Array.isArray(kpiGovde) ? (kpiGovde[0] ?? {}) : (kpiGovde ?? {});
   const notlar: OyuncuNotu[] = notSonuc.status === 'fulfilled' ? (notSonuc.value as OyuncuNotu[]) : [];
   // Bonus gecmisi ALINAMADIYSA "yok" degil "olculemedi".
   const bonusOlculdu = bonusSonuc.status === 'fulfilled';
@@ -71,28 +80,71 @@ export async function cekimBaglamiTopla(
     ? ((bonusSonuc.value as AnyRecord)?.Data ?? [])
     : [];
 
-  const sonYatirimZamani = (kpi.LastDepositDate ?? kpi.LastDepositLocalDate ?? null) as string | null;
+  /**
+   * OYUNCU PANO UCU asil kaynak.
+   *
+   * `lynonPlayerKpi` bu ucu okuyup ham govdeyi `rawKpi` icinde tasiyor.
+   * Eslenmis alanlar casino/spor ve gercek/bonus ayrimini kaybediyor;
+   * cekim degerlendirmesinde asil lazim olan tam o ayrimlar. Ham govde
+   * varsa ondan okunur, yoksa eslenmis alanlara duser.
+   */
+  const pano = oyuncuPanosu((kpi.rawKpi ?? null) as AnyRecord | null);
+  const hamVar = Boolean(kpi.rawKpi);
+
+  const sonYatirimZamani = (pano.sonYatirimTarihi
+    ?? kpi.LastDepositTime
+    ?? kpi.LastDepositDate
+    ?? null) as string | null;
   const sonYatirimBonuslari = sonYatirimdanSonrakiBonuslar(bonuslar, sonYatirimZamani).map((bonus) => ({
     ad: String(bonus?.Name ?? 'Bonus'),
     tutar: nullableSayi(bonus?.Amount ?? bonus?.TotalPaidAmount),
   }));
 
+  const toplamYatirim = hamVar ? pano.toplamYatirim : nullableSayi(kpi.DepositAmount);
+  const toplamCekim = hamVar ? pano.toplamCekim : nullableSayi(kpi.WithdrawalAmount);
+
   return {
     playerId,
-    login: String(cekim?.ClientLogin ?? kpi.ClientLogin ?? ''),
+    login: String(cekim?.ClientLogin ?? kpi.Login ?? ''),
     tutar: Number(cekim?.Amount ?? 0),
-    paraBirimi: String(cekim?.CurrencyId ?? cekim?.currency ?? 'TRY'),
+    paraBirimi: String(cekim?.CurrencyId ?? cekim?.currency ?? pano.paraBirimi ?? 'TRY'),
     gunlukCekim,
-    netKarZarar: nullableSayi(kpi.ProfitAndLose),
-    toplamYatirim: nullableSayi(kpi.DepositAmount),
-    toplamCekim: nullableSayi(kpi.WithdrawalAmount),
-    bakiye: nullableSayi(kpi.Balance),
-    sonYatirimTutari: nullableSayi(kpi.LastDepositAmount),
+    /**
+     * Kasa acisindan kar/zarar = yatirim - cekim. Ikisinden biri
+     * olculemediyse HESAPLANMAZ; eksik veriyle "oyuncu onde" demek
+     * cekim kararini yanlis yone iter.
+     */
+    netKarZarar: toplamYatirim === null || toplamCekim === null
+      ? nullableSayi(kpi.ProfitAndLose)
+      : toplamYatirim - toplamCekim,
+    toplamYatirim,
+    toplamCekim,
+    bakiye: hamVar ? (pano.gercekBakiye ?? pano.toplamBakiye) : nullableSayi(kpi.Balance),
+    sonYatirimTutari: hamVar ? pano.sonYatirimTutari : nullableSayi(kpi.LastDepositAmount),
     sonYatirimZamani,
-    sonCekimZamani: (kpi.LastWithdrawalDate ?? null) as string | null,
+    sonCekimZamani: (pano.sonCekimTarihi ?? kpi.LastWithdrawalTime ?? null) as string | null,
     sonYatirimBonuslari,
     bonusOlculdu,
     notlar,
     otomatikRed: otomatikRedKarari(gunlukCekim),
+
+    kayitTarihi: (kpi.RegistrationDate ?? null) as string | null,
+    // Dogrulama bayraklari UC DURUMLU: alan hic gelmediyse "bilinmiyor".
+    // `=== true` ile daraltmak, okunamayan alani "dogrulanmamis"
+    // gosterip yanlis uyari uretirdi.
+    telefonDogrulandi: typeof kpi.IsPhoneVerified === 'boolean' ? kpi.IsPhoneVerified : null,
+    epostaDogrulandi: typeof kpi.IsEmailVerified === 'boolean' ? kpi.IsEmailVerified : null,
+    kimlikDogrulandi: typeof kpi.IsIdentityVerified === 'boolean' ? kpi.IsIdentityVerified : null,
+    kategori: (kpi.CategoryName ?? null) as string | null,
+
+    yatirimAdedi: hamVar ? pano.yatirimAdedi : nullableSayi(kpi.DepositCount),
+    cekimAdedi: hamVar ? pano.cekimAdedi : nullableSayi(kpi.WithdrawalCount),
+    bonusBakiye: hamVar ? pano.bonusBakiye : nullableSayi(kpi.BonusBalance),
+    casinoBahis: pano.casinoBahis,
+    casinoGgr: pano.casinoGgr,
+    sporBahis: pano.sporBahis,
+    sporGgr: pano.sporGgr,
+    bonusKaynakliKazanc: bonusKaynakliKazanc(pano),
+    yatirimsizBakiye: hamVar && yatirimsizBakiyeMi(pano),
   };
 }
