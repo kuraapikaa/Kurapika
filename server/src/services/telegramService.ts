@@ -53,6 +53,48 @@ export function isActiveMemberStatus(status: string | null, isMemberFlag?: unkno
   return status === 'restricted' && isMemberFlag === true;
 }
 
-export async function sendTelegramMessage(chatId: number | string, text: string): Promise<void> {
-  await telegramApiCall('sendMessage', { chat_id: chatId, text });
+/**
+ * Mesaj gonder.
+ *
+ * `secenek.klavye` satir ici buton eklemek icin; `secenek.zorunluYanit`
+ * Telegram'in `force_reply` mekanizmasi (bot soru sorar, operator
+ * yanitlar ve yanit `reply_to_message` ile geri gelir).
+ *
+ * Mesaj kimligi doner: bir cekim mesajinin butonlarini sonradan
+ * kaldirmak icin gerekiyor.
+ */
+export async function sendTelegramMessage(
+  chatId: number | string,
+  text: string,
+  secenek: { klavye?: unknown; zorunluYanit?: boolean } = {},
+): Promise<{ messageId: number | null }> {
+  const params: Record<string, unknown> = { chat_id: chatId, text };
+  if (secenek.klavye) params.reply_markup = secenek.klavye;
+  else if (secenek.zorunluYanit) params.reply_markup = { force_reply: true, selective: true };
+  const sonuc = await telegramApiCall('sendMessage', params);
+  return { messageId: Number(sonuc?.message_id) || null };
+}
+
+/**
+ * Butonlari kaldir.
+ *
+ * Bir cekim cozumlendikten sonra butonlar durursa ikinci kez basilir ve
+ * uctan hata doner; operator "calismiyor" saniyor. Sonuc mesaja
+ * yazildiginda butonlar da silinir.
+ */
+export async function telegramButonlariKaldir(chatId: number | string, messageId: number): Promise<void> {
+  await telegramApiCall('editMessageReplyMarkup', { chat_id: chatId, message_id: messageId, reply_markup: { inline_keyboard: [] } })
+    .catch(() => undefined);
+}
+
+/** Butona basildiginda Telegram'in bekledigi onay; yoksa dugme "yukleniyor" kalir. */
+export async function telegramCallbackYanitla(callbackQueryId: string, metin: string): Promise<void> {
+  await telegramApiCall('answerCallbackQuery', { callback_query_id: callbackQueryId, text: metin.slice(0, 200) })
+    .catch(() => undefined);
+}
+
+/** Mesaja yanit olarak gonder — hangi cekime ait oldugu sohbette kaybolmasin. */
+export async function telegramYanitla(chatId: number | string, messageId: number, text: string): Promise<void> {
+  await telegramApiCall('sendMessage', { chat_id: chatId, text, reply_to_message_id: messageId })
+    .catch(() => undefined);
 }

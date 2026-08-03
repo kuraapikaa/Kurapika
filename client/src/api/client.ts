@@ -525,6 +525,21 @@ export const dashboardApi = {
   manuelDuzeltmeler: (dateRange: DateRange) =>
     post<any>('/lynon/manuel-duzeltmeler', { startDate: dateRange.startDate, endDate: dateRange.endDate }),
 
+  /**
+   * Aylık mutabakat: ayın başından bugüne ödeme yöntemi kırılımı.
+   *
+   * Rapor yalnızca ödeme sağlayıcılarından geçen parayı görüyor; elden
+   * yapılan kalemler ayrı eklenir ve toplamda ayrı gösterilir.
+   */
+  mutabakat: () => post<any>('/lynon/mutabakat', {}),
+
+  mutabakatKalemEkle: (kalem: { gun: string; tur: 'yatirim' | 'cekim'; tutar: number; aciklama: string }) =>
+    post<any>('/lynon/mutabakat/kalem', kalem),
+
+  mutabakatKalemSil: (id: string) => del<any>(`/lynon/mutabakat/kalem/${encodeURIComponent(id)}`),
+
+  mutabakatGonder: () => post<any>('/lynon/mutabakat/gonder', {}),
+
   /** Davranış kategorilerini oluştur (High Risk, Bonus Avcısı, VIP Üye, Aktif Üye). */
   davranisKategorileriniOlustur: () =>
     post<any>('/lynon/oyuncu-kategorileme/kategorileri-olustur', {}),

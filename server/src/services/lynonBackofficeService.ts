@@ -5,6 +5,16 @@ import { isLynonConfigured, lynonRequest, LynonHttpError, LynonAuthError } from 
 import { getCachedJsonWithTtl, setCachedJson } from '../lib/redisClient.js';
 import { istanbulDateKey } from '../lib/istanbulGunu.js';
 import { araligaGoreTtl } from './onbellekOmru.js';
+import { readStoredDocument, writeStoredDocument } from '../lib/documentStore.js';
+import {
+  ayAraligi,
+  ayinManuelKalemleri,
+  mutabakatMesaji,
+  mutabakatSatirlari,
+  mutabakatToplami,
+  ozetFarki,
+  type ManuelKalem,
+} from './mutabakat.js';
 import {
   bonusOturumSatiri,
   bonusOzeti,
@@ -2636,22 +2646,104 @@ export async function lynonClientBonuses(body: AnyRecord = {}): Promise<AnyRecor
  * Bir çekim talebini onaylar veya reddeder. Lynon ödeme geçidindeki tek işlem çözümleme
  * ucu — 'rejected' değeri doğrulanmıştır (gerçek backoffice isteğinden alınmıştır).
  */
+/**
+ * Cekim talebini cozumle (onayla / reddet).
+ *
+ * ── Duzeltilen hata ───────────────────────────────────────────────────
+ *
+ * Istek govdesi olarak ucun YANIT sekli gonderiliyordu:
+ *
+ *   { transactionId, status, amount, actualAmount }   ← YANIT
+ *
+ * Gercek istek govdesi tek alan:
+ *
+ *   { "action": "approve" }  |  { "action": "reject" }
+ *
+ * Islem kimligi zaten yolda. Yanit ise `{ transactionId, status,
+ * amount, actualAmount, ... }` donuyor; iki sekil birbirine karismis.
+ *
+ * `status` girdisi cagiranlarin sozlesmesini bozmamak icin korundu ve
+ * eyleme cevriliyor.
+ */
 export async function lynonResolveWithdrawal(input: {
   transactionId: number | string;
   status: 'rejected' | 'approved';
-  amount: number;
-  actualAmount: number;
+  amount?: number;
+  actualAmount?: number;
 }): Promise<AnyRecord> {
+  const action = input.status === 'approved' ? 'approve' : 'reject';
   const result = await lynonRequest(`/api/payment-gateway/api/v1.0/operation/resolve/${input.transactionId}`, {
     method: 'POST',
-    body: {
-      transactionId: Number(input.transactionId),
-      status: input.status,
-      amount: input.amount,
-      actualAmount: input.actualAmount,
-    },
+    body: { action },
   });
   return { HasError: false, Data: result };
+}
+
+// ─── Oyuncu notlari ──────────────────────────────────────────────────────
+
+/**
+ * Sitede tanimli not tipleri.
+ *
+ * Gozlemlenen liste: VIP (168), High Risk (167), Manual (166),
+ * Affiliate (165), Call (164), Risk (163). Tip kimlikleri koda
+ * GOMULMEZ; not eklerken ad uzerinden bulunur, cunku kimlikler siteye
+ * ozel ve degisebilir.
+ */
+export async function lynonNotTipleri(): Promise<AnyRecord[]> {
+  return cachedLynon(
+    `not-tipleri:${config.lynon.siteId}`,
+    30 * 60 * 1000,
+    async () => arrayOf(await lynonRequest(
+      `/api/note/api/v1/Types/sites/${config.lynon.siteId}/typeCategories/player`,
+    )),
+  );
+}
+
+/** Oyuncunun profil notlari. */
+export async function lynonOyuncuNotlari(playerId: number | string): Promise<AnyRecord[]> {
+  return arrayOf(await lynonRequest(
+    `/api/note/api/v1/Notes/sites/${config.lynon.siteId}/typeCategories/player`,
+    { query: { identifier: playerId } },
+  ));
+}
+
+/**
+ * Oyuncu profiline not ekle.
+ *
+ * `typeId` verilmezse tip ADINDAN bulunur (varsayilan "Manual"): panel
+ * ve bot, siteye ozel kimlikleri bilmek zorunda kalmasin. Ad da
+ * bulunamazsa listenin ilki kullanilmaz — HATA verilir, cunku yanlis
+ * tiple not yazmak notu yanlis kategoriye gomer.
+ */
+export async function lynonNotEkle(input: {
+  playerId: number | string;
+  text: string;
+  typeId?: number | null;
+  typeName?: string | null;
+}): Promise<AnyRecord> {
+  const metin = String(input.text ?? '').trim();
+  if (!metin) throw new LynonHttpError('Not metni boş olamaz.', 422, {});
+
+  let typeId = Number(input.typeId);
+  if (!Number.isFinite(typeId) || typeId <= 0) {
+    const aranan = String(input.typeName ?? 'Manual').trim().toLowerCase();
+    const tipler = await lynonNotTipleri();
+    const bulunan = tipler.find((tip) => String(tip?.name ?? '').trim().toLowerCase() === aranan);
+    if (!bulunan) {
+      throw new LynonHttpError(
+        `Not tipi bulunamadı: "${input.typeName ?? 'Manual'}". Sitede tanımlı tipler: ${tipler.map((t) => t?.name).join(', ')}`,
+        422,
+        {},
+      );
+    }
+    typeId = Number(bulunan.id);
+  }
+
+  const result = await lynonRequest('/api/note/api/v1/Notes/playerManagement', {
+    method: 'POST',
+    body: { identifier: Number(input.playerId), text: metin, typeId },
+  });
+  return { HasError: false, Data: result, typeId };
 }
 
 export async function lynonClientNotes(body: AnyRecord = {}): Promise<AnyRecord> {
@@ -2700,6 +2792,96 @@ export async function lynonKategoriler(): Promise<AnyRecord[]> {
   return arrayOf(await lynonRequest('/api/user/api/v1.0/categories', {
     query: { page: 1, countPerPage: 100, siteId: config.lynon.siteId },
   }));
+}
+
+// ─── Aylik mutabakat ─────────────────────────────────────────────────────
+
+/** Manuel mutabakat kalemlerinin saklandigi belge. */
+const MUTABAKAT_NAMESPACE = 'mutabakat-manuel-kalemler';
+
+export async function mutabakatManuelKalemleriOku(tenantKey = 'default'): Promise<ManuelKalem[]> {
+  return readStoredDocument<ManuelKalem[]>({
+    tenantKey,
+    namespace: MUTABAKAT_NAMESPACE,
+    fallback: [],
+  });
+}
+
+export async function mutabakatManuelKalemiEkle(
+  kalem: Omit<ManuelKalem, 'id' | 'eklendi'>,
+  tenantKey = 'default',
+): Promise<ManuelKalem> {
+  const tutar = Number(kalem.tutar);
+  if (!Number.isFinite(tutar) || tutar <= 0) {
+    throw new LynonHttpError('Tutar pozitif olmalı.', 422, {});
+  }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(kalem.gun))) {
+    throw new LynonHttpError('Gün YYYY-AA-GG biçiminde olmalı.', 422, {});
+  }
+  if (kalem.tur !== 'yatirim' && kalem.tur !== 'cekim') {
+    throw new LynonHttpError('Tür yatirim veya cekim olmalı.', 422, {});
+  }
+
+  const kalemler = await mutabakatManuelKalemleriOku(tenantKey);
+  const yeni: ManuelKalem = {
+    ...kalem,
+    tutar,
+    aciklama: String(kalem.aciklama ?? '').trim().slice(0, 300),
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    eklendi: new Date().toISOString(),
+  };
+  kalemler.unshift(yeni);
+  await writeStoredDocument<ManuelKalem[]>({ tenantKey, namespace: MUTABAKAT_NAMESPACE }, kalemler);
+  return yeni;
+}
+
+export async function mutabakatManuelKalemiSil(id: string, tenantKey = 'default'): Promise<boolean> {
+  const kalemler = await mutabakatManuelKalemleriOku(tenantKey);
+  const kalan = kalemler.filter((kalem) => kalem.id !== id);
+  if (kalan.length === kalemler.length) return false;
+  await writeStoredDocument<ManuelKalem[]>({ tenantKey, namespace: MUTABAKAT_NAMESPACE }, kalan);
+  return true;
+}
+
+/**
+ * Aylik mutabakat.
+ *
+ * Kaynak rapor 1842 — odeme yontemi kirilimi. Rapor YALNIZCA odeme
+ * saglayicilarindan gecen parayi goruyor; elden yapilan yatirimlar ve
+ * dengeleme kalemleri elle eklenir ve toplamda AYRI gosterilir.
+ */
+export async function lynonMutabakat(body: AnyRecord = {}): Promise<AnyRecord> {
+  const bugun = String(body.bugun ?? todayYmd());
+  const tenantKey = String(body.tenantKey ?? 'default');
+  const aralik = ayAraligi(bugun);
+
+  const rapor = await raporGetir(NARCOS_REPORT_IDS.integrationPayment, 'Report By Integration Payment', {
+    startDate: aralik.startDate,
+    endDate: aralik.endDate,
+    currency: config.lynon.currency,
+  });
+  const data = recordOf(rapor.Data);
+  const satirlar = mutabakatSatirlari(rowsFromReportData(data));
+  const ozet = summaryFromReportData(data);
+
+  const tumKalemler = await mutabakatManuelKalemleriOku(tenantKey);
+  const manuel = ayinManuelKalemleri(tumKalemler, aralik.ay);
+  const toplam = mutabakatToplami(satirlar, ozet, manuel);
+  const fark = ozetFarki(satirlar, ozet);
+
+  return {
+    HasError: false,
+    Data: {
+      Ay: aralik.ay,
+      Aralik: { startDate: aralik.startDate, endDate: aralik.endDate },
+      Satirlar: satirlar,
+      Toplam: toplam,
+      Fark: fark,
+      ManuelKalemler: manuel,
+      Mesaj: mutabakatMesaji({ ay: aralik.ay, aralik, satirlar, toplam, fark, manuel }),
+      Kaynak: `reportData/summarized/${NARCOS_REPORT_IDS.integrationPayment}`,
+    },
+  };
 }
 
 /** Manuel duzeltmelerde tek sayfadaki satir sayisi. */

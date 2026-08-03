@@ -1,0 +1,185 @@
+import { describe, expect, it } from 'vitest';
+import {
+  GUNLUK_CEKIM_ESIGI,
+  cekimBaglamMesaji,
+  gunlukCekimSayisi,
+  otomatikRedKarari,
+  riskNotuVarMi,
+  sonYatirimdanSonrakiBonuslar,
+  vipNotuVarMi,
+  type CekimBaglami,
+} from './cekimDegerlendirmesi.js';
+
+const cekim = (id: number, clientId: number, iso: string) => ({ Id: id, ClientId: clientId, CreatedLocal: iso });
+
+describe('gunlukCekimSayisi', () => {
+  const cekimler = [
+    cekim(1, 500, '2026-08-02T21:01:00Z'), // TR 00:01, 3 Ağustos
+    cekim(2, 500, '2026-08-03T09:00:00Z'),
+    cekim(3, 500, '2026-08-03T18:00:00Z'),
+    cekim(4, 999, '2026-08-03T10:00:00Z'), // başka oyuncu
+    cekim(5, 500, '2026-08-02T15:00:00Z'), // önceki gün
+  ];
+
+  it('yalnız aynı oyuncunun aynı günkü taleplerini sayar', () => {
+    expect(gunlukCekimSayisi(cekimler, 500, '2026-08-03')).toBe(3);
+  });
+
+  it('gece yarısını Türkiye saatiyle keser', () => {
+    // 21:01 UTC = 00:01 Istanbul; onceki gune degil 3 Agustos'a sayilir.
+    expect(gunlukCekimSayisi(cekimler, 500, '2026-08-02')).toBe(1);
+  });
+
+  it('değerlendirilen talebin kendisi hariç tutulabilir', () => {
+    expect(gunlukCekimSayisi(cekimler, 500, '2026-08-03', 3)).toBe(2);
+  });
+
+  it('başka oyuncunun talebi karışmaz', () => {
+    expect(gunlukCekimSayisi(cekimler, 999, '2026-08-03')).toBe(1);
+  });
+
+  it('kimliksiz sorgu sıfır döner', () => {
+    expect(gunlukCekimSayisi(cekimler, null, '2026-08-03')).toBe(0);
+  });
+
+  it('boş girdi çökmez', () => {
+    expect(gunlukCekimSayisi(null, 500, '2026-08-03')).toBe(0);
+  });
+});
+
+describe('otomatikRedKarari', () => {
+  it('eşiğe ulaşan talebi reddeder', () => {
+    const karar = otomatikRedKarari(3, 3);
+    expect(karar.reddet).toBe(true);
+    expect(karar.neden).toContain('3');
+  });
+
+  it('eşiğin altında reddetmez', () => {
+    expect(otomatikRedKarari(2, 3).reddet).toBe(false);
+  });
+
+  it('eşiğin üstünde de reddeder', () => {
+    expect(otomatikRedKarari(7, 3).reddet).toBe(true);
+  });
+
+  it('varsayılan eşik üç', () => {
+    expect(GUNLUK_CEKIM_ESIGI).toBe(3);
+  });
+
+  it('geçersiz eşikle reddetmez', () => {
+    // Esik tanimsizsa otomatik para hareketi durdurulmaz.
+    expect(otomatikRedKarari(99, 0).reddet).toBe(false);
+    expect(otomatikRedKarari(99, NaN).reddet).toBe(false);
+  });
+});
+
+describe('profil notları', () => {
+  /** Kullanicinin yapistirdigi gercek not satiri. */
+  const VIP_NOT = {
+    id: 910819, text: 'VIP', noteCreatedUserEmail: 'cvnsigliere@proton.me',
+    noteType: 'VIP', createdAt: '2026-08-03T19:04:03.196622Z',
+  };
+
+  it('gerçek VIP notunu tanır', () => {
+    expect(vipNotuVarMi([VIP_NOT])).toBe(true);
+    expect(riskNotuVarMi([VIP_NOT])).toBe(false);
+  });
+
+  it('sitedeki risk tiplerini tanır', () => {
+    expect(riskNotuVarMi([{ noteType: 'High Risk' }])).toBe(true);
+    expect(riskNotuVarMi([{ noteType: 'Risk' }])).toBe(true);
+  });
+
+  it('risk olmayan tipleri risk saymaz', () => {
+    for (const tip of ['Manual', 'Affiliate', 'Call', 'VIP']) {
+      expect(riskNotuVarMi([{ noteType: tip }]), tip).toBe(false);
+    }
+  });
+
+  it('boş liste risk üretmez', () => {
+    expect(riskNotuVarMi([])).toBe(false);
+    expect(riskNotuVarMi(null)).toBe(false);
+  });
+});
+
+describe('sonYatirimdanSonrakiBonuslar', () => {
+  const bonuslar = [
+    { CreatedLocal: '2026-08-03T08:00:00Z', Name: 'Önceki' },
+    { CreatedLocal: '2026-08-03T12:00:00Z', Name: 'Sonraki' },
+  ];
+
+  it('yalnız son yatırımdan sonrakileri verir', () => {
+    const sonuc = sonYatirimdanSonrakiBonuslar(bonuslar, '2026-08-03T10:00:00Z');
+    expect(sonuc.map((b) => b.Name)).toEqual(['Sonraki']);
+  });
+
+  it('yatırım anı bilinmiyorsa boş döner', () => {
+    // "Bonus yok" degil "olculemedi"; cagiran bu ayrimi gostermeli.
+    expect(sonYatirimdanSonrakiBonuslar(bonuslar, null)).toEqual([]);
+    expect(sonYatirimdanSonrakiBonuslar(bonuslar, 'bozuk')).toEqual([]);
+  });
+
+  it('tam yatırım anındaki bonus dahildir', () => {
+    expect(sonYatirimdanSonrakiBonuslar(bonuslar, '2026-08-03T12:00:00Z')).toHaveLength(1);
+  });
+});
+
+describe('cekimBaglamMesaji', () => {
+  const taban: CekimBaglami = {
+    playerId: 2503142, login: 'larac', tutar: 3000, paraBirimi: 'TRY',
+    gunlukCekim: 1, netKarZarar: -5000, toplamYatirim: 20000, toplamCekim: 8000,
+    bakiye: 4200, sonYatirimTutari: 1000, sonYatirimZamani: '2026-08-03T10:00:00Z',
+    sonCekimZamani: '2026-08-02T10:00:00Z',
+    sonYatirimBonuslari: [], bonusOlculdu: true, notlar: [],
+    otomatikRed: { reddet: false, neden: '', gunlukSayi: 1 },
+  };
+
+  it('temel alanları yazar', () => {
+    const mesaj = cekimBaglamMesaji('❌ ÇEKİM REDDEDİLDİ', taban);
+    expect(mesaj).toContain('larac (2503142)');
+    expect(mesaj).toContain('3.000 TRY');
+    expect(mesaj).toContain('Bugünkü talep: 1');
+  });
+
+  it('oyuncunun önde olduğunu yazar', () => {
+    expect(cekimBaglamMesaji('x', taban)).toContain('oyuncu önde');
+  });
+
+  it('risk notunu en üste taşır', () => {
+    const mesaj = cekimBaglamMesaji('x', { ...taban, notlar: [{ noteType: 'High Risk', text: 'şüpheli' }] });
+    expect(mesaj).toContain('PROFİLDE RİSK NOTU VAR');
+  });
+
+  it('otomatik ret gerekçesini yazar', () => {
+    const mesaj = cekimBaglamMesaji('x', {
+      ...taban, otomatikRed: { reddet: true, neden: 'Aynı gün 3. çekim talebi (eşik 3).', gunlukSayi: 3 },
+    });
+    expect(mesaj).toContain('Aynı gün 3. çekim talebi');
+  });
+
+  it('bonus ölçülemediyse "yok" demez', () => {
+    const mesaj = cekimBaglamMesaji('x', { ...taban, bonusOlculdu: false });
+    expect(mesaj).toContain('ölçülemedi');
+    expect(mesaj).not.toContain('bonus: yok');
+  });
+
+  it('son yatırım sonrası bonusları listeler', () => {
+    const mesaj = cekimBaglamMesaji('x', {
+      ...taban,
+      sonYatirimBonuslari: [{ ad: '100 FS Telegram Katıl Bonusu', tutar: 100 }],
+    });
+    expect(mesaj).toContain('100 FS Telegram Katıl Bonusu');
+  });
+
+  it('ölçülemeyen tutarı sıfır göstermez', () => {
+    const mesaj = cekimBaglamMesaji('x', {
+      ...taban, bakiye: null, toplamYatirim: null, toplamCekim: null, netKarZarar: null,
+    });
+    expect(mesaj).toContain('Bakiye: —');
+    expect(mesaj).toContain('Kasaya karşı: —');
+  });
+
+  it('not yoksa açıkça söyler', () => {
+    expect(cekimBaglamMesaji('x', taban)).toContain('Profil notu yok');
+  });
+});
