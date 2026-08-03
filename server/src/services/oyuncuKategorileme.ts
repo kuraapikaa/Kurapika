@@ -192,6 +192,59 @@ export function seviyeBul(merdiven: Seviye[], toplamYatirim: number | null): Sev
   );
 }
 
+/** Varsayilan kategori — hicbir banda girmeyen oyuncularin yeri. */
+export function varsayilanSeviye(merdiven: Seviye[]): Seviye | null {
+  return merdiven.find((seviye) => seviye.varsayilanMi) ?? null;
+}
+
+/**
+ * Hedef seviye.
+ *
+ * ── Merdivende gercek bir bosluk var ──────────────────────────────────
+ *
+ * Sitenin bantlari 10.000 TL'den basliyor:
+ *
+ *   Sicario (1)   10.000 – 49.999
+ *   Capo (2)      50.000 – 99.999
+ *   Jefe (3)     100.000 – 249.999
+ *   Baron (4)    250.000 – 499.999
+ *   El Patrón (5) 500.000 ve uzeri
+ *
+ * 0 – 9.999 TL arasi HICBIR banda girmiyor. Yalnizca bantlara baksaydik
+ * bu oyuncular icin hic oneri uretilmez, yanlis kategoride kalirlardi.
+ * Bosluk "Yeni Oyuncu" (varsayilan kategori) ile kapatiliyor — zaten
+ * anlami da bu.
+ */
+export function hedefSeviye(merdiven: Seviye[], toplamYatirim: number | null): Seviye | null {
+  if (toplamYatirim === null || !Number.isFinite(toplamYatirim)) return null;
+  return seviyeBul(merdiven, toplamYatirim) ?? varsayilanSeviye(merdiven);
+}
+
+/**
+ * Merdivendeki kapsanmayan araliklar.
+ *
+ * Varsayilan kategori bosluklari yakalar ama boslugun VARLIGI yine de
+ * gorunur olmali: kampanya ekibi 10.000 TL'lik esigi bilerek mi
+ * biraktı, yoksa Seviye 0 bandini tanimlamayi mi unuttu?
+ */
+export function merdivenBosluklari(merdiven: Seviye[]): Array<{ min: number; max: number | null }> {
+  const bantlar = merdiven
+    .filter((seviye) => seviye.esik)
+    .map((seviye) => ({ min: seviye.esik!.min ?? 0, max: seviye.esik!.max }))
+    .sort((a, b) => a.min - b.min);
+
+  const bosluklar: Array<{ min: number; max: number | null }> = [];
+  let imlec = 0;
+
+  for (const bant of bantlar) {
+    if (bant.min > imlec) bosluklar.push({ min: imlec, max: bant.min - 1 });
+    if (bant.max === null) return bosluklar; // ust sinirsiz bant: gerisi kapali
+    imlec = Math.max(imlec, bant.max + 1);
+  }
+  if (bantlar.length > 0) bosluklar.push({ min: imlec, max: null });
+  return bosluklar;
+}
+
 export type KategoriOnerisi = {
   playerId: number;
   login: string;
@@ -217,7 +270,7 @@ export function kategoriOnerisi(
   merdiven: Seviye[],
   simdi = Date.now(),
 ): KategoriOnerisi | null {
-  const hedef = seviyeBul(merdiven, profil.toplamYatirim);
+  const hedef = hedefSeviye(merdiven, profil.toplamYatirim);
   if (!hedef) return null;
   if (profil.mevcutKategoriId !== null && profil.mevcutKategoriId === hedef.id) return null;
 
@@ -225,12 +278,21 @@ export function kategoriOnerisi(
   const durgunGun = durgunlukGunu(profil.sonYatirim, simdi);
   const yatirim = profil.toplamYatirim ?? 0;
 
+  const mevcut = merdiven.find((seviye) => seviye.id === profil.mevcutKategoriId) ?? null;
+  // Varsayilan kategorinin seviye numarasi yok; merdivenin sifirinci basamagi sayilir.
+  const mevcutNo = mevcut ? mevcut.seviyeNo ?? 0 : null;
+  const hedefNo = hedef.seviyeNo ?? 0;
+  const dususMu = mevcutNo !== null && hedefNo < mevcutNo;
+
   const gerekceler = [`Toplam yatırım ${Math.round(yatirim).toLocaleString('tr-TR')} ₺ → ${hedef.ad}`];
   if (durgunGun !== null && durgunGun > KATEGORI_ESIKLERI.durgunGun) {
     gerekceler.push(`${durgunGun} gündür yatırım yok`);
   }
   if (hedef.esik?.belirsiz) {
     gerekceler.push('Kategori açıklamasındaki eşik tek yönlü okundu');
+  }
+  if (!hedef.esik && hedef.varsayilanMi) {
+    gerekceler.push('Hiçbir eşik bandına girmiyor, varsayılan kategoriye düşüyor');
   }
 
   /**
@@ -242,6 +304,17 @@ export function kategoriOnerisi(
   let bekletme: string | null = null;
   if (risk === 'KRİTİK') {
     bekletme = 'Kritik risk: çoklu hesap ve yüksek kazanç birlikte görüldü, manuel inceleme gerekiyor.';
+  } else if (dususMu) {
+    /**
+     * SEVIYE DUSURME OTOMATIK YAPILMAZ.
+     *
+     * Yatirim toplami birikimli; kendiliginden azalmaz. Oyuncu
+     * bandinin ALTINDA gorunuyorsa iki ihtimal var: kategorisi ELLE
+     * atanmis (VIP jesti, kampanya kararı) ya da yatirim toplami eksik
+     * okunmus. Ikisinde de dogru davranis, El Patrón'u sessizce Yeni
+     * Oyuncu'ya dusurmek degil, operatore sormaktir.
+     */
+    bekletme = `Seviye düşürme: ${mevcut?.ad ?? `#${profil.mevcutKategoriId}`} → ${hedef.ad}. Kategori elle atanmış olabilir, onay gerekiyor.`;
   } else if (hedef.esik?.belirsiz) {
     bekletme = 'Kategori açıklamasındaki eşik belirsiz; sınır elle doğrulanmalı.';
   }

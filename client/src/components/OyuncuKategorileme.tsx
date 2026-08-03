@@ -42,7 +42,13 @@ type Oneri = {
   bekletme: string | null;
 };
 
-type Seviye = { id: number; ad: string; seviyeNo: number | null; esik: { min: number | null; max: number | null; belirsiz: boolean } | null };
+type Seviye = {
+  id: number;
+  ad: string;
+  seviyeNo: number | null;
+  esik: { min: number | null; max: number | null; belirsiz: boolean } | null;
+  varsayilanMi: boolean;
+};
 
 const RISK_SINIFI: Record<Oneri['risk'], string> = {
   'DÜŞÜK': 'border-emerald-400/25 bg-emerald-400/[0.08] text-emerald-300',
@@ -50,8 +56,16 @@ const RISK_SINIFI: Record<Oneri['risk'], string> = {
   'KRİTİK': 'border-rose-400/35 bg-rose-400/[0.12] text-rose-300',
 };
 
-function esikYaz(esik: Seviye['esik']): string {
-  if (!esik) return 'eşik okunamadı';
+/**
+ * Eşik metni.
+ *
+ * Varsayılan kategorinin eşiği YOKTUR ve bu bir hata değil — hiçbir
+ * banda girmeyenlerin yeri orası. "Eşik okunamadı" yazmak varsayılan
+ * kategoriyi bozukmuş gibi gösterirdi.
+ */
+function esikYaz(seviye: Seviye): string {
+  const esik = seviye.esik;
+  if (!esik) return seviye.varsayilanMi ? 'varsayılan (bant dışı)' : 'eşik okunamadı';
   const bicim = (n: number) => n.toLocaleString('tr-TR');
   if (esik.min !== null && esik.max !== null) return `${bicim(esik.min)} – ${bicim(esik.max)} ₺`;
   if (esik.min !== null) return `${bicim(esik.min)} ₺ ve üzeri`;
@@ -74,6 +88,8 @@ export function OyuncuKategorileme() {
   const oneriler: Oneri[] = veri.Oneriler ?? [];
   const merdiven: Seviye[] = veri.Merdiven ?? [];
   const esiksiz: string[] = veri.EsiksizKategoriler ?? [];
+  const bosluklar: Array<{ min: number; max: number | null }> = veri.Bosluklar ?? [];
+  const varsayilan: Seviye | null = veri.VarsayilanKategori ?? null;
 
   const suzulmus = useMemo(
     () => oneriler.filter((o) => matchesAnyTr([String(o.playerId), o.login, o.hedefKategoriAdi], arama)),
@@ -158,12 +174,32 @@ export function OyuncuKategorileme() {
         />
       </div>
 
-      {esiksiz.length > 0 && (
-        <PanoKart className="px-4 py-3">
-          <p className="text-[11px] text-amber-400/90">
-            Eşiği okunamayan kategoriler hiçbir oyuncuya atanmaz: {esiksiz.join(', ')}. Lynon'daki açıklamayı
-            "[100.000 TL - 499.999 TL]" biçimine getirin.
-          </p>
+      {/*
+        * MERDİVEN BOŞLUĞU.
+        *
+        * Sitede gerçek bir boşluk var: bantlar 10.000 TL'den başlıyor,
+        * 0 – 9.999 arası hiçbir seviyeye girmiyor. Varsayılan kategori
+        * ("Yeni Oyuncu") bunu kapatıyor ama boşluğun kendisi görünmeli —
+        * bilerek mi bırakıldı, yoksa bir bant tanımlanmayı mı unutuldu?
+        */}
+      {(bosluklar.length > 0 || esiksiz.length > 0) && (
+        <PanoKart className="space-y-1.5 px-4 py-3">
+          {bosluklar.map((bosluk) => (
+            <p key={`${bosluk.min}-${bosluk.max}`} className="text-[11px] text-amber-400/90">
+              {bosluk.min.toLocaleString('tr-TR')} –{' '}
+              {bosluk.max === null ? '∞' : bosluk.max.toLocaleString('tr-TR')} ₺ arası hiçbir seviye bandına
+              girmiyor.{' '}
+              {varsayilan
+                ? `Bu oyuncular varsayılan kategoriye ("${varsayilan.ad}") yönlendiriliyor.`
+                : 'Varsayılan kategori de tanımlı değil; bu oyuncular için öneri üretilemiyor.'}
+            </p>
+          ))}
+          {esiksiz.length > 0 && (
+            <p className="text-[11px] text-[color:var(--panel-muted,#8a919c)]">
+              Eşiği okunamayan kategoriler bant olarak kullanılmaz: {esiksiz.join(', ')}. Bant olmasını
+              istiyorsanız Lynon'daki açıklamayı "[100.000 TL - 249.999 TL]" biçimine getirin.
+            </p>
+          )}
         </PanoKart>
       )}
 
@@ -182,8 +218,8 @@ export function OyuncuKategorileme() {
                   <span className="font-semibold text-white">{seviye.ad}</span>
                 </PanoHucreYazi>
                 <PanoHucreYazi sag>{seviye.seviyeNo ?? '—'}</PanoHucreYazi>
-                <PanoHucreYazi sag renk={seviye.esik ? undefined : 'text-amber-300'}>
-                  {esikYaz(seviye.esik)}
+                <PanoHucreYazi sag renk={seviye.esik || seviye.varsayilanMi ? undefined : 'text-amber-300'}>
+                  {esikYaz(seviye)}
                 </PanoHucreYazi>
               </PanoSatir>
             ))}

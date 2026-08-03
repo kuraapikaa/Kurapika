@@ -15,7 +15,9 @@ import { izinliKisitMi, kisitGovdeleri, type Kisit } from './hedefBakiyeKilidi.j
 import {
   kategoriGovdeleri,
   kategoriOnerileri,
+  merdivenBosluklari,
   seviyeMerdiveni,
+  varsayilanSeviye,
   type LynonKategori,
   type OyuncuProfili,
 } from './oyuncuKategorileme.js';
@@ -2661,8 +2663,17 @@ export async function lynonKategoriOnerileri(body: AnyRecord = {}): Promise<AnyR
       /** Otomatik uygulanabilir olanlar: bekletme sebebi olmayanlar. */
       Uygulanabilir: oneriler.filter((oneri) => !oneri.bekletme).length,
       Merdiven: merdiven,
-      /** Esigi cozulemeyen kategoriler — hicbir oyuncu buraya atanamaz. */
+      /** Esigi cozulemeyen kategoriler — bant olarak kullanilamaz. */
       EsiksizKategoriler: merdiven.filter((seviye) => !seviye.esik).map((seviye) => seviye.ad),
+      /**
+       * Hicbir bandin kapsamadigi tutar araliklari.
+       *
+       * Sitede gercek bir bosluk var: bantlar 10.000 TL'den basliyor,
+       * 0 – 9.999 arasi acikta. Varsayilan kategori bunu kapatiyor ama
+       * boslugun kendisi gorunur olmali — bilerek mi birakildi?
+       */
+      Bosluklar: merdivenBosluklari(merdiven),
+      VarsayilanKategori: varsayilanSeviye(merdiven),
       TarananOyuncu: profiller.length,
       RiskOlculen: ipSayisi.size,
     },
