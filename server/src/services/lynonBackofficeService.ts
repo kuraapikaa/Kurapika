@@ -2,8 +2,9 @@ import { config } from '../config.js';
 import { metrikSayisi, netGelir, panoMetrikleri, taninmayanAlanlar } from './lynonPanoMetrikleri.js';
 import { kayipTabani } from './kayipTabaniService.js';
 import { isLynonConfigured, lynonRequest, LynonHttpError, LynonAuthError } from '../lib/lynonAuth.js';
-import { getCachedJson, setCachedJson } from '../lib/redisClient.js';
+import { getCachedJsonWithTtl, setCachedJson } from '../lib/redisClient.js';
 import { istanbulDateKey } from '../lib/istanbulGunu.js';
+import { araligaGoreTtl } from './onbellekOmru.js';
 import {
   bonusOturumSatiri,
   bonusOzeti,
@@ -36,7 +37,13 @@ interface PageParams {
 }
 
 const REPORT_CACHE_TTL_MS = 10 * 60 * 1000;
-const DASHBOARD_CACHE_TTL_MS = 5 * 60 * 1000;
+/**
+ * Pano onbellegi artik SABIT DEGIL.
+ *
+ * Bugunu iceren pencere kisa, tamami gecmiste kalan pencere uzun omurlu
+ * (bkz. `onbellekOmru`). Sabit bes dakika, canli rakama bakan operator
+ * icin cok uzun; degismeyecek bir gecmis gun icin ise saf israfti.
+ */
 const AFFILIATE_CACHE_TTL_MS = 15 * 60 * 1000;
 let reportCatalogCache: { ts: number; data: AnyRecord[] } | null = null;
 type PromiseCacheEntry = { expiresAt: number; value: Promise<unknown> };
@@ -46,22 +53,41 @@ function cachedLynon<T>(key: string, ttlMs: number, loader: () => Promise<T>): P
   const existing = lynonResultCache.get(key);
   if (existing && existing.expiresAt > Date.now()) return existing.value as Promise<T>;
 
-  let guarded: Promise<T>;
-  guarded = (async () => {
-    const shared = await getCachedJson<T>(key).catch(() => undefined);
-    if (shared !== undefined) return shared;
+  /**
+   * BAYATLIK IKI KATINA CIKMASIN.
+   *
+   * Redis'ten alinan deger bellege TAM SURE ile yaziliyordu: Redis
+   * kaydinin omrunun 30 saniyesi kalmis olsa bile bellekte 5 dakika daha
+   * yasiyor, toplam bayatlik ~10 dakikaya cikabiliyordu. Canli rakama
+   * bakan operator icin bu "pano guncellenmiyor" demek.
+   *
+   * Artik bellek kaydi Redis kaydinin KALAN omruyla yaziliyor; ikisi
+   * ayni anda dusuyor.
+   */
+  // Kayit ONCE kuruluyor; Redis'ten gelen kalan omur uzerine yazilabilsin
+  // diye govde ona referansla erisiyor.
+  const kayit: PromiseCacheEntry = { expiresAt: Date.now() + ttlMs, value: undefined as unknown as Promise<unknown> };
+
+  const guarded: Promise<T> = (async () => {
+    const shared = await getCachedJsonWithTtl<T>(key).catch(() => undefined);
+    if (shared !== undefined) {
+      if (shared.ttlMs > 0 && lynonResultCache.get(key) === kayit) {
+        kayit.expiresAt = Date.now() + Math.min(ttlMs, shared.ttlMs);
+      }
+      return shared.value;
+    }
     const loaded = await loader();
     await setCachedJson(key, loaded, ttlMs).catch((error) => {
       console.warn('[redis-cache] Lynon cache write failed:', error instanceof Error ? error.message : error);
     });
     return loaded;
   })().catch((error) => {
-    const current = lynonResultCache.get(key);
-    if (current?.value === guarded) lynonResultCache.delete(key);
+    if (lynonResultCache.get(key) === kayit) lynonResultCache.delete(key);
     throw error;
   });
 
-  lynonResultCache.set(key, { expiresAt: Date.now() + ttlMs, value: guarded });
+  kayit.value = guarded;
+  lynonResultCache.set(key, kayit);
   if (lynonResultCache.size > 200) {
     const now = Date.now();
     for (const [cacheKey, entry] of lynonResultCache) {
@@ -688,7 +714,16 @@ export async function lynonSite(): Promise<unknown> {
 }
 
 export async function lynonDashboardSummary(startDate: string, endDate: string): Promise<AnyRecord> {
-  return cachedLynon(`dashboard-summary:${config.lynon.siteId}:${startDate}:${endDate}:${config.lynon.currency}`, DASHBOARD_CACHE_TTL_MS, async () => {
+  /**
+   * BUGUN KISA, GECMIS UZUN.
+   *
+   * Sabit bes dakikalik omur iki farkli soruya ayni cevabi veriyordu:
+   * bugunun rakami her yatirimda degisiyor (bes dakika cok uzun), gecmis
+   * bir gunun rakami ise bir daha ASLA degismiyor (bes dakikada bir
+   * yeniden cekmek saf israf). Ayrinti `onbellekOmru` icinde.
+   */
+  const ttl = araligaGoreTtl(endDate, todayYmd());
+  return cachedLynon(`dashboard-summary:${config.lynon.siteId}:${startDate}:${endDate}:${config.lynon.currency}`, ttl, async () => {
     const data = recordOf(await lynonRequest(`/api/report/api/v1.0/dashboardData/sites/${config.lynon.siteId}/dashboard/${config.lynon.currency}`, {
       query: { startDate, endDate },
     }));
@@ -753,7 +788,7 @@ export async function lynonDashboardSummary(startDate: string, endDate: string):
 }
 
 export async function lynonPartnerProfit(startDate: string, endDate: string): Promise<AnyRecord> {
-  return cachedLynon(`partner-profit:${config.lynon.siteId}:${startDate}:${endDate}:${config.lynon.currency}`, DASHBOARD_CACHE_TTL_MS, async () => {
+  return cachedLynon(`partner-profit:${config.lynon.siteId}:${startDate}:${endDate}:${config.lynon.currency}`, araligaGoreTtl(endDate, todayYmd()), async () => {
     const [summaryResult, gameTypeResult] = await Promise.allSettled([
       lynonDashboardSummary(startDate, endDate),
       raporGetir(NARCOS_REPORT_IDS.gameType, 'Report By Game Type', { startDate, endDate, currency: config.lynon.currency }),
@@ -868,7 +903,7 @@ export async function lynonAffiliateSummary(startDate: string, endDate: string):
 }
 
 export async function lynonTopCasinoGames(startDate: string, endDate: string, topRecordsCount = 5): Promise<AnyRecord> {
-  return cachedLynon(`top-casino:${config.lynon.siteId}:${startDate}:${endDate}:${topRecordsCount}:${config.lynon.currency}`, DASHBOARD_CACHE_TTL_MS, async () => {
+  return cachedLynon(`top-casino:${config.lynon.siteId}:${startDate}:${endDate}:${topRecordsCount}:${config.lynon.currency}`, araligaGoreTtl(endDate, todayYmd()), async () => {
     const catalog = await lynonReportCatalog();
     const reportMeta = catalog.find((item) => Number(item.id) === 1900)
       ?? catalog.find((item) => String(item.name ?? '').trim().toLowerCase() === 'report by game');
@@ -892,7 +927,7 @@ export async function lynonTopCasinoGames(startDate: string, endDate: string, to
 }
 
 async function lynonDashboardSportRows(startDate: string, endDate: string): Promise<AnyRecord[]> {
-  return cachedLynon(`dashboard-sport-rows:${config.lynon.siteId}:${startDate}:${endDate}`, DASHBOARD_CACHE_TTL_MS, async () => {
+  return cachedLynon(`dashboard-sport-rows:${config.lynon.siteId}:${startDate}:${endDate}`, araligaGoreTtl(endDate, todayYmd()), async () => {
     const from = gunBasi(startDate);
     const to = gunSonu(endDate);
     return (await lynonSportBets({ startDate: from, endDate: to, countPerPage: 500 })).map(mapSportBet);
