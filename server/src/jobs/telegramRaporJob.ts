@@ -417,8 +417,10 @@ export async function runTelegramRaporJob(tenantKey = 'default'): Promise<Telegr
   }
 
   // Yontem bazinda GUNLUK kasa — ayni ritimde, ayri hata izolasyonuyla:
-  // biri dusse digeri gitmeye devam etsin.
-  const kasaYontemSohbeti = sohbetSec('kasaYontem') || kasaSohbeti;
+  // biri dusse digeri gitmeye devam etsin. `sohbetSec` kendi icinde
+  // raporChatId'ye dusuyor; burada onun yerine ozellikle KASA sohbetine
+  // dusmek isteniyor, bu yuzden ham config degeri okunuyor.
+  const kasaYontemSohbeti = config.telegram.raporChatIdleri.kasaYontem || kasaSohbeti;
   if (kasaYontemSohbeti && ozetZamaniGeldi) {
     try {
       const yanit = await lynonYontemBazindaKasa({ gun: bugun() });
