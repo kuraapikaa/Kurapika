@@ -102,7 +102,7 @@ export async function telegramCekimCallback(callback: AnyRecord): Promise<Callba
       .catch(() => undefined);
   }
 
-  // "Red Nedeni Yaz" ise neden sorulur; yanit "çekim onay" grubuna gider.
+  // "Red Nedeni Yaz" ise neden sorulur; yanit red sonucuyla ayni gruba gider.
   if (veri.eylem === 'retNot' && chatId) {
     await sendTelegramMessage(chatId, redNedeniIstekMesaji(veri.islemId, veri.oyuncuId, ''), { zorunluYanit: true })
       .catch(() => undefined);
@@ -154,7 +154,7 @@ export async function telegramNotYaniti(input: {
 /**
  * Red nedeni istegine gelen yanit.
  *
- * Not yanitindan farkli: profile YAZILMAZ, "çekim onay" (`TELEGRAM_CHAT_CEKIM_ONAY`)
+ * Not yanitindan farkli: profile YAZILMAZ, red sonucuyla ayni grup (`TELEGRAM_CHAT_CEKIM_RED`)
  * grubuna AYRI bir mesaj olarak gonderilir. Onay/ret tek grupta
  * birlestiginde o grubu izleyen ekip red gerekcesini gormeye devam etsin
  * diye var; sohbet tanimli degilse acikca soylenir, sessizce yutulmaz.
@@ -174,13 +174,15 @@ export async function telegramRedNedeniYaniti(input: {
   const metin = String(input.metin ?? '').trim();
   if (!metin) return { islendi: false, mesaj: 'Red nedeni boş.' };
 
-  const hedef = config.telegram.raporChatIdleri.cekimOnay;
+  // Red SONUCUYLA ayni hedefe gider — reddedilen talebin geçmişi tek
+  // grupta kalsın diye. Tanımsızsa açıkça söylenir, sessizce yutulmaz.
+  const hedef = config.telegram.raporChatIdleri.cekimRed;
   if (!hedef) {
     if (input.messageId) {
       await telegramYanitla(input.chatId, input.messageId,
-        '⚠️ TELEGRAM_CHAT_CEKIM_ONAY tanımlı değil, red nedeni gönderilemedi.');
+        '⚠️ TELEGRAM_CHAT_CEKIM_RED tanımlı değil, red nedeni gönderilemedi.');
     }
-    return { islendi: false, mesaj: 'TELEGRAM_CHAT_CEKIM_ONAY tanımlı değil.' };
+    return { islendi: false, mesaj: 'TELEGRAM_CHAT_CEKIM_RED tanımlı değil.' };
   }
 
   await sendTelegramMessage(hedef, [

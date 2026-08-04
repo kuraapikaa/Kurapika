@@ -97,7 +97,7 @@ export function cekimButonlari(input: {
   ];
   const ikinci: TelegramButon[] = [
     { text: '❌ Reddet', callback_data: callbackVerisi('ret', input.islemId, input.oyuncuId) },
-    // İsteğe bağlı: reddedince neden sorulur, yanıt "çekim onay" grubuna
+    // İsteğe bağlı: reddedince neden sorulur, yanıt red sonucuyla aynı gruba
     // ayrıca gönderilir — onay/ret tek grupta birleştiğinde o grubu takip
     // eden ekip red gerekçesini görmeye devam etsin diye.
     { text: '📝 Red Nedeni Yaz', callback_data: callbackVerisi('retNot', input.islemId, input.oyuncuId) },
@@ -143,7 +143,7 @@ export function notIstegindenOyuncu(metin: unknown): string | null {
  * Red nedeni isteme mesaji.
  *
  * Not istegiyle AYNI `force_reply` deseni, ama iki kimlik tasiyor:
- * islem VE oyuncu. Yanit "çekim onay" grubuna gidecek mesajda ikisi de
+ * islem VE oyuncu. Yanit red sonucuyla ayni gruba gidecek mesajda ikisi de
  * lazim; islem numarasi olmadan hangi cekimin reddedildigi belirsiz
  * kalirdi.
  */

@@ -104,18 +104,24 @@ let gununDuzeltmeleri: AnyRecord[] = [];
 /**
  * Cekim mesajinin gidecegi sohbet.
  *
- * TEK GRUP tercih edilir: onay ve ret ayri gruplara bolundugunde karar
- * veren kisi iki pencere arasinda gidip geliyor — talep bir grupta,
- * sonucu baskasinda. `TELEGRAM_CHAT_CEKIM` tanimliysa hepsi oraya.
+ * TALEP ve ONAY icin TEK GRUP tercih edilir: karar veren kisi iki
+ * pencere arasinda gidip gelmesin. `TELEGRAM_CHAT_CEKIM` tanimliysa
+ * ikisi de oraya gider.
  *
- * Ayrik kimlikler yalnizca birlesik olan bos oldugunda kullanilir;
- * mevcut kurulumlar bozulmasin diye.
+ * RED SONUCU ise `TELEGRAM_CHAT_CEKIM_RED` tanimliysa BIRLESIK GRUBUN
+ * ONUNE GECER — reddedilen talepler operasyonel karar grubunu
+ * kirletmesin diye ayri bir arsiv/izleme grubuna dusuyor. Bu tanimsizsa
+ * red de birlesik gruba duser (eski davranis).
  */
 function cekimSohbeti(satir: AnyRecord): string {
+  const durum = islemDurumu(satir);
+  if (durum === 'red' && config.telegram.raporChatIdleri.cekimRed) {
+    return config.telegram.raporChatIdleri.cekimRed;
+  }
+
   const birlesik = config.telegram.raporChatIdleri.cekim;
   if (birlesik) return birlesik;
 
-  const durum = islemDurumu(satir);
   if (durum === 'onay') return sohbetSec('cekimOnay');
   if (durum === 'red') return sohbetSec('cekimRed');
   // Bekleyen talep: karar verilecek yer onay grubu.
