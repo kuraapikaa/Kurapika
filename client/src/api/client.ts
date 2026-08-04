@@ -948,6 +948,12 @@ export const adminApi = {
 
   chargeBonus: (body: { ClientId: number; BonusId: number; Amount?: number; AssignmentValues?: Record<string, unknown> }) =>
     post<any>('/admin/bonus/charge', body),
+
+  bonusBlacklist: () => get<{ HasError: boolean; Data: Array<{ login: string; neden: string | null; ekleyen: string; eklendi: string }> }>('/admin/bonus/blacklist'),
+  bonusBlacklistEkle: (login: string, neden?: string) =>
+    post<any>('/admin/bonus/blacklist', { login, neden }),
+  bonusBlacklistCikar: (login: string) =>
+    del<any>(`/admin/bonus/blacklist/${encodeURIComponent(login)}`),
 };
 
 /** Bonus Panel (ayrı giriş) - oyuncu bonus talep sayfası oturumu */

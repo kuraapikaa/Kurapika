@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { dashboardApi } from '../api/client';
+import { BonusBlacklistPanel } from './admin/BonusBlacklistPanel';
 
 interface PromoSpec {
     enabled?: boolean;
@@ -1558,6 +1559,7 @@ export function RulesManager() {
                             </div>
                         </div>
                     </Card>
+                    <BonusBlacklistPanel />
                     <Card className="p-8 border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] shadow-xl overflow-hidden relative">
                         <div className="absolute top-0 right-0 h-1 w-full bg-gradient-to-r from-blue-500 to-transparent opacity-20" />
                         <div className="flex items-center gap-3 mb-8">
