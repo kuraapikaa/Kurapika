@@ -13,12 +13,13 @@ import { atamaNotu } from '../services/bonusAtamaNotu.js';
 import { bonusDenetimAciklamasi } from '../services/bonusDenetimAciklamasi.js';
 import { audit } from '../lib/auditLog.js';
 import { yatirimHakki } from '../services/yatirimHakki.js';
-import { isLynonConfigured, lynonAssignCampaignToPlayer, lynonBuildBonusEligibilitySnapshot, lynonCreditPlayerMainAccount, lynonFindPlayerByLogin, lynonPlayerActivity } from '../services/lynonBackofficeService.js';
+import { isLynonConfigured, lynonAssignCampaignToPlayer, lynonBuildBonusEligibilitySnapshot, lynonCreditPlayerMainAccount, lynonFindPlayerByLogin, lynonOyuncuKpiSorgula, lynonPlayerActivity } from '../services/lynonBackofficeService.js';
 import { loginAnahtari, oyuncuAktivitesi, oyuncuRaporu, siralamaOlustur, type SiralamaMetrigi } from '../services/oyuncuRaporService.js';
 import { readTournamentSettings } from '../services/turnuvaAyarService.js';
 import { carkAnalizi } from '../services/carkOlasiliklari.js';
 import { telegramCekimCallback, telegramNotYaniti, telegramRedNedeniYaniti } from '../services/telegramCekimEylemi.js';
-import { notIstegindenOyuncu, redNedeniIstegindenBilgi } from '../services/telegramButonlari.js';
+import { notIstegindenOyuncu, redNedeniIstegindenBilgi, yetkiliKullanicilar, yetkiliMi } from '../services/telegramButonlari.js';
+import { oyuncuAdaylariMesaji, oyuncuBulunamadiMesaji, oyuncuKpiMesaji } from '../services/oyuncuKpiRaporu.js';
 import {
   kurallariCozumle,
   loginMaskele,
@@ -2435,6 +2436,36 @@ const selectedSlice = selected.slice;
         }
         return reply.send({ ok: true });
       }
+    }
+
+    /**
+     * ANLIK OYUNCU KPI SORGUSU.
+     *
+     * "/oyuncu <id|kullanıcı adı|telefon>" — çekim butonlarıyla AYNI
+     * yetkili listesiyle korunur, çünkü sonuç bakiye/yatırım/çekim gibi
+     * finansal PII taşıyor.
+     */
+    if (text.toLowerCase().startsWith('/oyuncu') && fromId && chatId) {
+      const sorgu = text.slice('/oyuncu'.length).trim();
+      if (!yetkiliMi(fromId, yetkiliKullanicilar())) {
+        await sendTelegramMessage(chatId, 'Bu sorgu için yetkiniz yok.').catch(() => undefined);
+      } else if (!sorgu) {
+        await sendTelegramMessage(chatId, 'Kullanım: /oyuncu <id | kullanıcı adı | telefon>').catch(() => undefined);
+      } else {
+        try {
+          const sonuc = await lynonOyuncuKpiSorgula(sorgu);
+          const mesaj = sonuc.durum === 'bulundu'
+            ? oyuncuKpiMesaji(sonuc.ozet)
+            : sonuc.durum === 'coklu'
+              ? oyuncuAdaylariMesaji(sorgu, sonuc.adaylar)
+              : oyuncuBulunamadiMesaji(sorgu);
+          await sendTelegramMessage(chatId, mesaj).catch(() => undefined);
+        } catch (err) {
+          request.log.error({ err }, '[telegram] oyuncu kpi sorgu hatası');
+          await sendTelegramMessage(chatId, '⚠️ Sorgu sırasında hata oluştu.').catch(() => undefined);
+        }
+      }
+      return reply.send({ ok: true });
     }
 
     if (text.toLowerCase().startsWith('/start') && fromId && chatId) {

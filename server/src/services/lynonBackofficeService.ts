@@ -27,6 +27,7 @@ import {
   type OyuncuAdlari,
 } from './bonusOturumRaporu.js';
 import { oyuncuBakiyeMesaji, oyuncuBakiyeOzetiCikar, topBakiyeliOyuncular } from './oyuncuBakiyeRaporu.js';
+import type { OyuncuAday, OyuncuKpiOzeti } from './oyuncuKpiRaporu.js';
 import { izinliKisitMi, kisitGovdeleri, type Kisit } from './hedefBakiyeKilidi.js';
 import {
   duzeltmeSatiri,
@@ -1085,6 +1086,60 @@ export async function lynonFindPlayerByLogin(login: string): Promise<AnyRecord |
     const rowSiteId = numberFrom(row.siteId ?? row.SiteId, NaN);
     return rowLogin === normalizedLogin && rowSiteId === Number(config.lynon.siteId);
   }) ?? null;
+}
+
+export type OyuncuKpiSonucu =
+  | { durum: 'bulunamadi' }
+  | { durum: 'coklu'; adaylar: OyuncuAday[] }
+  | { durum: 'bulundu'; ozet: OyuncuKpiOzeti };
+
+/**
+ * Anlik oyuncu KPI sorgusu — id, kullanici adi ya da telefon numarasi.
+ *
+ * `lynonPlayers` zaten Id/ExternalId/Login/Email/Phone/MobilePhone
+ * alanlarinin HEPSINDE arama yapiyor ve overview verisiyle (bakiye,
+ * toplam yatirim/cekim) zenginlestiriyor — burada AYRI bir arama
+ * mantigi ya da ek Lynon istegi YOK, yalnizca sonucu yorumlama var.
+ */
+export async function lynonOyuncuKpiSorgula(sorguMetin: string): Promise<OyuncuKpiSonucu> {
+  const sorgu = String(sorguMetin ?? '').trim();
+  if (!sorgu) return { durum: 'bulunamadi' };
+
+  const res = await lynonPlayers({ query: sorgu, MaxRows: 6, SkeepRows: 0 });
+  const rows = arrayOf(res.Data?.Objects);
+  if (rows.length === 0) return { durum: 'bulunamadi' };
+  if (rows.length > 1) {
+    return {
+      durum: 'coklu',
+      adaylar: rows.map((r) => ({
+        id: String(r.Id ?? ''),
+        login: String(r.Login ?? ''),
+        telefon: firstNonEmpty(r.Phone, r.MobilePhone) || null,
+      })),
+    };
+  }
+
+  const r = rows[0];
+  return {
+    durum: 'bulundu',
+    ozet: {
+      id: String(r.Id ?? ''),
+      login: String(r.Login ?? ''),
+      telefon: firstNonEmpty(r.Phone, r.MobilePhone) || null,
+      eposta: r.Email ?? null,
+      kayitTarihi: r.CreatedLocalDate ?? null,
+      telefonDogrulandi: typeof r.IsPhoneVerified === 'boolean' ? r.IsPhoneVerified : null,
+      epostaDogrulandi: typeof r.IsEmailVerified === 'boolean' ? r.IsEmailVerified : null,
+      kimlikDogrulandi: typeof r.IsIdentityVerified === 'boolean' ? r.IsIdentityVerified : null,
+      kategori: r.CategoryName ?? null,
+      paraBirimi: String(r.CurrencyId ?? config.lynon.currency ?? 'TRY'),
+      gercekBakiye: nullableNumber(r.Balance),
+      bonusBakiye: nullableNumber(r.BonusBalance),
+      toplamBakiye: nullableNumber(r.TotalBalance),
+      toplamYatirim: nullableNumber(r.TotalDeposit),
+      toplamCekim: nullableNumber(r.TotalWithdraw),
+    },
+  };
 }
 
 export async function lynonPlayerDetail(userId: string | number): Promise<AnyRecord> {
