@@ -365,11 +365,19 @@ export function mutabakatMesaji(input: {
  * kalir) — bu rapor bilerek "elle eklenenle rapor ayri" felsefesinden
  * sapiyor, cunku istenen tam olarak "manuel cikarmalar dahil güncel
  * durum".
+ *
+ * `genelManuelKalemler` — YONTEME ETIKETLENMEMIS manuel kalemler.
+ * Bunlar hicbir satira eslenmedigi icin ustteki dongude GORUNMEZ;
+ * onceden burada hic yazilmiyordu ve panelden yontem secmeden eklenen
+ * her kalem bu raporda SESSIZCE KAYBOLUYORDU ("yöntem kasası manuel
+ * işlemleri görmüyor" sikayetinin sebebi buydu). Artik ayri bir
+ * "GENEL" bolumunde listeleniyor.
  */
 export function yontemKasaMesaji(
   aralik: { baslangic: string; bitis: string },
   satirlar: MutabakatSatiri[],
   saat?: string | null,
+  genelManuelKalemler?: ManuelKalem[],
 ): string {
   const parcalar: string[] = [
     `🏦✨ YÖNTEM BAZINDA KASA · TÜM ZAMANLAR`,
@@ -379,43 +387,61 @@ export function yontemKasaMesaji(
 
   if (satirlar.length === 0) {
     parcalar.push('', '(bu aralıkta sağlayıcı hareketi yok)');
-    return parcalar.join('\n');
-  }
+  } else {
+    let toplamYatirim = 0;
+    let toplamCekim = 0;
+    let toplamManuelYatirim = 0;
+    let toplamManuelCekim = 0;
+    for (const satir of satirlar) {
+      const manuelYatirim = satir.manuelYatirim ?? 0;
+      const manuelCekim = satir.manuelCekim ?? 0;
+      const duzeltilmisYatirim = satir.duzeltilmisYatirim ?? satir.yatirim;
+      const duzeltilmisCekim = satir.duzeltilmisCekim ?? satir.cekim;
+      const duzeltilmisNet = satir.duzeltilmisNet ?? satir.net;
+      toplamYatirim += duzeltilmisYatirim;
+      toplamCekim += duzeltilmisCekim;
+      toplamManuelYatirim += manuelYatirim;
+      toplamManuelCekim += manuelCekim;
+      parcalar.push(
+        '',
+        `  🔹 ${satir.anahtar}`,
+        `    ⬇️ Yatırım: ${para(duzeltilmisYatirim)} (${satir.yatirimAdedi})` +
+          (manuelYatirim ? ` [rapor ${para(satir.yatirim)} + manuel ${para(manuelYatirim)}]` : ''),
+        `    ⬆️ Çekim:   ${para(duzeltilmisCekim)} (${satir.cekimAdedi})` +
+          (manuelCekim ? ` [rapor ${para(satir.cekim)} + manuel ${para(manuelCekim)}]` : ''),
+        `    ⚖️ Net:     ${para(duzeltilmisNet)}`,
+      );
+    }
 
-  let toplamYatirim = 0;
-  let toplamCekim = 0;
-  let toplamManuelYatirim = 0;
-  let toplamManuelCekim = 0;
-  for (const satir of satirlar) {
-    const manuelYatirim = satir.manuelYatirim ?? 0;
-    const manuelCekim = satir.manuelCekim ?? 0;
-    const duzeltilmisYatirim = satir.duzeltilmisYatirim ?? satir.yatirim;
-    const duzeltilmisCekim = satir.duzeltilmisCekim ?? satir.cekim;
-    const duzeltilmisNet = satir.duzeltilmisNet ?? satir.net;
-    toplamYatirim += duzeltilmisYatirim;
-    toplamCekim += duzeltilmisCekim;
-    toplamManuelYatirim += manuelYatirim;
-    toplamManuelCekim += manuelCekim;
     parcalar.push(
       '',
-      `  🔹 ${satir.anahtar}`,
-      `    ⬇️ Yatırım: ${para(duzeltilmisYatirim)} (${satir.yatirimAdedi})` +
-        (manuelYatirim ? ` [rapor ${para(satir.yatirim)} + manuel ${para(manuelYatirim)}]` : ''),
-      `    ⬆️ Çekim:   ${para(duzeltilmisCekim)} (${satir.cekimAdedi})` +
-        (manuelCekim ? ` [rapor ${para(satir.cekim)} + manuel ${para(manuelCekim)}]` : ''),
-      `    ⚖️ Net:     ${para(duzeltilmisNet)}`,
+      AYIRAC,
+      `  💰 TOPLAM Yatırım: ${para(toplamYatirim)}`,
+      `  💸 TOPLAM Çekim:   ${para(toplamCekim)}`,
+      `  ⚖️ TOPLAM Net:     ${para(toplamYatirim - toplamCekim)}`,
     );
+    if (toplamManuelYatirim || toplamManuelCekim) {
+      parcalar.push(`  ✏️ (manuel dahil: +${para(toplamManuelYatirim)} yatırım · +${para(toplamManuelCekim)} çekim)`);
+    }
   }
 
-  parcalar.push(
-    '',
-    AYIRAC,
-    `  💰 TOPLAM Yatırım: ${para(toplamYatirim)}`,
-    `  💸 TOPLAM Çekim:   ${para(toplamCekim)}`,
-    `  ⚖️ TOPLAM Net:     ${para(toplamYatirim - toplamCekim)}`,
-  );
-  if (toplamManuelYatirim || toplamManuelCekim) {
-    parcalar.push(`  ✏️ (manuel dahil: +${para(toplamManuelYatirim)} yatırım · +${para(toplamManuelCekim)} çekim)`);
+  // Yontemsiz manuel kalemler — hicbir satira eslenmedigi icin ustte
+  // GORUNMEZLER. Burada AYRICA gosterilmezse rapor onlari sessizce
+  // yutmus olur; operator "eklendi ama nereye gitti" diye sorardı.
+  if (genelManuelKalemler && genelManuelKalemler.length > 0) {
+    const genelYatirim = genelManuelKalemler.filter((k) => k.tur === 'yatirim').reduce((t, k) => t + sayi(k.tutar), 0);
+    const genelCekim = genelManuelKalemler.filter((k) => k.tur === 'cekim').reduce((t, k) => t + sayi(k.tutar), 0);
+    parcalar.push(
+      '',
+      AYIRAC,
+      `  🔓 GENEL (yönteme atanmamış, ${genelManuelKalemler.length} kalem)`,
+      `    ⬇️ Yatırım: ${para(genelYatirim)}`,
+      `    ⬆️ Çekim:   ${para(genelCekim)}`,
+    );
+    for (const kalem of genelManuelKalemler.slice(0, 10)) {
+      parcalar.push(`    • ${kalem.gun} ${kalem.tur === 'yatirim' ? '+' : '−'}${para(kalem.tutar)} — ${kalem.aciklama || 'açıklama yok'}`);
+    }
+    if (genelManuelKalemler.length > 10) parcalar.push(`    • … ${genelManuelKalemler.length - 10} kalem daha`);
   }
 
   return parcalar.join('\n');

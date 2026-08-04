@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { oyuncuBakiyeMesaji, oyuncuBakiyeOzetiCikar } from './oyuncuBakiyeRaporu.js';
+import { oyuncuBakiyeMesaji, oyuncuBakiyeOzetiCikar, topBakiyeliOyuncular } from './oyuncuBakiyeRaporu.js';
 
 /** Kullanıcının yapıştırdığı gerçek rapor 1843 yanıtının kısaltılmış hali. */
 const GERCEK_YANIT = {
@@ -86,5 +86,40 @@ describe('oyuncuBakiyeMesaji', () => {
     const mesaj = oyuncuBakiyeMesaji(ozet);
     expect(mesaj).not.toContain('▲');
     expect(mesaj).not.toContain('▼');
+  });
+
+  it('top oyuncular verilirse listeler', () => {
+    const top = topBakiyeliOyuncular(GERCEK_YANIT, 10).map((o) => ({ ...o, toplamYatirim: 6000, toplamCekim: 1500 }));
+    const mesaj = oyuncuBakiyeMesaji(ozet, undefined, top);
+    expect(mesaj).toContain('EN YÜKSEK BAKİYELİ 2 ÜYE');
+    expect(mesaj).toContain('1. larac (2503142) — 4.500 TRY');
+    expect(mesaj).toContain('Yatırım: 6.000 TRY · Çekim: 1.500 TRY');
+  });
+
+  it('top oyuncular verilmezse bölüm hiç yazılmaz', () => {
+    expect(oyuncuBakiyeMesaji(ozet)).not.toContain('EN YÜKSEK BAKİYELİ');
+  });
+});
+
+describe('topBakiyeliOyuncular', () => {
+  it('toplam bakiyeye göre büyükten küçüğe sıralar', () => {
+    const top = topBakiyeliOyuncular(GERCEK_YANIT, 10);
+    expect(top.map((o) => o.id)).toEqual(['2503142', '2489612']);
+    expect(top[0]).toMatchObject({ ad: 'larac', toplamBakiye: 4500, toplamYatirim: null, toplamCekim: null });
+  });
+
+  it('azami sayıyı kırpar', () => {
+    const cok = { reports: Array.from({ length: 15 }, (_, i) => ({ 'Player ID': String(i), Username: `p${i}`, 'Total Balance (TRY)': i })) };
+    expect(topBakiyeliOyuncular(cok, 10)).toHaveLength(10);
+  });
+
+  it('kimliksiz satırı atlar', () => {
+    const veri = { reports: [{ Username: 'kimliksiz', 'Total Balance (TRY)': 999 }] };
+    expect(topBakiyeliOyuncular(veri, 10)).toEqual([]);
+  });
+
+  it('boş/eksik girişte boş liste döner', () => {
+    expect(topBakiyeliOyuncular(null)).toEqual([]);
+    expect(topBakiyeliOyuncular({})).toEqual([]);
   });
 });

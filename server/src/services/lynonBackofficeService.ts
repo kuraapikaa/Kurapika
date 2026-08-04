@@ -26,7 +26,7 @@ import {
   tarihAraligindakiOturumlar,
   type OyuncuAdlari,
 } from './bonusOturumRaporu.js';
-import { oyuncuBakiyeMesaji, oyuncuBakiyeOzetiCikar } from './oyuncuBakiyeRaporu.js';
+import { oyuncuBakiyeMesaji, oyuncuBakiyeOzetiCikar, topBakiyeliOyuncular } from './oyuncuBakiyeRaporu.js';
 import { izinliKisitMi, kisitGovdeleri, type Kisit } from './hedefBakiyeKilidi.js';
 import {
   duzeltmeSatiri,
@@ -2970,6 +2970,9 @@ export async function lynonYontemBazindaKasa(body: AnyRecord = {}): Promise<AnyR
   // Baslangictan ONCEKI manuel kalemler test donemine ait; disaridadir.
   const manuel = tumKalemler.filter((kalem) => String(kalem.gun ?? '') >= baslangic);
   const satirlar = satirlariManuelIleZenginlestir(raporSatirlari, manuel);
+  // Yontemsiz kalemler hicbir satira eslenmez; ayri gosterilmezse rapor
+  // onlari sessizce yutar (bildirilen "manuel islemleri gormuyor" hatasi).
+  const genelManuelKalemler = manuel.filter((kalem) => !String(kalem.yontem ?? '').trim());
 
   return {
     HasError: false,
@@ -2977,7 +2980,8 @@ export async function lynonYontemBazindaKasa(body: AnyRecord = {}): Promise<AnyR
       Baslangic: baslangic,
       Bitis: bitis,
       Satirlar: satirlar,
-      Mesaj: yontemKasaMesaji({ baslangic, bitis }, satirlar),
+      GenelManuelKalemler: genelManuelKalemler,
+      Mesaj: yontemKasaMesaji({ baslangic, bitis }, satirlar, undefined, genelManuelKalemler),
       Kaynak: `reportData/summarized/${NARCOS_REPORT_IDS.integrationPayment}`,
     },
   };
@@ -3011,11 +3015,36 @@ export async function lynonAnlikOyuncuBakiyesi(body: AnyRecord = {}): Promise<An
   }).format(now);
   const ozet = oyuncuBakiyeOzetiCikar(data, gun, saat);
 
+  /**
+   * En yuksek bakiyeli oyuncularin yatirim/cekim toplamlarini
+   * playersOverview uzerinden zenginlestir — rapor 1843'te bu tutarlar
+   * YOK (yalnizca tarih var). `lynonPlayerOverviewMap()` zaten 5 dk
+   * onbellekli tek bir cagri; her turda 10 ayri KPI istegi atmaktan
+   * ucuz. Zenginlestirme dusse de ana bakiye ozeti YINE gitmeli.
+   */
+  const topOyuncular = topBakiyeliOyuncular(data, 10);
+  if (topOyuncular.length > 0) {
+    try {
+      const overviewMap = await lynonPlayerOverviewMap();
+      for (const oyuncu of topOyuncular) {
+        const overviewRow = overviewMap.get(oyuncu.id);
+        if (!overviewRow) continue;
+        const yatirim = pickAmount(overviewRow, ['TOTAL DEPOSITS AMOUNT FILTERED (TRY)', 'TOTAL DEPOSITS AMOUNT (TRY)', 'TOTAL DEPOSITS AMOUNT'], NaN);
+        const cekim = pickAmount(overviewRow, ['TOTAL WITHDRAWALS AMOUNT FILTERED (TRY)', 'TOTAL WITHDRAWALS AMOUNT (TRY)', 'TOTAL WITHDRAWALS AMOUNT'], NaN);
+        oyuncu.toplamYatirim = Number.isFinite(yatirim) ? yatirim : null;
+        oyuncu.toplamCekim = Number.isFinite(cekim) ? cekim : null;
+      }
+    } catch (err) {
+      console.error('[oyuncu-bakiyesi] top oyuncu zenginlestirme hatasi:', err instanceof Error ? err.message : err);
+    }
+  }
+
   return {
     HasError: false,
     Data: {
       Ozet: ozet,
-      Mesaj: oyuncuBakiyeMesaji(ozet),
+      TopOyuncular: topOyuncular,
+      Mesaj: oyuncuBakiyeMesaji(ozet, undefined, topOyuncular),
       Kaynak: `reportData/summarized/${NARCOS_REPORT_IDS.playerBalance}`,
     },
   };

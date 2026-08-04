@@ -66,7 +66,54 @@ export function oyuncuBakiyeOzetiCikar(
   };
 }
 
+export type TopBakiyeliOyuncu = {
+  id: string;
+  ad: string;
+  gercekBakiye: number | null;
+  toplamBakiye: number;
+  /** Rapor 1843'te yok; ayri bir uctan (playersOverview) sonradan doldurulur. */
+  toplamYatirim: number | null;
+  toplamCekim: number | null;
+};
+
+/**
+ * En yuksek TOPLAM bakiyeli oyuncular.
+ *
+ * Rapor 1843 satirlarindan cikar; yatirim/cekim toplami bu raporda YOK
+ * (yalnizca tarih var, tutar yok) — cagiran bunlari ayri bir uctan
+ * doldurup `toplamYatirim`/`toplamCekim`'i gunceller. Burada null
+ * birakilmasi bilinclidir: "olculemedi" ile "0 TL" karistirilmaz.
+ */
+export function topBakiyeliOyuncular(
+  data: AnyRecord | null | undefined,
+  azami = 10,
+): TopBakiyeliOyuncu[] {
+  const govde = (data ?? {}) as AnyRecord;
+  const satirlar: AnyRecord[] = Array.isArray(govde.reports) ? govde.reports : [];
+
+  return satirlar
+    .map((satir) => {
+      const id = String(satir?.['Player ID'] ?? '').trim();
+      const ad = String(satir?.Username ?? satir?.['Full Name'] ?? id).trim();
+      const toplamBakiyeDeger = satir?.['Total Balance (TRY)'];
+      return {
+        id,
+        ad,
+        gercekBakiye: satir?.['Total Real Balance (TRY)'] != null ? sayi(satir['Total Real Balance (TRY)']) : null,
+        toplamBakiye: toplamBakiyeDeger != null ? sayi(toplamBakiyeDeger) : 0,
+        toplamYatirim: null as number | null,
+        toplamCekim: null as number | null,
+      };
+    })
+    .filter((oyuncu) => oyuncu.id)
+    .sort((a, b) => b.toplamBakiye - a.toplamBakiye)
+    .slice(0, azami);
+}
+
 const TL = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 2 });
+
+/** Mesaj basliklarini ayiran ince cizgi; sohbette blok blok okunsun. */
+const AYIRAC = '━━━━━━━━━━━━━━━━━━';
 
 function para(deger: number | null): string {
   return deger === null ? '—' : `${TL.format(deger)} TRY`;
@@ -89,9 +136,16 @@ function trendYaz(simdi: number | null, onceki: number | null | undefined): stri
  *
  * `onceki` verilirse bir onceki gonderime gore trend oku eklenir — 7.5
  * dakikada bir gelen bir mesajda "yon" bir bakista gorulsun diye.
+ *
+ * `topOyuncular` verilirse en yuksek bakiyeli oyuncular ayri bir
+ * bolumde, toplam yatirim/cekimleriyle birlikte listelenir.
  */
-export function oyuncuBakiyeMesaji(ozet: OyuncuBakiyeOzeti, onceki?: OyuncuBakiyeOzeti | null): string {
-  return [
+export function oyuncuBakiyeMesaji(
+  ozet: OyuncuBakiyeOzeti,
+  onceki?: OyuncuBakiyeOzeti | null,
+  topOyuncular?: TopBakiyeliOyuncu[],
+): string {
+  const satirlar = [
     `👛✨ ANLIK OYUNCU BAKİYESİ · ${ozet.gun}${ozet.saat ? ` · ${ozet.saat}` : ''}`,
     '━━━━━━━━━━━━━━━━━━',
     `👥 Oyuncu: ${ozet.oyuncuSayisi === null ? '—' : ozet.oyuncuSayisi}`,
@@ -99,5 +153,17 @@ export function oyuncuBakiyeMesaji(ozet: OyuncuBakiyeOzeti, onceki?: OyuncuBakiy
     `💰 Gerçek bakiye: ${para(ozet.gercekBakiye)}${trendYaz(ozet.gercekBakiye, onceki?.gercekBakiye)}`,
     `🎁 Bonus bakiye:  ${para(ozet.bonusBakiye)}${trendYaz(ozet.bonusBakiye, onceki?.bonusBakiye)}`,
     `⚖️ Toplam bakiye: ${para(ozet.toplamBakiye)}${trendYaz(ozet.toplamBakiye, onceki?.toplamBakiye)}`,
-  ].join('\n');
+  ];
+
+  if (topOyuncular && topOyuncular.length > 0) {
+    satirlar.push('', AYIRAC, `🏆 EN YÜKSEK BAKİYELİ ${topOyuncular.length} ÜYE`);
+    topOyuncular.forEach((oyuncu, index) => {
+      satirlar.push(
+        `  ${index + 1}. ${oyuncu.ad} (${oyuncu.id}) — ${para(oyuncu.toplamBakiye)}`,
+        `     Yatırım: ${para(oyuncu.toplamYatirim)} · Çekim: ${para(oyuncu.toplamCekim)}`,
+      );
+    });
+  }
+
+  return satirlar.join('\n');
 }
