@@ -155,6 +155,18 @@ describe('cekimBaglamMesaji', () => {
     expect(mesaj).toContain('Bugünkü talep: 1');
   });
 
+  it('toplam yatırım ve çekimi en üstte, ilk bakışta gösterir', () => {
+    const mesaj = cekimBaglamMesaji('x', taban);
+    const enUstBlok = mesaj.split('🪪 HESAP')[0];
+    expect(enUstBlok).toContain('Toplam yatırım: 20.000 TRY · Toplam çekim: 8.000 TRY');
+  });
+
+  it('toplam yatırım/çekim ölçülemiyorsa en üstte de sıfır göstermez', () => {
+    const mesaj = cekimBaglamMesaji('x', { ...taban, toplamYatirim: null, toplamCekim: null });
+    const enUstBlok = mesaj.split('🪪 HESAP')[0];
+    expect(enUstBlok).toContain('Toplam yatırım: — · Toplam çekim: —');
+  });
+
   it('oyuncunun önde olduğunu yazar', () => {
     expect(cekimBaglamMesaji('x', taban, SIMDI)).toContain('oyuncu 🔴 önde');
   });

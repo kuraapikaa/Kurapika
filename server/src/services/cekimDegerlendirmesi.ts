@@ -292,6 +292,9 @@ export function cekimBaglamMesaji(baslik: string, b: CekimBaglami, simdi = Date.
     '━━━━━━━━━━━━━━━━━━',
     `👤 ${b.login || '(ad yok)'} · ${b.playerId}`,
     `💸 ${paraYaz(b.tutar, b.paraBirimi)}`,
+    // Toplam yatirim/cekim EN USTTE de tekrar edilir — 💰 PARA bolumune
+    // kaydirmadan, karar verirken ilk bakista gorunsun diye.
+    `📈 Toplam yatırım: ${paraYaz(b.toplamYatirim)} · Toplam çekim: ${paraYaz(b.toplamCekim)}`,
   ];
 
   // ── Uyarilar en uste; riskli bir sey varsa kaydirmadan gorunmeli.

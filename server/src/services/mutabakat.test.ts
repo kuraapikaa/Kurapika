@@ -328,4 +328,26 @@ describe('yontemKasaMesaji', () => {
     expect(mesaj).toContain('rapor 13.166 TRY + manuel 1.000 TRY');
     expect(mesaj).toContain('(manuel dahil:');
   });
+
+  it('yöntemsiz manuel kalemi GENEL bölümünde gösterir — sessizce kaybolmaz', () => {
+    const genel: ManuelKalem[] = [
+      { id: '1', gun: '2026-08-02', tur: 'yatirim', tutar: 500, aciklama: 'elden havale', ekleyen: 'a', eklendi: '' },
+    ];
+    const mesaj = yontemKasaMesaji(aralik, satirlar, null, genel);
+    expect(mesaj).toContain('GENEL (yönteme atanmamış, 1 kalem)');
+    expect(mesaj).toContain('elden havale');
+  });
+
+  it('yöntemsiz kalem yoksa GENEL bölümü hiç yazılmaz', () => {
+    expect(yontemKasaMesaji(aralik, satirlar)).not.toContain('GENEL');
+  });
+
+  it('sağlayıcı hareketi yokken bile yöntemsiz manuel kalemleri gösterir', () => {
+    const genel: ManuelKalem[] = [
+      { id: '1', gun: '2026-08-02', tur: 'cekim', tutar: 300, aciklama: 'iade', ekleyen: 'a', eklendi: '' },
+    ];
+    const mesaj = yontemKasaMesaji(aralik, [], null, genel);
+    expect(mesaj).toContain('sağlayıcı hareketi yok');
+    expect(mesaj).toContain('iade');
+  });
 });

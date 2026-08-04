@@ -15,7 +15,7 @@ import { readStoredDocument, writeStoredDocument } from '../lib/documentStore.js
 import { sendTelegramMessage } from '../services/telegramService.js';
 import { ozetZamaniMi } from '../services/telegramRaporu.js';
 import { lynonAnlikOyuncuBakiyesi } from '../services/lynonBackofficeService.js';
-import { oyuncuBakiyeMesaji, type OyuncuBakiyeOzeti } from '../services/oyuncuBakiyeRaporu.js';
+import { oyuncuBakiyeMesaji, type OyuncuBakiyeOzeti, type TopBakiyeliOyuncu } from '../services/oyuncuBakiyeRaporu.js';
 
 const NAMESPACE = 'oyuncu-bakiye-durumu';
 
@@ -45,7 +45,8 @@ export async function runOyuncuBakiyeJob(tenantKey = 'default', now = new Date()
 
   const yanit = await lynonAnlikOyuncuBakiyesi({});
   const ozet: OyuncuBakiyeOzeti = yanit?.Data?.Ozet;
-  await sendTelegramMessage(chatId, oyuncuBakiyeMesaji(ozet, durum.sonOzet));
+  const topOyuncular: TopBakiyeliOyuncu[] | undefined = yanit?.Data?.TopOyuncular;
+  await sendTelegramMessage(chatId, oyuncuBakiyeMesaji(ozet, durum.sonOzet, topOyuncular));
 
   // Kayit GONDERIM BASARILI OLDUKTAN sonra; Telegram dusukse bir
   // sonraki turda tekrar denenir ve trend onceki basarili gonderime gore kalir.
