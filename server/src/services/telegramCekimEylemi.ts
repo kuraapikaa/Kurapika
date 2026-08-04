@@ -88,41 +88,66 @@ export async function telegramCekimCallback(callback: AnyRecord): Promise<Callba
     return { islendi: false, mesaj };
   }
 
-  // 2 · Denetim.
-  audit(kullaniciAdi, 'telegram', 'withdrawal_resolve', `islem:${veri.islemId}`,
-    `Çekim ${EYLEM_ADI[veri.eylem]} (Telegram butonu). Oyuncu: ${veri.oyuncuId || 'bilinmiyor'}.`);
+  // Lynon tarafi zaten cozuldu (para hareketi gerceklesti) — buradan
+  // sonraki adimlardan biri (denetim, buton kaldirma, mesaj) beklenmedik
+  // sekilde patlarsa bile operator MUTLAKA bir geri bildirim gormeli ve
+  // buton "yukleniyor" halinde SIKISIP KALMAMALI. Onceden yalnizca
+  // Lynon cagrisi try/catch icindeydi; bu bloktaki bir hata (ag hatasi,
+  // Telegram API gecici arizasi vb.) fonksiyonu SESSIZCE yarida birakiyor,
+  // cagiran taraf (games.ts) da yalnizca sunucu logına yaziyordu —
+  // operator ekranda hicbir sey gormuyordu ("butonlar açık kalıyor ve
+  // geri bildirim vermiyor" sikayetinin sebebi buydu).
+  try {
+    // 2 · Denetim.
+    audit(kullaniciAdi, 'telegram', 'withdrawal_resolve', `islem:${veri.islemId}`,
+      `Çekim ${EYLEM_ADI[veri.eylem]} (Telegram butonu). Oyuncu: ${veri.oyuncuId || 'bilinmiyor'}.`);
 
-  // Tarama imlecine ONCEDEN gorulmus olarak isaretle — yoksa bir sonraki
-  // tur ayni durum degisimini "yeni olay" sanip sonucu IKINCI KEZ
-  // bildirir ("çekim onaylayınca bir daha çekim geldi" hatasi buydu).
-  await cekimSonucunuImleceIsaretle(veri.islemId, onayMi ? 'onay' : 'red').catch((err) => {
-    console.error('[telegram-cekim] imlec isaretleme hatasi:', err instanceof Error ? err.message : err);
-  });
+    // Tarama imlecine ONCEDEN gorulmus olarak isaretle — yoksa bir sonraki
+    // tur ayni durum degisimini "yeni olay" sanip sonucu IKINCI KEZ
+    // bildirir ("çekim onaylayınca bir daha çekim geldi" hatasi buydu).
+    await cekimSonucunuImleceIsaretle(veri.islemId, onayMi ? 'onay' : 'red').catch((err) => {
+      console.error('[telegram-cekim] imlec isaretleme hatasi:', err instanceof Error ? err.message : err);
+    });
 
-  // 3 · Butonlari kaldir ve sonucu mesaja yaz.
-  if (chatId && messageId) {
-    await telegramButonlariKaldir(chatId, messageId);
-    await telegramYanitla(chatId, messageId,
-      `${onayMi ? '✅' : '❌'} Çekim ${EYLEM_ADI[veri.eylem]} — ${kullaniciAdi}`);
-  }
-  if (callbackId) await telegramCallbackYanitla(callbackId, `Çekim ${EYLEM_ADI[veri.eylem]}.`);
+    // 3 · Butonlari kaldir ve sonucu mesaja yaz.
+    if (chatId && messageId) {
+      await telegramButonlariKaldir(chatId, messageId);
+      await telegramYanitla(chatId, messageId,
+        `${onayMi ? '✅' : '❌'} Çekim ${EYLEM_ADI[veri.eylem]} — ${kullaniciAdi}`);
+    }
+    if (callbackId) await telegramCallbackYanitla(callbackId, `Çekim ${EYLEM_ADI[veri.eylem]}.`);
 
-  // "Onayla + Not" ise not sorulur; yanit webhook'ta yakalanir.
-  if (veri.eylem === 'onayNot' && chatId && veri.oyuncuId) {
-    await sendTelegramMessage(chatId, notIstekMesaji(veri.oyuncuId, ''), { zorunluYanit: true })
-      .catch(() => undefined);
-  }
+    // "Onayla + Not" ise not sorulur; yanit webhook'ta yakalanir.
+    if (veri.eylem === 'onayNot' && chatId && veri.oyuncuId) {
+      await sendTelegramMessage(chatId, notIstekMesaji(veri.oyuncuId, ''), { zorunluYanit: true })
+        .catch(() => undefined);
+    }
 
-  // "Red Nedeni Yaz" ise neden sorulur; yanit red sonucuyla ayni gruba gider.
-  // Oyuncu adi/tutar/yontem, sohbette hala gorunen ORIJINAL cekim
-  // mesajindan okunur — ekstra Lynon istegi gerekmez.
-  if (veri.eylem === 'retNot' && chatId) {
-    const bilgi = cekimMesajindanBilgi(callback?.message?.text);
-    await sendTelegramMessage(
-      chatId,
-      redNedeniIstekMesaji(veri.islemId, veri.oyuncuId, bilgi.login ?? '', { tutar: bilgi.tutar, yontem: bilgi.yontem }),
-      { zorunluYanit: true },
-    ).catch(() => undefined);
+    // "Red Nedeni Yaz" ise neden sorulur; yanit red sonucuyla ayni gruba gider.
+    // Oyuncu adi/tutar/yontem, sohbette hala gorunen ORIJINAL cekim
+    // mesajindan okunur — ekstra Lynon istegi gerekmez.
+    if (veri.eylem === 'retNot' && chatId) {
+      const bilgi = cekimMesajindanBilgi(callback?.message?.text);
+      await sendTelegramMessage(
+        chatId,
+        redNedeniIstekMesaji(veri.islemId, veri.oyuncuId, bilgi.login ?? '', { tutar: bilgi.tutar, yontem: bilgi.yontem }),
+        { zorunluYanit: true },
+      ).catch(() => undefined);
+    }
+  } catch (err) {
+    const mesaj = err instanceof Error ? err.message : String(err);
+    console.error('[telegram-cekim] cozumleme sonrasi hata (Lynon tarafi zaten islendi):', mesaj);
+    // Lynon'da islem GERCEKTEN cozuldu — burada "başarısız" denirse
+    // operator ikinci kez basar ve uctan hata alir. Bunun yerine durum
+    // acikca soylenir: para hareketi tamam, yalnizca bildirim aksadi.
+    if (callbackId) await telegramCallbackYanitla(callbackId, `Çekim ${EYLEM_ADI[veri.eylem]} (Lynon'da işlendi).`).catch(() => undefined);
+    if (chatId && messageId) {
+      await telegramButonlariKaldir(chatId, messageId).catch(() => undefined);
+      await telegramYanitla(chatId, messageId,
+        `${onayMi ? '✅' : '❌'} Çekim ${EYLEM_ADI[veri.eylem]} — ${kullaniciAdi} (bildirim adımlarından biri başarısız oldu, işlem Lynon'da tamamlandı)`)
+        .catch(() => undefined);
+    }
+    return { islendi: true, mesaj: `Çekim ${veri.islemId} ${EYLEM_ADI[veri.eylem]} — bildirim hatası: ${mesaj}` };
   }
 
   return { islendi: true, mesaj: `Çekim ${veri.islemId} ${EYLEM_ADI[veri.eylem]}.` };
