@@ -948,6 +948,12 @@ export const adminApi = {
 
   chargeBonus: (body: { ClientId: number; BonusId: number; Amount?: number; AssignmentValues?: Record<string, unknown> }) =>
     post<any>('/admin/bonus/charge', body),
+
+  bonusBlacklist: () => get<{ HasError: boolean; Data: Array<{ login: string; neden: string | null; ekleyen: string; eklendi: string }> }>('/admin/bonus/blacklist'),
+  bonusBlacklistEkle: (login: string, neden?: string) =>
+    post<any>('/admin/bonus/blacklist', { login, neden }),
+  bonusBlacklistCikar: (login: string) =>
+    del<any>(`/admin/bonus/blacklist/${encodeURIComponent(login)}`),
 };
 
 /** Bonus Panel (ayrı giriş) - oyuncu bonus talep sayfası oturumu */
@@ -1136,6 +1142,35 @@ export const affiliateAdminApi = {
       toplamKomisyon: number;
       message?: string;
     }>('/admin/affiliate/komisyon-raporu', body),
+};
+
+export type BugscrmDurum = {
+  etkin: boolean;
+  yapilandirildi: boolean;
+  endpointUrl: string | null;
+  productId: string | null;
+  apiKeyTanimli: boolean;
+  webhookSecretTanimli: boolean;
+};
+
+export type BugscrmKaydi = {
+  clickId: string;
+  subId: string | null;
+  olayTuru: 'tiklama' | 'kayit' | 'yatirim' | 'ozel';
+  playerLogin: string | null;
+  tutar: number | null;
+  paraBirimi: string | null;
+  alindi: string;
+};
+
+export const bugscrmAdminApi = {
+  durum: () => get<{ HasError: boolean; Data: BugscrmDurum }>('/admin/bugscrm/durum'),
+  testBaglanti: () =>
+    post<{ HasError: boolean; AlertMessage?: string; Data: { ok: boolean; durum: string; mesaj?: string } }>(
+      '/admin/bugscrm/test-baglanti',
+      {},
+    ),
+  kayitlar: (limit = 100) => get<{ HasError: boolean; Data: BugscrmKaydi[] }>(`/admin/bugscrm/kayitlar?limit=${limit}`),
 };
 
 export const formsApi = {

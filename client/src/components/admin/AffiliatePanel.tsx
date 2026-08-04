@@ -31,6 +31,7 @@ import {
 } from '../../api/client';
 import { formatDateDisplay, formatNumber } from '../../lib/format';
 import type { ClientItem } from '../../types/dashboard';
+import { BugscrmSekmesi } from './BugscrmSekmesi';
 
 /**
  * Affiliate merkezi.
@@ -44,7 +45,7 @@ import type { ClientItem } from '../../types/dashboard';
  * Komisyon (hakedis raporu).
  */
 
-type Sekme = 'performans' | 'ortaklar' | 'komisyon';
+type Sekme = 'performans' | 'ortaklar' | 'komisyon' | 'bugscrm';
 
 type Siralama = 'netPozisyon' | 'netRevenue' | 'totalPlayers' | 'oyuncuBasiGelir' | 'cekimOrani';
 
@@ -559,6 +560,7 @@ export function AffiliatePanel() {
     { id: 'performans', ad: 'BTag performansı', ikon: BarChart3 },
     { id: 'ortaklar', ad: 'Ortaklar', ikon: Handshake },
     { id: 'komisyon', ad: 'Komisyon', ikon: Coins },
+    { id: 'bugscrm', ad: 'BugsCRM', ikon: Target },
   ];
 
   return (
@@ -592,6 +594,7 @@ export function AffiliatePanel() {
 
       {sekme === 'ortaklar' && <OrtaklarSekmesi />}
       {sekme === 'komisyon' && <KomisyonSekmesi range={range} />}
+      {sekme === 'bugscrm' && <BugscrmSekmesi />}
 
       {sekme === 'performans' && (
         <>

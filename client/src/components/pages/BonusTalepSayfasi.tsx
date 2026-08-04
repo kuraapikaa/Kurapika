@@ -336,6 +336,35 @@ export function BonusTalepSayfasi() {
 
   // Helper functions for styling
 
+  // Bakim modu: lobideki karti gizlemek (quickAccess enabled=false) yalnizca
+  // navigasyonu gizler, oyuncu sayfaya dogrudan URL ile hala ulasabilir. Bu
+  // bayrak sayfanin KENDISINI kapatir — bonus listesi, sorgular ve modallar
+  // hic calismaz, yalnizca "kapali" karti gosterilir.
+  if (pageContent.maintenanceMode) {
+    return (
+      <LobbyPageShell
+        active="bonus"
+        palette={palette}
+        rootStyle={rootStyle}
+        backgroundStyle={backgroundStyle}
+        eyebrow={pageContent.eyebrow}
+        title={pageContent.title}
+        subtitle={pageContent.subtitle}
+        wide
+      >
+        <LobbyCard className="py-16 text-center">
+          <Gift className="mx-auto mb-3 opacity-20" size={36} style={{ color: palette.accentColor }} />
+          <p className="text-base font-black text-[color:var(--lobby-text,#f3ecdd)]">{pageContent.unavailableTitle}</p>
+          {pageContent.unavailableDescription && (
+            <p className="mx-auto mt-2 max-w-md text-[13px] font-medium text-[color:var(--lobby-muted,#8f8674)]">
+              {pageContent.unavailableDescription}
+            </p>
+          )}
+        </LobbyCard>
+      </LobbyPageShell>
+    );
+  }
+
   return (
     <LobbyPageShell
       active="bonus"

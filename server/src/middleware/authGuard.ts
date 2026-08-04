@@ -36,6 +36,9 @@ const PUBLIC_EXACT_PATHS = new Set([
   // Telegram'ın gönderdiği her update handler'a ulaşmadan 401 alıyordu ve
   // oyuncu hesabı hiç bağlanamıyordu.
   '/api/telegram/webhook',
+  // BugsCRM'in gönderdiği tıklama/dönüşüm postback'i. Panel oturumu olamaz;
+  // kendi paylaşılan-sır doğrulaması var (bkz. routes/bugscrm.ts).
+  '/api/bugscrm/postback',
   // Affiliate portal kimlik dogrulama uclari. Panel oturumu olamaz; kendi
   // oturumlarini bu uclar kuruyor.
   '/api/affiliate-portal/login',

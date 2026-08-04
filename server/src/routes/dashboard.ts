@@ -32,6 +32,7 @@ import { bonusDenetimAciklamasi } from '../services/bonusDenetimAciklamasi.js';
 import { readStoredDocument, writeStoredDocument } from '../lib/documentStore.js';
 import { findNarcosBonusByCampaignTitle, NARCOS_BONUSES } from '../lib/narcosBonusCatalog.js';
 import { buildPromoRuleState, resolvePromoTitle } from '../lib/promoCatalog.js';
+import { bonusBlacklisteEkle, bonusBlacklisteMi, bonusBlacklistindenCikar, readBonusBlacklist } from '../services/bonusBlacklistService.js';
 import {
   isLynonConfigured,
   lynonBetReport,
@@ -1750,11 +1751,32 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
         });
       }
 
+      // Bonus talebinden men edilmis mi? Hesap kilitli degil, oyuncu siteyi
+      // normal kullanabiliyor — yalnizca bonus/cark/kazi-kazan taleplerinden
+      // disarida. Bu kontrol Lynon'a hic gitmeden en basta yapiliyor.
+      const blacklistTenantKey = await getTenantKeyForAdmin(request as any);
+      const blacklistKaydi = await bonusBlacklisteMi(blacklistTenantKey, login);
+      if (blacklistKaydi) {
+        return reply.send({
+          HasError: false,
+          Data: {
+            account: null,
+            withdrawalRulesCheck: null,
+            riskAnalysis: null,
+            bonusRules: null,
+            specificBonusCheck: {
+              overallOk: false,
+              items: [{ id: 'bonus-blacklist', ok: false, label: blacklistKaydi.neden ? `Bonus taleplerinden men edildi: ${blacklistKaydi.neden}` : 'Bu hesap bonus taleplerinden men edilmiştir.' }],
+            },
+          },
+        });
+      }
+
       const token = getBackofficeToken();
       if (shouldUseLynon(request)) {
         try {
           const account = await lynonBuildBonusEligibilitySnapshot({ login });
-          const tenantKey = await getTenantKeyForAdmin(request as any);
+          const tenantKey = blacklistTenantKey;
           const specs = await getRulesForTenant(tenantKey);
           const resolvedRule = resolveBonusRule(specs, bonusId);
           const spec = resolvedRule?.spec ?? null;
@@ -1902,6 +1924,41 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
       }
     }
   );
+
+  // Admin: bonus blacklist listesi.
+  fastify.get('/admin/bonus/blacklist', async (request, reply) => {
+    const session = request.session as any;
+    if (!session?.user) return reply.status(401).send({ HasError: true, AlertMessage: 'Oturum bulunamadı.' });
+    const tenantKey = await getTenantKeyForAdmin(request as any);
+    const kayitlar = await readBonusBlacklist(tenantKey);
+    return reply.send({ HasError: false, Data: kayitlar });
+  });
+
+  // Admin: bir oyuncuyu bonus talebinden men et.
+  fastify.post<{ Body: { login: string; neden?: string } }>('/admin/bonus/blacklist', async (request, reply) => {
+    const session = request.session as any;
+    const user = session?.user;
+    if (!user) return reply.status(401).send({ HasError: true, AlertMessage: 'Oturum bulunamadı.' });
+    const { login, neden } = request.body ?? {};
+    if (!login || !String(login).trim()) return reply.status(400).send({ HasError: true, AlertMessage: 'Kullanıcı adı gerekli.' });
+    const tenantKey = await getTenantKeyForAdmin(request as any);
+    const kayitlar = await bonusBlacklisteEkle(tenantKey, login, user.username ?? 'admin', neden);
+    const { audit } = await import('../lib/auditLog.js');
+    audit(user.username ?? 'admin', 'admin', 'bonus_blacklist_ekle', `login:${login}`, neden ? `Bonus talebinden men edildi: ${neden}` : 'Bonus talebinden men edildi.');
+    return reply.send({ HasError: false, Data: kayitlar });
+  });
+
+  // Admin: bir oyuncuyu bonus blacklist'inden çıkar.
+  fastify.delete<{ Params: { login: string } }>('/admin/bonus/blacklist/:login', async (request, reply) => {
+    const session = request.session as any;
+    const user = session?.user;
+    if (!user) return reply.status(401).send({ HasError: true, AlertMessage: 'Oturum bulunamadı.' });
+    const tenantKey = await getTenantKeyForAdmin(request as any);
+    const kayitlar = await bonusBlacklistindenCikar(tenantKey, request.params.login);
+    const { audit } = await import('../lib/auditLog.js');
+    audit(user.username ?? 'admin', 'admin', 'bonus_blacklist_cikar', `login:${request.params.login}`, 'Bonus blacklistinden çıkarıldı.');
+    return reply.send({ HasError: false, Data: kayitlar });
+  });
 
   // Admin: Bonus Ekle (Charge Bonus)
   fastify.post<{ Body: { ClientId: number; BonusId: number; Amount?: number; AssignmentValues?: Record<string, unknown> } }>(

@@ -120,6 +120,14 @@ const DEFAULT_GAME_SETTINGS = {
         label: 'Bonus Talep',
         path: '/bonus-talep',
         eyebrow: 'Bonus Merkezi',
+        /**
+         * Bakim modu: sayfaya dogrudan URL'den gelen oyuncuya bile bonus
+         * listesi yerine `unavailableTitle`/`unavailableDescription` gosterir.
+         * Lobideki karti gizlemek (quickAccess[].enabled=false) yalnizca
+         * navigasyonu gizler; oyuncu linki elde ederse ya da yer imindeyse
+         * sayfaya yine ulasir. Bu bayrak sayfanin KENDISINI kapatir.
+         */
+        maintenanceMode: false,
         title: 'Bonus Talep',
         subtitle: 'Size uygun kampanyaları seçin, hesabınızı doğrulayın ve talebinizi gönderin.',
         primaryButton: 'TALEP ET',

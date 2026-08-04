@@ -28,6 +28,10 @@ export type AuditAction =
   | 'agent_update'
   | 'agent_delete'
   | 'bonus_charge'
+  // Oyuncu bonus taleplerinden men ediliyor/men kaldiriliyor — kim, ne
+  // zaman, hangi gerekceyle men etti denetlenebilir olmali.
+  | 'bonus_blacklist_ekle'
+  | 'bonus_blacklist_cikar'
   | 'lynon_campaign_assignment'
   | 'lynon_campaign_update'
   | 'bonus_check'

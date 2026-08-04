@@ -924,6 +924,20 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
                       <TextAreaField label="Kapalı açıklaması" value={page.unavailableDescription} onChange={(unavailableDescription) => updatePage(pageId, { unavailableDescription })} />
                     </div>
 
+                    <div className="flex items-center gap-3 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.025] p-3">
+                      <CompactToggle
+                        checked={page.maintenanceMode === true}
+                        onChange={(maintenanceMode) => updatePage(pageId, { maintenanceMode })}
+                        label="Bakım modu"
+                      />
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold text-white">Bakım modu</p>
+                        <p className="mt-0.5 text-[10px] font-medium text-[color:var(--panel-muted,#8a919c)]">
+                          Açıkken sayfaya doğrudan gelen oyuncu bile listeyi görmez, yukarıdaki "Kapalı" metinleri gösterilir. Lobideki karttan gizlemek (yukarıdaki "Aktif" anahtarı) yalnızca navigasyonu gizler, sayfanın kendisini kapatmaz.
+                        </p>
+                      </div>
+                    </div>
+
                     {extraFields.length > 0 && (
                       <div className="rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.025] p-3">
                         <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-[color:var(--panel-muted,#8a919c)]">Sayfaya özel elementler</p>
