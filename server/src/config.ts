@@ -96,6 +96,18 @@ export const config = {
     botUsername: (process.env.TELEGRAM_BOT_USERNAME || '').trim(),
     webhookSecret: (process.env.TELEGRAM_WEBHOOK_SECRET || '').trim(),
     /**
+     * Webhook'un kayıtlı olduğu tam URL (örn. https://narcosbahis.vip/api/telegram/webhook).
+     *
+     * Tanımlıysa sunucu açılışta `setWebhook`'u YENIDEN çağırır ve
+     * `allowed_updates`'i acikca `["message","callback_query"]` olarak
+     * ister. Bu satır olmadan webhook elle (curl/BotFather) kurulmus ve
+     * `callback_query` hic istenmemis olabiliyordu — sonuc: cekim onay/
+     * ret butonlari BASILIYOR ama Telegram bu olayi hic gondermiyordu,
+     * sessizce. Bossa dokunulmaz — yanlis domain'e webhook kaydetmek
+     * botu tamamen susturur.
+     */
+    webhookUrl: (process.env.TELEGRAM_WEBHOOK_URL || '').trim(),
+    /**
      * Anlık rapor botunun varsayılan sohbeti. BOŞSA VE akışın kendi
      * sohbeti de yoksa o akış susar — varsayılan bir sohbet kimliği
      * uydurmak, kasa raporunu yanlış yere göndermek demektir.
@@ -141,7 +153,7 @@ export const config = {
     /** Olay taraması sıklığı. */
     raporAralikMs: Number(process.env.TELEGRAM_RAPOR_ARALIK_MS) || 60_000,
     /** Anlık oyuncu bakiye özetinin gönderilme sıklığı (rapor 1843). */
-    bakiyeOzetiAralikMs: Number(process.env.TELEGRAM_BAKIYE_OZET_MS) || 7.5 * 60 * 1000,
+    bakiyeOzetiAralikMs: Number(process.env.TELEGRAM_BAKIYE_OZET_MS) || 10 * 60 * 1000,
     /** Anlık oyuncu bakiye özetinin gönderileceği sohbet. Boşsa gönderilmez. */
     bakiyeOzetiChatId: (process.env.TELEGRAM_CHAT_BAKIYE || '').trim(),
   },

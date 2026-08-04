@@ -2963,17 +2963,21 @@ export async function lynonYontemBazindaKasa(body: AnyRecord = {}): Promise<AnyR
 /**
  * Anlik oyuncu bakiye ozeti — rapor 1843 ("Player Balance").
  *
- * Varsayilan aralik BUGUNUN BASINDAN SU ANA — kullanicinin kendi
- * yakaladigi istek de ayni pencereyi kullaniyordu. Yalnizca TOPLAM
- * (`reportsSummary`) dondurulur; 1000+ oyuncu satirini tasimak bu
- * cagri icin gereksiz ve periyodik (7.5 dakikada bir) calistigi icin
- * maliyetli olurdu.
+ * Varsayilan aralik BUGUN (Turkiye gunu) — `raporGetir`/`lynonReportById`
+ * `startDate`/`endDate`'i YMD ("YYYY-MM-DD") bekliyor ve kendi icinde
+ * `gunBasi`/`gunSonu` ile tam gune genisletiyor; bu ucun TUM diger
+ * cagrilari (mutabakat, yontem kasa, dashboard) ayni sekilde calisiyor.
+ * Once burada TAM ISO ("...T00:00:00Z") gonderiliyordu — `gunBasi()`
+ * bunu YMD sanip `${iso}T00:00:00...` diye ikinci kez ekleyip GECERSIZ
+ * bir tarih uretiyordu, bu da `lynonReportById`'i sessizce dusurup
+ * "Rapor bulunamadi" hatasina dusuruyordu: bot her turda hata veriyor,
+ * hic mesaj gitmiyordu.
  */
 export async function lynonAnlikOyuncuBakiyesi(body: AnyRecord = {}): Promise<AnyRecord> {
   const now = new Date();
   const gun = String(body.gun ?? todayYmd());
-  const startDate = String(body.startDate ?? gunBasi(gun));
-  const endDate = String(body.endDate ?? now.toISOString());
+  const startDate = String(body.startDate ?? gun);
+  const endDate = String(body.endDate ?? gun);
 
   const rapor = await raporGetir(NARCOS_REPORT_IDS.playerBalance, 'Report By Player Balance', {
     startDate, endDate, currency: config.lynon.currency,
