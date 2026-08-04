@@ -15,6 +15,7 @@
  *      Ikinci basisin uctan hata donmesi operatore "calismiyor"
  *      hissi verirdi.
  */
+import { config } from '../config.js';
 import { audit } from '../lib/auditLog.js';
 import { lynonNotEkle, lynonResolveWithdrawal } from './lynonBackofficeService.js';
 import {
@@ -26,6 +27,7 @@ import {
 import {
   callbackCoz,
   notIstekMesaji,
+  redNedeniIstekMesaji,
   yetkiliKullanicilar,
   yetkiliMi,
   type CekimEylemi,
@@ -37,6 +39,7 @@ const EYLEM_ADI: Record<CekimEylemi, string> = {
   onay: 'onaylandı',
   onayNot: 'onaylandı',
   ret: 'reddedildi',
+  retNot: 'reddedildi',
 };
 
 export type CallbackSonucu = {
@@ -99,6 +102,12 @@ export async function telegramCekimCallback(callback: AnyRecord): Promise<Callba
       .catch(() => undefined);
   }
 
+  // "Red Nedeni Yaz" ise neden sorulur; yanit "çekim onay" grubuna gider.
+  if (veri.eylem === 'retNot' && chatId) {
+    await sendTelegramMessage(chatId, redNedeniIstekMesaji(veri.islemId, veri.oyuncuId, ''), { zorunluYanit: true })
+      .catch(() => undefined);
+  }
+
   return { islendi: true, mesaj: `Çekim ${veri.islemId} ${EYLEM_ADI[veri.eylem]}.` };
 }
 
@@ -140,4 +149,53 @@ export async function telegramNotYaniti(input: {
     await telegramYanitla(input.chatId, input.messageId, `📝 Not eklendi — ${input.kullaniciAdi}`);
   }
   return { islendi: true, mesaj: 'Not eklendi.' };
+}
+
+/**
+ * Red nedeni istegine gelen yanit.
+ *
+ * Not yanitindan farkli: profile YAZILMAZ, "çekim onay" (`TELEGRAM_CHAT_CEKIM_ONAY`)
+ * grubuna AYRI bir mesaj olarak gonderilir. Onay/ret tek grupta
+ * birlestiginde o grubu izleyen ekip red gerekcesini gormeye devam etsin
+ * diye var; sohbet tanimli degilse acikca soylenir, sessizce yutulmaz.
+ */
+export async function telegramRedNedeniYaniti(input: {
+  islemId: string;
+  oyuncuId: string;
+  metin: string;
+  chatId: number | string;
+  messageId: number | null;
+  kullaniciId: unknown;
+  kullaniciAdi: string;
+}): Promise<CallbackSonucu> {
+  if (!yetkiliMi(input.kullaniciId, yetkiliKullanicilar())) {
+    return { islendi: false, mesaj: 'Yetkisiz kullanıcı.' };
+  }
+  const metin = String(input.metin ?? '').trim();
+  if (!metin) return { islendi: false, mesaj: 'Red nedeni boş.' };
+
+  const hedef = config.telegram.raporChatIdleri.cekimOnay;
+  if (!hedef) {
+    if (input.messageId) {
+      await telegramYanitla(input.chatId, input.messageId,
+        '⚠️ TELEGRAM_CHAT_CEKIM_ONAY tanımlı değil, red nedeni gönderilemedi.');
+    }
+    return { islendi: false, mesaj: 'TELEGRAM_CHAT_CEKIM_ONAY tanımlı değil.' };
+  }
+
+  await sendTelegramMessage(hedef, [
+    '🚫 ÇEKİM RED NEDENİ',
+    `İşlem: ${input.islemId}`,
+    input.oyuncuId ? `Oyuncu: ${input.oyuncuId}` : null,
+    `Neden: ${metin}`,
+    `Yazan: ${input.kullaniciAdi}`,
+  ].filter(Boolean).join('\n')).catch(() => undefined);
+
+  audit(input.kullaniciAdi, 'telegram', 'withdrawal_resolve', `islem:${input.islemId}`,
+    `Çekim red nedeni Telegram'da paylaşıldı: ${metin.slice(0, 200)}`);
+
+  if (input.messageId) {
+    await telegramYanitla(input.chatId, input.messageId, `📨 Red nedeni gönderildi — ${input.kullaniciAdi}`);
+  }
+  return { islendi: true, mesaj: 'Red nedeni gönderildi.' };
 }

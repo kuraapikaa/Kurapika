@@ -2933,28 +2933,51 @@ export async function lynonAylikKapanisMutabakati(body: AnyRecord = {}): Promise
 }
 
 /**
- * Yontem bazinda GUNLUK kasa durumu — mutabakat DEGIL, ANLIK.
+ * Yontem bazinda kasa raporunun basladigi gun.
  *
- * Ayni rapor (1842) kullanilir ama araligi TEK GUN: "su an hangi
- * yontemden ne kadar para girdi/cikti" sorusunu cevaplar. Kasa ozetiyle
- * (dashboard toplami) ayni ritimde periyodik olarak Telegram'a atilir.
+ * Oncesi test islemleri — siteye gercek trafik bu tarihten itibaren
+ * baslamis. Sabit tutuluyor ki rapor her turda AYNI baslangic noktasindan
+ * kumulatif kalsin.
+ */
+const YONTEM_KASA_BASLANGIC = '2026-07-28';
+
+/**
+ * Yontem bazinda TUM ZAMANLAR kasa durumu — mutabakat DEGIL, gunluk de
+ * DEGIL, KUMULATIF.
+ *
+ * Ayni rapor (1842) kullanilir ama araligi `YONTEM_KASA_BASLANGIC`'tan
+ * bugune: "su ana kadar hangi yontemden toplam ne kadar para girdi/cikti"
+ * sorusunu cevaplar. Manuel mutabakat kalemleri de (yonteme etiketliyse)
+ * ilgili satira islenir — bu rapor bilerek "rapor ile manuel ayri
+ * gosterilir" felsefesinden sapiyor, cunku istenen tam olarak "manuel
+ * cikarmalar dahil GUNCEL durum". Kasa ozetiyle (dashboard toplami) ayni
+ * ritimde periyodik olarak Telegram'a atilir.
  */
 export async function lynonYontemBazindaKasa(body: AnyRecord = {}): Promise<AnyRecord> {
-  const gun = String(body.gun ?? todayYmd());
+  const baslangic = String(body.baslangic ?? YONTEM_KASA_BASLANGIC);
+  const bitis = String(body.bitis ?? todayYmd());
+  const tenantKey = String(body.tenantKey ?? 'default');
+
   const rapor = await raporGetir(NARCOS_REPORT_IDS.integrationPayment, 'Report By Integration Payment', {
-    startDate: gun,
-    endDate: gun,
+    startDate: baslangic,
+    endDate: bitis,
     currency: config.lynon.currency,
   });
   const data = recordOf(rapor.Data);
-  const satirlar = mutabakatSatirlari(rowsFromReportData(data));
+  const raporSatirlari = mutabakatSatirlari(rowsFromReportData(data));
+
+  const tumKalemler = await mutabakatManuelKalemleriOku(tenantKey);
+  // Baslangictan ONCEKI manuel kalemler test donemine ait; disaridadir.
+  const manuel = tumKalemler.filter((kalem) => String(kalem.gun ?? '') >= baslangic);
+  const satirlar = satirlariManuelIleZenginlestir(raporSatirlari, manuel);
 
   return {
     HasError: false,
     Data: {
-      Gun: gun,
+      Baslangic: baslangic,
+      Bitis: bitis,
       Satirlar: satirlar,
-      Mesaj: yontemKasaMesaji(gun, satirlar),
+      Mesaj: yontemKasaMesaji({ baslangic, bitis }, satirlar),
       Kaynak: `reportData/summarized/${NARCOS_REPORT_IDS.integrationPayment}`,
     },
   };
@@ -2963,17 +2986,21 @@ export async function lynonYontemBazindaKasa(body: AnyRecord = {}): Promise<AnyR
 /**
  * Anlik oyuncu bakiye ozeti — rapor 1843 ("Player Balance").
  *
- * Varsayilan aralik BUGUNUN BASINDAN SU ANA — kullanicinin kendi
- * yakaladigi istek de ayni pencereyi kullaniyordu. Yalnizca TOPLAM
- * (`reportsSummary`) dondurulur; 1000+ oyuncu satirini tasimak bu
- * cagri icin gereksiz ve periyodik (7.5 dakikada bir) calistigi icin
- * maliyetli olurdu.
+ * Varsayilan aralik BUGUN (Turkiye gunu) — `raporGetir`/`lynonReportById`
+ * `startDate`/`endDate`'i YMD ("YYYY-MM-DD") bekliyor ve kendi icinde
+ * `gunBasi`/`gunSonu` ile tam gune genisletiyor; bu ucun TUM diger
+ * cagrilari (mutabakat, yontem kasa, dashboard) ayni sekilde calisiyor.
+ * Once burada TAM ISO ("...T00:00:00Z") gonderiliyordu — `gunBasi()`
+ * bunu YMD sanip `${iso}T00:00:00...` diye ikinci kez ekleyip GECERSIZ
+ * bir tarih uretiyordu, bu da `lynonReportById`'i sessizce dusurup
+ * "Rapor bulunamadi" hatasina dusuruyordu: bot her turda hata veriyor,
+ * hic mesaj gitmiyordu.
  */
 export async function lynonAnlikOyuncuBakiyesi(body: AnyRecord = {}): Promise<AnyRecord> {
   const now = new Date();
   const gun = String(body.gun ?? todayYmd());
-  const startDate = String(body.startDate ?? gunBasi(gun));
-  const endDate = String(body.endDate ?? now.toISOString());
+  const startDate = String(body.startDate ?? gun);
+  const endDate = String(body.endDate ?? gun);
 
   const rapor = await raporGetir(NARCOS_REPORT_IDS.playerBalance, 'Report By Player Balance', {
     startDate, endDate, currency: config.lynon.currency,

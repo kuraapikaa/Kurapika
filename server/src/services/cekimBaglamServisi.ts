@@ -26,6 +26,7 @@ import {
   casinoCevrimToplami,
   sporCevrimToplami,
   sonKullanilanBonusSec,
+  enCokOynananOyunlar as enCokOynananOyunlarSec,
   type CekimBaglami,
   type OyuncuNotu,
 } from './cekimDegerlendirmesi.js';
@@ -115,12 +116,16 @@ export async function cekimBaglamiTopla(
    */
   let casinoCevrimSonYatirim: number | null = null;
   let sporCevrimSonYatirim: number | null = null;
+  let enCokOynananOyunlar: ReturnType<typeof enCokOynananOyunlarSec> = [];
   if (sonYatirimZamani) {
     const [casinoSonuc, sportSonuc] = await Promise.allSettled([
       lynonCasinoOperations({ userId: playerId, startDate: sonYatirimZamani, countPerPage: 500 }),
       lynonSportBets({ userId: playerId, startDate: sonYatirimZamani, countPerPage: 500 }),
     ]);
-    if (casinoSonuc.status === 'fulfilled') casinoCevrimSonYatirim = casinoCevrimToplami(casinoSonuc.value);
+    if (casinoSonuc.status === 'fulfilled') {
+      casinoCevrimSonYatirim = casinoCevrimToplami(casinoSonuc.value);
+      enCokOynananOyunlar = enCokOynananOyunlarSec(casinoSonuc.value);
+    }
     if (sportSonuc.status === 'fulfilled') sporCevrimSonYatirim = sporCevrimToplami(sportSonuc.value);
   }
 
@@ -170,5 +175,6 @@ export async function cekimBaglamiTopla(
     casinoCevrimSonYatirim,
     sporCevrimSonYatirim,
     sonKullanilanBonus: bonusOlculdu ? sonKullanilanBonusSec(bonuslar) : null,
+    enCokOynananOyunlar,
   };
 }

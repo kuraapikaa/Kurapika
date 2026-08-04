@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { clearLynonSession, ensureLynonSession, getLynonAuthStatus, lynonRequest } from '../lib/lynonAuth.js';
 import { audit } from '../lib/auditLog.js';
 import { config } from '../config.js';
-import { sendTelegramMessage } from '../services/telegramService.js';
+import { ensureTelegramWebhook, sendTelegramMessage } from '../services/telegramService.js';
 import {
   lynonActiveWheels,
   lynonBackofficeSettings,
@@ -558,6 +558,25 @@ export async function lynonRoutes(app: FastifyInstance) {
       const yanit = await lynonAnlikOyuncuBakiyesi({});
       await sendTelegramMessage(config.telegram.bakiyeOzetiChatId, String(yanit?.Data?.Mesaj ?? ''));
       return reply.send({ HasError: false, AlertMessage: 'Oyuncu bakiye özeti gönderildi.' });
+    } catch (err) {
+      return sendError(reply, err);
+    }
+  });
+
+  /**
+   * Telegram webhook'u yeniden kaydet.
+   *
+   * `callback_query` unutulmus bir eski kayit ust uste bindiginde cekim
+   * butonlari hicbir sey yapmaz — sessizce. Redeploy beklemeden buradan
+   * duzeltilebilir.
+   */
+  app.post('/lynon/telegram-rapor/webhook-yenile', async (_request, reply) => {
+    if (!config.telegram.webhookUrl) {
+      return reply.status(400).send({ HasError: true, AlertMessage: 'TELEGRAM_WEBHOOK_URL tanımlı değil.' });
+    }
+    try {
+      await ensureTelegramWebhook();
+      return reply.send({ HasError: false, AlertMessage: 'Webhook yeniden kaydedildi.' });
     } catch (err) {
       return sendError(reply, err);
     }

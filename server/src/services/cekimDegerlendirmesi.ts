@@ -138,6 +138,29 @@ export function sporCevrimToplami(rows: AnyRecord[] | null | undefined): number 
 }
 
 /**
+ * Casino bahis satirlarindan (tip='bet') en cok oynanan oyunlar —
+ * bahis ADEDINE gore siralanir, ciro degil; "hangi oyunu en cok
+ * denedi" sorusu bahis sayisiyla cevaplanir, tek buyuk bahisli bir
+ * oyun listeyi yanlis yone cekmesin.
+ */
+export function enCokOynananOyunlar(
+  rows: AnyRecord[] | null | undefined,
+  azami = 3,
+): Array<{ ad: string; adet: number; bahis: number }> {
+  const kova = new Map<string, { ad: string; adet: number; bahis: number }>();
+  for (const row of rows ?? []) {
+    if (String(row?.type ?? '').toLowerCase() !== 'bet') continue;
+    const ad = String(row?.gameName ?? row?.game?.name ?? '').trim();
+    if (!ad) continue;
+    const mevcut = kova.get(ad) ?? { ad, adet: 0, bahis: 0 };
+    mevcut.adet += 1;
+    mevcut.bahis += Math.abs(sayiyaCevir(row?.amount));
+    kova.set(ad, mevcut);
+  }
+  return [...kova.values()].sort((a, b) => b.adet - a.adet).slice(0, azami);
+}
+
+/**
  * Zaman sirasina bakilmaksizin en son atanan/kullanilan bonus.
  *
  * `sonYatirimBonuslari`dan farkli: o liste son YATIRIMDAN SONRAKI
@@ -211,6 +234,8 @@ export type CekimBaglami = {
   sporCevrimSonYatirim: number | null;
   /** Zaman sirasina bakilmaksizin en son atanan/kullanilan bonus. */
   sonKullanilanBonus: { ad: string; tutar: number | null; tarih: string | null; durum: string | null } | null;
+  /** Son yatirimdan sonra en cok oynanan casino oyunlari, bahis adedine gore. */
+  enCokOynananOyunlar: Array<{ ad: string; adet: number; bahis: number }>;
 };
 
 function paraYaz(deger: number | null, kur = 'TRY'): string {
@@ -315,6 +340,10 @@ export function cekimBaglamMesaji(baslik: string, b: CekimBaglami, simdi = Date.
       satirlar.push(
         `  Son yatırımdan sonra çevrim: ${paraYaz(toplamCevrim)} (casino ${paraYaz(b.casinoCevrimSonYatirim)} · spor ${paraYaz(b.sporCevrimSonYatirim)})`,
       );
+    }
+    if (b.enCokOynananOyunlar.length > 0) {
+      const liste = b.enCokOynananOyunlar.map((oyun) => `${oyun.ad} (${oyun.adet})`).join(', ');
+      satirlar.push(`  Son yatırımdan sonra en çok oynanan: ${liste}`);
     }
   }
 

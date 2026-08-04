@@ -253,6 +253,9 @@ export function ayinManuelKalemleri(kalemler: ManuelKalem[] | null | undefined, 
 
 const TL = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 2 });
 
+/** Mesaj basliklarini ayiran ince cizgi; sohbette blok blok okunsun. */
+const AYIRAC = '━━━━━━━━━━━━━━━━━━';
+
 function para(deger: number): string {
   return `${TL.format(deger)} TRY`;
 }
@@ -280,10 +283,11 @@ export function mutabakatMesaji(input: {
 }): string {
   const { ay, aralik, satirlar, toplam, fark, manuel, kapanis } = input;
   const parcalar: string[] = [
-    kapanis ? `📕 AY KAPANIŞI · ${ay}` : `📒 AYLIK MUTABAKAT · ${ay}`,
-    `${aralik.startDate} → ${aralik.endDate}`,
+    kapanis ? `📕 AY KAPANIŞI · ${ay}` : `📒✨ AYLIK MUTABAKAT · ${ay}`,
+    `🗓️ ${aralik.startDate} → ${aralik.endDate}`,
+    AYIRAC,
     '',
-    'ÖDEME YÖNTEMİ KIRILIMI',
+    '🏦 ÖDEME YÖNTEMİ KIRILIMI',
   ];
 
   if (satirlar.length === 0) {
@@ -291,9 +295,9 @@ export function mutabakatMesaji(input: {
   } else {
     for (const satir of satirlar) {
       parcalar.push(
-        `  ${satir.anahtar}`,
-        `    Yatırım: ${para(satir.yatirim)} (${satir.yatirimAdedi})`,
-        `    Çekim:   ${para(satir.cekim)} (${satir.cekimAdedi})`,
+        `  🔹 ${satir.anahtar}`,
+        `    ⬇️ Yatırım: ${para(satir.yatirim)} (${satir.yatirimAdedi})`,
+        `    ⬆️ Çekim:   ${para(satir.cekim)} (${satir.cekimAdedi})`,
       );
       // Bu yonteme etiketli manuel duzeltme varsa hemen altina yazilir.
       if (satir.manuelYatirim || satir.manuelCekim) {
@@ -307,7 +311,7 @@ export function mutabakatMesaji(input: {
 
   parcalar.push(
     '',
-    'RAPOR TOPLAMI',
+    '📊 RAPOR TOPLAMI',
     `  Yatırım: ${para(toplam.raporYatirim)}`,
     `  Çekim:   ${para(toplam.raporCekim)}`,
     `  Net:     ${para(toplam.raporNet)}`,
@@ -316,7 +320,7 @@ export function mutabakatMesaji(input: {
   if (toplam.manuelKalemAdedi > 0) {
     parcalar.push(
       '',
-      `ELLE EKLENEN (${toplam.manuelKalemAdedi} kalem)`,
+      `✏️ ELLE EKLENEN (${toplam.manuelKalemAdedi} kalem)`,
       `  Yatırım: ${para(toplam.manuelYatirim)}`,
       `  Çekim:   ${para(toplam.manuelCekim)}`,
     );
@@ -328,7 +332,8 @@ export function mutabakatMesaji(input: {
 
   parcalar.push(
     '',
-    'GENEL TOPLAM',
+    AYIRAC,
+    '💰 GENEL TOPLAM',
     `  Yatırım: ${para(toplam.toplamYatirim)}`,
     `  Çekim:   ${para(toplam.toplamCekim)}`,
     `  Net:     ${para(toplam.toplamNet)}`,
@@ -348,44 +353,70 @@ export function mutabakatMesaji(input: {
 }
 
 /**
- * Yontem bazinda GUNLUK kasa mesaji.
+ * Yontem bazinda TUM ZAMANLAR kasa mesaji.
  *
- * `mutabakatMesaji`dan farkli: bu AY ozeti degil, o GUNUN saglayici
- * kirilimi — periyodik olarak (kasa ozetiyle ayni ritimde) atilir ve
- * "hangi yontemden ne kadar para girdi/cikti, su an" sorusunu cevaplar.
- * Manuel kalem, fark kontrolu yok — o mutabakatin isi.
+ * `mutabakatMesaji`dan farkli: bu ay ozeti degil, BASLANGIC gununden
+ * bugune KUMULATIF saglayici kirilimi — periyodik olarak (kasa ozetiyle
+ * ayni ritimde) atilir ve "yontem basina su ana kadar toplam ne kadar
+ * girdi/cikti" sorusunu cevaplar.
+ *
+ * `satirlar` `satirlariManuelIleZenginlestir` ciktisiysa MANUEL cikarma/
+ * ekleme de yontemin toplamina KATILIR (rapor rakami yaninda gorunur
+ * kalir) — bu rapor bilerek "elle eklenenle rapor ayri" felsefesinden
+ * sapiyor, cunku istenen tam olarak "manuel cikarmalar dahil güncel
+ * durum".
  */
-export function yontemKasaMesaji(gun: string, satirlar: MutabakatSatiri[], saat?: string | null): string {
+export function yontemKasaMesaji(
+  aralik: { baslangic: string; bitis: string },
+  satirlar: MutabakatSatiri[],
+  saat?: string | null,
+): string {
   const parcalar: string[] = [
-    `🏦 YÖNTEM BAZINDA KASA · ${gun}${saat ? ` · ${saat}` : ''}`,
+    `🏦✨ YÖNTEM BAZINDA KASA · TÜM ZAMANLAR`,
+    `🗓️ ${aralik.baslangic} → ${aralik.bitis}${saat ? ` · ${saat}` : ''}`,
+    AYIRAC,
   ];
 
   if (satirlar.length === 0) {
-    parcalar.push('', '(bugün sağlayıcı hareketi yok)');
+    parcalar.push('', '(bu aralıkta sağlayıcı hareketi yok)');
     return parcalar.join('\n');
   }
 
   let toplamYatirim = 0;
   let toplamCekim = 0;
+  let toplamManuelYatirim = 0;
+  let toplamManuelCekim = 0;
   for (const satir of satirlar) {
-    toplamYatirim += satir.yatirim;
-    toplamCekim += satir.cekim;
+    const manuelYatirim = satir.manuelYatirim ?? 0;
+    const manuelCekim = satir.manuelCekim ?? 0;
+    const duzeltilmisYatirim = satir.duzeltilmisYatirim ?? satir.yatirim;
+    const duzeltilmisCekim = satir.duzeltilmisCekim ?? satir.cekim;
+    const duzeltilmisNet = satir.duzeltilmisNet ?? satir.net;
+    toplamYatirim += duzeltilmisYatirim;
+    toplamCekim += duzeltilmisCekim;
+    toplamManuelYatirim += manuelYatirim;
+    toplamManuelCekim += manuelCekim;
     parcalar.push(
       '',
-      `  ${satir.anahtar}`,
-      `    ⬇️ Yatırım: ${para(satir.yatirim)} (${satir.yatirimAdedi})`,
-      `    ⬆️ Çekim:   ${para(satir.cekim)} (${satir.cekimAdedi})`,
-      `    ⚖️ Net:     ${para(satir.net)}`,
+      `  🔹 ${satir.anahtar}`,
+      `    ⬇️ Yatırım: ${para(duzeltilmisYatirim)} (${satir.yatirimAdedi})` +
+        (manuelYatirim ? ` [rapor ${para(satir.yatirim)} + manuel ${para(manuelYatirim)}]` : ''),
+      `    ⬆️ Çekim:   ${para(duzeltilmisCekim)} (${satir.cekimAdedi})` +
+        (manuelCekim ? ` [rapor ${para(satir.cekim)} + manuel ${para(manuelCekim)}]` : ''),
+      `    ⚖️ Net:     ${para(duzeltilmisNet)}`,
     );
   }
 
   parcalar.push(
     '',
-    '━━━━━━━━━━━━━━━━━━',
-    `  TOPLAM Yatırım: ${para(toplamYatirim)}`,
-    `  TOPLAM Çekim:   ${para(toplamCekim)}`,
-    `  TOPLAM Net:     ${para(toplamYatirim - toplamCekim)}`,
+    AYIRAC,
+    `  💰 TOPLAM Yatırım: ${para(toplamYatirim)}`,
+    `  💸 TOPLAM Çekim:   ${para(toplamCekim)}`,
+    `  ⚖️ TOPLAM Net:     ${para(toplamYatirim - toplamCekim)}`,
   );
+  if (toplamManuelYatirim || toplamManuelCekim) {
+    parcalar.push(`  ✏️ (manuel dahil: +${para(toplamManuelYatirim)} yatırım · +${para(toplamManuelCekim)} çekim)`);
+  }
 
   return parcalar.join('\n');
 }

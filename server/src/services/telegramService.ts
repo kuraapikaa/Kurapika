@@ -98,3 +98,28 @@ export async function telegramYanitla(chatId: number | string, messageId: number
   await telegramApiCall('sendMessage', { chat_id: chatId, text, reply_to_message_id: messageId })
     .catch(() => undefined);
 }
+
+/**
+ * Webhook'u aciliste yeniden dogrula/kaydet.
+ *
+ * `TELEGRAM_WEBHOOK_URL` bossa DOKUNULMAZ. Doluysa `setWebhook`
+ * `allowed_updates: ["message", "callback_query"]` ile YENIDEN
+ * cagirilir — webhook'un DAHA ONCE elle (BotFather/curl) kurulup
+ * `callback_query`'i hic istememis olma ihtimaline karsi. Bu durumda
+ * cekim onay/ret butonlarina basmak Telegram tarafinda hicbir seye
+ * varmaz: buton basimi gonderilmez, sunucuya asla dusmez, hata da
+ * loglanmaz — sessizce hicbir sey olmaz. Aciliste kendini onaran bu
+ * cagri olmadan bu durum yeniden, sessizce olusabilir.
+ */
+export async function ensureTelegramWebhook(): Promise<void> {
+  const url = config.telegram.webhookUrl;
+  if (!url) return;
+  if (!config.telegram.botToken) return;
+
+  await telegramApiCall('setWebhook', {
+    url,
+    secret_token: config.telegram.webhookSecret || undefined,
+    allowed_updates: ['message', 'callback_query'],
+    max_connections: 40,
+  });
+}

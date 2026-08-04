@@ -10,6 +10,7 @@ import {
   casinoCevrimToplami,
   sporCevrimToplami,
   sonKullanilanBonusSec,
+  enCokOynananOyunlar,
   type CekimBaglami,
 } from './cekimDegerlendirmesi.js';
 
@@ -144,6 +145,7 @@ describe('cekimBaglamMesaji', () => {
     bonusKaynakliKazanc: 47.4, yatirimsizBakiye: false,
     casinoCevrimSonYatirim: 500, sporCevrimSonYatirim: 0,
     sonKullanilanBonus: { ad: '100 FS Telegram Katıl Bonusu', tutar: 100, tarih: '2026-08-03T10:00:00Z', durum: 'Completed' },
+    enCokOynananOyunlar: [{ ad: 'Sweet Bonanza', adet: 12, bahis: 240 }],
   };
 
   it('temel alanları yazar', () => {
@@ -261,6 +263,16 @@ describe('cekimBaglamMesaji', () => {
     expect(mesaj).not.toContain('Son yatırımdan sonra çevrim');
   });
 
+  it('en çok oynanan oyunları yazar', () => {
+    const mesaj = cekimBaglamMesaji('x', taban, SIMDI);
+    expect(mesaj).toContain('Son yatırımdan sonra en çok oynanan: Sweet Bonanza (12)');
+  });
+
+  it('en çok oynanan oyun yoksa o satırı yazmaz', () => {
+    const mesaj = cekimBaglamMesaji('x', { ...taban, enCokOynananOyunlar: [] }, SIMDI);
+    expect(mesaj).not.toContain('en çok oynanan');
+  });
+
   it('son kullanılan bonusu yazar', () => {
     const mesaj = cekimBaglamMesaji('x', taban, SIMDI);
     expect(mesaj).toContain('Son kullanılan bonus: 100 FS Telegram Katıl Bonusu (100 TRY) · Completed');
@@ -292,6 +304,46 @@ describe('casinoCevrimToplami / sporCevrimToplami', () => {
       { stake: 50 },
       { betAmount: 25 },
     ])).toBe(175);
+  });
+});
+
+describe('enCokOynananOyunlar', () => {
+  it('bahis adedine göre sıralar, ciroya göre değil', () => {
+    const sonuc = enCokOynananOyunlar([
+      { type: 'bet', gameName: 'Sweet Bonanza', amount: -1000 },
+      { type: 'bet', gameName: 'Gates of Olympus', amount: -10 },
+      { type: 'bet', gameName: 'Gates of Olympus', amount: -10 },
+      { type: 'bet', gameName: 'Gates of Olympus', amount: -10 },
+    ]);
+    expect(sonuc[0]).toEqual({ ad: 'Gates of Olympus', adet: 3, bahis: 30 });
+    expect(sonuc[1]).toEqual({ ad: 'Sweet Bonanza', adet: 1, bahis: 1000 });
+  });
+
+  it('yalnız bet tipindeki satırları sayar', () => {
+    const sonuc = enCokOynananOyunlar([
+      { type: 'bet', gameName: 'X', amount: -10 },
+      { type: 'win', gameName: 'X', amount: 20 },
+    ]);
+    expect(sonuc).toEqual([{ ad: 'X', adet: 1, bahis: 10 }]);
+  });
+
+  it('oyun adı yoksa satırı atlar', () => {
+    expect(enCokOynananOyunlar([{ type: 'bet', amount: -10 }])).toEqual([]);
+  });
+
+  it('azami sayıyı kırpar', () => {
+    const rows = ['A', 'B', 'C', 'D'].map((ad) => ({ type: 'bet', gameName: ad, amount: -10 }));
+    expect(enCokOynananOyunlar(rows, 2)).toHaveLength(2);
+  });
+
+  it('boş/eksik girişte boş liste döner', () => {
+    expect(enCokOynananOyunlar(null)).toEqual([]);
+    expect(enCokOynananOyunlar(undefined)).toEqual([]);
+  });
+
+  it('game.name alanına düşer', () => {
+    expect(enCokOynananOyunlar([{ type: 'bet', game: { name: 'Book of Dead' }, amount: -10 }]))
+      .toEqual([{ ad: 'Book of Dead', adet: 1, bahis: 10 }]);
   });
 });
 

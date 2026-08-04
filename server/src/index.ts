@@ -298,6 +298,18 @@ try {
   else console.warn('Uyarı: Backoffice token veya Lynon panel bilgileri yok.');
   if (lynon.configured) console.log(`Lynon gateway configured (site ${lynon.siteId}).`);
 
+  // ─── Telegram Webhook ───────────────────────────────────────────────────────
+  // TELEGRAM_WEBHOOK_URL tanimliysa webhook her acilista `callback_query`
+  // dahil yeniden kaydedilir — elle kurulmus, `callback_query`'i hic
+  // istememis bir webhook cekim butonlarini sessizce isliyor hale
+  // getirebiliyordu. Hata bloklamaz; sunucu ayakta kalmaya devam eder.
+  try {
+    const { ensureTelegramWebhook } = await import('./services/telegramService.js');
+    await ensureTelegramWebhook();
+  } catch (err) {
+    console.error('[server] Telegram webhook kaydı başarısız:', err instanceof Error ? err.message : err);
+  }
+
   // ─── Background Jobs ──────────────────────────────────────────────────────
   await registerAutoWithdrawJob();
   await registerNextDayBonusJob();

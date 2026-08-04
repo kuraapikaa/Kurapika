@@ -17,8 +17,8 @@ import { isLynonConfigured, lynonAssignCampaignToPlayer, lynonBuildBonusEligibil
 import { loginAnahtari, oyuncuAktivitesi, oyuncuRaporu, siralamaOlustur, type SiralamaMetrigi } from '../services/oyuncuRaporService.js';
 import { readTournamentSettings } from '../services/turnuvaAyarService.js';
 import { carkAnalizi } from '../services/carkOlasiliklari.js';
-import { telegramCekimCallback, telegramNotYaniti } from '../services/telegramCekimEylemi.js';
-import { notIstegindenOyuncu } from '../services/telegramButonlari.js';
+import { telegramCekimCallback, telegramNotYaniti, telegramRedNedeniYaniti } from '../services/telegramCekimEylemi.js';
+import { notIstegindenOyuncu, redNedeniIstegindenBilgi } from '../services/telegramButonlari.js';
 import {
   kurallariCozumle,
   loginMaskele,
@@ -2404,6 +2404,31 @@ const selectedSlice = selected.slice;
           if (!sonuc.islendi) request.log.warn(`[telegram] not eklenmedi: ${sonuc.mesaj}`);
         } catch (err) {
           request.log.error({ err }, '[telegram] not yanıtı hatası');
+        }
+        return reply.send({ ok: true });
+      }
+
+      /**
+       * RED NEDENİ YANITI.
+       *
+       * "Red Nedeni Yaz" akışında bot soruyor, operator yanıtlıyor.
+       * Profile yazılmaz — "çekim onay" grubuna ayrı bir mesaj gider.
+       */
+      const redBilgi = redNedeniIstegindenBilgi(yanitlanan);
+      if (redBilgi) {
+        try {
+          const sonuc = await telegramRedNedeniYaniti({
+            islemId: redBilgi.islemId,
+            oyuncuId: redBilgi.oyuncuId,
+            metin: text,
+            chatId,
+            messageId: Number(message?.message_id) || null,
+            kullaniciId: fromId,
+            kullaniciAdi: String(message?.from?.username ?? fromId),
+          });
+          if (!sonuc.islendi) request.log.warn(`[telegram] red nedeni işlenmedi: ${sonuc.mesaj}`);
+        } catch (err) {
+          request.log.error({ err }, '[telegram] red nedeni hatası');
         }
         return reply.send({ ok: true });
       }
