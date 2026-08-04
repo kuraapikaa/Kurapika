@@ -15,12 +15,17 @@ import {
   lynonPlayerKpi,
   lynonWithdrawalRequests,
   lynonClientBonuses,
+  lynonCasinoOperations,
+  lynonSportBets,
 } from './lynonBackofficeService.js';
 import { istanbulDateKey } from '../lib/istanbulGunu.js';
 import {
   gunlukCekimSayisi,
   otomatikRedKarari,
   sonYatirimdanSonrakiBonuslar,
+  casinoCevrimToplami,
+  sporCevrimToplami,
+  sonKullanilanBonusSec,
   type CekimBaglami,
   type OyuncuNotu,
 } from './cekimDegerlendirmesi.js';
@@ -103,6 +108,22 @@ export async function cekimBaglamiTopla(
   const toplamYatirim = hamVar ? pano.toplamYatirim : nullableSayi(kpi.DepositAmount);
   const toplamCekim = hamVar ? pano.toplamCekim : nullableSayi(kpi.WithdrawalAmount);
 
+  /**
+   * Son yatirimdan sonraki cevrim — YALNIZCA son yatirim zamani biliniyorsa
+   * hesaplanir. Bilinmiyorsa "cevrim yok" degil "olculemedi" anlamina
+   * gelmeli; bu yuzden null birakilir, 0 yazilmaz.
+   */
+  let casinoCevrimSonYatirim: number | null = null;
+  let sporCevrimSonYatirim: number | null = null;
+  if (sonYatirimZamani) {
+    const [casinoSonuc, sportSonuc] = await Promise.allSettled([
+      lynonCasinoOperations({ userId: playerId, startDate: sonYatirimZamani, countPerPage: 500 }),
+      lynonSportBets({ userId: playerId, startDate: sonYatirimZamani, countPerPage: 500 }),
+    ]);
+    if (casinoSonuc.status === 'fulfilled') casinoCevrimSonYatirim = casinoCevrimToplami(casinoSonuc.value);
+    if (sportSonuc.status === 'fulfilled') sporCevrimSonYatirim = sporCevrimToplami(sportSonuc.value);
+  }
+
   return {
     playerId,
     login: String(cekim?.ClientLogin ?? kpi.Login ?? ''),
@@ -146,5 +167,8 @@ export async function cekimBaglamiTopla(
     sporGgr: pano.sporGgr,
     bonusKaynakliKazanc: bonusKaynakliKazanc(pano),
     yatirimsizBakiye: hamVar && yatirimsizBakiyeMi(pano),
+    casinoCevrimSonYatirim,
+    sporCevrimSonYatirim,
+    sonKullanilanBonus: bonusOlculdu ? sonKullanilanBonusSec(bonuslar) : null,
   };
 }

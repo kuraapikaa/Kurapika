@@ -9,10 +9,14 @@ import { readStoredDocument, writeStoredDocument } from '../lib/documentStore.js
 import {
   ayAraligi,
   ayinManuelKalemleri,
+  ayinTamAraligi,
   mutabakatMesaji,
   mutabakatSatirlari,
   mutabakatToplami,
+  oncekiAyAnahtari,
   ozetFarki,
+  satirlariManuelIleZenginlestir,
+  yontemKasaMesaji,
   type ManuelKalem,
 } from './mutabakat.js';
 import {
@@ -22,6 +26,7 @@ import {
   tarihAraligindakiOturumlar,
   type OyuncuAdlari,
 } from './bonusOturumRaporu.js';
+import { oyuncuBakiyeMesaji, oyuncuBakiyeOzetiCikar } from './oyuncuBakiyeRaporu.js';
 import { izinliKisitMi, kisitGovdeleri, type Kisit } from './hedefBakiyeKilidi.js';
 import {
   duzeltmeSatiri,
@@ -2831,10 +2836,12 @@ export async function mutabakatManuelKalemiEkle(
   }
 
   const kalemler = await mutabakatManuelKalemleriOku(tenantKey);
+  const yontem = String(kalem.yontem ?? '').trim();
   const yeni: ManuelKalem = {
     ...kalem,
     tutar,
     aciklama: String(kalem.aciklama ?? '').trim().slice(0, 300),
+    yontem: yontem || null,
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     eklendi: new Date().toISOString(),
   };
@@ -2852,7 +2859,54 @@ export async function mutabakatManuelKalemiSil(id: string, tenantKey = 'default'
 }
 
 /**
- * Aylik mutabakat.
+ * Mutabakat hesabinin ortak govdesi.
+ *
+ * `lynonMutabakat` (ay basindan bugune, gunluk 00:00 raporunun kaynagi)
+ * ve `lynonAylikKapanisMutabakati` (kapanmis onceki ayin kesin toplami)
+ * AYNI hesabi FARKLI tarih araliklariyla calistirir; kod tekrarini
+ * onlemek icin tek yerde toplandi.
+ */
+async function mutabakatHesapla(
+  aralik: { startDate: string; endDate: string },
+  ay: string,
+  tenantKey: string,
+  kapanis: boolean,
+): Promise<AnyRecord> {
+  const rapor = await raporGetir(NARCOS_REPORT_IDS.integrationPayment, 'Report By Integration Payment', {
+    startDate: aralik.startDate,
+    endDate: aralik.endDate,
+    currency: config.lynon.currency,
+  });
+  const data = recordOf(rapor.Data);
+  const raporSatirlari = mutabakatSatirlari(rowsFromReportData(data));
+  const ozet = summaryFromReportData(data);
+
+  const tumKalemler = await mutabakatManuelKalemleriOku(tenantKey);
+  const manuel = ayinManuelKalemleri(tumKalemler, ay);
+  const toplam = mutabakatToplami(raporSatirlari, ozet, manuel);
+  const fark = ozetFarki(raporSatirlari, ozet);
+  // Yonteme etiketli manuel kalemler ilgili satira islenir — rapor
+  // rakami degismez, yaninda "duzeltilmis" olarak gorunur.
+  const satirlar = satirlariManuelIleZenginlestir(raporSatirlari, manuel);
+
+  return {
+    HasError: false,
+    Data: {
+      Ay: ay,
+      Aralik: { startDate: aralik.startDate, endDate: aralik.endDate },
+      Kapanis: kapanis,
+      Satirlar: satirlar,
+      Toplam: toplam,
+      Fark: fark,
+      ManuelKalemler: manuel,
+      Mesaj: mutabakatMesaji({ ay, aralik, satirlar, toplam, fark, manuel, kapanis }),
+      Kaynak: `reportData/summarized/${NARCOS_REPORT_IDS.integrationPayment}`,
+    },
+  };
+}
+
+/**
+ * Aylik mutabakat — AYIN BASINDAN BUGUNE (devam eden ay).
  *
  * Kaynak rapor 1842 — odeme yontemi kirilimi. Rapor YALNIZCA odeme
  * saglayicilarindan gecen parayi goruyor; elden yapilan yatirimlar ve
@@ -2862,32 +2916,80 @@ export async function lynonMutabakat(body: AnyRecord = {}): Promise<AnyRecord> {
   const bugun = String(body.bugun ?? todayYmd());
   const tenantKey = String(body.tenantKey ?? 'default');
   const aralik = ayAraligi(bugun);
+  return mutabakatHesapla(aralik, aralik.ay, tenantKey, false);
+}
 
+/**
+ * Ay kapanis mutabakati — belirtilen (varsayilan: bir onceki) ayin
+ * TAM ve KESIN toplami. Gunluk 00:00 raporu "ay icinde ne kadar
+ * biriktik" sorusunu cevaplar; bu, "gecen ay kapanista tam olarak
+ * ne oldu" sorusunu cevaplar — muhasebe icin ayrı, kesin bir kayit.
+ */
+export async function lynonAylikKapanisMutabakati(body: AnyRecord = {}): Promise<AnyRecord> {
+  const tenantKey = String(body.tenantKey ?? 'default');
+  const ay = String(body.ay ?? oncekiAyAnahtari(todayYmd()));
+  const aralik = ayinTamAraligi(ay);
+  return mutabakatHesapla(aralik, ay, tenantKey, true);
+}
+
+/**
+ * Yontem bazinda GUNLUK kasa durumu — mutabakat DEGIL, ANLIK.
+ *
+ * Ayni rapor (1842) kullanilir ama araligi TEK GUN: "su an hangi
+ * yontemden ne kadar para girdi/cikti" sorusunu cevaplar. Kasa ozetiyle
+ * (dashboard toplami) ayni ritimde periyodik olarak Telegram'a atilir.
+ */
+export async function lynonYontemBazindaKasa(body: AnyRecord = {}): Promise<AnyRecord> {
+  const gun = String(body.gun ?? todayYmd());
   const rapor = await raporGetir(NARCOS_REPORT_IDS.integrationPayment, 'Report By Integration Payment', {
-    startDate: aralik.startDate,
-    endDate: aralik.endDate,
+    startDate: gun,
+    endDate: gun,
     currency: config.lynon.currency,
   });
   const data = recordOf(rapor.Data);
   const satirlar = mutabakatSatirlari(rowsFromReportData(data));
-  const ozet = summaryFromReportData(data);
-
-  const tumKalemler = await mutabakatManuelKalemleriOku(tenantKey);
-  const manuel = ayinManuelKalemleri(tumKalemler, aralik.ay);
-  const toplam = mutabakatToplami(satirlar, ozet, manuel);
-  const fark = ozetFarki(satirlar, ozet);
 
   return {
     HasError: false,
     Data: {
-      Ay: aralik.ay,
-      Aralik: { startDate: aralik.startDate, endDate: aralik.endDate },
+      Gun: gun,
       Satirlar: satirlar,
-      Toplam: toplam,
-      Fark: fark,
-      ManuelKalemler: manuel,
-      Mesaj: mutabakatMesaji({ ay: aralik.ay, aralik, satirlar, toplam, fark, manuel }),
+      Mesaj: yontemKasaMesaji(gun, satirlar),
       Kaynak: `reportData/summarized/${NARCOS_REPORT_IDS.integrationPayment}`,
+    },
+  };
+}
+
+/**
+ * Anlik oyuncu bakiye ozeti — rapor 1843 ("Player Balance").
+ *
+ * Varsayilan aralik BUGUNUN BASINDAN SU ANA — kullanicinin kendi
+ * yakaladigi istek de ayni pencereyi kullaniyordu. Yalnizca TOPLAM
+ * (`reportsSummary`) dondurulur; 1000+ oyuncu satirini tasimak bu
+ * cagri icin gereksiz ve periyodik (7.5 dakikada bir) calistigi icin
+ * maliyetli olurdu.
+ */
+export async function lynonAnlikOyuncuBakiyesi(body: AnyRecord = {}): Promise<AnyRecord> {
+  const now = new Date();
+  const gun = String(body.gun ?? todayYmd());
+  const startDate = String(body.startDate ?? gunBasi(gun));
+  const endDate = String(body.endDate ?? now.toISOString());
+
+  const rapor = await raporGetir(NARCOS_REPORT_IDS.playerBalance, 'Report By Player Balance', {
+    startDate, endDate, currency: config.lynon.currency,
+  });
+  const data = recordOf(rapor.Data);
+  const saat = new Intl.DateTimeFormat('tr-TR', {
+    timeZone: 'Europe/Istanbul', hour: '2-digit', minute: '2-digit',
+  }).format(now);
+  const ozet = oyuncuBakiyeOzetiCikar(data, gun, saat);
+
+  return {
+    HasError: false,
+    Data: {
+      Ozet: ozet,
+      Mesaj: oyuncuBakiyeMesaji(ozet),
+      Kaynak: `reportData/summarized/${NARCOS_REPORT_IDS.playerBalance}`,
     },
   };
 }

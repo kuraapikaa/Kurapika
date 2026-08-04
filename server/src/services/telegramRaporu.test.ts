@@ -7,6 +7,8 @@ import {
   cekimMesaji,
   cekimOlayKimligi,
   correctionMesaji,
+  gunlukYapanOzeti,
+  gunlukYatirimOzeti,
   islemDurumu,
   kasaMesaji,
   manuelDuzeltmeMesaji,
@@ -124,6 +126,15 @@ describe('biçimleme', () => {
     expect(mesaj).toContain('Havale · HemenOde');
   });
 
+  it('yatırım mesajı işlem sonrası bakiyeyi yazar', () => {
+    const mesaj = yatirimMesaji({ ClientId: 1, Amount: 1000, Balance: 4200 });
+    expect(mesaj).toContain('İşlem sonrası bakiye: 4.200 TRY');
+  });
+
+  it('yatırım mesajı bakiye bilinmiyorsa o satırı atlar', () => {
+    expect(yatirimMesaji({ ClientId: 1, Amount: 1000 })).not.toContain('İşlem sonrası bakiye');
+  });
+
   it('correction yönünü yazar', () => {
     expect(correctionMesaji({ ClientId: 1, Amount: 500, CorrectionType: 'debiting' })).toContain('ÇIKIŞ');
     expect(correctionMesaji({ ClientId: 1, Amount: 500, CorrectionType: 'crediting' })).toContain('GİRİŞ');
@@ -153,6 +164,43 @@ const GERCEK_YATIRIM = {
   ClientLogin: 'demircin20',
   Amount: 1000,
 };
+
+describe('gunlukYatirimOzeti', () => {
+  const gunun = [
+    { Id: 1, ClientId: 500, Amount: 100, CreatedLocal: '2026-08-03T08:00:00Z' },
+    { Id: 2, ClientId: 500, Amount: 300, CreatedLocal: '2026-08-03T12:00:00Z' },
+    { Id: 3, ClientId: 999, Amount: 1000, CreatedLocal: '2026-08-03T09:00:00Z' },
+  ];
+
+  it('oyuncunun kaçıncı yatırımı olduğunu ve toplamı bulur', () => {
+    expect(gunlukYatirimOzeti(gunun, gunun[1])).toEqual({ sira: 2, toplam: 400 });
+  });
+
+  it('günün ilk yatırımı için sıra 1 verir', () => {
+    expect(gunlukYatirimOzeti(gunun, gunun[0])).toEqual({ sira: 1, toplam: 100 });
+  });
+
+  it('başka oyuncunun yatırımlarını karıştırmaz', () => {
+    expect(gunlukYatirimOzeti(gunun, gunun[2])).toEqual({ sira: 1, toplam: 1000 });
+  });
+
+  it('satır listede yoksa null döner', () => {
+    expect(gunlukYatirimOzeti(gunun, { Id: 999, ClientId: 500 })).toBeNull();
+  });
+
+  it('kimliksiz girdide null döner', () => {
+    expect(gunlukYatirimOzeti(gunun, { Id: 1 })).toBeNull();
+  });
+
+  it('yatırım mesajına günlük sırayı ekler', () => {
+    const mesaj = yatirimMesaji({ ...gunun[1], ClientLogin: 'x' }, gunun);
+    expect(mesaj).toContain('Bugünkü 2. yatırımı · günlük toplam 400 TRY');
+  });
+
+  it('gununYatirimlari verilmezse günlük sıra satırı eklenmez', () => {
+    expect(yatirimMesaji(gunun[1])).not.toContain('Bugünkü');
+  });
+});
 
 describe('işlem durumu', () => {
   it('gerçek yatırım yanıtını başarılı sayar', () => {
@@ -242,6 +290,43 @@ describe('manuel düzeltme mesajı', () => {
   it('yönü bilinmeyen hareket için nötr başlık', () => {
     expect(manuelDuzeltmeMesaji({ ...SATIR, Yon: 'bilinmiyor' })).toContain('MANUEL DÜZELTME');
   });
+
+  it('gununDuzeltmeleri verilmezse yönetici özeti eklenmez', () => {
+    expect(manuelDuzeltmeMesaji(SATIR)).not.toContain('bugün');
+  });
+
+  it('aynı yöneticinin gün içindeki sırasını ve net toplamını yazar', () => {
+    const gunun = [
+      { Id: 1, Yapan: 'destek@narcosbahis.com', Yon: 'giris', NetTutar: 1000, CreatedLocal: '2026-08-03T10:00:00Z' },
+      { ...SATIR, NetTutar: 1000 }, // Id 74803, ayni gunun ikinci hareketi
+    ];
+    const mesaj = manuelDuzeltmeMesaji(SATIR, gunun);
+    expect(mesaj).toContain('bugün 2. işlemi (net 2.000 TRY)');
+  });
+});
+
+describe('gunlukYapanOzeti', () => {
+  const gunun = [
+    { Id: 1, Yapan: 'a@x.com', Yon: 'giris', NetTutar: 500, CreatedLocal: '2026-08-03T08:00:00Z' },
+    { Id: 2, Yapan: 'a@x.com', Yon: 'cikis', NetTutar: -200, CreatedLocal: '2026-08-03T09:00:00Z' },
+    { Id: 3, Yapan: 'b@x.com', Yon: 'giris', NetTutar: 900, CreatedLocal: '2026-08-03T09:30:00Z' },
+  ];
+
+  it('yöneticinin sırasını ve net toplamını hesaplar', () => {
+    expect(gunlukYapanOzeti(gunun, gunun[1])).toEqual({ sira: 2, netToplam: 300 });
+  });
+
+  it('başka yöneticinin hareketlerini karıştırmaz', () => {
+    expect(gunlukYapanOzeti(gunun, gunun[2])).toEqual({ sira: 1, netToplam: 900 });
+  });
+
+  it('yapan alanı boşsa null döner', () => {
+    expect(gunlukYapanOzeti(gunun, { Id: 1, Yapan: '' })).toBeNull();
+  });
+
+  it('satır listede yoksa null döner', () => {
+    expect(gunlukYapanOzeti(gunun, { Id: 999, Yapan: 'a@x.com' })).toBeNull();
+  });
 });
 
 describe('kasa özeti', () => {
@@ -297,6 +382,46 @@ describe('kasa özeti', () => {
   it('saat verildiyse başlığa yazar — 20 dakikalık mesajlar karışmasın', () => {
     expect(kasaMesaji({ ...BOS_OZET, saat: '14:20' })).toContain('· 14:20');
   });
+
+  it('elde tutma oranını yazar', () => {
+    const mesaj = kasaMesaji({ ...BOS_OZET, kar: 1000, gercekBahis: 4000 });
+    expect(mesaj).toContain('Elde tutma: %25.0');
+  });
+
+  it('elde tutma ölçülemiyorsa uydurulmaz', () => {
+    expect(kasaMesaji(BOS_OZET)).toContain('Elde tutma: —');
+  });
+
+  it('ortalama yatırımı yazar', () => {
+    const mesaj = kasaMesaji({ ...BOS_OZET, yatirim: 10_000, yatirimAdedi: 4 });
+    expect(mesaj).toContain('Ort. yatırım: 2.500 TRY');
+  });
+
+  it('yatırım adedi bilinmiyorsa ortalama satırı eklenmez', () => {
+    expect(kasaMesaji({ ...BOS_OZET, yatirim: 10_000 })).not.toContain('Ort. yatırım');
+  });
+
+  it('önceki özete göre artış okunu yazar', () => {
+    const mesaj = kasaMesaji(
+      { ...BOS_OZET, yatirim: 15_000, cekim: 3_000 },
+      { ...BOS_OZET, yatirim: 10_000, cekim: 3_000 },
+    );
+    expect(mesaj).toContain('▲5.000');
+  });
+
+  it('önceki özete göre azalış okunu yazar', () => {
+    const mesaj = kasaMesaji(
+      { ...BOS_OZET, ggr: 1_000 },
+      { ...BOS_OZET, ggr: 4_000 },
+    );
+    expect(mesaj).toContain('▼3.000');
+  });
+
+  it('önceki özet verilmezse trend oku eklenmez', () => {
+    const mesaj = kasaMesaji({ ...BOS_OZET, yatirim: 15_000 });
+    expect(mesaj).not.toContain('▲');
+    expect(mesaj).not.toContain('▼');
+  });
 });
 
 describe('ozetZamaniMi', () => {
@@ -325,6 +450,6 @@ describe('ozetZamaniMi', () => {
 
 describe('bosImlec', () => {
   it('temiz durumla başlar', () => {
-    expect(bosImlec()).toEqual({ akislar: {}, sonOzet: null });
+    expect(bosImlec()).toEqual({ akislar: {}, sonOzet: null, sonKasaOzeti: null });
   });
 });

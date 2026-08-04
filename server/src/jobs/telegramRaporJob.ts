@@ -26,6 +26,7 @@ import {
   lynonManuelDuzeltmeler,
   lynonResolveWithdrawal,
   lynonWithdrawalRequests,
+  lynonYontemBazindaKasa,
 } from '../services/lynonBackofficeService.js';
 import {
   bildirilecekYatirimMi,
@@ -40,6 +41,7 @@ import {
   tasanMesaji,
   yatirimMesaji,
   yeniOlaylar,
+  type KasaOzeti,
   type RaporImleci,
 } from '../services/telegramRaporu.js';
 import { cekimBaglamMesaji } from '../services/cekimDegerlendirmesi.js';
@@ -93,8 +95,25 @@ function bugun(): string {
 
 /** Cekim akisinin o turdaki tam listesi; gunluk sayim icin paylasilir. */
 let gunlukCekimler: AnyRecord[] = [];
+/** Gunun basarili yatirim listesi; oyuncu basina gunluk sira/toplam icin. */
+let gununYatirimlari: AnyRecord[] = [];
+/** Gunun manuel duzeltme listesi; yapan yonetici basina gunluk sira/toplam icin. */
+let gununDuzeltmeleri: AnyRecord[] = [];
 
+/**
+ * Cekim mesajinin gidecegi sohbet.
+ *
+ * TEK GRUP tercih edilir: onay ve ret ayri gruplara bolundugunde karar
+ * veren kisi iki pencere arasinda gidip geliyor — talep bir grupta,
+ * sonucu baskasinda. `TELEGRAM_CHAT_CEKIM` tanimliysa hepsi oraya.
+ *
+ * Ayrik kimlikler yalnizca birlesik olan bos oldugunda kullanilir;
+ * mevcut kurulumlar bozulmasin diye.
+ */
 function cekimSohbeti(satir: AnyRecord): string {
+  const birlesik = config.telegram.raporChatIdleri.cekim;
+  if (birlesik) return birlesik;
+
   const durum = islemDurumu(satir);
   if (durum === 'onay') return sohbetSec('cekimOnay');
   if (durum === 'red') return sohbetSec('cekimRed');
@@ -200,10 +219,13 @@ function akislar(): Akis[] {
          * yatirimi "YATIRIM" diye bildirmek, kasaya girmemis parayi girmis
          * gostermek olur; operator ona gore bonus verir.
          */
-        return hepsi.filter(bildirilecekYatirimMi);
+        const basarililar = hepsi.filter(bildirilecekYatirimMi);
+        // Gunluk sira/toplam icin paylasilir; her satir icin tekrar istek atmamak adina.
+        gununYatirimlari = basarililar;
+        return basarililar;
       },
       kimlik: (satir) => String(satir.Id ?? satir.DocumentId ?? satir.ReferenceNo ?? ''),
-      mesaj: yatirimMesaji,
+      mesaj: (satir) => yatirimMesaji(satir, gununYatirimlari),
       sohbet: () => sohbetSec('yatirim'),
     },
     {
@@ -246,10 +268,13 @@ function akislar(): Akis[] {
       etiket: 'Manuel düzeltme',
       satirlar: async () => {
         const yanit = await lynonManuelDuzeltmeler(aralik);
-        return yanit?.Data?.Satirlar ?? [];
+        const satirlar: AnyRecord[] = yanit?.Data?.Satirlar ?? [];
+        // Gunluk yapan-yonetici sira/toplami icin paylasilir.
+        gununDuzeltmeleri = satirlar;
+        return satirlar;
       },
       kimlik: (satir) => String(satir.Id ?? ''),
-      mesaj: manuelDuzeltmeMesaji,
+      mesaj: (satir) => manuelDuzeltmeMesaji(satir, gununDuzeltmeleri),
       sohbet: () => sohbetSec('correction'),
     },
     {
@@ -266,7 +291,13 @@ function akislar(): Akis[] {
   ];
 }
 
-async function ozetGonder(chatId: string): Promise<void> {
+/**
+ * Kasa ozetini olustur ve gonder; olusturulan ozeti dondurur.
+ *
+ * `onceki` verilirse mesajda bir onceki ozete gore trend oku gorunur.
+ * Cagiran, donen ozeti bir sonraki turun "onceki"si olarak saklar.
+ */
+async function ozetGonder(chatId: string, onceki: KasaOzeti | null = null): Promise<KasaOzeti> {
   const gun = bugun();
   const yanit = await lynonDashboardSummary(gun, gun);
   const d = (yanit?.Data ?? {}) as AnyRecord;
@@ -275,7 +306,7 @@ async function ozetGonder(chatId: string): Promise<void> {
   const metrikler: AnyRecord[] = Array.isArray(d.metrikler) ? d.metrikler : [];
   const m = (anahtar: string) => metrikler.find((x) => x.anahtar === anahtar)?.deger ?? null;
 
-  await sendTelegramMessage(chatId, kasaMesaji({
+  const ozet: KasaOzeti = {
     gun,
     saat: new Intl.DateTimeFormat('tr-TR', {
       timeZone: 'Europe/Istanbul', hour: '2-digit', minute: '2-digit',
@@ -298,7 +329,13 @@ async function ozetGonder(chatId: string): Promise<void> {
     freespinKazanc: m('freespinKazanc'),
     bonusOdeme: m('bonusOdeme'),
     cashback: m('cashback'),
-  }));
+  };
+
+  // Onceki ozet FARKLI bir gunden kalmissa trend anlamsiz; gun basi
+  // sifirlanir — "dun aksama gore" degil "bugun icinde" trend istenen.
+  const karsilastirilacak = onceki && onceki.gun === gun ? onceki : null;
+  await sendTelegramMessage(chatId, kasaMesaji(ozet, karsilastirilacak));
+  return ozet;
 }
 
 export async function runTelegramRaporJob(tenantKey = 'default'): Promise<TelegramRaporSonucu> {
@@ -366,15 +403,30 @@ export async function runTelegramRaporJob(tenantKey = 'default'): Promise<Telegr
   }
 
   const kasaSohbeti = sohbetSec('kasa');
-  if (kasaSohbeti && ozetZamaniMi(imlec.sonOzet, config.telegram.raporOzetAralikMs)) {
+  const ozetZamaniGeldi = ozetZamaniMi(imlec.sonOzet, config.telegram.raporOzetAralikMs);
+  if (kasaSohbeti && ozetZamaniGeldi) {
     try {
-      await ozetGonder(kasaSohbeti);
+      imlec.sonKasaOzeti = await ozetGonder(kasaSohbeti, imlec.sonKasaOzeti ?? null);
       imlec.sonOzet = new Date().toISOString();
       sonuc.ozetGonderildi = true;
       degisti = true;
     } catch (err) {
       sonuc.hata += 1;
       console.error('[telegram-rapor] kasa özeti:', err instanceof Error ? err.message : err);
+    }
+  }
+
+  // Yontem bazinda GUNLUK kasa — ayni ritimde, ayri hata izolasyonuyla:
+  // biri dusse digeri gitmeye devam etsin.
+  const kasaYontemSohbeti = sohbetSec('kasaYontem') || kasaSohbeti;
+  if (kasaYontemSohbeti && ozetZamaniGeldi) {
+    try {
+      const yanit = await lynonYontemBazindaKasa({ gun: bugun() });
+      await sendTelegramMessage(kasaYontemSohbeti, String(yanit?.Data?.Mesaj ?? ''));
+      sonuc.gonderilen += 1;
+    } catch (err) {
+      sonuc.hata += 1;
+      console.error('[telegram-rapor] yöntem bazında kasa:', err instanceof Error ? err.message : err);
     }
   }
 

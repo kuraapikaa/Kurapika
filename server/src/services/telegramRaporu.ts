@@ -36,10 +36,12 @@ export type RaporImleci = {
   akislar: Record<string, AkisImleci>;
   /** Son kasa ozetinin gonderildigi an (ISO). */
   sonOzet: string | null;
+  /** Bir onceki kasa ozeti — periyodik mesajda trend oku icin. */
+  sonKasaOzeti: KasaOzeti | null;
 };
 
 export function bosImlec(): RaporImleci {
-  return { akislar: {}, sonOzet: null };
+  return { akislar: {}, sonOzet: null, sonKasaOzeti: null };
 }
 
 /** Imlecte tutulan azami kimlik sayisi. Uctan gelen sayfadan buyuk olmali. */
@@ -142,19 +144,65 @@ type AnyRecord = Record<string, any>;
 /** Mesaj basliklarini ayiran ince cizgi; sohbette blok blok okunsun. */
 export const AYIRAC = '━━━━━━━━━━━━━━━━━━';
 
-export function yatirimMesaji(satir: AnyRecord): string {
+/**
+ * Oyuncunun ayni gunku, BU YATIRIM DAHIL kacinci basarili yatirimi ve
+ * o ana kadarki gunluk toplami.
+ *
+ * `gununYatirimlari` o gunun TAM listesi olmali (yalnizca bu oyuncununki
+ * degil) — sirali kayit icin diger oyuncularin arasindan suzuyoruz.
+ * Satir kendi listede bulunamazsa (kimliksiz / disaridan gelen tekil
+ * cagri) null doner — "1. yatirim" diye uydurmak yanlis sinyal verir.
+ */
+export function gunlukYatirimOzeti(
+  gununYatirimlari: AnyRecord[] | null | undefined,
+  satir: AnyRecord,
+): { sira: number; toplam: number } | null {
+  const kimlik = String(satir?.ClientId ?? satir?.userId ?? '');
+  if (!kimlik) return null;
+  const simdikiId = String(satir?.Id ?? satir?.DocumentId ?? satir?.ReferenceNo ?? '');
+  if (!simdikiId) return null;
+
+  const oyuncununYatirimlari = (gununYatirimlari ?? [])
+    .filter((y) => String(y?.ClientId ?? y?.userId ?? '') === kimlik)
+    .sort((a, b) =>
+      Date.parse(String(a?.CreatedLocal ?? a?.createdAt ?? '')) -
+      Date.parse(String(b?.CreatedLocal ?? b?.createdAt ?? '')));
+
+  const index = oyuncununYatirimlari.findIndex(
+    (y) => String(y?.Id ?? y?.DocumentId ?? y?.ReferenceNo ?? '') === simdikiId,
+  );
+  if (index === -1) return null;
+
+  const suanaKadar = oyuncununYatirimlari.slice(0, index + 1);
+  return {
+    sira: suanaKadar.length,
+    toplam: suanaKadar.reduce((sum, y) => sum + Number(y?.Amount ?? y?.amount ?? 0), 0),
+  };
+}
+
+/**
+ * `gununYatirimlari` verilirse mesaja "bugünkü N. yatırımı · toplam X"
+ * satırı eklenir — operatör aynı gün art arda yatırım yapan oyuncuyu bir
+ * bakışta görür. Ek API isteği gerektirmez: akış zaten günün tüm
+ * yatırımlarını tek seferde çekiyor, burada yalnızca o listeden okunur.
+ */
+export function yatirimMesaji(satir: AnyRecord, gununYatirimlari?: AnyRecord[]): string {
   const kisi = recordOf(satir.personalData);
+  const ozet = gununYatirimlari ? gunlukYatirimOzeti(gununYatirimlari, satir) : null;
+  const kur = satir.CurrencyId ?? satir.currency ?? 'TRY';
   return [
     '💰 YATIRIM',
     AYIRAC,
     `👤 ${oyuncuYaz(satir.ClientLogin ?? kisi.userName, satir.ClientId ?? satir.userId)}`,
-    `💵 ${paraYaz(satir.Amount ?? satir.amount, satir.CurrencyId ?? satir.currency ?? 'TRY')}`,
+    `💵 ${paraYaz(satir.Amount ?? satir.amount, kur)}`,
     // Uc `method` ("Havale") ve `integration` ("HemenOde") olarak ayri
     // doner; ikisi de operatore lazim.
     satir.PaymentSystemName || satir.method
       ? `🏦 ${[satir.method ?? satir.PaymentSystemName, satir.integration].filter(Boolean).join(' · ')}`
       : null,
     kisi.category?.name ? `🏷️ ${kisi.category.name}` : null,
+    satir.Balance !== null && satir.Balance !== undefined ? `💼 İşlem sonrası bakiye: ${paraYaz(satir.Balance, kur)}` : null,
+    ozet ? `🔢 Bugünkü ${ozet.sira}. yatırımı · günlük toplam ${paraYaz(ozet.toplam, kur)}` : null,
     `🕒 ${saatYaz(satir.CreatedLocal ?? satir.createdAt)}`,
   ].filter(Boolean).join('\n');
 }
@@ -261,6 +309,38 @@ const DUZELTME_YON_BASLIGI: Record<string, string> = {
 };
 
 /**
+ * Yapan yoneticinin ayni gunku, BU HAREKET DAHIL kacinci manuel
+ * duzeltmesi ve o ana kadarki net toplami (giris - cikis).
+ *
+ * Ayni yoneticinin gun icinde art arda manuel bakiye hareketi yapmasi —
+ * ozellikle notsuz — kotuye kullanim isareti olabilir; bu satir onu
+ * denetim ekranina gitmeden Telegram'da gorunur kilar.
+ */
+export function gunlukYapanOzeti(
+  gununDuzeltmeleri: AnyRecord[] | null | undefined,
+  satir: AnyRecord,
+): { sira: number; netToplam: number } | null {
+  const yapan = String(satir?.Yapan ?? '').trim();
+  if (!yapan) return null;
+  const simdikiId = String(satir?.Id ?? '');
+  if (!simdikiId) return null;
+
+  const yapaninIslemleri = (gununDuzeltmeleri ?? [])
+    .filter((d) => String(d?.Yapan ?? '').trim() === yapan)
+    .sort((a, b) =>
+      Date.parse(String(a?.CreatedLocal ?? '')) - Date.parse(String(b?.CreatedLocal ?? '')));
+
+  const index = yapaninIslemleri.findIndex((d) => String(d?.Id ?? '') === simdikiId);
+  if (index === -1) return null;
+
+  const suanaKadar = yapaninIslemleri.slice(0, index + 1);
+  return {
+    sira: suanaKadar.length,
+    netToplam: suanaKadar.reduce((sum, d) => sum + Number(d?.NetTutar ?? 0), 0),
+  };
+}
+
+/**
  * Manuel duzeltme bildirimi.
  *
  * Kritik alan `Yapan`: bu hareketi hangi yonetici yapti. Panelden
@@ -268,11 +348,14 @@ const DUZELTME_YON_BASLIGI: Record<string, string> = {
  * yapilanlar dusmuyordu; bot bu boslugu anlik olarak kapatiyor.
  *
  * NOTSUZ hareket ayrica isaretleniyor — manuel para hareketinin
- * gerekcesi olmali.
+ * gerekcesi olmali. `gununDuzeltmeleri` verilirse yapan yoneticinin o
+ * gunku hareket sayisi ve net toplami da eklenir (ek istek gerekmez;
+ * akis zaten günün tüm kayıtlarını tek seferde çekiyor).
  */
-export function manuelDuzeltmeMesaji(satir: AnyRecord): string {
+export function manuelDuzeltmeMesaji(satir: AnyRecord, gununDuzeltmeleri?: AnyRecord[]): string {
   const yon = String(satir.Yon ?? 'bilinmiyor');
   const isaret = yon === 'giris' ? '➕' : yon === 'cikis' ? '➖' : '❔';
+  const yapanOzeti = gununDuzeltmeleri ? gunlukYapanOzeti(gununDuzeltmeleri, satir) : null;
   return [
     DUZELTME_YON_BASLIGI[yon] ?? DUZELTME_YON_BASLIGI.bilinmiyor,
     AYIRAC,
@@ -280,7 +363,7 @@ export function manuelDuzeltmeMesaji(satir: AnyRecord): string {
     `${isaret} ${paraYaz(satir.Tutar, satir.ParaBirimi ?? 'TRY')}`,
     satir.Hesap ? `🏛️ ${satir.Hesap}` : null,
     satir.Kategori ? `🏷️ ${satir.Kategori}` : null,
-    `👮 ${satir.Yapan || 'bilinmiyor'}`,
+    `👮 ${satir.Yapan || 'bilinmiyor'}${yapanOzeti ? ` · bugün ${yapanOzeti.sira}. işlemi (net ${paraYaz(yapanOzeti.netToplam, satir.ParaBirimi ?? 'TRY')})` : ''}`,
     satir.NotAnlamli ? `📝 ${satir.Not}` : '⚠️ Gerekçe notu yok',
     `🕒 ${saatYaz(satir.CreatedLocal)}`,
   ].filter(Boolean).join('\n');
@@ -331,15 +414,37 @@ export type KasaOzeti = {
 };
 
 /**
+ * Onceki ozete gore trend oku.
+ *
+ * Ikisinden biri bilinmiyorsa BOS DONER — "degisim yok" ile "olculemedi"
+ * ayni sey degil, karisik trend okumaktansa hic gostermemek daha dogru.
+ */
+function trendYaz(simdi: number | null, onceki: number | null | undefined): string {
+  if (simdi === null || onceki === null || onceki === undefined) return '';
+  const fark = simdi - onceki;
+  if (fark === 0) return ' ▪️0';
+  return fark > 0 ? ` ▲${TL.format(fark)}` : ` ▼${TL.format(Math.abs(fark))}`;
+}
+
+/**
  * Kasa ozeti.
  *
  * Olculemeyen alan "—" yazilir, sifir DEGIL. Panoda bu ayrimi kurmak
  * icin ayri bir PR gerekti; ayni yalani Telegram'da tekrarlamiyoruz.
+ *
+ * `onceki` verilirse yatirim/cekim/net/GGR yaninda bir onceki ozete gore
+ * ok isaretiyle degisim gosterilir (20 dakikalik periyotta "yon" bir
+ * bakista gorulsun diye). Verilmezse trend satiri hic eklenmez —
+ * elle gonderilen tek seferlik ozette (panel butonu) karsilastirilacak
+ * "onceki" olmadigi icin uydurulmaz.
  */
-export function kasaMesaji(ozet: KasaOzeti): string {
+export function kasaMesaji(ozet: KasaOzeti, onceki?: KasaOzeti | null): string {
   const y = ozet.yatirim;
   const c = ozet.cekim;
   const net = y === null && c === null ? null : (y ?? 0) - (c ?? 0);
+  const oncekiNet = onceki && (onceki.yatirim !== null || onceki.cekim !== null)
+    ? (onceki.yatirim ?? 0) - (onceki.cekim ?? 0)
+    : null;
   const sayi = (v: number | null) => (v === null ? '—' : TL.format(v));
   const p = (v: number | null) => (v === null ? '—' : paraYaz(v));
 
@@ -353,19 +458,30 @@ export function kasaMesaji(ozet: KasaOzeti): string {
   // Net yon isareti: kasaya para girdi mi cikti mi, bir bakista.
   const netIsaret = net === null ? '' : net >= 0 ? ' 🟢' : ' 🔴';
 
+  // Elde tutma orani (hold %) — kar / gercek bahis. Standart casino KPI'i;
+  // yalnizca ikisi de olculebildiyse hesaplanir.
+  const holdOrani = ozet.kar !== null && ozet.gercekBahis
+    ? (ozet.kar / ozet.gercekBahis) * 100
+    : null;
+  const ortalamaYatirim = y !== null && ozet.yatirimAdedi
+    ? y / ozet.yatirimAdedi
+    : null;
+
   const satirlar = [
     `📊 KASA ÖZETİ · ${ozet.gun}${ozet.saat ? ` · ${ozet.saat}` : ''}`,
     AYIRAC,
     '💰 PARA',
-    `  ⬇️ Yatırım:  ${p(y)}${ozet.yatirimOyuncu !== null ? ` · ${ozet.yatirimOyuncu} oyuncu` : ''}${ozet.yatirimAdedi !== null ? ` · ${ozet.yatirimAdedi} işlem` : ''}`,
-    `  ⬆️ Çekim:    ${p(c)}${ozet.cekimOyuncu !== null ? ` · ${ozet.cekimOyuncu} oyuncu` : ''}`,
-    `  ⚖️ Net:      ${p(net)}${netIsaret}`,
+    `  ⬇️ Yatırım:  ${p(y)}${trendYaz(y, onceki?.yatirim)}${ozet.yatirimOyuncu !== null ? ` · ${ozet.yatirimOyuncu} oyuncu` : ''}${ozet.yatirimAdedi !== null ? ` · ${ozet.yatirimAdedi} işlem` : ''}`,
+    `  ⬆️ Çekim:    ${p(c)}${trendYaz(c, onceki?.cekim)}${ozet.cekimOyuncu !== null ? ` · ${ozet.cekimOyuncu} oyuncu` : ''}`,
+    `  ⚖️ Net:      ${p(net)}${netIsaret}${trendYaz(net, oncekiNet)}`,
+    ortalamaYatirim !== null ? `  Ort. yatırım: ${p(ortalamaYatirim)}` : null,
     '',
     '🎰 OYUN',
-    `  GGR:      ${p(ozet.ggr)}`,
-    `  Kâr:      ${p(ozet.kar)}`,
+    `  GGR:      ${p(ozet.ggr)}${trendYaz(ozet.ggr, onceki?.ggr)}`,
+    `  Kâr:      ${p(ozet.kar)}${trendYaz(ozet.kar, onceki?.kar)}`,
     `  Bahis:    ${p(ozet.gercekBahis)}${ozet.bahisAdedi !== null ? ` · ${sayi(ozet.bahisAdedi)} bahis` : ''}`,
     `  Kazanç:   ${p(ozet.gercekKazanc)}`,
+    `  Elde tutma: ${holdOrani === null ? '—' : `%${holdOrani.toFixed(1)}`}`,
     '',
     '🎁 BONUS',
     `  Maliyet:  ${p(bonusMaliyeti)}`,
@@ -379,7 +495,7 @@ export function kasaMesaji(ozet: KasaOzeti): string {
     `  Bahis yapan:    ${sayi(ozet.bahisOyuncu)}`,
     `  Gerçek bakiye:  ${p(ozet.oyuncuBakiyesi)}`,
     `  Bonus bakiye:   ${p(ozet.bonusBakiye)}`,
-  ];
+  ].filter((satir): satir is string => satir !== null);
 
   return satirlar.join('\n');
 }

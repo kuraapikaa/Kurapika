@@ -2,10 +2,14 @@ import { describe, expect, it } from 'vitest';
 import {
   ayAraligi,
   ayinManuelKalemleri,
+  ayinTamAraligi,
   mutabakatMesaji,
   mutabakatSatirlari,
   mutabakatToplami,
+  oncekiAyAnahtari,
   ozetFarki,
+  satirlariManuelIleZenginlestir,
+  yontemKasaMesaji,
   type ManuelKalem,
 } from './mutabakat.js';
 
@@ -139,6 +143,62 @@ describe('ay aralığı ve manuel süzme', () => {
   });
 });
 
+describe('oncekiAyAnahtari', () => {
+  it('yılın ortasında bir önceki ayı verir', () => {
+    expect(oncekiAyAnahtari('2026-08-03')).toBe('2026-07');
+  });
+
+  it('yıl başında bir önceki yılın aralığına döner', () => {
+    expect(oncekiAyAnahtari('2026-01-15')).toBe('2025-12');
+  });
+});
+
+describe('ayinTamAraligi', () => {
+  it('31 günlük ayın tam aralığını verir', () => {
+    expect(ayinTamAraligi('2026-07')).toEqual({ startDate: '2026-07-01', endDate: '2026-07-31', ay: '2026-07' });
+  });
+
+  it('şubatta artık yılı doğru hesaplar', () => {
+    expect(ayinTamAraligi('2024-02')).toEqual({ startDate: '2024-02-01', endDate: '2024-02-29', ay: '2024-02' });
+    expect(ayinTamAraligi('2026-02')).toEqual({ startDate: '2026-02-01', endDate: '2026-02-28', ay: '2026-02' });
+  });
+});
+
+describe('satirlariManuelIleZenginlestir', () => {
+  const satirlar = mutabakatSatirlari(GERCEK_SATIRLAR);
+
+  it('yönteme etiketli kalemi ilgili satıra işler', () => {
+    const manuel: ManuelKalem[] = [
+      { id: '1', gun: '2026-08-02', tur: 'yatirim', tutar: 500, aciklama: '', ekleyen: '', eklendi: '', yontem: 'HemenOde · Havale' },
+    ];
+    const zengin = satirlariManuelIleZenginlestir(satirlar, manuel);
+    const hemenode = zengin.find((s) => s.anahtar === 'HemenOde · Havale')!;
+    expect(hemenode.manuelYatirim).toBe(500);
+    expect(hemenode.duzeltilmisYatirim).toBe(5310 + 500);
+    expect(hemenode.duzeltilmisNet).toBe(5310 + 500 - 13166);
+  });
+
+  it('yöntemsiz (genel) kalem hiçbir satırı değiştirmez', () => {
+    const manuel: ManuelKalem[] = [
+      { id: '1', gun: '2026-08-02', tur: 'yatirim', tutar: 500, aciklama: '', ekleyen: '', eklendi: '' },
+    ];
+    const zengin = satirlariManuelIleZenginlestir(satirlar, manuel);
+    expect(zengin.every((s) => !s.manuelYatirim && !s.manuelCekim)).toBe(true);
+  });
+
+  it('eşleşmeyen yöntem hiçbir satırı değiştirmez', () => {
+    const manuel: ManuelKalem[] = [
+      { id: '1', gun: '2026-08-02', tur: 'yatirim', tutar: 500, aciklama: '', ekleyen: '', eklendi: '', yontem: 'Olmayan · Yöntem' },
+    ];
+    const zengin = satirlariManuelIleZenginlestir(satirlar, manuel);
+    expect(zengin.every((s) => !s.manuelYatirim && !s.manuelCekim)).toBe(true);
+  });
+
+  it('boş girdi çökmez', () => {
+    expect(satirlariManuelIleZenginlestir(null, null)).toEqual([]);
+  });
+});
+
 describe('mutabakatMesaji', () => {
   const satirlar = mutabakatSatirlari(GERCEK_SATIRLAR);
   const manuel: ManuelKalem[] = [
@@ -187,6 +247,37 @@ describe('mutabakatMesaji', () => {
     expect(mesaj).toContain('tutmuyor');
   });
 
+  it('kapanış modunda başlığı ayırt eder', () => {
+    const mesaj = mutabakatMesaji({
+      ay: '2026-07',
+      aralik: { startDate: '2026-07-01', endDate: '2026-07-31' },
+      satirlar,
+      toplam: mutabakatToplami(satirlar, GERCEK_OZET, []),
+      fark: ozetFarki(satirlar, GERCEK_OZET),
+      manuel: [],
+      kapanis: true,
+    });
+    expect(mesaj).toContain('AY KAPANIŞI · 2026-07');
+    expect(mesaj).not.toContain('AYLIK MUTABAKAT');
+  });
+
+  it('yönteme etiketli düzeltmeyi satırın altına yazar', () => {
+    const manuelYontemli: ManuelKalem[] = [
+      { id: '1', gun: '2026-08-02', tur: 'yatirim', tutar: 500, aciklama: '', ekleyen: 'a', eklendi: '', yontem: 'HemenOde · Havale' },
+    ];
+    const zengin = satirlariManuelIleZenginlestir(satirlar, manuelYontemli);
+    const mesaj = mutabakatMesaji({
+      ay: '2026-08',
+      aralik: { startDate: '2026-08-01', endDate: '2026-08-03' },
+      satirlar: zengin,
+      toplam: mutabakatToplami(satirlar, GERCEK_OZET, manuelYontemli),
+      fark: ozetFarki(satirlar, GERCEK_OZET),
+      manuel: manuelYontemli,
+    });
+    expect(mesaj).toContain('Elle düzeltme: yatırım 500 TRY');
+    expect(mesaj).toContain('düzeltilmiş net -7.356 TRY');
+  });
+
   it('hareketsiz ayda boş liste demez, açıkça söyler', () => {
     const mesaj = mutabakatMesaji({
       ay: '2026-09',
@@ -197,5 +288,32 @@ describe('mutabakatMesaji', () => {
       manuel: [],
     });
     expect(mesaj).toContain('sağlayıcı hareketi yok');
+  });
+});
+
+describe('yontemKasaMesaji', () => {
+  const satirlar = mutabakatSatirlari(GERCEK_SATIRLAR);
+
+  it('yöntem başına yatırım/çekim/net yazar', () => {
+    const mesaj = yontemKasaMesaji('2026-08-03', satirlar);
+    expect(mesaj).toContain('YÖNTEM BAZINDA KASA · 2026-08-03');
+    expect(mesaj).toContain('HemenOde · Havale');
+    expect(mesaj).toContain('5.310 TRY (5)');
+    expect(mesaj).toContain('13.166 TRY (2)');
+  });
+
+  it('toplam satırını ekler', () => {
+    const mesaj = yontemKasaMesaji('2026-08-03', satirlar);
+    expect(mesaj).toContain('TOPLAM Yatırım: 18.310 TRY');
+    expect(mesaj).toContain('TOPLAM Çekim:   13.166 TRY');
+  });
+
+  it('saat verilirse başlığa yazar', () => {
+    expect(yontemKasaMesaji('2026-08-03', satirlar, '14:20')).toContain('· 14:20');
+  });
+
+  it('hareket yoksa açıkça söyler', () => {
+    const mesaj = yontemKasaMesaji('2026-08-03', []);
+    expect(mesaj).toContain('bugün sağlayıcı hareketi yok');
   });
 });

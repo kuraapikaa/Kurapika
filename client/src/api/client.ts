@@ -533,12 +533,16 @@ export const dashboardApi = {
    */
   mutabakat: () => post<any>('/lynon/mutabakat', {}),
 
-  mutabakatKalemEkle: (kalem: { gun: string; tur: 'yatirim' | 'cekim'; tutar: number; aciklama: string }) =>
+  /** Kapanmış bir ayın kesin toplamı. `ay` ("YYYY-MM") verilmezse bir önceki ay. */
+  mutabakatKapanis: (ay?: string) => post<any>('/lynon/mutabakat/kapanis', ay ? { ay } : {}),
+
+  mutabakatKalemEkle: (kalem: { gun: string; tur: 'yatirim' | 'cekim'; tutar: number; aciklama: string; yontem?: string }) =>
     post<any>('/lynon/mutabakat/kalem', kalem),
 
   mutabakatKalemSil: (id: string) => del<any>(`/lynon/mutabakat/kalem/${encodeURIComponent(id)}`),
 
-  mutabakatGonder: () => post<any>('/lynon/mutabakat/gonder', {}),
+  /** `ay` verilirse o ayın KAPANIŞ raporu Telegram'a gider; yoksa ayın başından bugüne özet. */
+  mutabakatGonder: (ay?: string) => post<any>('/lynon/mutabakat/gonder', ay ? { ay } : {}),
 
   /** Davranış kategorilerini oluştur (High Risk, Bonus Avcısı, VIP Üye, Aktif Üye). */
   davranisKategorileriniOlustur: () =>
