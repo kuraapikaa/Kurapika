@@ -191,7 +191,7 @@ export function yatirimMesaji(satir: AnyRecord, gununYatirimlari?: AnyRecord[]):
   const ozet = gununYatirimlari ? gunlukYatirimOzeti(gununYatirimlari, satir) : null;
   const kur = satir.CurrencyId ?? satir.currency ?? 'TRY';
   return [
-    '💰 YATIRIM',
+    '💰 YENİ YATIRIM ✨',
     AYIRAC,
     `👤 ${oyuncuYaz(satir.ClientLogin ?? kisi.userName, satir.ClientId ?? satir.userId)}`,
     `💵 ${paraYaz(satir.Amount ?? satir.amount, kur)}`,
@@ -253,7 +253,7 @@ export function bildirilecekYatirimMi(satir: AnyRecord): boolean {
 }
 
 const CEKIM_BASLIGI: Record<IslemDurumu, string> = {
-  onay: '✅ ÇEKİM ONAYLANDI',
+  onay: '✅ ÇEKİM ONAYLANDI 🎉',
   red: '❌ ÇEKİM REDDEDİLDİ',
   bekliyor: '🏧 ÇEKİM TALEBİ',
   bilinmiyor: '🏧 ÇEKİM',
@@ -303,8 +303,8 @@ export function correctionMesaji(satir: AnyRecord): string {
 }
 
 const DUZELTME_YON_BASLIGI: Record<string, string> = {
-  giris: '⚖️ MANUEL BAKİYE EKLEME',
-  cikis: '⚖️ MANUEL BAKİYE ÇIKARMA',
+  giris: '⚖️ MANUEL BAKİYE EKLEME ⬆️',
+  cikis: '⚖️ MANUEL BAKİYE ÇIKARMA ⬇️',
   bilinmiyor: '⚖️ MANUEL DÜZELTME',
 };
 
@@ -371,7 +371,7 @@ export function manuelDuzeltmeMesaji(satir: AnyRecord, gununDuzeltmeleri?: AnyRe
 
 export function bonusMesaji(satir: AnyRecord): string {
   return [
-    '🎁 BONUS VERİLDİ',
+    '🎁 BONUS VERİLDİ 🎊',
     AYIRAC,
     `👤 ${oyuncuYaz(satir.ClientLogin, satir.ClientId)}`,
     `🏆 ${String(satir.Name ?? 'Bonus')}`,
@@ -429,6 +429,18 @@ function trendYaz(simdi: number | null, onceki: number | null | undefined): stri
 }
 
 /**
+ * Kar isaretine gore kisa bir kapanis notu.
+ *
+ * `kar` olculemiyorsa (null) hicbir sey yazilmaz — "kasa iyi gidiyor"
+ * gibi bir yorumu uydurmak, olculemeyen bir seyi olculmus gibi
+ * gostermek olur.
+ */
+function kasaKapanisNotu(kar: number | null): string | null {
+  if (kar === null) return null;
+  return kar >= 0 ? '✨ Bugün kasa lehine gidiyor, harika!' : '👀 Bugün oyuncular önde — takipte kalın.';
+}
+
+/**
  * Kasa ozeti.
  *
  * Olculemeyen alan "—" yazilir, sifir DEGIL. Panoda bu ayrimi kurmak
@@ -470,7 +482,7 @@ export function kasaMesaji(ozet: KasaOzeti, onceki?: KasaOzeti | null): string {
     : null;
 
   const satirlar = [
-    `📊 KASA ÖZETİ · ${ozet.gun}${ozet.saat ? ` · ${ozet.saat}` : ''}`,
+    `📊✨ KASA ÖZETİ · ${ozet.gun}${ozet.saat ? ` · ${ozet.saat}` : ''}`,
     AYIRAC,
     '💰 PARA',
     `  ⬇️ Yatırım:  ${p(y)}${trendYaz(y, onceki?.yatirim)}${ozet.yatirimOyuncu !== null ? ` · ${ozet.yatirimOyuncu} oyuncu` : ''}${ozet.yatirimAdedi !== null ? ` · ${ozet.yatirimAdedi} işlem` : ''}`,
@@ -500,6 +512,8 @@ export function kasaMesaji(ozet: KasaOzeti, onceki?: KasaOzeti | null): string {
     `  Bahis yapan:    ${sayi(ozet.bahisOyuncu)}`,
     `  Gerçek bakiye:  ${p(ozet.oyuncuBakiyesi)}`,
     `  Bonus bakiye:   ${p(ozet.bonusBakiye)}`,
+    kasaKapanisNotu(ozet.kar) ? '' : null,
+    kasaKapanisNotu(ozet.kar),
   ].filter((satir): satir is string => satir !== null);
 
   return satirlar.join('\n');

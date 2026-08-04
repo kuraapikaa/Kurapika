@@ -92,9 +92,10 @@ function trendYaz(simdi: number | null, onceki: number | null | undefined): stri
  */
 export function oyuncuBakiyeMesaji(ozet: OyuncuBakiyeOzeti, onceki?: OyuncuBakiyeOzeti | null): string {
   return [
-    `👛 ANLIK OYUNCU BAKİYESİ · ${ozet.gun}${ozet.saat ? ` · ${ozet.saat}` : ''}`,
+    `👛✨ ANLIK OYUNCU BAKİYESİ · ${ozet.gun}${ozet.saat ? ` · ${ozet.saat}` : ''}`,
     '━━━━━━━━━━━━━━━━━━',
     `👥 Oyuncu: ${ozet.oyuncuSayisi === null ? '—' : ozet.oyuncuSayisi}`,
+    '',
     `💰 Gerçek bakiye: ${para(ozet.gercekBakiye)}${trendYaz(ozet.gercekBakiye, onceki?.gercekBakiye)}`,
     `🎁 Bonus bakiye:  ${para(ozet.bonusBakiye)}${trendYaz(ozet.bonusBakiye, onceki?.bonusBakiye)}`,
     `⚖️ Toplam bakiye: ${para(ozet.toplamBakiye)}${trendYaz(ozet.toplamBakiye, onceki?.toplamBakiye)}`,

@@ -434,6 +434,19 @@ describe('kasa özeti', () => {
   it('en çok oynanan oyun verilmezse o satırı yazmaz', () => {
     expect(kasaMesaji(BOS_OZET)).not.toContain('En çok oynanan');
   });
+
+  it('kâr pozitifse olumlu kapanış notu ekler', () => {
+    expect(kasaMesaji({ ...BOS_OZET, kar: 1000 })).toContain('kasa lehine gidiyor');
+  });
+
+  it('kâr negatifse uyarı tonlu kapanış notu ekler', () => {
+    expect(kasaMesaji({ ...BOS_OZET, kar: -1000 })).toContain('oyuncular önde');
+  });
+
+  it('kâr ölçülemiyorsa kapanış notu uydurulmaz', () => {
+    expect(kasaMesaji(BOS_OZET)).not.toContain('kasa lehine');
+    expect(kasaMesaji(BOS_OZET)).not.toContain('oyuncular önde');
+  });
 });
 
 describe('ozetZamaniMi', () => {
