@@ -61,7 +61,6 @@ interface PromoSpec {
     checkPendingWithdrawal?: boolean;
     checkLastTransactionIsDeposit?: boolean;
     checkSingleInvestmentUsage?: boolean;
-    checkWheelCodeUsed?: boolean;
     checkSameDayUsage?: boolean;
     requiresPhoneVerified?: boolean;
     requiresTelegramMember?: boolean;
@@ -82,14 +81,11 @@ interface PromoSpec {
     activeDays?: string[];
     startTime?: string;
     endTime?: string;
-    category?: string;
 
     // Advanced & Limits
     minDep?: number;
     minDepositAmount?: number;
     maxDepositAmount?: number;
-    canReceiveLossBonus?: boolean;
-    canReceiveWheelBonus?: boolean;
     perDayLimit?: number;
     perWeekLimit?: number;
     isFirstDepositBonus?: boolean;
@@ -178,8 +174,6 @@ export function RulesManager() {
         });
         return Array.from(unique.values());
     }, [partnerBonusesRes, freebetsRes, promosAutoRes]);
-
-    console.log('[RulesManager] Yüklenen Toplam Promosyon Sayısı:', promos.length);
 
     const normalizeTitleForKey = (s: string): string =>
         String(s ?? '')
@@ -361,51 +355,40 @@ export function RulesManager() {
     if (isLoading) return (
         <div className="flex flex-col items-center justify-center p-40 space-y-4">
             <div className="relative h-16 w-16">
-                <div className="absolute inset-0 rounded-full border-4 border-blue-500/20 border-t-blue-500 animate-spin" />
+                <div className="absolute inset-0 rounded-full border-4 border-[color:var(--panel-accent,#0a84ff)]/20 border-t-[color:var(--panel-accent,#0a84ff)] animate-spin" />
             </div>
-            <p className="text-sm font-semibold text-blue-400 uppercase tracking-widest animate-pulse">Sistem Yükleniyor</p>
+            <p className="text-sm font-semibold text-[color:var(--panel-accent,#0a84ff)] uppercase tracking-widest animate-pulse">Sistem Yükleniyor</p>
         </div>
     );
 
     return (
         <div className="max-w-[1400px] mx-auto space-y-10 py-6 animate-in fade-in duration-700">
-            {/* Premium Header */}
-            <header className="relative overflow-hidden rounded-xl bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] p-8 md:p-12">
-                <div className="absolute top-0 right-0 -mr-20 -mt-20 h-64 w-64 rounded-full bg-blue-500/10 blur-[100px]" />
-
-                <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
-                    <div className="flex items-center gap-3">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-teal-500 p-[1px] shadow-lg shadow-blue-500/20">
-                            <div className="flex h-full w-full items-center justify-center rounded-[14px] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))]">
-                                <Settings className="text-white" size={24} />
-                            </div>
-                        </div>
-                        <div>
-                            <h1 className="text-4xl font-semibold tracking-tighter text-white md:text-5xl">
-                                Kural <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-teal-400 to-cyan-400">Merkezi</span>
-                            </h1>
-                            <div className="flex items-center gap-2 mt-2">
-                                <div className="h-1 w-8 rounded-full bg-blue-500" />
-                                <p className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-[0.3em]">Advanced Neural Logic Engine</p>
-                            </div>
-                        </div>
+            <header className="flex flex-col gap-4 rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-5 md:flex-row md:items-center md:justify-between md:p-6">
+                <div className="flex items-center gap-3">
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[color:var(--panel-accent,#0a84ff)]/10 text-[color:var(--panel-accent,#0a84ff)]">
+                        <Settings size={20} />
+                    </span>
+                    <div className="min-w-0">
+                        <h1 className="text-lg font-semibold text-[color:var(--panel-text,#f2f4f8)]">Kural Merkezi</h1>
+                        <p className="mt-0.5 text-xs font-medium text-[color:var(--panel-muted,#8a919c)]">Bonus uygunluk kurallarını tanımlayın ve düzenleyin.</p>
                     </div>
+                </div>
 
-                    <div className="flex flex-wrap items-center gap-4">
-                        <button
-                            onClick={() => queryClient.invalidateQueries({ queryKey: ['admin-rules'] })}
-                            className="group flex items-center justify-center h-12 w-12 rounded-xl bg-white/5 border border-[color:var(--panel-border,rgba(242,244,248,0.1))] hover:bg-white/10 transition-all active:scale-95"
-                        >
-                            <RefreshCw size={20} className={cn("text-[color:var(--panel-muted,#8a919c)] group-hover:text-white transition-colors", mutation.isPending && "animate-spin")} />
-                        </button>
-                        <Button
-                            variant="primary"
-                            onClick={() => setIsAdding(!isAdding)}
-                            className="h-12 px-8 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 shadow-xl shadow-blue-500/20 border-none font-semibold tracking-widest text-xs"
-                        >
-                            <Plus size={18} className="mr-2" /> YENİ KURAL EKLE
-                        </Button>
-                    </div>
+                <div className="flex flex-wrap items-center gap-3">
+                    <button
+                        onClick={() => queryClient.invalidateQueries({ queryKey: ['admin-rules'] })}
+                        className="group flex h-10 w-10 items-center justify-center rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/5 transition-all hover:bg-white/10 active:scale-95"
+                        aria-label="Yenile"
+                    >
+                        <RefreshCw size={17} className={cn("text-[color:var(--panel-muted,#8a919c)] group-hover:text-white transition-colors", mutation.isPending && "animate-spin")} />
+                    </button>
+                    <Button
+                        variant="primary"
+                        onClick={() => setIsAdding(!isAdding)}
+                        className="h-10 rounded-lg bg-[color:var(--panel-accent,#0a84ff)] px-5 text-xs font-semibold tracking-wide text-white hover:bg-[color:var(--panel-accent-deep,#0060df)]"
+                    >
+                        <Plus size={16} className="mr-1.5" /> Yeni Kural Ekle
+                    </Button>
                 </div>
             </header>
 
@@ -413,13 +396,13 @@ export function RulesManager() {
                 <div className="lg:col-span-9 space-y-6">
                     <div className="flex flex-col md:flex-row gap-4">
                         <div className="flex-1 relative group">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[color:var(--panel-muted,#8a919c)] group-focus-within:text-blue-500 transition-colors" size={18} />
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[color:var(--panel-muted,#8a919c)] group-focus-within:text-[color:var(--panel-accent,#0a84ff)] transition-colors" size={18} />
                             <input
                                 type="text"
                                 placeholder="Kural veya ID ara..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full h-14 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] backdrop-blur-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl pl-12 pr-4 text-sm text-white placeholder:text-[color:var(--panel-faint,#5c6470)] focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/20 transition-all font-bold"
+                                className="w-full h-14 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] backdrop-blur-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl pl-12 pr-4 text-sm text-white placeholder:text-[color:var(--panel-faint,#5c6470)] focus:outline-none focus:ring-2 focus:ring-[color:var(--panel-accent,#0a84ff)]/20 focus:border-[color:var(--panel-accent,#0a84ff)]/20 transition-all font-bold"
                             />
                         </div>
                     </div>
@@ -432,14 +415,13 @@ export function RulesManager() {
                                 exit={{ opacity: 0, y: -20, scale: 0.95 }}
                                 className="relative group"
                             >
-                                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-transparent blur-2xl rounded-xl" />
-                                <div className="relative p-8 rounded-xl bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-blue-500/20 shadow-2xl overflow-hidden">
+                                <div className="relative p-8 rounded-xl bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-accent,#0a84ff)]/20 overflow-hidden">
                                     <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                                        <Plus size={80} className="text-blue-500" />
+                                        <Plus size={80} className="text-[color:var(--panel-accent,#0a84ff)]" />
                                     </div>
                                     <div className="relative z-10 flex flex-col gap-8">
                                         <div className="flex items-center gap-3">
-                                            <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400">
+                                            <div className="h-10 w-10 rounded-xl bg-[color:var(--panel-accent,#0a84ff)]/10 flex items-center justify-center text-[color:var(--panel-accent,#0a84ff)]">
                                                 <Plus size={20} />
                                             </div>
                                             <div>
@@ -458,7 +440,7 @@ export function RulesManager() {
                                                         className={cn(
                                                             "flex items-center justify-center gap-2 h-14 rounded-xl border font-semibold text-[11px] transition-all uppercase tracking-widest",
                                                             newType === 'partner'
-                                                                ? "bg-blue-500/20 border-blue-500/50 text-blue-400"
+                                                                ? "bg-[color:var(--panel-accent,#0a84ff)]/20 border-[color:var(--panel-accent,#0a84ff)]/50 text-[color:var(--panel-accent,#0a84ff)]"
                                                                 : "bg-black/20 border-[color:var(--panel-border,rgba(242,244,248,0.1))] text-[color:var(--panel-muted,#8a919c)] hover:border-[color:var(--panel-border,rgba(242,244,248,0.1))]"
                                                         )}
                                                     >
@@ -535,7 +517,7 @@ export function RulesManager() {
                                 className={cn(
                                     "relative rounded-xl border transition-all duration-300",
                                     editKey === key
-                                        ? "bg-blue-500/5 border-blue-500/50 p-8"
+                                        ? "bg-[color:var(--panel-accent,#0a84ff)]/5 border-[color:var(--panel-accent,#0a84ff)]/50 p-8"
                                         : "bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border-[color:var(--panel-border,rgba(242,244,248,0.1))] hover:border-[color:var(--panel-border,rgba(242,244,248,0.1))] p-6 md:px-8 group"
                                 )}
                             >
@@ -544,7 +526,7 @@ export function RulesManager() {
                                         <motion.div key="edit" initial={{ opacity: 0, scale: 0.99, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} className="space-y-12">
                                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-8 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
                                                 <div className="flex items-center gap-5">
-                                                    <div className="h-16 w-16 rounded-[20px] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] flex items-center justify-center text-blue-400 shadow-[0_0_30px_rgba(0,0,0,0.4)]">
+                                                    <div className="h-16 w-16 rounded-[20px] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] flex items-center justify-center text-[color:var(--panel-accent,#0a84ff)] shadow-[0_0_30px_rgba(0,0,0,0.4)]">
                                                         <FileCode size={32} />
                                                     </div>
                                                     <div className="space-y-1">
@@ -570,7 +552,7 @@ export function RulesManager() {
                                                     <Button
                                                         variant="primary"
                                                         onClick={() => handleUpdateRule(key, editValue!)}
-                                                        className="h-12 px-10 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 font-semibold text-[11px] border-none shadow-xl shadow-blue-500/10 uppercase tracking-widest"
+                                                        className="h-12 px-10 rounded-xl bg-gradient-to-r from-[color:var(--panel-accent,#0a84ff)] to-[color:var(--panel-accent,#0a84ff)] font-semibold text-[11px] border-none shadow-xl shadow-[color:var(--panel-accent,#0a84ff)]/10 uppercase tracking-widest"
                                                         disabled={mutation.isPending}
                                                     >
                                                         {mutation.isPending ? 'KAYDEDİLİYOR...' : 'KURALI GÜNCELLE'}
@@ -581,8 +563,8 @@ export function RulesManager() {
                                             <div className="space-y-8">
                                                 {/* Section: Type & Amount */}
                                                 <div className="space-y-4">
-                                                    <h4 className="text-[10px] font-semibold text-blue-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                                                        <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                                                    <h4 className="text-[10px] font-semibold text-[color:var(--panel-accent,#0a84ff)] uppercase tracking-[0.2em] flex items-center gap-2">
+                                                        <div className="h-1.5 w-1.5 rounded-full bg-[color:var(--panel-accent,#0a84ff)]" />
                                                         Tür & Tutar Ayarları
                                                     </h4>
                                                     <div className="mb-4">
@@ -613,7 +595,7 @@ export function RulesManager() {
                                                             value={editValue?.title ?? ''}
                                                             onChange={(e) => setEditValue({ ...editValue, title: e.target.value })}
                                                             placeholder={getPromoTitleForRuleKey(key) ?? key}
-                                                            className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all outline-none font-bold"
+                                                            className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all outline-none font-bold"
                                                         />
                                                     </div>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -623,7 +605,7 @@ export function RulesManager() {
                                                             <select
                                                                 value={editValue?.type ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, type: e.target.value as any })}
-                                                                className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all outline-none font-bold"
+                                                                className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all outline-none font-bold"
                                                             >
                                                                 <option value="">Seçiniz...</option>
                                                                 <option value="partner">Partner Bonus</option>
@@ -638,7 +620,7 @@ export function RulesManager() {
                                                                     type="text"
                                                                     value={editValue?.partnerBonusId ?? ''}
                                                                     onChange={(e) => setEditValue({ ...editValue, partnerBonusId: e.target.value })}
-                                                                    className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all outline-none font-bold"
+                                                                    className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all outline-none font-bold"
                                                                     placeholder="Örn: 656569"
                                                                 />
                                                             </div>
@@ -656,7 +638,7 @@ export function RulesManager() {
                                                             <select
                                                                 value={editValue?.amountType ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, amountType: e.target.value as any })}
-                                                                className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all outline-none font-bold"
+                                                                className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all outline-none font-bold"
                                                             >
                                                                 <option value="">Seçiniz...</option>
                                                                 <option value="fixed">Sabit Tutar</option>
@@ -679,7 +661,7 @@ export function RulesManager() {
                                                                     type="number"
                                                                     value={editValue?.fixedAmount ?? ''}
                                                                     onChange={(e) => setEditValue({ ...editValue, fixedAmount: Number(e.target.value) })}
-                                                                    className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all outline-none font-bold"
+                                                                    className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all outline-none font-bold"
                                                                 />
                                                             </div>
                                                         )}
@@ -690,7 +672,7 @@ export function RulesManager() {
                                                                     type="number"
                                                                     value={editValue?.percentageAmount ?? ''}
                                                                     onChange={(e) => setEditValue({ ...editValue, percentageAmount: Number(e.target.value) })}
-                                                                    className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all outline-none font-bold"
+                                                                    className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all outline-none font-bold"
                                                                 />
                                                             </div>
                                                         )}
@@ -701,21 +683,21 @@ export function RulesManager() {
                                                                         <input type="number" placeholder="Örn: 3"
                                                                             value={editValue?.averageDepositCount ?? ''}
                                                                             onChange={(e) => setEditValue({ ...editValue, averageDepositCount: Number(e.target.value) })}
-                                                                            className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all outline-none font-bold" />
+                                                                            className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all outline-none font-bold" />
                                                                     </div>
                                                                     <div className="space-y-2">
                                                                         <label className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest block pl-1">Alt Sınır (₺)</label>
                                                                         <input type="number" placeholder="Örn: 100"
                                                                             value={editValue?.minimumBonus ?? ''}
                                                                             onChange={(e) => setEditValue({ ...editValue, minimumBonus: Number(e.target.value) })}
-                                                                            className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all outline-none font-bold" />
+                                                                            className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all outline-none font-bold" />
                                                                     </div>
                                                                     <div className="space-y-2">
                                                                         <label className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest block pl-1">Üst Sınır (₺)</label>
                                                                         <input type="number" placeholder="Örn: 2000"
                                                                             value={editValue?.maximumBonus ?? ''}
                                                                             onChange={(e) => setEditValue({ ...editValue, maximumBonus: Number(e.target.value) })}
-                                                                            className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all outline-none font-bold" />
+                                                                            className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all outline-none font-bold" />
                                                                     </div>
                                                                 </>
                                                             )}
@@ -737,7 +719,7 @@ export function RulesManager() {
                                                                             .map((parca) => Number(parca.trim()))
                                                                             .filter((sayi) => Number.isFinite(sayi) && sayi > 0),
                                                                     })}
-                                                                    className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all outline-none font-bold" />
+                                                                    className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all outline-none font-bold" />
                                                                 {(editValue?.dailySequencePercents ?? []).length > 0 && (
                                                                     <p className="text-[10px] text-[color:var(--panel-muted,#8a919c)] font-medium pl-1">
                                                                         {(editValue?.dailySequencePercents ?? []).length} kademe · toplam %
@@ -925,7 +907,7 @@ export function RulesManager() {
                                                                                     onChange={(e) => update({ percent: Number(e.target.value) })}
                                                                                     className="w-full h-10 bg-black/40 border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl pl-6 pr-3 text-xs text-white"
                                                                                 />
-                                                                                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-blue-400">%</span>
+                                                                                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[color:var(--panel-accent,#0a84ff)]">%</span>
                                                                             </div>
                                                                             <input
                                                                                 type="number"
@@ -1142,7 +1124,7 @@ export function RulesManager() {
                                                                 type="number"
                                                                 value={editValue?.minBalanceToClaim ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, minBalanceToClaim: Number(e.target.value) })}
-                                                                className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
+                                                                className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold"
                                                                 placeholder="N/A"
                                                             />
                                                         </div>
@@ -1153,7 +1135,7 @@ export function RulesManager() {
                                                                 type="number"
                                                                 value={editValue?.maxBalanceToClaim ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, maxBalanceToClaim: Number(e.target.value) })}
-                                                                className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
+                                                                className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold"
                                                                 placeholder="N/A"
                                                             />
                                                         </div>
@@ -1174,7 +1156,7 @@ export function RulesManager() {
                                                                 type="number"
                                                                 value={editValue?.principalWagerMult ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, principalWagerMult: Number(e.target.value) })}
-                                                                className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
+                                                                className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold"
                                                                 placeholder="0 (çevrim şartı yok)"
                                                             />
                                                         </div>
@@ -1185,7 +1167,7 @@ export function RulesManager() {
                                                                 type="number"
                                                                 value={editValue?.bonusWagerMult ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, bonusWagerMult: Number(e.target.value) })}
-                                                                className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
+                                                                className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold"
                                                                 placeholder="0 (Çevrimsiz)"
                                                             />
                                                         </div>
@@ -1196,7 +1178,7 @@ export function RulesManager() {
                                                                 type="number"
                                                                 value={editValue?.casinoWagering ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, casinoWagering: Number(e.target.value) })}
-                                                                className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
+                                                                className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold"
                                                                 placeholder="Kullanılmıyor"
                                                             />
                                                         </div>
@@ -1207,7 +1189,7 @@ export function RulesManager() {
                                                                 type="number"
                                                                 value={editValue?.sportWagering ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, sportWagering: Number(e.target.value) })}
-                                                                className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
+                                                                className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold"
                                                                 placeholder="Kullanılmıyor"
                                                             />
                                                         </div>
@@ -1219,7 +1201,7 @@ export function RulesManager() {
                                                                 step="0.01"
                                                                 value={editValue?.minSportOdds ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, minSportOdds: Number(e.target.value) })}
-                                                                className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
+                                                                className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold"
                                                                 placeholder="Kullanılmıyor"
                                                             />
                                                         </div>
@@ -1230,7 +1212,7 @@ export function RulesManager() {
                                                                 type="number"
                                                                 value={editValue?.maxPayoutMult ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, maxPayoutMult: Number(e.target.value) })}
-                                                                className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
+                                                                className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold"
                                                                 placeholder="10 (Örn)"
                                                             />
                                                         </div>
@@ -1241,7 +1223,7 @@ export function RulesManager() {
                                                                 type="number"
                                                                 value={editValue?.maxPayoutFixed ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, maxPayoutFixed: Number(e.target.value) })}
-                                                                className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
+                                                                className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold"
                                                                 placeholder="Sınırsız"
                                                             />
                                                         </div>
@@ -1250,8 +1232,8 @@ export function RulesManager() {
 
                                                 {/* Section: Advanced Deposit Limits */}
                                                 <div className="space-y-4 pt-4 border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
-                                                    <h4 className="text-[10px] font-semibold text-cyan-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                                                        <div className="h-1.5 w-1.5 rounded-full bg-cyan-500" />
+                                                    <h4 className="text-[10px] font-semibold text-[color:var(--panel-accent,#0a84ff)] uppercase tracking-[0.2em] flex items-center gap-2">
+                                                        <div className="h-1.5 w-1.5 rounded-full bg-[color:var(--panel-accent,#0a84ff)]" />
                                                         Gelişmiş Yatırım Limitleri
                                                     </h4>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1262,7 +1244,7 @@ export function RulesManager() {
                                                                 type="number"
                                                                 value={editValue?.minDepositAmount ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, minDepositAmount: Number(e.target.value) })}
-                                                                className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
+                                                                className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold"
                                                                 placeholder="Alt sınır"
                                                             />
                                                         </div>
@@ -1273,7 +1255,7 @@ export function RulesManager() {
                                                                 type="number"
                                                                 value={editValue?.maxDepositAmount ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, maxDepositAmount: Number(e.target.value) })}
-                                                                className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
+                                                                className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold"
                                                                 placeholder="Üst sınır"
                                                             />
                                                         </div>
@@ -1284,7 +1266,7 @@ export function RulesManager() {
                                                                 type="number"
                                                                 value={editValue?.perDayLimit ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, perDayLimit: Number(e.target.value) })}
-                                                                className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
+                                                                className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold"
                                                                 placeholder="Sınırsız"
                                                             />
                                                         </div>
@@ -1295,7 +1277,7 @@ export function RulesManager() {
                                                                 type="number"
                                                                 value={editValue?.perWeekLimit ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, perWeekLimit: Number(e.target.value) })}
-                                                                className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
+                                                                className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold"
                                                                 placeholder="Sınırsız"
                                                             />
                                                         </div>
@@ -1312,7 +1294,7 @@ export function RulesManager() {
                                                                         .map((p) => p.trim())
                                                                         .filter(Boolean),
                                                                 })}
-                                                                className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
+                                                                className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold"
                                                                 placeholder="Pragmatic Play"
                                                             />
                                                         </div>
@@ -1321,8 +1303,8 @@ export function RulesManager() {
 
                                                 {/* Section: Additional Logic Switches */}
                                                 <div className="space-y-4 pt-4 border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
-                                                    <h4 className="text-[10px] font-semibold text-blue-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                                                        <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                                                    <h4 className="text-[10px] font-semibold text-[color:var(--panel-accent,#0a84ff)] uppercase tracking-[0.2em] flex items-center gap-2">
+                                                        <div className="h-1.5 w-1.5 rounded-full bg-[color:var(--panel-accent,#0a84ff)]" />
                                                         Ekstra Kontrol Switchleri
                                                     </h4>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1332,26 +1314,14 @@ export function RulesManager() {
                                                             value={editValue?.isFirstDepositBonus}
                                                             onChange={(v) => setEditValue({ ...editValue, isFirstDepositBonus: v })}
                                                         />
-                                                        <ToggleField
-                                                            label="Kayıp Bonusu Alabilir"
-                                                            description="Bu bonusu alan kullanıcılar kayıp bonusundan da yararlanabilsin mi?"
-                                                            value={editValue?.canReceiveLossBonus}
-                                                            onChange={(v) => setEditValue({ ...editValue, canReceiveLossBonus: v })}
-                                                        />
-                                                        <ToggleField
-                                                            label="Wheel Bonus Alabilir"
-                                                            description="Bu bonusu alan kullanıcılar şans çarkından da yararlanabilsin mi?"
-                                                            value={editValue?.canReceiveWheelBonus}
-                                                            onChange={(v) => setEditValue({ ...editValue, canReceiveWheelBonus: v })}
-                                                        />
                                                     </div>
                                                 </div>
 
 
                                                 {/* Section: Talep Anı Koşulları */}
                                                 <div className="space-y-4 pt-4 border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
-                                                    <h4 className="text-[10px] font-semibold text-blue-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                                                        <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                                                    <h4 className="text-[10px] font-semibold text-[color:var(--panel-accent,#0a84ff)] uppercase tracking-[0.2em] flex items-center gap-2">
+                                                        <div className="h-1.5 w-1.5 rounded-full bg-[color:var(--panel-accent,#0a84ff)]" />
                                                         Talep Anı Koşulları
                                                     </h4>
                                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -1361,7 +1331,7 @@ export function RulesManager() {
                                                             <input type="number" placeholder="Örn: 3"
                                                                 value={editValue?.consecutiveLossDeposits ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, consecutiveLossDeposits: e.target.value === '' ? undefined : Number(e.target.value) })}
-                                                                className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all outline-none font-bold" />
+                                                                className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all outline-none font-bold" />
                                                         </div>
                                                         <div className="space-y-2">
                                                             <label className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest block pl-1">Bakiye Üst Sınırı (₺)</label>
@@ -1369,7 +1339,7 @@ export function RulesManager() {
                                                             <input type="number" placeholder="Örn: 10"
                                                                 value={editValue?.balanceBelow ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, balanceBelow: e.target.value === '' ? undefined : Number(e.target.value) })}
-                                                                className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all outline-none font-bold" />
+                                                                className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all outline-none font-bold" />
                                                         </div>
                                                         <ToggleField
                                                             label="Açık Bahis Olmamalı"
@@ -1383,8 +1353,8 @@ export function RulesManager() {
 
                                                 {/* Section: Time & Category Constraints */}
                                                 <div className="space-y-4 pt-4 border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
-                                                    <h4 className="text-[10px] font-semibold text-blue-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                                                        <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                                                    <h4 className="text-[10px] font-semibold text-[color:var(--panel-accent,#0a84ff)] uppercase tracking-[0.2em] flex items-center gap-2">
+                                                        <div className="h-1.5 w-1.5 rounded-full bg-[color:var(--panel-accent,#0a84ff)]" />
                                                         Zaman & Kategori Kısıtlamaları
                                                     </h4>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1407,7 +1377,7 @@ export function RulesManager() {
                                                                             }}
                                                                             className={cn(
                                                                                 "h-10 rounded-xl text-[10px] font-semibold transition-all border",
-                                                                                isActive ? "bg-blue-500/20 text-blue-400 border-blue-500/30" : "bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] text-[color:var(--panel-faint,#5c6470)] border-[color:var(--panel-border,rgba(242,244,248,0.1))]"
+                                                                                isActive ? "bg-[color:var(--panel-accent,#0a84ff)]/20 text-[color:var(--panel-accent,#0a84ff)] border-[color:var(--panel-accent,#0a84ff)]/30" : "bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] text-[color:var(--panel-faint,#5c6470)] border-[color:var(--panel-border,rgba(242,244,248,0.1))]"
                                                                             )}
                                                                         >
                                                                             {day}
@@ -1423,7 +1393,7 @@ export function RulesManager() {
                                                                     type="time"
                                                                     value={editValue?.startTime ?? ''}
                                                                     onChange={(e) => setEditValue({ ...editValue, startTime: e.target.value })}
-                                                                    className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
+                                                                    className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold"
                                                                 />
                                                             </div>
                                                             <div className="space-y-2">
@@ -1432,17 +1402,7 @@ export function RulesManager() {
                                                                     type="time"
                                                                     value={editValue?.endTime ?? ''}
                                                                     onChange={(e) => setEditValue({ ...editValue, endTime: e.target.value })}
-                                                                    className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
-                                                                />
-                                                            </div>
-                                                            <div className="col-span-2 space-y-2">
-                                                                <label className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest block pl-1">Kategori Filtresi</label>
-                                                                <input
-                                                                    type="text"
-                                                                    value={editValue?.category ?? ''}
-                                                                    onChange={(e) => setEditValue({ ...editValue, category: e.target.value })}
-                                                                    className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-blue-500 transition-all font-bold"
-                                                                    placeholder="Örn: Slot, Canlı Casino..."
+                                                                    className="w-full h-12 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold"
                                                                 />
                                                             </div>
                                                         </div>
@@ -1480,9 +1440,9 @@ export function RulesManager() {
                                                 </div>
                                                 <div className="flex flex-wrap gap-8">
                                                     {spec.type && (
-                                                        <div className="space-y-1 p-3 rounded-xl bg-blue-500/5 border border-blue-500/10">
-                                                            <p className="text-[9px] font-semibold text-blue-500/70 uppercase">Bonus Tipi</p>
-                                                            <p className="text-sm font-semibold text-blue-400">
+                                                        <div className="space-y-1 p-3 rounded-xl bg-[color:var(--panel-accent,#0a84ff)]/5 border border-[color:var(--panel-accent,#0a84ff)]/10">
+                                                            <p className="text-[9px] font-semibold text-[color:var(--panel-accent,#0a84ff)]/70 uppercase">Bonus Tipi</p>
+                                                            <p className="text-sm font-semibold text-[color:var(--panel-accent,#0a84ff)]">
                                                                 {spec.type === 'partner' ? `Partner #${spec.partnerBonusId}` : 'Nakit'}
                                                             </p>
                                                         </div>
@@ -1507,8 +1467,7 @@ export function RulesManager() {
                                                             {spec.checkPendingWithdrawal && <div className="w-2 h-2 rounded-full bg-rose-500" title="Çekim Kontrolü" />}
                                                             {spec.checkLastTransactionIsDeposit && <div className="w-2 h-2 rounded-full bg-amber-500" title="Son İşlem" />}
                                                             {spec.checkSingleInvestmentUsage && <div className="w-2 h-2 rounded-full bg-emerald-500" title="Tekil Yatırım" />}
-                                                            {spec.checkWheelCodeUsed && <div className="w-2 h-2 rounded-full bg-blue-500" title="Çark Kontrolü" />}
-                                                            {spec.isAutoCharge && <div className="w-2 h-2 rounded-full bg-blue-500" title="Oto Ekleme" />}
+                                                            {spec.isAutoCharge && <div className="w-2 h-2 rounded-full bg-[color:var(--panel-accent,#0a84ff)]" title="Oto Ekleme" />}
                                                         </div>
                                                     </div>
                                                     {spec.maxKpiLimit && <StatItem label="Max KPI" value={spec.maxKpiLimit} unit="TRY" color="rose-400" />}
@@ -1522,7 +1481,7 @@ export function RulesManager() {
                                                         setEditKey(key);
                                                         setEditValue({ ...spec, partnerBonusId: spec.partnerBonusId ?? (linked?.PartnerBonusId != null ? String(linked.PartnerBonusId) : undefined) });
                                                     }}
-                                                    className="h-12 w-12 flex items-center justify-center rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 hover:bg-blue-500 hover:text-white transition-all shadow-lg"
+                                                    className="h-12 w-12 flex items-center justify-center rounded-xl bg-[color:var(--panel-accent,#0a84ff)]/10 border border-[color:var(--panel-accent,#0a84ff)]/20 text-[color:var(--panel-accent,#0a84ff)] hover:bg-[color:var(--panel-accent,#0a84ff)] hover:text-white transition-all shadow-lg"
                                                     title="Düzenle"
                                                 >
                                                     <Edit2 size={18} />
@@ -1544,26 +1503,20 @@ export function RulesManager() {
                 </div>
 
                 <div className="lg:col-span-3 space-y-8">
-                    <Card className="p-8 border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] backdrop-blur-xl shadow-2xl relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 -mr-16 -mt-16 h-40 w-40 rounded-full bg-emerald-500/5 blur-3xl group-hover:bg-emerald-500/10 transition-all duration-1000" />
-                        <div className="relative z-10 flex flex-col items-center text-center space-y-6">
-                            <div className="h-20 w-20 rounded-full border-4 border-dashed border-emerald-500/20 flex items-center justify-center bg-emerald-500/5">
-                                <CheckCircle2 className="text-emerald-500" size={32} />
-                            </div>
-                            <div>
-                                <h4 className="text-xl font-semibold text-white tracking-tight">Analiz Motoru Aktif</h4>
-                                <div className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-[0.2em] mt-2 italic flex items-center justify-center gap-2">
-                                    <div className="h-1 w-1 rounded-full bg-emerald-500 animate-pulse" />
-                                    Senkronizasyon Başarılı
-                                </div>
-                            </div>
+                    <Card className="flex items-center gap-3 border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-4">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400">
+                            <CheckCircle2 size={18} />
+                        </span>
+                        <div className="min-w-0">
+                            <p className="text-xs font-semibold text-white">Analiz motoru aktif</p>
+                            <p className="mt-0.5 text-[10px] font-medium text-[color:var(--panel-muted,#8a919c)]">Senkronizasyon başarılı.</p>
                         </div>
                     </Card>
                     <BonusBlacklistPanel />
                     <Card className="p-8 border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] shadow-xl overflow-hidden relative">
-                        <div className="absolute top-0 right-0 h-1 w-full bg-gradient-to-r from-blue-500 to-transparent opacity-20" />
+                        <div className="absolute top-0 right-0 h-1 w-full bg-gradient-to-r from-[color:var(--panel-accent,#0a84ff)] to-transparent opacity-20" />
                         <div className="flex items-center gap-3 mb-8">
-                            <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 border border-blue-500/20">
+                            <div className="h-10 w-10 rounded-xl bg-[color:var(--panel-accent,#0a84ff)]/10 flex items-center justify-center text-[color:var(--panel-accent,#0a84ff)] border border-[color:var(--panel-accent,#0a84ff)]/20">
                                 <Info size={18} />
                             </div>
                             <h4 className="text-xs font-semibold text-white uppercase tracking-widest">Sistem Rehberi</h4>
@@ -1602,11 +1555,11 @@ export function RulesManager() {
                                 <h5 className="text-[9px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] pb-2">🛡️ KRİTİK KONTROLLER</h5>
                                 <div className="space-y-3">
                                     <div>
-                                        <h6 className="text-[10px] font-bold text-teal-400 mb-1">Single ID Takibi</h6>
+                                        <h6 className="text-[10px] font-bold text-[color:var(--panel-accent,#0a84ff)] mb-1">Single ID Takibi</h6>
                                         <p className="text-[10px] text-[color:var(--panel-muted,#8a919c)] leading-relaxed font-medium">Aynı yatırım fişinin (Deposit ID) birden fazla bonus için kullanılmasını engeller.</p>
                                     </div>
                                     <div>
-                                        <h6 className="text-[10px] font-bold text-teal-400 mb-1">Only New Player</h6>
+                                        <h6 className="text-[10px] font-bold text-[color:var(--panel-accent,#0a84ff)] mb-1">Only New Player</h6>
                                         <p className="text-[10px] text-[color:var(--panel-muted,#8a919c)] leading-relaxed font-medium">Sadece sisteme yeni kayıt olmuş ve hiç işlemi olmayan 'saf' üyelerin taleplerini karşılar.</p>
                                     </div>
                                 </div>
@@ -1640,7 +1593,7 @@ function StatItem({ label, value, unit, color }: any) {
 
 function ToggleField({ label, description, value, onChange }: { label: string; description?: string; value: boolean | undefined; onChange: (v: boolean | undefined) => void }) {
     return (
-        <div className="group space-y-4 p-6 rounded-xl bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] hover:border-blue-500/20 transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/5">
+        <div className="group space-y-4 p-6 rounded-xl bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] hover:border-[color:var(--panel-accent,#0a84ff)]/20 transition-all duration-500 hover:shadow-2xl hover:shadow-[color:var(--panel-accent,#0a84ff)]/5">
             <div className="min-h-[48px]">
                 <p className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] group-hover:text-white uppercase tracking-[0.1em] transition-colors">{label}</p>
                 {description && <p className="text-[11px] text-[color:var(--panel-faint,#5c6470)] font-medium mt-2 leading-relaxed line-clamp-2">{description}</p>}
@@ -1831,7 +1784,7 @@ function PromoContentEditor({ externalId, promoTitle }: { externalId: number; pr
 
     return (
         <div className="space-y-6 p-8 rounded-xl bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] relative overflow-hidden group">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500/50 via-blue-500/50 to-transparent opacity-30" />
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500/50 via-[color:var(--panel-accent,#0a84ff)]/50 to-transparent opacity-30" />
 
             <div className="flex flex-col md:flex-row items-start justify-between gap-6 relative z-10">
                 <div className="flex items-center gap-4">
@@ -1869,7 +1822,7 @@ function PromoContentEditor({ externalId, promoTitle }: { externalId: number; pr
                         <input
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
-                            className="w-full h-14 bg-black/40 border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-5 text-sm text-white focus:border-blue-500/50 transition-all outline-none font-bold"
+                            className="w-full h-14 bg-black/40 border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-5 text-sm text-white focus:border-[color:var(--panel-accent,#0a84ff)]/50 transition-all outline-none font-bold"
                             placeholder="Orijinal başlığı gizlemek için doldurun..."
                         />
                     </div>
@@ -1878,7 +1831,7 @@ function PromoContentEditor({ externalId, promoTitle }: { externalId: number; pr
                         <input
                             value={image}
                             onChange={(e) => setImage(e.target.value)}
-                            className="w-full h-14 bg-black/40 border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-5 text-sm text-white focus:border-blue-500/50 transition-all outline-none font-bold"
+                            className="w-full h-14 bg-black/40 border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-5 text-sm text-white focus:border-[color:var(--panel-accent,#0a84ff)]/50 transition-all outline-none font-bold"
                             placeholder="https://..."
                         />
                     </div>
@@ -1887,7 +1840,7 @@ function PromoContentEditor({ externalId, promoTitle }: { externalId: number; pr
                         <textarea
                             value={detailHtml}
                             onChange={(e) => setDetailHtml(e.target.value)}
-                            className="w-full min-h-[220px] bg-black/40 border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-5 py-4 text-sm text-[color:var(--panel-text-dim,#c8cdd5)] focus:border-blue-500/50 transition-all outline-none leading-relaxed"
+                            className="w-full min-h-[220px] bg-black/40 border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-5 py-4 text-sm text-[color:var(--panel-text-dim,#c8cdd5)] focus:border-[color:var(--panel-accent,#0a84ff)]/50 transition-all outline-none leading-relaxed"
                             placeholder="HTML formatında bonus detaylarını girin..."
                         />
                     </div>
@@ -1896,7 +1849,7 @@ function PromoContentEditor({ externalId, promoTitle }: { externalId: number; pr
                 <div className="space-y-3">
                     <label className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest block pl-1">CANLI ÖNİZLEME</label>
                     <div className="relative rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-6 h-full min-h-[400px] overflow-hidden group/preview">
-                        <div className="absolute inset-0 bg-gradient-to-b from-blue-500/5 to-transparent opacity-0 group-hover/preview:opacity-100 transition-opacity" />
+                        <div className="absolute inset-0 bg-gradient-to-b from-[color:var(--panel-accent,#0a84ff)]/5 to-transparent opacity-0 group-hover/preview:opacity-100 transition-opacity" />
 
                         {image?.trim() ? (
                             <img src={image.trim()} alt="" className="w-full aspect-video object-cover rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] shadow-2xl mb-6" />
@@ -1909,7 +1862,7 @@ function PromoContentEditor({ externalId, promoTitle }: { externalId: number; pr
 
                         <div className="space-y-4 relative z-10">
                             <h5 className="text-xl font-semibold text-white">{title?.trim() || promoTitle || 'Bonus Başlığı'}</h5>
-                            <div className="h-px w-12 bg-blue-500" />
+                            <div className="h-px w-12 bg-[color:var(--panel-accent,#0a84ff)]" />
                             {detailHtml?.trim() ? (
                                 <div className="text-sm text-[color:var(--panel-muted,#8a919c)] font-medium leading-relaxed max-h-[150px] overflow-auto custom-scrollbar pr-2" dangerouslySetInnerHTML={{ __html: detailHtml }} />
                             ) : (
