@@ -1144,6 +1144,35 @@ export const affiliateAdminApi = {
     }>('/admin/affiliate/komisyon-raporu', body),
 };
 
+export type BugscrmDurum = {
+  etkin: boolean;
+  yapilandirildi: boolean;
+  endpointUrl: string | null;
+  productId: string | null;
+  apiKeyTanimli: boolean;
+  webhookSecretTanimli: boolean;
+};
+
+export type BugscrmKaydi = {
+  clickId: string;
+  subId: string | null;
+  olayTuru: 'tiklama' | 'kayit' | 'yatirim' | 'ozel';
+  playerLogin: string | null;
+  tutar: number | null;
+  paraBirimi: string | null;
+  alindi: string;
+};
+
+export const bugscrmAdminApi = {
+  durum: () => get<{ HasError: boolean; Data: BugscrmDurum }>('/admin/bugscrm/durum'),
+  testBaglanti: () =>
+    post<{ HasError: boolean; AlertMessage?: string; Data: { ok: boolean; durum: string; mesaj?: string } }>(
+      '/admin/bugscrm/test-baglanti',
+      {},
+    ),
+  kayitlar: (limit = 100) => get<{ HasError: boolean; Data: BugscrmKaydi[] }>(`/admin/bugscrm/kayitlar?limit=${limit}`),
+};
+
 export const formsApi = {
   submitCallRequest: (body: any) => post<any>('/forms/call', body),
   submitPartnershipRequest: (body: any) => post<any>('/forms/partnership', body),

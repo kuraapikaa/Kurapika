@@ -295,6 +295,27 @@ export const config = {
     query: process.env.PROMOS_API_QUERY || 'paginate=1&limit=100&use_webp=1&platform=0&category=all&with_meta=1&country=',
     timeoutMs: Number(process.env.PROMOS_API_TIMEOUT_MS) || 15000,
   },
+  /**
+   * BugsCRM — kendi affiliate izleme entegrasyonumuz.
+   *
+   * Lynon, BTag'i oyuncu kaydında kendi tarafında yakalıyor; bu depo onu
+   * yalnızca rapordan OKUYOR (bkz. `lynonAffiliateSummary`) — kayıt anına
+   * müdahale eden bir uç yok. BugsCRM de aynı şekilde: tıklama/dönüşüm
+   * verisini KENDİ tarafında tutar, bize yalnızca postback (S2S) ile
+   * bildirir. Bu yüzden ApiKey/ProductId gibi kimlik bilgileri Lynon'daki
+   * gibi YALNIZCA ENV'DEN okunur, admin panelinden değiştirilemez —
+   * panel yalnızca bağlantı durumunu gösterir ve gelen tıklama/dönüşüm
+   * kayıtlarını listeler.
+   */
+  bugscrm: {
+    enabled: !['0', 'false', 'no', 'off'].includes(String(process.env.BUGSCRM_ENABLED ?? '').trim().toLowerCase()),
+    apiKey: (process.env.BUGSCRM_API_KEY || '').trim(),
+    productId: (process.env.BUGSCRM_PRODUCT_ID || '').trim(),
+    endpointUrl: (process.env.BUGSCRM_ENDPOINT_URL || '').trim().replace(/\/+$/, ''),
+    /** BugsCRM'in postback isteğine eklediği paylaşılan sır; header'da doğrulanır. */
+    webhookSecret: (process.env.BUGSCRM_WEBHOOK_SECRET || '').trim(),
+    timeoutMs: Number(process.env.BUGSCRM_API_TIMEOUT_MS) || 15000,
+  },
 } as const;
 
 export type Config = typeof config;
