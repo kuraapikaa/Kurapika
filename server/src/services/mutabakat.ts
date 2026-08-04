@@ -348,34 +348,56 @@ export function mutabakatMesaji(input: {
 }
 
 /**
- * Yontem bazinda GUNLUK kasa mesaji.
+ * Yontem bazinda TUM ZAMANLAR kasa mesaji.
  *
- * `mutabakatMesaji`dan farkli: bu AY ozeti degil, o GUNUN saglayici
- * kirilimi — periyodik olarak (kasa ozetiyle ayni ritimde) atilir ve
- * "hangi yontemden ne kadar para girdi/cikti, su an" sorusunu cevaplar.
- * Manuel kalem, fark kontrolu yok — o mutabakatin isi.
+ * `mutabakatMesaji`dan farkli: bu ay ozeti degil, BASLANGIC gununden
+ * bugune KUMULATIF saglayici kirilimi — periyodik olarak (kasa ozetiyle
+ * ayni ritimde) atilir ve "yontem basina su ana kadar toplam ne kadar
+ * girdi/cikti" sorusunu cevaplar.
+ *
+ * `satirlar` `satirlariManuelIleZenginlestir` ciktisiysa MANUEL cikarma/
+ * ekleme de yontemin toplamina KATILIR (rapor rakami yaninda gorunur
+ * kalir) — bu rapor bilerek "elle eklenenle rapor ayri" felsefesinden
+ * sapiyor, cunku istenen tam olarak "manuel cikarmalar dahil güncel
+ * durum".
  */
-export function yontemKasaMesaji(gun: string, satirlar: MutabakatSatiri[], saat?: string | null): string {
+export function yontemKasaMesaji(
+  aralik: { baslangic: string; bitis: string },
+  satirlar: MutabakatSatiri[],
+  saat?: string | null,
+): string {
   const parcalar: string[] = [
-    `🏦 YÖNTEM BAZINDA KASA · ${gun}${saat ? ` · ${saat}` : ''}`,
+    `🏦 YÖNTEM BAZINDA KASA · TÜM ZAMANLAR`,
+    `${aralik.baslangic} → ${aralik.bitis}${saat ? ` · ${saat}` : ''}`,
   ];
 
   if (satirlar.length === 0) {
-    parcalar.push('', '(bugün sağlayıcı hareketi yok)');
+    parcalar.push('', '(bu aralıkta sağlayıcı hareketi yok)');
     return parcalar.join('\n');
   }
 
   let toplamYatirim = 0;
   let toplamCekim = 0;
+  let toplamManuelYatirim = 0;
+  let toplamManuelCekim = 0;
   for (const satir of satirlar) {
-    toplamYatirim += satir.yatirim;
-    toplamCekim += satir.cekim;
+    const manuelYatirim = satir.manuelYatirim ?? 0;
+    const manuelCekim = satir.manuelCekim ?? 0;
+    const duzeltilmisYatirim = satir.duzeltilmisYatirim ?? satir.yatirim;
+    const duzeltilmisCekim = satir.duzeltilmisCekim ?? satir.cekim;
+    const duzeltilmisNet = satir.duzeltilmisNet ?? satir.net;
+    toplamYatirim += duzeltilmisYatirim;
+    toplamCekim += duzeltilmisCekim;
+    toplamManuelYatirim += manuelYatirim;
+    toplamManuelCekim += manuelCekim;
     parcalar.push(
       '',
       `  ${satir.anahtar}`,
-      `    ⬇️ Yatırım: ${para(satir.yatirim)} (${satir.yatirimAdedi})`,
-      `    ⬆️ Çekim:   ${para(satir.cekim)} (${satir.cekimAdedi})`,
-      `    ⚖️ Net:     ${para(satir.net)}`,
+      `    ⬇️ Yatırım: ${para(duzeltilmisYatirim)} (${satir.yatirimAdedi})` +
+        (manuelYatirim ? ` [rapor ${para(satir.yatirim)} + manuel ${para(manuelYatirim)}]` : ''),
+      `    ⬆️ Çekim:   ${para(duzeltilmisCekim)} (${satir.cekimAdedi})` +
+        (manuelCekim ? ` [rapor ${para(satir.cekim)} + manuel ${para(manuelCekim)}]` : ''),
+      `    ⚖️ Net:     ${para(duzeltilmisNet)}`,
     );
   }
 
@@ -386,6 +408,9 @@ export function yontemKasaMesaji(gun: string, satirlar: MutabakatSatiri[], saat?
     `  TOPLAM Çekim:   ${para(toplamCekim)}`,
     `  TOPLAM Net:     ${para(toplamYatirim - toplamCekim)}`,
   );
+  if (toplamManuelYatirim || toplamManuelCekim) {
+    parcalar.push(`  (manuel dahil: +${para(toplamManuelYatirim)} yatırım · +${para(toplamManuelCekim)} çekim)`);
+  }
 
   return parcalar.join('\n');
 }

@@ -436,7 +436,7 @@ export async function runTelegramRaporJob(tenantKey = 'default'): Promise<Telegr
     const kasaYontemSohbeti = config.telegram.raporChatIdleri.kasaYontem || kasaSohbeti;
     if (kasaYontemSohbeti) {
       try {
-        const yanit = await lynonYontemBazindaKasa({ gun: bugun() });
+        const yanit = await lynonYontemBazindaKasa({});
         await sendTelegramMessage(kasaYontemSohbeti, String(yanit?.Data?.Mesaj ?? ''));
         sonuc.gonderilen += 1;
       } catch (err) {

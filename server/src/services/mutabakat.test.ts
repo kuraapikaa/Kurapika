@@ -293,27 +293,39 @@ describe('mutabakatMesaji', () => {
 
 describe('yontemKasaMesaji', () => {
   const satirlar = mutabakatSatirlari(GERCEK_SATIRLAR);
+  const aralik = { baslangic: '2026-07-28', bitis: '2026-08-04' };
 
   it('yöntem başına yatırım/çekim/net yazar', () => {
-    const mesaj = yontemKasaMesaji('2026-08-03', satirlar);
-    expect(mesaj).toContain('YÖNTEM BAZINDA KASA · 2026-08-03');
+    const mesaj = yontemKasaMesaji(aralik, satirlar);
+    expect(mesaj).toContain('YÖNTEM BAZINDA KASA · TÜM ZAMANLAR');
+    expect(mesaj).toContain('2026-07-28 → 2026-08-04');
     expect(mesaj).toContain('HemenOde · Havale');
     expect(mesaj).toContain('5.310 TRY (5)');
     expect(mesaj).toContain('13.166 TRY (2)');
   });
 
   it('toplam satırını ekler', () => {
-    const mesaj = yontemKasaMesaji('2026-08-03', satirlar);
+    const mesaj = yontemKasaMesaji(aralik, satirlar);
     expect(mesaj).toContain('TOPLAM Yatırım: 18.310 TRY');
     expect(mesaj).toContain('TOPLAM Çekim:   13.166 TRY');
   });
 
   it('saat verilirse başlığa yazar', () => {
-    expect(yontemKasaMesaji('2026-08-03', satirlar, '14:20')).toContain('· 14:20');
+    expect(yontemKasaMesaji(aralik, satirlar, '14:20')).toContain('· 14:20');
   });
 
   it('hareket yoksa açıkça söyler', () => {
-    const mesaj = yontemKasaMesaji('2026-08-03', []);
-    expect(mesaj).toContain('bugün sağlayıcı hareketi yok');
+    const mesaj = yontemKasaMesaji(aralik, []);
+    expect(mesaj).toContain('sağlayıcı hareketi yok');
+  });
+
+  it('yönteme etiketli manuel kalemi rapor rakamının yanında gösterir', () => {
+    const manuel: ManuelKalem[] = [
+      { id: '1', gun: '2026-08-02', tur: 'cekim', tutar: 1000, aciklama: '', ekleyen: '', eklendi: '', yontem: 'HemenOde · Havale' },
+    ];
+    const zengin = satirlariManuelIleZenginlestir(satirlar, manuel);
+    const mesaj = yontemKasaMesaji(aralik, zengin);
+    expect(mesaj).toContain('rapor 13.166 TRY + manuel 1.000 TRY');
+    expect(mesaj).toContain('(manuel dahil:');
   });
 });
