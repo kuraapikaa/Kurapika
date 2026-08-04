@@ -30,6 +30,13 @@ export type LobbyPageContent = {
   loadingText: string;
   unavailableTitle: string;
   unavailableDescription: string;
+  /**
+   * Bakim modu. Lobideki karti gizlemek (quickAccess[].enabled=false)
+   * yalnizca navigasyonu gizler; oyuncu sayfaya dogrudan URL ile hala
+   * ulasabilir. Bu bayrak sayfanin KENDISINI kapatir: aciksa liste yerine
+   * `unavailableTitle`/`unavailableDescription` gosterilir.
+   */
+  maintenanceMode?: boolean;
   successTitle: string;
   successDescription: string;
   successButton: string;
@@ -83,6 +90,7 @@ export const DEFAULT_LOBBY_PAGE_CONTENTS: Record<LobbyPageId, LobbyPageContent> 
     loadingText: 'Bonuslar yükleniyor...',
     unavailableTitle: 'Form Geçici Olarak Kapalı',
     unavailableDescription: 'Bonus talepleri şu anda geçici olarak kapalı.',
+    maintenanceMode: false,
     successTitle: 'İşlem Başarılı!',
     successDescription: 'Tebrikler! "{bonus}" başarıyla tanımlandı.',
     successButton: 'Kapat',
@@ -600,6 +608,7 @@ export function normalizeLobbyPageContent(pageId: LobbyPageId, page?: Partial<Lo
     loadingText: asString(source.loadingText, fallback.loadingText),
     unavailableTitle: asString(source.unavailableTitle, fallback.unavailableTitle),
     unavailableDescription: asString(source.unavailableDescription, fallback.unavailableDescription),
+    maintenanceMode: source.maintenanceMode === true,
     successTitle: asString(source.successTitle, fallback.successTitle),
     successDescription: asString(source.successDescription, fallback.successDescription),
     successButton: asString(source.successButton, fallback.successButton),
