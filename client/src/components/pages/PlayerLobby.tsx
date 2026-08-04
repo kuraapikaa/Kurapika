@@ -152,15 +152,23 @@ const QUICK_ACCESS_ICON_MAP = {
   phone: Phone,
 } as const;
 
+/**
+ * Ağ isteği gelmeden önceki ilk kare — `LobbyDesignManager`daki "Gold"
+ * hazır temasıyla BİREBİR AYNI olmalı (bkz. `lobbyTheme.ts`
+ * `DEFAULT_LOBBY_PALETTE` üzerindeki not). Eskiden buradaki degerler
+ * gercek "gold" temasindan farkliydi (ozellikle yesil accentColor) ve
+ * sayfa acilista once bu yanlis renklerle, sonra dogru altin temayla
+ * boyaniyordu — bildirilen "once eski skin sonra gold" hatasi buydu.
+ */
 const DEFAULT_LOBBY_THEME: LobbyTheme = {
   themePreset: 'gold',
-  primaryColor: '#e7c574',
-  secondaryColor: '#d3a952',
-  accentColor: '#5fd6a7',
-  backgroundColor: '#0e0c09',
-  surfaceColor: '#121009',
-  textColor: '#f3ecdd',
-  mutedTextColor: '#8f8674',
+  primaryColor: '#f59e0b',
+  secondaryColor: '#eab308',
+  accentColor: '#fde68a',
+  backgroundColor: '#090805',
+  surfaceColor: '#171207',
+  textColor: '#fff7ed',
+  mutedTextColor: '#d6c59b',
   backgroundImageUrl: '',
   backgroundOverlay: 72,
   banner: {
