@@ -402,31 +402,47 @@ export async function runTelegramRaporJob(tenantKey = 'default'): Promise<Telegr
     }
   }
 
-  const kasaSohbeti = sohbetSec('kasa');
+  /**
+   * Kasa periyodu — 20 dk/1 saat neyse.
+   *
+   * Onceki surumde bu bayrak yalnizca ANA kasa ozeti (`kasaSohbeti`)
+   * GONDERILDIGINDE ilerliyordu. `TELEGRAM_CHAT_KASA` bossa (ki bu site
+   * icin oyleydi) `imlec.sonOzet` HIC yazilmiyor, `ozetZamaniMi` de her
+   * turda `true` donuyor — sonuc: asagidaki yontem bazinda kasa botu her
+   * dakika (20 dakikada bir degil) mesaj atiyordu. Simdi periyot ANA
+   * ozet gonderilsin gonderilmesin, pencere acildiginda ilerletiliyor;
+   * o pencerede kimin gonderdigi ayrica belirleniyor.
+   */
   const ozetZamaniGeldi = ozetZamaniMi(imlec.sonOzet, config.telegram.raporOzetAralikMs);
-  if (kasaSohbeti && ozetZamaniGeldi) {
-    try {
-      imlec.sonKasaOzeti = await ozetGonder(kasaSohbeti, imlec.sonKasaOzeti ?? null);
-      imlec.sonOzet = new Date().toISOString();
-      sonuc.ozetGonderildi = true;
-      degisti = true;
-    } catch (err) {
-      sonuc.hata += 1;
-      console.error('[telegram-rapor] kasa özeti:', err instanceof Error ? err.message : err);
-    }
-  }
+  if (ozetZamaniGeldi) {
+    imlec.sonOzet = new Date().toISOString();
+    degisti = true;
 
-  // Yontem bazinda GUNLUK kasa — ayni ritimde, ayri hata izolasyonuyla:
-  // biri dusse digeri gitmeye devam etsin.
-  const kasaYontemSohbeti = sohbetSec('kasaYontem') || kasaSohbeti;
-  if (kasaYontemSohbeti && ozetZamaniGeldi) {
-    try {
-      const yanit = await lynonYontemBazindaKasa({ gun: bugun() });
-      await sendTelegramMessage(kasaYontemSohbeti, String(yanit?.Data?.Mesaj ?? ''));
-      sonuc.gonderilen += 1;
-    } catch (err) {
-      sonuc.hata += 1;
-      console.error('[telegram-rapor] yöntem bazında kasa:', err instanceof Error ? err.message : err);
+    const kasaSohbeti = sohbetSec('kasa');
+    if (kasaSohbeti) {
+      try {
+        imlec.sonKasaOzeti = await ozetGonder(kasaSohbeti, imlec.sonKasaOzeti ?? null);
+        sonuc.ozetGonderildi = true;
+      } catch (err) {
+        sonuc.hata += 1;
+        console.error('[telegram-rapor] kasa özeti:', err instanceof Error ? err.message : err);
+      }
+    }
+
+    // Yontem bazinda GUNLUK kasa — ayni pencerede, ayri hata
+    // izolasyonuyla: biri dusse digeri gitmeye devam etsin. `sohbetSec`
+    // kendi icinde raporChatId'ye dusuyor; burada onun yerine ozellikle
+    // KASA sohbetine dusmek isteniyor, bu yuzden ham config degeri okunuyor.
+    const kasaYontemSohbeti = config.telegram.raporChatIdleri.kasaYontem || kasaSohbeti;
+    if (kasaYontemSohbeti) {
+      try {
+        const yanit = await lynonYontemBazindaKasa({ gun: bugun() });
+        await sendTelegramMessage(kasaYontemSohbeti, String(yanit?.Data?.Mesaj ?? ''));
+        sonuc.gonderilen += 1;
+      } catch (err) {
+        sonuc.hata += 1;
+        console.error('[telegram-rapor] yöntem bazında kasa:', err instanceof Error ? err.message : err);
+      }
     }
   }
 
