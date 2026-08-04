@@ -16,7 +16,7 @@ import { toast } from 'sonner';
 
 export interface EndpointDoc {
   id: string;
-  category: 'campaign' | 'bonus' | 'player' | 'finance' | 'reports' | 'proxy';
+  category: 'auth' | 'config' | 'reports' | 'player' | 'finance' | 'bets' | 'bonus' | 'proxy';
   method: 'GET' | 'POST' | 'PUT' | 'DELETE';
   title: string;
   endpoint: string;
@@ -27,213 +27,290 @@ export interface EndpointDoc {
   note?: string;
 }
 
+/**
+ * Kaynak: tacobahis (siteId 162) backoffice paneli, canlı ağ trafiği + response
+ * şema analiziyle toplandı (2026-07-15). Önceki sürüm tahmini/örnek verilerle
+ * doluydu; bu liste GERÇEK gözlemlenmiş uçlar, alan adları ve tuzaklardır.
+ * Yalnızca OKUMA uçları doğrulandı — yazma (POST/PUT/DELETE) uçları taranmadı,
+ * bu yüzden burada yer almıyor.
+ */
 const LYNON_ENDPOINTS_DATA: EndpointDoc[] = [
-  // Kampanyalar
+  // ─── Kimlik doğrulama ────────────────────────────────────────────────────
   {
-    id: 'camp-list',
-    category: 'campaign',
+    id: 'auth-credentials',
+    category: 'auth',
+    method: 'POST',
+    title: '2FA Adım 1 — Kimlik Doğrula, Challenge Token Al',
+    endpoint: '{idOrigin}/api/v1/twofa/credentials',
+    description: 'Kullanıcı adı/parola doğrulanır, OTP adımı için challenge token döner. Login ayrı bir SSO domaininde (id.tacobahis.com), backoffice domaininde değil.',
+    requestBody: `{\n  "username": "...",\n  "password": "...",\n  "returnurl": "...",\n  "deviceFingerprint": "..."\n}`,
+    responseSample: `{ "token": "...", "userType": "..." }`,
+    note: 'HTTP 451 = OTP adımı gerekli. HTTP 200 = cihaz güvenilirse (trustDevice) OTP atlanabilir. deviceFingerprint 32 karakter, tarayıcı sinyallerinden üretiliyor; trustDevice bunun sabit kalmasına dayanıyor.',
+  },
+  {
+    id: 'auth-otp',
+    category: 'auth',
+    method: 'POST',
+    title: '2FA Adım 2 — OTP Doğrula, Oturum Al',
+    endpoint: '{idOrigin}/api/v1/twofa/otp',
+    description: 'TOTP kodu doğrulanır, oturum başlatılır. Panel oturumu cookie tabanlı; tüm /api/* çağrıları credentials:include ile gidiyor, statik Bearer header gözlemlenmedi.',
+    requestBody: `{\n  "token": "<adım1 token>",\n  "otp": "<TOTP kodu>",\n  "trustDevice": false\n}`,
+    responseSample: `200 OK + session token (string, ~34 karakter, ayrıca cookie olarak set edilir)`,
+    note: 'trustDevice:true → cihaz güvenilir işaretlenir, sonraki girişlerde OTP sorulmaz. Canlıda doğrulanmadı: deviceFingerprint sunucu tarafı doğrulaması, session token cookie mi bearer mı beklendiği, returnurl zorunluluğu.',
+  },
+
+  // ─── Oturum ve konfigürasyon ─────────────────────────────────────────────
+  {
+    id: 'cfg-me',
+    category: 'config',
     method: 'GET',
-    title: 'Site Kampanya Listesi',
-    endpoint: '/api/bonusenginev2/api/v1/Campaign/site/{siteId}?page={page}&countPerPage={count}',
-    description: 'Belirtilen siteye ait tüm bonus kampanyalarını sayfalama parametreleriyle listeler.',
+    title: 'Mevcut Kullanıcı',
+    endpoint: '/api/v1/me',
+    description: 'Oturum sahibi kullanıcı + menü. Servis segmenti olmayan tek istisna uç — doğrudan gateway seviyesinde.',
+    responseSample: `{ "user": {...}, "menu": [...] }`,
+    note: 'menu yetkiye göre görünür bölümleri döndürür — panel menüsü UI\'da hardcode değil, sunucudan geliyor.',
+  },
+  {
+    id: 'cfg-bo-settings',
+    category: 'config',
+    method: 'GET',
+    title: 'BO Kullanıcı Ayarları',
+    endpoint: '/api/backofficeuser/api/v1/BackOfficeUsers/settings',
+    description: 'Backoffice operatörünün kişisel panel ayarları.',
+  },
+  {
+    id: 'cfg-grid-layout',
+    category: 'config',
+    method: 'GET',
+    title: 'Grid Layout Konfigürasyonu',
+    endpoint: '/api/backofficeuser/api/v1/GridLayoutConfigs/{tableKey}',
+    description: 'Tablo sütun/sıralama düzeni. POST ile aynı yoldan kaydedilir.',
+    parameters: [{ name: 'tableKey', type: 'string', required: true, description: 'ör. payment-transaction-history-list-table, bets-history-list-table, sports-bets-history-list-table' }],
+  },
+  {
+    id: 'cfg-sites',
+    category: 'config',
+    method: 'GET',
+    title: 'Site Listesi / Detayı',
+    endpoint: '/api/partner/api/v1.0/sites/all veya /sites/{siteId}',
+    description: 'Site/partner konfigürasyonu: domain, walletConfig, accountConfig, para birimi, dil, komisyonlar.',
+    responseSample: `id, domain, secretKey, walletConfig, accountConfig, status, externalId, isWithdrawal, defaultCurrency, defaultLanguage, siteTimeZone, redirectorUrl, template, bonusIntegrationVersion, walletType, minBalance, isMultipleWithdrawalAllowed, loginWallEnabled, commissions ...`,
+    note: '⚠️ secretKey site API secret\'ını döndürür — bu ucun response\'unu loglama, cache\'leme veya frontend\'e taşıma. uiConvertedCurrencyes alanı backend\'de typo, olduğu gibi map\'le.',
+  },
+  {
+    id: 'cfg-dictionaries',
+    category: 'config',
+    method: 'GET',
+    title: 'Sözlükler (Para Birimi / Saat Dilimi / Dil)',
+    endpoint: '/api/dictionary/api/v1.0/currencies · /timeZones · /api/cmsgateway/api/v1/languages',
+    description: 'Referans veri listeleri. Currency: id, iso, name, isCrypto, symbol, decimalPlaces. TimeZone: id, name, time, utcDiff.',
+  },
+
+  // ─── Analytics / Raporlama ───────────────────────────────────────────────
+  {
+    id: 'rep-dashboard',
+    category: 'reports',
+    method: 'GET',
+    title: 'Dashboard Özeti',
+    endpoint: '/api/report/api/v1.0/dashboardData/sites/{siteId}/dashboard/{currency}',
+    description: 'Yatırım/çekim/GGR/kâr gibi düz key-value özet. UI\'da azami aralık 31 gün.',
     parameters: [
-      { name: 'siteId', type: 'number', required: true, description: 'Site organizasyon kimliği' },
-      { name: 'page', type: 'number', required: false, description: 'Sayfa numarası (Varsayılan: 1)' },
-      { name: 'countPerPage', type: 'number', required: false, description: 'Sayfa başı kayıt (Varsayılan: 20)' }
+      { name: 'startDate', type: 'date', required: true, description: 'ör. 2026-07-15 (sade tarih, saat YOK)' },
+      { name: 'endDate', type: 'date', required: true, description: 'ör. 2026-07-15' },
     ],
-    responseSample: `{\n  "totalCount": 12,\n  "items": [\n    {\n      "campaignId": "camp_250_deneme",\n      "systemName": "250 TL Slot Deneme Bonusu",\n      "startDate": "2026-01-01T00:00:00Z",\n      "endDate": "2026-12-31T23:59:59Z",\n      "supportedCurrencies": ["TRY"]\n    }\n  ]\n}`,
-    note: 'OIDC oturum çerezi ile kimlik doğrulanır.'
+    responseSample: `TOTAL DEPOSITS AMOUNT, TOTAL WITHDRAWALS AMOUNT, FIRST DEPOSIT COUNT, USERS REAL BALANCE, USERS BONUS BALANCE, PLAYERS REGISTERED, PROFIT, GGR, TOTAL Bonus PayOut, TOTAL Cashback ...`,
+    note: '⚠️ Tutarlar STRING döner ("0 TRY"), sayı değil — parse gerekiyor. Key\'ler boşluklu ve casing tutarsız (TOTAL BET COUNT vs TOTAL Bonus PayOut); sabit key→field map\'i yaz, otomatik camelCase dönüşümüne güvenme.',
   },
   {
-    id: 'camp-single',
-    category: 'campaign',
+    id: 'rep-catalog',
+    category: 'reports',
     method: 'GET',
-    title: 'Tek Kampanya Detayı',
-    endpoint: '/api/bonusenginev2/api/v1/Campaign/{campaignId}',
-    description: 'ID değeri verilen kampanyanın tüm yapılandırma ve kural detaylarını getirir.',
+    title: 'Rapor Kataloğu',
+    endpoint: '/api/report/api/v1.0/reportData/site/{siteId}',
+    description: 'Site için tanımlı raporların listesi: id, name, isPublished, orderId.',
+    note: '⚠️ Rapor id\'leri SİTE BAZLI üretiliyor (bu sitede 1890–1902). Başka sitede farklı id\'ler çıkar — id\'yi hardcode etme, katalogdan name ile eşleştir.',
+  },
+  {
+    id: 'rep-data',
+    category: 'reports',
+    method: 'GET',
+    title: 'Rapor Verisi (Özetlenmiş)',
+    endpoint: '/api/report/api/v1.0/reportData/summarized/{reportId}',
+    description: 'Tek uç, farklı reportId ile 12 farklı rapor döner. Response: { reports: [...], reportsSummary: {...} }. reportsSummary yalnızca (TRY) çevrilmiş kolonların toplamını içerir.',
     parameters: [
-      { name: 'campaignId', type: 'string', required: true, description: 'Kampanya benzersiz ID' }
-    ]
+      { name: 'reportId', type: 'number', required: true, description: 'Katalogdan alınır — bkz. Rapor Kataloğu ucu' },
+      { name: 'startDate', type: 'ISO8601', required: true, description: 'ör. 2026-07-01T00:00:00Z (saat var, ms YOK)' },
+      { name: 'endDate', type: 'ISO8601', required: true, description: '' },
+      { name: 'currency', type: 'string', required: true, description: 'ör. TRY' },
+    ],
+    note: [
+      '1890 Report By Player (tek snake_case rapor): player_id, username, bet_amount, won_amount, ggr + _by_currency varyantları.',
+      '1891 Deposit / 1893 Transaction / 1901 Withdraw: Transaction ID, Player ID, UserName, Integration Name, Amount, Status, Balance before/after.',
+      '1897 Player Balance Report — bakiye sorgusu için ÖNERİLEN (tek istekte tüm oyuncular; oyuncu başına BackofficeAccounts çağırmaktan iyi).',
+      '1899 Players Overview Report — affiliate için ana kaynak: Affiliate Id, TOTAL DEPOSITS/WITHDRAWALS, GGR, CASINO/SPORT kırılımı.',
+      'Diğer 11 rapor boşluklu Title Case kolon ("Transaction ID"), yalnızca 1890 snake_case. Her raporun orijinal + (TRY) çevrilmiş kolon çifti var.',
+    ].join(' '),
   },
   {
-    id: 'camp-create',
-    category: 'campaign',
-    method: 'POST',
-    title: 'Yeni Kampanya Oluştur',
-    endpoint: '/api/bonusenginev2/api/v1/Campaign/site/{siteId}',
-    description: 'Lynon kampanya motorunda yeni bir kampanya tanımı ve kuralları oluşturur.',
-    requestBody: `{\n  "systemName": "%100 Risksiz Ilk Yatirim",\n  "nameTranslations": { "tr": "%100 Risksiz İlk Yatırım" },\n  "expirationToClaimInDays": 7,\n  "configurationCurrency": "TRY",\n  "supportedCurrencies": ["TRY"],\n  "maxAssigneeCount": 100000,\n  "startDate": "2026-01-01T00:00:00Z",\n  "endDate": "2026-12-31T23:59:59Z"\n}`
-  },
-  {
-    id: 'camp-update',
-    category: 'campaign',
-    method: 'PUT',
-    title: 'Kampanya Güncelle',
-    endpoint: '/api/bonusenginev2/api/v1/Campaign/{campaignId}',
-    description: 'Mevcut kampanyanın süre, para birimi veya sınır ayarlarını günceller.',
-  },
-  {
-    id: 'camp-clone',
-    category: 'campaign',
-    method: 'PUT',
-    title: 'Kampanya Klonla',
-    endpoint: '/api/bonusenginev2/api/v1/Campaign/clone/{campaignId}',
-    description: 'Varolan bir kampanyayı tüm blok ve çevrim ayarlarıyla birlikte hızlıca kopyalar.',
-  },
-  {
-    id: 'camp-state',
-    category: 'campaign',
-    method: 'PUT',
-    title: 'Kampanya Durum Değiştir',
-    endpoint: '/api/bonusenginev2/api/v1/Campaign/state/{campaignId}',
-    description: 'Kampanyayı aktif, pasif veya dondurulmuş duruma getirir.',
-    requestBody: `{\n  "state": "Active"\n}`
-  },
-  {
-    id: 'camp-delete',
-    category: 'campaign',
-    method: 'DELETE',
-    title: 'Kampanya Arşivle / Sil',
-    endpoint: '/api/bonusenginev2/api/v1/Campaign/{campaignId}',
-    description: 'Kampanyayı sistemden kaldırır veya arşive taşır.',
-  },
-  {
-    id: 'camp-assignable',
-    category: 'campaign',
+    id: 'rep-corrections',
+    category: 'reports',
     method: 'GET',
-    title: 'Atanabilir Kampanyalar',
-    endpoint: '/api/bonusenginev2/api/v1/Campaign/site/{siteId}/assignable',
-    description: 'Oyunculara doğrudan atanmaya uygun aktif kampanyaların listesini döner.',
+    title: 'Manuel Düzeltme Geçmişi',
+    endpoint: '/api/platform/api/v1.0/CorrectionHistory/sites/{siteId}',
+    description: 'id, playerId, accountName, updateBalanceType, amount, userName, note, category.',
+    note: 'userName = düzeltmeyi yapan BO OPERATÖRÜ (oyuncu değil) — denetim izi için kritik alan.',
   },
 
-  // Bonus Blokları & Atama
+  // ─── Oyuncu yönetimi ─────────────────────────────────────────────────────
   {
-    id: 'bonus-by-camp',
-    category: 'bonus',
-    method: 'GET',
-    title: 'Kampanya Bonusları',
-    endpoint: '/api/bonusenginev2/api/v1/Bonus/campaign/{campaignId}',
-    description: 'Kampanyaya bağlı tüm bonus bloklarını ve tutar kurallarını listeler.',
-  },
-  {
-    id: 'bonus-create',
-    category: 'bonus',
-    method: 'POST',
-    title: 'Bonus Bloğu Ekle',
-    endpoint: '/api/bonusenginev2/api/v1/Bonus/site/{siteId}/campaign/{campaignId}',
-    description: 'Kampanya altına freespin, deposit bonusu veya nakit iade bloğu ekler.',
-  },
-  {
-    id: 'bonus-block-catalog',
-    category: 'bonus',
-    method: 'GET',
-    title: 'Blok Kataloğu',
-    endpoint: '/api/bonusenginev2/api/v1/Block',
-    description: 'Lynon bonus engine içerisinde kullanılabilen hazır kural ve işlem bloklarını listeler.',
-  },
-  {
-    id: 'player-assign',
-    category: 'bonus',
-    method: 'POST',
-    title: 'Oyuncuya Kampanya Atama',
-    endpoint: '/api/bonusenginev2/api/v1/CampaignAssignment/site/{siteId}/player/{playerId}',
-    description: 'Oyuncunun hesabına doğrudan manuel veya otomatik bonus kampanyası tanımlar.',
-    requestBody: `{\n  "campaignId": "camp_250_deneme",\n  "assignmentReason": "Manual Operator Grant",\n  "bonusBlocksConfiguration": {\n    "wagerMultiplier": 10,\n    "validGames": ["Gates of Olympus 1000", "Sweet Bonanza 1000"]\n  }\n}`
-  },
-  {
-    id: 'cashback-engine',
-    category: 'bonus',
-    method: 'POST',
-    title: 'Cashback Engine Servisi',
-    endpoint: '/api/cashbackengine/api/v1',
-    description: 'Otomatik haftalık ve anlık kayıp bonusu hesaplamalarını gerçekleştiren mikroservis ucu.',
-  },
-  {
-    id: 'freespin-service',
-    category: 'bonus',
-    method: 'POST',
-    title: 'Freespin Servis Ucu',
-    endpoint: '/api/freespin/api/v1',
-    description: 'Sağlayıcı bağımsız (Pragmatic, NetEnt vb.) toplu freespin tanımlama ve takip servisi.',
-  },
-
-  // Oyuncu Profil & CRM
-  {
-    id: 'user-details',
+    id: 'player-list',
     category: 'player',
     method: 'GET',
-    title: 'Oyuncu Genel Bilgileri',
+    title: 'Oyuncu Listesi',
+    endpoint: '/api/user/api/v1.0/userBackOffice',
+    description: 'Serbest metin arama (ad/kullanıcı adı/email/ID), durum, doğrulama, kategori ve tarih filtreleriyle oyuncu listesi.',
+    parameters: [
+      { name: 'siteId', type: 'number', required: true, description: '' },
+      { name: 'query', type: 'string', required: false, description: 'Yalnızca Enter\'da tetiklenir, debounce yok' },
+      { name: 'status', type: 'enum', required: false, description: 'active | blocked' },
+      { name: 'verificationStatus', type: 'enum', required: false, description: 'verified | notVerified' },
+      { name: 'registrationDateFrom/To', type: 'ISO8601', required: false, description: 'UTC gönderilmeli — UI yerel saati kendi çeviriyor' },
+    ],
+    responseSample: `userId, siteId, userName, email, phoneNumber?, verificationStatus, registrationDate, status, categoryName, lastLoginDate?`,
+    note: '? = opsiyonel; servis/partnership hesaplarında firstName/lastName/phoneNumber gelmez. Nullable tanımla, yoksa patlar. Agent/Affiliate ID kolonları UI\'da var ama response\'ta yok (pre-launch, hep null).',
+  },
+  {
+    id: 'player-detail',
+    category: 'player',
+    method: 'GET',
+    title: 'Oyuncu Detayı',
     endpoint: '/api/user/api/v1.0/userBackOffice/users/{userId}',
-    description: 'Oyuncu kimlik doğrulamaları, son IP adresi, kayıt tarihi ve giriş durum bilgisi.',
+    description: 'id, category{...}, restrictions[...] dahil tam profil.',
+    responseSample: `restrictions: [{ restriction: { id, name }, isRestricted }] — id: 1 CasinoBet, 2 SportsBet, 4 Withdraw, 8 Deposit, 16 Promotions`,
+    note: 'restriction id\'leri 2\'nin katları → backend\'de bitmask. Liste ucunda alan adı userId, burada id — aynı oyuncu iki farklı anahtarla geliyor.',
   },
   {
-    id: 'user-accounts',
+    id: 'player-categories',
     category: 'player',
     method: 'GET',
-    title: 'Oyuncu Cüzdan Bakiyeleri',
+    title: 'Oyuncu Kategorileri',
+    endpoint: '/api/user/api/v1.0/categories/bysite/{siteId}',
+    description: 'id, name, color, textColor, isDefault, isVisibleToPlayer.',
+  },
+  {
+    id: 'player-accounts',
+    category: 'player',
+    method: 'GET',
+    title: 'Hesaplar / Bakiye',
     endpoint: '/api/platform/api/v1.0/BackofficeAccounts/{userId}',
-    description: 'Oyuncunun reel nakit, bonus bakiyesi ve kilitli tutarlarını sorgular.',
-  },
-  {
-    id: 'user-corrections',
-    category: 'player',
-    method: 'GET',
-    title: 'Operatör Bakiye Düzeltme Notları',
-    endpoint: '/api/platform/api/v1.0/CorrectionHistory/sites/{siteId}?playerId={userId}',
-    description: 'Manuel eklenen/düşülen bakiyelerin operatör açıklama geçmişi.',
-  },
-  {
-    id: 'user-assigned-campaigns',
-    category: 'player',
-    method: 'GET',
-    title: 'Oyuncu Aktif Kampanyaları',
-    endpoint: '/api/bonusenginev2/api/v1/CampaignAssignment/site/{siteId}/player/{userId}',
-    description: 'Oyuncuya atanmış olan tüm bonus ve kampanya durum listesi.',
+    description: 'Her oyuncuda 5 hesap: playerAccount (ana), playerUnusedBalance, playerFrozenAccount, playerBonusWinAccount, playerBonusMoneyAccount.',
+    note: 'Toplu bakiye sorgusu için bu ucu oyuncu başına çağırmak yerine Rapor 1897 (Player Balance Report) kullan — tek istekte tüm oyuncular.',
   },
 
-  // Finansal Uçlar
+  // ─── Ödeme işlemleri ─────────────────────────────────────────────────────
   {
     id: 'fin-transactions',
     category: 'finance',
     method: 'POST',
-    title: 'Ödeme ve İşlem Geçmişi',
+    title: 'İşlem Sorgulama (Deposit/Withdrawal ortak uç)',
     endpoint: '/api/payment-operations/api/v1.0/BackOfficeTransactions',
-    description: 'Yatırım ve çekim işlemlerini detaylı filtrelerle sorgulayan ana finans ucu.',
-    requestBody: `{\n  "request": {\n    "playerId": 10452,\n    "transactionType": "Deposit",\n    "status": "Success"\n  }\n}`
+    description: 'Deposit Requests / Money Management / Transactions History panel bölümlerinin ÜÇÜ de bu tek ucu farklı ön filtrelerle kullanır.',
+    requestBody: `{\n  "siteId": 162,\n  "page": null,\n  "countPerPage": 100,\n  "status": null,\n  "transactionTypes": null,\n  "currencies": null,\n  "methodIds": null,\n  "corrected": null\n}`,
+    responseSample: `id, transactionType, amount, userId (string), status, method, integration, platformTransactionId (uuid), personalData {...}, corrected, createdAt`,
+    note: '⚠️ personalData her kayıtta PII taşır (email/phone/isim) — loglama/cache\'lemeden önce KVKK/GDPR kapsamını değerlendir. transactionTypes ÇOĞUL isim ama TEKİL değer alır ("deposit" | "withdrawal"). method serbest metin gibi (KrediKarti ve Credit Card ikisi de var) — enum olarak sabitleme.',
   },
   {
-    id: 'fin-sports',
+    id: 'fin-counts',
     category: 'finance',
     method: 'GET',
-    title: 'Oyuncu Spor Bahisleri Geçmişi',
-    endpoint: '/api/sportOperation/api/v1.0/sportBetEvent/players/{userId}/site/{siteId}',
-    description: 'Oyuncunun kupon hareketlerini, oranları ve kupon durumlarını listeler.',
+    title: 'Bekleyen İşlem Sayaçları',
+    endpoint: '/api/payment-operations/api/v1.0/BackOfficeTransactions/deposit/count · /withdrawal/count',
+    description: 'Sidebar badge sayılarını besler.',
   },
   {
-    id: 'fin-casino',
+    id: 'fin-methods',
     category: 'finance',
     method: 'GET',
-    title: 'Oyuncu Casino Hareket Raporu',
-    endpoint: '/api/operation/api/v1.0/backOffices/players/{userId}/site/{siteId}',
-    description: 'Slot ve Canlı Casino spin/el bazlı bahis ve kazanç hareketleri.',
-  },
-  {
-    id: 'fin-login-history',
-    category: 'finance',
-    method: 'GET',
-    title: 'IP ve Giriş Analiz Servisi',
-    endpoint: '/api/playerDataHub/api/v1.0/playerLogin/{userId}',
-    description: 'Çoklu hesap ve çakışan IP adreslerini tespit etmek için giriş logları.',
+    title: 'Ödeme Yöntemleri',
+    endpoint: '/api/payment-integration/api/v1.0/BackOfficePayments/{siteId}/payments',
+    description: 'Entegrasyon → method hiyerarşisi. methodIds filtresini beslemek için kullanılır.',
   },
 
-  // Dashboard Local Proxy Uçları
+  // ─── Bahisler ─────────────────────────────────────────────────────────────
+  {
+    id: 'bets-casino',
+    category: 'bets',
+    method: 'GET',
+    title: 'Casino Bahis Geçmişi',
+    endpoint: '/api/operation/api/v1.0/backoffices',
+    description: 'Spin/el bazlı bet+win kayıtları, round{...} altında oyun/sağlayıcı bilgisiyle.',
+    parameters: [
+      { name: 'startCreateDate / endCreateDate', type: 'ISO8601', required: true, description: '⚠️ ZORUNLU — tarihsiz çağrı 400 döner' },
+    ],
+    note: '⚠️ round.playerId İÇ ID, round.playerExternalId ise userBackOffice\'teki userId — oyuncuyla eşleştirirken playerExternalId kullan. Her bahis 2 kayıt üretir (bet + win, aynı round.id altında) — bahis sayısı çıkarırken type=\'bet\' filtrele, yoksa iki katı sayarsın.',
+  },
+  {
+    id: 'bets-sport',
+    category: 'bets',
+    method: 'GET',
+    title: 'Spor Bahis Geçmişi',
+    endpoint: '/api/sportOperation/api/v1.0/sportBetEvent',
+    description: 'platformPlayerId, odds, possibleWin, details[] (kombine kupon seçimleri).',
+    parameters: [{ name: 'SiteIds', type: 'number[]', required: true, description: '⚠️ PascalCase + çoğul — diğer tüm uçlardan farklı casing' }],
+    note: 'odds üst seviyede number, details[].odds içinde STRING — aynı veri iki tip.',
+  },
+
+  // ─── Bonus / Promosyon ────────────────────────────────────────────────────
+  {
+    id: 'bonus-offers',
+    category: 'bonus',
+    method: 'GET',
+    title: 'Bonus Teklifleri',
+    endpoint: '/api/bonusoffer/api/v1.0/offer/{siteId}?bonusEngineVersion=V2',
+    description: 'id, title, templateId, startDate, endDate, state (bool).',
+  },
+  {
+    id: 'bonus-requests',
+    category: 'bonus',
+    method: 'GET',
+    title: 'Bonus Talepleri',
+    endpoint: '/api/bonusOffer/api/v1.0/request/{siteId}?bonusEngineVersion=V2&siteId={siteId}',
+    description: 'siteId hem path hem query\'de tekrar ediyor ama UI böyle gönderiyor. Test verisinde boş, şema tam doğrulanamadı.',
+  },
+  {
+    id: 'bonus-campaigns',
+    category: 'bonus',
+    method: 'GET',
+    title: 'Bonus Kampanyaları (Engine V2)',
+    endpoint: '/api/bonusenginev2/api/v1/Campaign/site/{siteId}',
+    description: 'id, systemName, configurationCurrency, status, isEnabled, startDate, endDate, owner.',
+    note: 'Bu serviste versiyon v1 (diğer servislerde v1.0) — kopyala-yapıştırırken dikkat.',
+  },
+  {
+    id: 'bonus-blocks',
+    category: 'bonus',
+    method: 'GET',
+    title: 'Bonus Mantık Blokları',
+    endpoint: '/api/bonusenginev2/api/v1/Block',
+    description: '28 hazır kural/işlem bloğu. siteId almaz, global kataloğdur.',
+  },
+  {
+    id: 'bonus-wheel',
+    category: 'bonus',
+    method: 'GET',
+    title: 'Çark (Wheel)',
+    endpoint: '/api/wheel/api/v1.0/WheelsBackOffice/sites/{siteId}/active-wheels',
+    description: 'Lynon\'un kendi çark modülü (bu uygulamanın çarkından ayrı). Test verisinde boş obje.',
+  },
+
+  // Bu uygulamanın kendi dahili Lynon proxy uçları
   {
     id: 'proxy-status',
     category: 'proxy',
     method: 'GET',
     title: 'Lynon Session Durum Ucu',
     endpoint: '/api/lynon/status',
-    description: 'Backoffice OIDC session oturumunun aktiflik durumunu kontrol eder.',
+    description: 'Backoffice oturumunun bu sunucu tarafında aktiflik durumunu kontrol eder.',
   },
   {
     id: 'proxy-dashboard',
@@ -241,16 +318,16 @@ const LYNON_ENDPOINTS_DATA: EndpointDoc[] = [
     method: 'GET',
     title: 'Dashboard KPI Özeti Proxy',
     endpoint: '/api/lynon/dashboard?startDate={startDate}&endDate={endDate}',
-    description: 'NGR, GGR, yatırım/çekim metriklerini tarih aralığına göre Lynon API’den getirir.',
+    description: 'Bu sunucunun kendi normalize ettiği dashboard verisi (bkz. lynonBackofficeService.ts).',
   },
   {
     id: 'proxy-raw',
     category: 'proxy',
     method: 'GET',
-    title: 'Lynon Raw Generic API Pass-through',
+    title: 'Lynon Raw Generic Pass-through',
     endpoint: '/api/lynon/raw?path={encodedPath}',
-    description: 'Herhangi bir `/api/` Lynon servisine güvenli proxy üzerinden doğrudan erişim sağlar.',
-  }
+    description: 'Herhangi bir Lynon `/api/...` yoluna, bu sunucunun kimlik doğrulamasıyla doğrudan proxy erişim.',
+  },
 ];
 
 export function LynonApiDocs() {
@@ -332,23 +409,18 @@ export function LynonApiDocs() {
         <div className="relative z-10 flex flex-wrap items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="inline-flex items-center gap-2 rounded-full border border-[color:var(--panel-accent,#0a84ff)]/40 bg-[color:var(--panel-accent,#0a84ff)]/10 px-3 py-1 text-[11px] font-bold text-[#fbbf24]">
-              <Sparkles size={13} /> LYNON BACKOFFICE V2 API CATALOG
+              <Sparkles size={13} /> GERÇEK TRAFİK ANALİZİYLE DOĞRULANDI
             </div>
             <h1 className="text-2xl font-extrabold text-white tracking-tight">Lynon API & Endpoint Dökümantasyonu</h1>
             <p className="text-xs text-[color:var(--panel-muted,#8a919c)] max-w-2xl">
-              Narcosbahis / Lynon Backoffice ekosisteminde kullanılan tüm mikroservis uçları, kampanya motoru metodları, oyuncu CRM servisleri ve Proxy rotalarının canlı kataloğu.
+              tacobahis (siteId 162) backoffice panelinden canlı ağ trafiği + response şema analiziyle toplanmış gerçek
+              uçlar, alan adları ve entegrasyon tuzakları (2026-07-15). Yalnızca okuma uçları doğrulandı.
             </p>
           </div>
           <div className="flex items-center gap-3">
             <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/40 px-4 py-2.5 text-center">
               <span className="block text-[10px] font-bold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-wider">Toplam Uç</span>
               <span className="text-lg font-semibold text-[#fbbf24]">{LYNON_ENDPOINTS_DATA.length}</span>
-            </div>
-            <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-2.5 text-center">
-              <span className="block text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Durum</span>
-              <span className="text-xs font-semibold text-emerald-300 flex items-center gap-1">
-                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" /> OIDC Aktif
-              </span>
             </div>
           </div>
         </div>
@@ -359,11 +431,14 @@ export function LynonApiDocs() {
         <div className="flex flex-wrap items-center gap-2">
           {[
             { id: 'all', label: 'Tüm Uçlar', count: LYNON_ENDPOINTS_DATA.length },
-            { id: 'campaign', label: 'Kampanyalar', count: LYNON_ENDPOINTS_DATA.filter((e) => e.category === 'campaign').length },
-            { id: 'bonus', label: 'Bonus Engine', count: LYNON_ENDPOINTS_DATA.filter((e) => e.category === 'bonus').length },
-            { id: 'player', label: 'Oyuncu CRM', count: LYNON_ENDPOINTS_DATA.filter((e) => e.category === 'player').length },
-            { id: 'finance', label: 'Finans & İşlem', count: LYNON_ENDPOINTS_DATA.filter((e) => e.category === 'finance').length },
-            { id: 'proxy', label: 'Dashboard Proxy', count: LYNON_ENDPOINTS_DATA.filter((e) => e.category === 'proxy').length }
+            { id: 'auth', label: 'Kimlik Doğrulama', count: LYNON_ENDPOINTS_DATA.filter((e) => e.category === 'auth').length },
+            { id: 'config', label: 'Oturum & Config', count: LYNON_ENDPOINTS_DATA.filter((e) => e.category === 'config').length },
+            { id: 'reports', label: 'Raporlama', count: LYNON_ENDPOINTS_DATA.filter((e) => e.category === 'reports').length },
+            { id: 'player', label: 'Oyuncu Yönetimi', count: LYNON_ENDPOINTS_DATA.filter((e) => e.category === 'player').length },
+            { id: 'finance', label: 'Ödeme İşlemleri', count: LYNON_ENDPOINTS_DATA.filter((e) => e.category === 'finance').length },
+            { id: 'bets', label: 'Bahisler', count: LYNON_ENDPOINTS_DATA.filter((e) => e.category === 'bets').length },
+            { id: 'bonus', label: 'Bonus / Promosyon', count: LYNON_ENDPOINTS_DATA.filter((e) => e.category === 'bonus').length },
+            { id: 'proxy', label: 'Dahili Proxy', count: LYNON_ENDPOINTS_DATA.filter((e) => e.category === 'proxy').length }
           ].map((cat) => (
             <button
               key={cat.id}
