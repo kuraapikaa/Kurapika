@@ -27,18 +27,26 @@ export type LobbyPalette = {
  * Sıcak siyah zemin + krem metin + altın vurgu. Kazanç tutarları yeşille
  * ayrılır; para hareketi tek renkte toplandığı için ekranda aranmadan bulunur.
  *
- * DİKKAT: bu yalnızca VARSAYILAN. Admin "Lobi Tasarımı" bölümünden palet
- * kaydedildiyse veritabanındaki değer bunu ezer ve burada yapılan değişiklik
- * canlıda görünmez.
+ * Degerler `LobbyDesignManager`daki "Gold" hazır temasıyla BİREBİR AYNI —
+ * bu site şu an o temayı kullanıyor. Bilerek: ilk ziyarette (önbellek
+ * boşken) sayfa admin verisi gelene kadar BU paletle boyanıyor; burası
+ * gerçek temadan farklı olursa ("varsayılan yeşil vurgu" gibi) kullanıcı
+ * önce eski/yanlış renkli bir sayfa görüp sonra doğru altın temaya geçişi
+ * İZLER — bildirilen "önce eski skin sonra gold" hatası tam olarak buydu.
+ *
+ * DİKKAT: Admin "Lobi Tasarımı"ndan FARKLI bir hazır tema seçilirse (ör.
+ * Mavi, Yeşil) veritabanındaki değer bunu ezer; burası yalnızca ilk kare
+ * ve ağ isteği başarısız olursa devreye giren gerçek bir yedektir —
+ * hazır tema değişirse bu satırların da güncellenmesi gerekir.
  */
 export const DEFAULT_LOBBY_PALETTE: LobbyPalette = {
-  primaryColor: '#e7c574',
-  secondaryColor: '#d3a952',
-  accentColor: '#5fd6a7',
-  backgroundColor: '#0e0c09',
-  surfaceColor: '#121009',
-  textColor: '#f3ecdd',
-  mutedTextColor: '#8f8674',
+  primaryColor: '#f59e0b',
+  secondaryColor: '#eab308',
+  accentColor: '#fde68a',
+  backgroundColor: '#090805',
+  surfaceColor: '#171207',
+  textColor: '#fff7ed',
+  mutedTextColor: '#d6c59b',
   backgroundImageUrl: '',
   backgroundOverlay: 72,
 };
