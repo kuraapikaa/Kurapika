@@ -7,6 +7,8 @@ import {
   klavye,
   notIstegindenOyuncu,
   notIstekMesaji,
+  redNedeniIstegindenBilgi,
+  redNedeniIstekMesaji,
   yetkiliKullanicilar,
   yetkiliMi,
 } from './telegramButonlari.js';
@@ -17,8 +19,8 @@ describe('callback verisi', () => {
     expect(callbackCoz(veri)).toEqual({ eylem: 'onay', islemId: '967829', oyuncuId: '2503142' });
   });
 
-  it('üç eylemi de taşır', () => {
-    for (const eylem of ['onay', 'ret', 'onayNot'] as const) {
+  it('dört eylemi de taşır', () => {
+    for (const eylem of ['onay', 'ret', 'onayNot', 'retNot'] as const) {
       expect(callbackCoz(callbackVerisi(eylem, 1, 2))?.eylem).toBe(eylem);
     }
   });
@@ -69,9 +71,9 @@ describe('yetki', () => {
 describe('çekim butonları', () => {
   const yetkililer = yetkiliKullanicilar('111');
 
-  it('yetkili varken üç buton üretir', () => {
+  it('yetkili varken dört buton üretir', () => {
     const butonlar = cekimButonlari({ islemId: 967829, oyuncuId: 2503142, sonuclanmis: false, yetkililer });
-    expect(butonlar.flat().map((b) => b.text)).toEqual(['✅ Onayla', '📝 Onayla + Not', '❌ Reddet']);
+    expect(butonlar.flat().map((b) => b.text)).toEqual(['✅ Onayla', '📝 Onayla + Not', '❌ Reddet', '📝 Red Nedeni Yaz']);
   });
 
   it('yetkili listesi boşsa buton eklenmez', () => {
@@ -107,5 +109,28 @@ describe('not isteme akışı', () => {
     expect(notIstegindenOyuncu('rastgele bir mesaj (2503142)')).toBeNull();
     expect(notIstegindenOyuncu('')).toBeNull();
     expect(notIstegindenOyuncu(null)).toBeNull();
+  });
+});
+
+describe('red nedeni isteme akışı', () => {
+  it('mesajdan işlem ve oyuncu kimliği geri okunur', () => {
+    const mesaj = redNedeniIstekMesaji(967829, 2503142, 'larac');
+    expect(redNedeniIstegindenBilgi(mesaj)).toEqual({ islemId: '967829', oyuncuId: '2503142' });
+  });
+
+  it('kullanıcı adı yoksa da kimlikler okunur', () => {
+    const mesaj = redNedeniIstekMesaji(967829, 2503142, '');
+    expect(redNedeniIstegindenBilgi(mesaj)).toEqual({ islemId: '967829', oyuncuId: '2503142' });
+  });
+
+  it('bota ait olmayan mesajdan bilgi okunmaz', () => {
+    expect(redNedeniIstegindenBilgi('rastgele bir mesaj')).toBeNull();
+    expect(redNedeniIstegindenBilgi('')).toBeNull();
+    expect(redNedeniIstegindenBilgi(null)).toBeNull();
+  });
+
+  it('not isteği mesajıyla karıştırılmaz', () => {
+    expect(redNedeniIstegindenBilgi(notIstekMesaji(2503142, 'larac'))).toBeNull();
+    expect(notIstegindenOyuncu(redNedeniIstekMesaji(967829, 2503142, 'larac'))).toBeNull();
   });
 });

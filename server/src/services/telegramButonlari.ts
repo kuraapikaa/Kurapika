@@ -24,10 +24,10 @@
  */
 
 /** Butonlarin tetikleyebilecegi eylemler. */
-export type CekimEylemi = 'onay' | 'ret' | 'onayNot';
+export type CekimEylemi = 'onay' | 'ret' | 'onayNot' | 'retNot';
 
-const EYLEM_KODU: Record<CekimEylemi, string> = { onay: 'a', ret: 'r', onayNot: 'n' };
-const KOD_EYLEM: Record<string, CekimEylemi> = { a: 'onay', r: 'ret', n: 'onayNot' };
+const EYLEM_KODU: Record<CekimEylemi, string> = { onay: 'a', ret: 'r', onayNot: 'n', retNot: 'x' };
+const KOD_EYLEM: Record<string, CekimEylemi> = { a: 'onay', r: 'ret', n: 'onayNot', x: 'retNot' };
 
 /** Telegram'in callback_data icin izin verdigi azami bayt. */
 export const AZAMI_CALLBACK_BAYT = 64;
@@ -97,6 +97,10 @@ export function cekimButonlari(input: {
   ];
   const ikinci: TelegramButon[] = [
     { text: '❌ Reddet', callback_data: callbackVerisi('ret', input.islemId, input.oyuncuId) },
+    // İsteğe bağlı: reddedince neden sorulur, yanıt "çekim onay" grubuna
+    // ayrıca gönderilir — onay/ret tek grupta birleştiğinde o grubu takip
+    // eden ekip red gerekçesini görmeye devam etsin diye.
+    { text: '📝 Red Nedeni Yaz', callback_data: callbackVerisi('retNot', input.islemId, input.oyuncuId) },
   ];
   return [satir, ikinci];
 }
@@ -133,4 +137,32 @@ export function notIstegindenOyuncu(metin: unknown): string | null {
   const eslesme = s.match(/\((\d+)\)|:\s*(\d+)\s*$/m);
   const kimlik = eslesme?.[1] ?? eslesme?.[2];
   return kimlik ? kimlik : null;
+}
+
+/**
+ * Red nedeni isteme mesaji.
+ *
+ * Not istegiyle AYNI `force_reply` deseni, ama iki kimlik tasiyor:
+ * islem VE oyuncu. Yanit "çekim onay" grubuna gidecek mesajda ikisi de
+ * lazim; islem numarasi olmadan hangi cekimin reddedildigi belirsiz
+ * kalirdi.
+ */
+export const RED_NEDENI_ONEKI = 'Red nedeni gerekiyor —';
+
+export function redNedeniIstekMesaji(islemId: unknown, oyuncuId: unknown, login: unknown): string {
+  const ad = String(login ?? '').trim();
+  const oyuncu = ad ? `${ad} (${oyuncuId})` : String(oyuncuId ?? '');
+  return `${RED_NEDENI_ONEKI} işlem ${String(islemId ?? '')} · oyuncu ${oyuncu}\nBu mesajı yanıtlayarak red nedenini yazın.`;
+}
+
+/** Bot'un red nedeni istegi mesajindan islem ve oyuncu kimligini geri okur. */
+export function redNedeniIstegindenBilgi(metin: unknown): { islemId: string; oyuncuId: string } | null {
+  const s = String(metin ?? '');
+  if (!s.startsWith(RED_NEDENI_ONEKI)) return null;
+  const islemEslesme = s.match(/işlem\s+(\S+)\s+·/);
+  const islemId = islemEslesme?.[1];
+  if (!islemId) return null;
+  const oyuncuEslesme = s.match(/\((\d+)\)|oyuncu\s+(\d+)\s*(?:\n|$)/m);
+  const oyuncuId = oyuncuEslesme?.[1] ?? oyuncuEslesme?.[2] ?? '';
+  return { islemId, oyuncuId };
 }
