@@ -18,6 +18,7 @@
 import { config } from '../config.js';
 import { audit } from '../lib/auditLog.js';
 import { lynonNotEkle, lynonResolveWithdrawal } from './lynonBackofficeService.js';
+import { cekimSonucunuImleceIsaretle } from '../jobs/telegramRaporJob.js';
 import {
   sendTelegramMessage,
   telegramButonlariKaldir,
@@ -87,6 +88,13 @@ export async function telegramCekimCallback(callback: AnyRecord): Promise<Callba
   // 2 · Denetim.
   audit(kullaniciAdi, 'telegram', 'withdrawal_resolve', `islem:${veri.islemId}`,
     `Çekim ${EYLEM_ADI[veri.eylem]} (Telegram butonu). Oyuncu: ${veri.oyuncuId || 'bilinmiyor'}.`);
+
+  // Tarama imlecine ONCEDEN gorulmus olarak isaretle — yoksa bir sonraki
+  // tur ayni durum degisimini "yeni olay" sanip sonucu IKINCI KEZ
+  // bildirir ("çekim onaylayınca bir daha çekim geldi" hatasi buydu).
+  await cekimSonucunuImleceIsaretle(veri.islemId, onayMi ? 'onay' : 'red').catch((err) => {
+    console.error('[telegram-cekim] imlec isaretleme hatasi:', err instanceof Error ? err.message : err);
+  });
 
   // 3 · Butonlari kaldir ve sonucu mesaja yaz.
   if (chatId && messageId) {
