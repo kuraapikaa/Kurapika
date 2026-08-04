@@ -411,6 +411,8 @@ export type KasaOzeti = {
   freespinKazanc: number | null;
   bonusOdeme: number | null;
   cashback: number | null;
+  /** Bugün en çok oynanan casino oyunları (ciroya göre). Verilmezse bölüm hiç yazılmaz. */
+  enCokOynananOyunlar?: Array<{ ad: string; ciro: number }> | null;
 };
 
 /**
@@ -482,6 +484,9 @@ export function kasaMesaji(ozet: KasaOzeti, onceki?: KasaOzeti | null): string {
     `  Bahis:    ${p(ozet.gercekBahis)}${ozet.bahisAdedi !== null ? ` · ${sayi(ozet.bahisAdedi)} bahis` : ''}`,
     `  Kazanç:   ${p(ozet.gercekKazanc)}`,
     `  Elde tutma: ${holdOrani === null ? '—' : `%${holdOrani.toFixed(1)}`}`,
+    ozet.enCokOynananOyunlar && ozet.enCokOynananOyunlar.length > 0
+      ? `  En çok oynanan: ${ozet.enCokOynananOyunlar.map((o) => `${o.ad} (${p(o.ciro)})`).join(', ')}`
+      : null,
     '',
     '🎁 BONUS',
     `  Maliyet:  ${p(bonusMaliyeti)}`,

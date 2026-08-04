@@ -422,6 +422,18 @@ describe('kasa özeti', () => {
     expect(mesaj).not.toContain('▲');
     expect(mesaj).not.toContain('▼');
   });
+
+  it('en çok oynanan oyunları yazar', () => {
+    const mesaj = kasaMesaji({
+      ...BOS_OZET,
+      enCokOynananOyunlar: [{ ad: 'Sweet Bonanza', ciro: 12_500 }, { ad: 'Gates of Olympus', ciro: 8_000 }],
+    });
+    expect(mesaj).toContain('En çok oynanan: Sweet Bonanza (12.500 TRY), Gates of Olympus (8.000 TRY)');
+  });
+
+  it('en çok oynanan oyun verilmezse o satırı yazmaz', () => {
+    expect(kasaMesaji(BOS_OZET)).not.toContain('En çok oynanan');
+  });
 });
 
 describe('ozetZamaniMi', () => {

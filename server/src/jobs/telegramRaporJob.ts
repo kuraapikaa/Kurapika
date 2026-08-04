@@ -25,6 +25,7 @@ import {
   lynonDeposits,
   lynonManuelDuzeltmeler,
   lynonResolveWithdrawal,
+  lynonTopCasinoGames,
   lynonWithdrawalRequests,
   lynonYontemBazindaKasa,
 } from '../services/lynonBackofficeService.js';
@@ -299,12 +300,17 @@ function akislar(): Akis[] {
  */
 async function ozetGonder(chatId: string, onceki: KasaOzeti | null = null): Promise<KasaOzeti> {
   const gun = bugun();
-  const yanit = await lynonDashboardSummary(gun, gun);
+  const [yanit, topOyunlar] = await Promise.all([
+    lynonDashboardSummary(gun, gun),
+    // En cok oynanan oyunlar zenginlestirme — dusmesi ana ozeti engellemez.
+    lynonTopCasinoGames(gun, gun, 5).catch(() => null),
+  ]);
   const d = (yanit?.Data ?? {}) as AnyRecord;
   // Etiketli olcu listesinden oku; ana alanlarda karsiligi olmayanlar
   // yalnizca burada var.
   const metrikler: AnyRecord[] = Array.isArray(d.metrikler) ? d.metrikler : [];
   const m = (anahtar: string) => metrikler.find((x) => x.anahtar === anahtar)?.deger ?? null;
+  const oyunlar: AnyRecord[] = Array.isArray(topOyunlar?.Data) ? topOyunlar.Data : [];
 
   const ozet: KasaOzeti = {
     gun,
@@ -329,6 +335,9 @@ async function ozetGonder(chatId: string, onceki: KasaOzeti | null = null): Prom
     freespinKazanc: m('freespinKazanc'),
     bonusOdeme: m('bonusOdeme'),
     cashback: m('cashback'),
+    enCokOynananOyunlar: oyunlar.length > 0
+      ? oyunlar.map((oyun) => ({ ad: String(oyun.Name ?? 'Bilinmiyor'), ciro: Number(oyun.Turnover) || 0 }))
+      : null,
   };
 
   // Onceki ozet FARKLI bir gunden kalmissa trend anlamsiz; gun basi
