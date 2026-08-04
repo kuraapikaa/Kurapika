@@ -27,6 +27,7 @@ import {
 } from './telegramService.js';
 import {
   callbackCoz,
+  cekimMesajindanBilgi,
   notIstekMesaji,
   redNedeniIstekMesaji,
   yetkiliKullanicilar,
@@ -111,9 +112,15 @@ export async function telegramCekimCallback(callback: AnyRecord): Promise<Callba
   }
 
   // "Red Nedeni Yaz" ise neden sorulur; yanit red sonucuyla ayni gruba gider.
+  // Oyuncu adi/tutar/yontem, sohbette hala gorunen ORIJINAL cekim
+  // mesajindan okunur — ekstra Lynon istegi gerekmez.
   if (veri.eylem === 'retNot' && chatId) {
-    await sendTelegramMessage(chatId, redNedeniIstekMesaji(veri.islemId, veri.oyuncuId, ''), { zorunluYanit: true })
-      .catch(() => undefined);
+    const bilgi = cekimMesajindanBilgi(callback?.message?.text);
+    await sendTelegramMessage(
+      chatId,
+      redNedeniIstekMesaji(veri.islemId, veri.oyuncuId, bilgi.login ?? '', { tutar: bilgi.tutar, yontem: bilgi.yontem }),
+      { zorunluYanit: true },
+    ).catch(() => undefined);
   }
 
   return { islendi: true, mesaj: `Çekim ${veri.islemId} ${EYLEM_ADI[veri.eylem]}.` };
@@ -170,6 +177,9 @@ export async function telegramNotYaniti(input: {
 export async function telegramRedNedeniYaniti(input: {
   islemId: string;
   oyuncuId: string;
+  login?: string | null;
+  tutar?: string | null;
+  yontem?: string | null;
   metin: string;
   chatId: number | string;
   messageId: number | null;
@@ -193,10 +203,16 @@ export async function telegramRedNedeniYaniti(input: {
     return { islendi: false, mesaj: 'TELEGRAM_CHAT_CEKIM_RED tanımlı değil.' };
   }
 
+  const oyuncuSatiri = input.login
+    ? `Oyuncu: ${input.login} (${input.oyuncuId || 'bilinmiyor'})`
+    : input.oyuncuId ? `Oyuncu: ${input.oyuncuId}` : null;
+
   await sendTelegramMessage(hedef, [
     '🚫 ÇEKİM RED NEDENİ',
     `İşlem: ${input.islemId}`,
-    input.oyuncuId ? `Oyuncu: ${input.oyuncuId}` : null,
+    oyuncuSatiri,
+    input.tutar ? `Tutar: ${input.tutar}` : null,
+    input.yontem ? `Yöntem: ${input.yontem}` : null,
     `Neden: ${metin}`,
     `Yazan: ${input.kullaniciAdi}`,
   ].filter(Boolean).join('\n')).catch(() => undefined);

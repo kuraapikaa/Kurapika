@@ -134,6 +134,7 @@ export async function cekimBaglamiTopla(
     login: String(cekim?.ClientLogin ?? kpi.Login ?? ''),
     tutar: Number(cekim?.Amount ?? 0),
     paraBirimi: String(cekim?.CurrencyId ?? cekim?.currency ?? pano.paraBirimi ?? 'TRY'),
+    yontem: [cekim?.method ?? cekim?.PaymentSystemName, cekim?.integration].filter(Boolean).join(' · ') || null,
     gunlukCekim,
     /**
      * Kasa acisindan kar/zarar = yatirim - cekim. Ikisinden biri

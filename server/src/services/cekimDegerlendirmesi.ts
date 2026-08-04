@@ -194,6 +194,8 @@ export type CekimBaglami = {
   login: string;
   tutar: number;
   paraBirimi: string;
+  /** Cekim talebinin olusturuldugu odeme yontemi ("Havale · HemenOde"). */
+  yontem: string | null;
   /** Bu talep dahil, ayni gunku talep sayisi. */
   gunlukCekim: number;
   /** Kasa acisindan kar/zarar; negatifse oyuncu onde. */
@@ -292,10 +294,11 @@ export function cekimBaglamMesaji(baslik: string, b: CekimBaglami, simdi = Date.
     '━━━━━━━━━━━━━━━━━━',
     `👤 ${b.login || '(ad yok)'} · ${b.playerId}`,
     `💸 ${paraYaz(b.tutar, b.paraBirimi)}`,
+    b.yontem ? `🏦 ${b.yontem}` : null,
     // Toplam yatirim/cekim EN USTTE de tekrar edilir — 💰 PARA bolumune
     // kaydirmadan, karar verirken ilk bakista gorunsun diye.
     `📈 Toplam yatırım: ${paraYaz(b.toplamYatirim)} · Toplam çekim: ${paraYaz(b.toplamCekim)}`,
-  ];
+  ].filter((satir): satir is string => satir !== null);
 
   // ── Uyarilar en uste; riskli bir sey varsa kaydirmadan gorunmeli.
   const uyarilar: string[] = [];

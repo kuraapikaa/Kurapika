@@ -2420,6 +2420,9 @@ const selectedSlice = selected.slice;
           const sonuc = await telegramRedNedeniYaniti({
             islemId: redBilgi.islemId,
             oyuncuId: redBilgi.oyuncuId,
+            login: redBilgi.login,
+            tutar: redBilgi.tutar,
+            yontem: redBilgi.yontem,
             metin: text,
             chatId,
             messageId: Number(message?.message_id) || null,
