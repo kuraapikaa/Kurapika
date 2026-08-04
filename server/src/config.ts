@@ -111,9 +111,26 @@ export const config = {
      */
     raporChatIdleri: {
       yatirim: (process.env.TELEGRAM_CHAT_YATIRIM || '').trim(),
+      /**
+       * TEK ÇEKİM GRUBU.
+       *
+       * Onay ve ret ayrı gruplara bölündüğünde karar veren kişi iki
+       * pencere arasında gidip geliyordu: talep bir grupta, sonucu
+       * başka grupta. Tanımlıysa çekimle ilgili HER ŞEY buraya gider —
+       * talep, butonlar ve sonuç.
+       *
+       * Aşağıdaki ayrık kimlikler geriye dönük uyumluluk için duruyor;
+       * yalnızca bu boşsa kullanılırlar.
+       */
+      cekim: (process.env.TELEGRAM_CHAT_CEKIM || '').trim(),
       cekimOnay: (process.env.TELEGRAM_CHAT_CEKIM_ONAY || '').trim(),
       cekimRed: (process.env.TELEGRAM_CHAT_CEKIM_RED || '').trim(),
       kasa: (process.env.TELEGRAM_CHAT_KASA || '').trim(),
+      /**
+       * Yöntem bazında GÜNLÜK kasa durumu (mutabakat değil, anlık).
+       * Boşsa `kasa` sohbetine düşer — ayrı bir grup zorunlu değil.
+       */
+      kasaYontem: (process.env.TELEGRAM_CHAT_KASA_YONTEM || '').trim(),
       correction: (process.env.TELEGRAM_CHAT_CORRECTION || '').trim(),
       bonus: (process.env.TELEGRAM_CHAT_BONUS || '').trim(),
     },
@@ -123,6 +140,10 @@ export const config = {
     mutabakatChatId: (process.env.TELEGRAM_CHAT_MUTABAKAT || '').trim(),
     /** Olay taraması sıklığı. */
     raporAralikMs: Number(process.env.TELEGRAM_RAPOR_ARALIK_MS) || 60_000,
+    /** Anlık oyuncu bakiye özetinin gönderilme sıklığı (rapor 1843). */
+    bakiyeOzetiAralikMs: Number(process.env.TELEGRAM_BAKIYE_OZET_MS) || 7.5 * 60 * 1000,
+    /** Anlık oyuncu bakiye özetinin gönderileceği sohbet. Boşsa gönderilmez. */
+    bakiyeOzetiChatId: (process.env.TELEGRAM_CHAT_BAKIYE || '').trim(),
   },
   /**
    * Hedef bakiye kilidi.

@@ -5,11 +5,18 @@
  * mutabakati TEK bir Telegram sohbetine gonderir. Hesaplama
  * `services/mutabakat` icinde ve testli.
  *
+ * AYIN ILK GUNU, ayni 00:00 penceresinde, bir ONCEKI ayin KAPANIS
+ * raporu da AYRICA gonderilir — "ay icinde ne kadar biriktik" (gunluk)
+ * ile "gecen ay kapanista tam olarak ne oldu" (aylik, kesin) farkli
+ * sorulara cevap verir; biri digerinin yerine gecmez.
+ *
  * ── Gunde bir kez ─────────────────────────────────────────────────────
  *
  * Is dakikada bir uyanip saate bakiyor; 00:00 penceresine girildiginde
  * ve O GUN daha gonderilmemisse gonderiyor. Gonderilen gun kaydediliyor,
- * boylece surec yeniden baslasa da ayni gun ikinci kez gitmiyor.
+ * boylece surec yeniden baslasa da ayni gun ikinci kez gitmiyor. Kapanis
+ * raporu icin ayrica hangi ayin GONDERILDIGI kaydedilir — surec ayin
+ * ilk gunu birden fazla kez calissa da kapanis ikinci kez gitmiyor.
  *
  * Neden cron degil: proje icinde zamanlayici yalnizca `intervalMs`
  * destekliyor ve ayni desen `nextDayBonusJob` icinde zaten kullaniliyor.
@@ -18,14 +25,19 @@ import { config } from '../config.js';
 import { readStoredDocument, writeStoredDocument } from '../lib/documentStore.js';
 import { istanbulDateKey } from '../lib/istanbulGunu.js';
 import { sendTelegramMessage } from '../services/telegramService.js';
-import { lynonMutabakat } from '../services/lynonBackofficeService.js';
+import { lynonAylikKapanisMutabakati, lynonMutabakat } from '../services/lynonBackofficeService.js';
+import { oncekiAyAnahtari } from '../services/mutabakat.js';
 
 const NAMESPACE = 'mutabakat-durumu';
 
 /** 00:00'i kacirmamak icin pencere; is dakikada bir uyaniyor. */
 const PENCERE_DAKIKA = Number(process.env.MUTABAKAT_PENCERE_DK) || 10;
 
-type MutabakatDurumu = { sonGonderilenGun: string | null };
+type MutabakatDurumu = {
+  sonGonderilenGun: string | null;
+  /** Kapanis raporu en son hangi ay ("YYYY-MM") icin gonderildi. */
+  sonKapanisAyi: string | null;
+};
 
 export type MutabakatSonucu = {
   atlandi?: string;
@@ -58,25 +70,51 @@ export async function runMutabakatJob(tenantKey = 'default', now = new Date()): 
   const durum = await readStoredDocument<MutabakatDurumu>({
     tenantKey,
     namespace: NAMESPACE,
-    fallback: { sonGonderilenGun: null },
+    fallback: { sonGonderilenGun: null, sonKapanisAyi: null },
   });
-  if (durum.sonGonderilenGun === gun) {
-    return { atlandi: 'Bugün zaten gönderildi.', gonderildi: false, gun };
+
+  let gonderildi = false;
+  let degisti = false;
+
+  if (durum.sonGonderilenGun !== gun) {
+    const yanit = await lynonMutabakat({ bugun: gun, tenantKey });
+    await sendTelegramMessage(chatId, String(yanit?.Data?.Mesaj ?? ''));
+    // Kayit GONDERIM BASARILI OLDUKTAN sonra; Telegram dusukse bir
+    // sonraki turda tekrar denenir.
+    durum.sonGonderilenGun = gun;
+    gonderildi = true;
+    degisti = true;
   }
 
-  const yanit = await lynonMutabakat({ bugun: gun, tenantKey });
-  await sendTelegramMessage(chatId, String(yanit?.Data?.Mesaj ?? ''));
+  // Ayin ilk gunu: bir onceki ayin KAPANIS raporu AYRICA gonderilir.
+  // Gun kaydindan BAGIMSIZ kendi kaydini tutar — surec ayin ilk gunu
+  // birden fazla kez calissa da kapanis ikinci kez gitmez.
+  if (gun.endsWith('-01')) {
+    const kapanisAyi = oncekiAyAnahtari(gun);
+    if (durum.sonKapanisAyi !== kapanisAyi) {
+      const kapanisYaniti = await lynonAylikKapanisMutabakati({ ay: kapanisAyi, tenantKey });
+      await sendTelegramMessage(chatId, String(kapanisYaniti?.Data?.Mesaj ?? ''));
+      durum.sonKapanisAyi = kapanisAyi;
+      gonderildi = true;
+      degisti = true;
+    }
+  }
 
-  // Kayit GONDERIM BASARILI OLDUKTAN sonra; Telegram dusukse bir
-  // sonraki turda tekrar denenir.
-  await writeStoredDocument<MutabakatDurumu>({ tenantKey, namespace: NAMESPACE }, { sonGonderilenGun: gun });
-  return { gonderildi: true, gun };
+  if (degisti) await writeStoredDocument<MutabakatDurumu>({ tenantKey, namespace: NAMESPACE }, durum);
+  return gonderildi ? { gonderildi: true, gun } : { atlandi: 'Bugün zaten gönderildi.', gonderildi: false, gun };
 }
 
-/** Panelden "şimdi gönder". Pencere ve gün kaydı kontrolü yapmaz. */
-export async function mutabakatiSimdiGonder(tenantKey = 'default'): Promise<void> {
+/**
+ * Panelden "şimdi gönder". Pencere ve gün kaydı kontrolü yapmaz.
+ *
+ * `ay` verilirse O AYIN KAPANIŞ raporu gönderilir (kesin, tam ay);
+ * verilmezse her zamanki gibi ayın başından bugüne özet gider.
+ */
+export async function mutabakatiSimdiGonder(tenantKey = 'default', ay?: string): Promise<void> {
   const chatId = config.telegram.mutabakatChatId;
   if (!chatId) throw new Error('TELEGRAM_CHAT_MUTABAKAT tanımlı değil.');
-  const yanit = await lynonMutabakat({ bugun: istanbulDateKey(new Date()), tenantKey });
+  const yanit = ay
+    ? await lynonAylikKapanisMutabakati({ ay, tenantKey })
+    : await lynonMutabakat({ bugun: istanbulDateKey(new Date()), tenantKey });
   await sendTelegramMessage(chatId, String(yanit?.Data?.Mesaj ?? ''));
 }

@@ -28,11 +28,27 @@ import {
 type Satir = {
   anahtar: string; entegrasyon: string; yontem: string;
   yatirim: number; yatirimAdedi: number; cekim: number; cekimAdedi: number; net: number;
+  manuelYatirim?: number; manuelCekim?: number;
+  duzeltilmisYatirim?: number; duzeltilmisCekim?: number; duzeltilmisNet?: number;
 };
 type Kalem = {
   id: string; gun: string; tur: 'yatirim' | 'cekim';
   tutar: number; aciklama: string; ekleyen: string; eklendi: string;
+  yontem?: string | null;
 };
+
+/** Bugünün Türkiye ayından bir önceki ay ("YYYY-MM"). */
+function oncekiAy(): string {
+  const bugun = new Date();
+  const parcalar = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Istanbul', year: 'numeric', month: '2-digit',
+  }).formatToParts(bugun);
+  const yil = Number(parcalar.find((p) => p.type === 'year')?.value);
+  const ay = Number(parcalar.find((p) => p.type === 'month')?.value);
+  const oncekiAy = ay === 1 ? 12 : ay - 1;
+  const oncekiYil = ay === 1 ? yil - 1 : yil;
+  return `${oncekiYil}-${String(oncekiAy).padStart(2, '0')}`;
+}
 
 function bugunYmd(): string {
   return new Intl.DateTimeFormat('en-CA', {
@@ -46,6 +62,7 @@ export function Mutabakat() {
   const [tur, setTur] = useState<'yatirim' | 'cekim'>('yatirim');
   const [tutar, setTutar] = useState('');
   const [aciklama, setAciklama] = useState('');
+  const [yontem, setYontem] = useState('');
 
   const { data: yanit, isLoading, error } = useQuery({
     queryKey: ['mutabakat'],
@@ -62,14 +79,15 @@ export function Mutabakat() {
   const tazele = () => queryClient.invalidateQueries({ queryKey: ['mutabakat'] });
 
   const ekle = useMutation({
-    mutationFn: () => dashboardApi.mutabakatKalemEkle({ gun, tur, tutar: Number(tutar), aciklama }),
-    onSuccess: () => { setTutar(''); setAciklama(''); tazele(); },
+    mutationFn: () => dashboardApi.mutabakatKalemEkle({ gun, tur, tutar: Number(tutar), aciklama, yontem: yontem || undefined }),
+    onSuccess: () => { setTutar(''); setAciklama(''); setYontem(''); tazele(); },
   });
   const sil = useMutation({
     mutationFn: (id: string) => dashboardApi.mutabakatKalemSil(id),
     onSuccess: tazele,
   });
   const gonder = useMutation({ mutationFn: () => dashboardApi.mutabakatGonder() });
+  const kapanisGonder = useMutation({ mutationFn: () => dashboardApi.mutabakatGonder(oncekiAy()) });
 
   const hataMesaji = (error as Error)?.message || (yanit?.HasError ? yanit?.AlertMessage : '');
   if (hataMesaji) {
@@ -144,20 +162,37 @@ export function Mutabakat() {
             simge={<BookOpen size={15} />}
             vurgu="hacim"
           />
-          <button
-            type="button"
-            onClick={() => gonder.mutate()}
-            disabled={gonder.isPending}
-            className="mb-3.5 flex h-9 items-center gap-1.5 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] px-3 text-xs font-semibold text-[color:var(--panel-text-dim,#c8cdd5)] hover:bg-white/[0.05] disabled:opacity-40"
-          >
-            <Send size={13} /> {gonder.isPending ? 'Gönderiliyor…' : "Telegram'a gönder"}
-          </button>
+          <div className="mb-3.5 flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => gonder.mutate()}
+              disabled={gonder.isPending}
+              className="flex h-9 items-center gap-1.5 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] px-3 text-xs font-semibold text-[color:var(--panel-text-dim,#c8cdd5)] hover:bg-white/[0.05] disabled:opacity-40"
+            >
+              <Send size={13} /> {gonder.isPending ? 'Gönderiliyor…' : "Telegram'a gönder"}
+            </button>
+            <button
+              type="button"
+              onClick={() => kapanisGonder.mutate()}
+              disabled={kapanisGonder.isPending}
+              title={`${oncekiAy()} kapanış raporunu gönder`}
+              className="flex h-9 items-center gap-1.5 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] px-3 text-xs font-semibold text-[color:var(--panel-text-dim,#c8cdd5)] hover:bg-white/[0.05] disabled:opacity-40"
+            >
+              <BookOpen size={13} /> {kapanisGonder.isPending ? 'Gönderiliyor…' : `${oncekiAy()} kapanışı gönder`}
+            </button>
+          </div>
         </div>
         {gonder.isError && (
           <p className="px-4 pb-3 text-[11px] text-rose-300">{(gonder.error as Error).message}</p>
         )}
         {gonder.isSuccess && (
           <p className="px-4 pb-3 text-[11px] text-emerald-300">Mutabakat gönderildi.</p>
+        )}
+        {kapanisGonder.isError && (
+          <p className="px-4 pb-3 text-[11px] text-rose-300">{(kapanisGonder.error as Error).message}</p>
+        )}
+        {kapanisGonder.isSuccess && (
+          <p className="px-4 pb-3 text-[11px] text-emerald-300">Kapanış raporu gönderildi.</p>
         )}
 
         {isLoading && <PanoYukleniyor satir={5} />}
@@ -170,23 +205,41 @@ export function Mutabakat() {
               { ad: 'Çekim', sag: true }, { ad: 'Adet', sag: true }, { ad: 'Net', sag: true },
             ]}
           >
-            {satirlar.map((satir) => (
-              <PanoSatir key={satir.anahtar}>
-                <PanoHucreYazi>
-                  <span className="font-semibold text-white">{satir.entegrasyon}</span>
-                  <span className="ml-1.5 text-[11px] text-[color:var(--panel-muted,#8a919c)]">{satir.yontem}</span>
-                </PanoHucreYazi>
-                <PanoHucreYazi sag renk="text-emerald-300/80">{sayiYaz(satir.yatirim, 'para')}</PanoHucreYazi>
-                <PanoHucreYazi sag>{sayiYaz(satir.yatirimAdedi)}</PanoHucreYazi>
-                <PanoHucreYazi sag renk="text-rose-300/80">{sayiYaz(satir.cekim, 'para')}</PanoHucreYazi>
-                <PanoHucreYazi sag>{sayiYaz(satir.cekimAdedi)}</PanoHucreYazi>
-                <PanoHucreYazi sag>
-                  <span className={satir.net >= 0 ? 'font-semibold text-emerald-300' : 'font-semibold text-rose-300'}>
-                    {isaretliYaz(satir.net)}
-                  </span>
-                </PanoHucreYazi>
-              </PanoSatir>
-            ))}
+            {satirlar.map((satir) => {
+              const duzeltildi = Boolean(satir.manuelYatirim || satir.manuelCekim);
+              return (
+                <PanoSatir key={satir.anahtar}>
+                  <PanoHucreYazi>
+                    <span className="font-semibold text-white">{satir.entegrasyon}</span>
+                    <span className="ml-1.5 text-[11px] text-[color:var(--panel-muted,#8a919c)]">{satir.yontem}</span>
+                  </PanoHucreYazi>
+                  <PanoHucreYazi sag renk="text-emerald-300/80">
+                    {sayiYaz(satir.yatirim, 'para')}
+                    {satir.manuelYatirim ? (
+                      <span className="ml-1 text-[10px] text-[color:var(--panel-muted,#8a919c)]">
+                        → {sayiYaz(satir.duzeltilmisYatirim ?? satir.yatirim, 'para')}
+                      </span>
+                    ) : null}
+                  </PanoHucreYazi>
+                  <PanoHucreYazi sag>{sayiYaz(satir.yatirimAdedi)}</PanoHucreYazi>
+                  <PanoHucreYazi sag renk="text-rose-300/80">
+                    {sayiYaz(satir.cekim, 'para')}
+                    {satir.manuelCekim ? (
+                      <span className="ml-1 text-[10px] text-[color:var(--panel-muted,#8a919c)]">
+                        → {sayiYaz(satir.duzeltilmisCekim ?? satir.cekim, 'para')}
+                      </span>
+                    ) : null}
+                  </PanoHucreYazi>
+                  <PanoHucreYazi sag>{sayiYaz(satir.cekimAdedi)}</PanoHucreYazi>
+                  <PanoHucreYazi sag>
+                    <span className={(duzeltildi ? satir.duzeltilmisNet ?? satir.net : satir.net) >= 0 ? 'font-semibold text-emerald-300' : 'font-semibold text-rose-300'}>
+                      {isaretliYaz(duzeltildi ? satir.duzeltilmisNet ?? satir.net : satir.net)}
+                    </span>
+                    {duzeltildi ? <span className="ml-1 text-[10px] text-[color:var(--panel-muted,#8a919c)]">✏️ düzeltildi</span> : null}
+                  </PanoHucreYazi>
+                </PanoSatir>
+              );
+            })}
           </PanoTablo>
         )}
       </PanoKart>
@@ -218,6 +271,20 @@ export function Mutabakat() {
             >
               <option value="yatirim">Yatırım</option>
               <option value="cekim">Çekim</option>
+            </select>
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-[10px] uppercase tracking-[0.1em] text-[color:var(--panel-muted,#8a919c)]">Yöntem</span>
+            <select
+              value={yontem}
+              onChange={(e) => setYontem(e.target.value)}
+              title="Belirli bir sağlayıcıya bağla; boş bırakılırsa genel kalem sayılır"
+              className="h-9 min-w-[160px] rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[#0c1119] px-2 text-xs text-white focus:outline-none"
+            >
+              <option value="">Genel (yönteme özel değil)</option>
+              {satirlar.map((satir) => (
+                <option key={satir.anahtar} value={satir.anahtar}>{satir.anahtar}</option>
+              ))}
             </select>
           </label>
           <label className="flex flex-col gap-1">
@@ -257,8 +324,8 @@ export function Mutabakat() {
           <PanoBos>Bu ayda elle eklenmiş kalem yok.</PanoBos>
         ) : (
           <PanoTablo
-            minGenislik={640}
-            basliklar={[{ ad: 'Gün' }, { ad: 'Tür' }, { ad: 'Tutar', sag: true }, { ad: 'Açıklama' }, { ad: 'Ekleyen' }, { ad: '', sag: true }]}
+            minGenislik={720}
+            basliklar={[{ ad: 'Gün' }, { ad: 'Tür' }, { ad: 'Yöntem' }, { ad: 'Tutar', sag: true }, { ad: 'Açıklama' }, { ad: 'Ekleyen' }, { ad: '', sag: true }]}
           >
             {kalemler.map((kalem) => (
               <PanoSatir key={kalem.id}>
@@ -268,6 +335,7 @@ export function Mutabakat() {
                     {kalem.tur === 'yatirim' ? 'Yatırım' : 'Çekim'}
                   </span>
                 </PanoHucreYazi>
+                <PanoHucreYazi><span className="text-[11px] text-[color:var(--panel-muted,#8a919c)]">{kalem.yontem || 'Genel'}</span></PanoHucreYazi>
                 <PanoHucreYazi sag>{sayiYaz(kalem.tutar, 'para')}</PanoHucreYazi>
                 <PanoHucreYazi><span className="text-[11px]">{kalem.aciklama || '—'}</span></PanoHucreYazi>
                 <PanoHucreYazi><span className="text-[11px]">{kalem.ekleyen}</span></PanoHucreYazi>

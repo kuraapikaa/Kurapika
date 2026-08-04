@@ -289,6 +289,32 @@ export async function registerMutabakatJob(): Promise<void> {
   });
 }
 
+/**
+ * Anlık oyuncu bakiye botu: her ~7.5 dakikada bir toplam gerçek/bonus/
+ * toplam oyuncu bakiyesini (rapor 1843) tek bir Telegram sohbetine atar.
+ *
+ * Diğer akış sohbetlerinin aksine `raporChatId`'ye DÜŞMEZ — bu kadar sık
+ * (7.5 dakikada bir) gelen bir mesajı genel sohbete karıştırmak istenmeyen
+ * bir gürültü olurdu; yalnızca `TELEGRAM_CHAT_BAKIYE` tanımlıysa çalışır.
+ */
+export async function registerOyuncuBakiyeJob(): Promise<void> {
+  if (!config.lynon.enabled) {
+    console.log('[scheduler] Anlık oyuncu bakiye botu Lynon kapalı olduğu için atlandı.');
+    return;
+  }
+  if (!config.telegram.botToken || !config.telegram.bakiyeOzetiChatId) {
+    console.log('[scheduler] Anlık oyuncu bakiye botu kapalı (TELEGRAM_CHAT_BAKIYE tanımlı değil).');
+    return;
+  }
+  const { runOyuncuBakiyeJob } = await import('./oyuncuBakiyeJob.js');
+  // Dakikada bir uyanip aralik dolup dolmadigina bakar — mutabakat/kasa
+  // ozeti ile ayni desen (`ozetZamaniMi`).
+  scheduler.register('oyuncu-bakiyesi', 60_000, async () => {
+    const sonuc = await runOyuncuBakiyeJob();
+    if (sonuc.gonderildi) console.log('[oyuncu-bakiyesi] Gönderildi.');
+  });
+}
+
 /** Ard arda giriş yapmayan sadakat oyuncuları için 2. gün SMS, 3. gün puan silme kontrolü (her 6 saatte bir). */
 export async function registerLoyaltyRetentionJob(): Promise<void> {
   const { runLoyaltyRetentionSweep } = await import('./loyaltyRetentionJob.js');

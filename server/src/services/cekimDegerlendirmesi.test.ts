@@ -7,6 +7,9 @@ import {
   riskNotuVarMi,
   sonYatirimdanSonrakiBonuslar,
   vipNotuVarMi,
+  casinoCevrimToplami,
+  sporCevrimToplami,
+  sonKullanilanBonusSec,
   type CekimBaglami,
 } from './cekimDegerlendirmesi.js';
 
@@ -139,6 +142,8 @@ describe('cekimBaglamMesaji', () => {
     yatirimAdedi: 4, cekimAdedi: 2, bonusBakiye: 0,
     casinoBahis: 98.8, casinoGgr: 37.56, sporBahis: 0, sporGgr: 0,
     bonusKaynakliKazanc: 47.4, yatirimsizBakiye: false,
+    casinoCevrimSonYatirim: 500, sporCevrimSonYatirim: 0,
+    sonKullanilanBonus: { ad: '100 FS Telegram Katıl Bonusu', tutar: 100, tarih: '2026-08-03T10:00:00Z', durum: 'Completed' },
   };
 
   it('temel alanları yazar', () => {
@@ -242,5 +247,70 @@ describe('cekimBaglamMesaji', () => {
 
   it('bonus kaynaklı kazancı yazar', () => {
     expect(cekimBaglamMesaji('x', taban, SIMDI)).toContain('Bonustan kazanç: 47,4 TRY');
+  });
+
+  it('son yatırımdan sonraki çevrimi yazar', () => {
+    const mesaj = cekimBaglamMesaji('x', taban, SIMDI);
+    expect(mesaj).toContain('Son yatırımdan sonra çevrim: 500 TRY (casino 500 TRY · spor 0 TRY)');
+  });
+
+  it('çevrim ölçülemediyse o satırı yazmaz', () => {
+    const mesaj = cekimBaglamMesaji('x', {
+      ...taban, casinoCevrimSonYatirim: null, sporCevrimSonYatirim: null,
+    }, SIMDI);
+    expect(mesaj).not.toContain('Son yatırımdan sonra çevrim');
+  });
+
+  it('son kullanılan bonusu yazar', () => {
+    const mesaj = cekimBaglamMesaji('x', taban, SIMDI);
+    expect(mesaj).toContain('Son kullanılan bonus: 100 FS Telegram Katıl Bonusu (100 TRY) · Completed');
+  });
+
+  it('son kullanılan bonus yoksa açıkça söyler', () => {
+    const mesaj = cekimBaglamMesaji('x', { ...taban, sonKullanilanBonus: null }, SIMDI);
+    expect(mesaj).toContain('Son kullanılan bonus: —');
+  });
+});
+
+describe('casinoCevrimToplami / sporCevrimToplami', () => {
+  it('yalnız bet tipindeki casino satırlarını toplar', () => {
+    expect(casinoCevrimToplami([
+      { type: 'bet', amount: -100 },
+      { type: 'win', amount: 250 },
+      { type: 'Bet', amount: 50 },
+    ])).toBe(150);
+  });
+
+  it('boş/eksik girişte sıfır döner', () => {
+    expect(casinoCevrimToplami(null)).toBe(0);
+    expect(sporCevrimToplami(undefined)).toBe(0);
+  });
+
+  it('spor satırlarında amount/stake/betAmount alanlarına düşer', () => {
+    expect(sporCevrimToplami([
+      { amount: 100 },
+      { stake: 50 },
+      { betAmount: 25 },
+    ])).toBe(175);
+  });
+});
+
+describe('sonKullanilanBonusSec', () => {
+  it('en son tarihli bonusu seçer', () => {
+    const sonuc = sonKullanilanBonusSec([
+      { Name: 'Eski', CreatedLocal: '2026-08-01T10:00:00Z', Amount: 50 },
+      { Name: 'Yeni', CreatedLocal: '2026-08-03T10:00:00Z', Amount: 100, ResultType: 'Claimed' },
+    ]);
+    expect(sonuc).toEqual({ ad: 'Yeni', tutar: 100, tarih: '2026-08-03T10:00:00Z', durum: 'Claimed' });
+  });
+
+  it('liste boşsa null döner', () => {
+    expect(sonKullanilanBonusSec([])).toBeNull();
+    expect(sonKullanilanBonusSec(null)).toBeNull();
+  });
+
+  it('geçersiz tarihli satırları yok sayar', () => {
+    const sonuc = sonKullanilanBonusSec([{ Name: 'Bozuk', CreatedLocal: 'gecersiz' }]);
+    expect(sonuc).toBeNull();
   });
 });

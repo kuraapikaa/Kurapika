@@ -117,6 +117,55 @@ export function sonYatirimdanSonrakiBonuslar(
   });
 }
 
+function sayiyaCevir(deger: unknown): number {
+  const n = Number(deger);
+  return Number.isFinite(n) ? n : 0;
+}
+
+/** Casino islem satirlarindan (tip='bet') son yatirim sonrasi cevrim toplami. */
+export function casinoCevrimToplami(rows: AnyRecord[] | null | undefined): number {
+  return (rows ?? [])
+    .filter((row) => String(row?.type ?? '').toLowerCase() === 'bet')
+    .reduce((sum, row) => sum + Math.abs(sayiyaCevir(row?.amount)), 0);
+}
+
+/** Spor bahis satirlarindan son yatirim sonrasi cevrim toplami. */
+export function sporCevrimToplami(rows: AnyRecord[] | null | undefined): number {
+  return (rows ?? []).reduce(
+    (sum, row) => sum + Math.abs(sayiyaCevir(row?.amount ?? row?.stake ?? row?.betAmount)),
+    0,
+  );
+}
+
+/**
+ * Zaman sirasina bakilmaksizin en son atanan/kullanilan bonus.
+ *
+ * `sonYatirimBonuslari`dan farkli: o liste son YATIRIMDAN SONRAKI
+ * bonuslarla sinirli. Bu, oyuncunun genel gecmisindeki EN SON bonus —
+ * yatirimla iliskili olsun olmasin.
+ */
+export function sonKullanilanBonusSec(
+  bonuslar: AnyRecord[] | null | undefined,
+): { ad: string; tutar: number | null; tarih: string | null; durum: string | null } | null {
+  let en: AnyRecord | null = null;
+  let enZaman = -Infinity;
+  for (const bonus of bonuslar ?? []) {
+    const t = Date.parse(String(bonus?.CreatedLocal ?? bonus?.assignedDate ?? ''));
+    if (Number.isFinite(t) && t > enZaman) {
+      enZaman = t;
+      en = bonus;
+    }
+  }
+  if (!en) return null;
+  const tutar = Number(en.Amount ?? en.payout);
+  return {
+    ad: String(en.Name ?? en.bonusName ?? en.templateName ?? 'Bonus'),
+    tutar: Number.isFinite(tutar) ? tutar : null,
+    tarih: (en.CreatedLocal ?? en.assignedDate ?? null) as string | null,
+    durum: en.ResultType ?? en.status ?? null,
+  };
+}
+
 export type CekimBaglami = {
   playerId: number;
   login: string;
@@ -156,6 +205,12 @@ export type CekimBaglami = {
   bonusKaynakliKazanc: number | null;
   /** Hic yatirim yapmadan bakiye biriktirmis mi? */
   yatirimsizBakiye: boolean;
+  /** Son yatirimdan SONRA yapilan casino bahis toplami (cevrim). */
+  casinoCevrimSonYatirim: number | null;
+  /** Son yatirimdan SONRA yapilan spor bahis toplami (cevrim). */
+  sporCevrimSonYatirim: number | null;
+  /** Zaman sirasina bakilmaksizin en son atanan/kullanilan bonus. */
+  sonKullanilanBonus: { ad: string; tutar: number | null; tarih: string | null; durum: string | null } | null;
 };
 
 function paraYaz(deger: number | null, kur = 'TRY'): string {
@@ -255,6 +310,12 @@ export function cekimBaglamMesaji(baslik: string, b: CekimBaglami, simdi = Date.
       `  Casino: ${paraYaz(b.casinoBahis)} bahis · GGR ${paraYaz(b.casinoGgr)}`,
       `  Spor:   ${paraYaz(b.sporBahis)} bahis · GGR ${paraYaz(b.sporGgr)}`,
     );
+    if (b.casinoCevrimSonYatirim !== null || b.sporCevrimSonYatirim !== null) {
+      const toplamCevrim = (b.casinoCevrimSonYatirim ?? 0) + (b.sporCevrimSonYatirim ?? 0);
+      satirlar.push(
+        `  Son yatırımdan sonra çevrim: ${paraYaz(toplamCevrim)} (casino ${paraYaz(b.casinoCevrimSonYatirim)} · spor ${paraYaz(b.sporCevrimSonYatirim)})`,
+      );
+    }
   }
 
   // ── Bonus. "Yok" ile "olculemedi" ayri seyler.
@@ -262,6 +323,11 @@ export function cekimBaglamMesaji(baslik: string, b: CekimBaglami, simdi = Date.
   if (b.bonusKaynakliKazanc !== null) {
     satirlar.push(`  Bonustan kazanç: ${paraYaz(b.bonusKaynakliKazanc)}`);
   }
+  satirlar.push(
+    b.sonKullanilanBonus
+      ? `  Son kullanılan bonus: ${b.sonKullanilanBonus.ad}${b.sonKullanilanBonus.tutar ? ` (${paraYaz(b.sonKullanilanBonus.tutar)})` : ''}${b.sonKullanilanBonus.durum ? ` · ${b.sonKullanilanBonus.durum}` : ''}${b.sonKullanilanBonus.tarih ? ` · ${yasYaz(b.sonKullanilanBonus.tarih, simdi)}` : ''}`
+      : '  Son kullanılan bonus: —',
+  );
   if (!b.bonusOlculdu) {
     satirlar.push('  Son yatırım sonrası: ölçülemedi');
   } else if (b.sonYatirimBonuslari.length === 0) {

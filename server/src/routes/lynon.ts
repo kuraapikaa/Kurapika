@@ -1,6 +1,8 @@
 import type { FastifyInstance } from 'fastify';
 import { clearLynonSession, ensureLynonSession, getLynonAuthStatus, lynonRequest } from '../lib/lynonAuth.js';
 import { audit } from '../lib/auditLog.js';
+import { config } from '../config.js';
+import { sendTelegramMessage } from '../services/telegramService.js';
 import {
   lynonActiveWheels,
   lynonBackofficeSettings,
@@ -20,6 +22,9 @@ import {
   lynonKycDocuments,
   lynonManuelDuzeltmeler,
   lynonMutabakat,
+  lynonAylikKapanisMutabakati,
+  lynonYontemBazindaKasa,
+  lynonAnlikOyuncuBakiyesi,
   mutabakatManuelKalemiEkle,
   mutabakatManuelKalemiSil,
   lynonMe,
@@ -333,18 +338,32 @@ export async function lynonRoutes(app: FastifyInstance) {
     }
   });
 
+  /** Kapanmış bir ayın KESİN toplamı. `ay` verilmezse bir önceki ay. */
+  app.post<{ Body?: { ay?: string } }>('/lynon/mutabakat/kapanis', async (request, reply) => {
+    try {
+      return reply.send(await lynonAylikKapanisMutabakati(request.body ?? {}));
+    } catch (err) {
+      return sendError(reply, err);
+    }
+  });
+
   /**
    * Elle yatırım/çekim kalemi ekle.
    *
    * Rapor yalnızca ödeme sağlayıcılarından geçen parayı görüyor; elden
    * yapılan havaleler ve dengeleme kalemleri buradan giriliyor ve
    * mutabakatta AYRI gösteriliyor.
+   *
+   * `yontem` verilirse (rapordaki "Entegrasyon · Yöntem" anahtarıyla
+   * aynı biçimde) kalem o satıra işlenir — sağlayıcının bildirdiği
+   * tutar bir yöntemde eksik/yanlışsa düzeltme orada görünür. Boş
+   * bırakılırsa kalem genel kabul edilir, hiçbir satırı değiştirmez.
    */
-  app.post<{ Body: { gun?: string; tur?: string; tutar?: number; aciklama?: string } }>(
+  app.post<{ Body: { gun?: string; tur?: string; tutar?: number; aciklama?: string; yontem?: string } }>(
     '/lynon/mutabakat/kalem',
     async (request, reply) => {
       const kullanici = (request.session as any)?.user;
-      const { gun, tur, tutar, aciklama } = request.body ?? {};
+      const { gun, tur, tutar, aciklama, yontem } = request.body ?? {};
       try {
         const kalem = await mutabakatManuelKalemiEkle({
           gun: String(gun ?? ''),
@@ -352,9 +371,10 @@ export async function lynonRoutes(app: FastifyInstance) {
           tutar: Number(tutar),
           aciklama: String(aciklama ?? ''),
           ekleyen: kullanici?.username ?? 'bilinmeyen',
+          yontem: yontem ? String(yontem) : null,
         });
         audit(kullanici?.username ?? 'bilinmeyen', kullanici?.role ?? '-', 'manual_adjustment',
-          'mutabakat', `Mutabakata elle ${kalem.tur} eklendi: ${kalem.tutar} TRY (${kalem.gun}) — ${kalem.aciklama}`);
+          'mutabakat', `Mutabakata elle ${kalem.tur} eklendi: ${kalem.tutar} TRY (${kalem.gun})${kalem.yontem ? ` · ${kalem.yontem}` : ''} — ${kalem.aciklama}`);
         return reply.send({ HasError: false, Data: kalem });
       } catch (err) {
         return sendError(reply, err);
@@ -375,11 +395,11 @@ export async function lynonRoutes(app: FastifyInstance) {
     }
   });
 
-  /** Mutabakatı şimdi Telegram'a gönder. */
-  app.post('/lynon/mutabakat/gonder', async (_request, reply) => {
+  /** Mutabakatı şimdi Telegram'a gönder. `ay` verilirse o ayın KAPANIŞ raporu gider. */
+  app.post<{ Body?: { ay?: string } }>('/lynon/mutabakat/gonder', async (request, reply) => {
     try {
       const { mutabakatiSimdiGonder } = await import('../jobs/mutabakatJob.js');
-      await mutabakatiSimdiGonder();
+      await mutabakatiSimdiGonder('default', request.body?.ay);
       return reply.send({ HasError: false, AlertMessage: 'Mutabakat gönderildi.' });
     } catch (err) {
       return sendError(reply, err);
@@ -511,6 +531,33 @@ export async function lynonRoutes(app: FastifyInstance) {
       const { telegramKasaOzetiGonder } = await import('../jobs/telegramRaporJob.js');
       await telegramKasaOzetiGonder();
       return reply.send({ HasError: false, AlertMessage: 'Kasa özeti gönderildi.' });
+    } catch (err) {
+      return sendError(reply, err);
+    }
+  });
+
+  /** Yöntem bazında GÜNLÜK kasa raporunu şimdi Telegram'a gönder. */
+  app.post('/lynon/telegram-rapor/yontem-kasa', async (_request, reply) => {
+    const chatId = config.telegram.raporChatIdleri.kasaYontem || config.telegram.raporChatIdleri.kasa || config.telegram.raporChatId;
+    if (!chatId) return reply.status(400).send({ HasError: true, AlertMessage: 'Kasa sohbeti tanımlı değil.' });
+    try {
+      const yanit = await lynonYontemBazindaKasa({});
+      await sendTelegramMessage(chatId, String(yanit?.Data?.Mesaj ?? ''));
+      return reply.send({ HasError: false, AlertMessage: 'Yöntem bazında kasa raporu gönderildi.' });
+    } catch (err) {
+      return sendError(reply, err);
+    }
+  });
+
+  /** Anlık oyuncu bakiye özetini şimdi Telegram'a gönder. */
+  app.post('/lynon/telegram-rapor/oyuncu-bakiyesi', async (_request, reply) => {
+    if (!config.telegram.bakiyeOzetiChatId) {
+      return reply.status(400).send({ HasError: true, AlertMessage: 'TELEGRAM_CHAT_BAKIYE tanımlı değil.' });
+    }
+    try {
+      const yanit = await lynonAnlikOyuncuBakiyesi({});
+      await sendTelegramMessage(config.telegram.bakiyeOzetiChatId, String(yanit?.Data?.Mesaj ?? ''));
+      return reply.send({ HasError: false, AlertMessage: 'Oyuncu bakiye özeti gönderildi.' });
     } catch (err) {
       return sendError(reply, err);
     }
