@@ -2459,7 +2459,7 @@ const selectedSlice = selected.slice;
             : sonuc.durum === 'coklu'
               ? oyuncuAdaylariMesaji(sorgu, sonuc.adaylar)
               : oyuncuBulunamadiMesaji(sorgu);
-          await sendTelegramMessage(chatId, mesaj).catch(() => undefined);
+          await sendTelegramMessage(chatId, mesaj, { html: true }).catch(() => undefined);
         } catch (err) {
           request.log.error({ err }, '[telegram] oyuncu kpi sorgu hatası');
           await sendTelegramMessage(chatId, '⚠️ Sorgu sırasında hata oluştu.').catch(() => undefined);

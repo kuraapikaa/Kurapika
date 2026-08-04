@@ -78,7 +78,7 @@ export async function runMutabakatJob(tenantKey = 'default', now = new Date()): 
 
   if (durum.sonGonderilenGun !== gun) {
     const yanit = await lynonMutabakat({ bugun: gun, tenantKey });
-    await sendTelegramMessage(chatId, String(yanit?.Data?.Mesaj ?? ''));
+    await sendTelegramMessage(chatId, String(yanit?.Data?.Mesaj ?? ''), { html: true });
     // Kayit GONDERIM BASARILI OLDUKTAN sonra; Telegram dusukse bir
     // sonraki turda tekrar denenir.
     durum.sonGonderilenGun = gun;
@@ -93,7 +93,7 @@ export async function runMutabakatJob(tenantKey = 'default', now = new Date()): 
     const kapanisAyi = oncekiAyAnahtari(gun);
     if (durum.sonKapanisAyi !== kapanisAyi) {
       const kapanisYaniti = await lynonAylikKapanisMutabakati({ ay: kapanisAyi, tenantKey });
-      await sendTelegramMessage(chatId, String(kapanisYaniti?.Data?.Mesaj ?? ''));
+      await sendTelegramMessage(chatId, String(kapanisYaniti?.Data?.Mesaj ?? ''), { html: true });
       durum.sonKapanisAyi = kapanisAyi;
       gonderildi = true;
       degisti = true;

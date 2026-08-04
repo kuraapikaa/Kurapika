@@ -8,6 +8,8 @@
  * TEKRARLANMAZ.
  */
 
+import { gorselMesaj, kalinSatir } from './telegramService.js';
+
 type AnyRecord = Record<string, any>;
 
 export type OyuncuKpiOzeti = {
@@ -57,41 +59,41 @@ export function oyuncuKpiMesaji(o: OyuncuKpiOzeti): string {
     ? o.toplamYatirim - o.toplamCekim
     : null;
 
-  return [
-    `🔎✨ OYUNCU KPI · ${o.login} (${o.id})`,
+  return gorselMesaj([
+    kalinSatir(`🔎✨ OYUNCU KPI · ${o.login} (${o.id})`),
     '━━━━━━━━━━━━━━━━━━',
     '',
-    '🪪 HESAP',
+    kalinSatir('🪪 HESAP'),
     `  Kayıt:    ${saatYaz(o.kayitTarihi)}`,
     `  Telefon:  ${onayYaz(o.telefonDogrulandi)} ${o.telefon ?? '—'}`,
     `  E-posta:  ${onayYaz(o.epostaDogrulandi)} ${o.eposta ?? '—'}`,
     `  Kimlik:   ${onayYaz(o.kimlikDogrulandi)}`,
     `  Kategori: ${o.kategori ?? '—'}`,
     '',
-    '💰 BAKİYE',
+    kalinSatir('💰 BAKİYE'),
     `  Gerçek:  ${para(o.gercekBakiye, o.paraBirimi)}`,
     `  Bonus:   ${para(o.bonusBakiye, o.paraBirimi)}`,
     `  Toplam:  ${para(o.toplamBakiye, o.paraBirimi)}`,
     '',
-    '📈 YATIRIM / ÇEKİM',
+    kalinSatir('📈 YATIRIM / ÇEKİM'),
     `  Toplam yatırım: ${para(o.toplamYatirim, o.paraBirimi)}`,
     `  Toplam çekim:   ${para(o.toplamCekim, o.paraBirimi)}`,
     netKarZarar === null
       ? '  Kasaya karşı: —'
       : `  Kasaya karşı: oyuncu ${netKarZarar >= 0 ? '🔴 önde' : '🟢 geride'} ${para(Math.abs(netKarZarar), o.paraBirimi)}`,
-  ].join('\n');
+  ]);
 }
 
 /** Aramaya birden fazla eslesme donduyse kisa aday listesi. */
 export function oyuncuAdaylariMesaji(sorgu: string, adaylar: OyuncuAday[]): string {
   const satirlar = [
-    `🔎 "${sorgu}" için birden fazla eşleşme bulundu (${adaylar.length}):`,
+    kalinSatir(`🔎 "${sorgu}" için birden fazla eşleşme bulundu (${adaylar.length}):`),
     '',
     ...adaylar.slice(0, 8).map((a) => `  • ${a.login} (${a.id})${a.telefon ? ` · ${a.telefon}` : ''}`),
   ];
   if (adaylar.length > 8) satirlar.push(`  • … ${adaylar.length - 8} eşleşme daha`);
   satirlar.push('', 'Kimlik ile tekrar sorgulayın: /oyuncu <id>');
-  return satirlar.join('\n');
+  return gorselMesaj(satirlar);
 }
 
 export function oyuncuBulunamadiMesaji(sorgu: string): string {

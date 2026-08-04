@@ -359,7 +359,7 @@ async function ozetGonder(chatId: string, onceki: KasaOzeti | null = null): Prom
   // Onceki ozet FARKLI bir gunden kalmissa trend anlamsiz; gun basi
   // sifirlanir — "dun aksama gore" degil "bugun icinde" trend istenen.
   const karsilastirilacak = onceki && onceki.gun === gun ? onceki : null;
-  await sendTelegramMessage(chatId, kasaMesaji(ozet, karsilastirilacak));
+  await sendTelegramMessage(chatId, kasaMesaji(ozet, karsilastirilacak), { html: true });
   return ozet;
 }
 
@@ -402,7 +402,7 @@ export async function runTelegramRaporJob(tenantKey = 'default'): Promise<Telegr
         if (akis.olayIsle) {
           const hazir = await akis.olayIsle(satir);
           if (!hazir) continue;
-          await sendTelegramMessage(hazir.hedef, hazir.metin, { klavye: hazir.klavye });
+          await sendTelegramMessage(hazir.hedef, hazir.metin, { klavye: hazir.klavye, html: true });
           sonuc.gonderilen += 1;
           // Otomatik ret gibi BU TUR icinde durumu degistiren bir islem,
           // sonraki turun ayni degisimi "yeni olay" sanmamasi icin kendi
@@ -416,7 +416,7 @@ export async function runTelegramRaporJob(tenantKey = 'default'): Promise<Telegr
         // ayni akistan gelip farkli sohbetlere gidiyor.
         const hedef = akis.sohbet(satir);
         if (!hedef) continue;
-        await sendTelegramMessage(hedef, akis.mesaj(satir));
+        await sendTelegramMessage(hedef, akis.mesaj(satir), { html: true });
         sonuc.gonderilen += 1;
       }
       if (tasan > 0) {
@@ -468,7 +468,7 @@ export async function runTelegramRaporJob(tenantKey = 'default'): Promise<Telegr
     if (kasaYontemSohbeti) {
       try {
         const yanit = await lynonYontemBazindaKasa({});
-        await sendTelegramMessage(kasaYontemSohbeti, String(yanit?.Data?.Mesaj ?? ''));
+        await sendTelegramMessage(kasaYontemSohbeti, String(yanit?.Data?.Mesaj ?? ''), { html: true });
         sonuc.gonderilen += 1;
       } catch (err) {
         sonuc.hata += 1;

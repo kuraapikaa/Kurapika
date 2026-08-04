@@ -46,7 +46,7 @@ export async function runOyuncuBakiyeJob(tenantKey = 'default', now = new Date()
   const yanit = await lynonAnlikOyuncuBakiyesi({});
   const ozet: OyuncuBakiyeOzeti = yanit?.Data?.Ozet;
   const topOyuncular: TopBakiyeliOyuncu[] | undefined = yanit?.Data?.TopOyuncular;
-  await sendTelegramMessage(chatId, oyuncuBakiyeMesaji(ozet, durum.sonOzet, topOyuncular));
+  await sendTelegramMessage(chatId, oyuncuBakiyeMesaji(ozet, durum.sonOzet, topOyuncular), { html: true });
 
   // Kayit GONDERIM BASARILI OLDUKTAN sonra; Telegram dusukse bir
   // sonraki turda tekrar denenir ve trend onceki basarili gonderime gore kalir.

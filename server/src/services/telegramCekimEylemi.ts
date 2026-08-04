@@ -20,6 +20,8 @@ import { audit } from '../lib/auditLog.js';
 import { lynonNotEkle, lynonResolveWithdrawal } from './lynonBackofficeService.js';
 import { cekimSonucunuImleceIsaretle } from '../jobs/telegramRaporJob.js';
 import {
+  gorselMesaj,
+  kalinSatir,
   sendTelegramMessage,
   telegramButonlariKaldir,
   telegramCallbackYanitla,
@@ -207,15 +209,15 @@ export async function telegramRedNedeniYaniti(input: {
     ? `Oyuncu: ${input.login} (${input.oyuncuId || 'bilinmiyor'})`
     : input.oyuncuId ? `Oyuncu: ${input.oyuncuId}` : null;
 
-  await sendTelegramMessage(hedef, [
-    '🚫 ÇEKİM RED NEDENİ',
+  await sendTelegramMessage(hedef, gorselMesaj([
+    kalinSatir('🚫 ÇEKİM RED NEDENİ'),
     `İşlem: ${input.islemId}`,
     oyuncuSatiri,
     input.tutar ? `Tutar: ${input.tutar}` : null,
     input.yontem ? `Yöntem: ${input.yontem}` : null,
     `Neden: ${metin}`,
     `Yazan: ${input.kullaniciAdi}`,
-  ].filter(Boolean).join('\n')).catch(() => undefined);
+  ]), { html: true }).catch(() => undefined);
 
   audit(input.kullaniciAdi, 'telegram', 'withdrawal_resolve', `islem:${input.islemId}`,
     `Çekim red nedeni Telegram'da paylaşıldı: ${metin.slice(0, 200)}`);

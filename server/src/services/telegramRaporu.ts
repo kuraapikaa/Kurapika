@@ -25,6 +25,8 @@
  * gercek bir bos akis olabilir ve oradaki ilk kayit BILDIRILMELIDIR.
  */
 
+import { gorselMesaj, kalinSatir } from './telegramService.js';
+
 export type AkisImleci = {
   /** Bu akis en az bir kez tarandi mi? */
   baslatildi: boolean;
@@ -190,8 +192,8 @@ export function yatirimMesaji(satir: AnyRecord, gununYatirimlari?: AnyRecord[]):
   const kisi = recordOf(satir.personalData);
   const ozet = gununYatirimlari ? gunlukYatirimOzeti(gununYatirimlari, satir) : null;
   const kur = satir.CurrencyId ?? satir.currency ?? 'TRY';
-  return [
-    '💰 YENİ YATIRIM ✨',
+  return gorselMesaj([
+    kalinSatir('💰 YENİ YATIRIM ✨'),
     AYIRAC,
     `👤 ${oyuncuYaz(satir.ClientLogin ?? kisi.userName, satir.ClientId ?? satir.userId)}`,
     `💵 ${paraYaz(satir.Amount ?? satir.amount, kur)}`,
@@ -204,7 +206,7 @@ export function yatirimMesaji(satir: AnyRecord, gununYatirimlari?: AnyRecord[]):
     satir.Balance !== null && satir.Balance !== undefined ? `💼 İşlem sonrası bakiye: ${paraYaz(satir.Balance, kur)}` : null,
     ozet ? `🔢 Bugünkü ${ozet.sira}. yatırımı · günlük toplam ${paraYaz(ozet.toplam, kur)}` : null,
     `🕒 ${saatYaz(satir.CreatedLocal ?? satir.createdAt)}`,
-  ].filter(Boolean).join('\n');
+  ]);
 }
 
 function recordOf(deger: unknown): AnyRecord {
@@ -261,8 +263,8 @@ const CEKIM_BASLIGI: Record<IslemDurumu, string> = {
 
 export function cekimMesaji(satir: AnyRecord): string {
   const durum = islemDurumu(satir);
-  return [
-    CEKIM_BASLIGI[durum],
+  return gorselMesaj([
+    kalinSatir(CEKIM_BASLIGI[durum]),
     AYIRAC,
     `👤 ${oyuncuYaz(satir.ClientLogin, satir.ClientId)}`,
     `💸 ${paraYaz(satir.Amount, satir.CurrencyId ?? satir.currency ?? 'TRY')}`,
@@ -272,7 +274,7 @@ export function cekimMesaji(satir: AnyRecord): string {
     // Durum taninmadiysa ham degeri goster; sessizce yutma.
     durum === 'bilinmiyor' && hamDurum(satir) ? `❔ Durum: ${hamDurum(satir)}` : null,
     `🕒 ${saatYaz(satir.CreatedLocal ?? satir.createdAt)}`,
-  ].filter(Boolean).join('\n');
+  ]);
 }
 
 /**
@@ -356,8 +358,8 @@ export function manuelDuzeltmeMesaji(satir: AnyRecord, gununDuzeltmeleri?: AnyRe
   const yon = String(satir.Yon ?? 'bilinmiyor');
   const isaret = yon === 'giris' ? '➕' : yon === 'cikis' ? '➖' : '❔';
   const yapanOzeti = gununDuzeltmeleri ? gunlukYapanOzeti(gununDuzeltmeleri, satir) : null;
-  return [
-    DUZELTME_YON_BASLIGI[yon] ?? DUZELTME_YON_BASLIGI.bilinmiyor,
+  return gorselMesaj([
+    kalinSatir(DUZELTME_YON_BASLIGI[yon] ?? DUZELTME_YON_BASLIGI.bilinmiyor),
     AYIRAC,
     `👤 ${oyuncuYaz(satir.ClientLogin, satir.ClientId)}`,
     `${isaret} ${paraYaz(satir.Tutar, satir.ParaBirimi ?? 'TRY')}`,
@@ -366,12 +368,12 @@ export function manuelDuzeltmeMesaji(satir: AnyRecord, gununDuzeltmeleri?: AnyRe
     `👮 ${satir.Yapan || 'bilinmiyor'}${yapanOzeti ? ` · bugün ${yapanOzeti.sira}. işlemi (net ${paraYaz(yapanOzeti.netToplam, satir.ParaBirimi ?? 'TRY')})` : ''}`,
     satir.NotAnlamli ? `📝 ${satir.Not}` : '⚠️ Gerekçe notu yok',
     `🕒 ${saatYaz(satir.CreatedLocal)}`,
-  ].filter(Boolean).join('\n');
+  ]);
 }
 
 export function bonusMesaji(satir: AnyRecord): string {
-  return [
-    '🎁 BONUS VERİLDİ 🎊',
+  return gorselMesaj([
+    kalinSatir('🎁 BONUS VERİLDİ 🎊'),
     AYIRAC,
     `👤 ${oyuncuYaz(satir.ClientLogin, satir.ClientId)}`,
     `🏆 ${String(satir.Name ?? 'Bonus')}`,
@@ -380,7 +382,7 @@ export function bonusMesaji(satir: AnyRecord): string {
     satir.Durum ? `📌 ${satir.Durum}` : null,
     satir.Description ? `📝 ${satir.Description}` : null,
     `🕒 ${saatYaz(satir.CreatedLocal)}`,
-  ].filter(Boolean).join('\n');
+  ]);
 }
 
 /** Kesintiden sonra biriken kayitlarin ozet satiri. */
@@ -482,15 +484,15 @@ export function kasaMesaji(ozet: KasaOzeti, onceki?: KasaOzeti | null): string {
     : null;
 
   const satirlar = [
-    `📊✨ KASA ÖZETİ · ${ozet.gun}${ozet.saat ? ` · ${ozet.saat}` : ''}`,
+    kalinSatir(`📊✨ KASA ÖZETİ · ${ozet.gun}${ozet.saat ? ` · ${ozet.saat}` : ''}`),
     AYIRAC,
-    '💰 PARA',
+    kalinSatir('💰 PARA'),
     `  ⬇️ Yatırım:  ${p(y)}${trendYaz(y, onceki?.yatirim)}${ozet.yatirimOyuncu !== null ? ` · ${ozet.yatirimOyuncu} oyuncu` : ''}${ozet.yatirimAdedi !== null ? ` · ${ozet.yatirimAdedi} işlem` : ''}`,
     `  ⬆️ Çekim:    ${p(c)}${trendYaz(c, onceki?.cekim)}${ozet.cekimOyuncu !== null ? ` · ${ozet.cekimOyuncu} oyuncu` : ''}`,
     `  ⚖️ Net:      ${p(net)}${netIsaret}${trendYaz(net, oncekiNet)}`,
     ortalamaYatirim !== null ? `  Ort. yatırım: ${p(ortalamaYatirim)}` : null,
     '',
-    '🎰 OYUN',
+    kalinSatir('🎰 OYUN'),
     `  GGR:      ${p(ozet.ggr)}${trendYaz(ozet.ggr, onceki?.ggr)}`,
     `  Kâr:      ${p(ozet.kar)}${trendYaz(ozet.kar, onceki?.kar)}`,
     `  Bahis:    ${p(ozet.gercekBahis)}${ozet.bahisAdedi !== null ? ` · ${sayi(ozet.bahisAdedi)} bahis` : ''}`,
@@ -500,13 +502,13 @@ export function kasaMesaji(ozet: KasaOzeti, onceki?: KasaOzeti | null): string {
       ? `  En çok oynanan: ${ozet.enCokOynananOyunlar.map((o) => `${o.ad} (${p(o.ciro)})`).join(', ')}`
       : null,
     '',
-    '🎁 BONUS',
+    kalinSatir('🎁 BONUS'),
     `  Maliyet:  ${p(bonusMaliyeti)}`,
     `  Freespin: ${p(ozet.freespinKazanc)}`,
     `  Ödeme:    ${p(ozet.bonusOdeme)}`,
     `  Cashback: ${p(ozet.cashback)}`,
     '',
-    '👥 OYUNCU',
+    kalinSatir('👥 OYUNCU'),
     `  Yeni kayıt:     ${sayi(ozet.yeniKayit)}`,
     `  İlk yatırım:    ${sayi(ozet.ilkYatirim)}`,
     `  Bahis yapan:    ${sayi(ozet.bahisOyuncu)}`,
@@ -514,9 +516,9 @@ export function kasaMesaji(ozet: KasaOzeti, onceki?: KasaOzeti | null): string {
     `  Bonus bakiye:   ${p(ozet.bonusBakiye)}`,
     kasaKapanisNotu(ozet.kar) ? '' : null,
     kasaKapanisNotu(ozet.kar),
-  ].filter((satir): satir is string => satir !== null);
+  ];
 
-  return satirlar.join('\n');
+  return gorselMesaj(satirlar);
 }
 
 /** Ozet gonderme zamani geldi mi? */
