@@ -9,6 +9,8 @@
  * oyuncu satirlari hic tasinmaz.
  */
 
+import { gorselMesaj, kalinSatir } from './telegramService.js';
+
 type AnyRecord = Record<string, any>;
 
 export type OyuncuBakiyeOzeti = {
@@ -145,9 +147,9 @@ export function oyuncuBakiyeMesaji(
   onceki?: OyuncuBakiyeOzeti | null,
   topOyuncular?: TopBakiyeliOyuncu[],
 ): string {
-  const satirlar = [
-    `👛✨ ANLIK OYUNCU BAKİYESİ · ${ozet.gun}${ozet.saat ? ` · ${ozet.saat}` : ''}`,
-    '━━━━━━━━━━━━━━━━━━',
+  const satirlar: Array<string | null> = [
+    kalinSatir(`👛✨ ANLIK OYUNCU BAKİYESİ · ${ozet.gun}${ozet.saat ? ` · ${ozet.saat}` : ''}`),
+    AYIRAC,
     `👥 Oyuncu: ${ozet.oyuncuSayisi === null ? '—' : ozet.oyuncuSayisi}`,
     '',
     `💰 Gerçek bakiye: ${para(ozet.gercekBakiye)}${trendYaz(ozet.gercekBakiye, onceki?.gercekBakiye)}`,
@@ -156,7 +158,7 @@ export function oyuncuBakiyeMesaji(
   ];
 
   if (topOyuncular && topOyuncular.length > 0) {
-    satirlar.push('', AYIRAC, `🏆 EN YÜKSEK BAKİYELİ ${topOyuncular.length} ÜYE`);
+    satirlar.push('', AYIRAC, kalinSatir(`🏆 EN YÜKSEK BAKİYELİ ${topOyuncular.length} ÜYE`));
     topOyuncular.forEach((oyuncu, index) => {
       satirlar.push(
         `  ${index + 1}. ${oyuncu.ad} (${oyuncu.id}) — ${para(oyuncu.toplamBakiye)}`,
@@ -165,5 +167,5 @@ export function oyuncuBakiyeMesaji(
     });
   }
 
-  return satirlar.join('\n');
+  return gorselMesaj(satirlar);
 }

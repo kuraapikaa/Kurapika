@@ -553,9 +553,16 @@ export function WheelManager({
       return;
     }
     if (selected) {
-      handleUpdateSlice(slice.id, { label: selected.value, bonusId: selected.id, type: 'bonus', isLoss: false, requiresConfiguration: true });
+      // Listeden GERÇEK bir Lynon kampanyası seçildi — id doğrulanmış
+      // demektir, teslimatı bloke etmenin bir anlamı yok. Önceden burada
+      // `requiresConfiguration: true` yazılıyordu; yani operatör canlı
+      // listeden doğru kampanyayı seçse bile dilim "yapılandırılmamış"
+      // görünmeye devam ediyor, çark o ödülü asla dağıtmıyordu.
+      handleUpdateSlice(slice.id, { label: selected.value, bonusId: selected.id, type: 'bonus', isLoss: false, requiresConfiguration: false });
       return;
     }
+    // Elle yazılan sayısal bir id: listeden doğrulanmadı, admin isterse
+    // aşağıdaki "Teslimata hazır" düğmesiyle kendi onayını verebilir.
     handleUpdateSlice(slice.id, {
       label: value,
       bonusId: /^\d+$/.test(value) ? value : slice.type === 'bonus' ? null : slice.bonusId,

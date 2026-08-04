@@ -30,6 +30,7 @@ import {
   lynonYontemBazindaKasa,
 } from '../services/lynonBackofficeService.js';
 import {
+  AZAMI_GORULEN,
   bildirilecekYatirimMi,
   bonusMesaji,
   bosImlec,
@@ -81,7 +82,7 @@ type Akis = {
    * otomatik ret uygulaniyor ve mesaja butonlar ekleniyor. `null`
    * donmek "bu satiri gonderme" demektir.
    */
-  olayIsle?: (satir: AnyRecord) => Promise<{ metin: string; klavye?: unknown; hedef: string } | null>;
+  olayIsle?: (satir: AnyRecord) => Promise<{ metin: string; klavye?: unknown; hedef: string; ekKimlik?: string } | null>;
 };
 
 /** Akisin sohbeti; tanimli degilse varsayilana duser. */
@@ -152,11 +153,19 @@ function otomatikRedAcikMi(): boolean {
  * Bekleyen talep: baglam toplanir, gerekirse otomatik reddedilir, aksi
  * halde butonlu zengin mesaj gider. Sonuclanmis talep (onay/red):
  * butonsuz sonuc mesaji ilgili gruba gider.
+ *
+ * `ekKimlik` — otomatik ret gibi BU TUR icinde durumu degistiren bir
+ * islem, bir sonraki tarama turunde AYNI durum degisimini "yeni olay"
+ * sanip sonucu IKINCI KEZ bildirebilir ("çekim onaylayınca bir daha
+ * çekim geldi" hatasiyla ayni kok neden). Cagiran bu kimligi doğrudan
+ * BU TURUN imlecine ekler; `cekimSonucunuImleceIsaretle` gibi ayri bir
+ * okuma/yazma DONGUSU KULLANILMAZ — o, ayni turun sonunda imleci
+ * bastan yazan disaridaki dongu ile YARISIRDI.
  */
 async function cekimOlayiniIsle(
   satir: AnyRecord,
   liste: AnyRecord[],
-): Promise<{ metin: string; klavye?: unknown; hedef: string } | null> {
+): Promise<{ metin: string; klavye?: unknown; hedef: string; ekKimlik?: string } | null> {
   const durum = islemDurumu(satir);
   const hedef = cekimSohbeti(satir);
   if (!hedef) return null;
@@ -185,6 +194,7 @@ async function cekimOlayiniIsle(
       return {
         metin: cekimBaglamMesaji('⛔ ÇEKİM OTOMATİK REDDEDİLDİ', baglam),
         hedef: sohbetSec('cekimRed') || hedef,
+        ekKimlik: `${String(islemId ?? '')}:red`,
       };
     } catch (err) {
       const mesaj = err instanceof Error ? err.message : String(err);
@@ -349,7 +359,7 @@ async function ozetGonder(chatId: string, onceki: KasaOzeti | null = null): Prom
   // Onceki ozet FARKLI bir gunden kalmissa trend anlamsiz; gun basi
   // sifirlanir — "dun aksama gore" degil "bugun icinde" trend istenen.
   const karsilastirilacak = onceki && onceki.gun === gun ? onceki : null;
-  await sendTelegramMessage(chatId, kasaMesaji(ozet, karsilastirilacak));
+  await sendTelegramMessage(chatId, kasaMesaji(ozet, karsilastirilacak), { html: true });
   return ozet;
 }
 
@@ -392,15 +402,21 @@ export async function runTelegramRaporJob(tenantKey = 'default'): Promise<Telegr
         if (akis.olayIsle) {
           const hazir = await akis.olayIsle(satir);
           if (!hazir) continue;
-          await sendTelegramMessage(hazir.hedef, hazir.metin, { klavye: hazir.klavye });
+          await sendTelegramMessage(hazir.hedef, hazir.metin, { klavye: hazir.klavye, html: true });
           sonuc.gonderilen += 1;
+          // Otomatik ret gibi BU TUR icinde durumu degistiren bir islem,
+          // sonraki turun ayni degisimi "yeni olay" sanmamasi icin kendi
+          // kimligini BU TURUN imlecine ekler (bkz. cekimOlayiniIsle).
+          if (hazir.ekKimlik && !yeniImlec.gorulen.includes(hazir.ekKimlik)) {
+            yeniImlec.gorulen = [hazir.ekKimlik, ...yeniImlec.gorulen].slice(0, AZAMI_GORULEN);
+          }
           continue;
         }
         // Sohbet SATIR BASINA seciliyor: onaylanan ve reddedilen cekimler
         // ayni akistan gelip farkli sohbetlere gidiyor.
         const hedef = akis.sohbet(satir);
         if (!hedef) continue;
-        await sendTelegramMessage(hedef, akis.mesaj(satir));
+        await sendTelegramMessage(hedef, akis.mesaj(satir), { html: true });
         sonuc.gonderilen += 1;
       }
       if (tasan > 0) {
@@ -452,7 +468,7 @@ export async function runTelegramRaporJob(tenantKey = 'default'): Promise<Telegr
     if (kasaYontemSohbeti) {
       try {
         const yanit = await lynonYontemBazindaKasa({});
-        await sendTelegramMessage(kasaYontemSohbeti, String(yanit?.Data?.Mesaj ?? ''));
+        await sendTelegramMessage(kasaYontemSohbeti, String(yanit?.Data?.Mesaj ?? ''), { html: true });
         sonuc.gonderilen += 1;
       } catch (err) {
         sonuc.hata += 1;
@@ -474,4 +490,40 @@ export async function telegramKasaOzetiGonder(): Promise<void> {
   if (!isTelegramConfigured()) throw new Error('TELEGRAM_BOT_TOKEN tanımlı değil.');
   if (!config.telegram.raporChatId) throw new Error('TELEGRAM_RAPOR_CHAT_ID tanımlı değil.');
   await ozetGonder(config.telegram.raporChatId);
+}
+
+/**
+ * Telegram butonuyla cozumlenen bir cekimi cekim akisinin imlecinde
+ * ONCEDEN GORULMUS isaretle.
+ *
+ * `cekimOlayKimligi` durum degisimini AYRI olay sayar ("bekliyor" ->
+ * "onay" yeni bir kimlik) — bu, operatorun Lynon arayuzunden DOGRUDAN
+ * onayladigi bir cekimin sonucunu bildirmek icin bilinçli. Ama Telegram
+ * BUTONUYLA onaylanan/reddedilen bir cekimde sonuc zaten o an
+ * `telegramCekimCallback` tarafindan aynı mesaja yanit olarak yazılıyor;
+ * bir sonraki tarama turu ayni durum degisimini GORUP ikinci kez "✅
+ * ÇEKİM ONAYLANDI" / "❌ ÇEKİM REDDEDİLDİ" gonderiyordu — operator
+ * onayladigi cekimi "bir daha çekim geldi" diye ikinci kez goruyordu.
+ * Bu fonksiyon o ikinci bildirimi BASTAN engeller: sonuc kimligini
+ * imlece ONAYDAN HEMEN SONRA yazar, tarama turu onu zaten gorulmus sayar.
+ */
+export async function cekimSonucunuImleceIsaretle(
+  islemId: unknown,
+  durum: 'onay' | 'red',
+  tenantKey = 'default',
+): Promise<void> {
+  const id = String(islemId ?? '').trim();
+  if (!id) return;
+  const olayKimligi = `${id}:${durum}`;
+
+  const imlec = await readStoredDocument<RaporImleci>({ tenantKey, namespace: NAMESPACE, fallback: bosImlec });
+  imlec.akislar ??= {};
+  const cekimImleci = imlec.akislar.cekim ?? { baslatildi: true, gorulen: [] };
+  if (cekimImleci.gorulen.includes(olayKimligi)) return;
+
+  imlec.akislar.cekim = {
+    baslatildi: true,
+    gorulen: [olayKimligi, ...cekimImleci.gorulen].slice(0, AZAMI_GORULEN),
+  };
+  await writeStoredDocument<RaporImleci>({ tenantKey, namespace: NAMESPACE }, imlec);
 }

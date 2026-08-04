@@ -131,7 +131,7 @@ describe('sonYatirimdanSonrakiBonuslar', () => {
 describe('cekimBaglamMesaji', () => {
   const SIMDI = Date.parse('2026-08-03T20:00:00Z');
   const taban: CekimBaglami = {
-    playerId: 2503142, login: 'larac', tutar: 3000, paraBirimi: 'TRY',
+    playerId: 2503142, login: 'larac', tutar: 3000, paraBirimi: 'TRY', yontem: 'Havale · HemenOde',
     gunlukCekim: 1, netKarZarar: -5000, toplamYatirim: 20000, toplamCekim: 8000,
     bakiye: 4200, sonYatirimTutari: 1000, sonYatirimZamani: '2026-08-03T10:00:00Z',
     sonCekimZamani: '2026-08-02T10:00:00Z',
@@ -165,6 +165,16 @@ describe('cekimBaglamMesaji', () => {
     const mesaj = cekimBaglamMesaji('x', { ...taban, toplamYatirim: null, toplamCekim: null });
     const enUstBlok = mesaj.split('🪪 HESAP')[0];
     expect(enUstBlok).toContain('Toplam yatırım: — · Toplam çekim: —');
+  });
+
+  it('çekim talebinin yöntemini en üstte gösterir', () => {
+    const mesaj = cekimBaglamMesaji('x', taban);
+    expect(mesaj).toContain('🏦 Havale · HemenOde');
+  });
+
+  it('yöntem bilinmiyorsa o satırı yazmaz', () => {
+    const mesaj = cekimBaglamMesaji('x', { ...taban, yontem: null });
+    expect(mesaj).not.toContain('🏦');
   });
 
   it('oyuncunun önde olduğunu yazar', () => {

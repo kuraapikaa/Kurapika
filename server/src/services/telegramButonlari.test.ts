@@ -4,6 +4,7 @@ import {
   callbackCoz,
   callbackVerisi,
   cekimButonlari,
+  cekimMesajindanBilgi,
   klavye,
   notIstegindenOyuncu,
   notIstekMesaji,
@@ -113,14 +114,26 @@ describe('not isteme akışı', () => {
 });
 
 describe('red nedeni isteme akışı', () => {
-  it('mesajdan işlem ve oyuncu kimliği geri okunur', () => {
+  it('mesajdan işlem, oyuncu, kullanıcı adı geri okunur', () => {
     const mesaj = redNedeniIstekMesaji(967829, 2503142, 'larac');
-    expect(redNedeniIstegindenBilgi(mesaj)).toEqual({ islemId: '967829', oyuncuId: '2503142' });
+    expect(redNedeniIstegindenBilgi(mesaj)).toEqual({
+      islemId: '967829', oyuncuId: '2503142', login: 'larac', tutar: null, yontem: null,
+    });
   });
 
   it('kullanıcı adı yoksa da kimlikler okunur', () => {
     const mesaj = redNedeniIstekMesaji(967829, 2503142, '');
-    expect(redNedeniIstegindenBilgi(mesaj)).toEqual({ islemId: '967829', oyuncuId: '2503142' });
+    const bilgi = redNedeniIstegindenBilgi(mesaj);
+    expect(bilgi?.islemId).toBe('967829');
+    expect(bilgi?.oyuncuId).toBe('2503142');
+    expect(bilgi?.login).toBeNull();
+  });
+
+  it('tutar ve yöntem verilirse geri okunur — "·" içeren yöntem değeri bile', () => {
+    const mesaj = redNedeniIstekMesaji(967829, 2503142, 'larac', { tutar: '3.000 TRY', yontem: 'Havale · HemenOde' });
+    expect(redNedeniIstegindenBilgi(mesaj)).toEqual({
+      islemId: '967829', oyuncuId: '2503142', login: 'larac', tutar: '3.000 TRY', yontem: 'Havale · HemenOde',
+    });
   });
 
   it('bota ait olmayan mesajdan bilgi okunmaz', () => {
@@ -132,5 +145,39 @@ describe('red nedeni isteme akışı', () => {
   it('not isteği mesajıyla karıştırılmaz', () => {
     expect(redNedeniIstegindenBilgi(notIstekMesaji(2503142, 'larac'))).toBeNull();
     expect(notIstegindenOyuncu(redNedeniIstekMesaji(967829, 2503142, 'larac'))).toBeNull();
+  });
+});
+
+describe('cekimMesajindanBilgi', () => {
+  it('zengin talep mesajından (nokta ayraçlı) login/tutar/yöntem okur', () => {
+    const mesaj = [
+      '🏧 ÇEKİM TALEBİ',
+      '━━━━━━━━━━━━━━━━━━',
+      '👤 larac · 2503142',
+      '💸 3.000 TRY',
+      '🏦 Havale · HemenOde',
+    ].join('\n');
+    expect(cekimMesajindanBilgi(mesaj)).toEqual({ login: 'larac', tutar: '3.000 TRY', yontem: 'Havale · HemenOde' });
+  });
+
+  it('sade sonuç mesajından (parantezli) login okur', () => {
+    const mesaj = [
+      '✅ ÇEKİM ONAYLANDI',
+      '━━━━━━━━━━━━━━━━━━',
+      '👤 larac (2503142)',
+      '💸 3.000 TRY',
+      '🏦 Havale · HemenOde',
+    ].join('\n');
+    expect(cekimMesajindanBilgi(mesaj)).toEqual({ login: 'larac', tutar: '3.000 TRY', yontem: 'Havale · HemenOde' });
+  });
+
+  it('yöntem satırı yoksa null döner', () => {
+    const mesaj = '👤 larac · 2503142\n💸 3.000 TRY';
+    expect(cekimMesajindanBilgi(mesaj).yontem).toBeNull();
+  });
+
+  it('boş/eksik girişte çökmez', () => {
+    expect(cekimMesajindanBilgi(null)).toEqual({ login: null, tutar: null, yontem: null });
+    expect(cekimMesajindanBilgi('')).toEqual({ login: null, tutar: null, yontem: null });
   });
 });

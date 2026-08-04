@@ -19,6 +19,8 @@
  * bir toplam gostermek, farkin kaynagini gizlerdi.
  */
 
+import { gorselMesaj, kalinSatir } from './telegramService.js';
+
 type AnyRecord = Record<string, any>;
 
 export type MutabakatSatiri = {
@@ -282,12 +284,12 @@ export function mutabakatMesaji(input: {
   kapanis?: boolean;
 }): string {
   const { ay, aralik, satirlar, toplam, fark, manuel, kapanis } = input;
-  const parcalar: string[] = [
-    kapanis ? `📕 AY KAPANIŞI · ${ay}` : `📒✨ AYLIK MUTABAKAT · ${ay}`,
+  const parcalar: Array<string | null> = [
+    kalinSatir(kapanis ? `📕 AY KAPANIŞI · ${ay}` : `📒✨ AYLIK MUTABAKAT · ${ay}`),
     `🗓️ ${aralik.startDate} → ${aralik.endDate}`,
     AYIRAC,
     '',
-    '🏦 ÖDEME YÖNTEMİ KIRILIMI',
+    kalinSatir('🏦 ÖDEME YÖNTEMİ KIRILIMI'),
   ];
 
   if (satirlar.length === 0) {
@@ -311,7 +313,7 @@ export function mutabakatMesaji(input: {
 
   parcalar.push(
     '',
-    '📊 RAPOR TOPLAMI',
+    kalinSatir('📊 RAPOR TOPLAMI'),
     `  Yatırım: ${para(toplam.raporYatirim)}`,
     `  Çekim:   ${para(toplam.raporCekim)}`,
     `  Net:     ${para(toplam.raporNet)}`,
@@ -320,7 +322,7 @@ export function mutabakatMesaji(input: {
   if (toplam.manuelKalemAdedi > 0) {
     parcalar.push(
       '',
-      `✏️ ELLE EKLENEN (${toplam.manuelKalemAdedi} kalem)`,
+      kalinSatir(`✏️ ELLE EKLENEN (${toplam.manuelKalemAdedi} kalem)`),
       `  Yatırım: ${para(toplam.manuelYatirim)}`,
       `  Çekim:   ${para(toplam.manuelCekim)}`,
     );
@@ -333,7 +335,7 @@ export function mutabakatMesaji(input: {
   parcalar.push(
     '',
     AYIRAC,
-    '💰 GENEL TOPLAM',
+    kalinSatir('💰 GENEL TOPLAM'),
     `  Yatırım: ${para(toplam.toplamYatirim)}`,
     `  Çekim:   ${para(toplam.toplamCekim)}`,
     `  Net:     ${para(toplam.toplamNet)}`,
@@ -343,13 +345,13 @@ export function mutabakatMesaji(input: {
   if (!fark.tutarli) {
     parcalar.push(
       '',
-      '⚠️ Satır toplamı uçun özetiyle tutmuyor:',
+      kalinSatir('⚠️ Satır toplamı uçun özetiyle tutmuyor:'),
       `  Yatırım farkı: ${para(fark.yatirimFarki)}`,
       `  Çekim farkı:   ${para(fark.cekimFarki)}`,
     );
   }
 
-  return parcalar.join('\n');
+  return gorselMesaj(parcalar);
 }
 
 /**
@@ -379,8 +381,8 @@ export function yontemKasaMesaji(
   saat?: string | null,
   genelManuelKalemler?: ManuelKalem[],
 ): string {
-  const parcalar: string[] = [
-    `🏦✨ YÖNTEM BAZINDA KASA · TÜM ZAMANLAR`,
+  const parcalar: Array<string | null> = [
+    kalinSatir('🏦✨ YÖNTEM BAZINDA KASA · TÜM ZAMANLAR'),
     `🗓️ ${aralik.baslangic} → ${aralik.bitis}${saat ? ` · ${saat}` : ''}`,
     AYIRAC,
   ];
@@ -444,5 +446,5 @@ export function yontemKasaMesaji(
     if (genelManuelKalemler.length > 10) parcalar.push(`    • … ${genelManuelKalemler.length - 10} kalem daha`);
   }
 
-  return parcalar.join('\n');
+  return gorselMesaj(parcalar);
 }

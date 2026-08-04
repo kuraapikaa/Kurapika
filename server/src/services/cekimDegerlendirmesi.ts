@@ -21,6 +21,7 @@
 type AnyRecord = Record<string, any>;
 
 import { istanbulDateKey } from '../lib/istanbulGunu.js';
+import { gorselMesaj, kalinSatir } from './telegramService.js';
 
 /** Bir gunde bu sayiya ULASAN talep otomatik reddedilir. */
 export const GUNLUK_CEKIM_ESIGI = Number(process.env.GUNLUK_CEKIM_ESIGI) || 3;
@@ -194,6 +195,8 @@ export type CekimBaglami = {
   login: string;
   tutar: number;
   paraBirimi: string;
+  /** Cekim talebinin olusturuldugu odeme yontemi ("Havale · HemenOde"). */
+  yontem: string | null;
   /** Bu talep dahil, ayni gunku talep sayisi. */
   gunlukCekim: number;
   /** Kasa acisindan kar/zarar; negatifse oyuncu onde. */
@@ -288,14 +291,15 @@ function onayYaz(deger: boolean | null): string {
 export function cekimBaglamMesaji(baslik: string, b: CekimBaglami, simdi = Date.now()): string {
   const kazanc = b.netKarZarar === null ? null : -b.netKarZarar;
   const satirlar: string[] = [
-    baslik,
+    kalinSatir(baslik),
     '━━━━━━━━━━━━━━━━━━',
     `👤 ${b.login || '(ad yok)'} · ${b.playerId}`,
     `💸 ${paraYaz(b.tutar, b.paraBirimi)}`,
+    b.yontem ? `🏦 ${b.yontem}` : null,
     // Toplam yatirim/cekim EN USTTE de tekrar edilir — 💰 PARA bolumune
     // kaydirmadan, karar verirken ilk bakista gorunsun diye.
     `📈 Toplam yatırım: ${paraYaz(b.toplamYatirim)} · Toplam çekim: ${paraYaz(b.toplamCekim)}`,
-  ];
+  ].filter((satir): satir is string => satir !== null);
 
   // ── Uyarilar en uste; riskli bir sey varsa kaydirmadan gorunmeli.
   const uyarilar: string[] = [];
@@ -309,7 +313,7 @@ export function cekimBaglamMesaji(baslik: string, b: CekimBaglami, simdi = Date.
   // ── Hesap
   satirlar.push(
     '',
-    '🪪 HESAP',
+    kalinSatir('🪪 HESAP'),
     `  Kayıt:    ${b.kayitTarihi ? yasYaz(b.kayitTarihi, simdi) : '—'}`,
     `  Telefon:  ${onayYaz(b.telefonDogrulandi)}   E-posta: ${onayYaz(b.epostaDogrulandi)}   Kimlik: ${onayYaz(b.kimlikDogrulandi)}`,
     `  Kategori: ${b.kategori || '—'}`,
@@ -318,7 +322,7 @@ export function cekimBaglamMesaji(baslik: string, b: CekimBaglami, simdi = Date.
   // ── Para
   satirlar.push(
     '',
-    '💰 PARA',
+    kalinSatir('💰 PARA'),
     `  Bakiye:   ${paraYaz(b.bakiye)}${b.bonusBakiye ? ` (+${paraYaz(b.bonusBakiye)} bonus)` : ''}`,
     `  Yatırım:  ${paraYaz(b.toplamYatirim)}${b.yatirimAdedi !== null ? ` · ${b.yatirimAdedi} işlem` : ''}`,
     `  Çekim:    ${paraYaz(b.toplamCekim)}${b.cekimAdedi !== null ? ` · ${b.cekimAdedi} işlem` : ''}`,
@@ -334,7 +338,7 @@ export function cekimBaglamMesaji(baslik: string, b: CekimBaglami, simdi = Date.
   if (b.casinoBahis !== null || b.sporBahis !== null) {
     satirlar.push(
       '',
-      '🎰 OYUN',
+      kalinSatir('🎰 OYUN'),
       `  Casino: ${paraYaz(b.casinoBahis)} bahis · GGR ${paraYaz(b.casinoGgr)}`,
       `  Spor:   ${paraYaz(b.sporBahis)} bahis · GGR ${paraYaz(b.sporGgr)}`,
     );
@@ -351,7 +355,7 @@ export function cekimBaglamMesaji(baslik: string, b: CekimBaglami, simdi = Date.
   }
 
   // ── Bonus. "Yok" ile "olculemedi" ayri seyler.
-  satirlar.push('', '🎁 BONUS');
+  satirlar.push('', kalinSatir('🎁 BONUS'));
   if (b.bonusKaynakliKazanc !== null) {
     satirlar.push(`  Bonustan kazanç: ${paraYaz(b.bonusKaynakliKazanc)}`);
   }
@@ -375,7 +379,7 @@ export function cekimBaglamMesaji(baslik: string, b: CekimBaglami, simdi = Date.
   }
 
   // ── Notlar
-  satirlar.push('', '📝 NOTLAR');
+  satirlar.push('', kalinSatir('📝 NOTLAR'));
   if (b.notlar.length > 0) {
     for (const not of b.notlar.slice(0, 5)) {
       satirlar.push(`  • [${String(not.noteType ?? '—')}] ${String(not.text ?? '')} — ${String(not.noteCreatedUserEmail ?? '')}`);
@@ -385,5 +389,5 @@ export function cekimBaglamMesaji(baslik: string, b: CekimBaglami, simdi = Date.
     satirlar.push('  Profil notu yok.');
   }
 
-  return satirlar.join('\n');
+  return gorselMesaj(satirlar);
 }

@@ -142,27 +142,92 @@ export function notIstegindenOyuncu(metin: unknown): string | null {
 /**
  * Red nedeni isteme mesaji.
  *
- * Not istegiyle AYNI `force_reply` deseni, ama iki kimlik tasiyor:
- * islem VE oyuncu. Yanit red sonucuyla ayni gruba gidecek mesajda ikisi de
- * lazim; islem numarasi olmadan hangi cekimin reddedildigi belirsiz
- * kalirdi.
+ * Not istegiyle AYNI `force_reply` deseni, ama daha fazla alan tasiyor:
+ * islem, oyuncu, ve (varsa) tutar/yontem — red nedeni raporunda bunlarin
+ * hepsi gorunsun diye, oyuncuya geri sorgu atmadan.
+ *
+ * Alan ayraci `" | "` — "·" YONTEM DEGERININ ICINDE de geciyor (orn.
+ * "Havale · HemenOde"), bu yuzden alanlari ayirmak icin kullanilamaz.
  */
 export const RED_NEDENI_ONEKI = 'Red nedeni gerekiyor —';
 
-export function redNedeniIstekMesaji(islemId: unknown, oyuncuId: unknown, login: unknown): string {
+export function redNedeniIstekMesaji(
+  islemId: unknown,
+  oyuncuId: unknown,
+  login: unknown,
+  ek?: { tutar?: string | null; yontem?: string | null },
+): string {
   const ad = String(login ?? '').trim();
   const oyuncu = ad ? `${ad} (${oyuncuId})` : String(oyuncuId ?? '');
-  return `${RED_NEDENI_ONEKI} işlem ${String(islemId ?? '')} · oyuncu ${oyuncu}\nBu mesajı yanıtlayarak red nedenini yazın.`;
+  const parcalar = [`işlem ${String(islemId ?? '')}`, `oyuncu ${oyuncu}`];
+  if (ek?.tutar) parcalar.push(`tutar ${ek.tutar}`);
+  if (ek?.yontem) parcalar.push(`yöntem ${ek.yontem}`);
+  return `${RED_NEDENI_ONEKI} ${parcalar.join(' | ')}\nBu mesajı yanıtlayarak red nedenini yazın.`;
 }
 
-/** Bot'un red nedeni istegi mesajindan islem ve oyuncu kimligini geri okur. */
-export function redNedeniIstegindenBilgi(metin: unknown): { islemId: string; oyuncuId: string } | null {
+export type RedNedeniBilgisi = {
+  islemId: string;
+  oyuncuId: string;
+  login: string | null;
+  tutar: string | null;
+  yontem: string | null;
+};
+
+/** Bot'un red nedeni istegi mesajindan islem/oyuncu/tutar/yontem bilgisini geri okur. */
+export function redNedeniIstegindenBilgi(metin: unknown): RedNedeniBilgisi | null {
   const s = String(metin ?? '');
   if (!s.startsWith(RED_NEDENI_ONEKI)) return null;
-  const islemEslesme = s.match(/işlem\s+(\S+)\s+·/);
-  const islemId = islemEslesme?.[1];
+
+  const ilkSatir = s.split('\n')[0].slice(RED_NEDENI_ONEKI.length).trim();
+  let islemId: string | null = null;
+  let oyuncuId = '';
+  let login: string | null = null;
+  let tutar: string | null = null;
+  let yontem: string | null = null;
+
+  for (const parca of ilkSatir.split(' | ').map((p) => p.trim())) {
+    if (parca.startsWith('işlem ')) {
+      islemId = parca.slice('işlem '.length).trim();
+    } else if (parca.startsWith('oyuncu ')) {
+      const oyuncuMetin = parca.slice('oyuncu '.length).trim();
+      const eslesme = oyuncuMetin.match(/^(.*)\((\d+)\)\s*$/);
+      if (eslesme) {
+        login = eslesme[1].trim() || null;
+        oyuncuId = eslesme[2];
+      } else {
+        oyuncuId = oyuncuMetin;
+      }
+    } else if (parca.startsWith('tutar ')) {
+      tutar = parca.slice('tutar '.length).trim() || null;
+    } else if (parca.startsWith('yöntem ')) {
+      yontem = parca.slice('yöntem '.length).trim() || null;
+    }
+  }
+
   if (!islemId) return null;
-  const oyuncuEslesme = s.match(/\((\d+)\)|oyuncu\s+(\d+)\s*(?:\n|$)/m);
-  const oyuncuId = oyuncuEslesme?.[1] ?? oyuncuEslesme?.[2] ?? '';
-  return { islemId, oyuncuId };
+  return { islemId, oyuncuId, login, tutar, yontem };
+}
+
+/**
+ * Orijinal cekim mesajindan (talep ya da sonuc) oyuncu adi, tutar ve
+ * yontem bilgisini geri okur.
+ *
+ * Buton basildiginda mesaj hala sohbette gorunur olarak duruyor —
+ * `callback.message.text`. Iki farkli bicim olabiliyor:
+ *   - Zengin talep (`cekimBaglamMesaji`): "👤 ad · id"
+ *   - Sade sonuc (`cekimMesaji`, `oyuncuYaz` ile): "👤 ad (id)"
+ * Ikisi de denenir; hicbiri eslesmezse null.
+ */
+export function cekimMesajindanBilgi(metin: unknown): { login: string | null; tutar: string | null; yontem: string | null } {
+  const s = String(metin ?? '');
+  const noktaliEslesme = s.match(/^👤 (.+?) · \d+\s*$/m);
+  const parantezliEslesme = s.match(/^👤 (.+?) \(\d+\)\s*$/m);
+  const login = (noktaliEslesme?.[1] ?? parantezliEslesme?.[1] ?? '').trim() || null;
+  const tutarEslesme = s.match(/^💸 (.+)$/m);
+  const yontemEslesme = s.match(/^🏦 (.+)$/m);
+  return {
+    login,
+    tutar: tutarEslesme?.[1]?.trim() || null,
+    yontem: yontemEslesme?.[1]?.trim() || null,
+  };
 }

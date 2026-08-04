@@ -6,6 +6,57 @@ export function isTelegramConfigured(): boolean {
   return Boolean(config.telegram.botToken);
 }
 
+/**
+ * Telegram HTML parse_mode icin metin kacisi.
+ *
+ * Butun raporlar `<b>` ile kalin basliklar kullaniyor; bu yuzden
+ * gonderilen HER mesaj `parse_mode: 'HTML'` ile gidiyor. Rapor
+ * icindeki DINAMIK deger (login, not, red nedeni, tutar metni vb.)
+ * `&`/`<`/`>` icerirse Telegram bunu etiket sanip mesaji SESSIZCE
+ * reddeder — bu yuzden her interpolasyon buradan gecmeli. Statik
+ * baslik metinleri (`<b>...</b>` etiketinin kendisi) kacilmaz.
+ */
+export function escapeHtml(deger: unknown): string {
+  return String(deger ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+/**
+ * Bir satiri kalin isaretler. `gorselMesaj()` disinda kullanilmaz —
+ * ureteceginiz `**...**` sarmalayicisi yalnizca O yardimcida `<b>`
+ * etiketine cevrilir.
+ */
+export function kalinSatir(metin: string): string {
+  return `**${metin}**`;
+}
+
+/**
+ * Rapor mesajlarinin TEK giris noktasi: satir dizisini HTML-guvenli
+ * metne cevirir.
+ *
+ * ── Neden boyle ──────────────────────────────────────────────────────
+ * Her satir escapeHtml'den GECER — statik etiket/emoji metninde zaten
+ * `&`/`<`/`>` yok, dinamik degerlerde (login, not, red nedeni) VARSA
+ * Telegram mesaji parcalayamayip 400 donduruyor ve mesaj SESSIZCE hic
+ * gitmiyor. Tek tek her interpolasyonu kacmak yerine butun satir
+ * kaciliyor — unutma riski yok.
+ *
+ * `kalinSatir()` ile sarmalanmis (tum satiri `**...**` olan) satirlar
+ * kacıldiktan SONRA `<b>` etiketine donusturuluyor — sarmalayici
+ * karakterler (`*`) escapeHtml'den etkilenmiyor, sira onemsiz.
+ */
+export function gorselMesaj(satirlar: Array<string | null | undefined>): string {
+  return satirlar
+    .filter((s): s is string => s !== null && s !== undefined)
+    .map((satir) => {
+      const eslesme = satir.match(/^\*\*(.*)\*\*$/);
+      return eslesme ? `<b>${escapeHtml(eslesme[1])}</b>` : escapeHtml(satir);
+    })
+    .join('\n');
+}
+
 async function telegramApiCall(method: string, params: Record<string, unknown> = {}): Promise<any> {
   if (!config.telegram.botToken) throw new Error('TELEGRAM_BOT_TOKEN tanımlı değil.');
   const res = await fetch(`${TELEGRAM_API}/bot${config.telegram.botToken}/${method}`, {
@@ -66,9 +117,15 @@ export function isActiveMemberStatus(status: string | null, isMemberFlag?: unkno
 export async function sendTelegramMessage(
   chatId: number | string,
   text: string,
-  secenek: { klavye?: unknown; zorunluYanit?: boolean } = {},
+  secenek: { klavye?: unknown; zorunluYanit?: boolean; html?: boolean } = {},
 ): Promise<{ messageId: number | null }> {
   const params: Record<string, unknown> = { chat_id: chatId, text };
+  // `html` yalnizca `gorselMesaj()` ile INSA EDILMIS metinlerde acilir —
+  // o yardimci butun dinamik degerleri onceden kaciyor. Diger cagrilar
+  // (force_reply sorulari, kisa onay mesajlari) duz metin kalir; aksi
+  // halde kacilmamis bir login/not degeri Telegram'a 400 donduturur ve
+  // mesaj SESSIZCE hic gitmez.
+  if (secenek.html) params.parse_mode = 'HTML';
   if (secenek.klavye) params.reply_markup = secenek.klavye;
   else if (secenek.zorunluYanit) params.reply_markup = { force_reply: true, selective: true };
   const sonuc = await telegramApiCall('sendMessage', params);
@@ -94,9 +151,15 @@ export async function telegramCallbackYanitla(callbackQueryId: string, metin: st
 }
 
 /** Mesaja yanit olarak gonder — hangi cekime ait oldugu sohbette kaybolmasin. */
-export async function telegramYanitla(chatId: number | string, messageId: number, text: string): Promise<void> {
-  await telegramApiCall('sendMessage', { chat_id: chatId, text, reply_to_message_id: messageId })
-    .catch(() => undefined);
+export async function telegramYanitla(
+  chatId: number | string,
+  messageId: number,
+  text: string,
+  secenek: { html?: boolean } = {},
+): Promise<void> {
+  const params: Record<string, unknown> = { chat_id: chatId, text, reply_to_message_id: messageId };
+  if (secenek.html) params.parse_mode = 'HTML';
+  await telegramApiCall('sendMessage', params).catch(() => undefined);
 }
 
 /**

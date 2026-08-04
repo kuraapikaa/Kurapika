@@ -542,7 +542,7 @@ export async function lynonRoutes(app: FastifyInstance) {
     if (!chatId) return reply.status(400).send({ HasError: true, AlertMessage: 'Kasa sohbeti tanımlı değil.' });
     try {
       const yanit = await lynonYontemBazindaKasa({});
-      await sendTelegramMessage(chatId, String(yanit?.Data?.Mesaj ?? ''));
+      await sendTelegramMessage(chatId, String(yanit?.Data?.Mesaj ?? ''), { html: true });
       return reply.send({ HasError: false, AlertMessage: 'Yöntem bazında kasa raporu gönderildi.' });
     } catch (err) {
       return sendError(reply, err);
@@ -556,7 +556,7 @@ export async function lynonRoutes(app: FastifyInstance) {
     }
     try {
       const yanit = await lynonAnlikOyuncuBakiyesi({});
-      await sendTelegramMessage(config.telegram.bakiyeOzetiChatId, String(yanit?.Data?.Mesaj ?? ''));
+      await sendTelegramMessage(config.telegram.bakiyeOzetiChatId, String(yanit?.Data?.Mesaj ?? ''), { html: true });
       return reply.send({ HasError: false, AlertMessage: 'Oyuncu bakiye özeti gönderildi.' });
     } catch (err) {
       return sendError(reply, err);
