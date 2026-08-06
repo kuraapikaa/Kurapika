@@ -477,7 +477,38 @@ export async function runTelegramRaporJob(tenantKey = 'default'): Promise<Telegr
     }
   }
 
-  if (degisti) await writeStoredDocument<RaporImleci>({ tenantKey, namespace: NAMESPACE }, imlec);
+  /**
+   * YARIS DURUMU KORUMASI.
+   *
+   * Bu fonksiyon `imlec`'i basta (yukarida) OKUR, sonra dakikalarca surebilen
+   * bir dongude (her akis icin Lynon cagrilari) BELLEKTE degistirir ve en
+   * sonunda TEK SEFERDE geri yazar. Bu surede operator bir cekimi Telegram
+   * butonuyla cozumlerse, `cekimSonucunuImleceIsaretle` KENDI okuma/yazma
+   * dongusunu calistirip depoyu GUNCEL tutar — ama bu fonksiyon en sonunda
+   * BASTA OKUDUGU (artik BAYAT) `imlec` nesnesini kosulsuzca ustune yazinca
+   * o guncellemeyi SILER. Sonuc: bir sonraki tarama ayni onay/red olayini
+   * "yeni" sanip IKINCI KEZ bildirir — "çekim onaylayınca bir daha çekim
+   * geldi" hatasi tam olarak buydu ve `cekimSonucunuImleceIsaretle`
+   * eklendikten SONRA bile bu yaris yuzunden ARADA SIRADA tekrar ediyordu.
+   *
+   * Yazmadan hemen once depoyu TEKRAR okuyup her akisin `gorulen`
+   * listesini BIRLESTIRIYORUZ (union). `gorulen` yalnizca EKLENEN bir
+   * liste oldugu icin birlestirme guvenli: gercek bir yeni olayi asla
+   * kaybettirmez, yalnizca arada baska bir surecin isaretledigi kimlikleri
+   * de korur.
+   */
+  if (degisti) {
+    const guncelImlec = await readStoredDocument<RaporImleci>({ tenantKey, namespace: NAMESPACE, fallback: bosImlec });
+    for (const ad of Object.keys(imlec.akislar)) {
+      const disaridanGorulen = guncelImlec.akislar?.[ad]?.gorulen ?? [];
+      if (disaridanGorulen.length === 0) continue;
+      imlec.akislar[ad] = {
+        baslatildi: true,
+        gorulen: [...new Set([...imlec.akislar[ad].gorulen, ...disaridanGorulen])].slice(0, AZAMI_GORULEN),
+      };
+    }
+    await writeStoredDocument<RaporImleci>({ tenantKey, namespace: NAMESPACE }, imlec);
+  }
   return sonuc;
 }
 
