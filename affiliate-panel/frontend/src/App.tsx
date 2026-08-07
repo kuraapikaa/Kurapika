@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { NavLink, Navigate, Route, Routes, useNavigate } from 'react-router-dom';
+import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { api, useVeri } from './api';
+import { IKON, Kabuk, type MenuOgesi } from './kabuk';
 import { Buton, Yukleniyor, useTema } from './ui';
 import { Landing } from './sayfalar/Landing';
 import { Baglanti } from './sayfalar/yonetim/Baglanti';
@@ -28,26 +29,50 @@ interface Oturum {
   ortakAnahtari?: string | null;
 }
 
-const YONETIM_MENUSU = [
-  { yol: '/ozet', etiket: 'Özet' },
-  { yol: '/basvurular', etiket: 'Başvurular' },
-  { yol: '/ortaklar', etiket: 'Ortaklar' },
-  { yol: '/planlar', etiket: 'Komisyon planları' },
-  { yol: '/medya', etiket: 'Medya' },
-  { yol: '/kademeler', etiket: 'Kademeler' },
-  { yol: '/postback', etiket: 'Postback' },
-  { yol: '/tiklamalar', etiket: 'Tıklamalar' },
-  { yol: '/donemler', etiket: 'Hakediş' },
-  { yol: '/baglanti', etiket: 'Backoffice bağlantısı' },
+/**
+ * Menü, sektördeki affiliate platformlarının düzenini izliyor:
+ * ortaklar, teklifler (komisyon planları), istatistik, ödemeler.
+ * Bu paneli ilk kez açan biri nereye bakacağını zaten biliyor.
+ */
+const YONETIM_MENUSU: MenuOgesi[] = [
+  { yol: '/ozet', etiket: 'Panel', ikon: IKON.pano },
+  {
+    yol: '/ortaklar',
+    etiket: 'Ortaklar',
+    ikon: IKON.ortak,
+    altlar: [
+      { yol: '/ortaklar', etiket: 'Tüm ortaklar' },
+      { yol: '/basvurular', etiket: 'Başvurular' },
+      { yol: '/kademeler', etiket: 'Kademeler' },
+    ],
+  },
+  { yol: '/planlar', etiket: 'Komisyon planları', ikon: IKON.teklif },
+  { yol: '/medya', etiket: 'Medya', ikon: IKON.medya },
+  {
+    yol: '/tiklamalar',
+    etiket: 'İstatistik',
+    ikon: IKON.istatistik,
+    altlar: [{ yol: '/tiklamalar', etiket: 'Tıklamalar' }],
+  },
+  { yol: '/donemler', etiket: 'Hakediş', ikon: IKON.odeme },
+  {
+    yol: '/baglanti',
+    etiket: 'Ayarlar',
+    ikon: IKON.ayar,
+    altlar: [
+      { yol: '/baglanti', etiket: 'Backoffice bağlantısı' },
+      { yol: '/postback', etiket: 'Postback' },
+    ],
+  },
 ];
 
-const PORTAL_MENUSU = [
-  { yol: '/portal', etiket: 'Özet' },
-  { yol: '/portal/medya', etiket: 'Medya ve linkler' },
-  { yol: '/portal/alt-linkler', etiket: 'Alt linkler' },
-  { yol: '/portal/tiklamalar', etiket: 'Tıklamalar' },
-  { yol: '/portal/hakedis', etiket: 'Hakediş' },
-  { yol: '/portal/postback', etiket: 'Postback' },
+const PORTAL_MENUSU: MenuOgesi[] = [
+  { yol: '/portal', etiket: 'Panel', ikon: IKON.pano, tam: true },
+  { yol: '/portal/alt-linkler', etiket: 'Alt linkler', ikon: IKON.link },
+  { yol: '/portal/medya', etiket: 'Medya', ikon: IKON.medya },
+  { yol: '/portal/tiklamalar', etiket: 'Tıklamalar', ikon: IKON.istatistik },
+  { yol: '/portal/hakedis', etiket: 'Hakediş', ikon: IKON.odeme },
+  { yol: '/portal/postback', etiket: 'Postback', ikon: IKON.ayar },
 ];
 
 export function App() {
@@ -65,13 +90,13 @@ export function App() {
   }, [veri?.girisli, veri?.rol]);
 
   if (yukleniyor) return <Yukleniyor />;
-  // Giris yapmamis ziyaretci CIPLAK BIR GIRIS KUTUSU degil, programin
-  // ne teklif ettigini anlatan sayfayi goruyor: bu adres ortaklara
+
+  // Giris yapmamis ziyaretci CIPLAK BIR GIRIS KUTUSU degil, programin ne
+  // teklif ettigini anlatan sayfayi goruyor: bu adres ortaklara
   // paylasilan adres ve ilk kez gelen biri kapiyla karsilasmamali.
   if (!veri?.girisli) return <Landing girisYapildi={yenile} />;
 
   const yonetici = veri.rol === 'yonetici';
-  const menu = yonetici ? YONETIM_MENUSU : PORTAL_MENUSU;
 
   const cikis = async () => {
     setCikisYapiliyor(true);
@@ -81,70 +106,44 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen">
-      <header
-        className="sticky top-0 z-10 border-b px-4 py-3"
-        style={{ background: 'var(--yuzey)', borderColor: 'var(--kenar)' }}
-      >
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3">
-          <span className="text-base font-semibold">Affiliate Paneli</span>
-          <span className="text-xs" style={{ color: 'var(--metin-2)' }}>
-            {yonetici ? 'Yönetim' : 'Ortak portali'} · {veri.ad}
-            {veri.ortakAnahtari ? ` · ${veri.ortakAnahtari}` : ''}
-          </span>
-          <div className="ml-auto flex items-center gap-2">
-            <Buton onClick={temaDegistir}>{koyu ? 'Aydınlık' : 'Karanlık'}</Buton>
-            <Buton onClick={cikis} devredisi={cikisYapiliyor}>Çıkış</Buton>
-          </div>
-        </div>
-
-        <nav className="mx-auto mt-3 flex max-w-7xl flex-wrap gap-1">
-          {menu.map((m) => (
-            <NavLink
-              key={m.yol}
-              to={m.yol}
-              end={m.yol === '/portal'}
-              className="rounded-lg px-3 py-1.5 text-sm"
-              style={({ isActive }) => ({
-                background: isActive ? 'var(--vurgu)' : 'transparent',
-                color: isActive ? 'var(--vurgu-metin)' : 'var(--metin-2)',
-              })}
-            >
-              {m.etiket}
-            </NavLink>
-          ))}
-        </nav>
-      </header>
-
-      <main className="mx-auto max-w-7xl space-y-4 p-4">
-        <Routes>
-          {yonetici ? (
-            <>
-              <Route path="/ozet" element={<Ozet />} />
-              <Route path="/basvurular" element={<Basvurular />} />
-              <Route path="/ortaklar" element={<Ortaklar />} />
-              <Route path="/planlar" element={<Planlar />} />
-              <Route path="/medya" element={<Medya />} />
-              <Route path="/kademeler" element={<Kademeler />} />
-              <Route path="/postback" element={<Postback />} />
-              <Route path="/tiklamalar" element={<Tiklamalar />} />
-              <Route path="/donemler" element={<Donemler />} />
-              <Route path="/baglanti" element={<Baglanti />} />
-              <Route path="*" element={<Navigate to="/ozet" replace />} />
-            </>
-          ) : (
-            <>
-              <Route path="/portal" element={<PortalOzet />} />
-              <Route path="/portal/medya" element={<PortalMedya />} />
-              <Route path="/portal/alt-linkler" element={<PortalAltLinkler />} />
-              <Route path="/portal/tiklamalar" element={<PortalTiklamalar />} />
-              <Route path="/portal/hakedis" element={<PortalHakedis />} />
-              <Route path="/portal/postback" element={<PortalPostback />} />
-              <Route path="*" element={<Navigate to="/portal" replace />} />
-            </>
-          )}
-        </Routes>
-      </main>
-    </div>
+    <Kabuk
+      menu={yonetici ? YONETIM_MENUSU : PORTAL_MENUSU}
+      baslik={yonetici ? 'Affiliate Yönetimi' : 'Ortak Paneli'}
+      altBaslik={veri.ortakAnahtari ?? veri.ad ?? ''}
+      sagUst={
+        <>
+          <Buton onClick={temaDegistir}>{koyu ? 'Aydınlık' : 'Karanlık'}</Buton>
+          <Buton onClick={cikis} devredisi={cikisYapiliyor}>Çıkış</Buton>
+        </>
+      }
+    >
+      <Routes>
+        {yonetici ? (
+          <>
+            <Route path="/ozet" element={<Ozet />} />
+            <Route path="/basvurular" element={<Basvurular />} />
+            <Route path="/ortaklar" element={<Ortaklar />} />
+            <Route path="/planlar" element={<Planlar />} />
+            <Route path="/medya" element={<Medya />} />
+            <Route path="/kademeler" element={<Kademeler />} />
+            <Route path="/postback" element={<Postback />} />
+            <Route path="/tiklamalar" element={<Tiklamalar />} />
+            <Route path="/donemler" element={<Donemler />} />
+            <Route path="/baglanti" element={<Baglanti />} />
+            <Route path="*" element={<Navigate to="/ozet" replace />} />
+          </>
+        ) : (
+          <>
+            <Route path="/portal" element={<PortalOzet />} />
+            <Route path="/portal/alt-linkler" element={<PortalAltLinkler />} />
+            <Route path="/portal/medya" element={<PortalMedya />} />
+            <Route path="/portal/tiklamalar" element={<PortalTiklamalar />} />
+            <Route path="/portal/hakedis" element={<PortalHakedis />} />
+            <Route path="/portal/postback" element={<PortalPostback />} />
+            <Route path="*" element={<Navigate to="/portal" replace />} />
+          </>
+        )}
+      </Routes>
+    </Kabuk>
   );
 }
