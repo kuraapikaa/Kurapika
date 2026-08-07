@@ -148,6 +148,39 @@ export function validateEnvironment(): EnvValidationResult {
     if (['1', 'true', 'yes', 'on'].includes(String(process.env.PANEL_AUTH_DISABLED || '').toLowerCase())) {
       errors.push('PANEL_AUTH_DISABLED production ortaminda acik olamaz.');
     }
+
+    /**
+     * DEPOLAR — bu kontrol eksikti ve maliyeti ölçüldü.
+     *
+     * `DATABASE_URL` boşken env-check "Tüm ortam değişkenleri doğrulandı"
+     * yazıyor, hemen ardından `initializeDatabase` yakalanmamış bir hata
+     * fırlatıyordu. Dağıtım logunda görünen şey, temiz bir onay satırının
+     * altında bir yığın izi: doğrulayıcının varlık sebebi tam olarak bu
+     * durumu önlemekken, yanlış bir "her şey yolunda" veriyordu.
+     *
+     * Eşik `database.ts`/`redisClient.ts` ile AYNI: `*_REQUIRED` açıkça
+     * kapatılmadıkça production'da zorunlu. İki yerde ayrı ayrı
+     * yazılsalardı zamanla ayrışır ve doğrulayıcı yine yalan söylerdi.
+     */
+    const zorunluMu = (anahtar: string): boolean => {
+      const ham = process.env[anahtar];
+      if (ham == null || ham === '') return true;
+      return ['1', 'true', 'yes', 'on'].includes(ham.trim().toLowerCase());
+    };
+
+    if (zorunluMu('DATABASE_REQUIRED') && !String(process.env.DATABASE_URL || '').trim()) {
+      errors.push(
+        'DATABASE_URL tanımlı değil (boş değer de sayılmaz) — production\'da PostgreSQL zorunlu. ' +
+        'Railway\'de referansla bağlayın: DATABASE_URL=${{Postgres.DATABASE_URL}}',
+      );
+    }
+
+    if (zorunluMu('REDIS_REQUIRED') && !String(process.env.REDIS_URL || '').trim()) {
+      errors.push(
+        'REDIS_URL tanımlı değil (boş değer de sayılmaz) — production session store için Redis zorunlu. ' +
+        'Railway\'de referansla bağlayın: REDIS_URL=${{Redis.REDIS_URL}}',
+      );
+    }
   }
 
   for (const rule of ENV_RULES) {
