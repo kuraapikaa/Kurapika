@@ -8,6 +8,7 @@ import { araligaGoreTtl } from './onbellekOmru.js';
 import { readStoredDocument, writeStoredDocument } from '../lib/documentStore.js';
 import {
   ayAraligi,
+  gunAraligi,
   ayinManuelKalemleri,
   ayinTamAraligi,
   mutabakatMesaji,
@@ -2980,6 +2981,21 @@ export async function lynonMutabakat(body: AnyRecord = {}): Promise<AnyRecord> {
  * biriktik" sorusunu cevaplar; bu, "gecen ay kapanista tam olarak
  * ne oldu" sorusunu cevaplar — muhasebe icin ayrı, kesin bir kayit.
  */
+/**
+ * GUNLUK mutabakat — tek gunun odeme yontemi kirilimi.
+ *
+ * Aylik surum ("ay basindan bugune") birikimli calisiyordu; "bugun ne
+ * oldu" sorusu ancak dunku toplamdan cikararak cevaplanabiliyordu.
+ * Gunluk mutabakat o cikarmayi gereksiz kiliyor ve gunu kapatirken
+ * saglayici ekstresiyle karsilastirilabilir tek bir rakam veriyor.
+ */
+export async function lynonGunlukMutabakat(body: AnyRecord = {}): Promise<AnyRecord> {
+  const gun = String(body.gun ?? body.bugun ?? todayYmd());
+  const tenantKey = String(body.tenantKey ?? 'default');
+  const aralik = gunAraligi(gun);
+  return mutabakatHesapla(aralik, aralik.ay, tenantKey, false);
+}
+
 export async function lynonAylikKapanisMutabakati(body: AnyRecord = {}): Promise<AnyRecord> {
   const tenantKey = String(body.tenantKey ?? 'default');
   const ay = String(body.ay ?? oncekiAyAnahtari(todayYmd()));
