@@ -106,6 +106,29 @@ npm --prefix affiliate-panel/frontend run dev
 Arayüz `5175`, sunucu `4100`. Vite `/api` ve `/c` isteklerini sunucuya
 vekilliyor.
 
+## Railway'e dağıtım
+
+Aynı projede **ayrı bir servis** olarak. Ayrı proje değil: Railway referans
+değişkenleri (`${{Postgres.DATABASE_URL}}`) yalnızca proje içinde çözülüyor,
+ayrı projede düz bağlantı dizesi yapıştırmak zorunda kalırsınız ve o değer
+parola döndüğünde sessizce bayatlar.
+
+Servis ayarlarında **tek** kritik alan var:
+
+> **Root Directory = `affiliate-panel`**
+
+Bu tek ayar iki şeyi birden doğru yapıyor: Railway `affiliate-panel/railway.json`
+dosyasını buluyor, ve Docker build bağlamı `affiliate-panel/` oluyor —
+`Dockerfile`'daki `COPY frontend/…` satırlarının varsaydığı bağlam bu.
+
+Root Directory'yi boş bırakıp `dockerfilePath`'e `affiliate-panel/Dockerfile`
+yazmak **çalışmaz**: o durumda build bağlamı depo kökü olur ve
+`COPY frontend/package*.json` diye bir yol bulunamaz.
+
+Veritabanı BugsPanel ile aynı Postgres örneğini paylaşabilir; tablolar `aff_`
+önekli (`aff_belgeler`), `app_documents`/`audit_events` ile çakışmıyor. Bedeli:
+tek bir Postgres kesintisi ikisini birden düşürür.
+
 ## Güvenlikte bilerek verilen kararlar
 
 - **Sırlar şifreli.** `AFF_SECRET_KEY` yoksa bağlantı **kaydedilmiyor**.
