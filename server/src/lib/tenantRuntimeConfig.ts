@@ -84,9 +84,59 @@ function envLynon(): LynonRuntime {
   };
 }
 
-function birlestir(kayit: TenantConnection | undefined): LynonRuntime {
+/**
+ * Kayıtta gerçek bir kimlik bilgisi var mı?
+ *
+ * Adres veya site kimliği tek başına yetmez: giriş yapmak için kullanıcı
+ * adı, parola ve TOTP sırrı gerekiyor. Bunlardan biri bile kayıtta yoksa
+ * o site "kendi bağlantısı var" sayılamaz.
+ */
+function kendiKimligiVar(ustu: TenantConnection['lynon'] | undefined): boolean {
+  return Boolean(ustu && (ustu.username || ustu.password || ustu.otpSecret || ustu.otpToken));
+}
+
+/**
+ * ORTAM DEĞİŞKENİ YALNIZCA VARSAYILAN SİTENİN.
+ *
+ * Burada eskiden kaydı olmayan HER tenant `envLynon()`'a düşüyordu. Bu,
+ * çok kiracılığın engellemesi gereken şeyi tam olarak üretiyordu: master
+ * panelden yeni bir site oluşturmak — bağlantısı hiç girilmeden —
+ * o siteye ANA SİTENİN Lynon kullanıcı adını, parolasını, TOTP sırrını
+ * ve site kimliğini veriyordu. `isLynonConfigured()` true dönüyor, panel
+ * sorunsuz açılıyor ve alt sitenin ekranında ana sitenin oyuncuları,
+ * bakiyeleri ve çekim talepleri görünüyordu. Hata da vermiyordu.
+ *
+ * Artık ENV yalnızca varsayılan (tek siteli kurulumun) tenant'ı için
+ * geçerli. Kendi kimlik bilgisi girilmemiş bir alt site
+ * "yapılandırılmamış" sayılır: Lynon kapalı görünür, panel bunu söyler.
+ * Yanlış siteye bağlanmaktansa hiç bağlanmamak doğru taraftır.
+ */
+function envDevralinabilirMi(tenantKey: string, ustu: TenantConnection['lynon'] | undefined): boolean {
+  return tenantKey === varsayilanTenantKey() || kendiKimligiVar(ustu);
+}
+
+function birlestir(kayit: TenantConnection | undefined, tenantKey: string): LynonRuntime {
   const env = envLynon();
   const ustu = kayit?.lynon;
+
+  if (!envDevralinabilirMi(tenantKey, ustu)) {
+    return {
+      ...env,
+      enabled: false,
+      username: '',
+      password: '',
+      otpSecret: '',
+      otpToken: '',
+      // Site kimliği ve adresler de düşürülür: eksik bir kayıtla ana
+      // sitenin siteId'sine istek atmak, kimlik bilgisi sızmasa bile
+      // yanlış siteyi sorgulamak demek.
+      siteId: ustu?.siteId && Number.isFinite(Number(ustu.siteId)) ? Number(ustu.siteId) : 0,
+      backofficeBaseUrl: metin(ustu?.backofficeBaseUrl, ''),
+      idBaseUrl: metin(ustu?.idBaseUrl, ''),
+      returnUrl: '',
+    };
+  }
+
   if (!ustu) return env;
 
   const backofficeBaseUrl = metin(ustu.backofficeBaseUrl, env.backofficeBaseUrl);
@@ -117,7 +167,19 @@ function birlestir(kayit: TenantConnection | undefined): LynonRuntime {
 
 /** İçinde bulunulan bağlamın (veya verilen tenant'ın) etkin Lynon ayarı. */
 export function lynonCfg(tenantKey?: string): LynonRuntime {
-  return birlestir(cache.get(safeTenantKey(tenantKey ?? currentTenantKey())));
+  const key = safeTenantKey(tenantKey ?? currentTenantKey());
+  return birlestir(cache.get(key), key);
+}
+
+/**
+ * Sitenin kendi Lynon bağlantısı girilmiş mi?
+ *
+ * Master panelin "bu site kurulmuş mu" sorusuna cevap verir; varsayılan
+ * site için ENV yeterli sayılır.
+ */
+export function tenantBaglantisiKurulduMu(tenantKey?: string): boolean {
+  const key = safeTenantKey(tenantKey ?? currentTenantKey());
+  return envDevralinabilirMi(key, cache.get(key)?.lynon);
 }
 
 /**
@@ -131,12 +193,20 @@ export function tenantConnectionOverride(tenantKey?: string): TenantConnection |
   return cache.get(safeTenantKey(tenantKey ?? currentTenantKey()));
 }
 
-/** İçinde bulunulan bağlamın etkin backoffice/dashboard token'ları. */
+/**
+ * İçinde bulunulan bağlamın etkin backoffice/dashboard token'ları.
+ *
+ * ENV token'ı da Lynon kimlik bilgileriyle aynı kurala tabi: yalnızca
+ * varsayılan siteye düşer. BetConstruct token'ı bir siteye bağlı bir
+ * yetki; alt siteye devretmek onu ana sitenin verisine sokardı.
+ */
 export function backofficeCfg(tenantKey?: string): BackofficeRuntime {
-  const kayit = cache.get(safeTenantKey(tenantKey ?? currentTenantKey()));
+  const key = safeTenantKey(tenantKey ?? currentTenantKey());
+  const kayit = cache.get(key);
+  const devralabilir = envDevralinabilirMi(key, kayit?.lynon);
   return {
-    authToken: metin(kayit?.backoffice?.authToken, config.api.backofficeAuthToken),
-    dashboardAuthToken: metin(kayit?.backoffice?.dashboardAuthToken, config.api.authToken),
+    authToken: metin(kayit?.backoffice?.authToken, devralabilir ? config.api.backofficeAuthToken : ''),
+    dashboardAuthToken: metin(kayit?.backoffice?.dashboardAuthToken, devralabilir ? config.api.authToken : ''),
   };
 }
 
@@ -153,6 +223,18 @@ export async function ensureTenantRuntime(tenantKey: string): Promise<void> {
     yuklemeler.set(key, bekleyen);
   }
   cache.set(key, await bekleyen);
+}
+
+/**
+ * Kaydı doğrudan belleğe yazar (write-through).
+ *
+ * Master panel bir bağlantıyı kaydettikten sonra aynı kaydı diskten/
+ * veritabanından tekrar okumak zorunda kalmasın diye var. Yazma ile
+ * belleğin arasında bir an bile fark olmaması önemli: o aralıkta gelen
+ * bir istek eski (ya da hiç) bağlantıyla çalışırdı.
+ */
+export function tenantRuntimeYaz(tenantKey: string, kayit: TenantConnection): void {
+  cache.set(safeTenantKey(tenantKey), kayit);
 }
 
 /** Master panelden kayıt değişince çağrılır; sonraki okuma yeniden yükler. */

@@ -1,7 +1,7 @@
 import { readFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { tenantConnectionOverride } from './tenantRuntimeConfig.js';
+import { tenantBaglantisiKurulduMu, tenantConnectionOverride } from './tenantRuntimeConfig.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const AUTH_FILE = join(__dirname, '..', '.backoffice-auth.json');
@@ -59,18 +59,31 @@ function tenantToken(alan: 'authToken' | 'dashboardAuthToken'): string {
   return tenantConnectionOverride()?.backoffice?.[alan]?.trim() || '';
 }
 
-/** Önce tenant kaydı, sonra .env (DASHBOARD_AUTH / AUTH_TOKEN / BACKOFFICE_AUTH), sonra .dashboard-auth.json. */
-export function getDashboardToken(): string {
-  return (
-    tenantToken('dashboardAuthToken') ||
-    getEnvDashboardToken() ||
-    readDashboard().token?.trim() ||
-    read().token?.trim() ||
-    ''
-  );
+/**
+ * ENV VE DOSYA YALNIZCA VARSAYILAN SİTEYE DÜŞER.
+ *
+ * `.env` ve `.backoffice-auth.json` süreç genelinde tek token tutuyor ve
+ * bu token bir siteye bağlı bir yetki. Kendi bağlantısı girilmemiş bir
+ * alt siteye devretmek, o sitenin panelini ana sitenin verisine sokardı.
+ * Yapılandırılmamış site token'sız kalır ve istek yetkisiz döner —
+ * yanlış siteyi sorgulamaktansa doğru taraf budur.
+ */
+function paylasilanTokenKullanilabilirMi(): boolean {
+  return tenantBaglantisiKurulduMu();
 }
 
-/** Önce tenant kaydı, sonra .env (BACKOFFICE_AUTH / DASHBOARD_AUTH / AUTH_TOKEN), sonra .backoffice-auth.json. */
+/** Önce tenant kaydı, sonra (izinliyse) .env, sonra .dashboard-auth.json. */
+export function getDashboardToken(): string {
+  const kendi = tenantToken('dashboardAuthToken');
+  if (kendi) return kendi;
+  if (!paylasilanTokenKullanilabilirMi()) return '';
+  return getEnvDashboardToken() || readDashboard().token?.trim() || read().token?.trim() || '';
+}
+
+/** Önce tenant kaydı, sonra (izinliyse) .env, sonra .backoffice-auth.json. */
 export function getBackofficeToken(): string {
-  return tenantToken('authToken') || getEnvBackofficeToken() || read().token?.trim() || '';
+  const kendi = tenantToken('authToken');
+  if (kendi) return kendi;
+  if (!paylasilanTokenKullanilabilirMi()) return '';
+  return getEnvBackofficeToken() || read().token?.trim() || '';
 }
