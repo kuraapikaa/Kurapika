@@ -11,6 +11,9 @@ import { config } from './config.js';
 import { registerGlobalErrorHandler } from './lib/errorHandler.js';
 import { registerRequestId } from './lib/requestId.js';
 import { createRedisSessionStore } from './lib/redisClient.js';
+import { resolveTenantKeyForRequest } from './lib/tenant.js';
+import { runWithTenant, varsayilanTenantKey } from './lib/tenantContext.js';
+import { ensureTenantRuntime } from './lib/tenantRuntimeConfig.js';
 
 const { cors: corsConfig } = config;
 const isProduction = process.env.NODE_ENV === 'production';
@@ -270,6 +273,47 @@ export async function buildApp() {
     // Bir ara katman yine de saklarsa en azından oturuma göre ayrıştırsın.
     reply.header('Vary', 'Cookie, Accept-Encoding');
     return payload;
+  });
+
+  // ─── Tenant Bağlamı ────────────────────────────────────────────────────────
+  //
+  // Panelin çok kiracılı çalışmasının TEK giriş noktası burası. İsteğin
+  // hangi siteye ait olduğu bir kez çözülür (oturum > master'ın
+  // ?tenantId'si > Host eşleşmesi), o tenant'ın bağlantı kaydı belleğe
+  // alınır ve isteğin geri kalanı `AsyncLocalStorage` bağlamı içinde
+  // çalışır. Lynon oturumu, kimlik bilgileri ve kural dosyası bu bağlamı
+  // okuduğu için aşağıdaki hiçbir rotanın tenant'ı elden taşıması
+  // gerekmiyor.
+  //
+  // Kanca CALLBACK biçiminde: `done()` bağlamın İÇİNDE çağrıldığı için
+  // sonraki kancalar ve rota işleyicisi aynı bağlamı görür. `async`
+  // yazılsaydı bağlam kanca döner dönmez kapanır, işleyici varsayılan
+  // tenant'a düşerdi.
+  app.addHook('preHandler', (request, _reply, done) => {
+    // Yalnızca /api. Uygulamanın TÜM rotaları /api altında; statik
+    // dosyalar ve SPA kabuğu tenant bilmiyor. Onları da kapsasaydık her
+    // js/css/png isteği tenant listesi için bir okuma tetiklerdi.
+    if (!request.url?.startsWith('/api')) return done();
+
+    resolveTenantKeyForRequest(request as never)
+      .then(async (key) => {
+        await ensureTenantRuntime(key);
+        return key;
+      })
+      // Tenant çözülemezse isteği düşürmek yerine varsayılana dönüyoruz;
+      // tek siteli kurulumda tenants.json hiç olmayabilir.
+      .catch(() => varsayilanTenantKey())
+      .then((key) => {
+        (request as { tenantKey?: string }).tenantKey = key;
+        runWithTenant(key, () => done());
+      })
+      // SON ÇARE: `done()` HER DURUMDA çağrılmalı. Buraya kadar sızan bir
+      // hatada zincir sessizce ölür ve istek zaman aşımına kadar askıda
+      // kalırdı — yanlış tenant'a düşmekten çok daha kötüsü.
+      .catch((error) => {
+        request.log.error({ err: error }, '[tenant] bağlam kurulamadı; varsayılana düşülüyor');
+        done();
+      });
   });
 
   // ─── Global Error Handler ─────────────────────────────────────────────────

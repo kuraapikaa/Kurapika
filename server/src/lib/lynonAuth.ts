@@ -1,6 +1,7 @@
 import { createHash, createHmac } from 'crypto';
-import { config } from '../config.js';
 import { LYNON_SL_TIMEZONE } from './istanbulGunu.js';
+import { currentTenantKey } from './tenantContext.js';
+import { lynonCfg } from './tenantRuntimeConfig.js';
 
 type JsonValue = unknown;
 
@@ -115,8 +116,20 @@ interface LynonSession {
   redirectTrace?: Array<{ status: number; host: string; path: string; hasLocation: boolean; setCookie: boolean }>;
 }
 
-let activeSession: LynonSession | null = null;
-let loginPromise: Promise<LynonSession> | null = null;
+/**
+ * TENANT BAŞINA OTURUM.
+ *
+ * Burada eskiden TEK bir `activeSession` vardı. Her alt site kendi
+ * backoffice'ine kendi panel kullanıcısıyla bağlandığı için tek çerez
+ * kavanozu paylaşmak yalnızca yanlış değil, tehlikeliydi: A sitesi için
+ * açılan oturumla B sitesinin oyuncularına bonus yazılabilirdi.
+ *
+ * Oturumlar ve devam eden giriş sözleri tenant anahtarına göre ayrı
+ * tutuluyor; `runWithTenant` ile kurulan bağlam hangi kavanozun
+ * kullanılacağını belirliyor.
+ */
+const sessions = new Map<string, LynonSession>();
+const loginPromises = new Map<string, Promise<LynonSession>>();
 
 interface TotpOptions {
   algorithm: 'sha1' | 'sha256' | 'sha512';
@@ -193,13 +206,12 @@ function originOf(url: string): string {
  * dilimde calisan bir site icin).
  */
 export function siteHeaders(): Record<string, string> {
-  const ofset = process.env.LYNON_TIMEZONE_OFFSET?.trim();
-  const dilim = ofset && ofset !== '' && Number.isFinite(Number(ofset))
-    ? Number(ofset)
-    : LYNON_SL_TIMEZONE;
+  const cfg = lynonCfg();
+  // Site kimliği ve dilim artık tenant'ın kendi bağlantı kaydından gelir;
+  // `LYNON_TIMEZONE_OFFSET` yalnızca kayıtta değer yoksa devreye girer.
   return {
-    'sl-id': String(config.lynon.siteId),
-    'sl-timezone': String(dilim),
+    'sl-id': String(cfg.siteId),
+    'sl-timezone': String(cfg.timezoneOffset ?? LYNON_SL_TIMEZONE),
   };
 }
 
@@ -227,7 +239,7 @@ async function discoverReturnUrl(jar: CookieJar): Promise<string> {
   const explicit = String(process.env.LYNON_RETURN_URL || '').trim();
   if (explicit) return explicit;
 
-  let currentUrl = config.lynon.backofficeBaseUrl;
+  let currentUrl = lynonCfg().backofficeBaseUrl;
   for (let i = 0; i < 8; i++) {
     const response = await fetch(currentUrl, {
       method: 'GET',
@@ -247,7 +259,7 @@ async function discoverReturnUrl(jar: CookieJar): Promise<string> {
     currentUrl = nextUrl;
   }
 
-  return config.lynon.returnUrl;
+  return lynonCfg().returnUrl;
 }
 
 async function completeBackofficeRedirect(returnUrl: string, jar: CookieJar): Promise<LynonSession['redirectTrace']> {
@@ -256,7 +268,7 @@ async function completeBackofficeRedirect(returnUrl: string, jar: CookieJar): Pr
 
   let currentUrl = returnUrl.startsWith('http')
     ? returnUrl
-    : `${config.lynon.idBaseUrl.replace(/\/$/, '')}/${returnUrl.replace(/^\//, '')}`;
+    : `${lynonCfg().idBaseUrl.replace(/\/$/, '')}/${returnUrl.replace(/^\//, '')}`;
   let method: 'GET' | 'POST' = 'GET';
   let formBody: URLSearchParams | null = null;
   let formSubmitFromUrl: string | null = null;
@@ -353,8 +365,8 @@ function extractHtmlForm(html: string, baseUrl: string): { action: string; metho
 }
 
 function stableDeviceFingerprint(): string {
-  if (config.lynon.deviceFingerprint) return config.lynon.deviceFingerprint.slice(0, 32);
-  const seed = `${config.lynon.username || 'panel'}:${config.lynon.siteId}:${config.lynon.backofficeBaseUrl}`;
+  if (lynonCfg().deviceFingerprint) return lynonCfg().deviceFingerprint.slice(0, 32);
+  const seed = `${lynonCfg().username || 'panel'}:${lynonCfg().siteId}:${lynonCfg().backofficeBaseUrl}`;
   return createHash('md5').update(seed).digest('hex');
 }
 
@@ -368,9 +380,9 @@ function normalizeTotpAlgorithm(value: string | undefined): TotpOptions['algorit
 function parseTotpSecret(secret: string): ParsedTotpSecret {
   const trimmed = secret.trim();
   const fallback: TotpOptions = {
-    algorithm: normalizeTotpAlgorithm(config.lynon.otpAlgorithm),
-    digits: Math.max(4, Math.min(10, Number(config.lynon.otpDigits) || 6)),
-    periodSeconds: Math.max(10, Number(config.lynon.otpPeriodSeconds) || 30),
+    algorithm: normalizeTotpAlgorithm(lynonCfg().otpAlgorithm),
+    digits: Math.max(4, Math.min(10, Number(lynonCfg().otpDigits) || 6)),
+    periodSeconds: Math.max(10, Number(lynonCfg().otpPeriodSeconds) || 30),
   };
 
   if (!trimmed.toLowerCase().startsWith('otpauth://')) {
@@ -382,9 +394,9 @@ function parseTotpSecret(secret: string): ParsedTotpSecret {
     return {
       secret: url.searchParams.get('secret') ?? trimmed,
       options: {
-        algorithm: normalizeTotpAlgorithm(url.searchParams.get('algorithm') ?? config.lynon.otpAlgorithm),
-        digits: Math.max(4, Math.min(10, Number(url.searchParams.get('digits') ?? config.lynon.otpDigits) || 6)),
-        periodSeconds: Math.max(10, Number(url.searchParams.get('period') ?? config.lynon.otpPeriodSeconds) || 30),
+        algorithm: normalizeTotpAlgorithm(url.searchParams.get('algorithm') ?? lynonCfg().otpAlgorithm),
+        digits: Math.max(4, Math.min(10, Number(url.searchParams.get('digits') ?? lynonCfg().otpDigits) || 6)),
+        periodSeconds: Math.max(10, Number(url.searchParams.get('period') ?? lynonCfg().otpPeriodSeconds) || 30),
       },
     };
   } catch {
@@ -444,9 +456,9 @@ function hotp(secret: Buffer, counter: number, options: TotpOptions): string {
 }
 
 function currentOtp(nowMs = Date.now()): string {
-  const token = config.lynon.otpToken.trim();
+  const token = lynonCfg().otpToken.trim();
   if (/^\d{6}$/.test(token)) return token;
-  const value = config.lynon.otpSecret.trim();
+  const value = lynonCfg().otpSecret.trim();
   if (/^\d{6}$/.test(value)) return value;
   const { bytes, options } = base32Decode(value);
   return hotp(bytes, Math.floor(nowMs / 1000 / options.periodSeconds), options);
@@ -454,7 +466,7 @@ function currentOtp(nowMs = Date.now()): string {
 
 async function postJson(url: string, body: Record<string, unknown>, jar: CookieJar): Promise<{ status: number; ok: boolean; data: JsonValue; responseDateMs?: number }> {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), config.lynon.timeoutMs);
+  const timeoutId = setTimeout(() => controller.abort(), lynonCfg().timeoutMs);
   try {
     const response = await fetch(url, {
       method: 'POST',
@@ -488,15 +500,20 @@ function assertConfigured(): void {
   }
 }
 
-async function login(): Promise<LynonSession> {
+function oturumuYaz(tenantKey: string, session: LynonSession): LynonSession {
+  sessions.set(tenantKey, session);
+  return session;
+}
+
+async function login(tenantKey: string): Promise<LynonSession> {
   assertConfigured();
 
   const jar = new CookieJar();
-  const credentialsUrl = `${config.lynon.idBaseUrl.replace(/\/$/, '')}/api/v1/twofa/credentials`;
+  const credentialsUrl = `${lynonCfg().idBaseUrl.replace(/\/$/, '')}/api/v1/twofa/credentials`;
   const returnUrl = await discoverReturnUrl(jar);
   const credentials = await postJson(credentialsUrl, {
-    username: config.lynon.username,
-    password: config.lynon.password,
+    username: lynonCfg().username,
+    password: lynonCfg().password,
     returnurl: returnUrl,
     deviceFingerprint: stableDeviceFingerprint(),
   }, jar);
@@ -506,8 +523,7 @@ async function login(): Promise<LynonSession> {
 
   if (credentials.ok && jar.size > 0) {
     const redirectTrace = await completeBackofficeRedirect(returnUrl, jar);
-    activeSession = { jar, authenticatedAt: Date.now(), redirectTrace };
-    return activeSession;
+    return oturumuYaz(tenantKey, { jar, authenticatedAt: Date.now(), redirectTrace });
   }
 
   if (credentials.ok && typeof credentials.data === 'string') {
@@ -524,11 +540,11 @@ async function login(): Promise<LynonSession> {
   }
 
   if (challengeToken) {
-    const otpUrl = `${config.lynon.idBaseUrl.replace(/\/$/, '')}/api/v1/twofa/otp`;
+    const otpUrl = `${lynonCfg().idBaseUrl.replace(/\/$/, '')}/api/v1/twofa/otp`;
     const otp = await postJson(otpUrl, {
       token: challengeToken,
       otp: currentOtp(credentials.responseDateMs ?? Date.now()),
-      trustDevice: config.lynon.trustDevice,
+      trustDevice: lynonCfg().trustDevice,
     }, jar);
 
     if (!otp.ok) {
@@ -540,50 +556,73 @@ async function login(): Promise<LynonSession> {
     const tokenFromObject = String(asRecord(otp.data).token ?? '').trim();
     if (tokenFromObject) sessionToken = tokenFromObject;
     const redirectTrace = await completeBackofficeRedirect(returnUrl, jar);
-    activeSession = { jar, sessionToken, authenticatedAt: Date.now(), redirectTrace };
-    return activeSession;
+    return oturumuYaz(tenantKey, { jar, sessionToken, authenticatedAt: Date.now(), redirectTrace });
   }
 
-  activeSession = { jar, sessionToken, authenticatedAt: Date.now() };
-  return activeSession;
+  return oturumuYaz(tenantKey, { jar, sessionToken, authenticatedAt: Date.now() });
 }
 
 export function isLynonConfigured(): boolean {
-  return Boolean(config.lynon.enabled && config.lynon.username && config.lynon.password && (config.lynon.otpSecret || config.lynon.otpToken));
+  const cfg = lynonCfg();
+  return Boolean(cfg.enabled && cfg.username && cfg.password && (cfg.otpSecret || cfg.otpToken));
 }
 
-export function clearLynonSession(): void {
-  activeSession = null;
-  loginPromise = null;
+/** Tenant belirtilmezse yalnızca İÇİNDE BULUNULAN bağlamın oturumu düşer. */
+export function clearLynonSession(tenantKey?: string): void {
+  if (tenantKey === undefined) {
+    const key = currentTenantKey();
+    sessions.delete(key);
+    loginPromises.delete(key);
+    return;
+  }
+  sessions.delete(tenantKey);
+  loginPromises.delete(tenantKey);
+}
+
+/** Bağlantı bilgileri değişince o tenant'ın açık oturumu geçersizdir. */
+export function clearAllLynonSessions(): void {
+  sessions.clear();
+  loginPromises.clear();
 }
 
 export function getLynonAuthStatus(): Record<string, unknown> {
+  const tenantKey = currentTenantKey();
+  const cfg = lynonCfg(tenantKey);
+  const session = sessions.get(tenantKey) ?? null;
   return {
     configured: isLynonConfigured(),
-    baseUrl: config.lynon.backofficeBaseUrl,
-    siteId: config.lynon.siteId,
-    currency: config.lynon.currency,
-    otpMode: config.lynon.otpToken ? 'token' : config.lynon.otpSecret ? 'secret' : 'missing',
-    authenticated: Boolean(activeSession),
-    authenticatedAt: activeSession ? new Date(activeSession.authenticatedAt).toISOString() : null,
-    cookieCount: activeSession?.jar.size ?? 0,
-    cookieNames: activeSession?.jar.names() ?? [],
-    cookieScopes: activeSession?.jar.scopes() ?? [],
-    redirectTrace: activeSession?.redirectTrace ?? [],
+    tenantKey,
+    baseUrl: cfg.backofficeBaseUrl,
+    siteId: cfg.siteId,
+    currency: cfg.currency,
+    otpMode: cfg.otpToken ? 'token' : cfg.otpSecret ? 'secret' : 'missing',
+    authenticated: Boolean(session),
+    authenticatedAt: session ? new Date(session.authenticatedAt).toISOString() : null,
+    cookieCount: session?.jar.size ?? 0,
+    cookieNames: session?.jar.names() ?? [],
+    cookieScopes: session?.jar.scopes() ?? [],
+    redirectTrace: session?.redirectTrace ?? [],
+    /** Açık oturumu olan diğer siteler; teşhis için. */
+    aktifOturumlar: [...sessions.keys()],
   };
 }
 
 export async function ensureLynonSession(): Promise<LynonSession> {
-  const ttl = Math.max(config.lynon.sessionTtlMs, 60_000);
-  if (activeSession && Date.now() - activeSession.authenticatedAt < ttl) {
-    return activeSession;
+  const tenantKey = currentTenantKey();
+  const ttl = Math.max(lynonCfg(tenantKey).sessionTtlMs, 60_000);
+  const mevcut = sessions.get(tenantKey);
+  if (mevcut && Date.now() - mevcut.authenticatedAt < ttl) {
+    return mevcut;
   }
-  if (!loginPromise) {
-    loginPromise = login().finally(() => {
-      loginPromise = null;
+
+  let bekleyen = loginPromises.get(tenantKey);
+  if (!bekleyen) {
+    bekleyen = login(tenantKey).finally(() => {
+      loginPromises.delete(tenantKey);
     });
+    loginPromises.set(tenantKey, bekleyen);
   }
-  return loginPromise;
+  return bekleyen;
 }
 
 export interface LynonRequestOptions {
@@ -597,7 +636,7 @@ export interface LynonRequestOptions {
 function buildUrl(path: string, query?: LynonRequestOptions['query']): string {
   const url = path.startsWith('http')
     ? new URL(path)
-    : new URL(`${config.lynon.backofficeBaseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`);
+    : new URL(`${lynonCfg().backofficeBaseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`);
 
   if (query) {
     for (const [key, value] of Object.entries(query)) {
@@ -614,11 +653,11 @@ export async function lynonRequest<T = JsonValue>(path: string, options: LynonRe
   const method = options.method ?? (options.body ? 'POST' : 'GET');
   const url = buildUrl(path, options.query);
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), config.lynon.timeoutMs);
+  const timeoutId = setTimeout(() => controller.abort(), lynonCfg().timeoutMs);
 
   try {
     const headers: Record<string, string> = {
-      ...commonHeaders(config.lynon.backofficeBaseUrl),
+      ...commonHeaders(lynonCfg().backofficeBaseUrl),
       ...options.headers,
       Cookie: session.jar.header(url),
     };

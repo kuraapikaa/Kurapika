@@ -12,12 +12,14 @@ import {
   Lock,
   Pause,
   Play,
+  PlugZap,
   Plus,
   Save,
   Search,
   Server,
   Settings,
   Shield,
+  ShieldAlert,
   Sparkles,
   X,
 } from 'lucide-react';
@@ -45,6 +47,8 @@ export function MasterPanel() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [form, setForm] = useState<TenantForm>(initialForm);
+  /** Bağlantı ayarları açık olan site; null ise kapalı. */
+  const [connectionTenant, setConnectionTenant] = useState<any>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ['master-tenants'],
@@ -248,6 +252,7 @@ export function MasterPanel() {
               key={tenant.id}
               tenant={tenant}
               onEdit={() => handleEdit(tenant)}
+              onConnection={() => setConnectionTenant(tenant)}
               onToggle={() => updateMutation.mutate({ id: tenant.id, data: { isActive: !tenant.isActive } })}
               isUpdating={updateMutation.isPending}
             />
@@ -262,6 +267,10 @@ export function MasterPanel() {
           )}
         </section>
       </main>
+
+      {connectionTenant && (
+        <ConnectionModal tenant={connectionTenant} onClose={() => setConnectionTenant(null)} />
+      )}
     </div>
   );
 }
@@ -302,7 +311,7 @@ function Field({ label, value, onChange, placeholder, type = 'text' }: { label: 
   );
 }
 
-function TenantCard({ tenant, onEdit, onToggle, isUpdating }: { tenant: any; onEdit: () => void; onToggle: () => void; isUpdating: boolean }) {
+function TenantCard({ tenant, onEdit, onConnection, onToggle, isUpdating }: { tenant: any; onEdit: () => void; onConnection: () => void; onToggle: () => void; isUpdating: boolean }) {
   return (
     <article className="group relative overflow-hidden rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface-2,rgba(242,244,248,0.05))] p-4 transition hover:border-blue-400/20">
       <div className={cn('hidden absolute right-0 top-0 h-36 w-36 rounded-full blur-3xl', tenant.isActive ? 'bg-emerald-400/10' : 'bg-rose-400/10')} />
@@ -349,6 +358,9 @@ function TenantCard({ tenant, onEdit, onToggle, isUpdating }: { tenant: any; onE
         <button onClick={onEdit} className="flex h-8 flex-1 items-center justify-center rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.035] text-[10px] font-bold text-[color:var(--panel-text-dim,#c8cdd5)] transition hover:bg-white/[0.08]">
           <span className="inline-flex items-center gap-2"><Settings size={14} /> Ayarlar</span>
         </button>
+        <button onClick={onConnection} className="flex h-8 flex-1 items-center justify-center rounded-lg border border-cyan-300/20 bg-cyan-300/[0.08] text-[10px] font-bold text-cyan-200 transition hover:bg-cyan-300/[0.14]">
+          <span className="inline-flex items-center gap-2"><PlugZap size={14} /> Bağlantı</span>
+        </button>
         <button
           onClick={onToggle}
           disabled={isUpdating}
@@ -361,6 +373,155 @@ function TenantCard({ tenant, onEdit, onToggle, isUpdating }: { tenant: any; onE
         </button>
       </div>
     </article>
+  );
+}
+
+/**
+ * ALT SİTENİN KENDİ LYNON/BACKOFFICE BAĞLANTISI.
+ *
+ * Boş bırakılan her alan ortam değişkenindeki değere düşer; form bunu
+ * yer tutucularda açıkça söyler. Sır alanları sunucudan MASKELİ gelir ve
+ * boş gönderildiğinde "değiştirme" anlamına gelir — aksi halde forma
+ * dokunmadan kaydet'e basmak sitenin şifresini silerdi.
+ */
+function ConnectionModal({ tenant, onClose }: { tenant: any; onClose: () => void }) {
+  const queryClient = useQueryClient();
+  const [lynon, setLynon] = useState<Record<string, string>>({});
+  const [backoffice, setBackoffice] = useState<Record<string, string>>({});
+  const [testSonucu, setTestSonucu] = useState<{ ok: boolean; message: string } | null>(null);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['master-connection', tenant.id],
+    queryFn: () => masterApi.getConnection(tenant.id),
+  });
+
+  const mevcut = data?.data;
+  const sifrelemeHazir = data?.sifrelemeHazir !== false;
+
+  const kaydet = useMutation({
+    mutationFn: () => masterApi.updateConnection(tenant.id, { lynon, backoffice }),
+    onSuccess: (cevap: any) => {
+      if (cevap?.ok === false) {
+        toast.error(cevap.message || 'Kaydedilemedi');
+        return;
+      }
+      toast.success('Bağlantı bilgileri kaydedildi');
+      setLynon({});
+      setBackoffice({});
+      setTestSonucu(null);
+      queryClient.invalidateQueries({ queryKey: ['master-connection', tenant.id] });
+    },
+    onError: () => toast.error('Kaydedilemedi'),
+  });
+
+  const test = useMutation({
+    mutationFn: () => masterApi.testConnection(tenant.id),
+    onSuccess: (cevap: any) => setTestSonucu({ ok: Boolean(cevap?.ok), message: cevap?.message || '' }),
+    onError: (hata: any) => setTestSonucu({ ok: false, message: hata?.message || 'Bağlantı denenemedi.' }),
+  });
+
+  const alan = (key: string, value: string) => setLynon((current) => ({ ...current, [key]: value }));
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-start justify-center overflow-y-auto bg-black/70 p-4 backdrop-blur-sm">
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative my-8 w-full max-w-3xl rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[#0b1017] p-5"
+      >
+        <div className="mb-4 flex items-start justify-between gap-4">
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-cyan-300/70">Site bağlantısı</p>
+            <h2 className="mt-1 text-lg font-bold tracking-[-0.025em] text-white">{tenant.siteName || tenant.domain}</h2>
+            <p className="mt-1 text-xs font-medium text-[color:var(--panel-muted,#8a919c)]">
+              Boş bırakılan alanlar sunucunun ortam değişkenindeki değeri kullanır.
+            </p>
+          </div>
+          <button onClick={onClose} className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.03] p-2 text-[color:var(--panel-muted,#8a919c)] transition hover:text-white">
+            <X size={18} />
+          </button>
+        </div>
+
+        {!sifrelemeHazir && (
+          <div className="mb-4 rounded-lg border border-amber-300/25 bg-amber-300/[0.08] p-3 text-xs font-semibold text-amber-200">
+            <span className="inline-flex items-center gap-2"><ShieldAlert size={15} /> TENANT_SECRET_KEY tanımlı değil.</span>
+            <p className="mt-1 font-medium text-amber-200/80">
+              Şifre, OTP sırrı ve token alanları şifrelenemediği için kaydedilemez. Adres ve site kimliği gibi sır olmayan alanlar kaydedilebilir.
+            </p>
+          </div>
+        )}
+
+        {isLoading ? (
+          <div className="flex justify-center py-12"><Loader2 size={28} className="animate-spin text-cyan-300" /></div>
+        ) : (
+          <>
+            <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[color:var(--panel-faint,#5c6470)]">Lynon backoffice</p>
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+              <Field label="Backoffice adresi" value={lynon.backofficeBaseUrl ?? ''} onChange={(v) => alan('backofficeBaseUrl', v)} placeholder={mevcut?.lynon?.backofficeBaseUrl || 'ENV değeri'} />
+              <Field label="Kimlik (ID) adresi" value={lynon.idBaseUrl ?? ''} onChange={(v) => alan('idBaseUrl', v)} placeholder={mevcut?.lynon?.idBaseUrl || 'ENV değeri'} />
+              <Field label="Site ID" value={lynon.siteId ?? ''} onChange={(v) => alan('siteId', v)} placeholder={mevcut?.lynon?.siteId ? String(mevcut.lynon.siteId) : 'ENV değeri'} />
+              <Field label="Para birimi" value={lynon.currency ?? ''} onChange={(v) => alan('currency', v)} placeholder={mevcut?.lynon?.currency || 'ENV değeri'} />
+              <Field label="Panel kullanıcısı" value={lynon.username ?? ''} onChange={(v) => alan('username', v)} placeholder={mevcut?.lynon?.username || 'ENV değeri'} />
+              <Field label="Panel şifresi" value={lynon.password ?? ''} onChange={(v) => alan('password', v)} placeholder={mevcut?.lynon?.passwordMask || 'ENV değeri'} type="password" />
+              <Field label="OTP sırrı" value={lynon.otpSecret ?? ''} onChange={(v) => alan('otpSecret', v)} placeholder={mevcut?.lynon?.otpSecretMask || 'ENV değeri'} type="password" />
+              <Field label="OTP token" value={lynon.otpToken ?? ''} onChange={(v) => alan('otpToken', v)} placeholder={mevcut?.lynon?.otpTokenMask || 'ENV değeri'} type="password" />
+              <Field label="Saat dilimi ofseti" value={lynon.timezoneOffset ?? ''} onChange={(v) => alan('timezoneOffset', v)} placeholder={mevcut?.lynon?.timezoneOffset != null ? String(mevcut.lynon.timezoneOffset) : 'ENV değeri'} />
+            </div>
+
+            <p className="mb-2 mt-5 text-[10px] font-semibold uppercase tracking-[0.2em] text-[color:var(--panel-faint,#5c6470)]">Backoffice token</p>
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <Field
+                label="Backoffice token"
+                value={backoffice.authToken ?? ''}
+                onChange={(v) => setBackoffice((c) => ({ ...c, authToken: v }))}
+                placeholder={mevcut?.backoffice?.authTokenMask || 'ENV değeri'}
+                type="password"
+              />
+              <Field
+                label="Dashboard token"
+                value={backoffice.dashboardAuthToken ?? ''}
+                onChange={(v) => setBackoffice((c) => ({ ...c, dashboardAuthToken: v }))}
+                placeholder={mevcut?.backoffice?.dashboardAuthTokenMask || 'ENV değeri'}
+                type="password"
+              />
+            </div>
+
+            {testSonucu && (
+              <div className={cn(
+                'mt-4 rounded-lg border p-3 text-xs font-semibold',
+                testSonucu.ok ? 'border-emerald-300/25 bg-emerald-300/[0.08] text-emerald-200' : 'border-rose-300/25 bg-rose-300/[0.08] text-rose-200'
+              )}>
+                {testSonucu.ok ? 'Bağlantı kuruldu.' : testSonucu.message || 'Bağlantı kurulamadı.'}
+              </div>
+            )}
+
+            <div className="mt-5 flex flex-col-reverse justify-between gap-3 sm:flex-row">
+              <button
+                onClick={() => test.mutate()}
+                disabled={test.isPending}
+                className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.03] px-4 text-xs font-bold text-[color:var(--panel-text-dim,#c8cdd5)] transition hover:bg-white/[0.08] disabled:cursor-wait disabled:opacity-70"
+              >
+                {test.isPending ? <Loader2 size={16} className="animate-spin" /> : <PlugZap size={16} />}
+                {test.isPending ? 'Deneniyor...' : 'Bağlantıyı dene'}
+              </button>
+              <div className="flex gap-3">
+                <button onClick={onClose} className="h-9 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.03] px-4 text-xs font-bold text-[color:var(--panel-muted,#8a919c)] transition hover:text-white">
+                  Kapat
+                </button>
+                <button
+                  onClick={() => kaydet.mutate()}
+                  disabled={kaydet.isPending}
+                  className="inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-blue-400 px-5 text-xs font-bold text-white transition hover:bg-blue-300 disabled:cursor-wait disabled:opacity-70"
+                >
+                  {kaydet.isPending ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                  {kaydet.isPending ? 'Kaydediliyor...' : 'Kaydet'}
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+      </motion.div>
+    </div>
   );
 }
 

@@ -235,6 +235,20 @@ export function assignmentValuesForPromoSpec(spec: PromoSpec): Record<string, un
   return values;
 }
 
+/**
+ * Atama degerleri bir FREESPIN atamasi mi tanimliyor?
+ *
+ * Ayrimin bedeli var: freespin atamasinda para tutari (`BonusMoneyAmount`)
+ * gonderilirse Lynon atamayi reddediyor, oyuncu freespin'i hic almiyor.
+ * `assignmentValuesForPromoSpec` ile ayni dosyada duruyor ki iki kavram
+ * birbirinden ayri evrilmesin.
+ */
+export function freespinAtamasiVar(assignmentValues: Record<string, unknown>): boolean {
+  return ['BetLevel', 'RoundCount', 'Game'].some(
+    (alan) => assignmentValues[alan] !== undefined && assignmentValues[alan] !== null && assignmentValues[alan] !== '',
+  );
+}
+
 export interface RulesConfig {
     PROMO_SPECS: Record<string, PromoSpec>;
     PROMO_TITLE_SPECS: Record<string, PromoSpec>;

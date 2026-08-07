@@ -1,4 +1,4 @@
-import { config } from '../config.js';
+import { lynonCfg } from '../lib/tenantRuntimeConfig.js';
 import { metrikSayisi, netGelir, panoMetrikleri, taninmayanAlanlar } from './lynonPanoMetrikleri.js';
 import { kayipTabani } from './kayipTabaniService.js';
 import { isLynonConfigured, lynonRequest, LynonHttpError, LynonAuthError } from '../lib/lynonAuth.js';
@@ -366,7 +366,7 @@ function reportDateRangeFromBody(body: AnyRecord = {}): { startDate: string; end
   return {
     startDate,
     endDate,
-    currency: firstNonEmpty(body.currency, body.CurrencyId, body.ToCurrencyId, config.lynon.currency),
+    currency: firstNonEmpty(body.currency, body.CurrencyId, body.ToCurrencyId, lynonCfg().currency),
   };
 }
 
@@ -439,7 +439,7 @@ function nullableNumber(value: unknown): number | null {
  * playerFrozenAccount eşleşip yanlış bakiye gösterilir.
  */
 function pickMainAccount(accounts: AnyRecord[]): AnyRecord | undefined {
-  const currency = String(config.lynon.currency).toUpperCase();
+  const currency = String(lynonCfg().currency).toUpperCase();
   const isMain = (account: AnyRecord) => String(account.accountType ?? '').toLowerCase() === 'playeraccount';
   return (
     accounts.find((account) => isMain(account) && String(account.currency ?? '').toUpperCase() === currency) ??
@@ -460,8 +460,8 @@ function mapPlayer(row: AnyRecord): AnyRecord {
     Email: row.email ?? null,
     Phone: firstNonEmpty(row.phoneNumber, row.phone) || null,
     MobilePhone: firstNonEmpty(row.phoneNumber, row.mobilePhone) || null,
-    PartnerName: firstNonEmpty(row.siteName, row.webSiteName, `Site ${row.siteId ?? config.lynon.siteId}`),
-    PartnerId: row.siteId ?? config.lynon.siteId,
+    PartnerName: firstNonEmpty(row.siteName, row.webSiteName, `Site ${row.siteId ?? lynonCfg().siteId}`),
+    PartnerId: row.siteId ?? lynonCfg().siteId,
     Balance: nullableNumber(
       row.balance ??
       row.realBalance ??
@@ -473,7 +473,7 @@ function mapPlayer(row: AnyRecord): AnyRecord {
     LastLoginLocalDate: row.lastLoginDate ?? null,
     CreatedLocalDate: row.registrationDate ?? row.createdAt ?? null,
     IsLocked: boolFromStatus(row.status),
-    CurrencyId: firstNonEmpty(row.preferredCurrency, row.currency, config.lynon.currency),
+    CurrencyId: firstNonEmpty(row.preferredCurrency, row.currency, lynonCfg().currency),
     Status: row.status ?? null,
     ExternalId: String(userId ?? ''),
     Language: row.language ?? null,
@@ -522,7 +522,7 @@ function mapTransaction(row: AnyRecord): AnyRecord {
     ClientLastName: personal.lastname ?? null,
     Amount: amount,
     AmountEUR: amount,
-    CurrencyId: firstNonEmpty(row.currency, row.actualCurrency, row.receivedCurrency, config.lynon.currency),
+    CurrencyId: firstNonEmpty(row.currency, row.actualCurrency, row.receivedCurrency, lynonCfg().currency),
     ExchangedAmount: numberFrom(row.convertedAmount, amount),
     TransactionDate: row.createdAt ?? null,
     CreatedLocal: row.createdAt ?? null,
@@ -590,8 +590,8 @@ function mapBonus(row: AnyRecord, source: 'offer' | 'campaign'): AnyRecord {
     IsFreeBet: isFreeBet,
     SourceType: source === 'campaign' ? 'Campaign' : 'Offer',
     IsAssignable: campaignId != null,
-    Partner: { Id: config.lynon.siteId, Name: `Site ${config.lynon.siteId}` },
-    PartnerId: config.lynon.siteId,
+    Partner: { Id: lynonCfg().siteId, Name: `Site ${lynonCfg().siteId}` },
+    PartnerId: lynonCfg().siteId,
     configurationCurrency: row.configurationCurrency,
   };
 }
@@ -612,7 +612,7 @@ function mapCasinoBet(row: AnyRecord): AnyRecord {
     TypeName: financialMovementTypeNameCaseInsensitive(type) || 'Casino',
     Amount: type.toLowerCase() === 'win' ? 0 : amount,
     WinningAmount: type.toLowerCase() === 'win' ? amount : 0,
-    CurrencyId: firstNonEmpty(round.currency, row.currency, config.lynon.currency),
+    CurrencyId: firstNonEmpty(round.currency, row.currency, lynonCfg().currency),
     StateName: normalizeStatusName(row.state),
     GameName: round.gameName ?? null,
     ProviderName: round.providerName ?? null,
@@ -642,7 +642,7 @@ function mapSportBet(row: AnyRecord): AnyRecord {
     TypeName: 'sport',
     Amount: amount,
     WinningAmount: win,
-    CurrencyId: firstNonEmpty(row.currency, config.lynon.currency),
+    CurrencyId: firstNonEmpty(row.currency, lynonCfg().currency),
     Price: numberFrom(row.price ?? row.odds, 0),
     StateName: normalizeStatusName(status),
     SportName: firstNonEmpty(firstLeg.sport, row.sportName, row.sport, 'Sportbook'),
@@ -736,7 +736,7 @@ export async function lynonSites(): Promise<unknown> {
 }
 
 export async function lynonSite(): Promise<unknown> {
-  return lynonRequest(`/api/partner/api/v1.0/sites/${config.lynon.siteId}`);
+  return lynonRequest(`/api/partner/api/v1.0/sites/${lynonCfg().siteId}`);
 }
 
 export async function lynonDashboardSummary(startDate: string, endDate: string): Promise<AnyRecord> {
@@ -749,8 +749,8 @@ export async function lynonDashboardSummary(startDate: string, endDate: string):
    * yeniden cekmek saf israf). Ayrinti `onbellekOmru` icinde.
    */
   const ttl = araligaGoreTtl(endDate, todayYmd());
-  return cachedLynon(`dashboard-summary:${config.lynon.siteId}:${startDate}:${endDate}:${config.lynon.currency}`, ttl, async () => {
-    const data = recordOf(await lynonRequest(`/api/report/api/v1.0/dashboardData/sites/${config.lynon.siteId}/dashboard/${config.lynon.currency}`, {
+  return cachedLynon(`dashboard-summary:${lynonCfg().siteId}:${startDate}:${endDate}:${lynonCfg().currency}`, ttl, async () => {
+    const data = recordOf(await lynonRequest(`/api/report/api/v1.0/dashboardData/sites/${lynonCfg().siteId}/dashboard/${lynonCfg().currency}`, {
       query: { startDate, endDate },
     }));
 
@@ -809,15 +809,15 @@ export async function lynonDashboardSummary(startDate: string, endDate: string):
       raw: data,
     };
 
-    return { HasError: false, Data: summary, UpdatedAt: new Date().toISOString(), Source: { siteId: config.lynon.siteId, endpoint: 'dashboardData' } };
+    return { HasError: false, Data: summary, UpdatedAt: new Date().toISOString(), Source: { siteId: lynonCfg().siteId, endpoint: 'dashboardData' } };
   });
 }
 
 export async function lynonPartnerProfit(startDate: string, endDate: string): Promise<AnyRecord> {
-  return cachedLynon(`partner-profit:${config.lynon.siteId}:${startDate}:${endDate}:${config.lynon.currency}`, araligaGoreTtl(endDate, todayYmd()), async () => {
+  return cachedLynon(`partner-profit:${lynonCfg().siteId}:${startDate}:${endDate}:${lynonCfg().currency}`, araligaGoreTtl(endDate, todayYmd()), async () => {
     const [summaryResult, gameTypeResult] = await Promise.allSettled([
       lynonDashboardSummary(startDate, endDate),
-      raporGetir(NARCOS_REPORT_IDS.gameType, 'Report By Game Type', { startDate, endDate, currency: config.lynon.currency }),
+      raporGetir(NARCOS_REPORT_IDS.gameType, 'Report By Game Type', { startDate, endDate, currency: lynonCfg().currency }),
     ]);
 
     const summaryData = summaryResult.status === 'fulfilled' ? recordOf(summaryResult.value.Data) : {};
@@ -883,8 +883,8 @@ export async function lynonPartnerProfit(startDate: string, endDate: string): Pr
 }
 
 export async function lynonAffiliateSummary(startDate: string, endDate: string): Promise<AnyRecord> {
-  return cachedLynon(`affiliate-summary:${config.lynon.siteId}:${startDate}:${endDate}:${config.lynon.currency}`, AFFILIATE_CACHE_TTL_MS, async () => {
-    const report = await lynonReportById(NARCOS_REPORT_IDS.playersOverview, { startDate, endDate, currency: config.lynon.currency });
+  return cachedLynon(`affiliate-summary:${lynonCfg().siteId}:${startDate}:${endDate}:${lynonCfg().currency}`, AFFILIATE_CACHE_TTL_MS, async () => {
+    const report = await lynonReportById(NARCOS_REPORT_IDS.playersOverview, { startDate, endDate, currency: lynonCfg().currency });
     const rows = rowsFromReportData(recordOf(report.Data));
     const groups = new Map<string, { players: Set<string>; activePlayers: Set<string>; totalDeposits: number; totalWithdrawals: number; netRevenue: number }>();
 
@@ -923,18 +923,18 @@ export async function lynonAffiliateSummary(startDate: string, endDate: string):
         Objects: objects,
       },
       UpdatedAt: new Date().toISOString(),
-      Source: { reportId: NARCOS_REPORT_IDS.playersOverview, reportName: 'Players Overview Report', siteId: config.lynon.siteId },
+      Source: { reportId: NARCOS_REPORT_IDS.playersOverview, reportName: 'Players Overview Report', siteId: lynonCfg().siteId },
     };
   });
 }
 
 export async function lynonTopCasinoGames(startDate: string, endDate: string, topRecordsCount = 5): Promise<AnyRecord> {
-  return cachedLynon(`top-casino:${config.lynon.siteId}:${startDate}:${endDate}:${topRecordsCount}:${config.lynon.currency}`, araligaGoreTtl(endDate, todayYmd()), async () => {
+  return cachedLynon(`top-casino:${lynonCfg().siteId}:${startDate}:${endDate}:${topRecordsCount}:${lynonCfg().currency}`, araligaGoreTtl(endDate, todayYmd()), async () => {
     const catalog = await lynonReportCatalog();
     const reportMeta = catalog.find((item) => Number(item.id) === 1900)
       ?? catalog.find((item) => String(item.name ?? '').trim().toLowerCase() === 'report by game');
     const resolvedReportId = Number(reportMeta?.id ?? NARCOS_REPORT_IDS.game);
-    const report = await lynonReportById(resolvedReportId, { startDate, endDate, currency: config.lynon.currency });
+    const report = await lynonReportById(resolvedReportId, { startDate, endDate, currency: lynonCfg().currency });
     const rows = rowsFromReportData(recordOf(report.Data))
       .filter((row) => !row['Game Type'] || textIncludes(row['Game Type'], 'casino'))
       .map((row, index) => ({
@@ -948,12 +948,12 @@ export async function lynonTopCasinoGames(startDate: string, endDate: string, to
       .sort((a, b) => numberFrom(b.Turnover) - numberFrom(a.Turnover))
       .slice(0, Math.max(1, topRecordsCount));
 
-    return { HasError: false, Data: rows, Source: { viewerReportId: 1900, resolvedReportId, reportName: reportMeta?.name ?? 'Report By Game', siteId: config.lynon.siteId } };
+    return { HasError: false, Data: rows, Source: { viewerReportId: 1900, resolvedReportId, reportName: reportMeta?.name ?? 'Report By Game', siteId: lynonCfg().siteId } };
   });
 }
 
 async function lynonDashboardSportRows(startDate: string, endDate: string): Promise<AnyRecord[]> {
-  return cachedLynon(`dashboard-sport-rows:${config.lynon.siteId}:${startDate}:${endDate}`, araligaGoreTtl(endDate, todayYmd()), async () => {
+  return cachedLynon(`dashboard-sport-rows:${lynonCfg().siteId}:${startDate}:${endDate}`, araligaGoreTtl(endDate, todayYmd()), async () => {
     const from = gunBasi(startDate);
     const to = gunSonu(endDate);
     return (await lynonSportBets({ startDate: from, endDate: to, countPerPage: 500 })).map(mapSportBet);
@@ -1024,7 +1024,7 @@ export async function lynonPlayers(body: AnyRecord = {}): Promise<AnyRecord> {
   const { page, countPerPage } = pageFromBody(body);
   const query = firstNonEmpty(body.query, body.Login, body.ClientLogin, body.UserName, body.Email, body.Id);
   const params: Record<string, string | number | boolean | null | undefined> = {
-    siteId: config.lynon.siteId,
+    siteId: lynonCfg().siteId,
     page,
     countPerPage,
     query: query || undefined,
@@ -1084,7 +1084,7 @@ export async function lynonFindPlayerByLogin(login: string): Promise<AnyRecord |
   return rows.find((row) => {
     const rowLogin = String(row.Login ?? row.userName ?? '').trim().toLocaleLowerCase('tr-TR');
     const rowSiteId = numberFrom(row.siteId ?? row.SiteId, NaN);
-    return rowLogin === normalizedLogin && rowSiteId === Number(config.lynon.siteId);
+    return rowLogin === normalizedLogin && rowSiteId === Number(lynonCfg().siteId);
   }) ?? null;
 }
 
@@ -1132,7 +1132,7 @@ export async function lynonOyuncuKpiSorgula(sorguMetin: string): Promise<OyuncuK
       epostaDogrulandi: typeof r.IsEmailVerified === 'boolean' ? r.IsEmailVerified : null,
       kimlikDogrulandi: typeof r.IsIdentityVerified === 'boolean' ? r.IsIdentityVerified : null,
       kategori: r.CategoryName ?? null,
-      paraBirimi: String(r.CurrencyId ?? config.lynon.currency ?? 'TRY'),
+      paraBirimi: String(r.CurrencyId ?? lynonCfg().currency ?? 'TRY'),
       gercekBakiye: nullableNumber(r.Balance),
       bonusBakiye: nullableNumber(r.BonusBalance),
       toplamBakiye: nullableNumber(r.TotalBalance),
@@ -1170,7 +1170,7 @@ export async function lynonPlayerMainBalance(userId: string | number): Promise<n
 /** Oyuncunun bahis/cekim/yatirim kisitlari. */
 export async function lynonPlayerRestrictions(userId: string | number): Promise<Kisit[]> {
   const yanit = recordOf(
-    await lynonRequest(`/api/limit/api/v1.0/userSettings/userSettings/${config.lynon.siteId}/${userId}/restrictions`),
+    await lynonRequest(`/api/limit/api/v1.0/userSettings/userSettings/${lynonCfg().siteId}/${userId}/restrictions`),
   );
   return arrayOf(yanit.restrictions) as Kisit[];
 }
@@ -1196,7 +1196,7 @@ export async function lynonSetPlayerRestriction(input: {
     throw new LynonHttpError(`Bu akıştan '${restriction}' kısıtı değiştirilemez.`, 422, { restriction });
   }
 
-  const yol = `/api/limit/api/v1.0/userSettings/userSettings/${config.lynon.siteId}/${userId}/restrictions`;
+  const yol = `/api/limit/api/v1.0/userSettings/userSettings/${lynonCfg().siteId}/${userId}/restrictions`;
   const adaylar = kisitGovdeleri(restriction, isRestricted, note);
   let sonHata: unknown = null;
 
@@ -1245,14 +1245,14 @@ export async function lynonAdjustPlayerMainAccount(input: {
     lynonPlayerAccounts(input.playerId),
   ]);
   const player = recordOf(detailResponse.Data);
-  if (Number(player.PartnerId ?? player.siteId) !== Number(config.lynon.siteId)) {
+  if (Number(player.PartnerId ?? player.siteId) !== Number(lynonCfg().siteId)) {
     throw new LynonHttpError('Oyuncu aktif Lynon sitesine ait değil.', 404, { playerId: input.playerId });
   }
 
   const accounts = arrayOf(accountsResponse.Data?.Objects);
   const mainAccount = accounts.find((account) =>
     String(account.accountType ?? '').toLowerCase() === 'playeraccount' &&
-    String(account.currency ?? '').toUpperCase() === String(config.lynon.currency).toUpperCase()
+    String(account.currency ?? '').toUpperCase() === String(lynonCfg().currency).toUpperCase()
   );
   const accountId = Number(mainAccount?.id);
   if (!Number.isFinite(accountId)) {
@@ -1284,7 +1284,7 @@ async function lynonPlayerOverviewMap(): Promise<Map<string, AnyRecord>> {
     return playerOverviewReportCache.value;
   }
 
-  const range = { startDate: yearAgoYmd(), endDate: todayYmd(), currency: config.lynon.currency };
+  const range = { startDate: yearAgoYmd(), endDate: todayYmd(), currency: lynonCfg().currency };
   const value = Promise.all([
     lynonReportById(NARCOS_REPORT_IDS.playersOverview, range),
     lynonReportById(NARCOS_REPORT_IDS.playerBalance, range).catch(() => ({ Data: {} })),
@@ -1328,20 +1328,20 @@ export async function lynonPlayerKpi(userId: string | number): Promise<AnyRecord
   // Oyuncu profilindeki 32 alanlı doğrudan Lynon KPI ucu, rapor tablosundan
   // daha güncel ve son yatırım/çekim tutarlarını da içerir.
   const [directResult, directDetailResult, directAccountsResult] = await Promise.allSettled([
-    lynonRequest(`/api/report/api/v1.0/dashboardData/player/${config.lynon.siteId}/${userId}/dashboard/${config.lynon.currency}`),
+    lynonRequest(`/api/report/api/v1.0/dashboardData/player/${lynonCfg().siteId}/${userId}/dashboard/${lynonCfg().currency}`),
     lynonRequest(`/api/user/api/v1.0/userBackOffice/users/${userId}`),
     lynonRequest(`/api/platform/api/v1.0/BackofficeAccounts/${userId}`),
   ]);
   const direct = directResult.status === 'fulfilled' ? recordOf(directResult.value) : {};
   if (Object.keys(direct).length > 0) {
     const responseSiteId = numberFrom(direct['a.SiteId'] ?? direct.SiteId, NaN);
-    if (Number.isFinite(responseSiteId) && responseSiteId !== Number(config.lynon.siteId)) {
+    if (Number.isFinite(responseSiteId) && responseSiteId !== Number(lynonCfg().siteId)) {
       throw new LynonHttpError('Oyuncu aktif Lynon sitesine ait değil.', 404, { userId });
     }
 
     const detail = directDetailResult.status === 'fulfilled' ? recordOf(directDetailResult.value) : {};
     const detailSiteId = numberFrom(detail.siteId ?? detail.SiteId, NaN);
-    if (Number.isFinite(detailSiteId) && detailSiteId !== Number(config.lynon.siteId)) {
+    if (Number.isFinite(detailSiteId) && detailSiteId !== Number(lynonCfg().siteId)) {
       throw new LynonHttpError('Oyuncu aktif Lynon sitesine ait değil.', 404, { userId });
     }
     const accounts = directAccountsResult.status === 'fulfilled' ? arrayOf(directAccountsResult.value) : [];
@@ -1407,7 +1407,7 @@ export async function lynonPlayerKpi(userId: string | number): Promise<AnyRecord
         BonusPayout: pickAmount(direct, ['BONUS PAYOUT']),
         CashbackBonus: pickAmount(direct, ['CASHBACK BONUS']),
         SportsbookProfileId: null,
-        CurrencyId: firstNonEmpty(direct.Currency, detail.preferredCurrency, config.lynon.currency),
+        CurrencyId: firstNonEmpty(direct.Currency, detail.preferredCurrency, lynonCfg().currency),
         Balance: balance,
         TotalBalance: totalBalance || balance + bonusBalance,
         BonusBalance: bonusBalance,
@@ -1495,7 +1495,7 @@ export async function lynonPlayerKpi(userId: string | number): Promise<AnyRecord
         DepositCount: pickAmount(overview, ['TOTAL DEPOSITS COUNT FILTERED', 'TOTAL DEPOSITS COUNT']),
         WithdrawalCount: pickAmount(overview, ['TOTAL WITHDRAWALS COUNT FILTERED', 'TOTAL WITHDRAWALS COUNT']),
         WithdrawalAmount: withdrawalAmount,
-        CurrencyId: firstNonEmpty(overview.Currency, config.lynon.currency),
+        CurrencyId: firstNonEmpty(overview.Currency, lynonCfg().currency),
         Balance: balance,
         TotalBalance: pickAmount(overview, ['TOTAL BALANCE (TRY)', 'TOTAL BALANCE'], balance + bonusBalance),
         BonusBalance: bonusBalance,
@@ -1539,7 +1539,7 @@ export async function lynonPlayerKpi(userId: string | number): Promise<AnyRecord
       SportProfitness: 0, CasinoProfitness: 0, TotalDeposit: 0, TotalWithdrawal: 0,
       ProfitAndLose: 0, GamingProfitAndLose: 0, DepositAmount: 0, DepositCount: 0,
       WithdrawalCount: 0, WithdrawalAmount: 0,
-      CurrencyId: firstNonEmpty(mainAccount?.currency, detail.preferredCurrency, config.lynon.currency),
+      CurrencyId: firstNonEmpty(mainAccount?.currency, detail.preferredCurrency, lynonCfg().currency),
       Balance: balance, TotalBalance: balance + bonusBalance, BonusBalance: bonusBalance,
       LastLoginIp: detail.lastLoginIp ?? null, LastLoginDate: detail.lastLoginDate ?? null,
       RegistrationDate: detail.registrationDate ?? null, IsTest: false, IsVerified: player.IsVerified,
@@ -1561,7 +1561,7 @@ export async function lynonPaymentTransactions(
         .map((value) => String(value ?? '').trim().toLowerCase())
         .filter(Boolean);
   const payload = {
-    siteId: config.lynon.siteId,
+    siteId: lynonCfg().siteId,
     page,
     countPerPage,
     query: query || null,
@@ -1587,7 +1587,7 @@ export async function lynonPaymentTransactions(
   // oyuncunun yatırımları o pencerede hiç yer almayabilir ve sonuç sessizce boş dönerdi.
   const explicitClientId = nullableNumber(body.ClientId ?? body.clientId ?? body.playerId);
   const rows = explicitClientId != null && explicitClientId > 0
-    ? arrayOf(await lynonRequest(`/api/payment-operations/api/v1.0/backofficeTransactions/users/${explicitClientId}/sites/${config.lynon.siteId}`))
+    ? arrayOf(await lynonRequest(`/api/payment-operations/api/v1.0/backofficeTransactions/users/${explicitClientId}/sites/${lynonCfg().siteId}`))
     // Bazı Lynon kurulumları filtre alanlarını sessizce yok sayıp tüm kayıtları döndürüyor.
     // Bu yüzden aynı filtreleri sunucuda da zorunlu uygula; yatırım/çekim ve tarih asla karışmasın.
     : arrayOf(await lynonRequest('/api/payment-operations/api/v1.0/BackOfficeTransactions', {
@@ -1721,7 +1721,7 @@ export async function lynonClientTransactions(body: AnyRecord = {}): Promise<Any
 
 export async function lynonBonusDefinitions(): Promise<AnyRecord> {
   const [offers, campaigns] = await Promise.allSettled([
-    lynonRequest(`/api/bonusoffer/api/v1.0/offer/${config.lynon.siteId}`, {
+    lynonRequest(`/api/bonusoffer/api/v1.0/offer/${lynonCfg().siteId}`, {
       query: { bonusEngineVersion: 'V2' },
     }),
     lynonCampaigns(1, 500),
@@ -1781,21 +1781,21 @@ export async function lynonBonusDefinitions(): Promise<AnyRecord> {
   };
 }
 export async function lynonBonusRequests(): Promise<AnyRecord> {
-  const rows = arrayOf(await lynonRequest(`/api/bonusOffer/api/v1.0/request/${config.lynon.siteId}`, {
-    query: { bonusEngineVersion: 'V2', siteId: config.lynon.siteId },
+  const rows = arrayOf(await lynonRequest(`/api/bonusOffer/api/v1.0/request/${lynonCfg().siteId}`, {
+    query: { bonusEngineVersion: 'V2', siteId: lynonCfg().siteId },
   }));
   return wrapObjects(rows);
 }
 
 export async function lynonPromoCodes(): Promise<AnyRecord> {
-  const rows = arrayOf(await lynonRequest(`/api/promocodes/api/v1.0/promocodes/get-promocodes/${config.lynon.siteId}`, {
+  const rows = arrayOf(await lynonRequest(`/api/promocodes/api/v1.0/promocodes/get-promocodes/${lynonCfg().siteId}`, {
     query: { page: 1, countPerPage: 50 },
   }));
   return wrapObjects(rows);
 }
 
 export async function lynonActiveWheels(): Promise<AnyRecord> {
-  const data = await lynonRequest(`/api/wheel/api/v1.0/WheelsBackOffice/sites/${config.lynon.siteId}/active-wheels`);
+  const data = await lynonRequest(`/api/wheel/api/v1.0/WheelsBackOffice/sites/${lynonCfg().siteId}/active-wheels`);
   return { HasError: false, Data: data };
 }
 
@@ -1805,13 +1805,13 @@ export async function lynonBonusBlocks(): Promise<AnyRecord> {
 }
 
 export async function lynonPlayerCategories(): Promise<AnyRecord> {
-  const rows = arrayOf(await lynonRequest(`/api/user/api/v1.0/categories/bysite/${config.lynon.siteId}`));
+  const rows = arrayOf(await lynonRequest(`/api/user/api/v1.0/categories/bysite/${lynonCfg().siteId}`));
   return wrapObjects(rows);
 }
 
 export async function lynonKycDocuments(): Promise<AnyRecord> {
   const rows = arrayOf(await lynonRequest('/api/kyc/api/v1.0/documentsVerifications', {
-    query: { siteId: config.lynon.siteId },
+    query: { siteId: lynonCfg().siteId },
   }));
   return wrapObjects(rows);
 }
@@ -1926,7 +1926,7 @@ function mapFinancialMovement(row: AnyRecord): AnyRecord {
     ClientLogin: firstNonEmpty(row.playerUserName, row.playerId),
     Amount: Math.abs(signedAmount),
     AmountEUR: Math.abs(signedAmount),
-    CurrencyId: firstNonEmpty(row.currency, config.lynon.currency),
+    CurrencyId: firstNonEmpty(row.currency, lynonCfg().currency),
     ExchangedAmount: Math.abs(signedAmount),
     TransactionDate: row.date ?? null,
     CreatedLocal: row.date ?? null,
@@ -1988,7 +1988,7 @@ export async function lynonPaymentCounts(): Promise<AnyRecord> {
 }
 
 export async function lynonPaymentMethods(): Promise<AnyRecord> {
-  const rows = arrayOf(await lynonRequest(`/api/payment-integration/api/v1.0/BackOfficePayments/${config.lynon.siteId}/payments`));
+  const rows = arrayOf(await lynonRequest(`/api/payment-integration/api/v1.0/BackOfficePayments/${lynonCfg().siteId}/payments`));
   return wrapObjects(rows);
 }
 
@@ -2022,7 +2022,7 @@ export async function lynonReportCatalog(force = false): Promise<AnyRecord[]> {
   if (!force && reportCatalogCache && Date.now() - reportCatalogCache.ts < REPORT_CACHE_TTL_MS) {
     return reportCatalogCache.data;
   }
-  const data = arrayOf(await lynonRequest(`/api/report/api/v1.0/reportData/site/${config.lynon.siteId}`));
+  const data = arrayOf(await lynonRequest(`/api/report/api/v1.0/reportData/site/${lynonCfg().siteId}`));
   reportCatalogCache = { ts: Date.now(), data };
   return data;
 }
@@ -2071,7 +2071,7 @@ export async function lynonReportByName(
     query: {
       startDate: gunBasi(range.startDate ?? yearAgoYmd()),
       endDate: gunSonu(range.endDate ?? todayYmd()),
-      currency: range.currency ?? config.lynon.currency,
+      currency: range.currency ?? lynonCfg().currency,
     },
   }));
 
@@ -2103,7 +2103,7 @@ export async function lynonReportById(
       startDate: gunBasi(range.startDate ?? yearAgoYmd()),
       endDate: gunSonu(range.endDate ?? todayYmd()),
       'tz-id': '13',
-      currency: range.currency ?? config.lynon.currency,
+      currency: range.currency ?? lynonCfg().currency,
     },
   }));
   return { HasError: false, Data: data, reportId };
@@ -2115,7 +2115,7 @@ export async function lynonOperationalKpi(
 ): Promise<AnyRecord> {
   const startDate = range.startDate ?? yearAgoYmd();
   const endDate = range.endDate ?? todayYmd();
-  const currency = range.currency ?? config.lynon.currency;
+  const currency = range.currency ?? lynonCfg().currency;
   const key = `${startDate}|${endDate}|${currency}`;
   const existing = operationalKpiCache.get(key);
   if (existing && existing.expiresAt > Date.now()) return existing.value;
@@ -2176,7 +2176,7 @@ export async function lynonCasinoOperations(params: {
   const page = params.page ?? 1;
   const countPerPage = params.countPerPage ?? 100;
   if (params.userId != null) {
-    return arrayOf(await lynonRequest(`/api/operation/api/v1.0/backOffices/players/${params.userId}/site/${config.lynon.siteId}`, {
+    return arrayOf(await lynonRequest(`/api/operation/api/v1.0/backOffices/players/${params.userId}/site/${lynonCfg().siteId}`, {
       query: {
         page,
         countPerPage,
@@ -2191,7 +2191,7 @@ export async function lynonCasinoOperations(params: {
       countPerPage,
       startCreateDate: params.startDate ?? gunBasi(todayYmd()),
       endCreateDate: params.endDate ?? gunSonu(todayYmd()),
-      siteId: config.lynon.siteId,
+      siteId: lynonCfg().siteId,
     },
   }));
 }
@@ -2206,7 +2206,7 @@ export async function lynonSportBets(params: {
   const page = params.page ?? 1;
   const countPerPage = params.countPerPage ?? 100;
   if (params.userId != null) {
-    return arrayOf(await lynonRequest(`/api/sportOperation/api/v1.0/sportBetEvent/players/${params.userId}/site/${config.lynon.siteId}`, {
+    return arrayOf(await lynonRequest(`/api/sportOperation/api/v1.0/sportBetEvent/players/${params.userId}/site/${lynonCfg().siteId}`, {
       query: {
         page,
         countPerPage,
@@ -2216,7 +2216,7 @@ export async function lynonSportBets(params: {
     }));
   }
   return arrayOf(await lynonRequest('/api/sportOperation/api/v1.0/sportBetEvent', {
-    query: { page, countPerPage, SiteIds: config.lynon.siteId },
+    query: { page, countPerPage, SiteIds: lynonCfg().siteId },
   }));
 }
 
@@ -2356,13 +2356,13 @@ const BONUS_OTURUM_CACHE_TTL_MS = Number(process.env.BONUS_OTURUM_CACHE_MS) || 3
  */
 export async function bonusOturumlariniTopla(): Promise<{ oturumlar: AnyRecord[]; kirpildi: boolean }> {
   return cachedLynon(
-    `bonus-oturumlari:${config.lynon.siteId}`,
+    `bonus-oturumlari:${lynonCfg().siteId}`,
     BONUS_OTURUM_CACHE_TTL_MS,
     async () => {
       const oturumlar: AnyRecord[] = [];
       for (let sayfa = 1; sayfa <= BONUS_OTURUM_AZAMI_SAYFA; sayfa += 1) {
         const parca = arrayOf(
-          await lynonRequest(`/api/bonusenginev2/api/v1/Report/bonusSessions/site/${config.lynon.siteId}`, {
+          await lynonRequest(`/api/bonusenginev2/api/v1/Report/bonusSessions/site/${lynonCfg().siteId}`, {
             query: { page: sayfa, countPerPage: BONUS_OTURUM_SAYFA },
           }),
         );
@@ -2455,7 +2455,7 @@ export async function lynonClientBonusReport(body: AnyRecord = {}): Promise<AnyR
       /** Suzmeden once elde olan toplam oturum sayisi. */
       ToplamOturum: oturumlar.length,
       Range: range,
-      Kaynak: `bonusSessions/site/${config.lynon.siteId}`,
+      Kaynak: `bonusSessions/site/${lynonCfg().siteId}`,
     },
   };
 }
@@ -2542,7 +2542,7 @@ export async function lynonRegistrationStatsDetails(body: AnyRecord = {}): Promi
       FirstDepositTimeLocal: deposit.first,
       DepositCount: deposit.count,
       DepositAmount: deposit.amount,
-      CurrencyId: player.CurrencyId ?? config.lynon.currency,
+      CurrencyId: player.CurrencyId ?? lynonCfg().currency,
       BTag: player.BTag ?? null,
       raw: player,
     };
@@ -2560,7 +2560,7 @@ export async function lynonClientTurnoverPaging(body: AnyRecord = {}): Promise<A
     BetAmount: pickAmount(row, ['bet_amount_by_currency', 'bet_amount']),
     WinAmount: pickAmount(row, ['won_amount_by_currency', 'won_amount']),
     GGR: pickAmount(row, ['ggr_by_currency', 'ggr']),
-    CurrencyId: firstNonEmpty(row.currency, config.lynon.currency),
+    CurrencyId: firstNonEmpty(row.currency, lynonCfg().currency),
   }));
   return {
     HasError: false,
@@ -2640,7 +2640,7 @@ export async function lynonClientDetailedReport(body: AnyRecord = {}): Promise<A
       BonusWonAmount: sportBonusWin + casinoBonusWin,
       ConvertedBonusAmount: numberFrom(kpi.BonusPayout),
       IsVerified: Boolean(kpi.IsVerified ?? detail.IsVerified),
-      CurrencyId: firstNonEmpty(kpi.CurrencyId, detail.CurrencyId, config.lynon.currency),
+      CurrencyId: firstNonEmpty(kpi.CurrencyId, detail.CurrencyId, lynonCfg().currency),
       Accounts: accounts,
     }],
   };
@@ -2654,8 +2654,8 @@ export async function lynonClientBonuses(body: AnyRecord = {}): Promise<AnyRecor
   // bonus oturumlarını zorunlu olarak okur. Kaynaklardan biri eksikse çağrı hata verir;
   // eksik bonus geçmişiyle yanlış onay üretilemez.
   const [assignmentsPayload, sessionsPayload] = await Promise.all([
-    lynonRequest(`/api/bonusenginev2/api/v1/CampaignAssignment/site/${config.lynon.siteId}/player/${clientId}`),
-    lynonRequest(`/api/bonusenginev2/api/v1/Report/bonusSessions/site/${config.lynon.siteId}`, {
+    lynonRequest(`/api/bonusenginev2/api/v1/CampaignAssignment/site/${lynonCfg().siteId}/player/${clientId}`),
+    lynonRequest(`/api/bonusenginev2/api/v1/Report/bonusSessions/site/${lynonCfg().siteId}`, {
       query: { page: 1, countPerPage: 200, playerId: clientId },
     }),
   ]);
@@ -2686,7 +2686,7 @@ export async function lynonClientBonuses(body: AnyRecord = {}): Promise<AnyRecor
       Amount: numberFrom(session.payout ?? assignment.amount),
       CreatedLocal: session.assignedDate ?? assignment.createdAt ?? null,
       AcceptanceDateLocal: session.claimedDate ?? assignment.claimDate ?? null,
-      ClientCurrency: firstNonEmpty(session.claimedCurrency, assignment.currency, config.lynon.currency),
+      ClientCurrency: firstNonEmpty(session.claimedCurrency, assignment.currency, lynonCfg().currency),
       Note: session.assignmentReason ?? null,
     };
   };
@@ -2759,10 +2759,10 @@ export async function lynonResolveWithdrawal(input: {
  */
 export async function lynonNotTipleri(): Promise<AnyRecord[]> {
   return cachedLynon(
-    `not-tipleri:${config.lynon.siteId}`,
+    `not-tipleri:${lynonCfg().siteId}`,
     30 * 60 * 1000,
     async () => arrayOf(await lynonRequest(
-      `/api/note/api/v1/Types/sites/${config.lynon.siteId}/typeCategories/player`,
+      `/api/note/api/v1/Types/sites/${lynonCfg().siteId}/typeCategories/player`,
     )),
   );
 }
@@ -2770,7 +2770,7 @@ export async function lynonNotTipleri(): Promise<AnyRecord[]> {
 /** Oyuncunun profil notlari. */
 export async function lynonOyuncuNotlari(playerId: number | string): Promise<AnyRecord[]> {
   return arrayOf(await lynonRequest(
-    `/api/note/api/v1/Notes/sites/${config.lynon.siteId}/typeCategories/player`,
+    `/api/note/api/v1/Notes/sites/${lynonCfg().siteId}/typeCategories/player`,
     { query: { identifier: playerId } },
   ));
 }
@@ -2817,7 +2817,7 @@ export async function lynonNotEkle(input: {
 export async function lynonClientNotes(body: AnyRecord = {}): Promise<AnyRecord> {
   const clientId = firstNonEmpty(body.ClientId, body.clientId, body.userId);
   if (!clientId) return { HasError: false, AlertType: 'success', AlertMessage: '', ModelErrors: [], Data: [] };
-  const rows = arrayOf(await lynonRequest(`/api/platform/api/v1.0/CorrectionHistory/sites/${config.lynon.siteId}`, {
+  const rows = arrayOf(await lynonRequest(`/api/platform/api/v1.0/CorrectionHistory/sites/${lynonCfg().siteId}`, {
     query: { page: 1, countPerPage: 200, playerId: clientId },
   }));
   return {
@@ -2840,7 +2840,7 @@ export async function lynonClientsByIp(body: AnyRecord = {}): Promise<AnyRecord>
   const ip = firstNonEmpty(body.LoginIP, body.ip);
   if (!ip) return wrapObjects([]);
   const rows = arrayOf(await lynonRequest('/api/playerDataHub/api/v1.0/playerLogin', {
-    query: { ip, siteId: config.lynon.siteId },
+    query: { ip, siteId: lynonCfg().siteId },
   }));
   return wrapObjects(rows.map((row, index) => ({
     ...row,
@@ -2858,7 +2858,7 @@ export async function lynonClientsByIp(body: AnyRecord = {}): Promise<AnyRecord>
 /** Sitenin kategori merdiveni. Esikler aciklama alaninda yaziyor. */
 export async function lynonKategoriler(): Promise<AnyRecord[]> {
   return arrayOf(await lynonRequest('/api/user/api/v1.0/categories', {
-    query: { page: 1, countPerPage: 100, siteId: config.lynon.siteId },
+    query: { page: 1, countPerPage: 100, siteId: lynonCfg().siteId },
   }));
 }
 
@@ -2930,7 +2930,7 @@ async function mutabakatHesapla(
   const rapor = await raporGetir(NARCOS_REPORT_IDS.integrationPayment, 'Report By Integration Payment', {
     startDate: aralik.startDate,
     endDate: aralik.endDate,
-    currency: config.lynon.currency,
+    currency: lynonCfg().currency,
   });
   const data = recordOf(rapor.Data);
   const raporSatirlari = mutabakatSatirlari(rowsFromReportData(data));
@@ -3016,7 +3016,7 @@ export async function lynonYontemBazindaKasa(body: AnyRecord = {}): Promise<AnyR
   const rapor = await raporGetir(NARCOS_REPORT_IDS.integrationPayment, 'Report By Integration Payment', {
     startDate: baslangic,
     endDate: bitis,
-    currency: config.lynon.currency,
+    currency: lynonCfg().currency,
   });
   const data = recordOf(rapor.Data);
   const raporSatirlari = mutabakatSatirlari(rowsFromReportData(data));
@@ -3062,7 +3062,7 @@ export async function lynonAnlikOyuncuBakiyesi(body: AnyRecord = {}): Promise<An
   const endDate = String(body.endDate ?? gun);
 
   const rapor = await raporGetir(NARCOS_REPORT_IDS.playerBalance, 'Report By Player Balance', {
-    startDate, endDate, currency: config.lynon.currency,
+    startDate, endDate, currency: lynonCfg().currency,
   });
   const data = recordOf(rapor.Data);
   const saat = new Intl.DateTimeFormat('tr-TR', {
@@ -3126,13 +3126,13 @@ const DUZELTME_CACHE_TTL_MS = Number(process.env.DUZELTME_CACHE_MS) || 2 * 60 * 
  */
 export async function manuelDuzeltmeleriTopla(): Promise<{ kayitlar: AnyRecord[]; kirpildi: boolean }> {
   return cachedLynon(
-    `manuel-duzeltmeler:${config.lynon.siteId}`,
+    `manuel-duzeltmeler:${lynonCfg().siteId}`,
     DUZELTME_CACHE_TTL_MS,
     async () => {
       const kayitlar: AnyRecord[] = [];
       for (let sayfa = 1; sayfa <= DUZELTME_AZAMI_SAYFA; sayfa += 1) {
         const parca = arrayOf(
-          await lynonRequest(`/api/platform/api/v1.0/CorrectionHistory/sites/${config.lynon.siteId}`, {
+          await lynonRequest(`/api/platform/api/v1.0/CorrectionHistory/sites/${lynonCfg().siteId}`, {
             query: { page: sayfa, countPerPage: DUZELTME_SAYFA },
           }),
         );
@@ -3192,7 +3192,7 @@ export async function lynonManuelDuzeltmeler(body: AnyRecord = {}): Promise<AnyR
         kirpildi && kapsananEnEskiGun && range.startDate && range.startDate < kapsananEnEskiGun,
       ),
       Range: range,
-      Kaynak: `CorrectionHistory/sites/${config.lynon.siteId}`,
+      Kaynak: `CorrectionHistory/sites/${lynonCfg().siteId}`,
     },
   };
 }
@@ -3217,7 +3217,7 @@ export async function lynonDavranisKategorileriniOlustur(): Promise<AnyRecord> {
   const hatalar: AnyRecord[] = [];
 
   for (const tanim of eksik) {
-    const govde = kategoriOlusturmaGovdesi(tanim, config.lynon.siteId);
+    const govde = kategoriOlusturmaGovdesi(tanim, lynonCfg().siteId);
     try {
       const yanit = await lynonRequest('/api/user/api/v1.0/categories', { method: 'POST', body: govde });
       olusturulan.push({ ad: tanim.name, kimlik: tanim.kimlik, yanit });
@@ -3454,7 +3454,7 @@ async function mergeVerificationDetail(listRow: AnyRecord): Promise<AnyRecord> {
     const detail = recordOf(await lynonRequest(`/api/user/api/v1.0/userBackOffice/users/${listRow.Id}`));
     const detailSiteId = numberFrom(detail.siteId ?? detail.SiteId, NaN);
     // Farklı sitenin kaydı asla tenant sınırını geçmemeli; şüphedeyse liste satırında kal.
-    if (!Number.isFinite(detailSiteId) || detailSiteId !== Number(config.lynon.siteId)) return listRow;
+    if (!Number.isFinite(detailSiteId) || detailSiteId !== Number(lynonCfg().siteId)) return listRow;
     return dogrulamaAlanlariniBirlestir(listRow, mapPlayer(detail));
   } catch {
     return listRow;
@@ -3471,7 +3471,7 @@ export async function lynonBuildBonusEligibilitySnapshot(input: { login?: string
   if (!player && input.playerId != null) {
     const detail = recordOf(await lynonRequest(`/api/user/api/v1.0/userBackOffice/users/${input.playerId}`));
     const detailSiteId = numberFrom(detail.siteId ?? detail.SiteId, NaN);
-    if (!Number.isFinite(detailSiteId) || detailSiteId !== Number(config.lynon.siteId)) {
+    if (!Number.isFinite(detailSiteId) || detailSiteId !== Number(lynonCfg().siteId)) {
       throw new LynonHttpError('Oyuncu aktif Lynon sitesinde bulunamadı.', 404, { playerId: input.playerId });
     }
     player = mapPlayer(detail);
@@ -3485,7 +3485,7 @@ export async function lynonBuildBonusEligibilitySnapshot(input: { login?: string
   if (!player?.Id) throw new LynonHttpError('Oyuncu aktif Lynon sitesinde bulunamadı.', 404, {});
 
   const playerSiteId = numberFrom(player.siteId ?? player.SiteId, NaN);
-  if (!Number.isFinite(playerSiteId) || playerSiteId !== Number(config.lynon.siteId)) {
+  if (!Number.isFinite(playerSiteId) || playerSiteId !== Number(lynonCfg().siteId)) {
     throw new LynonHttpError('Oyuncu aktif Lynon sitesinde bulunamadı.', 404, { playerId: player.Id });
   }
 
@@ -3629,7 +3629,7 @@ export async function lynonBuildBonusEligibilitySnapshot(input: { login?: string
     totalDeposits: numberFrom(kpi.DepositAmount, successfulDeposits.reduce((sum, row) => sum + numberFrom(row.amount), 0)),
     totalWithdrawals: numberFrom(kpi.WithdrawalAmount, withdrawals.filter((row) => String(row.status).toLowerCase() === 'success').reduce((sum, row) => sum + numberFrom(row.amount), 0)),
     balance: numberFrom(kpi.Balance ?? player.Balance),
-    currency: firstNonEmpty(kpi.CurrencyId, player.CurrencyId, config.lynon.currency),
+    currency: firstNonEmpty(kpi.CurrencyId, player.CurrencyId, lynonCfg().currency),
     /**
      * Son yatirim — KIMLIGIYLE birlikte.
      *
@@ -3748,7 +3748,7 @@ export interface LynonCampaignBonusInput {
 }
 
 export async function lynonCampaigns(page = 1, countPerPage = 100): Promise<AnyRecord[]> {
-  const data = await lynonRequest(`/api/bonusenginev2/api/v1/Campaign/site/${config.lynon.siteId}`, {
+  const data = await lynonRequest(`/api/bonusenginev2/api/v1/Campaign/site/${lynonCfg().siteId}`, {
     query: { page, countPerPage },
   });
   return arrayOf(data);
@@ -3767,12 +3767,12 @@ export async function lynonTemplate(templateId: number): Promise<AnyRecord> {
 }
 
 export async function lynonCreateCampaign(input: LynonCampaignInput): Promise<AnyRecord> {
-  return recordOf(await lynonRequest(`/api/bonusenginev2/api/v1/Campaign/site/${config.lynon.siteId}`, {
+  return recordOf(await lynonRequest(`/api/bonusenginev2/api/v1/Campaign/site/${lynonCfg().siteId}`, {
     method: 'POST',
     body: {
       ...input,
-      configurationCurrency: input.configurationCurrency ?? config.lynon.currency,
-      supportedCurrencies: input.supportedCurrencies ?? [config.lynon.currency],
+      configurationCurrency: input.configurationCurrency ?? lynonCfg().currency,
+      supportedCurrencies: input.supportedCurrencies ?? [lynonCfg().currency],
       maxAssigneeCount: input.maxAssigneeCount ?? 999999999,
     },
   }));
@@ -3805,21 +3805,21 @@ export async function lynonArchiveCampaign(campaignId: number): Promise<AnyRecor
 }
 
 export async function lynonAddCampaignBonus(campaignId: number, input: LynonCampaignBonusInput): Promise<AnyRecord> {
-  return recordOf(await lynonRequest(`/api/bonusenginev2/api/v1/Bonus/site/${config.lynon.siteId}/campaign/${campaignId}`, {
+  return recordOf(await lynonRequest(`/api/bonusenginev2/api/v1/Bonus/site/${lynonCfg().siteId}/campaign/${campaignId}`, {
     method: 'POST',
     body: { ...input },
   }));
 }
 
 export async function lynonUpdateCampaignBonus(bonusId: number, input: Partial<LynonCampaignBonusInput>): Promise<AnyRecord> {
-  return recordOf(await lynonRequest(`/api/bonusenginev2/api/v1/Bonus/site/${config.lynon.siteId}/${bonusId}`, {
+  return recordOf(await lynonRequest(`/api/bonusenginev2/api/v1/Bonus/site/${lynonCfg().siteId}/${bonusId}`, {
     method: 'PUT',
     body: { ...input },
   }));
 }
 
 export async function lynonDeleteCampaignBonus(bonusId: number): Promise<AnyRecord> {
-  return recordOf(await lynonRequest(`/api/bonusenginev2/api/v1/Bonus/site/${config.lynon.siteId}/${bonusId}`, { method: 'DELETE' }));
+  return recordOf(await lynonRequest(`/api/bonusenginev2/api/v1/Bonus/site/${lynonCfg().siteId}/${bonusId}`, { method: 'DELETE' }));
 }
 
 function assignmentParamPayload(param: AnyRecord, supplied: unknown): { value: unknown; valueJson: string | null } {
@@ -3888,7 +3888,7 @@ export function buildLynonCampaignAssignmentBody(
     campaignId: input.campaignId,
     assignmentReason: input.assignmentReason ?? 'Narcosbahis bonus talebi',
     bonusBlocksConfiguration,
-    configurationCurrency: input.configurationCurrency ?? config.lynon.currency,
+    configurationCurrency: input.configurationCurrency ?? lynonCfg().currency,
   };
 }
 
@@ -3920,7 +3920,7 @@ export async function lynonAssignCampaignToPlayer(input: LynonCampaignAssignment
   }
 
   return recordOf(await lynonRequest(
-    `/api/bonusenginev2/api/v1/CampaignAssignment/site/${config.lynon.siteId}/player/${input.playerId}`,
+    `/api/bonusenginev2/api/v1/CampaignAssignment/site/${lynonCfg().siteId}/player/${input.playerId}`,
     {
       method: 'POST',
       body: buildLynonCampaignAssignmentBody(input, bonusBlocksConfiguration),
