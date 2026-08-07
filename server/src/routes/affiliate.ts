@@ -18,6 +18,7 @@ import {
 } from '../services/affiliateAccountService.js';
 import { lynonAffiliateSummary } from '../services/lynonBackofficeService.js';
 import { affiliateEntegrasyonDurumu } from '../services/lynonAffiliateEntegrasyon.js';
+import { ortakOzetleri, sonOlculenGun } from '../services/affiliateCrm/cekirdek.js';
 import type { AffiliateUser } from '../types/betconstruct.js';
 import {
   AffiliateOdemeHatasi,
@@ -234,6 +235,40 @@ export async function affiliateRoutes(app: FastifyInstance): Promise<void> {
       return hataYanit(reply, err);
     }
   });
+
+  /**
+   * Ortak başına dönem özeti — KENDİ kayıtlarımızdan.
+   *
+   * `/admin/affiliate/rapor` Lynon'a istek anında gidip o aralığın
+   * özetini alıyor. Bu uç ise günlük olarak biriktirdiğimiz anlık
+   * görüntülerden okuyor: eğilim serisi veriyor, Lynon'u her açılışta
+   * yormuyor ve Lynon geçici olarak erişilemezken de çalışıyor.
+   */
+  app.get<{ Querystring: { start?: string; end?: string; ortak?: string } }>(
+    '/admin/affiliate/olcumler',
+    async (request, reply) => {
+      const tenantKey = await resolveTenantKeyForRequest(request as any);
+      const varsayilan = varsayilanAralik();
+      const start = request.query.start || varsayilan.startDate;
+      const end = request.query.end || varsayilan.endDate;
+      try {
+        const ozetler = await ortakOzetleri(tenantKey, { start, end, ortakAnahtari: request.query.ortak });
+        return reply.send({
+          ok: true,
+          aralik: { start, end },
+          ortaklar: ozetler,
+          sonOlculenGun: await sonOlculenGun(tenantKey),
+          toplam: {
+            yatirim: ozetler.reduce((t, o) => t + o.yatirim, 0),
+            cekim: ozetler.reduce((t, o) => t + o.cekim, 0),
+            ggr: ozetler.reduce((t, o) => t + o.ggr, 0),
+          },
+        });
+      } catch (err) {
+        return hataYanit(reply, err);
+      }
+    },
+  );
 
   app.get('/admin/affiliate/hesaplar', async (request, reply) => {
     const tenantKey = await resolveTenantKeyForRequest(request as any);

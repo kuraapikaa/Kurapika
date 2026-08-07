@@ -334,6 +334,25 @@ export async function registerOyuncuBakiyeJob(): Promise<void> {
   });
 }
 
+/**
+ * Affiliate/CRM günlük anlık görüntüsü (saatte bir, her site için).
+ *
+ * Panel Lynon'dan istek anında özet çekip hiçbir yere yazmıyordu; geçmiş
+ * geriye dönük üretilemediği için eğilim ve kohort soruları hiç
+ * cevaplanamıyordu.
+ */
+export async function registerAffiliateCrmJob(): Promise<void> {
+  const { runAffiliateCrmJob } = await import('./affiliateCrmJob.js');
+  scheduler.register('affiliate-crm', 60 * 60 * 1000, async () => {
+    await herTenantIcin('affiliate-crm', async (tenantKey) => {
+      const sonuc = await runAffiliateCrmJob(tenantKey);
+      if (sonuc && (sonuc.cekilenGun > 0 || sonuc.hatali.length > 0)) {
+        console.log(`[affiliate-crm] ${tenantKey}: ${sonuc.cekilenGun} gün, ${sonuc.yazilanOlcum} ölçüm, ${sonuc.hatali.length} hata`);
+      }
+    });
+  });
+}
+
 /** Ard arda giriş yapmayan sadakat oyuncuları için 2. gün SMS, 3. gün puan silme kontrolü (her 6 saatte bir). */
 export async function registerLoyaltyRetentionJob(): Promise<void> {
   const { runLoyaltyRetentionSweep } = await import('./loyaltyRetentionJob.js');
