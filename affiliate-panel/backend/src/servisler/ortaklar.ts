@@ -45,12 +45,85 @@ export interface Ortak {
   odemeYontemi: string | null;
   odemeDetayi: string | null;
   not: string | null;
+  /** Başvuru formunda verilen yanıtlar. Yönetici kararını buna göre verir. */
+  basvuru: Basvuru;
   createdAt: string;
   updatedAt: string;
 }
 
+/** Trafiğin nasıl geldiği; ödeme riskini belirleyen asıl bilgi. */
+export const PROMOSYON_YONTEMLERI = [
+  'seo', 'ppc', 'sosyal-medya', 'e-posta', 'yayin', 'influencer',
+  'telegram', 'forum', 'uygulama', 'diger',
+] as const;
+export type PromosyonYontemi = (typeof PROMOSYON_YONTEMLERI)[number];
+
+/**
+ * BAŞVURU YANITLARI.
+ *
+ * Hepsi opsiyonel ve serbest — zorunlu kılmak, doldurmayacak ama iyi
+ * olabilecek bir ortağı kapıda kaybetmek olurdu. Ama SORULMASI önemli:
+ * bu alanlar boşsa yönetici "bu trafiği kabul edeyim mi" sorusunu
+ * cevaplayamaz ve karar tamamen sezgiye kalır.
+ *
+ * `aylikOyuncu` ve `aylikTrafik` BEYAN — doğrulanmış değil. Panelde
+ * böyle etiketleniyor; gerçek rakam ilk ay ölçümlerinden geliyor ve
+ * ikisi arasındaki fark, ortağın beyanının ne kadar güvenilir olduğunu
+ * gösteren ilk sinyal.
+ */
+export interface Basvuru {
+  /** Site/kanal adresleri. */
+  kanallar: string[];
+  promosyonYontemleri: PromosyonYontemi[];
+  /** Trafiğin geldiği ülkeler (serbest metin, örn. "TR, AZ, DE"). */
+  ulkeler: string | null;
+  /** Aylık beyan edilen oyuncu sayısı. */
+  aylikOyuncu: number | null;
+  /** Aylık beyan edilen ziyaretçi/tıklama hacmi. */
+  aylikTrafik: number | null;
+  /** Hâlihazırda çalıştığı diğer programlar; referans niteliğinde. */
+  mevcutProgramlar: string | null;
+  /** Tercih ettiği komisyon modeli. */
+  tercihEdilenModel: 'gelir-payi' | 'cpa' | 'hibrit' | null;
+  /** Serbest açıklama. */
+  aciklama: string | null;
+}
+
+export const bosBasvuru = (): Basvuru => ({
+  kanallar: [],
+  promosyonYontemleri: [],
+  ulkeler: null,
+  aylikOyuncu: null,
+  aylikTrafik: null,
+  mevcutProgramlar: null,
+  tercihEdilenModel: null,
+  aciklama: null,
+});
+
 type Depo = { version: 1; ortaklar: Ortak[] };
-const cozDepo = (ham: unknown): Depo => ({ version: 1, ortaklar: diziOku<Ortak>(kayitOku(ham).ortaklar) });
+
+/**
+ * `basvuru` sonradan eklendi; eski kayıtlarda yok ve `.kanallar.map`
+ * gibi bir erişim patlar. Okurken dolduruluyor.
+ */
+const cozOrtak = (ham: unknown): Ortak => {
+  const o = kayitOku(ham) as Partial<Ortak>;
+  const b = kayitOku(o.basvuru) as Partial<Basvuru>;
+  return {
+    ...(o as Ortak),
+    basvuru: {
+      ...bosBasvuru(),
+      ...b,
+      kanallar: diziOku<string>(b.kanallar),
+      promosyonYontemleri: diziOku<PromosyonYontemi>(b.promosyonYontemleri),
+    },
+  };
+};
+
+const cozDepo = (ham: unknown): Depo => ({
+  version: 1,
+  ortaklar: diziOku<unknown>(kayitOku(ham).ortaklar).map(cozOrtak),
+});
 
 export class OrtakHatasi extends Error {
   constructor(message: string, public statusCode = 400) {
@@ -111,6 +184,39 @@ export interface OrtakGirdisi {
   odemeYontemi?: string;
   odemeDetayi?: string;
   not?: string;
+  basvuru?: unknown;
+}
+
+const sayiVeyaNull = (deger: unknown): number | null => {
+  if (deger === undefined || deger === null || deger === '') return null;
+  const n = Number(deger);
+  // Negatif ya da sacma bir beyan kabul edilmiyor ama HATA da vermiyoruz:
+  // basvuru formu bir engel degil, bir bilgi toplama araci. Gecersiz
+  // deger "beyan edilmedi" sayiliyor.
+  return Number.isFinite(n) && n >= 0 ? Math.round(n) : null;
+};
+
+export function basvuruOku(ham: unknown): Basvuru {
+  const b = (ham && typeof ham === 'object' ? ham : {}) as Record<string, unknown>;
+  const model = String(b.tercihEdilenModel ?? '');
+
+  return {
+    kanallar: (Array.isArray(b.kanallar) ? b.kanallar : [])
+      .map(metin)
+      .filter(Boolean)
+      .slice(0, 10),
+    promosyonYontemleri: (Array.isArray(b.promosyonYontemleri) ? b.promosyonYontemleri : [])
+      .map((y) => metin(y))
+      .filter((y): y is PromosyonYontemi => (PROMOSYON_YONTEMLERI as readonly string[]).includes(y)),
+    ulkeler: metin(b.ulkeler).slice(0, 200) || null,
+    aylikOyuncu: sayiVeyaNull(b.aylikOyuncu),
+    aylikTrafik: sayiVeyaNull(b.aylikTrafik),
+    mevcutProgramlar: metin(b.mevcutProgramlar).slice(0, 500) || null,
+    tercihEdilenModel: ['gelir-payi', 'cpa', 'hibrit'].includes(model)
+      ? (model as Basvuru['tercihEdilenModel'])
+      : null,
+    aciklama: metin(b.aciklama).slice(0, 2000) || null,
+  };
 }
 
 export async function ortakOlustur(kiraci: string, girdi: OrtakGirdisi, simdi = new Date()): Promise<Ortak> {
@@ -150,6 +256,7 @@ export async function ortakOlustur(kiraci: string, girdi: OrtakGirdisi, simdi = 
       odemeYontemi: metin(girdi.odemeYontemi) || null,
       odemeDetayi: metin(girdi.odemeDetayi) || null,
       not: metin(girdi.not) || null,
+      basvuru: basvuruOku(girdi.basvuru),
       createdAt: simdi.toISOString(),
       updatedAt: simdi.toISOString(),
     };
@@ -204,6 +311,7 @@ export async function ortakGuncelle(
     if (girdi.odemeYontemi !== undefined) ortak.odemeYontemi = metin(girdi.odemeYontemi) || null;
     if (girdi.odemeDetayi !== undefined) ortak.odemeDetayi = metin(girdi.odemeDetayi) || null;
     if (girdi.not !== undefined) ortak.not = metin(girdi.not) || null;
+    if (girdi.basvuru !== undefined) ortak.basvuru = basvuruOku(girdi.basvuru);
 
     ortak.updatedAt = simdi.toISOString();
     return ortak;

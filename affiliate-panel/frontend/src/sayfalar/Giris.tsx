@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { api } from '../api';
 import { Alan, Buton, Hata, Kart, useTema } from '../ui';
+import { BasvuruFormu } from './Basvuru';
 
 /**
  * GİRİŞ VE BAŞVURU.
@@ -23,9 +24,6 @@ export function Giris({ girisYapildi }: { girisYapildi: () => void }) {
   const [kullanici, setKullanici] = useState('');
   const [parola, setParola] = useState('');
   const [eposta, setEposta] = useState('');
-  const [ad, setAd] = useState('');
-  const [ortakAnahtari, setOrtakAnahtari] = useState('');
-  const [trafikKaynagi, setTrafikKaynagi] = useState('');
 
   const gonder = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -39,10 +37,6 @@ export function Giris({ girisYapildi }: { girisYapildi: () => void }) {
       } else if (sekme === 'ortak') {
         await api.gonder('/api/oturum/ortak', { eposta, parola });
         girisYapildi();
-      } else {
-        await api.gonder('/api/oturum/basvuru', { ad, eposta, parola, ortakAnahtari, trafikKaynagi });
-        setBilgi('Başvurunuz alındı. Onaylandıktan sonra izleme linki üretebileceksiniz.');
-        setSekme('ortak');
       }
     } catch (h) {
       setHata(h instanceof Error ? h.message : 'Bilinmeyen hata.');
@@ -59,7 +53,7 @@ export function Giris({ girisYapildi }: { girisYapildi: () => void }) {
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-3">
+      <div className={`w-full space-y-3 ${sekme === 'basvuru' ? 'max-w-3xl' : 'max-w-md'}`}>
         <div className="flex items-center justify-between">
           <h1 className="text-lg font-semibold">Affiliate Paneli</h1>
           <Buton onClick={temaDegistir}>{koyu ? 'Aydınlık' : 'Karanlık'}</Buton>
@@ -83,44 +77,33 @@ export function Giris({ girisYapildi }: { girisYapildi: () => void }) {
             ))}
           </div>
 
-          <form className="space-y-3" onSubmit={gonder}>
-            {sekme === 'yonetici' && (
-              <Alan etiket="Kullanıcı adı" deger={kullanici} degisti={setKullanici} />
-            )}
-            {sekme === 'basvuru' && (
-              <>
-                <Alan etiket="Ad / Şirket" deger={ad} degisti={setAd} />
-                <Alan
-                  etiket="İstediğiniz izleme anahtarı"
-                  deger={ortakAnahtari}
-                  degisti={setOrtakAnahtari}
-                  ipucu="Harf, rakam, nokta, alt çizgi ve tire. Trafiğiniz bu anahtarla eşleşir."
-                />
-                <Alan etiket="Trafik kaynağı" deger={trafikKaynagi} degisti={setTrafikKaynagi} ipucu="Site adresi, kanal, uygulama…" />
-              </>
-            )}
-            {sekme !== 'yonetici' && (
-              <Alan etiket="E-posta" deger={eposta} degisti={setEposta} tip="email" />
-            )}
-            <Alan
-              etiket="Parola"
-              deger={parola}
-              degisti={setParola}
-              tip="password"
-              ipucu={sekme === 'basvuru' ? 'En az 10 karakter.' : undefined}
+          {bilgi && (
+            <p className="mb-3 rounded-lg border px-3 py-2 text-sm" style={{ color: 'var(--olumlu)', borderColor: 'var(--olumlu)' }}>
+              {bilgi}
+            </p>
+          )}
+
+          {sekme === 'basvuru' ? (
+            <BasvuruFormu
+              tamamlandi={() => {
+                setBilgi('Başvurunuz alındı. Onaylandıktan sonra izleme linki üretebileceksiniz.');
+                setSekme('ortak');
+              }}
             />
+          ) : (
+            <form className="space-y-3" onSubmit={gonder}>
+              {sekme === 'yonetici' ? (
+                <Alan etiket="Kullanıcı adı" deger={kullanici} degisti={setKullanici} />
+              ) : (
+                <Alan etiket="E-posta" deger={eposta} degisti={setEposta} tip="email" />
+              )}
+              <Alan etiket="Parola" deger={parola} degisti={setParola} tip="password" />
 
-            {hata && <Hata mesaj={hata} />}
-            {bilgi && (
-              <p className="rounded-lg border px-3 py-2 text-sm" style={{ color: 'var(--olumlu)', borderColor: 'var(--olumlu)' }}>
-                {bilgi}
-              </p>
-            )}
+              {hata && <Hata mesaj={hata} />}
 
-            <Buton tip="submit" tur="birincil" tam devredisi={gonderiliyor}>
-              {sekme === 'basvuru' ? 'Başvur' : 'Giriş yap'}
-            </Buton>
-          </form>
+              <Buton tip="submit" tur="birincil" tam devredisi={gonderiliyor}>Giriş yap</Buton>
+            </form>
+          )}
         </Kart>
       </div>
     </div>

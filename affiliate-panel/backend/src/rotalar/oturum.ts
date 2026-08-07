@@ -82,6 +82,7 @@ export async function oturumRotalari(app: FastifyInstance): Promise<void> {
       trafikKaynagi: String(govde.trafikKaynagi ?? ''),
       odemeYontemi: String(govde.odemeYontemi ?? ''),
       odemeDetayi: String(govde.odemeDetayi ?? ''),
+      basvuru: govde.basvuru,
       durum: 'bekliyor',
     });
     yanit.status(201);

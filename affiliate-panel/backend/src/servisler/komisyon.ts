@@ -38,12 +38,51 @@ const ALAN = 'komisyon-planlari';
 export type KomisyonTuru = 'gelir-payi' | 'cpa' | 'hibrit';
 export const KOMISYON_TURLERI: KomisyonTuru[] = ['gelir-payi', 'cpa', 'hibrit'];
 
+/**
+ * KADEMELİ GELİR PAYI.
+ *
+ * Sabit tek oran, hacim büyüdükçe ortağı motive etmiyor: 5.000 TL
+ * getiren de 200.000 TL getiren de aynı yüzdeyi alıyor. Sektörde
+ * yaygın olan, gelir arttıkça oranın da artması.
+ *
+ * Kademe yoksa (`gelirKademeleri` boş) plan düz `gelirPayiYuzde` ile
+ * çalışıyor — mevcut planlar aynen geçerli kalsın diye.
+ */
+export interface GelirKademesi {
+  /** Bu kademenin başladığı net gelir eşiği (dahil). İlk kademe 0 olmalı. */
+  esik: number;
+  yuzde: number;
+}
+
+/**
+ * Kademeler nasıl uygulanacak?
+ *
+ * `topluca` — ulaşılan kademenin oranı TÜM tutara uygulanır. Sektörde
+ * yaygın olan bu; ortak için anlaşılır ("bu ay %40'a çıktım") ve
+ * eşiği geçmek için güçlü bir motivasyon.
+ *
+ * `dilimli` — her dilim kendi oranıyla, gelir vergisi gibi. Site için
+ * daha ucuz ve eşiğin bir lira üstünde/altında olmanın yarattığı
+ * uçurumu ortadan kaldırır.
+ *
+ * İkisi de destekleniyor çünkü fark ÖNEMLİ ve sözleşmeden sözleşmeye
+ * değişiyor: 50.000 TL'de %40 eşiği olan bir planda `topluca` 20.000
+ * TL öderken `dilimli` yaklaşık 15.000 TL öder. Varsayılanı seçip
+ * diğerini yok saymak, sözleşmenin yarısını sessizce yanlış
+ * uygulamak olurdu.
+ */
+export type KademeModu = 'topluca' | 'dilimli';
+export const KADEME_MODLARI: KademeModu[] = ['topluca', 'dilimli'];
+
 export interface KomisyonPlani {
   id: string;
   ad: string;
   tur: KomisyonTuru;
-  /** Net gelirin yüzdesi (gelir-payi ve hibrit). */
+  /** Kademe tanımlı değilse kullanılan düz oran. */
   gelirPayiYuzde: number;
+  /** Boşsa düz oran geçerli. Eşiğe göre artan sırada tutulur. */
+  gelirKademeleri: GelirKademesi[];
+  kademeModu: KademeModu;
   /** İlk yatırım başına sabit tutar (cpa ve hibrit). */
   cpaTutari: number;
   /**
@@ -63,7 +102,26 @@ export interface KomisyonPlani {
 }
 
 type Depo = { version: 1; planlar: KomisyonPlani[] };
-const cozDepo = (ham: unknown): Depo => ({ version: 1, planlar: diziOku<KomisyonPlani>(kayitOku(ham).planlar) });
+
+/**
+ * Kademe alanları SONRADAN eklendi. Eski kayıtlarda yoklar ve
+ * `plan.gelirKademeleri.length` gibi bir erişim patlar. Okurken
+ * dolduruyoruz: eski plan, kademesiz (düz oranlı) bir plan olarak
+ * geçerliliğini koruyor.
+ */
+const cozPlan = (ham: unknown): KomisyonPlani => {
+  const p = kayitOku(ham) as Partial<KomisyonPlani>;
+  return {
+    ...(p as KomisyonPlani),
+    gelirKademeleri: diziOku<GelirKademesi>(p.gelirKademeleri),
+    kademeModu: KADEME_MODLARI.includes(p.kademeModu as KademeModu) ? (p.kademeModu as KademeModu) : 'topluca',
+  };
+};
+
+const cozDepo = (ham: unknown): Depo => ({
+  version: 1,
+  planlar: diziOku<unknown>(kayitOku(ham).planlar).map(cozPlan),
+});
 
 export class KomisyonHatasi extends Error {
   constructor(message: string, public statusCode = 400) {
@@ -105,11 +163,47 @@ export interface PlanGirdisi {
   ad?: string;
   tur?: string;
   gelirPayiYuzde?: unknown;
+  gelirKademeleri?: unknown;
+  kademeModu?: unknown;
   cpaTutari?: unknown;
   yonetimGideriYuzde?: unknown;
   asgariOdeme?: unknown;
   negatifDevir?: boolean;
   varsayilan?: boolean;
+}
+
+/**
+ * Kademeleri doğrular ve eşiğe göre sıralar.
+ *
+ * Sıralamayı kaydederken yapıyoruz, hesaplarken değil: hesap her
+ * hakediş turunda çalışıyor ve orada sıralamak hem israf hem de
+ * "sıralamayı unutan bir çağrı" riski. Kayıtta sıralıysa okuyan
+ * herkes sıralı görüyor.
+ */
+function kademeleriOku(ham: unknown): GelirKademesi[] {
+  if (ham === undefined || ham === null) return [];
+  if (!Array.isArray(ham)) throw new KomisyonHatasi('gelirKademeleri bir liste olmalı.');
+  if (!ham.length) return [];
+
+  const kademeler = ham.map((k, i) => {
+    const kayit = (k ?? {}) as { esik?: unknown; yuzde?: unknown };
+    return {
+      esik: tutarOku(kayit.esik, `gelirKademeleri[${i}].esik`),
+      yuzde: yuzdeOku(kayit.yuzde, `gelirKademeleri[${i}].yuzde`),
+    };
+  }).sort((a, b) => a.esik - b.esik);
+
+  // Ilk kademe 0'dan baslamazsa esigin altindaki gelir HICBIR kademeye
+  // dusmez ve ortak dusuk aylarda sifir alir; bu sessiz bir hata olurdu.
+  if (kademeler[0].esik !== 0) {
+    throw new KomisyonHatasi('İlk kademenin eşiği 0 olmalı; aksi halde eşiğin altındaki gelir hesaplanmaz.');
+  }
+  for (let i = 1; i < kademeler.length; i += 1) {
+    if (kademeler[i].esik === kademeler[i - 1].esik) {
+      throw new KomisyonHatasi(`Aynı eşik iki kez tanımlanamaz: ${kademeler[i].esik}`);
+    }
+  }
+  return kademeler;
 }
 
 function planGovdesi(girdi: PlanGirdisi): Omit<KomisyonPlani, 'id' | 'createdAt' | 'updatedAt' | 'varsayilan'> {
@@ -122,11 +216,22 @@ function planGovdesi(girdi: PlanGirdisi): Omit<KomisyonPlani, 'id' | 'createdAt'
 
   const gelirPayiYuzde = yuzdeOku(girdi.gelirPayiYuzde, 'gelirPayiYuzde');
   const cpaTutari = tutarOku(girdi.cpaTutari, 'cpaTutari');
+  const gelirKademeleri = kademeleriOku(girdi.gelirKademeleri);
+  const kademeModu = KADEME_MODLARI.includes(girdi.kademeModu as KademeModu)
+    ? (girdi.kademeModu as KademeModu)
+    : 'topluca';
 
   // Turune gore anlamli olmayan bir plan, ay sonunda sifir hakedis
   // uretir ve sebebi hicbir yerde gorunmez. Kurulumda yakalanmali.
-  if ((tur === 'gelir-payi' || tur === 'hibrit') && gelirPayiYuzde <= 0) {
-    throw new KomisyonHatasi('Gelir payı planında gelirPayiYuzde sıfırdan büyük olmalı.');
+  // Kademe varsa duz oran kullanilmiyor, o yuzden kontrol kademeye kayar.
+  if (tur === 'gelir-payi' || tur === 'hibrit') {
+    if (gelirKademeleri.length) {
+      if (gelirKademeleri.every((k) => k.yuzde <= 0)) {
+        throw new KomisyonHatasi('Kademelerin en az birinde yüzde sıfırdan büyük olmalı.');
+      }
+    } else if (gelirPayiYuzde <= 0) {
+      throw new KomisyonHatasi('Gelir payı planında gelirPayiYuzde sıfırdan büyük olmalı (ya da kademe tanımlayın).');
+    }
   }
   if ((tur === 'cpa' || tur === 'hibrit') && cpaTutari <= 0) {
     throw new KomisyonHatasi('CPA planında cpaTutari sıfırdan büyük olmalı.');
@@ -136,10 +241,67 @@ function planGovdesi(girdi: PlanGirdisi): Omit<KomisyonPlani, 'id' | 'createdAt'
     ad,
     tur,
     gelirPayiYuzde,
+    gelirKademeleri,
+    kademeModu,
     cpaTutari,
     yonetimGideriYuzde: yuzdeOku(girdi.yonetimGideriYuzde, 'yonetimGideriYuzde'),
     asgariOdeme: tutarOku(girdi.asgariOdeme, 'asgariOdeme'),
     negatifDevir: girdi.negatifDevir !== false,
+  };
+}
+
+export interface GelirPayiSonucu {
+  tutar: number;
+  /** Uygulanan efektif oran; panelde "bu ay %38 aldınız" demek için. */
+  efektifYuzde: number;
+  /** `topluca` modda ulaşılan kademe; kademesiz planda `null`. */
+  ulasilanKademe: GelirKademesi | null;
+}
+
+/**
+ * Gelir payını hesaplar; kademeli ya da düz.
+ *
+ * Dışa açık, çünkü panelin "şu kadar daha getirirsen üst kademeye
+ * çıkarsın" gibi bir önizleme yapabilmesi için hakediş kaydından
+ * bağımsız çağrılabilmesi gerekiyor.
+ */
+export function gelirPayiHesapla(plan: KomisyonPlani, taban: number): GelirPayiSonucu {
+  const bos = { tutar: 0, efektifYuzde: 0, ulasilanKademe: null };
+  if (!(taban > 0)) return bos;
+
+  const kademeler = plan.gelirKademeleri ?? [];
+  if (!kademeler.length) {
+    return {
+      tutar: kurusa(taban * (plan.gelirPayiYuzde / 100)),
+      efektifYuzde: plan.gelirPayiYuzde,
+      ulasilanKademe: null,
+    };
+  }
+
+  if (plan.kademeModu === 'dilimli') {
+    let tutar = 0;
+    for (let i = 0; i < kademeler.length; i += 1) {
+      const alt = kademeler[i].esik;
+      if (taban <= alt) break;
+      // Son kademenin ustu sinirsiz.
+      const ust = i + 1 < kademeler.length ? kademeler[i + 1].esik : Infinity;
+      const dilim = Math.min(taban, ust) - alt;
+      if (dilim > 0) tutar += dilim * (kademeler[i].yuzde / 100);
+    }
+    tutar = kurusa(tutar);
+    return {
+      tutar,
+      efektifYuzde: Math.round((tutar / taban) * 10000) / 100,
+      ulasilanKademe: null,
+    };
+  }
+
+  // `topluca`: ulasilan kademenin orani TUM tutara uygulanir.
+  const ulasilan = [...kademeler].reverse().find((k) => taban >= k.esik) ?? kademeler[0];
+  return {
+    tutar: kurusa(taban * (ulasilan.yuzde / 100)),
+    efektifYuzde: ulasilan.yuzde,
+    ulasilanKademe: ulasilan,
   };
 }
 
@@ -216,6 +378,10 @@ export interface Hakedis {
   /** Devreden zarar uygulandıktan sonraki gelir tabanı. */
   hesapTabani: number;
   gelirPayi: number;
+  /** Uygulanan efektif oran; kademeli planda "bu ay %40'a çıktım" bilgisi. */
+  gelirPayiYuzdesi: number;
+  /** `topluca` kademeli planda ulaşılan kademe; yoksa `null`. */
+  ulasilanKademe: GelirKademesi | null;
   cpaPayi: number;
   /** CPA bileşeni ölçülemediyse dolu; panelde sebep olarak gösterilir. */
   cpaHesaplanamadiSebebi: string | null;
@@ -248,9 +414,10 @@ export function hakedisHesapla(plan: KomisyonPlani, girdi: HakedisGirdisi): Hake
   const gelirPayliMi = plan.tur === 'gelir-payi' || plan.tur === 'hibrit';
   const cpaliMi = plan.tur === 'cpa' || plan.tur === 'hibrit';
 
-  const gelirPayi = gelirPayliMi && hesapTabani > 0
-    ? kurusa(hesapTabani * (plan.gelirPayiYuzde / 100))
-    : 0;
+  const gelirSonucu = gelirPayliMi
+    ? gelirPayiHesapla(plan, hesapTabani)
+    : { tutar: 0, efektifYuzde: 0, ulasilanKademe: null };
+  const gelirPayi = gelirSonucu.tutar;
 
   let cpaPayi = 0;
   let cpaHesaplanamadiSebebi: string | null = null;
@@ -272,6 +439,8 @@ export function hakedisHesapla(plan: KomisyonPlani, girdi: HakedisGirdisi): Hake
     netGelir,
     hesapTabani,
     gelirPayi,
+    gelirPayiYuzdesi: gelirSonucu.efektifYuzde,
+    ulasilanKademe: gelirSonucu.ulasilanKademe,
     cpaPayi,
     cpaHesaplanamadiSebebi,
     toplam,
