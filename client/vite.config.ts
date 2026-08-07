@@ -14,13 +14,11 @@ export default defineConfig({
     sourcemap: false,
     reportCompressedSize: false,
     rollupOptions: {
-      // Iki ayri giris: ana uygulama ve ortak paneli.
-      //
-      // Ortak, yonetim panelinin JS'ini indirmemeli; ayni pakette olsalardi
-      // admin ekranlarinin kodu ortagin tarayicisina da inerdi.
+      // Tek giris kaldi. Ortak paneli ayri bir giristi (ortak.html) ama
+      // ortaklik Bugs Affiliate'e tasindi; /ortak.html artik sunucuda yeni
+      // panele yonlendiriliyor.
       input: {
         main: resolve(__dirname, 'index.html'),
-        ortak: resolve(__dirname, 'ortak.html'),
       },
       output: {
         /**

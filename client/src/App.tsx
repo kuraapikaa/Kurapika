@@ -310,7 +310,10 @@ const NAV_GROUPS: Array<{ label: string; items: SidebarItem[] }> = [
       { id: 'riskAnalizi', label: 'Risk analizi', path: '/risk-analizi', icon: ShieldAlert },
       { id: 'oyuncuKategorileme', label: 'Otomatik kategori', path: '/oyuncu-kategorileme', icon: Layers },
       { id: 'userSystem', label: 'Kullanıcı sistemi', path: '/admin/kullanici-sistemi', icon: UserCog },
-      { id: 'affiliate', label: 'Affiliate merkezi', path: '/affiliate', icon: Handshake },
+      // "Affiliate merkezi" idi. Ortaklik yonetimi Bugs Affiliate'e tasindi;
+      // eski ad, iki ayri affiliate arayuzunden hangisinin guncel oldugunu
+      // belirsiz birakiyordu. Burada kalan sey Lynon'un BTag raporu.
+      { id: 'affiliate', label: 'BTag performansı', path: '/affiliate', icon: Handshake },
     ],
   },
   {
