@@ -17,6 +17,7 @@ import {
   type AffiliateHesapGorunum,
 } from '../services/affiliateAccountService.js';
 import { lynonAffiliateSummary } from '../services/lynonBackofficeService.js';
+import { affiliateEntegrasyonDurumu } from '../services/lynonAffiliateEntegrasyon.js';
 import type { AffiliateUser } from '../types/betconstruct.js';
 import {
   AffiliateOdemeHatasi,
@@ -207,6 +208,32 @@ export async function affiliateRoutes(app: FastifyInstance): Promise<void> {
   );
 
   // ─── Admin: ortak hesaplari ────────────────────────────────────────────────
+
+  /**
+   * Lynon'un third-party affiliate katalogu ve bizim entegrasyonumuzun
+   * hazırlık durumu.
+   *
+   * Lynon backoffice'i `/websites/{siteId}/third-party-integrations/
+   * affiliates` ekranında sitenin bağlanabileceği harici affiliate
+   * sistemlerini listeliyor. Panel bunu okuyup hangi tipin bizim
+   * entegrasyonumuzla aynı şekle sahip olduğunu ve hangi alanların
+   * hazır olduğunu gösteriyor.
+   */
+  app.get('/admin/affiliate/lynon-entegrasyon', async (request, reply) => {
+    if (adminKullanici(request)?.role !== 'admin') {
+      return reply.status(403).send({ ok: false, message: 'Yetkisiz' });
+    }
+    try {
+      // Postback adresini panelin kendi genel adresinden üretiyoruz;
+      // Lynon'a elle yazılan bir adres yanlış siteye gidebilirdi.
+      const proto = String(request.headers['x-forwarded-proto'] ?? 'https').split(',')[0];
+      const host = String(request.headers['x-forwarded-host'] ?? request.headers.host ?? '').split(',')[0];
+      const durum = await affiliateEntegrasyonDurumu(`${proto}://${host}`);
+      return reply.send({ ok: true, ...durum });
+    } catch (err) {
+      return hataYanit(reply, err);
+    }
+  });
 
   app.get('/admin/affiliate/hesaplar', async (request, reply) => {
     const tenantKey = await resolveTenantKeyForRequest(request as any);
