@@ -13,6 +13,20 @@
       "runtimeArgs": ["--no-install", "vite", "--port", "5174", "--strictPort"],
       "cwd": "client",
       "port": 5174
+    },
+    {
+      "name": "affiliate-panel",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["--no-install", "tsx", "watch", "src/index.ts"],
+      "cwd": "affiliate-panel/backend",
+      "port": 4100
+    },
+    {
+      "name": "affiliate-panel-arayuz",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["--no-install", "vite", "--port", "5175", "--strictPort"],
+      "cwd": "affiliate-panel/frontend",
+      "port": 5175
     }
   ]
 }
