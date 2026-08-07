@@ -53,6 +53,7 @@ import { maybeSendDemoMock } from './lib/demoMockData.js';
 import { dashboardRoutes } from './routes/dashboard.js';
 import { gamesRoutes } from './routes/games.js';
 import { affiliateRoutes } from './routes/affiliate.js';
+import { affiliateYonlendirmeleriKur } from './lib/affiliateYonlendirme.js';
 import { bugscrmRoutes } from './routes/bugscrm.js';
 import { formsRoutes } from './routes/forms.js';
 import { masterRoutes } from './routes/master.js';
@@ -198,9 +199,9 @@ if (isProduction) {
     return hashli ? 'public, max-age=31536000, immutable' : 'public, max-age=3600';
   };
 
-  // Ortak paneli ayri bir Vite girisi (/ortak.html). Eskiden SPA icinde
-  // /ortak-paneli rotasiydi; disariya verilmis baglantilar kirilmasin.
-  app.get('/ortak-paneli', async (_request, reply) => reply.redirect('/ortak.html', 301));
+  // Ortaklik ayri bir urune tasindi; eski adresler yeni panele gidiyor.
+  // Gerekce ve test edilebilirlik icin bkz. lib/affiliateYonlendirme.ts
+  affiliateYonlendirmeleriKur(app);
 
   app.get('*', async (request, reply) => {
     const pathname = request.url?.split('?')[0] ?? '/';
