@@ -13,6 +13,7 @@ import { altOrtaklar } from '../servisler/kademeler.js';
 import { altParametreleriTemizle } from '../servisler/izleme.js';
 import { medyaIzlemeLinki, medyalariListele } from '../servisler/medya.js';
 import { ortakOzetleri } from '../servisler/olcum.js';
+import { ftdDurumu } from '../servisler/ilkYatirim.js';
 import { ortakBul, onayZorunlu } from '../servisler/ortaklar.js';
 import { postbackAyarla, postbackAyarlari, postbackKayitlari } from '../servisler/postback.js';
 import { tiklamalariListele, tiklamaOzeti } from '../servisler/tiklama.js';
@@ -76,6 +77,10 @@ export async function portalRotalari(app: FastifyInstance): Promise<void> {
         gunlukGgr: [],
       },
       altOrtaklar: await altOrtaklar(istek.kiraci, oturum.ortakAnahtari!),
+      // FTD `null` iken sebebi ONEMLI: "hic olculemez" ile "kalibrasyon
+      // suruyor" ortak icin cok farkli seyler. Panel dogru olani
+      // soyleyebilsin diye durum da donuyor.
+      ftd: await ftdDurumu(istek.kiraci),
     };
   });
 

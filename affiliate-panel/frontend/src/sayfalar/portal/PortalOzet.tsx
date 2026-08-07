@@ -1,6 +1,6 @@
 import { paraBicimi, useVeri } from '../../api';
 import { CubukListesi, OlcuKarti, ZamanSerisi } from '../../grafik';
-import { Bos, Hata, Kart, Rozet, Yukleniyor } from '../../ui';
+import { Hata, Kart, Rozet, Yukleniyor } from '../../ui';
 
 interface Ozet {
   ortakAnahtari: string;
@@ -50,7 +50,12 @@ function degisimYuzdesi(seri: number[]): number | null {
 
 export function PortalOzet() {
   const ben = useVeri<Ben>('/api/portal/ben');
-  const ozet = useVeri<{ aralik: { start: string; end: string }; ozet: Ozet; altOrtaklar: string[] }>('/api/portal/ozet');
+  const ozet = useVeri<{
+    aralik: { start: string; end: string };
+    ozet: Ozet;
+    altOrtaklar: string[];
+    ftd: { olculuyorMu: boolean; olcumBaslangici: string | null };
+  }>('/api/portal/ozet');
   const tiklama = useVeri<{ ozet: TiklamaOzeti | null }>('/api/portal/tiklamalar');
   const linkler = useVeri<{ linkler: AltLink[] }>('/api/portal/alt-linkler');
 
@@ -108,16 +113,24 @@ export function PortalOzet() {
         />
       </div>
 
+      {/* Veri yokken 200 piksellik bos bir kutu ekranin yarisini
+          kapliyor ve hicbir sey soylemiyor. Grafik yalnizca cizilecek
+          bir sey varken gosteriliyor. */}
+      {seri.length > 0 && (
       <Kart baslik="Günlük GGR">
         <ZamanSerisi noktalar={seri} bosMesaj="Bu dönemde ölçüm yok." />
         {o?.ftdSayisi === null && (
           <p className="mt-3 text-xs" style={{ color: 'var(--metin-2)' }}>
-            İlk yatırım (FTD) sayısı bu bağlantıdan ölçülemiyor; CPA bileşeni olan planlarda bu
-            kalem hakedişte ayrıca işaretlenir.
+            {ozet.veri?.ftd.olculuyorMu
+              ? 'Bu dönemde ilk yatırım kaydı yok.'
+              : 'İlk yatırım (FTD) ölçümü kalibrasyon aşamasında; geçmiş günler referans olarak' +
+                ' işleniyor. Ölçüm başlayınca bu kalem burada görünecek.'}
           </p>
         )}
       </Kart>
+      )}
 
+      {Boolean(t?.toplam) && (
       <div className="grid gap-3 lg:grid-cols-2">
         <Kart baslik="Alt kanal kırılımı">
           <CubukListesi
@@ -141,6 +154,7 @@ export function PortalOzet() {
           />
         </Kart>
       </div>
+      )}
 
       {(ozet.veri?.altOrtaklar ?? []).length > 0 && (
         <Kart baslik="Getirdiğiniz ortaklar">
@@ -154,7 +168,43 @@ export function PortalOzet() {
       )}
 
       {!o?.gunSayisi && !t?.toplam && (
-        <Kart><Bos mesaj="Henüz veri yok. Alt link oluşturup paylaşmaya başlayın." /></Kart>
+        <Kart baslik="Buradan başlayın">
+          <ol className="space-y-3">
+            {[
+              {
+                b: 'Hesabınızın onaylanmasını bekleyin',
+                m: 'Onaydan önce izleme linki üretilemez; onaysız gönderilen trafiğin hakedişi hesaplanmaz.',
+                tamam: ben.veri?.durum === 'onaylandi',
+              },
+              {
+                b: 'Alt link oluşturun',
+                m: 'Kampanya başına ayrı link kurun; hangi kanalın çalıştığını tek tek görürsünüz.',
+                tamam: false,
+              },
+              {
+                b: 'Paylaşın ve bekleyin',
+                m: 'Rakamlar günlük güncellenir. İlk tıklamadan sonra bu ekran dolmaya başlar.',
+                tamam: false,
+              },
+            ].map((adim, i) => (
+              <li key={adim.b} className="flex gap-3">
+                <span
+                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold"
+                  style={{
+                    background: adim.tamam ? 'var(--olumlu)' : 'var(--yuzey-2)',
+                    color: adim.tamam ? '#fff' : 'var(--metin-2)',
+                  }}
+                >
+                  {adim.tamam ? '✓' : i + 1}
+                </span>
+                <div>
+                  <p className="text-sm font-medium">{adim.b}</p>
+                  <p className="text-sm" style={{ color: 'var(--metin-2)' }}>{adim.m}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </Kart>
       )}
     </>
   );
