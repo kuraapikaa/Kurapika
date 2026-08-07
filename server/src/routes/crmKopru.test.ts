@@ -11,12 +11,14 @@ const lynonOyuncuKpiSorgula = vi.fn();
 const lynonCreditPlayerMainAccount = vi.fn();
 const lynonBonusDefinitions = vi.fn();
 const lynonPaymentTransactions = vi.fn();
+const lynonPlayerDetail = vi.fn();
 
 vi.mock('../services/lynonBackofficeService.js', () => ({
   lynonOyuncuKpiSorgula: (...a: unknown[]) => lynonOyuncuKpiSorgula(...a),
   lynonCreditPlayerMainAccount: (...a: unknown[]) => lynonCreditPlayerMainAccount(...a),
   lynonBonusDefinitions: (...a: unknown[]) => lynonBonusDefinitions(...a),
   lynonPaymentTransactions: (...a: unknown[]) => lynonPaymentTransactions(...a),
+  lynonPlayerDetail: (...a: unknown[]) => lynonPlayerDetail(...a),
   lynonErrorResponse: () => ({ status: 502, body: { error: 'lynon' } }),
 }));
 
@@ -253,5 +255,68 @@ describe('hesap yaniti', () => {
 
     expect(res.statusCode).toBe(200);
     expect(res.json().account.phone).toBe('05369824414');
+  });
+});
+
+describe('oyuncu detayi', () => {
+  const OZET = {
+    durum: 'bulundu',
+    ozet: { id: '2519660', login: 'yekda52', telefon: '5369824414', paraBirimi: 'TRY', kayitTarihi: null, metrics: [] },
+  };
+
+  it('adi, ulke kodlu numarayi ve kisitlari dondurur', async () => {
+    lynonOyuncuKpiSorgula.mockResolvedValue(OZET);
+    // Gercek yanit sekli: numara ulke kodundan AYRI tutuluyor.
+    lynonPlayerDetail.mockResolvedValue({
+      Data: {
+        FirstName: 'Yekda ',
+        LastName: 'Uzun ',
+        Phone: '5369824414',
+        phoneCode: '+90',
+        Email: 'yekda5252@hotmail.com',
+        CategoryName: 'Yeni Oyuncu',
+        Status: 'active',
+        IsIdentityVerified: true,
+        restrictions: [
+          { restriction: { id: 4, name: 'Withdraw' }, isRestricted: true },
+          { restriction: { id: 8, name: 'Deposit' }, isRestricted: false },
+        ],
+      },
+    });
+
+    const app = await sunucu();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/crm/players/lookup?q=yekda52',
+      headers: { 'x-crm-key': ANAHTAR, 'x-tenant': 'default' },
+    });
+    await app.close();
+
+    const a = res.json().account;
+    expect(a.firstName).toBe('Yekda');
+    expect(a.fullName).toBe('Yekda Uzun');
+    // Ulke kodu birlestirilmeli; yoksa WhatsApp'a adres olmaz.
+    expect(a.phone).toBe('905369824414');
+    expect(a.kycVerified).toBe(true);
+    expect(a.restrictions.Withdraw).toBe(true);
+    expect(a.restrictions.Deposit).toBe(false);
+  });
+
+  it('detay alinamazsa arama yine calisir', async () => {
+    lynonOyuncuKpiSorgula.mockResolvedValue(OZET);
+    lynonPlayerDetail.mockRejectedValue(new Error('detay ucu dustu'));
+
+    const app = await sunucu();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/crm/players/lookup?q=yekda52',
+      headers: { 'x-crm-key': ANAHTAR, 'x-tenant': 'default' },
+    });
+    await app.close();
+
+    // Eksik profil, hic profil olmamasindan iyidir.
+    expect(res.statusCode).toBe(200);
+    expect(res.json().account.username).toBe('yekda52');
+    expect(res.json().account.phone).toBe('5369824414');
   });
 });
