@@ -71,6 +71,7 @@ import {
   registerAffiliateCrmJob,
 } from './jobs/scheduler.js';
 import { enforceEnvironment } from './lib/envValidator.js';
+import { spaKabuguDonsunMu } from './lib/spaKabugu.js';
 import { watchConfigFile, getWatcherStatus } from './lib/configWatcher.js';
 import { closeDatabase, getDatabaseStatus, initializeDatabase } from './lib/database.js';
 import { closeRedis, getRedisStatus, initializeRedis } from './lib/redisClient.js';
@@ -212,6 +213,10 @@ if (isProduction) {
       reply.header('Cache-Control', cacheControlFor(resolved, ext));
       return reply.send(createReadStream(resolved));
     }
+    if (!spaKabuguDonsunMu(pathname)) {
+      return reply.status(404).type('text/plain').send('Bulunamadı.');
+    }
+
     const indexHtml = join(clientDist, 'index.html');
     // SPA kabuğu asla önbelleğe alınmamalı: güvenlik başlıkları (CSP,
     // frame-ancestors) yanıtla birlikte taşındığı için önbellekten servis
