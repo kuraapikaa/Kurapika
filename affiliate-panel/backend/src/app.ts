@@ -3,7 +3,7 @@ import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
 import Fastify, { type FastifyInstance, type FastifyRequest } from 'fastify';
-import { guvenliKiraciAnahtari, varsayilanKiraci } from './lib/kiraci.js';
+import { kiraciCozumle } from './lib/kiraci.js';
 import { jetonCoz, OTURUM_CEREZI, type OturumVerisi } from './kimlik/oturum.js';
 import { markaRotalari } from './rotalar/marka.js';
 import { oturumRotalari } from './rotalar/oturum.js';
@@ -31,16 +31,9 @@ declare module 'fastify' {
  * yapılan ve en pahalıya patlayan hata.
  */
 function kiraciCoz(istek: FastifyRequest, oturum: OturumVerisi | null): string {
-  if (oturum) return oturum.kiraci;
-
-  const baslik = String(istek.headers['x-kiraci'] ?? '').trim();
-  if (baslik) return guvenliKiraciAnahtari(baslik);
-
-  const sunucu = String(istek.headers.host ?? '').split(':')[0];
-  const parcalar = sunucu.split('.');
-  if (parcalar.length > 2 && parcalar[0] !== 'www') return guvenliKiraciAnahtari(parcalar[0]);
-
-  return varsayilanKiraci();
+  // Kural `lib/kiraci.ts`te: rota katmanindan bagimsiz oldugu icin
+  // dogrudan test edilebiliyor.
+  return kiraciCozumle(oturum?.kiraci ?? null, istek.headers as { host?: unknown; 'x-kiraci'?: unknown });
 }
 
 interface HataGovdesi {
