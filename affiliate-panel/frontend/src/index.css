@@ -16,8 +16,10 @@
   --kenar: #dfe3ee;
   --metin: #16192b;
   --metin-2: #5a6178;
-  --vurgu: #4f46e5;
+  --vurgu: #6d28d9;
   --vurgu-metin: #ffffff;
+  /* Secili menu ogesinin zemini; vurgunun cok acik hali. */
+  --vurgu-yumusak: #ede9fe;
   --olumlu: #047857;
   --uyari: #b45309;
   --olumsuz: #be123c;
@@ -31,8 +33,9 @@
   --kenar: #2a3050;
   --metin: #eef1fb;
   --metin-2: #98a0bd;
-  --vurgu: #818cf8;
+  --vurgu: #a78bfa;
   --vurgu-metin: #0b0d17;
+  --vurgu-yumusak: #241d3d;
   --olumlu: #34d399;
   --uyari: #fbbf24;
   --olumsuz: #fb7185;

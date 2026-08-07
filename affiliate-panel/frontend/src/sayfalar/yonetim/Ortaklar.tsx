@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { api, useVeri } from '../../api';
-import { Alan, Bos, Buton, Hata, Hucre, Kart, Rozet, Satir, Tablo, Yukleniyor } from '../../ui';
+import { Alan, Buton, Hata, Kart, Rozet, Yukleniyor } from '../../ui';
+import { FiltrePaneli, KisaKimlik, VeriTablosu, type Sutun } from '../../tablo';
 
 interface Ortak {
   id: string;
@@ -42,6 +43,7 @@ export function Ortaklar() {
   const [yeni, setYeni] = useState({ ad: '', eposta: '', ortakAnahtari: '', parola: '' });
   // Uretilen parola YALNIZCA burada, bir kez gorunur; hicbir listede yok.
   const [uretilen, setUretilen] = useState<{ ad: string; parola: string } | null>(null);
+  const [filtre, setFiltre] = useState<Record<string, string>>({ ad: '', durum: '', plan: '' });
 
   const calistir = async (is: () => Promise<unknown>) => {
     setHata(null);
@@ -53,9 +55,115 @@ export function Ortaklar() {
     }
   };
 
-  const planSecenekleri = [
-    { deger: '', etiket: 'Varsayılan plan' },
-    ...(planlar.veri?.planlar ?? []).map((p) => ({ deger: p.id, etiket: p.ad })),
+  const planAdi = new Map((planlar.veri?.planlar ?? []).map((p) => [p.id, p.ad]));
+
+  // Filtreleme ISTEMCIDE: veri zaten tamami cekilmis durumda. Liste
+  // sayfalanmaya basladiginda bu sunucuya tasinmali; `filtre` durumu
+  // oraya parametre olarak gecer, ekranin geri kalani ayni kalir.
+  const sutunSatirlari = (liste.veri?.ortaklar ?? []).filter((o) => {
+    const q = filtre.ad.trim().toLowerCase();
+    if (q && ![o.ad, o.eposta, o.ortakAnahtari].some((x) => x.toLowerCase().includes(q))) return false;
+    if (filtre.durum && o.durum !== filtre.durum) return false;
+    if (filtre.plan && o.planId !== filtre.plan) return false;
+    return true;
+  });
+
+  const sutunlar: Array<Sutun<Ortak>> = [
+    {
+      ad: 'ortak',
+      etiket: 'Ortak',
+      deger: (o) => o.ad,
+      hucre: (o) => (
+        <div>
+          <div className="font-medium">{o.ad}</div>
+          <div className="text-xs" style={{ color: 'var(--metin-2)' }}>{o.eposta}</div>
+          {!o.parolaKurulu && (
+            <div className="text-xs" style={{ color: 'var(--uyari)' }}>Parola yok — giriş yapamaz</div>
+          )}
+        </div>
+      ),
+    },
+    { ad: 'anahtar', etiket: 'Anahtar', deger: (o) => o.ortakAnahtari, hucre: (o) => <KisaKimlik deger={o.ortakAnahtari} /> },
+    {
+      ad: 'durum',
+      etiket: 'Durum',
+      deger: (o) => o.durum,
+      hucre: (o) => <Rozet metin={DURUM_ETIKETI[o.durum]} renk={DURUM_RENGI[o.durum]} />,
+    },
+    {
+      ad: 'plan',
+      etiket: 'Plan',
+      deger: (o) => planAdi.get(o.planId ?? '') ?? '',
+      hucre: (o) => (
+        <select
+          className="rounded-lg border px-2 py-1 text-xs"
+          style={{ background: 'var(--yuzey-2)', borderColor: 'var(--kenar)', color: 'var(--metin)' }}
+          value={o.planId ?? ''}
+          onChange={(e) => calistir(() => api.yaz(`/api/yonetim/ortaklar/${o.id}`, { planId: e.target.value }))}
+        >
+          <option value="">Varsayılan</option>
+          {(planlar.veri?.planlar ?? []).map((p) => <option key={p.id} value={p.id}>{p.ad}</option>)}
+        </select>
+      ),
+    },
+    {
+      ad: 'odeme',
+      etiket: 'Ödeme yöntemi',
+      deger: (o) => o.odemeYontemi ?? '',
+      hucre: (o) => ((odeme.veri?.yontemler ?? []).length > 0 ? (
+        <select
+          className="rounded-lg border px-2 py-1 text-xs"
+          style={{ background: 'var(--yuzey-2)', borderColor: 'var(--kenar)', color: 'var(--metin)' }}
+          value={o.odemeYontemi ?? ''}
+          onChange={(e) => calistir(() => api.yaz(`/api/yonetim/ortaklar/${o.id}`, { odemeYontemi: e.target.value }))}
+        >
+          <option value="">Seçilmedi</option>
+          {/* Ortagin mevcut degeri listede yoksa yine de gorunmeli; aksi
+              halde secici onu sessizce bosaltirdi. */}
+          {o.odemeYontemi && !(odeme.veri?.yontemler ?? []).includes(o.odemeYontemi) && (
+            <option value={o.odemeYontemi}>{o.odemeYontemi} (listede yok)</option>
+          )}
+          {(odeme.veri?.yontemler ?? []).map((y) => <option key={y} value={y}>{y}</option>)}
+        </select>
+      ) : (
+        <span className="text-xs">{o.odemeYontemi ?? '—'}</span>
+      )),
+    },
+    { ad: 'kayit', etiket: 'Kayıt', deger: (o) => o.createdAt, hucre: (o) => <span className="text-xs">{o.createdAt.slice(0, 10)}</span> },
+    {
+      ad: 'islem',
+      etiket: 'İşlem',
+      hucre: (o) => (
+        <div className="flex flex-wrap gap-1">
+          {o.durum !== 'onaylandi' && (
+            <Buton onClick={() => calistir(() => api.yaz(`/api/yonetim/ortaklar/${o.id}`, { durum: 'onaylandi' }))}>Onayla</Buton>
+          )}
+          {o.durum !== 'askida' && (
+            <Buton onClick={() => calistir(() => api.yaz(`/api/yonetim/ortaklar/${o.id}`, { durum: 'askida' }))}>Askıya al</Buton>
+          )}
+          <Buton
+            onClick={() => calistir(async () => {
+              const y = await api.gonder<{ parola: string }>(`/api/yonetim/ortaklar/${o.id}/parola-sifirla`);
+              setUretilen({ ad: o.ad, parola: y.parola });
+            })}
+          >
+            Parola
+          </Buton>
+          <Buton
+            tur="tehlike"
+            onClick={() => {
+              // Silmek olcumleri ve gecmis hakedis satirlarini SAHIPSIZ
+              // birakiyor; onaysiz tek tikla yapilmamali.
+              if (window.confirm(`${o.ad} silinsin mi? Geçmiş ölçümleri sahipsiz kalır.`)) {
+                calistir(() => api.sil(`/api/yonetim/ortaklar/${o.id}`));
+              }
+            }}
+          >
+            Sil
+          </Buton>
+        </div>
+      ),
+    },
   ];
 
   if (liste.yukleniyor) return <Yukleniyor />;
@@ -81,6 +189,33 @@ export function Ortaklar() {
           </Buton>
         </div>
       </Kart>
+
+      <FiltrePaneli
+        deger={filtre}
+        uygulandi={setFiltre}
+        alanlar={[
+          { ad: 'ad', etiket: 'Ortak / e-posta / anahtar' },
+          {
+            ad: 'durum',
+            etiket: 'Durum',
+            secenekler: [
+              { deger: '', etiket: 'Hepsi' },
+              { deger: 'onaylandi', etiket: 'Onaylı' },
+              { deger: 'bekliyor', etiket: 'Bekliyor' },
+              { deger: 'askida', etiket: 'Askıda' },
+              { deger: 'reddedildi', etiket: 'Reddedildi' },
+            ],
+          },
+          {
+            ad: 'plan',
+            etiket: 'Plan',
+            secenekler: [
+              { deger: '', etiket: 'Hepsi' },
+              ...(planlar.veri?.planlar ?? []).map((p) => ({ deger: p.id, etiket: p.ad })),
+            ],
+          },
+        ]}
+      />
 
       {(hata || liste.hata) && <Hata mesaj={hata ?? liste.hata!} />}
 
@@ -129,90 +264,13 @@ export function Ortaklar() {
       </Kart>
 
       <Kart baslik="Ortaklar">
-        {(liste.veri?.ortaklar ?? []).length === 0 ? (
-          <Bos mesaj="Henüz ortak yok." />
-        ) : (
-          <Tablo basliklar={['Ortak', 'Anahtar', 'Durum', 'Plan', 'Ödeme yöntemi', 'İşlem']}>
-            {liste.veri!.ortaklar.map((o) => (
-              <Satir key={o.id}>
-                <Hucre>
-                  <div className="font-medium">{o.ad}</div>
-                  <div className="text-xs" style={{ color: 'var(--metin-2)' }}>{o.eposta}</div>
-                  {!o.parolaKurulu && (
-                    <div className="text-xs" style={{ color: 'var(--uyari)' }}>Parola kurulu değil — giriş yapamaz</div>
-                  )}
-                </Hucre>
-                <Hucre><code className="text-xs">{o.ortakAnahtari}</code></Hucre>
-                <Hucre><Rozet metin={DURUM_ETIKETI[o.durum]} renk={DURUM_RENGI[o.durum]} /></Hucre>
-                <Hucre>
-                  <select
-                    className="rounded-lg border px-2 py-1 text-xs"
-                    style={{ background: 'var(--yuzey-2)', borderColor: 'var(--kenar)', color: 'var(--metin)' }}
-                    value={o.planId ?? ''}
-                    onChange={(e) => calistir(() => api.yaz(`/api/yonetim/ortaklar/${o.id}`, { planId: e.target.value }))}
-                  >
-                    {planSecenekleri.map((p) => <option key={p.deger} value={p.deger}>{p.etiket}</option>)}
-                  </select>
-                </Hucre>
-                <Hucre>
-                  {(odeme.veri?.yontemler ?? []).length > 0 ? (
-                    <select
-                      className="rounded-lg border px-2 py-1 text-xs"
-                      style={{ background: 'var(--yuzey-2)', borderColor: 'var(--kenar)', color: 'var(--metin)' }}
-                      value={o.odemeYontemi ?? ''}
-                      onChange={(e) => calistir(() => api.yaz(`/api/yonetim/ortaklar/${o.id}`, { odemeYontemi: e.target.value }))}
-                    >
-                      <option value="">Seçilmedi</option>
-                      {/* Ortagin mevcut degeri listede yoksa yine de gorunmeli;
-                          aksi halde secici onu sessizce bosaltirdi. */}
-                      {o.odemeYontemi && !(odeme.veri?.yontemler ?? []).includes(o.odemeYontemi) && (
-                        <option value={o.odemeYontemi}>{o.odemeYontemi} (listede yok)</option>
-                      )}
-                      {(odeme.veri?.yontemler ?? []).map((y) => <option key={y} value={y}>{y}</option>)}
-                    </select>
-                  ) : (
-                    <span className="text-xs">{o.odemeYontemi ?? '—'}</span>
-                  )}
-                </Hucre>
-                <Hucre>
-                  <div className="flex flex-wrap gap-1">
-                    {o.durum !== 'onaylandi' && (
-                      <Buton onClick={() => calistir(() => api.yaz(`/api/yonetim/ortaklar/${o.id}`, { durum: 'onaylandi' }))}>
-                        Onayla
-                      </Buton>
-                    )}
-                    {o.durum !== 'askida' && (
-                      <Buton onClick={() => calistir(() => api.yaz(`/api/yonetim/ortaklar/${o.id}`, { durum: 'askida' }))}>
-                        Askıya al
-                      </Buton>
-                    )}
-                    <Buton
-                      onClick={() => calistir(async () => {
-                        const y = await api.gonder<{ parola: string }>(`/api/yonetim/ortaklar/${o.id}/parola-sifirla`);
-                        setUretilen({ ad: o.ad, parola: y.parola });
-                      })}
-                    >
-                      Parola sıfırla
-                    </Buton>
-                    <Buton
-                      tur="tehlike"
-                      onClick={() => {
-                        // Ortagi silmek olcumlerini ve gecmis hakedis
-                        // satirlarini SAHIPSIZ birakiyor; onay olmadan
-                        // tek tikla yapilmamali.
-                        if (window.confirm(`${o.ad} silinsin mi? Geçmiş ölçümleri sahipsiz kalır.`)) {
-                          calistir(() => api.sil(`/api/yonetim/ortaklar/${o.id}`));
-                        }
-                      }}
-                    >
-                      Sil
-                    </Buton>
-                  </div>
-                </Hucre>
-              </Satir>
-            ))}
-          </Tablo>
-        )}
+        <VeriTablosu
+          satirlar={sutunSatirlari}
+          anahtar={(o) => o.id}
+          bosMesaj="Filtreye uyan ortak yok."
+          varsayilanSiralama={{ ad: 'kayit', yon: 'azalan' }}
+          sutunlar={sutunlar}
+        />
       </Kart>
     </>
   );
