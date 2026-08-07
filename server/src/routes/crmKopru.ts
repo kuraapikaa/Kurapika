@@ -112,6 +112,10 @@ export async function crmKopruRoutes(app: FastifyInstance): Promise<void> {
         account: {
           userId: o.id,
           username: o.login,
+          // CRM kullanici adindan WhatsApp sohbeti aciyor; numarayi baska
+          // yerden ogrenemiyor. Temsilciye gosterilmiyor, sunucu tarafinda
+          // adres olarak kullaniliyor.
+          phone: o.telefon,
           fullName: null,
           currency: o.paraBirimi,
           registeredAt: o.kayitTarihi,

@@ -228,3 +228,30 @@ describe('islem listesi', () => {
     expect(lynonPaymentTransactions).not.toHaveBeenCalled();
   });
 });
+
+describe('hesap yaniti', () => {
+  it('telefonu dondurur — CRM kullanici adindan sohbet acmak icin buna muhtac', async () => {
+    lynonOyuncuKpiSorgula.mockResolvedValue({
+      durum: 'bulundu',
+      ozet: {
+        id: '2519618',
+        login: 'snnads01',
+        telefon: '05369824414',
+        paraBirimi: 'TRY',
+        kayitTarihi: null,
+        metrics: [],
+      },
+    });
+
+    const app = await sunucu();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/crm/players/lookup?q=snnads01',
+      headers: { 'x-crm-key': ANAHTAR, 'x-tenant': 'default' },
+    });
+    await app.close();
+
+    expect(res.statusCode).toBe(200);
+    expect(res.json().account.phone).toBe('05369824414');
+  });
+});
