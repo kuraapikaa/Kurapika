@@ -35,9 +35,55 @@ function kayitliTercih(): PanelTheme | null {
   }
 }
 
+/**
+ * AYRI KATMANDA ÇİZİLEN ÖĞELERİ YENİDEN HESAPLATIR.
+ *
+ * Tema kökteki `data-panel-theme` ile değişiyor ve panelin çoğu bunu
+ * anında alıyor. Ama iki grup öğe almıyordu:
+ *
+ *   - `.premium-sidebar` — `position: fixed` + `backdrop-filter` ile
+ *     kendi kompozit katmanını oluşturuyor.
+ *   - Form kontrolleri (`input`, `select`, `textarea`) — tarayıcı
+ *     tarafından ayrı çizilen öğeler.
+ *
+ * Tarayıcıda ölçüldüğünde durum netti: aynı anda panel gövdesindeki kart
+ * başlığı DOĞRU renge geçerken sidebar bağlantısı ve form alanı ESKİ
+ * temada kalıyordu. Yani sorun ölçümde değil, bu alt ağaçlara özel.
+ * Kullanıcıya görünen hâli: temayı çevirince menü yazıları beyaz menü
+ * üstünde açık gri kalıyor ve arama kutusu koyu zemin üstünde koyu yazı
+ * oluyordu. Sayfayı yenileyince düzeliyordu, bu yüzden tutarsız
+ * görünüyordu.
+ *
+ * DENENIP İŞE YARAMAYANLAR: reflow zorlamak, `backdrop-filter`ı kapatıp
+ * açmak, kuralları tema kapsamında tekrar yazmak, öğeye boş bir özel
+ * özellik yazmak. Yalnızca öğeyi kısa süreliğine yerleşimden çıkarmak
+ * tazeliyor.
+ *
+ * Aynı senkron blokta geri alındığı için arada hiçbir kare boyanmıyor;
+ * göze çarpan bir titreme olmuyor. Menünün kaydırma konumu korunuyor —
+ * uzun menüde başa dönmek fark edilir bir gerileme olurdu.
+ */
+function tazeleAyrikKatmanlar(): void {
+  const hedefler = document.querySelectorAll<HTMLElement>(
+    '.premium-sidebar, .app-shell input, .app-shell select, .app-shell textarea',
+  );
+  const kaydirmalar = new Map<Element, number>();
+  document.querySelectorAll('.premium-sidebar nav').forEach((el) => kaydirmalar.set(el, el.scrollTop));
+
+  hedefler.forEach((el) => {
+    const eski = el.style.display;
+    el.style.display = 'none';
+    void el.offsetHeight;
+    el.style.display = eski;
+  });
+
+  kaydirmalar.forEach((ust, el) => { el.scrollTop = ust; });
+}
+
 export function uygulaPanelTheme(theme: PanelTheme): void {
   if (typeof document === 'undefined') return;
   document.documentElement.setAttribute('data-panel-theme', theme);
+  tazeleAyrikKatmanlar();
 }
 
 interface PanelThemeState {

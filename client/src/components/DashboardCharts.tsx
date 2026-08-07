@@ -2,12 +2,16 @@ import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, 
 import type { PartnerProfitData } from '../types/dashboard';
 import { Card } from './ui/Card';
 import { formatNumber } from '../lib/format';
+import { useGrafikRenkleri } from '../lib/grafikTemasi';
 
 interface DashboardChartsProps {
     data: PartnerProfitData | undefined;
 }
 
 export function DashboardCharts({ data }: DashboardChartsProps) {
+    // Recharts renkleri prop olarak alıyor, CSS değişkeni okumuyor; tema
+    // buradan geçmezse açık temada ızgara çizgileri görünmez kalırdı.
+    const renk = useGrafikRenkleri();
     if (!data) return null;
 
     const sportTurnover = data.SportTurnover || 0;
@@ -140,24 +144,24 @@ export function DashboardCharts({ data }: DashboardChartsProps) {
                                     <stop offset="100%" stopColor="#30d158" stopOpacity={0.2} />
                                 </linearGradient>
                             </defs>
-                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
+                            <CartesianGrid strokeDasharray="3 3" stroke={renk.izgara} vertical={false} />
                             <XAxis
                                 dataKey="name"
-                                stroke="#5c6470"
+                                stroke={renk.eksenYazi}
                                 fontSize={10}
                                 tickLine={false}
                                 axisLine={false}
                                 tick={{ fontWeight: 900, letterSpacing: '0.1em' }}
                             />
                             <YAxis
-                                stroke="#5c6470"
+                                stroke={renk.eksenYazi}
                                 fontSize={9}
                                 tickLine={false}
                                 axisLine={false}
                                 tickFormatter={(val) => `${(val / 1000).toFixed(0)}k`}
                                 tick={{ fontWeight: 700 }}
                             />
-                            <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.02)' }} />
+                            <Tooltip content={<CustomTooltip />} cursor={{ fill: renk.izgara }} />
                             <Legend iconType="circle" formatter={(val) => <span className="text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)] ml-1">{val}</span>} />
                             <Bar dataKey="Turnover" fill="url(#barGradient1)" radius={[10, 10, 0, 0]} name="Ciro" barSize={40} />
                             <Bar dataKey="GGR" fill="url(#barGradient2)" radius={[10, 10, 0, 0]} name="Net GGR" barSize={40} />

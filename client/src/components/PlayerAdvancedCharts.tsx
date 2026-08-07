@@ -1,11 +1,16 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Activity } from 'lucide-react';
+import { useGrafikRenkleri } from '../lib/grafikTemasi';
 
 interface AdvancedChartsProps {
     data: any; // KPI Data
 }
 
 export function AdvancedCharts({ data }: AdvancedChartsProps) {
+    // Recharts renkleri prop olarak alıyor, CSS değişkeni okumuyor; tema
+    // renkleri buradan geçmezse açık temada ızgara görünmez, ipucu kutusu
+    // siyah kalırdı.
+    const renk = useGrafikRenkleri();
     if (!data) return null;
 
     // Simulate monthly trend data based on totals (since we don't have historical timeline from kpi endpoint)
@@ -28,18 +33,18 @@ export function AdvancedCharts({ data }: AdvancedChartsProps) {
                 <div className="h-64">
                     <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={performanceData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
-                            <XAxis dataKey="name" stroke="#8a919c" fontSize={10} tickLine={false} axisLine={false} />
-                            <YAxis stroke="#8a919c" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(val) => `₺${(val / 1000)}k`} />
+                            <CartesianGrid strokeDasharray="3 3" stroke={renk.izgara} vertical={false} />
+                            <XAxis dataKey="name" stroke={renk.eksenYazi} fontSize={10} tickLine={false} axisLine={false} />
+                            <YAxis stroke={renk.eksenYazi} fontSize={10} tickLine={false} axisLine={false} tickFormatter={(val) => `₺${(val / 1000)}k`} />
                             <Tooltip
-                                cursor={{ fill: '#ffffff05' }}
-                                contentStyle={{ backgroundColor: '#0b0d12', borderColor: '#ffffff10', borderRadius: '12px', fontSize: '12px' }}
+                                cursor={{ fill: renk.izgara }}
+                                contentStyle={{ backgroundColor: renk.ipucuZemin, borderColor: renk.ipucuKenar, color: renk.ipucuYazi, borderRadius: '12px', fontSize: '12px' }}
                                 formatter={(value: any) => new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(value)}
                             />
-                            <Legend wrapperStyle={{ fontSize: '10px' }} />
-                            <Bar dataKey="depositValue" name="Bahis Tutarı" fill="#0a84ff" radius={[4, 4, 0, 0]} />
-                            <Bar dataKey="winValue" name="Kazanç" fill="#30d158" radius={[4, 4, 0, 0]} />
-                            <Bar dataKey="profit" name="Net Kâr" fill="#ff453a" radius={[4, 4, 0, 0]} />
+                            <Legend wrapperStyle={{ fontSize: '10px', color: renk.eksenYazi }} />
+                            <Bar dataKey="depositValue" name="Bahis Tutarı" fill={renk.seri.mavi} radius={[4, 4, 0, 0]} />
+                            <Bar dataKey="winValue" name="Kazanç" fill={renk.seri.yesil} radius={[4, 4, 0, 0]} />
+                            <Bar dataKey="profit" name="Net Kâr" fill={renk.seri.kirmizi} radius={[4, 4, 0, 0]} />
                         </BarChart>
                     </ResponsiveContainer>
                 </div>
