@@ -8,6 +8,13 @@
       "when": 1786126367454,
       "tag": "0000_ilk_sema",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1786131239300,
+      "tag": "0001_oyuncu_eslesme",
+      "breakpoints": true
     }
   ]
 }

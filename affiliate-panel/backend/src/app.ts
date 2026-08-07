@@ -8,6 +8,7 @@ import { jetonCoz, OTURUM_CEREZI, type OturumVerisi } from './kimlik/oturum.js';
 import { markaRotalari } from './rotalar/marka.js';
 import { oturumRotalari } from './rotalar/oturum.js';
 import { portalRotalari } from './rotalar/portal.js';
+import { kayitRotalari } from './rotalar/kayitUcu.js';
 import { tiklamaRotalari } from './rotalar/tiklamaUcu.js';
 import { yonetimRotalari } from './rotalar/yonetim.js';
 
@@ -104,6 +105,8 @@ export async function uygulamaKur(): Promise<FastifyInstance> {
   await app.register(oturumRotalari, { prefix: '/api/oturum' });
   await app.register(yonetimRotalari, { prefix: '/api/yonetim' });
   await app.register(portalRotalari, { prefix: '/api/portal' });
+  // Sunucudan sunucuya: oturum degil, kiraciya ait S2S anahtariyla.
+  await app.register(kayitRotalari, { prefix: '/api/kayit' });
   await app.register(tiklamaRotalari);
 
   return app;

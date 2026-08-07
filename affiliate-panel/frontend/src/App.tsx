@@ -8,6 +8,7 @@ import { Baglanti } from './sayfalar/yonetim/Baglanti';
 import { Basvurular } from './sayfalar/yonetim/Basvurular';
 import { BTag } from './sayfalar/yonetim/BTag';
 import { Donemler } from './sayfalar/yonetim/Donemler';
+import { Eslesmeler } from './sayfalar/yonetim/Eslesmeler';
 import { Kademeler } from './sayfalar/yonetim/Kademeler';
 import { Medya } from './sayfalar/yonetim/Medya';
 import { Ortaklar } from './sayfalar/yonetim/Ortaklar';
@@ -41,6 +42,7 @@ const YONETIM_MENUSU: MenuOgesi[] = [
       { yol: '/basvurular', etiket: 'Başvurular' },
       { yol: '/kademeler', etiket: 'Kademeler' },
       { yol: '/btag', etiket: 'İzleme anahtarları' },
+      { yol: '/eslesmeler', etiket: 'Oyuncu eşleşmeleri' },
     ],
   },
   { yol: '/planlar', etiket: 'Komisyon planları', ikon: IKON.teklif },
@@ -130,6 +132,7 @@ export function App() {
             <Route path="/tiklamalar" element={<Tiklamalar />} />
             <Route path="/trafik-kalitesi" element={<TrafikKalitesi />} />
             <Route path="/btag" element={<BTag />} />
+            <Route path="/eslesmeler" element={<Eslesmeler />} />
             <Route path="/donemler" element={<Donemler />} />
             <Route path="/baglanti" element={<Baglanti />} />
             <Route path="*" element={<Navigate to="/ozet" replace />} />

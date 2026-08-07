@@ -31,7 +31,9 @@ import type { KomisyonPlani } from './servisler/komisyon.js';
 import type { Medya } from './servisler/medya.js';
 import type { OrtakGunlukOlcum, OrtakOzeti } from './servisler/olcum.js';
 import type { OrtakDurumu, OrtakGorunumu } from './servisler/ortaklar.js';
+import type { EslesmeCakismasi, OyuncuEslesmesi } from './servisler/oyuncuEslesme.js';
 import type { PostbackAyari, PostbackKaydi } from './servisler/postback.js';
+import type { AnahtarDurumu } from './servisler/s2sAnahtari.js';
 import type { SenkronSonucu } from './servisler/senkron.js';
 import type { Tiklama, TiklamaOzeti } from './servisler/tiklama.js';
 import type { KaliteSinyali } from './servisler/trafikKalitesi.js';
@@ -135,6 +137,28 @@ export interface YonetimUclari {
   '/trafik-kalitesi': { raporlar: KaliteRaporGorunumu[] };
   '/btag': { anahtarlar: BtagAnahtari[]; sahipsiz: SahipsizAnahtar[]; olcumsuzSayisi: number };
   '/donemler': { donemler: Array<Omit<Donem, 'satirlar'>> };
+  '/oyuncu-eslesmeleri': {
+    eslesmeler: EslesmeGorunumu[];
+    cakismalar: CakismaGorunumu[];
+    anahtar: AnahtarDurumu;
+  };
+}
+
+/**
+ * Eşleşmeye ortağın ADI ekleniyor.
+ *
+ * Depoda yalnızca `ortakId` var; ekranda kimlik göstermek okunamaz.
+ * Birleştirme sunucuda yapılıyor: arayüzün ortak listesini ayrıca çekip
+ * eşleştirmesi, iki isteğin arasında eklenen bir ortakta boş satır
+ * gösterirdi.
+ */
+export interface EslesmeGorunumu extends OyuncuEslesmesi {
+  ortakAdi: string | null;
+}
+
+export interface CakismaGorunumu extends EslesmeCakismasi {
+  denenenOrtakAdi: string | null;
+  mevcutOrtakAdi: string | null;
 }
 
 /* ── Ortak portali ───────────────────────────────────────────────── */

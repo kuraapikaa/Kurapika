@@ -1,7 +1,18 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { belgeOlcumDeposu, postgresOlcumDeposu, type OlcumDeposu, type YazilacakOlcum } from './olcumDeposu.js';
 import { belgeTiklamaDeposu, postgresTiklamaDeposu, type Tiklama, type TiklamaDeposu } from './tiklamaDeposu.js';
-import { olcumler as olcumTablosu, tiklamalar as tiklamaTablosu } from '../lib/sema.js';
+import {
+  belgeEslesmeDeposu,
+  postgresEslesmeDeposu,
+  type EslesmeDeposu,
+  type OyuncuEslesmesi,
+} from './eslesmeDeposu.js';
+import {
+  eslesmeCakismalari as cakismaTablosu,
+  olcumler as olcumTablosu,
+  oyuncuEslesmeleri as eslesmeTablosu,
+  tiklamalar as tiklamaTablosu,
+} from '../lib/sema.js';
 import { veritabani, veritabaniniBaslat, veritabaniniKapat } from '../lib/veritabani.js';
 import { testVeritabaniAc } from '../../test/testVeritabani.js';
 
@@ -46,12 +57,14 @@ varsaCalistir('depo denkligi', () => {
   const KIRACI = 'denklik-kiracisi';
   let tiklamaUygulamalari: Array<[string, TiklamaDeposu]>;
   let olcumUygulamalari: Array<[string, OlcumDeposu]>;
+  let eslesmeUygulamalari: Array<[string, EslesmeDeposu]>;
 
   beforeAll(async () => {
     process.env.DATABASE_URL = (await testVeritabaniAc('aff_test_depolar'))!;
     await veritabaniniBaslat();
     tiklamaUygulamalari = [['postgres', postgresTiklamaDeposu()], ['belge', belgeTiklamaDeposu()]];
     olcumUygulamalari = [['postgres', postgresOlcumDeposu()], ['belge', belgeOlcumDeposu()]];
+    eslesmeUygulamalari = [['postgres', postgresEslesmeDeposu()], ['belge', belgeEslesmeDeposu()]];
   });
 
   afterAll(async () => {
@@ -63,10 +76,14 @@ varsaCalistir('depo denkligi', () => {
     const vt = veritabani();
     await vt!.delete(tiklamaTablosu);
     await vt!.delete(olcumTablosu);
+    await vt!.delete(eslesmeTablosu);
+    await vt!.delete(cakismaTablosu);
     // Belge uygulamasi ayni kiraciyi kullaniyor; onun da sifirlanmasi sart.
     const { yaz } = await import('../lib/depo.js');
     await yaz(KIRACI, 'tiklamalar', { version: 1, tiklamalar: [] });
     await yaz(KIRACI, 'olcumler', { version: 1, olcumler: {} });
+    await yaz(KIRACI, 'oyuncu-eslesmeleri', { version: 1, eslesmeler: [] });
+    await yaz(KIRACI, 'eslesme-cakismalari', { version: 1, cakismalar: [] });
   });
 
   /** Senaryoyu her iki uygulamada koşup sonuçları eşitliğe zorlar. */
@@ -232,6 +249,143 @@ varsaCalistir('depo denkligi', () => {
     it('kayit yoksa son gun null', async () => {
       const sonuc = await ikisindeDe(olcumUygulamalari, (depo: OlcumDeposu) => depo.sonGun(KIRACI));
       expect(sonuc).toBeNull();
+    });
+  });
+
+  describe('oyuncu eslesmeleri', () => {
+    const eslesme = (lynonOyuncuId: string, ortakId: string, ek: Partial<OyuncuEslesmesi> = {}): OyuncuEslesmesi => ({
+      lynonOyuncuId,
+      ortakId,
+      ortakAnahtari: ortakId.toUpperCase(),
+      clickId: null,
+      medyaId: null,
+      alt: {},
+      kaynak: 'kayit',
+      olusturuldu: '2026-08-01T00:00:00.000Z',
+      ...ek,
+    });
+
+    it('ilk kayit yazilir', async () => {
+      const sonuc = await ikisindeDe(eslesmeUygulamalari, async (depo: EslesmeDeposu) => {
+        const { eklendi, kayitli } = await depo.ekleYokSayarak(KIRACI, eslesme('p1', 'ortak-a'));
+        return { eklendi, ortakId: kayitli.ortakId };
+      });
+      expect(sonuc).toEqual({ eklendi: true, ortakId: 'ortak-a' });
+    });
+
+    /** Kuralın kendisi. İki uygulamada da AYNI cevabı vermek zorunda. */
+    it('mevcut kaydin uzerine YAZMAZ, mevcudu dondurur', async () => {
+      const sonuc = await ikisindeDe(eslesmeUygulamalari, async (depo: EslesmeDeposu) => {
+        await depo.ekleYokSayarak(KIRACI, eslesme('p2', 'ortak-a'));
+        const ikinci = await depo.ekleYokSayarak(KIRACI, eslesme('p2', 'ortak-b', {
+          olusturuldu: '2026-08-09T00:00:00.000Z',
+        }));
+        const kalan = await depo.bul(KIRACI, 'p2');
+        return {
+          eklendi: ikinci.eklendi,
+          donen: ikinci.kayitli.ortakId,
+          kalan: kalan?.ortakId,
+          zaman: kalan?.olusturuldu,
+        };
+      });
+      expect(sonuc).toEqual({
+        eklendi: false,
+        donen: 'ortak-a',
+        kalan: 'ortak-a',
+        zaman: '2026-08-01T00:00:00.000Z',
+      });
+    });
+
+    it('ortaga gore suzer, en yeni once', async () => {
+      const sonuc = await ikisindeDe(eslesmeUygulamalari, async (depo: EslesmeDeposu) => {
+        await depo.ekleYokSayarak(KIRACI, eslesme('p1', 'ortak-a', { olusturuldu: '2026-08-01T00:00:00.000Z' }));
+        await depo.ekleYokSayarak(KIRACI, eslesme('p2', 'ortak-b', { olusturuldu: '2026-08-02T00:00:00.000Z' }));
+        await depo.ekleYokSayarak(KIRACI, eslesme('p3', 'ortak-a', { olusturuldu: '2026-08-03T00:00:00.000Z' }));
+        return {
+          hepsi: (await depo.listele(KIRACI, {})).map((e) => e.lynonOyuncuId),
+          yalnizA: (await depo.listele(KIRACI, { ortakId: 'ortak-a' })).map((e) => e.lynonOyuncuId),
+        };
+      });
+      expect(sonuc).toEqual({ hepsi: ['p3', 'p2', 'p1'], yalnizA: ['p3', 'p1'] });
+    });
+
+    it('cakismalari en yeniden eskiye tutar', async () => {
+      const sonuc = await ikisindeDe(eslesmeUygulamalari, async (depo: EslesmeDeposu) => {
+        for (const [i, zaman] of ['2026-08-01', '2026-08-03', '2026-08-02'].entries()) {
+          await depo.cakismaYaz(KIRACI, {
+            id: `c${i}`,
+            lynonOyuncuId: 'p1',
+            denenenOrtakId: 'ortak-b',
+            denenenOrtakAnahtari: 'ORTAK-B',
+            mevcutOrtakId: 'ortak-a',
+            zaman: `${zaman}T00:00:00.000Z`,
+          });
+        }
+        return (await depo.cakismalariListele(KIRACI, 10)).map((c) => c.zaman.slice(0, 10));
+      });
+      expect(sonuc).toEqual(['2026-08-03', '2026-08-02', '2026-08-01']);
+    });
+
+    /**
+     * ASIL GUVENCE: kural VERITABANINDA.
+     *
+     * Uygulama katmanindaki her kontrol, iki surec ayni anda calistiginda
+     * atlanabilir. Bu test, korumanin koda degil KISITA bagli oldugunu
+     * gosteriyor: `ON CONFLICT` olmadan ikinci satir veritabani
+     * tarafindan reddediliyor.
+     *
+     * Bu yuzden `ekleYokSayarak` "once bak, yoksa yaz" desenine
+     * donerse -- ki gorunuste ayni isi yapar -- eszamanli iki bildirimde
+     * hata firlatir; sessizce iki sahip uretmesi mumkun degil.
+     *
+     * NOT: gercek eszamanliligi tek surecte guvenilir sekilde
+     * uretemedim; Promise.all ile denedigimde havuz baglantilari sirayla
+     * acildigi icin cagrilar seri kosuyordu ve test, hatali bir
+     * uygulamayi da geciriyordu. Onun yerine dayanak noktasi -- kisitin
+     * kendisi -- dogrudan sinaniyor.
+     */
+    it('kisit ayni oyuncu icin IKINCI satiri reddediyor (postgres)', async () => {
+      const vt = veritabani()!;
+      const satir = (ortakId: string) => ({
+        kiraci: KIRACI,
+        lynonOyuncuId: 'kisit-testi',
+        ortakId,
+        ortakAnahtari: 'X',
+        clickId: null,
+        medyaId: null,
+        alt: {},
+        kaynak: 'kayit',
+        olusturuldu: new Date('2026-08-01T00:00:00Z'),
+      });
+
+      await vt.insert(eslesmeTablosu).values(satir('ortak-a'));
+
+      // Drizzle hatayi sariyor; asil sebep `cause`ta. Postgres 23505 =
+      // unique_violation. Mesaj metnine bakmak, surum degisiminde
+      // sessizce gecen bir teste donusurdu.
+      const hata = await vt.insert(eslesmeTablosu).values(satir('ortak-b')).catch((h: unknown) => h);
+      expect(hata).toBeInstanceOf(Error);
+      expect((hata as { cause?: { code?: string } }).cause?.code).toBe('23505');
+
+      const kalan = await vt.select().from(eslesmeTablosu);
+      expect(kalan).toHaveLength(1);
+      expect(kalan[0].ortakId).toBe('ortak-a');
+    });
+
+    /** Cok sayida talep sonunda TEK sahip birakmali. */
+    it('ayni oyuncuya gelen bes talep tek sahip birakir (postgres)', async () => {
+      const depo = postgresEslesmeDeposu();
+      const sonuclar = await Promise.all(
+        ['ortak-a', 'ortak-b', 'ortak-c', 'ortak-d', 'ortak-e'].map((ortakId) =>
+          depo.ekleYokSayarak(KIRACI, eslesme('cok-talep', ortakId))),
+      );
+
+      expect(sonuclar.filter((s) => s.eklendi)).toHaveLength(1);
+      // Kaybedenlerin hepsi AYNI kaydi gormeli; yoksa "kim sahip" sorusu
+      // istege gore farkli cevaplanirdi.
+      const sahip = sonuclar.find((s) => s.eklendi)!.kayitli.ortakId;
+      expect(sonuclar.every((s) => s.kayitli.ortakId === sahip)).toBe(true);
+      expect((await depo.bul(KIRACI, 'cok-talep'))?.ortakId).toBe(sahip);
     });
   });
 });
