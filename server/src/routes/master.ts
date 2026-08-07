@@ -13,7 +13,7 @@ import {
   type TenantLynonConnection,
 } from '../repositories/tenantConnectionRepository.js';
 import { maskele, sifrelemeHazirMi } from '../lib/secretBox.js';
-import { ensureTenantRuntime, invalidateTenantRuntime } from '../lib/tenantRuntimeConfig.js';
+import { ensureTenantRuntime, tenantBaglantisiKurulduMu, tenantRuntimeYaz } from '../lib/tenantRuntimeConfig.js';
 import { aktifTenantAnahtarlari } from '../lib/tenantFanout.js';
 import { clearLynonSession, ensureLynonSession, getLynonAuthStatus, isLynonConfigured } from '../lib/lynonAuth.js';
 import { hashPassword } from './auth.js';
@@ -95,7 +95,16 @@ export async function masterRoutes(app: FastifyInstance) {
   // Master Tenants API
   app.get('/master/tenants', async (request: any, reply) => {
     if (!request.session.isMaster) return reply.status(401).send({ error: 'Yetkisiz' });
-    return reply.send({ ok: true, data: await loadTenants() });
+    const tenants = await loadTenants();
+    // Her siteye "Lynon bağlantısı girilmiş mi" bilgisi ekleniyor.
+    // Bağlantısı olmayan site artık ana sitenin kimlik bilgilerine
+    // DÜŞMÜYOR, yani hiç veri gösteremez — bunu panelde görmek gerekiyor,
+    // yoksa boş ekranın nedeni anlaşılmaz.
+    const zenginlestirilmis = await Promise.all(tenants.map(async (tenant: any) => {
+      await ensureTenantRuntime(tenant.id);
+      return { ...tenant, baglantiKuruldu: tenantBaglantisiKurulduMu(tenant.id) };
+    }));
+    return reply.send({ ok: true, data: zenginlestirilmis });
   });
 
   app.post('/master/tenants', async (request: any, reply) => {
@@ -268,24 +277,20 @@ export async function masterRoutes(app: FastifyInstance) {
       });
     }
 
+    const kayit = { version: 1 as const, lynon, backoffice, updatedAt: new Date().toISOString(), updatedBy: 'master' };
     try {
-      await saveTenantConnection(id, {
-        version: 1,
-        lynon,
-        backoffice,
-        updatedAt: new Date().toISOString(),
-        updatedBy: 'master',
-      });
+      await saveTenantConnection(id, kayit);
     } catch (error) {
       return reply.status(400).send({ ok: false, message: error instanceof Error ? error.message : 'Kaydedilemedi' });
     }
 
-    // Bellekteki kopya ve açık Lynon oturumu artık eski bilgilere ait.
-    invalidateTenantRuntime(id);
-    await ensureTenantRuntime(id);
+    // Belleğe DOĞRUDAN yazılıyor: geçersiz kılıp yeniden okumak arada bir
+    // pencere bırakırdı ve o anda gelen istek eski bağlantıyla çalışırdı.
+    // Açık Lynon oturumu da artık eski bilgilere ait.
+    tenantRuntimeYaz(id, kayit);
     clearLynonSession(safeTenantKey(id));
 
-    return reply.send({ ok: true });
+    return reply.send({ ok: true, baglantiKuruldu: tenantBaglantisiKurulduMu(id) });
   });
 
   /** Girilen bilgilerle gerçekten oturum açılabiliyor mu — kaydettikten sonra tek tuşla. */
