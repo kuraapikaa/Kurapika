@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { api } from '../api';
-import { Alan, Buton, Hata, Kart } from '../ui';
+import { Alan, Buton, Hata } from '../ui';
 
 /**
  * ORTAK BAŞVURU FORMU.
@@ -83,7 +83,7 @@ export function BasvuruFormu({ tamamlandi }: { tamamlandi: () => void }) {
 
   return (
     <form className="space-y-3" onSubmit={gonder}>
-      <Kart baslik="Hesap bilgileri">
+      <FormBolumu no={1} baslik="Hesap bilgileri" aciklama="Giriş için gerekli dört alan.">
         <div className="grid gap-3 md:grid-cols-2">
           <Alan etiket="Ad / Şirket *" deger={form.ad} degisti={yaz('ad')} />
           <Alan etiket="E-posta *" deger={form.eposta} degisti={yaz('eposta')} tip="email" />
@@ -95,14 +95,13 @@ export function BasvuruFormu({ tamamlandi }: { tamamlandi: () => void }) {
             ipucu="Harf, rakam, nokta, alt çizgi, tire. Trafiğiniz bu anahtarla eşleşir."
           />
         </div>
-      </Kart>
+      </FormBolumu>
 
-      <Kart baslik="Trafiğiniz">
-        <p className="mb-3 text-sm" style={{ color: 'var(--metin-2)' }}>
-          Bu alanlar zorunlu değil ama başvurunuzun değerlendirilmesini hızlandırır.
-          Rakamlar <strong>beyan</strong> olarak kaydedilir; kimse sizden kanıt istemiyor.
-        </p>
-
+      <FormBolumu
+        no={2}
+        baslik="Trafiğiniz"
+        aciklama="Hiçbiri zorunlu değil ama değerlendirmeyi hızlandırır."
+      >
         <div className="grid gap-3 md:grid-cols-2">
           <Alan
             etiket="Kanallarınız"
@@ -138,9 +137,9 @@ export function BasvuruFormu({ tamamlandi }: { tamamlandi: () => void }) {
             ))}
           </div>
         </div>
-      </Kart>
+      </FormBolumu>
 
-      <Kart baslik="İş bilgileri">
+      <FormBolumu no={3} baslik="İş bilgileri" aciklama="Ödeme ve tercihleriniz.">
         <div className="grid gap-3 md:grid-cols-2">
           <Alan
             etiket="Şu an çalıştığınız programlar"
@@ -165,13 +164,57 @@ export function BasvuruFormu({ tamamlandi }: { tamamlandi: () => void }) {
         <div className="mt-3">
           <Alan etiket="Eklemek istedikleriniz" deger={form.aciklama} degisti={yaz('aciklama')} cokSatir />
         </div>
-      </Kart>
+      </FormBolumu>
 
       {hata && <Hata mesaj={hata} />}
 
-      <Buton tip="submit" tur="birincil" tam devredisi={gonderiliyor}>
-        {gonderiliyor ? 'Gönderiliyor…' : 'Başvuruyu gönder'}
-      </Buton>
+      <div className="rounded-2xl border p-5" style={{ background: 'var(--yuzey)', borderColor: 'var(--kenar)' }}>
+        <Buton tip="submit" tur="birincil" tam devredisi={gonderiliyor}>
+          {gonderiliyor ? 'Gönderiliyor…' : 'Başvuruyu gönder'}
+        </Buton>
+        <p className="mt-3 text-center text-xs" style={{ color: 'var(--metin-2)' }}>
+          Beyan ettiğiniz rakamlar için kimse sizden kanıt istemiyor. Onay sonrası
+          e-postanızla giriş yaparsınız.
+        </p>
+      </div>
     </form>
+  );
+}
+
+/**
+ * Numaralı form bölümü.
+ *
+ * Uzun bir formu tek kutuda göstermek "doldurulacak çok şey var"
+ * hissi veriyor ve terk oranını artırıyor. Numaralandırmak formu
+ * sonlu ve ölçülebilir gösteriyor: üç bölüm, ilki dört alan.
+ *
+ * Adımlara BÖLMEDIM (sihirbaz yapmadım): opsiyonel alanları ayrı
+ * ekranlara koymak, atlanabilir olduklarını gizler ve zorunlu gibi
+ * hissettirir.
+ */
+function FormBolumu({
+  no, baslik, aciklama, children,
+}: {
+  no: number;
+  baslik: string;
+  aciklama: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="rounded-2xl border p-5" style={{ background: 'var(--yuzey)', borderColor: 'var(--kenar)' }}>
+      <div className="mb-4 flex items-start gap-3">
+        <span
+          className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-semibold"
+          style={{ background: 'color-mix(in srgb, var(--vurgu) 14%, transparent)', color: 'var(--vurgu)' }}
+        >
+          {no}
+        </span>
+        <div>
+          <h2 className="font-medium">{baslik}</h2>
+          <p className="text-sm" style={{ color: 'var(--metin-2)' }}>{aciklama}</p>
+        </div>
+      </div>
+      {children}
+    </section>
   );
 }
