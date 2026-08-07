@@ -70,6 +70,7 @@ import {
   registerOtomatikKategoriJob,
   registerMutabakatJob,
   registerOyuncuBakiyeJob,
+  registerAffiliateCrmJob,
 } from './jobs/scheduler.js';
 import { enforceEnvironment } from './lib/envValidator.js';
 import { watchConfigFile, getWatcherStatus } from './lib/configWatcher.js';
@@ -329,6 +330,7 @@ try {
   await registerOtomatikKategoriJob();
   await registerMutabakatJob();
   await registerOyuncuBakiyeJob();
+  await registerAffiliateCrmJob();
   scheduler.start(10000);
 
   // ─── Config Hot-Reload ─────────────────────────────────────────────────────

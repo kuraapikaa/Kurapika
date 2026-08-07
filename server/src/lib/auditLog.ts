@@ -19,6 +19,10 @@ export type AuditAction =
   // Odeme kaydi para hareketi; kimin hangi donemi odedigi denetlenebilir olmali.
   | 'affiliate_odeme_create'
   | 'affiliate_odeme_update'
+  // Oyuncuyu Lynon'da ortak yapmak. Uc BOS yanit donduguu icin panelin
+  // elinde baska hicbir kanit yok: kimin, hangi oyuncuyu, hangi tiple
+  // ortak yaptigi yalnizca bu kayitta duruyor.
+  | 'affiliate_player_register'
   | 'logout'
   | 'lead_create'
   | 'lead_update'
