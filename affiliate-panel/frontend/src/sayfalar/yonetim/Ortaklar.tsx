@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { api, gunBicimi, useVeri } from '../../api';
+import { api, useVeri } from '../../api';
 import { Alan, Bos, Buton, Hata, Hucre, Kart, Rozet, Satir, Tablo, Yukleniyor } from '../../ui';
 
 interface Ortak {
@@ -11,10 +11,17 @@ interface Ortak {
   planId: string | null;
   trafikKaynagi: string | null;
   parolaKurulu: boolean;
+  odemeYontemi: string | null;
   createdAt: string;
 }
 
 interface Plan { id: string; ad: string }
+
+interface OdemeYontemleri {
+  yontemler: string[];
+  kaynak: 'backoffice' | 'yok' | 'hata';
+  mesaj?: string;
+}
 
 const DURUM_RENGI = {
   bekliyor: 'uyari', onaylandi: 'olumlu', askida: 'olumsuz', reddedildi: 'olumsuz',
@@ -27,6 +34,10 @@ const DURUM_ETIKETI = {
 export function Ortaklar() {
   const liste = useVeri<{ ortaklar: Ortak[] }>('/api/yonetim/ortaklar');
   const planlar = useVeri<{ planlar: Plan[] }>('/api/yonetim/planlar');
+  // Odeme yontemleri backoffice'ten: serbest metin "Papara", "papara",
+  // "PAPARA TR" gibi uc ayri deger uretiyor ve odeme gunu hangisinin
+  // hangisi oldugu elle cozuluyordu.
+  const odeme = useVeri<OdemeYontemleri>('/api/yonetim/odeme-yontemleri');
   const [hata, setHata] = useState<string | null>(null);
   const [yeni, setYeni] = useState({ ad: '', eposta: '', ortakAnahtari: '', parola: '' });
   // Uretilen parola YALNIZCA burada, bir kez gorunur; hicbir listede yok.
@@ -94,11 +105,34 @@ export function Ortaklar() {
         </Kart>
       )}
 
+      <Kart
+        baslik="Ödeme yöntemleri"
+        sag={<Buton onClick={() => odeme.yenile()}>Backoffice’ten yenile</Buton>}
+      >
+        {odeme.veri?.kaynak === 'backoffice' && odeme.veri.yontemler.length > 0 ? (
+          <>
+            <p className="mb-2 text-sm" style={{ color: 'var(--metin-2)' }}>
+              Son 90 günde gerçekten para geçmiş {odeme.veri.yontemler.length} yöntem. Ortağın ödeme
+              yöntemi bu listeden seçiliyor.
+            </p>
+            <div className="flex flex-wrap gap-1">
+              {odeme.veri.yontemler.map((y) => <Rozet key={y} metin={y} />)}
+            </div>
+          </>
+        ) : (
+          <p className="text-sm" style={{ color: 'var(--metin-2)' }}>
+            {odeme.veri?.kaynak === 'hata'
+              ? `Backoffice’ten okunamadı: ${odeme.veri.mesaj}. Ödeme yöntemi serbest metin olarak girilecek.`
+              : 'Backoffice bağlantısı yok; ödeme yöntemi serbest metin olarak girilecek.'}
+          </p>
+        )}
+      </Kart>
+
       <Kart baslik="Ortaklar">
         {(liste.veri?.ortaklar ?? []).length === 0 ? (
           <Bos mesaj="Henüz ortak yok." />
         ) : (
-          <Tablo basliklar={['Ortak', 'Anahtar', 'Durum', 'Plan', 'Kayıt', 'İşlem']}>
+          <Tablo basliklar={['Ortak', 'Anahtar', 'Durum', 'Plan', 'Ödeme yöntemi', 'İşlem']}>
             {liste.veri!.ortaklar.map((o) => (
               <Satir key={o.id}>
                 <Hucre>
@@ -120,7 +154,26 @@ export function Ortaklar() {
                     {planSecenekleri.map((p) => <option key={p.deger} value={p.deger}>{p.etiket}</option>)}
                   </select>
                 </Hucre>
-                <Hucre>{gunBicimi(o.createdAt)}</Hucre>
+                <Hucre>
+                  {(odeme.veri?.yontemler ?? []).length > 0 ? (
+                    <select
+                      className="rounded-lg border px-2 py-1 text-xs"
+                      style={{ background: 'var(--yuzey-2)', borderColor: 'var(--kenar)', color: 'var(--metin)' }}
+                      value={o.odemeYontemi ?? ''}
+                      onChange={(e) => calistir(() => api.yaz(`/api/yonetim/ortaklar/${o.id}`, { odemeYontemi: e.target.value }))}
+                    >
+                      <option value="">Seçilmedi</option>
+                      {/* Ortagin mevcut degeri listede yoksa yine de gorunmeli;
+                          aksi halde secici onu sessizce bosaltirdi. */}
+                      {o.odemeYontemi && !(odeme.veri?.yontemler ?? []).includes(o.odemeYontemi) && (
+                        <option value={o.odemeYontemi}>{o.odemeYontemi} (listede yok)</option>
+                      )}
+                      {(odeme.veri?.yontemler ?? []).map((y) => <option key={y} value={y}>{y}</option>)}
+                    </select>
+                  ) : (
+                    <span className="text-xs">{o.odemeYontemi ?? '—'}</span>
+                  )}
+                </Hucre>
                 <Hucre>
                   <div className="flex flex-wrap gap-1">
                     {o.durum !== 'onaylandi' && (

@@ -46,6 +46,43 @@ const kademeOzeti = (p: Plan): string => {
   return `${p.gelirKademeleri.map((k) => `${k.esik}+ → %${k.yuzde}`).join(', ')} (${mod})`;
 };
 
+/**
+ * HAZIR PLAN SABLONLARI.
+ *
+ * Bos formdan bir hibrit plan kurmak, hangi alanlarin birlikte anlamli
+ * oldugunu bilmeyi gerektiriyor: hibritte hem yuzde hem CPA dolmali,
+ * kademeli planda ilk esik 0 olmali. Sablon bu bilgiyi forma tasiyor;
+ * kullanici degistirip kaydediyor.
+ *
+ * Oranlar SEKTOR ORTALAMASINA yakin tutuldu ama baglayici degil --
+ * sablonun isi dogru SEKLI vermek, dogru RAKAMI degil.
+ */
+const SABLONLAR: Array<{ ad: string; aciklama: string; deger: Partial<typeof BOS_PLAN> }> = [
+  {
+    ad: 'Gelir payı (düz)',
+    aciklama: 'Tek oran. En basit ve en kolay anlatılan model.',
+    deger: { ad: 'Gelir payı %30', tur: 'gelir-payi', gelirPayiYuzde: '30', cpaTutari: '0', kademeler: '' },
+  },
+  {
+    ad: 'Gelir payı (kademeli)',
+    aciklama: 'Hacim büyüdükçe oran artar; ortağı büyümeye teşvik eder.',
+    deger: {
+      ad: 'Kademeli gelir payı', tur: 'gelir-payi', gelirPayiYuzde: '25', cpaTutari: '0',
+      kademeler: ['0:25', '10000:35', '50000:45'].join('\n'), kademeModu: 'topluca',
+    },
+  },
+  {
+    ad: 'CPA',
+    aciklama: 'Oyuncu başı sabit ödeme. Ortak için öngörülebilir, site için riskli.',
+    deger: { ad: 'CPA 500', tur: 'cpa', gelirPayiYuzde: '0', cpaTutari: '500', kademeler: '' },
+  },
+  {
+    ad: 'Hibrit',
+    aciklama: 'Düşürülmüş gelir payı + oyuncu başı ödeme. İkisinin riski paylaşılır.',
+    deger: { ad: 'Hibrit %15 + 250', tur: 'hibrit', gelirPayiYuzde: '15', cpaTutari: '250', kademeler: '' },
+  },
+];
+
 export function Planlar() {
   const { veri, yukleniyor, hata, yenile } = useVeri<{ planlar: Plan[] }>('/api/yonetim/planlar');
   const [form, setForm] = useState({ ...BOS_PLAN });
@@ -65,6 +102,27 @@ export function Planlar() {
 
   return (
     <>
+      <Kart baslik="Hazır şablonlar">
+        <p className="mb-3 text-sm" style={{ color: 'var(--metin-2)' }}>
+          Şablon formu doldurur; rakamları değiştirip kaydedin. Oranlar sektör ortalamasına yakın
+          örneklerdir, bağlayıcı değildir.
+        </p>
+        <div className="grid gap-2 md:grid-cols-4">
+          {SABLONLAR.map((sb) => (
+            <button
+              key={sb.ad}
+              type="button"
+              className="rounded-lg border p-3 text-left transition-opacity hover:opacity-80"
+              style={{ background: 'var(--yuzey-2)', borderColor: 'var(--kenar)' }}
+              onClick={() => setForm({ ...BOS_PLAN, ...sb.deger })}
+            >
+              <span className="block text-sm font-medium">{sb.ad}</span>
+              <span className="mt-1 block text-xs" style={{ color: 'var(--metin-2)' }}>{sb.aciklama}</span>
+            </button>
+          ))}
+        </div>
+      </Kart>
+
       <Kart baslik="Yeni komisyon planı">
         <div className="grid gap-3 md:grid-cols-3">
           <Alan etiket="Plan adı" deger={form.ad} degisti={(v) => setForm({ ...form, ad: v })} />

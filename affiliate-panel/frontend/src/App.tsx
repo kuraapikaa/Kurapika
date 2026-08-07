@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { NavLink, Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { api, useVeri } from './api';
 import { Buton, Yukleniyor, useTema } from './ui';
-import { Giris } from './sayfalar/Giris';
+import { Landing } from './sayfalar/Landing';
 import { Baglanti } from './sayfalar/yonetim/Baglanti';
 import { Basvurular } from './sayfalar/yonetim/Basvurular';
 import { Donemler } from './sayfalar/yonetim/Donemler';
@@ -65,7 +65,10 @@ export function App() {
   }, [veri?.girisli, veri?.rol]);
 
   if (yukleniyor) return <Yukleniyor />;
-  if (!veri?.girisli) return <Giris girisYapildi={yenile} />;
+  // Giris yapmamis ziyaretci CIPLAK BIR GIRIS KUTUSU degil, programin
+  // ne teklif ettigini anlatan sayfayi goruyor: bu adres ortaklara
+  // paylasilan adres ve ilk kez gelen biri kapiyla karsilasmamali.
+  if (!veri?.girisli) return <Landing girisYapildi={yenile} />;
 
   const yonetici = veri.rol === 'yonetici';
   const menu = yonetici ? YONETIM_MENUSU : PORTAL_MENUSU;
