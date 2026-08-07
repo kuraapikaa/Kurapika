@@ -972,6 +972,61 @@
   --panel-special: #bf5af2;
   --panel-text-dim: #c8cdd5;
   --panel-faint: #5c6470;
+  /* Yuzey yukseltmesi ve ic cizgiler. Eskiden rgba(255,255,255,...) olarak
+     gomuluydu; acik temada beyaz uzerine beyaz hicbir sey gostermiyordu. */
+  --panel-header: rgba(8, 12, 20, 0.72);
+  --panel-raise: rgba(255, 255, 255, 0.03);
+  --panel-raise-strong: rgba(255, 255, 255, 0.06);
+  --panel-inset-line: rgba(255, 255, 255, 0.035);
+  --panel-active-text: #f2f6ff;
+  --panel-shadow: rgba(2, 6, 15, 0.35);
+  --panel-shadow-strong: rgba(2, 6, 15, 0.42);
+  color-scheme: dark;
+}
+
+/*
+ * ACIK TEMA.
+ *
+ * Yalnizca yonetim panelini etkiler. Lobi (`narcos-theme`) BILEREK
+ * disarida: oyuncuya bakan marka yuzeyi sicak siyah + altin ve acik bir
+ * varyanti yok; ayni anahtarla ikisini birden cevirmek markayi bozardi.
+ *
+ * Palet, koyu temanin ters cevrilmisi degil. Zemin notr-soguk gri
+ * (#f4f6fa), yuzeyler saf beyaz; boylece kartlar zeminden ONE cikiyor —
+ * koyu temada tam tersi calisiyor. Aksan mavisi ayni kaldi, cunku secili
+ * durumun anlami temaya gore degismemeli.
+ */
+:root[data-panel-theme='light'] {
+  --panel-bg: #f4f6fa;
+  --panel-sidebar: rgba(255, 255, 255, 0.88);
+  --panel-surface: rgba(255, 255, 255, 0.72);
+  --panel-surface-2: #ffffff;
+  --panel-border: rgba(15, 23, 42, 0.12);
+  --panel-border-strong: rgba(10, 132, 255, 0.42);
+  --panel-text: #0f172a;
+  --panel-text-dim: #33415a;
+  --panel-muted: #5b6b86;
+  /* Beyaz uzerinde 4.5:1'in altina dusmemeli — bu token 8-9.5px'lik
+     buyuk harf mikro etiketlerde kullaniliyor, en zor okunan metin o. */
+  --panel-faint: #64748b;
+  --panel-header: rgba(255, 255, 255, 0.82);
+  --panel-accent: #0a6ed1;
+  --panel-accent-teal: #0891b2;
+  --panel-accent-soft: rgba(10, 110, 209, 0.1);
+  --panel-blur: blur(20px) saturate(140%);
+  /* Durum renkleri beyaz uzerinde koyulastirildi: #30d158 acik zeminde
+     okunmuyordu (kontrast ~1.6:1). */
+  --panel-success: #15803d;
+  --panel-warning: #b45309;
+  --panel-danger: #b91c1c;
+  --panel-special: #7e22ce;
+  --panel-raise: rgba(15, 23, 42, 0.045);
+  --panel-raise-strong: rgba(15, 23, 42, 0.08);
+  --panel-inset-line: rgba(255, 255, 255, 0.9);
+  --panel-active-text: #0b2545;
+  --panel-shadow: rgba(15, 23, 42, 0.1);
+  --panel-shadow-strong: rgba(15, 23, 42, 0.14);
+  color-scheme: light;
 }
 
 .app-shell {
@@ -993,7 +1048,7 @@
   background: var(--panel-sidebar) !important;
   backdrop-filter: var(--panel-blur) !important;
   -webkit-backdrop-filter: var(--panel-blur) !important;
-  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.03) !important;
+  box-shadow: inset -1px 0 0 var(--panel-raise) !important;
 }
 
 .app-shell .sidebar-brand {
@@ -1017,7 +1072,7 @@
   width: 26px !important;
   height: 26px !important;
   border-radius: 8px !important;
-  background: rgba(255, 255, 255, 0.03) !important;
+  background: var(--panel-raise) !important;
 }
 
 .app-shell .sidebar-nav-group a[aria-current='page'] .sidebar-link-icon {
@@ -1038,8 +1093,8 @@
 .app-shell .sidebar-nav-group a[aria-current='page'] {
   border-color: rgba(59, 130, 246, 0.28) !important;
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.16), rgba(45, 212, 191, 0.08)) !important;
-  color: #f2f6ff !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+  color: var(--panel-active-text) !important;
+  box-shadow: inset 0 1px 0 var(--panel-raise-strong) !important;
 }
 
 .app-shell .sidebar-nav-group a[aria-current='page'] .sidebar-link-icon {
@@ -1062,10 +1117,13 @@
   z-index: 45;
   min-height: 58px !important;
   border-bottom: 1px solid var(--panel-border) !important;
-  background: rgba(8, 12, 20, 0.72) !important;
+  /* Kendi token'i var: baslik cubugu zeminden bir tik AYRI durmali, ama
+     acik temada koyu kalmamali. Sabit rgba(8,12,20,.72) idi; acik temada
+     koyu zemin uzerine koyu metin cikiyor, baslik hic okunmuyordu. */
+  background: var(--panel-header) !important;
   backdrop-filter: var(--panel-blur) !important;
   -webkit-backdrop-filter: var(--panel-blur) !important;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.03) !important;
+  box-shadow: 0 1px 0 var(--panel-raise) !important;
 }
 
 .app-shell .app-content {
@@ -1128,7 +1186,7 @@
   background-image: none !important;
   backdrop-filter: var(--panel-blur) !important;
   -webkit-backdrop-filter: var(--panel-blur) !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035), 0 14px 40px rgba(2, 6, 15, 0.35) !important;
+  box-shadow: inset 0 1px 0 var(--panel-inset-line), 0 14px 40px var(--panel-shadow) !important;
 }
 
 .app-shell .premium-card:hover,
@@ -1137,7 +1195,7 @@
   transform: none !important;
   border-color: var(--panel-border-strong) !important;
   background-color: var(--panel-surface-2) !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 18px 50px rgba(2, 6, 15, 0.42) !important;
+  box-shadow: inset 0 1px 0 var(--panel-inset-line), 0 18px 50px var(--panel-shadow-strong) !important;
 }
 
 .app-shell .tab-workspace section > header {
@@ -1319,4 +1377,270 @@
     padding-left: 8px !important;
     padding-right: 8px !important;
   }
+}
+/* ─── Tema anahtarı ve açık tema düzeltmeleri ─────────────────────────────
+ *
+ * Sidebar'daki sınıflar Tailwind ile doğrudan renk gömüyordu
+ * (`text-white`, `border-white/[0.06]`, `bg-black/25`, `text-slate-600`).
+ * Açık temada bunların hepsi beyaz üstüne beyaz ya da siyah kutu olarak
+ * çıkıyordu. Panelin geri kalanı gibi burası da `--panel-*` token'larına
+ * bağlandı; koyu temadaki görünüm birebir korunuyor çünkü token'ların
+ * koyu değerleri eski sabitlerle aynı.
+ */
+
+.app-shell .sidebar-foot {
+  border-top-color: var(--panel-border) !important;
+}
+
+.app-shell .sidebar-theme-toggle {
+  color: var(--panel-muted);
+}
+
+.app-shell .sidebar-theme-toggle:hover {
+  background: var(--panel-raise-strong);
+  color: var(--panel-text);
+}
+
+.app-shell .sidebar-brand {
+  border-bottom-color: var(--panel-border) !important;
+}
+
+.app-shell .sidebar-brand strong {
+  color: var(--panel-text) !important;
+}
+
+.app-shell .sidebar-brand small {
+  color: var(--panel-faint) !important;
+}
+
+/* Menüdeki arama kutusu: koyu temada siyah, açık temada beyaz zemin. */
+.app-shell .premium-sidebar input[type='text'] {
+  border-color: var(--panel-border) !important;
+  background: var(--panel-raise) !important;
+  color: var(--panel-text) !important;
+}
+
+.app-shell .sidebar-nav-group a {
+  color: var(--panel-text-dim) !important;
+}
+
+.app-shell .sidebar-nav-group a:hover {
+  background: var(--panel-raise) !important;
+  color: var(--panel-text) !important;
+}
+
+.app-shell .sidebar-nav-group a[aria-current='page'] {
+  color: var(--panel-active-text) !important;
+}
+
+/*
+ * Açık temada aksan yüzeyleri güçlendirilir. Koyu temada %16 alfa mavi
+ * siyah üstünde net okunuyor; beyaz üstünde aynı alfa neredeyse görünmez
+ * kalıyor, seçili menü öğesi seçili görünmüyordu.
+ */
+:root[data-panel-theme='light'] .app-shell .sidebar-nav-group a[aria-current='page'] {
+  border-color: rgba(10, 110, 209, 0.32) !important;
+  background: linear-gradient(135deg, rgba(10, 110, 209, 0.13), rgba(8, 145, 178, 0.08)) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7) !important;
+}
+
+:root[data-panel-theme='light'] .app-shell .sidebar-nav-group a[aria-current='page'] .sidebar-link-icon {
+  background: rgba(10, 110, 209, 0.16) !important;
+  border-color: rgba(10, 110, 209, 0.3) !important;
+  color: #0a6ed1 !important;
+}
+
+:root[data-panel-theme='light'] .app-shell .sidebar-link-icon {
+  color: var(--panel-muted) !important;
+}
+
+:root[data-panel-theme='light'] .app-shell .premium-sidebar {
+  box-shadow: 1px 0 0 var(--panel-border), 12px 0 40px rgba(15, 23, 42, 0.05) !important;
+}
+
+:root[data-panel-theme='light'] .app-shell .premium-sidebar::after {
+  display: none;
+}
+
+/* Zemin halesi: koyu temada mavi/mor ışıma, açık temada yumuşak yıkama. */
+:root[data-panel-theme='light'] .app-shell .app-backdrop {
+  background:
+    radial-gradient(ellipse 1000px 600px at 17% -60px, rgba(10, 110, 209, 0.07), transparent 70%),
+    radial-gradient(ellipse 840px 560px at 88% 200px, rgba(126, 34, 206, 0.045), transparent 70%),
+    var(--panel-bg) !important;
+}
+
+/*
+ * Gövde: kart, tablo, başlık ve form yüzeyleri.
+ *
+ * Bileşenlerde `bg-slate-900/40`, `text-white`, `text-slate-400` gibi
+ * doğrudan koyu değerler var. Hepsini 65 dosyada tek tek değiştirmek
+ * yerine panel kabuğu altında token'a bağlanıyorlar — Tailwind sınıfı
+ * yerinde kalır, rengi tema belirler.
+ */
+:root[data-panel-theme='light'] .app-shell .tab-workspace table thead {
+  background: rgba(15, 23, 42, 0.035) !important;
+}
+
+:root[data-panel-theme='light'] .app-shell .tab-workspace table th {
+  border-bottom-color: var(--panel-border) !important;
+  color: var(--panel-muted) !important;
+}
+
+:root[data-panel-theme='light'] .app-shell .tab-workspace table td {
+  border-bottom-color: rgba(15, 23, 42, 0.07) !important;
+  color: var(--panel-text-dim) !important;
+}
+
+:root[data-panel-theme='light'] .app-shell .tab-workspace table tbody tr:hover {
+  background: rgba(10, 110, 209, 0.045) !important;
+}
+
+:root[data-panel-theme='light'] .app-shell input:not([type='checkbox']):not([type='radio']),
+:root[data-panel-theme='light'] .app-shell select,
+:root[data-panel-theme='light'] .app-shell textarea {
+  border-color: var(--panel-border) !important;
+  background-color: #ffffff !important;
+  color: var(--panel-text) !important;
+}
+
+/*
+ * Açık temada beyaz metin görünmez.
+ *
+ * Panelde `text-white`, `text-slate-100/200/300` ve `text-zinc-*`
+ * yaygın; hepsi koyu zemin varsayıyor. Kabuk altında koyu metne
+ * çevriliyor. Aksan renkli metinlere (cyan/blue/emerald/rose)
+ * DOKUNULMUYOR — onlar durum bildiriyor ve iki temada da okunuyor.
+ */
+:root[data-panel-theme='light'] .app-shell .tab-workspace [class*='text-white'],
+:root[data-panel-theme='light'] .app-shell .tab-workspace [class*='text-slate-100'],
+:root[data-panel-theme='light'] .app-shell .tab-workspace [class*='text-slate-200'],
+:root[data-panel-theme='light'] .app-shell .tab-workspace [class*='text-zinc-100'],
+:root[data-panel-theme='light'] .app-shell .tab-workspace [class*='text-zinc-200'],
+:root[data-panel-theme='light'] .app-shell .app-header [class*='text-white'] {
+  color: var(--panel-text) !important;
+}
+
+:root[data-panel-theme='light'] .app-shell .tab-workspace [class*='text-slate-400'],
+:root[data-panel-theme='light'] .app-shell .tab-workspace [class*='text-slate-500'],
+:root[data-panel-theme='light'] .app-shell .tab-workspace [class*='text-zinc-400'],
+:root[data-panel-theme='light'] .app-shell .tab-workspace [class*='text-zinc-500'] {
+  color: var(--panel-muted) !important;
+}
+
+:root[data-panel-theme='light'] .app-shell .tab-workspace [class*='text-slate-600'],
+:root[data-panel-theme='light'] .app-shell .tab-workspace [class*='text-zinc-600'] {
+  color: var(--panel-faint) !important;
+}
+
+/*
+ * Bölüm başlıkları ve gövde metni.
+ *
+ * `.tab-workspace section > header h1/h2` rengini `@apply text-white` ile
+ * ALIYOR — sınıf DOM'da bir attribute olarak görünmediği için yukarıdaki
+ * `[class*='text-white']` seçicisi bunları hiç yakalamıyordu. Açık temada
+ * beyaz üstüne beyaz başlık kalıyordu.
+ */
+:root[data-panel-theme='light'] .app-shell .tab-workspace section > header h1,
+:root[data-panel-theme='light'] .app-shell .tab-workspace section > header h2,
+:root[data-panel-theme='light'] .app-shell .tab-workspace section > header h3 {
+  color: var(--panel-text) !important;
+}
+
+:root[data-panel-theme='light'] .app-shell .tab-workspace section > header p {
+  color: var(--panel-muted) !important;
+}
+
+/* Başlık çubuğundaki metin de kabuk altında token'a bağlı. */
+:root[data-panel-theme='light'] .app-shell .app-header {
+  color: var(--panel-text);
+}
+
+:root[data-panel-theme='light'] .app-shell .app-header [class*='text-slate-400'],
+:root[data-panel-theme='light'] .app-shell .app-header [class*='text-slate-500'],
+:root[data-panel-theme='light'] .app-shell .app-header [class*='text-zinc-400'] {
+  color: var(--panel-muted) !important;
+}
+
+/*
+ * DURUM RENKLERİ AÇIK TEMADA KOYULAŞIR.
+ *
+ * Bunlara dokunmamak ilk düşünülen doğru karardı: emerald "onaylandı",
+ * rose "reddedildi", amber "bekliyor" demek ve anlamları temaya göre
+ * değişmemeli. Ama ölçüm aksini söyledi — beyaz zemin üzerinde
+ * text-emerald-300 1.52:1, text-amber-300 1.44:1, text-rose-300 1.89:1
+ * kontrast veriyordu; yani üç durum da fiilen okunmuyordu.
+ *
+ * Renkler aynı AİLEDE kalıp koyulaşıyor: anlam korunur, okunabilirlik
+ * gelir. Yalnızca METİN rengi değişir; rozet zeminleri (bg-emerald-300/10)
+ * ve kenarlıklar olduğu gibi kalır.
+ */
+:root[data-panel-theme='light'] .app-shell [class*='text-emerald-2'],
+:root[data-panel-theme='light'] .app-shell [class*='text-emerald-3'],
+:root[data-panel-theme='light'] .app-shell [class*='text-emerald-4'],
+:root[data-panel-theme='light'] .app-shell [class*='text-green-3'],
+:root[data-panel-theme='light'] .app-shell [class*='text-green-4'],
+:root[data-panel-theme='light'] .app-shell [class*='text-teal-3'] {
+  color: var(--panel-success) !important;
+}
+
+:root[data-panel-theme='light'] .app-shell [class*='text-rose-2'],
+:root[data-panel-theme='light'] .app-shell [class*='text-rose-3'],
+:root[data-panel-theme='light'] .app-shell [class*='text-rose-4'],
+:root[data-panel-theme='light'] .app-shell [class*='text-red-3'],
+:root[data-panel-theme='light'] .app-shell [class*='text-red-4'] {
+  color: var(--panel-danger) !important;
+}
+
+:root[data-panel-theme='light'] .app-shell [class*='text-amber-2'],
+:root[data-panel-theme='light'] .app-shell [class*='text-amber-3'],
+:root[data-panel-theme='light'] .app-shell [class*='text-amber-4'],
+:root[data-panel-theme='light'] .app-shell [class*='text-yellow-3'],
+:root[data-panel-theme='light'] .app-shell [class*='text-orange-3'] {
+  color: var(--panel-warning) !important;
+}
+
+:root[data-panel-theme='light'] .app-shell [class*='text-cyan-1'],
+:root[data-panel-theme='light'] .app-shell [class*='text-cyan-2'],
+:root[data-panel-theme='light'] .app-shell [class*='text-cyan-3'],
+:root[data-panel-theme='light'] .app-shell [class*='text-sky-3'],
+:root[data-panel-theme='light'] .app-shell [class*='text-blue-2'],
+:root[data-panel-theme='light'] .app-shell [class*='text-blue-3'] {
+  color: var(--panel-accent) !important;
+}
+
+:root[data-panel-theme='light'] .app-shell [class*='text-violet-3'],
+:root[data-panel-theme='light'] .app-shell [class*='text-purple-3'],
+:root[data-panel-theme='light'] .app-shell [class*='text-fuchsia-3'] {
+  color: var(--panel-special) !important;
+}
+
+/*
+ * Nötr gri metinler — kabuk GENELİNDE.
+ *
+ * Bu kurallar önce yalnızca `.tab-workspace` altındaydı; sidebar ve
+ * altbilgideki `text-slate-300` gibi sınıflar dışarıda kalıp beyaz üstüne
+ * açık gri olarak (1.48:1) çıkıyordu.
+ */
+:root[data-panel-theme='light'] .app-shell [class*='text-slate-100'],
+:root[data-panel-theme='light'] .app-shell [class*='text-slate-200'],
+:root[data-panel-theme='light'] .app-shell [class*='text-slate-300'],
+:root[data-panel-theme='light'] .app-shell [class*='text-zinc-100'],
+:root[data-panel-theme='light'] .app-shell [class*='text-zinc-200'],
+:root[data-panel-theme='light'] .app-shell [class*='text-zinc-300'],
+:root[data-panel-theme='light'] .app-shell [class*='text-white'] {
+  color: var(--panel-text) !important;
+}
+
+:root[data-panel-theme='light'] .app-shell [class*='text-slate-400'],
+:root[data-panel-theme='light'] .app-shell [class*='text-slate-500'],
+:root[data-panel-theme='light'] .app-shell [class*='text-zinc-400'],
+:root[data-panel-theme='light'] .app-shell [class*='text-zinc-500'] {
+  color: var(--panel-muted) !important;
+}
+
+:root[data-panel-theme='light'] .app-shell [class*='text-slate-600'],
+:root[data-panel-theme='light'] .app-shell [class*='text-zinc-600'],
+:root[data-panel-theme='light'] .app-shell [class*='text-slate-700'] {
+  color: var(--panel-faint) !important;
 }
