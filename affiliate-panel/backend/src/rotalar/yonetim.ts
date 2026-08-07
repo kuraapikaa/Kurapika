@@ -157,6 +157,23 @@ export async function yonetimRotalari(app: FastifyInstance): Promise<void> {
 
   app.get('/ortaklar', async (istek) => ({ ortaklar: await ortaklariListele(istek.kiraci) }));
 
+  /**
+   * Bekleyen başvurular.
+   *
+   * Ayrı bir uç: yönetici günde bir kez "yeni başvuru var mı" diye
+   * bakıyor ve bunun için tüm ortak listesini çekip istemcide
+   * filtrelemek, ortak sayısı büyüdükçe boşa taşınan veri demek.
+   * En eski başvuru başta — sırada bekleyen en uzun süre bekleyendir.
+   */
+  app.get('/basvurular', async (istek) => {
+    const ortaklar = await ortaklariListele(istek.kiraci);
+    return {
+      basvurular: ortaklar
+        .filter((o) => o.durum === 'bekliyor')
+        .sort((a, b) => a.createdAt.localeCompare(b.createdAt)),
+    };
+  });
+
   // `gorunume` ZORUNLU: servis tam kaydı döndürüyor ve içinde parola
   // özeti var. Doğrudan göndermek, özeti ağdan dışarı çıkarmak olurdu —
   // listede maskelenip burada unutulması tam olarak bu tür bir hata.

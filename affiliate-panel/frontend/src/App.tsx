@@ -4,6 +4,7 @@ import { api, useVeri } from './api';
 import { Buton, Yukleniyor, useTema } from './ui';
 import { Giris } from './sayfalar/Giris';
 import { Baglanti } from './sayfalar/yonetim/Baglanti';
+import { Basvurular } from './sayfalar/yonetim/Basvurular';
 import { Donemler } from './sayfalar/yonetim/Donemler';
 import { Kademeler } from './sayfalar/yonetim/Kademeler';
 import { Medya } from './sayfalar/yonetim/Medya';
@@ -28,6 +29,7 @@ interface Oturum {
 
 const YONETIM_MENUSU = [
   { yol: '/ozet', etiket: 'Özet' },
+  { yol: '/basvurular', etiket: 'Başvurular' },
   { yol: '/ortaklar', etiket: 'Ortaklar' },
   { yol: '/planlar', etiket: 'Komisyon planları' },
   { yol: '/medya', etiket: 'Medya' },
@@ -114,6 +116,7 @@ export function App() {
           {yonetici ? (
             <>
               <Route path="/ozet" element={<Ozet />} />
+              <Route path="/basvurular" element={<Basvurular />} />
               <Route path="/ortaklar" element={<Ortaklar />} />
               <Route path="/planlar" element={<Planlar />} />
               <Route path="/medya" element={<Medya />} />

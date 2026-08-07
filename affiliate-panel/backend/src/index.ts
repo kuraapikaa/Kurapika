@@ -69,12 +69,27 @@ async function baslat(): Promise<void> {
   if (existsSync(arayuzDizini)) {
     await app.register(fastifyStatic, { root: arayuzDizini });
     app.setNotFoundHandler((istek, yanit) => {
-      // API yollari 404 DONMELI; SPA kabugu dondurmek, hatali bir uc
-      // adresini "sayfa var ama bos" gibi gosterirdi.
-      if (istek.url.startsWith('/api') || istek.url.startsWith('/c/')) {
-        return yanit.status(404).send({ hata: 'Bulunamadı.' });
+      /**
+       * SPA kabuğu YALNIZCA kök adres için.
+       *
+       * Önceki hâli, statik dosya olarak bulunamayan HER yola
+       * `index.html` dönüyordu. Sızıntı değildi (dosyalar zaten
+       * `genel/` içinde yok) ama sunucu `/.env`, `/.git/config`,
+       * `/.npmrc` gibi yollara da 200 dönüyordu — üretim logunda
+       * tarayıcıların bunları denediği ve 200 aldığı görüldü. Tarayıcı
+       * 200'ü "burada bir şey var" diye okuyup taramayı derinleştiriyor.
+       *
+       * Arayüz `HashRouter` kullanıyor: her rota `/#/...` biçiminde ve
+       * sunucunun görmesi gereken tek yol `/`. Yani derin bağlantı için
+       * yedek yola hiç gerek yok — bulunamayan her şey gerçekten 404.
+       */
+      if (istek.url === '/' || istek.url.startsWith('/?')) {
+        return yanit.sendFile('index.html');
       }
-      return yanit.sendFile('index.html');
+      const apiYolu = istek.url.startsWith('/api') || istek.url.startsWith('/c/');
+      return apiYolu
+        ? yanit.status(404).send({ hata: 'Bulunamadı.' })
+        : yanit.status(404).type('text/plain').send('Bulunamadı.');
     });
   }
 
