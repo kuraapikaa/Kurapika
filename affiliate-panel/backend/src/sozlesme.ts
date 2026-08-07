@@ -34,6 +34,8 @@ import type { OrtakDurumu, OrtakGorunumu } from './servisler/ortaklar.js';
 import type { OtoBonusAyari, OtoBonusDurumuYaniti, OtoBonusKaydi } from './servisler/otoBonus.js';
 import type { EslesmeCakismasi, OyuncuEslesmesi } from './servisler/oyuncuEslesme.js';
 import type { PostbackAyari, PostbackKaydi } from './servisler/postback.js';
+import type { KuyrukOzeti } from './depolar/olayKuyrugu.js';
+import type { SirDurumu } from './servisler/webhookSirri.js';
 import type { CuzdanHareketi, OrtakBakiyesi } from './servisler/cuzdan.js';
 import type { AnahtarDurumu } from './servisler/s2sAnahtari.js';
 import type { SenkronSonucu } from './servisler/senkron.js';
@@ -140,6 +142,7 @@ export interface YonetimUclari {
   '/trafik-kalitesi': { raporlar: KaliteRaporGorunumu[] };
   '/btag': { anahtarlar: BtagAnahtari[]; sahipsiz: SahipsizAnahtar[]; olcumsuzSayisi: number };
   '/donemler': { donemler: Array<Omit<Donem, 'satirlar'>> };
+  '/webhook-durumu': { sir: SirDurumu; kuyruk: KuyrukOzeti; veritabaniVarMi: boolean };
   '/cuzdanlar': {
     bakiyeler: Array<OrtakBakiyesi & { ortakAdi: string | null }>;
     hareketler: Array<CuzdanHareketi & { ortakAdi: string | null }>;

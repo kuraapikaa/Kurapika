@@ -57,6 +57,8 @@ import {
 } from '../servisler/postback.js';
 import { anahtarDurumu, anahtarSil, anahtarUret } from '../servisler/s2sAnahtari.js';
 import { eksikGunleriSenkronla, gunuSenkronla } from '../servisler/senkron.js';
+import { sirDurumu, sirUret, sirriSil, sirriYaz } from '../servisler/webhookSirri.js';
+import { olayKuyrugu } from '../depolar/olayKuyrugu.js';
 import { bakiyeler, hareketEkle, hareketleriListele } from '../servisler/cuzdan.js';
 import { geceHakedisiIsle } from '../isler/geceIsi.js';
 import { veritabani } from '../lib/veritabani.js';
@@ -334,6 +336,37 @@ export async function yonetimRotalari(app: FastifyInstance): Promise<void> {
   app.post('/cuzdan/tahakkuk', async (istek, yanit) => {
     if (!veritabani()) return yanit.status(503).send({ hata: 'Cüzdan için veritabanı gerekli.' });
     return yanit.send(await geceHakedisiIsle(istek.kiraci));
+  });
+
+  // ── Lynon webhook ──────────────────────────────────────────────────
+
+  app.get('/webhook-durumu', async (istek): Promise<YonetimUclari['/webhook-durumu']> => ({
+    sir: await sirDurumu(istek.kiraci),
+    // Kuyruk tabloda; veritabani yoksa webhook zaten kabul edilmiyor.
+    kuyruk: veritabani()
+      ? await olayKuyrugu().ozet(istek.kiraci)
+      : { bekleyen: 0, isleniyor: 0, tamam: 0, hatali: 0 },
+    veritabaniVarMi: Boolean(veritabani()),
+  }));
+
+  /**
+   * Sırrı kurar. Gövdede `sir` varsa Lynon'un verdiği değer kaydedilir;
+   * yoksa üretilip BİR KEZ döndürülür.
+   */
+  app.post('/webhook-sirri', async (istek, yanit) => {
+    const govde = (istek.body ?? {}) as { sir?: unknown };
+    const verilen = typeof govde.sir === 'string' ? govde.sir.trim() : '';
+    if (verilen) {
+      await sirriYaz(istek.kiraci, verilen);
+      return yanit.status(201).send({ uretildi: false });
+    }
+    const sir = await sirUret(istek.kiraci);
+    return yanit.status(201).send({ uretildi: true, sir, uyari: 'Bu değer bir daha gösterilmeyecek.' });
+  });
+
+  app.delete('/webhook-sirri', async (istek, yanit) => {
+    await sirriSil(istek.kiraci);
+    return yanit.status(204).send();
   });
 
   /** İlk yatırım ölçümünün durumu; kalibrasyon sürüyorsa panel söylesin. */

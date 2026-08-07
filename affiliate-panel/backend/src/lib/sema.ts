@@ -201,3 +201,71 @@ export const cuzdanHareketleri = pgTable(
     index('aff_cuzdan_kiraci_ortak').on(t.kiraci, t.ortakId),
   ],
 );
+
+/**
+ * WEBHOOK OLAY KUYRUĞU.
+ *
+ * Lynon olayı gönderiyor; uç imzayı doğrulayıp olayı BURAYA yazıyor ve
+ * hemen 200 dönüyor. İşleme ayrı yürüyor.
+ *
+ * ── Neden bellekte değil, tabloda ──
+ *
+ * Bellekteki bir kuyruk, konteyner yeniden başladığında sessizce
+ * boşalır: Lynon 200 aldığı için tekrar göndermez ve olay sonsuza kadar
+ * kaybolur. Yatırım ve bahis kayıtları geriye dönük üretilemez.
+ *
+ * ── `imza` neden BENZERSİZ ──
+ *
+ * Tekrar saldırısına (replay) karşı ikinci hat. Zaman damgası imzalı
+ * metnin içinde olduğu için aynı imza yalnızca aynı isteğe ait olabilir.
+ */
+export const webhookOlaylari = pgTable(
+  'aff_webhook_olaylari',
+  {
+    id: text('id').primaryKey(),
+    kiraci: text('kiraci').notNull(),
+    imza: text('imza').notNull(),
+    olayTuru: text('olay_turu').notNull(),
+    oyuncuId: text('oyuncu_id').notNull(),
+    /** Tutar olaya göre anlam değiştiriyor: yatırım, çekim, bahis, kazanç. */
+    tutar: doublePrecision('tutar').notNull().default(0),
+    /** Ham gövde; ileride yeni bir alan gerektiğinde kaynağa dönebilmek için. */
+    govde: jsonb('govde').notNull(),
+    durum: text('durum').notNull(),
+    deneme: integer('deneme').notNull().default(0),
+    sonHata: text('son_hata'),
+    alindi: timestamp('alindi', { withTimezone: true }).notNull(),
+    islendi: timestamp('islendi', { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex('aff_webhook_kiraci_imza').on(t.kiraci, t.imza),
+    index('aff_webhook_kiraci_durum_alindi').on(t.kiraci, t.durum, t.alindi),
+  ],
+);
+
+/**
+ * OYUNCU BAZLI GÜNLÜK TOPLAMLAR.
+ *
+ * Webhook olayları buraya katlanıyor. Ortak bazlı `olcumler` tablosundan
+ * AYRI bilerek: o, backoffice raporundan geliyor ve gün sonunda
+ * kesinleşiyor. Aynı tabloya yazsalardı gün içi olaylar gün sonu
+ * raporuyla çelişir ve hangisinin doğru olduğu belirsizleşirdi.
+ */
+export const oyuncuGunluk = pgTable(
+  'aff_oyuncu_gunluk',
+  {
+    kiraci: text('kiraci').notNull(),
+    gun: text('gun').notNull(),
+    oyuncuId: text('oyuncu_id').notNull(),
+    yatirim: doublePrecision('yatirim').notNull().default(0),
+    cekim: doublePrecision('cekim').notNull().default(0),
+    bahis: doublePrecision('bahis').notNull().default(0),
+    kazanc: doublePrecision('kazanc').notNull().default(0),
+    olaySayisi: integer('olay_sayisi').notNull().default(0),
+    guncellendi: timestamp('guncellendi', { withTimezone: true }).notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.kiraci, t.gun, t.oyuncuId] }),
+    index('aff_oyuncu_gunluk_kiraci_gun').on(t.kiraci, t.gun),
+  ],
+);

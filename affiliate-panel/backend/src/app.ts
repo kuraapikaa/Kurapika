@@ -10,6 +10,7 @@ import { oturumRotalari } from './rotalar/oturum.js';
 import { portalRotalari } from './rotalar/portal.js';
 import { kayitRotalari } from './rotalar/kayitUcu.js';
 import { tiklamaRotalari } from './rotalar/tiklamaUcu.js';
+import { webhookRotalari } from './rotalar/webhookUcu.js';
 import { yonetimRotalari } from './rotalar/yonetim.js';
 
 declare module 'fastify' {
@@ -100,6 +101,8 @@ export async function uygulamaKur(): Promise<FastifyInstance> {
   await app.register(portalRotalari, { prefix: '/api/portal' });
   // Sunucudan sunucuya: oturum degil, kiraciya ait S2S anahtariyla.
   await app.register(kayitRotalari, { prefix: '/api/kayit' });
+  // Lynon webhook'lari: oturum degil, paylasilan sirla HMAC imzasi.
+  await app.register(webhookRotalari, { prefix: '/api/webhooks' });
   await app.register(tiklamaRotalari);
 
   return app;
