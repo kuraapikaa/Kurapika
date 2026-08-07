@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
+import { Logo, useMarka } from './marka';
 
 /**
  * UYGULAMA KABUĞU — sol kenar çubuğu.
@@ -41,6 +42,7 @@ export function Kabuk({
 }) {
   const [acik, setAcik] = useState(false);
   const konum = useLocation();
+  const marka = useMarka();
 
   // Sayfa degisince mobil menu kapaniyor; acik kalmasi, dokundugunuz
   // sayfayi ortmesi demek olurdu.
@@ -63,17 +65,11 @@ export function Kabuk({
         }`}
         style={{ background: 'var(--yuzey)', borderColor: 'var(--kenar)' }}
       >
-        <div className="flex items-center gap-2 border-b px-4 py-4" style={{ borderColor: 'var(--kenar)' }}>
-          <span
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm font-bold"
-            style={{ background: 'var(--vurgu)', color: 'var(--vurgu-metin)' }}
-          >
-            A
-          </span>
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold">{baslik}</p>
-            <p className="truncate text-xs" style={{ color: 'var(--metin-2)' }}>{altBaslik}</p>
-          </div>
+        <div className="border-b px-4 py-4" style={{ borderColor: 'var(--kenar)' }}>
+          <Logo marka={marka} />
+          <p className="mt-2 truncate text-xs" style={{ color: 'var(--metin-2)' }}>
+            {baslik}{altBaslik ? ` · ${altBaslik}` : ''}
+          </p>
         </div>
 
         <nav className="flex-1 space-y-0.5 overflow-y-auto p-2">

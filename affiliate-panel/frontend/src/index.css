@@ -16,10 +16,38 @@
   --kenar: #dfe3ee;
   --metin: #16192b;
   --metin-2: #5a6178;
-  --vurgu: #6d28d9;
+  --vurgu: #7d5c0d;
   --vurgu-metin: #ffffff;
   /* Secili menu ogesinin zemini; vurgunun cok acik hali. */
-  --vurgu-yumusak: #ede9fe;
+  --vurgu-yumusak: #f7efd8;
+  /*
+   * MARKA DEGRADESI — logodaki altin.
+   *
+   * Uc durak: ust parlak, orta doygun, alt koyu. Iki duraklı bir
+   * degrade altini "sari" gosteriyor; metalik his ucuncu duraktan
+   * geliyor.
+   *
+   * Vurgu renginden AYRI tutuldu: vurgu metin ve dugmelerde
+   * kullaniliyor ve kontrast esigini gecmek zorunda.
+   *
+   * ACIK TEMADA DURAKLAR KOYU. Ilk denemede parlak altin (#f3dfa2)
+   * ust durakti; koyu zeminde guzel ama BEYAZ uzerinde neredeyse
+   * gorunmuyordu. Referans logo koyu zeminde duruyor ve o paleti
+   * aydinlik temaya oldugu gibi tasimak, logonun kaybolmasi demekti.
+   *
+   * Vurgu da olcumle secildi: #9a7213 beyaz uzerinde 4.40:1 ve
+   * %14'luk altin tonu uzerinde 4.38:1 veriyordu -- ikisi de esigin
+   * altinda. #7d5c0d sirasiyla 6.21 ve 5.10.
+   *
+   * Logolar WCAG kontrast kuralindan MUAF, ama muafiyet "okunmasin"
+   * demek degil. Ilk denemede acik temadaki ust durak beyaz uzerinde
+   * 1.96:1 idi -- yani logonun bas harfleri neredeyse gorunmuyordu.
+   * Duraklar 3.04 -> 7 araligina cekildi: metalik rampa korunuyor,
+   * en acik ucu bile buyuk metin esigini geciyor.
+   */
+  --marka-ust: #b8860b;
+  --marka-orta: #8a660f;
+  --marka-alt: #6b4f0b;
   --olumlu: #047857;
   --uyari: #b45309;
   --olumsuz: #be123c;
@@ -33,9 +61,13 @@
   --kenar: #2a3050;
   --metin: #eef1fb;
   --metin-2: #98a0bd;
-  --vurgu: #a78bfa;
+  --vurgu: #e0bf5f;
   --vurgu-metin: #0b0d17;
-  --vurgu-yumusak: #241d3d;
+  --vurgu-yumusak: #2d2410;
+  /* Koyu temada degrade daha parlak: koyu zeminde ayni altin soner. */
+  --marka-ust: #fff3cf;
+  --marka-orta: #e8c56a;
+  --marka-alt: #c9a227;
   --olumlu: #34d399;
   --uyari: #fbbf24;
   --olumsuz: #fb7185;

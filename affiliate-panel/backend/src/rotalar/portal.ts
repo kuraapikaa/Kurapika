@@ -1,3 +1,4 @@
+import QRCode from 'qrcode';
 import type { FastifyInstance } from 'fastify';
 import { ortakZorunlu } from '../kimlik/koruma.js';
 import {
@@ -134,11 +135,41 @@ export async function portalRotalari(app: FastifyInstance): Promise<void> {
    */
   app.get('/alt-linkler', async (istek) => {
     const temel = String(process.env.AFF_TIKLAMA_TEMEL_URL || '').trim().replace(/\/$/, '');
-    const linkler = await altLinkleriListele(istek.kiraci, istek.oturum!.ortakAnahtari);
+    const [linkler, tiklamalar, medyalar] = await Promise.all([
+      altLinkleriListele(istek.kiraci, istek.oturum!.ortakAnahtari),
+      tiklamalariListele(istek.kiraci, { ortakAnahtari: istek.oturum!.ortakAnahtari, limit: 1000 }),
+      medyalariListele(istek.kiraci, istek.oturum!.ortakAnahtari),
+    ]);
+
+    // Link basina tiklama. Kayitli alt parametreler tiklamada aynen
+    // gorunuyor; eslesme bunun uzerinden kuruluyor. Yalnizca medyaId'ye
+    // bakmak, ayni medyayi kullanan iki linki birbirine karistirirdi.
+    const imza = (medyaId: string | null, alt: Record<string, string>) =>
+      JSON.stringify([medyaId, Object.entries(alt).sort()]);
+    const sayaclar = new Map<string, { toplam: number; sonTiklama: string | null }>();
+    for (const t of tiklamalar) {
+      const anahtar = imza(t.medyaId, t.alt as Record<string, string>);
+      const mevcut = sayaclar.get(anahtar) ?? { toplam: 0, sonTiklama: null };
+      mevcut.toplam += 1;
+      if (!mevcut.sonTiklama || t.zaman > mevcut.sonTiklama) mevcut.sonTiklama = t.zaman;
+      sayaclar.set(anahtar, mevcut);
+    }
+
+    const medyaAdi = new Map(medyalar.map((m) => [m.id, m.ad]));
+
     return {
       // Tam adres SUNUCUDA kuruluyor; arayüzün kökü kendi tahmin etmesi,
       // ortağın yanlış alan adıyla link paylaşmasına yol açardı.
-      linkler: linkler.map((l) => ({ ...l, tamAdres: temel ? `${temel}/l/${l.kod}` : null })),
+      linkler: linkler.map((l) => {
+        const sayac = sayaclar.get(imza(l.medyaId, l.alt as Record<string, string>));
+        return {
+          ...l,
+          tamAdres: temel ? `${temel}/l/${l.kod}` : null,
+          medyaAdi: medyaAdi.get(l.medyaId) ?? null,
+          tiklama: sayac?.toplam ?? 0,
+          sonTiklama: sayac?.sonTiklama ?? null,
+        };
+      }),
       temelHazir: Boolean(temel),
     };
   });
@@ -161,6 +192,45 @@ export async function portalRotalari(app: FastifyInstance): Promise<void> {
 
     yanit.status(201);
     return altLinkOlustur(istek.kiraci, ortak.ortakAnahtari, govde);
+  });
+
+  /**
+   * Alt linkin QR kodu.
+   *
+   * SUNUCUDA uretiliyor. Ucuncu taraf bir QR servisine adres gondermek
+   * daha az kod olurdu ama ortagin kampanya linkini baskasinin
+   * sunucusuna sizdirmak ve o servisin calisma suresine bagimli olmak
+   * demekti. Istemcide uretmek de mumkun ama paketi ~20 kB buyutuyor
+   * ve QR yalnizca bir dugmeye basildiginda gerekiyor.
+   *
+   * SVG donuyor: her boyutta net, yazdirmaya uygun ve PNG'den kucuk.
+   */
+  app.get<{ Params: { id: string } }>('/alt-linkler/:id/qr', async (istek, yanit) => {
+    const temel = String(process.env.AFF_TIKLAMA_TEMEL_URL || '').trim().replace(/\/$/, '');
+    if (!temel) {
+      yanit.status(409);
+      return { hata: 'Tıklama adresi tanımlı değil; QR üretilemiyor.' };
+    }
+
+    const linkler = await altLinkleriListele(istek.kiraci, istek.oturum!.ortakAnahtari);
+    // Sahiplik listeden geliyor: kimlikten dogrudan okumak, baskasinin
+    // linkinin QR'ini uretmeye izin verirdi.
+    const link = linkler.find((l) => l.id === istek.params.id);
+    if (!link) {
+      yanit.status(404);
+      return { hata: 'Alt link bulunamadı.' };
+    }
+
+    const svg = await QRCode.toString(`${temel}/l/${link.kod}`, {
+      type: 'svg',
+      margin: 2,
+      errorCorrectionLevel: 'M',
+    });
+    // Onbellek YOK: link kapatilabiliyor ve kapali bir linkin QR'ini
+    // onbellekten servis etmek, calismayan bir kod dagitmak olurdu.
+    yanit.header('Cache-Control', 'no-store');
+    yanit.type('image/svg+xml');
+    return svg;
   });
 
   app.put<{ Params: { id: string } }>('/alt-linkler/:id', async (istek) => {

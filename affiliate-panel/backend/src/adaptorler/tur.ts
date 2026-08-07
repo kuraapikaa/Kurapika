@@ -55,10 +55,23 @@ export interface HamOlcum {
    * İlk yatırımını o gün yapan oyuncu sayısı.
    *
    * `null` = ÖLÇÜLEMEDİ. Sıfır yazmak "hiç ilk yatırım olmadı" demek
-   * olurdu; toplam düzeyinde rapor veren backoffice'lerde bu bilgi
-   * gerçekten yok ve uydurmak komisyon hesabını bozar.
+   * olurdu; uydurmak komisyon hesabını bozar.
+   *
+   * Adaptör bunu doğrudan biliyorsa yazar. Bilmiyorsa `null` bırakıp
+   * `yatiranOyuncular` doldurur — çekirdek o listeden TÜRETİR.
    */
   ftdSayisi: number | null;
+  /**
+   * O gün yatırım yapan oyuncu kimlikleri.
+   *
+   * Backoffice "ilk yatırım" alanı vermiyor ama oyuncu bazında satır
+   * veriyorsa, bilgi burada saklı: daha önce hiç yatırım yapmamış bir
+   * kimlik, ilk yatırımını o gün yapmıştır. Çekirdek bir defter tutup
+   * FTD'yi buradan hesaplıyor (bkz. `servisler/ilkYatirim.ts`).
+   *
+   * Veremeyen adaptörlerde boş; o durumda FTD `null` kalır.
+   */
+  yatiranOyuncular?: string[];
 }
 
 export interface HamOrtak {

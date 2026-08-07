@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react';
 import { BasvuruFormu } from './Basvuru';
 import { Alan, Buton, Hata, useTema } from '../ui';
 import { api } from '../api';
+import { Logo, useMarka } from '../marka';
 
 /**
  * ORTAKLIK PROGRAMI LANDING SAYFASI.
@@ -77,6 +78,7 @@ export function Landing({ girisYapildi }: { girisYapildi: () => void }) {
   const [gorunum, setGorunum] = useState<Gorunum>('tanitim');
   const [koyu, temaDegistir] = useTema();
   const [bilgi, setBilgi] = useState<string | null>(null);
+  const marka = useMarka();
 
   const git = (hedef: Gorunum) => {
     setGorunum(hedef);
@@ -96,14 +98,8 @@ export function Landing({ girisYapildi }: { girisYapildi: () => void }) {
         }}
       >
         <div className="mx-auto flex max-w-6xl items-center gap-3 px-5 py-3.5">
-          <button type="button" className="flex items-center gap-2" onClick={() => git('tanitim')}>
-            <span
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold"
-              style={{ background: 'var(--vurgu)', color: 'var(--vurgu-metin)' }}
-            >
-              A
-            </span>
-            <span className="font-semibold">Ortaklık Programı</span>
+          <button type="button" className="flex items-center" onClick={() => git('tanitim')}>
+            <Logo marka={marka} />
           </button>
           <div className="ml-auto flex items-center gap-2">
             <Buton onClick={temaDegistir}>{koyu ? 'Aydınlık' : 'Karanlık'}</Buton>
@@ -148,7 +144,7 @@ export function Landing({ girisYapildi }: { girisYapildi: () => void }) {
 
       <footer className="border-t" style={{ borderColor: 'var(--kenar)' }}>
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-5 py-6 text-xs" style={{ color: 'var(--metin-2)' }}>
-          <span>Ortaklık Programı</span>
+          <span>{marka.ad}</span>
           <span className="ml-auto">18+ · Sorumlu oyun</span>
         </div>
       </footer>

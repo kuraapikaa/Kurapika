@@ -108,7 +108,7 @@ export function App() {
   return (
     <Kabuk
       menu={yonetici ? YONETIM_MENUSU : PORTAL_MENUSU}
-      baslik={yonetici ? 'Affiliate Yönetimi' : 'Ortak Paneli'}
+      baslik={yonetici ? 'Yönetim' : 'Ortak paneli'}
       altBaslik={veri.ortakAnahtari ?? veri.ad ?? ''}
       sagUst={
         <>
