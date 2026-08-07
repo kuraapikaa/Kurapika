@@ -9,8 +9,14 @@ olarak duruyor.
 affiliate-panel/
   backend/   Fastify + TypeScript
   frontend/  React + Vite + Tailwind
+  docs/      Entegrasyon dokümanları
   Dockerfile İkisini tek imajda birleştirir
 ```
+
+**Lynon'a bağlanacaksan:** [docs/lynon-entegrasyon.md](docs/lynon-entegrasyon.md)
+— dört entegrasyon noktası (rapor çekme, izleme linkleri, kayıt
+bildirimi, olay webhook'u), imza hesabı, kurulum sırası ve sorun
+giderme tablosu.
 
 ## Mimarideki tek asıl karar: adaptör sınırı
 
