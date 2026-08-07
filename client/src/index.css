@@ -1008,7 +1008,7 @@
   --panel-muted: #5b6b86;
   /* Beyaz uzerinde 4.5:1'in altina dusmemeli — bu token 8-9.5px'lik
      buyuk harf mikro etiketlerde kullaniliyor, en zor okunan metin o. */
-  --panel-faint: #64748b;
+  --panel-faint: #5f6d85;
   --panel-header: rgba(255, 255, 255, 0.82);
   --panel-accent: #0a6ed1;
   --panel-accent-teal: #0891b2;
@@ -1644,3 +1644,95 @@
 :root[data-panel-theme='light'] .app-shell [class*='text-slate-700'] {
   color: var(--panel-faint) !important;
 }
+
+/* ─── Açık tema: yüzey opaklıkları ────────────────────────────────────────
+ *
+ * Panelde `bg-white/N` (koyu zeminde yüzey YÜKSELTMESİ) 95'ten fazla,
+ * `bg-black/N` (koyu zeminde ÇUKUR) 200'den fazla yerde kullanılıyor.
+ * İkisi de koyu zemin varsayıyor ve açık temada tam ters çalışıyordu:
+ * beyaz üstüne beyaz yüzeyler tamamen kayboluyor, siyah çukurlar ise
+ * açık sayfanın ortasında koyu kutulara dönüşüyordu.
+ *
+ * Anlam korunuyor, yön çevriliyor: yükseltme açık temada hafif KOYU bir
+ * tint, çukur ise hafif GRİ bir tint oluyor. Opaklık kademeleri
+ * birebir taşınmıyor — koyu zeminde %3 beyaz görünür bir fark yaratırken
+ * beyaz zeminde %3 siyah çok daha güçlü okunur.
+ *
+ * Tam ekran örtüler (`inset-0`) DIŞARIDA: modalin arkasındaki koyu perde
+ * açık temada da koyu olmalı, standart olan bu.
+ */
+:root[data-panel-theme='light'] .app-shell [class~='bg-white/[0.01]'] { background-color: rgba(15, 23, 42, 0.025) !important; }
+:root[data-panel-theme='light'] .app-shell [class~='hover:bg-white/[0.01]']:hover { background-color: rgba(15, 23, 42, 0.055) !important; }
+:root[data-panel-theme='light'] .app-shell [class~='bg-white/[0.015]'] { background-color: rgba(15, 23, 42, 0.025) !important; }
+:root[data-panel-theme='light'] .app-shell [class~='hover:bg-white/[0.015]']:hover { background-color: rgba(15, 23, 42, 0.055) !important; }
+:root[data-panel-theme='light'] .app-shell [class~='bg-white/[0.02]'] { background-color: rgba(15, 23, 42, 0.03) !important; }
+:root[data-panel-theme='light'] .app-shell [class~='hover:bg-white/[0.02]']:hover { background-color: rgba(15, 23, 42, 0.06) !important; }
+:root[data-panel-theme='light'] .app-shell [class~='bg-white/[0.025]'] { background-color: rgba(15, 23, 42, 0.03) !important; }
+:root[data-panel-theme='light'] .app-shell [class~='hover:bg-white/[0.025]']:hover { background-color: rgba(15, 23, 42, 0.06) !important; }
+:root[data-panel-theme='light'] .app-shell [class~='bg-white/[0.03]'] { background-color: rgba(15, 23, 42, 0.035) !important; }
+:root[data-panel-theme='light'] .app-shell [class~='hover:bg-white/[0.03]']:hover { background-color: rgba(15, 23, 42, 0.065) !important; }
+:root[data-panel-theme='light'] .app-shell [class~='bg-white/[0.035]'] { background-color: rgba(15, 23, 42, 0.04) !important; }
+:root[data-panel-theme='light'] .app-shell [class~='hover:bg-white/[0.035]']:hover { background-color: rgba(15, 23, 42, 0.07) !important; }
+:root[data-panel-theme='light'] .app-shell [class~='bg-white/[0.04]'] { background-color: rgba(15, 23, 42, 0.045) !important; }
+:root[data-panel-theme='light'] .app-shell [class~='hover:bg-white/[0.04]']:hover { background-color: rgba(15, 23, 42, 0.075) !important; }
+:root[data-panel-theme='light'] .app-shell [class~='bg-white/[0.045]'] { background-color: rgba(15, 23, 42, 0.05) !important; }
+:root[data-panel-theme='light'] .app-shell [class~='hover:bg-white/[0.045]']:hover { background-color: rgba(15, 23, 42, 0.08) !important; }
+:root[data-panel-theme='light'] .app-shell [class~='bg-white/[0.05]'] { background-color: rgba(15, 23, 42, 0.05) !important; }
+:root[data-panel-theme='light'] .app-shell [class~='hover:bg-white/[0.05]']:hover { background-color: rgba(15, 23, 42, 0.08) !important; }
+:root[data-panel-theme='light'] .app-shell [class~='bg-white/5'] { background-color: rgba(15, 23, 42, 0.05) !important; }
+:root[data-panel-theme='light'] .app-shell [class~='hover:bg-white/5']:hover { background-color: rgba(15, 23, 42, 0.08) !important; }
+:root[data-panel-theme='light'] .app-shell [class~='bg-white/[0.06]'] { background-color: rgba(15, 23, 42, 0.06) !important; }
+:root[data-panel-theme='light'] .app-shell [class~='hover:bg-white/[0.06]']:hover { background-color: rgba(15, 23, 42, 0.09) !important; }
+:root[data-panel-theme='light'] .app-shell [class~='bg-white/[0.07]'] { background-color: rgba(15, 23, 42, 0.07) !important; }
+:root[data-panel-theme='light'] .app-shell [class~='hover:bg-white/[0.07]']:hover { background-color: rgba(15, 23, 42, 0.1) !important; }
+:root[data-panel-theme='light'] .app-shell [class~='bg-white/[0.08]'] { background-color: rgba(15, 23, 42, 0.08) !important; }
+:root[data-panel-theme='light'] .app-shell [class~='hover:bg-white/[0.08]']:hover { background-color: rgba(15, 23, 42, 0.11) !important; }
+:root[data-panel-theme='light'] .app-shell [class~='bg-white/10'] { background-color: rgba(15, 23, 42, 0.08) !important; }
+:root[data-panel-theme='light'] .app-shell [class~='hover:bg-white/10']:hover { background-color: rgba(15, 23, 42, 0.11) !important; }
+:root[data-panel-theme='light'] .app-shell [class~='bg-white/15'] { background-color: rgba(15, 23, 42, 0.11) !important; }
+:root[data-panel-theme='light'] .app-shell [class~='hover:bg-white/15']:hover { background-color: rgba(15, 23, 42, 0.14) !important; }
+
+:root[data-panel-theme='light'] .app-shell [class~='bg-black/15']:not([class~='inset-0']) { background-color: rgba(15, 23, 42, 0.03) !important; }
+:root[data-panel-theme='light'] .app-shell [class~='bg-black/20']:not([class~='inset-0']) { background-color: rgba(15, 23, 42, 0.035) !important; }
+:root[data-panel-theme='light'] .app-shell [class~='bg-black/25']:not([class~='inset-0']) { background-color: rgba(15, 23, 42, 0.04) !important; }
+:root[data-panel-theme='light'] .app-shell [class~='bg-black/30']:not([class~='inset-0']) { background-color: rgba(15, 23, 42, 0.045) !important; }
+:root[data-panel-theme='light'] .app-shell [class~='bg-black/35']:not([class~='inset-0']) { background-color: rgba(15, 23, 42, 0.05) !important; }
+:root[data-panel-theme='light'] .app-shell [class~='bg-black/40']:not([class~='inset-0']) { background-color: rgba(15, 23, 42, 0.055) !important; }
+:root[data-panel-theme='light'] .app-shell [class~='bg-black/45']:not([class~='inset-0']) { background-color: rgba(15, 23, 42, 0.06) !important; }
+:root[data-panel-theme='light'] .app-shell [class~='bg-black/50']:not([class~='inset-0']) { background-color: rgba(15, 23, 42, 0.065) !important; }
+:root[data-panel-theme='light'] .app-shell [class~='bg-black/60']:not([class~='inset-0']) { background-color: rgba(15, 23, 42, 0.05) !important; }
+:root[data-panel-theme='light'] .app-shell [class~='bg-black/70']:not([class~='inset-0']) { background-color: rgba(15, 23, 42, 0.06) !important; }
+:root[data-panel-theme='light'] .app-shell [class~='bg-black/80']:not([class~='inset-0']) { background-color: rgba(15, 23, 42, 0.07) !important; }
+
+/* Beyaz üstüne beyaz kalan tek istisna: nötr rozet zemini. */
+:root[data-panel-theme='light'] .app-shell [class~='bg-white/40'] { background-color: rgba(15, 23, 42, 0.16) !important; }
+
+
+/* ─── @apply ile renk alan sınıflar ───────────────────────────────────────
+ *
+ * Bu sınıflar rengini `@apply text-cyan-200` gibi ifadelerden alıyor.
+ * Tailwind bunu derlerken sınıf adı DOM'da bir öznitelik olarak
+ * görünmüyor, dolayısıyla yukarıdaki `[class*='text-cyan-2']` seçicileri
+ * hiçbirini yakalamıyor. Açık temada hepsi beyaz üstüne açık turkuaz
+ * kalıyordu (`.tab-intro-chip` ölçümde 1.48:1).
+ *
+ * Aynı tuzağa bölüm başlıkları ve tablo başlıkları da düşmüştü; hepsi
+ * burada açıkça ele alınıyor.
+ */
+:root[data-panel-theme='light'] .app-shell .tab-intro-chip,
+:root[data-panel-theme='light'] .app-shell .tab-intro-status,
+:root[data-panel-theme='light'] .app-shell .tab-intro-icon {
+  color: var(--panel-accent) !important;
+  border-color: rgba(10, 110, 209, 0.24) !important;
+  background-color: rgba(10, 110, 209, 0.07) !important;
+}
+
+:root[data-panel-theme='light'] .app-shell .sidebar-nav-group a:hover .sidebar-link-icon {
+  color: var(--panel-text) !important;
+}
+
+:root[data-panel-theme='light'] .app-shell .sidebar-system-card {
+  border-color: rgba(21, 128, 61, 0.22) !important;
+  background: rgba(21, 128, 61, 0.07) !important;
+}
+
