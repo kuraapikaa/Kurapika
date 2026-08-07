@@ -17,7 +17,8 @@ import {
   type AffiliateHesapGorunum,
 } from '../services/affiliateAccountService.js';
 import { lynonAffiliateSummary } from '../services/lynonBackofficeService.js';
-import { affiliateEntegrasyonDurumu } from '../services/lynonAffiliateEntegrasyon.js';
+import { affiliateEntegrasyonDurumu, lynonAffiliateSaglayicilari } from '../services/lynonAffiliateEntegrasyon.js';
+import { ortakOlarakKaydet, OrtakKaydiHatasi } from '../services/affiliateCrm/lynonOrtakKaydi.js';
 import { ortakOzetleri, sonOlculenGun } from '../services/affiliateCrm/cekirdek.js';
 import type { AffiliateUser } from '../types/betconstruct.js';
 import {
@@ -60,6 +61,9 @@ function varsayilanAralik(): { startDate: string; endDate: string } {
 }
 
 function hataYanit(reply: FastifyReply, err: unknown) {
+  if (err instanceof OrtakKaydiHatasi) {
+    return reply.status(err.statusCode).send({ ok: false, message: err.message });
+  }
   if (err instanceof AffiliateHesapHatasi || err instanceof AffiliateOdemeHatasi) {
     return reply.status(err.statusCode).send({ ok: false, message: err.message });
   }
@@ -269,6 +273,45 @@ export async function affiliateRoutes(app: FastifyInstance): Promise<void> {
       }
     },
   );
+
+  /**
+   * Mevcut bir Lynon oyuncusunu ortak (affiliate) olarak kaydeder.
+   *
+   * `affiliateType` canlı katalogla doğrulanıyor: liste gömülü olsaydı
+   * Lynon yeni bir tip eklediğinde panel onu sessizce reddederdi.
+   */
+  app.put<{
+    Params: { playerId: string };
+    Body: {
+      email?: string;
+      userName?: string;
+      affiliateType?: string;
+      countryCode?: string;
+      playerExternalId?: string;
+      walletNumber?: string;
+    };
+  }>('/admin/affiliate/ortak-kaydi/:playerId', async (request, reply) => {
+    const kullanici = adminKullanici(request);
+    if (kullanici?.role !== 'admin') return reply.status(403).send({ ok: false, message: 'Yetkisiz' });
+
+    const tenantKey = await resolveTenantKeyForRequest(request as any);
+    try {
+      const katalog = await lynonAffiliateSaglayicilari().catch(() => []);
+      const sonuc = await ortakOlarakKaydet(
+        tenantKey,
+        { playerId: request.params.playerId, ...request.body },
+        { kabulEdilenTipler: katalog.map((s) => s.type), aktor: kullanici.username },
+      );
+      // "gonderildi", "kuruldu" DEGIL: uc bos donuyor, dogrulayamiyoruz.
+      return reply.send({
+        ok: true,
+        ...sonuc,
+        uyari: 'Lynon bu uçta boş yanıt döndürüyor; kaydın oluştuğu panel tarafından doğrulanamaz.',
+      });
+    } catch (err) {
+      return hataYanit(reply, err);
+    }
+  });
 
   app.get('/admin/affiliate/hesaplar', async (request, reply) => {
     const tenantKey = await resolveTenantKeyForRequest(request as any);
