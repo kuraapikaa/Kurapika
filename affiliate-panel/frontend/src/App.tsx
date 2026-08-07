@@ -6,6 +6,7 @@ import { Buton, Yukleniyor, useTema } from './ui';
 import { Landing } from './sayfalar/Landing';
 import { Baglanti } from './sayfalar/yonetim/Baglanti';
 import { Basvurular } from './sayfalar/yonetim/Basvurular';
+import { BTag } from './sayfalar/yonetim/BTag';
 import { Donemler } from './sayfalar/yonetim/Donemler';
 import { Kademeler } from './sayfalar/yonetim/Kademeler';
 import { Medya } from './sayfalar/yonetim/Medya';
@@ -14,6 +15,7 @@ import { Ozet } from './sayfalar/yonetim/Ozet';
 import { Planlar } from './sayfalar/yonetim/Planlar';
 import { Postback } from './sayfalar/yonetim/Postback';
 import { Tiklamalar } from './sayfalar/yonetim/Tiklamalar';
+import { TrafikKalitesi } from './sayfalar/yonetim/TrafikKalitesi';
 import { PortalAltLinkler } from './sayfalar/portal/PortalAltLinkler';
 import { PortalHakedis } from './sayfalar/portal/PortalHakedis';
 import { PortalMedya } from './sayfalar/portal/PortalMedya';
@@ -44,6 +46,7 @@ const YONETIM_MENUSU: MenuOgesi[] = [
       { yol: '/ortaklar', etiket: 'Tüm ortaklar' },
       { yol: '/basvurular', etiket: 'Başvurular' },
       { yol: '/kademeler', etiket: 'Kademeler' },
+      { yol: '/btag', etiket: 'İzleme anahtarları' },
     ],
   },
   { yol: '/planlar', etiket: 'Komisyon planları', ikon: IKON.teklif },
@@ -52,7 +55,10 @@ const YONETIM_MENUSU: MenuOgesi[] = [
     yol: '/tiklamalar',
     etiket: 'İstatistik',
     ikon: IKON.istatistik,
-    altlar: [{ yol: '/tiklamalar', etiket: 'Tıklamalar' }],
+    altlar: [
+      { yol: '/tiklamalar', etiket: 'Tıklamalar' },
+      { yol: '/trafik-kalitesi', etiket: 'Trafik kalitesi' },
+    ],
   },
   { yol: '/donemler', etiket: 'Hakediş', ikon: IKON.odeme },
   {
@@ -128,6 +134,8 @@ export function App() {
             <Route path="/kademeler" element={<Kademeler />} />
             <Route path="/postback" element={<Postback />} />
             <Route path="/tiklamalar" element={<Tiklamalar />} />
+            <Route path="/trafik-kalitesi" element={<TrafikKalitesi />} />
+            <Route path="/btag" element={<BTag />} />
             <Route path="/donemler" element={<Donemler />} />
             <Route path="/baglanti" element={<Baglanti />} />
             <Route path="*" element={<Navigate to="/ozet" replace />} />

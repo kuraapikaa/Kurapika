@@ -35,6 +35,8 @@ import {
   medyaSil,
 } from '../servisler/medya.js';
 import { olcumleriOku, ortakOzetleri } from '../servisler/olcum.js';
+import { kaliteRaporu, riskBandi } from '../servisler/trafikKalitesi.js';
+import { ftdDurumu } from '../servisler/ilkYatirim.js';
 import {
   gorunume,
   ortakGuncelle,
@@ -181,6 +183,103 @@ export async function yonetimRotalari(app: FastifyInstance): Promise<void> {
       }),
     };
   });
+
+  /**
+   * TRAFIK KALITESI VE RISK SIRALAMASI.
+   *
+   * Panel simdiye kadar yalnizca HACIM gosteriyordu; "bu trafik gercek
+   * mi" sorusu ancak ay sonunda, odeme yapildiktan sonra ve elle fark
+   * ediliyordu.
+   *
+   * Skor bir HUKUM DEGIL, bir siralama: yoneticinin sinirli dikkatini
+   * hangi ortaga ayiracagini soyluyor. Bu yuzden bilesenler de
+   * donuyor -- "78 risk" bir sey ifade etmiyor, "tiklamalarin %80'i tek
+   * IP'den" ifade ediyor.
+   */
+  app.get('/trafik-kalitesi', async (istek) => {
+    const sorgu = (istek.query ?? {}) as Record<string, unknown>;
+    const [ortaklar, tiklamalar, olcumler] = await Promise.all([
+      ortaklariListele(istek.kiraci),
+      tiklamalariListele(istek.kiraci, {
+        start: sorguMetni(sorgu.start),
+        end: sorguMetni(sorgu.end),
+        limit: 1000,
+      }),
+      olcumleriOku(istek.kiraci, { start: sorguMetni(sorgu.start), end: sorguMetni(sorgu.end) }),
+    ]);
+
+    const raporlar = ortaklar.map((o) => {
+      const rapor = kaliteRaporu(o.ortakAnahtari, tiklamalar, olcumler);
+      return { ...rapor, ortakAdi: o.ad, durum: o.durum, bant: riskBandi(rapor.riskSkoru) };
+    });
+
+    return {
+      // Skorlu olanlar once ve riskliden temize: yonetici en ustten
+      // asagi bakip birakabilsin. Skorsuzlar sona -- onlar hakkinda
+      // soylenecek bir sey yok, siralamada yer kaplamamalilar.
+      raporlar: raporlar.sort((a, b) => {
+        if (a.riskSkoru === null && b.riskSkoru === null) return 0;
+        if (a.riskSkoru === null) return 1;
+        if (b.riskSkoru === null) return -1;
+        return b.riskSkoru - a.riskSkoru;
+      }),
+    };
+  });
+
+  /**
+   * BTAG (IZLEME ANAHTARI) YONETIMI.
+   *
+   * Asil degeri SAHIPSIZ anahtar tespiti: backoffice'ten olcum geliyor
+   * ama o anahtara sahip bir ortak kaydi yok. Bu, atfedilmemis gelir
+   * demek -- ya ortak silindi, ya anahtar elle degistirildi, ya da
+   * backoffice'te panelde olmayan bir BTag tanimlanmis.
+   *
+   * Sessizce durdugu surece kimse fark etmiyor: rakamlar ortak
+   * ozetinde gorunmuyor, hakedis hesabina girmiyor ve kimseye
+   * odenmiyor.
+   */
+  app.get('/btag', async (istek) => {
+    const [ortaklar, olcumler, tiklamalar] = await Promise.all([
+      ortaklariListele(istek.kiraci),
+      olcumleriOku(istek.kiraci),
+      tiklamalariListele(istek.kiraci, { limit: 1000 }),
+    ]);
+
+    const kayitli = new Map(ortaklar.map((o) => [o.ortakAnahtari, o]));
+    const olcumAnahtarlari = new Set(olcumler.map((o) => o.ortakAnahtari));
+    const tiklamaAnahtarlari = new Set(tiklamalar.map((t) => t.ortakAnahtari));
+
+    const sahipsiz = [...olcumAnahtarlari]
+      .filter((a) => !kayitli.has(a))
+      .map((anahtar) => {
+        const kendi = olcumler.filter((o) => o.ortakAnahtari === anahtar);
+        return {
+          anahtar,
+          gunSayisi: kendi.length,
+          ggr: Math.round(kendi.reduce((t, o) => t + o.ggr, 0)),
+          yatirim: Math.round(kendi.reduce((t, o) => t + o.yatirim, 0)),
+          sonGun: kendi.map((o) => o.gun).sort().pop() ?? null,
+        };
+      })
+      .sort((a, b) => b.ggr - a.ggr);
+
+    return {
+      anahtarlar: ortaklar.map((o) => ({
+        anahtar: o.ortakAnahtari,
+        ortakAdi: o.ad,
+        durum: o.durum,
+        olcumVar: olcumAnahtarlari.has(o.ortakAnahtari),
+        tiklamaVar: tiklamaAnahtarlari.has(o.ortakAnahtari),
+      })),
+      sahipsiz,
+      // Olcumu hic gelmemis anahtar: ortak var ama trafik yok. Yeni
+      // ortakta normal, eski ortakta "link paylasildi mi?" sorusu.
+      olcumsuzSayisi: ortaklar.filter((o) => !olcumAnahtarlari.has(o.ortakAnahtari)).length,
+    };
+  });
+
+  /** İlk yatırım ölçümünün durumu; kalibrasyon sürüyorsa panel söylesin. */
+  app.get('/ftd-durumu', async (istek) => ftdDurumu(istek.kiraci));
 
   // ── Ortaklar ───────────────────────────────────────────────────────
 
