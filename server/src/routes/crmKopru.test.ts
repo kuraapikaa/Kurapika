@@ -10,11 +10,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const lynonOyuncuKpiSorgula = vi.fn();
 const lynonCreditPlayerMainAccount = vi.fn();
 const lynonBonusDefinitions = vi.fn();
+const lynonPaymentTransactions = vi.fn();
 
 vi.mock('../services/lynonBackofficeService.js', () => ({
   lynonOyuncuKpiSorgula: (...a: unknown[]) => lynonOyuncuKpiSorgula(...a),
   lynonCreditPlayerMainAccount: (...a: unknown[]) => lynonCreditPlayerMainAccount(...a),
   lynonBonusDefinitions: (...a: unknown[]) => lynonBonusDefinitions(...a),
+  lynonPaymentTransactions: (...a: unknown[]) => lynonPaymentTransactions(...a),
   lynonErrorResponse: () => ({ status: 502, body: { error: 'lynon' } }),
 }));
 
@@ -187,5 +189,42 @@ describe('crm koprusu — bonus yukleme', () => {
 
     expect(ilk.json().reference).toBe(ikinci.json().reference);
     expect(lynonCreditPlayerMainAccount).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('islem listesi', () => {
+  it('yatirim ve cekimi ayirir, tutari kurusa cevirir, yeniden eskiye siralar', async () => {
+    lynonPaymentTransactions.mockResolvedValue([
+      { Id: 1, transactionType: 'deposit', Amount: 250.5, DocumentState: 'Approved', CreatedAt: '2026-08-01T10:00:00Z' },
+      { Id: 2, transactionType: 'withdrawal', Amount: 100, DocumentState: 'Pending', CreatedAt: '2026-08-03T10:00:00Z' },
+      { Id: 3, transactionType: 'deposit', Amount: 40, DocumentState: 'Approved', CreatedAt: '2026-08-05T10:00:00Z' },
+    ]);
+
+    const app = await sunucu();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/crm/players/77/transactions',
+      headers: { 'x-crm-key': ANAHTAR, 'x-tenant': 'default' },
+    });
+    await app.close();
+
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+
+    // Kurus cevrimi: 250.5 TL -> 25050. Bir birim hatasi burada yakalanir.
+    expect(body.deposits.map((d: { amountCents: number }) => d.amountCents)).toEqual([4000, 25050]);
+    expect(body.withdrawals).toHaveLength(1);
+    expect(body.withdrawals[0].status).toBe('Pending');
+    // ClientId ile oyuncuya ozel uca gidilmeli; site geneli arama degil.
+    expect(lynonPaymentTransactions).toHaveBeenCalledWith({ ClientId: '77' });
+  });
+
+  it('anahtarsiz cagri Lynona hic ulasmaz', async () => {
+    const app = await sunucu();
+    const res = await app.inject({ method: 'GET', url: '/api/crm/players/77/transactions' });
+    await app.close();
+
+    expect(res.statusCode).toBe(401);
+    expect(lynonPaymentTransactions).not.toHaveBeenCalled();
   });
 });

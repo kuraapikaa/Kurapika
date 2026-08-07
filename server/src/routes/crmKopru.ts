@@ -6,6 +6,7 @@ import {
   lynonCreditPlayerMainAccount,
   lynonErrorResponse,
   lynonOyuncuKpiSorgula,
+  lynonPaymentTransactions,
 } from '../services/lynonBackofficeService.js';
 
 /**
@@ -138,6 +139,63 @@ export async function crmKopruRoutes(app: FastifyInstance): Promise<void> {
           return reply.code(404).send({ error: 'Oyuncu bulunamadi' });
         }
         return reply.send(kpiyeCevir(sonuc.ozet));
+      } catch (error) {
+        const { status, body } = lynonErrorResponse(error);
+        return reply.code(status).send(body);
+      }
+    },
+  );
+
+  /**
+   * Oyuncunun son islemleri: yatirimlar ve cekim talepleri, durumlariyla.
+   *
+   * KPI ucu yalnizca TOPLAM yatirim/cekim veriyor. Temsilcinin sohbette
+   * ihtiyaci olan ise "cekimi neden yatmadi" ve "en son ne zaman yatirdi" —
+   * ikisinin de cevabi tekil islemlerde, toplamda degil.
+   *
+   * Site geneli arama yerine oyuncuya ozel uca gidiyor: yogun bir sitede
+   * belirli bir oyuncunun kayitlari ilk sayfada olmayabiliyor ve sonuc
+   * sessizce bos donuyordu (bkz. lynonPaymentTransactions).
+   */
+  app.get<{ Params: { userId: string }; Querystring: { limit?: string } }>(
+    '/crm/players/:userId/transactions',
+    async (request, reply) => {
+      const tenant = kimlikDogrula(request, reply);
+      if (!tenant) return;
+
+      const limit = Math.min(Math.max(Number(request.query.limit ?? 10) || 10, 1), 50);
+
+      try {
+        const rows = await runWithTenant(tenant, () =>
+          lynonPaymentTransactions({ ClientId: request.params.userId }),
+        );
+
+        const cevir = (row: Record<string, unknown>) => ({
+          id: String(row.Id ?? row.DocumentId ?? ''),
+          // Lynon ana birimde donuyor; CRM her yerde minor unit kullaniyor.
+          amountCents: Math.round(Number(row.Amount ?? row.amount ?? 0) * 100),
+          currency: String(row.CurrencyId ?? row.currency ?? '') || null,
+          status: String(row.DocumentState ?? row.status ?? '') || null,
+          method: String(row.PaymentSystemName ?? row.paymentSystemName ?? '') || null,
+          createdAt: (row.CreatedAt ?? row.createdAt ?? row.DocumentDate ?? null) as string | null,
+        });
+
+        const tur = (row: Record<string, unknown>) =>
+          String(row.transactionType ?? row.type ?? '').trim().toLowerCase();
+
+        const liste = Array.isArray(rows) ? rows : [];
+        const yatirimlar = liste.filter((r) => tur(r) === 'deposit').map(cevir);
+        const cekimler = liste.filter((r) => tur(r) === 'withdrawal').map(cevir);
+
+        // En yeni once: temsilcinin bakacagi sey son islem.
+        const yeniOnce = (a: { createdAt: string | null }, b: { createdAt: string | null }) =>
+          Date.parse(b.createdAt ?? '') - Date.parse(a.createdAt ?? '') || 0;
+
+        return reply.send({
+          deposits: yatirimlar.sort(yeniOnce).slice(0, limit),
+          withdrawals: cekimler.sort(yeniOnce).slice(0, limit),
+          fetchedAt: new Date().toISOString(),
+        });
       } catch (error) {
         const { status, body } = lynonErrorResponse(error);
         return reply.code(status).send(body);
