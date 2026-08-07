@@ -65,6 +65,12 @@ const PUBLIC_PREFIXES = [
   // kayıtlı bir medyanın hedefine yönlendiriyor; adres istekten
   // alınmadığı için açık yönlendirme taşıyıcısı değil.
   '/api/t/',
+  // WhatsApp CRM köprüsü. Çağıran bir insan değil, ayrı bir servis — panel
+  // oturumu olamaz. Kendi kimlik doğrulaması var: her uç X-CRM-Key başlığını
+  // CRM_BRIDGE_KEY ile karşılaştırıyor ve anahtar tanımlı değilse 503 dönüyor
+  // (bkz. routes/crmKopru.ts). Bu listede olmadığı için köprünün tamamı,
+  // kendi kontrolü hiç çalışmadan 401 alıyordu.
+  '/api/crm/',
 ];
 
 /** Bonus panel API'leri — admin veya bonus panel girişi yeterli. */
@@ -78,7 +84,12 @@ const BONUS_PANEL_PATHS = new Set([
   '/api/admin/bonus/partner-list',
 ]);
 
-function isPublicPath(path: string): boolean {
+/**
+ * Dışa açık: testler bu mantığın kopyasını değil kendisini sınasın diye.
+ * Kopyalanan bir liste, asıl liste değiştiğinde sessizce yeşil kalır — bu
+ * dosyada tam olarak öyle oldu ve CRM köprüsü haftalarca 401 döndü.
+ */
+export function isPublicPath(path: string): boolean {
   if (PUBLIC_EXACT_PATHS.has(path)) return true;
   if (PUBLIC_PREFIXES.some((prefix) => path.startsWith(prefix))) return true;
   if (!path.startsWith('/api')) return true;
