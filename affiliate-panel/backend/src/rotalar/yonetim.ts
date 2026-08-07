@@ -37,6 +37,7 @@ import { olcumleriOku, ortakOzetleri } from '../servisler/olcum.js';
 import {
   gorunume,
   ortakGuncelle,
+  ortakParolasiSifirla,
   ortakOlustur,
   ortaklariListele,
   ortakSil,
@@ -189,6 +190,19 @@ export async function yonetimRotalari(app: FastifyInstance): Promise<void> {
     await ortakSil(istek.kiraci, istek.params.id);
     return { silindi: true };
   });
+
+  /**
+   * Parola sifirlama.
+   *
+   * "Ortaklarin parolalarini listele" teknik olarak imkansiz: depoda
+   * scrypt ozeti var ve ozet geri cevrilemiyor. Yapilabilecek tek sey
+   * yeni bir parola uretip BIR KEZ gostermek.
+   *
+   * Uretilen parola yalnizca bu yanitta donuyor; hicbir listede,
+   * hicbir kayitta bir daha gorunmuyor.
+   */
+  app.post<{ Params: { id: string } }>('/ortaklar/:id/parola-sifirla', async (istek) =>
+    ortakParolasiSifirla(istek.kiraci, istek.params.id));
 
   // ── Komisyon planları ──────────────────────────────────────────────
 

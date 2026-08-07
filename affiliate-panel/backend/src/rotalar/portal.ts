@@ -1,5 +1,11 @@
 import type { FastifyInstance } from 'fastify';
 import { ortakZorunlu } from '../kimlik/koruma.js';
+import {
+  altLinkDurumDegistir,
+  altLinkleriListele,
+  altLinkOlustur,
+  altLinkSil,
+} from '../servisler/altLink.js';
 import { gunAnahtari, gunEkle } from '../lib/gunler.js';
 import { donemleriListele, ortakDonemi } from '../servisler/hakedis.js';
 import { altOrtaklar } from '../servisler/kademeler.js';
@@ -118,6 +124,53 @@ export async function portalRotalari(app: FastifyInstance): Promise<void> {
       // Izlemeli link: tiklama ucumuzden gecer, kanal kirilimi burada olusur.
       izlemeliLink,
     };
+  });
+
+  /**
+   * ALT LİNKLER — ortağın kendi kampanya bağlantıları.
+   *
+   * Ortak anahtarı hep oturumdan; gövdeden kabul etseydik bir ortak
+   * başkasının adına link üretip trafiği ona yazdırabilirdi.
+   */
+  app.get('/alt-linkler', async (istek) => {
+    const temel = String(process.env.AFF_TIKLAMA_TEMEL_URL || '').trim().replace(/\/$/, '');
+    const linkler = await altLinkleriListele(istek.kiraci, istek.oturum!.ortakAnahtari);
+    return {
+      // Tam adres SUNUCUDA kuruluyor; arayüzün kökü kendi tahmin etmesi,
+      // ortağın yanlış alan adıyla link paylaşmasına yol açardı.
+      linkler: linkler.map((l) => ({ ...l, tamAdres: temel ? `${temel}/l/${l.kod}` : null })),
+      temelHazir: Boolean(temel),
+    };
+  });
+
+  app.post('/alt-linkler', async (istek, yanit) => {
+    const oturum = istek.oturum!;
+    const ortak = oturum.ortakId ? await ortakBul(istek.kiraci, oturum.ortakId) : null;
+    if (!ortak) {
+      yanit.status(401);
+      return { hata: 'Hesap bulunamadı.' };
+    }
+    // Onaysiz ortak link uretemez; alt link de bir izleme linkidir.
+    onayZorunlu(ortak);
+
+    const govde = (istek.body ?? {}) as { ad?: string; medyaId?: string; alt?: Record<string, unknown> };
+    // Medya erisimi BURADA da kontrol ediliyor: kisitli bir medyanin
+    // kimligini bilen ortak, aksi halde ona kapali bir kreatif icin
+    // link uretebilirdi.
+    await medyaIzlemeLinki(istek.kiraci, String(govde.medyaId ?? ''), ortak.ortakAnahtari);
+
+    yanit.status(201);
+    return altLinkOlustur(istek.kiraci, ortak.ortakAnahtari, govde);
+  });
+
+  app.put<{ Params: { id: string } }>('/alt-linkler/:id', async (istek) => {
+    const govde = (istek.body ?? {}) as { aktif?: boolean };
+    return altLinkDurumDegistir(istek.kiraci, istek.oturum!.ortakAnahtari!, istek.params.id, govde.aktif !== false);
+  });
+
+  app.delete<{ Params: { id: string } }>('/alt-linkler/:id', async (istek) => {
+    await altLinkSil(istek.kiraci, istek.oturum!.ortakAnahtari!, istek.params.id);
+    return { silindi: true };
   });
 
   app.get('/tiklamalar', async (istek) => {

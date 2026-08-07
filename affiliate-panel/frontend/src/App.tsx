@@ -13,6 +13,7 @@ import { Ozet } from './sayfalar/yonetim/Ozet';
 import { Planlar } from './sayfalar/yonetim/Planlar';
 import { Postback } from './sayfalar/yonetim/Postback';
 import { Tiklamalar } from './sayfalar/yonetim/Tiklamalar';
+import { PortalAltLinkler } from './sayfalar/portal/PortalAltLinkler';
 import { PortalHakedis } from './sayfalar/portal/PortalHakedis';
 import { PortalMedya } from './sayfalar/portal/PortalMedya';
 import { PortalOzet } from './sayfalar/portal/PortalOzet';
@@ -43,6 +44,7 @@ const YONETIM_MENUSU = [
 const PORTAL_MENUSU = [
   { yol: '/portal', etiket: 'Özet' },
   { yol: '/portal/medya', etiket: 'Medya ve linkler' },
+  { yol: '/portal/alt-linkler', etiket: 'Alt linkler' },
   { yol: '/portal/tiklamalar', etiket: 'Tıklamalar' },
   { yol: '/portal/hakedis', etiket: 'Hakediş' },
   { yol: '/portal/postback', etiket: 'Postback' },
@@ -131,6 +133,7 @@ export function App() {
             <>
               <Route path="/portal" element={<PortalOzet />} />
               <Route path="/portal/medya" element={<PortalMedya />} />
+              <Route path="/portal/alt-linkler" element={<PortalAltLinkler />} />
               <Route path="/portal/tiklamalar" element={<PortalTiklamalar />} />
               <Route path="/portal/hakedis" element={<PortalHakedis />} />
               <Route path="/portal/postback" element={<PortalPostback />} />

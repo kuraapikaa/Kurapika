@@ -1,4 +1,4 @@
-import { randomUUID } from 'crypto';
+import { randomBytes, randomUUID } from 'crypto';
 import { degistir, diziOku, kayitOku, oku } from '../lib/depo.js';
 import { parolaDogrula, parolaOzeti } from '../lib/sifre.js';
 
@@ -348,6 +348,45 @@ export async function ortakGirisi(kiraci: string, eposta: string, parola: string
     throw new OrtakHatasi('Hesabınız şu anda erişime kapalı. Lütfen yöneticinizle görüşün.', 403);
   }
   return ortak;
+}
+
+/**
+ * PAROLA SIFIRLAMA — okumak mümkün değil, yalnızca değiştirmek.
+ *
+ * Parolalar scrypt özeti olarak duruyor ve özet geri çevrilemiyor;
+ * "ortakların parolalarını listele" diye bir şey teknik olarak
+ * imkânsız. Bu bir eksiklik değil, deponun düz parola tutmamasının
+ * doğrudan sonucu: veritabanı sızsa bile hiçbir ortağın parolası
+ * okunamaz.
+ *
+ * Yönetici bir ortağın hesabına erişim vermek istediğinde yapılacak
+ * şey yeni bir parola ÜRETİP bir kez göstermek. Üretilen parola
+ * yalnızca bu yanıtta dönüyor; sonrasında panelde bir daha
+ * görünmüyor.
+ */
+export function rastgeleParola(uzunluk = 16): string {
+  // Karistirilan karakterler (0/O, 1/l/I) yok: parola sozlu ya da elle
+  // aktarilacak ve yanlis okunan bir karakter en sik destek sebebi.
+  const alfabe = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let parola = '';
+  for (const b of randomBytes(uzunluk)) parola += alfabe[b % alfabe.length];
+  return parola;
+}
+
+export async function ortakParolasiSifirla(
+  kiraci: string,
+  id: string,
+  simdi = new Date(),
+): Promise<{ ortak: OrtakGorunumu; parola: string }> {
+  const parola = rastgeleParola();
+  const ortak = await degistir<Depo, Ortak>(kiraci, ALAN, cozDepo, (depo) => {
+    const kayit = depo.ortaklar.find((o) => o.id === id);
+    if (!kayit) throw new OrtakHatasi('Ortak bulunamadı.', 404);
+    kayit.parolaOzeti = parolaOzeti(parola);
+    kayit.updatedAt = simdi.toISOString();
+    return kayit;
+  });
+  return { ortak: gorunume(ortak), parola };
 }
 
 /** Onaylanmamış ortak izleme linki üretemez, medya alamaz. */

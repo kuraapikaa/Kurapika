@@ -29,6 +29,8 @@ export function Ortaklar() {
   const planlar = useVeri<{ planlar: Plan[] }>('/api/yonetim/planlar');
   const [hata, setHata] = useState<string | null>(null);
   const [yeni, setYeni] = useState({ ad: '', eposta: '', ortakAnahtari: '', parola: '' });
+  // Uretilen parola YALNIZCA burada, bir kez gorunur; hicbir listede yok.
+  const [uretilen, setUretilen] = useState<{ ad: string; parola: string } | null>(null);
 
   const calistir = async (is: () => Promise<unknown>) => {
     setHata(null);
@@ -71,6 +73,27 @@ export function Ortaklar() {
 
       {(hata || liste.hata) && <Hata mesaj={hata ?? liste.hata!} />}
 
+      {uretilen && (
+        <Kart baslik="Yeni parola">
+          <p className="mb-2 text-sm">
+            <strong>{uretilen.ad}</strong> için yeni parola:
+          </p>
+          <code
+            className="block break-all rounded-lg border px-3 py-2 text-sm"
+            style={{ background: 'var(--yuzey-2)', borderColor: 'var(--kenar)' }}
+          >
+            {uretilen.parola}
+          </code>
+          <p className="mt-2 text-xs" style={{ color: 'var(--uyari)' }}>
+            Bu parola bir daha gösterilmeyecek — depoda yalnızca geri çevrilemez özeti tutuluyor.
+            Ortağa iletin, sonra bu kutuyu kapatın.
+          </p>
+          <div className="mt-2">
+            <Buton onClick={() => setUretilen(null)}>Kapat</Buton>
+          </div>
+        </Kart>
+      )}
+
       <Kart baslik="Ortaklar">
         {(liste.veri?.ortaklar ?? []).length === 0 ? (
           <Bos mesaj="Henüz ortak yok." />
@@ -110,6 +133,14 @@ export function Ortaklar() {
                         Askıya al
                       </Buton>
                     )}
+                    <Buton
+                      onClick={() => calistir(async () => {
+                        const y = await api.gonder<{ parola: string }>(`/api/yonetim/ortaklar/${o.id}/parola-sifirla`);
+                        setUretilen({ ad: o.ad, parola: y.parola });
+                      })}
+                    >
+                      Parola sıfırla
+                    </Buton>
                     <Buton
                       tur="tehlike"
                       onClick={() => {
