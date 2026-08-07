@@ -1,12 +1,13 @@
-import { mkdir, readFile, rename, writeFile } from 'fs/promises';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import { readStoredDocument, writeStoredDocument } from '../lib/documentStore.js';
 import { evaluateForAccount } from '../services/promoEvaluator.js';
-import { assignmentValuesForPromoSpec, getRules, type PromoSpec, type RulesConfig } from '../services/rulesService.js';
+import { assignmentValuesForPromoSpec, freespinAtamasiVar, getRules, type PromoSpec, type RulesConfig } from '../services/rulesService.js';
 import { atamaNotu } from '../services/bonusAtamaNotu.js';
 import { bonusDenetimAciklamasi } from '../services/bonusDenetimAciklamasi.js';
 import { audit } from '../lib/auditLog.js';
+import { currentTenantKey, safeTenantKey } from '../lib/tenantContext.js';
+import { bekleyenGun, gunEkle, VARSAYILAN_PENCERE, type GunDurumu, type PencereAyari } from './ertesiGunPenceresi.js';
 import {
   isLynonConfigured,
   istanbulDateKey,
@@ -21,10 +22,59 @@ import {
 } from '../services/lynonBackofficeService.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const STATE_PATH = join(__dirname, '..', 'data', 'next-day-bonus-runs', 'default.json');
+const STATE_DIR = join(__dirname, '..', 'data', 'next-day-bonus-runs');
 const PAGE_SIZE = 500;
-const MAX_PAGES = 10;
 const BETWEEN_PLAYERS_MS = 350;
+
+/**
+ * ERTESI GUN BONUSU — TELAFILI CALISMA MODELI.
+ *
+ * Bu is eskiden YALNIZCA Turkiye saatiyle 00:15-00:19 arasinda
+ * calisiyordu: `if (hour !== 0 || minute < 15 || minute > 19) return`.
+ * Bes dakikalik bir pencere ve HICBIR telafi yolu yoktu. Sonuclari
+ * sahada tam olarak "ertesi gun freespinleri dagitilmiyor" seklinde
+ * goruluyordu:
+ *
+ *   - Surec o bes dakikada ayakta degilse (Railway yeniden baslatmasi,
+ *     deploy, kisa bir cokme) O GUNUN bonusu tamamen ve sessizce
+ *     kayboluyordu. Ertesi gun uyanan is yalnizca YENI gune bakiyor,
+ *     kacirdigi gunu hic sormuyordu.
+ *   - Gecici bir API hatasi alan oyuncunun kaydi `error` olarak
+ *     yaziliyordu ama kayit anahtari gunu icerdigi icin (`stateKey`)
+ *     yalnizca AYNI GUN, ayni pencerede yeniden denenebiliyordu. 00:19'u
+ *     geciren hata kalici kayipti.
+ *
+ * Yerine gecen model: is her dakika uyanir ve "bekleyen gun" arar. Bir
+ * gun, baslangic saati gectiginde bekleyen sayilir ve tum kapilardan
+ * hatasiz gecene kadar bekleyen kalir — gunun hangi saatinde olundugu
+ * fark etmez. Boylece aksam yeniden baslatilan bir sunucu sabahki
+ * dagitimi telafi eder.
+ *
+ * Sonsuz yeniden denemeye karsi iki sinir var: gun basina deneme sayisi
+ * ve denemeler arasi bekleme. Kalici bir hata (silinmis kampanya gibi)
+ * Lynon'u dakikada bir dovmez.
+ */
+
+/** Zamanlama ayari; hepsi ortam degiskeni ile ezilebilir. */
+function pencereAyari(): PencereAyari {
+  return {
+    baslangicSaat: Number(process.env.ERTESI_GUN_BASLANGIC_SAAT ?? VARSAYILAN_PENCERE.baslangicSaat),
+    baslangicDakika: Number(process.env.ERTESI_GUN_BASLANGIC_DAKIKA ?? VARSAYILAN_PENCERE.baslangicDakika),
+    telafiGun: Math.max(1, Number(process.env.ERTESI_GUN_TELAFI_GUN) || VARSAYILAN_PENCERE.telafiGun),
+    maxDeneme: Math.max(1, Number(process.env.ERTESI_GUN_MAX_DENEME) || VARSAYILAN_PENCERE.maxDeneme),
+    denemeArasiMs: Math.max(60_000, Number(process.env.ERTESI_GUN_DENEME_ARASI_MS) || VARSAYILAN_PENCERE.denemeArasiMs),
+  };
+}
+
+/**
+ * Onceki gunun yatirim islemlerinde taranacak en fazla sayfa.
+ *
+ * Eskiden 10 sayfa (5.000 islem) SESSIZ bir tavandi: yogun bir gunde
+ * 5.000. islemden sonrasi hic okunmuyor, o oyuncular bonus almiyor ve
+ * hicbir yerde iz kalmiyordu. Tavan yukseltildi ve dolarsa artik
+ * loglaniyor.
+ */
+const MAX_SAYFA = Math.max(1, Number(process.env.ERTESI_GUN_MAX_SAYFA) || 60);
 
 type RunRecord = {
   status: 'granted' | 'ineligible' | 'already-granted' | 'error';
@@ -33,8 +83,10 @@ type RunRecord = {
 };
 
 type RunState = {
-  version: 1;
+  version: 2;
+  /** Geriye donuk uyumluluk: v1 kaydindaki tamamlanmis gunler. */
   completedDates: string[];
+  gunler: Record<string, GunDurumu>;
   records: Record<string, RunRecord>;
 };
 
@@ -44,41 +96,42 @@ type AutoRule = {
   spec: PromoSpec;
 };
 
-const emptyState = (): RunState => ({ version: 1, completedDates: [], records: {} });
+const emptyState = (): RunState => ({ version: 2, completedDates: [], gunler: {}, records: {} });
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function loadState(): Promise<RunState> {
-  const parsed = await readStoredDocument<Partial<RunState>>({
-    tenantKey: 'default',
+function statePath(tenantKey: string): string {
+  return join(STATE_DIR, `${safeTenantKey(tenantKey)}.json`);
+}
+
+async function loadState(tenantKey: string): Promise<RunState> {
+  const parsed = await readStoredDocument<Partial<RunState> & { completedDates?: unknown }>({
+    tenantKey: safeTenantKey(tenantKey),
     namespace: 'next-day-bonus-runs',
-    filePath: STATE_PATH,
-    fallback: emptyState(),
+    filePath: statePath(tenantKey),
+    fallback: emptyState,
   });
+
+  const completedDates = Array.isArray(parsed.completedDates) ? parsed.completedDates.map(String) : [];
+  const gunler: Record<string, GunDurumu> = parsed.gunler && typeof parsed.gunler === 'object' ? { ...parsed.gunler } : {};
+  // v1 -> v2 gecisi: eski `completedDates` listesi tamamlanmis gun sayilir,
+  // yoksa surumu yukseltir yukseltmez tum gecmis gunler yeniden dagitilirdi.
+  for (const dateKey of completedDates) {
+    if (!gunler[dateKey]) gunler[dateKey] = { durum: 'done', deneme: 0 };
+  }
+
   return {
-    version: 1,
-    completedDates: Array.isArray(parsed.completedDates) ? parsed.completedDates.map(String) : [],
+    version: 2,
+    completedDates,
+    gunler,
     records: parsed.records && typeof parsed.records === 'object' ? parsed.records : {},
   };
 }
 
-async function saveState(state: RunState): Promise<void> {
+async function saveState(tenantKey: string, state: RunState): Promise<void> {
   await writeStoredDocument(
-    { tenantKey: 'default', namespace: 'next-day-bonus-runs', filePath: STATE_PATH },
+    { tenantKey: safeTenantKey(tenantKey), namespace: 'next-day-bonus-runs', filePath: statePath(tenantKey) },
     state,
   );
-}
-
-function istanbulHourMinute(now: Date): { hour: number; minute: number } {
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'Europe/Istanbul',
-    hour: '2-digit',
-    minute: '2-digit',
-    hourCycle: 'h23',
-  }).formatToParts(now);
-  return {
-    hour: Number(parts.find((part) => part.type === 'hour')?.value ?? -1),
-    minute: Number(parts.find((part) => part.type === 'minute')?.value ?? -1),
-  };
 }
 
 function automaticRules(rules: RulesConfig): AutoRule[] {
@@ -95,10 +148,11 @@ function automaticRules(rules: RulesConfig): AutoRule[] {
   return [...unique.values()];
 }
 
-async function previousDayDepositorIds(previousDateKey: string): Promise<Array<number | string>> {
+async function previousDayDepositorIds(previousDateKey: string): Promise<{ ids: Array<number | string>; kirpildi: boolean }> {
   const bounds = istanbulDayBoundsUtc(previousDateKey);
   const rows: Record<string, any>[] = [];
-  for (let page = 0; page < MAX_PAGES; page += 1) {
+  let kirpildi = false;
+  for (let page = 0; page < MAX_SAYFA; page += 1) {
     const pageRows = await lynonPaymentTransactions({
       FromCreatedDateLocal: bounds.from,
       ToCreatedDateLocal: bounds.to,
@@ -107,8 +161,10 @@ async function previousDayDepositorIds(previousDateKey: string): Promise<Array<n
     }, { transactionTypes: 'deposit', status: ['success'] });
     rows.push(...pageRows);
     if (pageRows.length < PAGE_SIZE) break;
+    if (page === MAX_SAYFA - 1) kirpildi = true;
   }
-  return [...new Set(rows.map((row) => row.userId).filter((id) => id !== null && id !== undefined && String(id).trim() !== ''))];
+  const ids = [...new Set(rows.map((row) => row.userId).filter((id) => id !== null && id !== undefined && String(id).trim() !== ''))];
+  return { ids, kirpildi };
 }
 
 function stateKey(dateKey: string, rule: AutoRule, playerId: number | string): string {
@@ -147,17 +203,13 @@ export type KuruSonuc = {
 /**
  * Ertesi gun bonusunu KURU calistirir: hicbir sey yazmaz, atama yapmaz.
  *
- * Is yalnizca Turkiye saatiyle 00:15-00:19 arasinda calisiyor. Bu 5 dakikalik
- * pencere disinda "neden eklenmedi" sorusunu cevaplamanin hicbir yolu yoktu;
- * kural degistirip ertesi geceye kadar beklemek gerekiyordu.
- *
- * Bu fonksiyon isin kapilarindan AYNI sirayla gecer ve her birinin sonucunu
- * doner. Zaman penceresi ve idempotency kayitlari KASITLI olarak atlanir —
- * amac "su anda calissaydi ne olurdu" sorusunu cevaplamak.
+ * Zaman penceresi ve idempotency kayitlari KASITLI olarak atlanir — amac
+ * "su anda calissaydi ne olurdu" sorusunu cevaplamak.
  */
 export async function nextDayBonusKuruCalistir(
   playerId: string | number,
   now = new Date(),
+  tenantKey = currentTenantKey(),
 ): Promise<KuruSonuc> {
   const dateKey = istanbulDateKey(now);
   const kapilar: KuruKapi[] = [];
@@ -170,7 +222,7 @@ export async function nextDayBonusKuruCalistir(
     return { playerId: String(playerId), dateKey, kapilar, verilirdi: false, tutar: null };
   }
 
-  const rules = await getRules('default');
+  const rules = await getRules(tenantKey);
   const activeRules = automaticRules(rules);
   if (!ekle(
     'Otomatik kural',
@@ -183,7 +235,7 @@ export async function nextDayBonusKuruCalistir(
   }
 
   const previousDateKey = previousIstanbulDateKey(now);
-  const oncekiGunOyuncular = await previousDayDepositorIds(previousDateKey);
+  const { ids: oncekiGunOyuncular } = await previousDayDepositorIds(previousDateKey);
   const listede = oncekiGunOyuncular.some((id: unknown) => String(id) === String(playerId));
   ekle(
     'Onceki gun yatirimi',
@@ -223,7 +275,7 @@ export async function nextDayBonusKuruCalistir(
     const account = await lynonBuildBonusEligibilitySnapshot({ playerId });
     const promoId = rule.group === 'id' && Number.isFinite(Number(rule.key)) ? Number(rule.key) : campaignId;
     const promoTitle = rule.group === 'title' ? rule.key : String(campaign?.Name ?? rule.key);
-    const check = await evaluateForAccount(account as any, { id: promoId, title: promoTitle, kuralAnahtari: rule.key, ...rule.spec } as any, rules, 'default', 'bonus');
+    const check = await evaluateForAccount(account as any, { id: promoId, title: promoTitle, kuralAnahtari: rule.key, ...rule.spec } as any, rules, tenantKey, 'bonus');
 
     const dusenler = check.items.filter((item) => !item.ok);
     ekle(
@@ -233,48 +285,80 @@ export async function nextDayBonusKuruCalistir(
     );
 
     const hesaplanan = Number(check.calculatedAmount ?? rule.spec.fixedAmount ?? 0);
+    const tutarliBirDeger = Number.isFinite(hesaplanan) && hesaplanan > 0;
+    /**
+     * FREESPIN'DE TUTAR SIFIR OLABILIR.
+     *
+     * Burada kosulsuz "tutar > 0" araniyordu; gercek is ise nakit
+     * disindaki kampanyalarda tutar sartı KOSMUYOR. Sonuc: freespin
+     * kampanyalari icin kuru calistirma "verilmezdi" diyor ama is
+     * veriyordu — teshis araci gercegin tam tersini soyluyordu.
+     */
+    const freespin = !isCash && freespinAtamasiVar(assignmentValuesForPromoSpec(rule.spec));
+    const tutarGerekli = isCash || !freespin;
     ekle(
       `[${rule.key}] Tutar`,
-      Number.isFinite(hesaplanan) && hesaplanan > 0,
-      Number.isFinite(hesaplanan) && hesaplanan > 0
+      tutarliBirDeger || !tutarGerekli,
+      tutarliBirDeger
         ? `${hesaplanan} TRY`
-        : 'Hesaplanan tutar 0 — barem/yuzde tanimi eksik olabilir',
+        : freespin
+          ? 'Freespin atamasi; para tutari gerekmiyor'
+          : 'Hesaplanan tutar 0 — barem/yuzde tanimi eksik olabilir',
     );
 
-    if (check.overallOk && hesaplanan > 0 && listede) {
+    if (check.overallOk && listede && (tutarliBirDeger || !tutarGerekli)) {
       verilirdi = true;
-      tutar = hesaplanan;
+      tutar = tutarliBirDeger ? hesaplanan : null;
     }
   }
 
   return { playerId: String(playerId), dateKey, kapilar, verilirdi, tutar };
 }
 
-export async function runNextDayBonusJob(now = new Date()): Promise<{
+export async function runNextDayBonusJob(
+  tenantKey = currentTenantKey(),
+  now = new Date(),
+): Promise<{
   skipped: boolean;
   dateKey: string;
   rules: number;
   players: number;
   granted: number;
   errors: number;
+  /** Telafi edilen (bugun olmayan) bir gun islendiyse true. */
+  telafi: boolean;
 }> {
-  const dateKey = istanbulDateKey(now);
-  const baseResult = { skipped: true, dateKey, rules: 0, players: 0, granted: 0, errors: 0 };
+  const bugun = istanbulDateKey(now);
+  const baseResult = { skipped: true, dateKey: bugun, rules: 0, players: 0, granted: 0, errors: 0, telafi: false };
   if (!isLynonConfigured()) return baseResult;
 
-  const { hour, minute } = istanbulHourMinute(now);
-  // 00:15'te başlar; geçici API hataları için 00:19'a kadar güvenli/idempotent yeniden deneme penceresi vardır.
-  if (hour !== 0 || minute < 15 || minute > 19) return baseResult;
-
-  const rules = await getRules('default');
+  const rules = await getRules(tenantKey);
   const activeRules = automaticRules(rules);
-  if (!activeRules.length) return { ...baseResult, rules: 0 };
+  if (!activeRules.length) return baseResult;
 
-  const state = await loadState();
-  if (state.completedDates.includes(dateKey)) return { ...baseResult, rules: activeRules.length };
+  const ayar = pencereAyari();
+  const state = await loadState(tenantKey);
+  const dateKey = bekleyenGun(state.gunler, now, ayar);
+  if (!dateKey) return { ...baseResult, rules: activeRules.length };
 
-  const previousDateKey = previousIstanbulDateKey(now);
-  const playerIds = await previousDayDepositorIds(previousDateKey);
+  const telafi = dateKey !== bugun;
+  const gun: GunDurumu = state.gunler[dateKey] ?? { durum: 'bekliyor', deneme: 0 };
+  state.gunler[dateKey] = { ...gun, durum: 'bekliyor', deneme: gun.deneme + 1, sonDenemeAt: new Date().toISOString() };
+  await saveState(tenantKey, state);
+
+  if (telafi) {
+    console.warn(`[next-day-bonus] ${tenantKey}: ${dateKey} gunu tamamlanmamis, telafi ediliyor (deneme ${gun.deneme + 1}/${ayar.maxDeneme}).`);
+  }
+
+  const previousDateKey = previousIstanbulDateKey(`${dateKey}T12:00:00+03:00`);
+  const { ids: playerIds, kirpildi } = await previousDayDepositorIds(previousDateKey);
+  if (kirpildi) {
+    console.warn(
+      `[next-day-bonus] ${tenantKey}: ${previousDateKey} yatirim listesi ${MAX_SAYFA * PAGE_SIZE} islemde kirpildi; ` +
+      'bazi oyuncular atlanmis olabilir. ERTESI_GUN_MAX_SAYFA degerini yukseltin.',
+    );
+  }
+
   const catalogResponse = await lynonBonusDefinitions();
   const catalogRows = Array.isArray(catalogResponse.Result) ? catalogResponse.Result : [];
   const campaignById = new Map(
@@ -303,14 +387,14 @@ export async function runNextDayBonusJob(now = new Date()): Promise<{
 
         const promoId = rule.group === 'id' && Number.isFinite(Number(rule.key)) ? Number(rule.key) : campaignId;
         const promoTitle = rule.group === 'title' ? rule.key : String(campaign?.Name ?? rule.key);
-        const check = await evaluateForAccount(account as any, { id: promoId, title: promoTitle, kuralAnahtari: rule.key, ...rule.spec } as any, rules, 'default', 'bonus');
+        const check = await evaluateForAccount(account as any, { id: promoId, title: promoTitle, kuralAnahtari: rule.key, ...rule.spec } as any, rules, tenantKey, 'bonus');
         if (!check.overallOk) {
           state.records[key] = {
             status: 'ineligible',
             at: new Date().toISOString(),
             message: check.items.filter((item) => !item.ok).map((item) => item.reason || item.label).join(' | ').slice(0, 500),
           };
-          await saveState(state);
+          await saveState(tenantKey, state);
           continue;
         }
 
@@ -320,15 +404,27 @@ export async function runNextDayBonusJob(now = new Date()): Promise<{
           );
           if (alreadyAssigned) {
             state.records[key] = { status: 'already-granted', at: new Date().toISOString(), message: 'Lynon kampanyası bugün zaten atanmış.' };
-            await saveState(state);
+            await saveState(tenantKey, state);
             continue;
           }
 
           const calculatedAmount = Number(check.calculatedAmount ?? 0);
           const configuredAssignmentValues = assignmentValuesForPromoSpec(rule.spec);
+          /**
+           * FREESPIN ATAMASINA PARA TUTARI EKLENMEZ.
+           *
+           * Hesaplanan tutar sifirdan buyukse `BonusMoneyAmount` kosulsuz
+           * ekleniyordu. Kayip yuzdesine bagli bir freespin kuralinda bu,
+           * BetLevel/RoundCount/Game ile birlikte bir de para tutari
+           * gonderilmesi demekti; Lynon boyle bir atamayi reddediyor ve
+           * oyuncu freespin'i hic alamiyordu.
+           */
+          const freespin = freespinAtamasiVar(configuredAssignmentValues);
           const assignmentValues = {
             ...configuredAssignmentValues,
-            ...(calculatedAmount > 0 && configuredAssignmentValues.BonusMoneyAmount == null ? { BonusMoneyAmount: calculatedAmount } : {}),
+            ...(!freespin && calculatedAmount > 0 && configuredAssignmentValues.BonusMoneyAmount == null
+              ? { BonusMoneyAmount: calculatedAmount }
+              : {}),
           };
           await lynonAssignCampaignToPlayer({
             campaignId,
@@ -342,14 +438,6 @@ export async function runNextDayBonusJob(now = new Date()): Promise<{
             }),
             assignmentValues,
           });
-          /**
-           * DENETIM KAYDI.
-           *
-           * Bu is oyunculara otomatik bonus veriyordu ve denetime HICBIR
-           * SEY yazmiyordu. Geriye donuk "bu bonus kime, neden, hangi
-           * kuralla verildi" sorusu yalnizca Lynon tarafindan
-           * cevaplanabiliyordu; panelin kendi kaydi bostu.
-           */
           audit('sistem', 'job', 'lynon_campaign_assignment', String(playerId), bonusDenetimAciklamasi({
             tur: 'kampanya',
             kaynak: `ertesi gün otomasyonu ${previousDateKey}`,
@@ -366,19 +454,10 @@ export async function runNextDayBonusJob(now = new Date()): Promise<{
           const note = cashNote(dateKey, rule);
           if (await cashAlreadyCredited(playerId, dateKey, note)) {
             state.records[key] = { status: 'already-granted', at: new Date().toISOString(), message: 'Crediting düzeltmesi bugün zaten işlendi.' };
-            await saveState(state);
+            await saveState(tenantKey, state);
             continue;
           }
           await lynonAdjustPlayerMainAccount({ playerId, amount, correctionType: 'crediting', note });
-          /**
-           * NAKIT BONUS DA DENETIME DUSER.
-           *
-           * Nakit bonus Lynon'da kampanya atamasi olarak degil BAKIYE
-           * DUZELTMESI olarak yaziliyor. Panelin denetim kaydinda yalnizca
-           * kampanya atamalari gorunuyordu; oyuncunun bakiyesine dogrudan
-           * para ekleyen bu yol tamamen kayit disiydi. Para hareketi
-           * denetlenebilir olmali.
-           */
           audit('sistem', 'job', 'bonus_charge_as_cash', String(playerId), bonusDenetimAciklamasi({
             tur: 'nakit',
             kaynak: `ertesi gün otomasyonu ${previousDateKey}`,
@@ -393,21 +472,31 @@ export async function runNextDayBonusJob(now = new Date()): Promise<{
 
         granted += 1;
         state.records[key] = { status: 'granted', at: new Date().toISOString() };
-        await saveState(state);
+        await saveState(tenantKey, state);
       } catch (error) {
         errors += 1;
         hasRetryableError = true;
         state.records[key] = { status: 'error', at: new Date().toISOString(), message: (error instanceof Error ? error.message : String(error)).slice(0, 500) };
-        await saveState(state);
+        await saveState(tenantKey, state);
       }
       await sleep(BETWEEN_PLAYERS_MS);
     }
   }
 
   if (!hasRetryableError) {
+    state.gunler[dateKey] = { ...state.gunler[dateKey], durum: 'done' };
     state.completedDates = [...new Set([...state.completedDates, dateKey])].slice(-45);
-    await saveState(state);
+    // Bellek sinirsiz buyumesin: telafi penceresi disindaki gunlerin
+    // kayitlari artik hicbir karari etkilemiyor.
+    const koru = new Set(Array.from({ length: ayar.telafiGun + 2 }, (_, i) => gunEkle(bugun, -i)));
+    for (const gunAnahtari of Object.keys(state.gunler)) {
+      if (!koru.has(gunAnahtari) && state.gunler[gunAnahtari]?.durum === 'done') delete state.gunler[gunAnahtari];
+    }
+    for (const kayitAnahtari of Object.keys(state.records)) {
+      if (!koru.has(kayitAnahtari.split(':')[0] ?? '')) delete state.records[kayitAnahtari];
+    }
+    await saveState(tenantKey, state);
   }
 
-  return { skipped: false, dateKey, rules: activeRules.length, players: playerIds.length, granted, errors };
+  return { skipped: false, dateKey, rules: activeRules.length, players: playerIds.length, granted, errors, telafi };
 }

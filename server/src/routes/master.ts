@@ -4,7 +4,18 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import crypto from 'crypto';
 import { safeTenantKey } from '../lib/tenant.js';
+import { runWithTenant } from '../lib/tenantContext.js';
 import { loadTenants, saveTenants } from '../repositories/tenantRepository.js';
+import {
+  loadTenantConnection,
+  saveTenantConnection,
+  type TenantBackofficeConnection,
+  type TenantLynonConnection,
+} from '../repositories/tenantConnectionRepository.js';
+import { maskele, sifrelemeHazirMi } from '../lib/secretBox.js';
+import { ensureTenantRuntime, invalidateTenantRuntime } from '../lib/tenantRuntimeConfig.js';
+import { aktifTenantAnahtarlari } from '../lib/tenantFanout.js';
+import { clearLynonSession, ensureLynonSession, getLynonAuthStatus, isLynonConfigured } from '../lib/lynonAuth.js';
 import { hashPassword } from './auth.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -141,5 +152,169 @@ export async function masterRoutes(app: FastifyInstance) {
 
     await saveTenants(tenants);
     return reply.send({ ok: true, tenant: tenants[idx] });
+  });
+
+  // ─── Alt Site Bağlantıları (Lynon / Backoffice) ──────────────────────────
+  //
+  // Her tenant kendi backoffice'ine bağlanır. Sırlar `secretBox` ile
+  // şifreli saklanır ve panele ASLA açık dönmez — yalnızca "tanımlı mı"
+  // bilgisi ve son iki karakter gösterilir.
+
+  async function tenantVarMi(id: string): Promise<boolean> {
+    return (await loadTenants()).some((tenant: any) => tenant.id === id);
+  }
+
+  app.get('/master/tenants/:id/connection', async (request: any, reply) => {
+    if (!request.session.isMaster) return reply.status(401).send({ error: 'Yetkisiz' });
+    const { id } = request.params as any;
+    if (!(await tenantVarMi(id))) return reply.status(404).send({ ok: false, message: 'Tenant bulunamadı' });
+
+    const kayit = await loadTenantConnection(id);
+    return reply.send({
+      ok: true,
+      sifrelemeHazir: sifrelemeHazirMi(),
+      data: {
+        lynon: {
+          enabled: kayit.lynon.enabled ?? null,
+          backofficeBaseUrl: kayit.lynon.backofficeBaseUrl ?? '',
+          idBaseUrl: kayit.lynon.idBaseUrl ?? '',
+          siteId: kayit.lynon.siteId ?? null,
+          currency: kayit.lynon.currency ?? '',
+          username: kayit.lynon.username ?? '',
+          deviceFingerprint: kayit.lynon.deviceFingerprint ?? '',
+          trustDevice: kayit.lynon.trustDevice ?? null,
+          otpAlgorithm: kayit.lynon.otpAlgorithm ?? '',
+          otpDigits: kayit.lynon.otpDigits ?? null,
+          otpPeriodSeconds: kayit.lynon.otpPeriodSeconds ?? null,
+          timezoneOffset: kayit.lynon.timezoneOffset ?? null,
+          // Sırlar maskeli: varlıkları görünür, içerikleri değil.
+          passwordMask: maskele(kayit.lynon.password),
+          otpSecretMask: maskele(kayit.lynon.otpSecret),
+          otpTokenMask: maskele(kayit.lynon.otpToken),
+        },
+        backoffice: {
+          authTokenMask: maskele(kayit.backoffice.authToken),
+          dashboardAuthTokenMask: maskele(kayit.backoffice.dashboardAuthToken),
+        },
+        updatedAt: kayit.updatedAt ?? null,
+        updatedBy: kayit.updatedBy ?? null,
+      },
+    });
+  });
+
+  app.put('/master/tenants/:id/connection', async (request: any, reply) => {
+    if (!request.session.isMaster) return reply.status(401).send({ error: 'Yetkisiz' });
+    const { id } = request.params as any;
+    if (!(await tenantVarMi(id))) return reply.status(404).send({ ok: false, message: 'Tenant bulunamadı' });
+
+    const govde = request.body || {};
+    const gelenLynon = govde.lynon || {};
+    const gelenBackoffice = govde.backoffice || {};
+
+    const mevcut = await loadTenantConnection(id);
+    const lynon: TenantLynonConnection = { ...mevcut.lynon };
+    const backoffice: TenantBackofficeConnection = { ...mevcut.backoffice };
+
+    // BOŞ ALAN "DEĞİŞTİRME" DEMEK, "SİL" DEĞİL.
+    //
+    // Sır alanları panele maskeli döndüğü için form her açıldığında boş
+    // gelir. Boş değeri kayda yazsaydık, kullanıcının parolaya hiç
+    // dokunmadan "kaydet"e basması sitenin Lynon şifresini silerdi.
+    const metinAta = <K extends keyof TenantLynonConnection>(alan: K, deger: unknown) => {
+      if (typeof deger !== 'string') return;
+      const kirpik = deger.trim();
+      if (kirpik === '') return;
+      (lynon[alan] as unknown) = kirpik;
+    };
+    const sayiAta = <K extends keyof TenantLynonConnection>(alan: K, deger: unknown) => {
+      if (deger === undefined || deger === null || deger === '') return;
+      const n = Number(deger);
+      if (Number.isFinite(n)) (lynon[alan] as unknown) = n;
+    };
+
+    metinAta('backofficeBaseUrl', gelenLynon.backofficeBaseUrl);
+    metinAta('idBaseUrl', gelenLynon.idBaseUrl);
+    metinAta('returnUrl', gelenLynon.returnUrl);
+    metinAta('currency', gelenLynon.currency);
+    metinAta('username', gelenLynon.username);
+    metinAta('password', gelenLynon.password);
+    metinAta('otpSecret', gelenLynon.otpSecret);
+    metinAta('otpToken', gelenLynon.otpToken);
+    metinAta('deviceFingerprint', gelenLynon.deviceFingerprint);
+    metinAta('otpAlgorithm', gelenLynon.otpAlgorithm);
+    sayiAta('siteId', gelenLynon.siteId);
+    sayiAta('otpDigits', gelenLynon.otpDigits);
+    sayiAta('otpPeriodSeconds', gelenLynon.otpPeriodSeconds);
+    if (gelenLynon.timezoneOffset !== undefined && gelenLynon.timezoneOffset !== null && gelenLynon.timezoneOffset !== '') {
+      const n = Number(gelenLynon.timezoneOffset);
+      if (Number.isFinite(n)) lynon.timezoneOffset = n;
+    }
+    if (typeof gelenLynon.enabled === 'boolean') lynon.enabled = gelenLynon.enabled;
+    if (typeof gelenLynon.trustDevice === 'boolean') lynon.trustDevice = gelenLynon.trustDevice;
+
+    if (typeof gelenBackoffice.authToken === 'string' && gelenBackoffice.authToken.trim()) {
+      backoffice.authToken = gelenBackoffice.authToken.trim();
+    }
+    if (typeof gelenBackoffice.dashboardAuthToken === 'string' && gelenBackoffice.dashboardAuthToken.trim()) {
+      backoffice.dashboardAuthToken = gelenBackoffice.dashboardAuthToken.trim();
+    }
+
+    const sirGirildi = [gelenLynon.password, gelenLynon.otpSecret, gelenLynon.otpToken, gelenBackoffice.authToken, gelenBackoffice.dashboardAuthToken]
+      .some((deger) => typeof deger === 'string' && deger.trim() !== '');
+    if (sirGirildi && !sifrelemeHazirMi()) {
+      return reply.status(400).send({
+        ok: false,
+        message: 'TENANT_SECRET_KEY tanımlı değil. Kimlik bilgileri şifrelenemediği için kaydedilmedi.',
+      });
+    }
+
+    try {
+      await saveTenantConnection(id, {
+        version: 1,
+        lynon,
+        backoffice,
+        updatedAt: new Date().toISOString(),
+        updatedBy: 'master',
+      });
+    } catch (error) {
+      return reply.status(400).send({ ok: false, message: error instanceof Error ? error.message : 'Kaydedilemedi' });
+    }
+
+    // Bellekteki kopya ve açık Lynon oturumu artık eski bilgilere ait.
+    invalidateTenantRuntime(id);
+    await ensureTenantRuntime(id);
+    clearLynonSession(safeTenantKey(id));
+
+    return reply.send({ ok: true });
+  });
+
+  /** Girilen bilgilerle gerçekten oturum açılabiliyor mu — kaydettikten sonra tek tuşla. */
+  app.post('/master/tenants/:id/connection/test', async (request: any, reply) => {
+    if (!request.session.isMaster) return reply.status(401).send({ error: 'Yetkisiz' });
+    const { id } = request.params as any;
+    if (!(await tenantVarMi(id))) return reply.status(404).send({ ok: false, message: 'Tenant bulunamadı' });
+
+    await ensureTenantRuntime(id);
+    const key = safeTenantKey(id);
+    return runWithTenant(key, async () => {
+      if (!isLynonConfigured()) {
+        return reply.send({ ok: false, message: 'Lynon bilgileri eksik (kullanıcı adı, şifre ve OTP sırrı/token gerekli).' });
+      }
+      // Önceki oturum başarılı görünüp yeni bilgileri hiç denemesin.
+      clearLynonSession(key);
+      try {
+        await ensureLynonSession();
+        return reply.send({ ok: true, message: 'Bağlantı kuruldu.', durum: getLynonAuthStatus() });
+      } catch (error) {
+        return reply.send({ ok: false, message: error instanceof Error ? error.message : 'Bağlantı kurulamadı.' });
+      }
+    });
+  });
+
+  /** Arka plan işlerinin durumu; hangi site için ne zaman çalıştığı. */
+  app.get('/master/jobs', async (request: any, reply) => {
+    if (!request.session.isMaster) return reply.status(401).send({ error: 'Yetkisiz' });
+    const { scheduler } = await import('../jobs/scheduler.js');
+    return reply.send({ ok: true, data: scheduler.getStatus(), siteler: await aktifTenantAnahtarlari() });
   });
 }

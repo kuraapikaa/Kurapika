@@ -75,6 +75,8 @@ import { enforceEnvironment } from './lib/envValidator.js';
 import { watchConfigFile, getWatcherStatus } from './lib/configWatcher.js';
 import { closeDatabase, getDatabaseStatus, initializeDatabase } from './lib/database.js';
 import { closeRedis, getRedisStatus, initializeRedis } from './lib/redisClient.js';
+import { hydrateTenantRuntime } from './lib/tenantRuntimeConfig.js';
+import { sifrelemeHazirMi } from './lib/secretBox.js';
 
 // ─── Giden API Trafigi Kaydi ────────────────────────────────────────────────
 // Global fetch sarmali; ilk dis cagridan ONCE kurulmali yoksa acilis
@@ -86,6 +88,12 @@ enforceEnvironment();
 
 await initializeDatabase();
 await initializeRedis();
+
+// Alt sitelerin Lynon/backoffice bağlantı kayıtları belleğe alınır. Arka
+// plan işleri istek bağlamı olmadan çalıştığı için bu, ilk turda yanlış
+// (varsayılan) siteye bağlanmamalarının tek güvencesi.
+const yuklenenTenant = await hydrateTenantRuntime();
+console.log(`[tenant] ${yuklenenTenant} site yapılandırması yüklendi.${sifrelemeHazirMi() ? '' : ' TENANT_SECRET_KEY tanımlı değil; panelden kimlik bilgisi kaydedilemez.'}`);
 
 const { port } = config;
 

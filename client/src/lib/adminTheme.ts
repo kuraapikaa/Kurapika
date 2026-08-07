@@ -9,6 +9,37 @@ import type { CSSProperties } from 'react';
  *
  * Renkler tasarım dosyasından (Admin Panel.html) çıkarıldı.
  */
+export type AdminTheme = 'light' | 'dark';
+
+/**
+ * Açık tema paleti.
+ *
+ * Koyu temanın ters çevrilmişi DEĞİL. Zemin nötr-soğuk gri, yüzeyler saf
+ * beyaz; kartlar zeminden öne çıkıyor (koyu temada tam tersi çalışıyor).
+ * Durum renkleri beyaz üzerinde okunacak şekilde koyulaştırıldı —
+ * #30d158 açık zeminde ~1.6:1 kontrastla okunmuyordu.
+ */
+export const ADMIN_COLORS_LIGHT = {
+  bg: '#f4f6fa',
+  surface: 'rgba(255, 255, 255, 0.72)',
+  surfaceStrong: '#ffffff',
+
+  text: '#0f172a',
+  textDim: '#33415a',
+  muted: '#5b6b86',
+  mutedDeep: '#6b7a94',
+  faint: '#7c8aa3',
+
+  accent: '#0a6ed1',
+  accentDeep: '#0b5aa8',
+
+  success: '#15803d',
+  info: '#0891b2',
+  warning: '#b45309',
+  danger: '#b91c1c',
+  special: '#7e22ce',
+} as const;
+
 export const ADMIN_COLORS = {
   /** Zemin ve yüzeyler. */
   bg: '#050609',
@@ -34,9 +65,19 @@ export const ADMIN_COLORS = {
   special: '#bf5af2',
 } as const;
 
-/** Kenarlıklar metin renginin düşük alfası; ayrı bir gri tonu getirilmiyor. */
-export function adminBorder(alpha: number): string {
-  return `rgba(242, 244, 248, ${alpha})`;
+export function adminPalette(theme: AdminTheme = 'dark') {
+  return theme === 'light' ? ADMIN_COLORS_LIGHT : ADMIN_COLORS;
+}
+
+/**
+ * Kenarlıklar metin renginin düşük alfası; ayrı bir gri tonu getirilmiyor.
+ *
+ * Açık temada aynı kural ters yönde işler: kenarlık METİN rengiyle
+ * (koyu lacivert) çizilir. Zemin rengiyle çizmek beyaz üstüne beyaz
+ * demek olurdu.
+ */
+export function adminBorder(alpha: number, theme: AdminTheme = 'dark'): string {
+  return theme === 'light' ? `rgba(15, 23, 42, ${alpha})` : `rgba(242, 244, 248, ${alpha})`;
 }
 
 export const ADMIN_TOKENS = {
@@ -51,36 +92,40 @@ export const ADMIN_TOKENS = {
  * Panel kökünde bir kez tanımlanır; alt bileşenler var(--adm-*) ile okur.
  * Bu sayede 65 dosyaya tek tek renk gömmek gerekmiyor.
  */
-export function adminCssVars(): CSSProperties {
+export function adminCssVars(theme: AdminTheme = 'dark'): CSSProperties {
+  const c = adminPalette(theme);
   return {
-    backgroundColor: ADMIN_COLORS.bg,
-    color: ADMIN_COLORS.text,
-    '--adm-bg': ADMIN_COLORS.bg,
-    '--adm-surface': ADMIN_COLORS.surface,
-    '--adm-surface-strong': ADMIN_COLORS.surfaceStrong,
-    '--adm-text': ADMIN_COLORS.text,
-    '--adm-text-dim': ADMIN_COLORS.textDim,
-    '--adm-muted': ADMIN_COLORS.muted,
-    '--adm-muted-deep': ADMIN_COLORS.mutedDeep,
-    '--adm-faint': ADMIN_COLORS.faint,
-    '--adm-accent': ADMIN_COLORS.accent,
-    '--adm-accent-deep': ADMIN_COLORS.accentDeep,
-    '--adm-success': ADMIN_COLORS.success,
-    '--adm-info': ADMIN_COLORS.info,
-    '--adm-warning': ADMIN_COLORS.warning,
-    '--adm-danger': ADMIN_COLORS.danger,
-    '--adm-special': ADMIN_COLORS.special,
-    '--adm-border': adminBorder(0.1),
+    backgroundColor: c.bg,
+    color: c.text,
+    '--adm-bg': c.bg,
+    '--adm-surface': c.surface,
+    '--adm-surface-strong': c.surfaceStrong,
+    '--adm-text': c.text,
+    '--adm-text-dim': c.textDim,
+    '--adm-muted': c.muted,
+    '--adm-muted-deep': c.mutedDeep,
+    '--adm-faint': c.faint,
+    '--adm-accent': c.accent,
+    '--adm-accent-deep': c.accentDeep,
+    '--adm-success': c.success,
+    '--adm-info': c.info,
+    '--adm-warning': c.warning,
+    '--adm-danger': c.danger,
+    '--adm-special': c.special,
+    '--adm-border': adminBorder(theme === 'light' ? 0.12 : 0.1, theme),
   } as CSSProperties;
 }
 
 /** Tepedeki soğuk hâle — tasarım dosyasındaki iki elips. */
-export function adminBackgroundStyle(): CSSProperties {
+export function adminBackgroundStyle(theme: AdminTheme = 'dark'): CSSProperties {
+  const c = adminPalette(theme);
+  // Açık zeminde aynı alfa neredeyse görünmez kalıyor; hale yumuşatıldı.
+  const [accentAlfa, specialAlfa] = theme === 'light' ? ['12', '0d'] : ['24', '17'];
   return {
     background: [
-      `radial-gradient(ellipse 1000px 600px at 17% -60px, ${ADMIN_COLORS.accent}24, transparent 70%)`,
-      `radial-gradient(ellipse 840px 560px at 88% 200px, ${ADMIN_COLORS.special}17, transparent 70%)`,
-      ADMIN_COLORS.bg,
+      `radial-gradient(ellipse 1000px 600px at 17% -60px, ${c.accent}${accentAlfa}, transparent 70%)`,
+      `radial-gradient(ellipse 840px 560px at 88% 200px, ${c.special}${specialAlfa}, transparent 70%)`,
+      c.bg,
     ].join(', '),
   };
 }

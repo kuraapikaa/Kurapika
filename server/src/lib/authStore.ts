@@ -1,6 +1,7 @@
 import { readFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { tenantConnectionOverride } from './tenantRuntimeConfig.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const AUTH_FILE = join(__dirname, '..', '.backoffice-auth.json');
@@ -46,16 +47,30 @@ function getEnvDashboardToken(): string {
   );
 }
 
-/** Önce .env (DASHBOARD_AUTH / AUTH_TOKEN / BACKOFFICE_AUTH), yoksa .dashboard-auth.json dosyası. */
-export function getDashboardToken(): string {
-  const fromEnv = getEnvDashboardToken();
-  if (fromEnv) return fromEnv;
-  return readDashboard().token?.trim() || read().token?.trim() || '';
+/**
+ * Tenant'ın master panelden girilmiş token'ı; hepsinden önce gelir.
+ *
+ * `.env` ve `.backoffice-auth.json` SÜREÇ GENELİNDE tek bir token
+ * tutuyor. Çok kiracılı kurulumda bu, ikinci sitenin isteklerini birinci
+ * sitenin token'ıyla imzalamak demekti. Tenant'ın kendi kaydı varsa o
+ * kazanır; yoksa eski sıra (ENV, sonra dosya) aynen korunur.
+ */
+function tenantToken(alan: 'authToken' | 'dashboardAuthToken'): string {
+  return tenantConnectionOverride()?.backoffice?.[alan]?.trim() || '';
 }
 
-/** Önce .env (BACKOFFICE_AUTH / DASHBOARD_AUTH / AUTH_TOKEN), yoksa .backoffice-auth.json dosyası. */
+/** Önce tenant kaydı, sonra .env (DASHBOARD_AUTH / AUTH_TOKEN / BACKOFFICE_AUTH), sonra .dashboard-auth.json. */
+export function getDashboardToken(): string {
+  return (
+    tenantToken('dashboardAuthToken') ||
+    getEnvDashboardToken() ||
+    readDashboard().token?.trim() ||
+    read().token?.trim() ||
+    ''
+  );
+}
+
+/** Önce tenant kaydı, sonra .env (BACKOFFICE_AUTH / DASHBOARD_AUTH / AUTH_TOKEN), sonra .backoffice-auth.json. */
 export function getBackofficeToken(): string {
-  const fromEnv = getEnvBackofficeToken();
-  if (fromEnv) return fromEnv;
-  return read().token?.trim() || '';
+  return tenantToken('authToken') || getEnvBackofficeToken() || read().token?.trim() || '';
 }

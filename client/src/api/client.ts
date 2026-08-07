@@ -1201,7 +1201,18 @@ export const masterApi = {
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
       body: JSON.stringify(body)
-  }).then(r => r.json())
+  }).then(r => r.json()),
+
+  /** Alt sitenin kendi Lynon/backoffice bağlantısı. Sırlar maskeli döner. */
+  getConnection: (id: string) => get<any>(`/master/tenants/${id}/connection`),
+  updateConnection: (id: string, body: any) => fetch(`${API_BASE}/master/tenants/${id}/connection`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(body)
+  }).then(r => r.json()),
+  testConnection: (id: string) => post<any>(`/master/tenants/${id}/connection/test`, {}),
+  getJobs: () => get<any>('/master/jobs'),
 };
 
 export const tournamentApi = {

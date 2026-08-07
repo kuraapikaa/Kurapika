@@ -42,8 +42,9 @@ import {
   ScrollText,
   BookOpen,
   Sparkles,
-  type LucideIcon, ChevronLeft, ChevronRight, Search} from 'lucide-react';
+  type LucideIcon, ChevronLeft, ChevronRight, Search, Sun, Moon} from 'lucide-react';
 import { cn } from './lib/utils';
+import { panelThemeBaslat, usePanelTheme } from './store/panelTheme';
 import { LoadingState } from './components/ui/LoadingState';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { DateRangeBar } from './components/DateRangeBar';
@@ -440,6 +441,12 @@ export default function App() {
   });
   const [navQuery, setNavQuery] = useState('');
   const [isMasterAuth, setIsMasterAuth] = useState<boolean | null>(null);
+
+  // Panel teması: kökteki `data-panel-theme` ile uygulanır, renkler
+  // index.css'teki --panel-* token'larından gelir.
+  const panelTheme = usePanelTheme((s) => s.theme);
+  const toggleTheme = usePanelTheme((s) => s.toggleTheme);
+  useEffect(() => panelThemeBaslat(), []);
 
   // Tenant/Branding Config
   const [tenantConfig, setTenantConfig] = useState<{themeColor?: string; logoUrl?: string; adminTitle?: string} | null>(null);
@@ -870,7 +877,31 @@ export default function App() {
               </div>
 
             </nav>
-            <div className="border-t border-white/[0.06] p-2">
+            <div className="sidebar-foot border-t p-2">
+              {/*
+                * TEMA ANAHTARI.
+                *
+                * Menünün dibinde, çıkışın hemen üstünde: günde bir kez
+                * dokunulan bir ayar, her ekranda göz hizasında durmamalı.
+                * Panelin tamamını çevirir — açık sidebar + koyu gövde
+                * yamalı görünürdü, iki yüzey aynı temada.
+                */}
+              <button
+                type="button"
+                onClick={toggleTheme}
+                role="switch"
+                aria-checked={panelTheme === 'light'}
+                title={panelTheme === 'dark' ? 'Açık temaya geç' : 'Koyu temaya geç'}
+                className={cn(
+                  'sidebar-theme-toggle mb-1 flex h-9 w-full items-center gap-2 rounded-lg px-2.5 text-[11px] font-semibold transition',
+                  navCollapsed && 'md:justify-center md:px-0'
+                )}
+              >
+                {panelTheme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+                <span className={cn('flex-1 text-left', navCollapsed && 'md:hidden')}>
+                  {panelTheme === 'dark' ? 'Açık tema' : 'Koyu tema'}
+                </span>
+              </button>
               <div className={cn("sidebar-system-card", navCollapsed && "md:hidden")}>
                 <div className="flex items-center gap-2">
                   <span className="relative flex h-2 w-2">

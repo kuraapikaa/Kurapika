@@ -1,5 +1,6 @@
 import { config } from '../config.js';
 import { getBackofficeToken } from '../lib/authStore.js';
+import { herTenantIcin } from '../lib/tenantFanout.js';
 
 interface ScheduledJob {
   name: string;
@@ -171,25 +172,32 @@ export async function registerAutoWithdrawJob(): Promise<void> {
   const { runAutoWithdrawJob } = await import('../jobs/autoWithdrawJob.js');
 
   scheduler.register('auto-withdraw', intervalMs, async () => {
-    const result = await runAutoWithdrawJob({ config, getBackofficeToken });
-    if (result.checkedClients > 0 || (result.errors && result.errors.length > 0)) {
-      console.log(`[auto-withdraw] Kontrol tamamlandı: ${result.checkedClients} oyuncu${result.errors?.length ? `, ${result.errors.length} hata` : ''}`);
-    }
+    await herTenantIcin('auto-withdraw', async (tenantKey) => {
+      const result = await runAutoWithdrawJob({ config, getBackofficeToken });
+      if (result.checkedClients > 0 || (result.errors && result.errors.length > 0)) {
+        console.log(`[auto-withdraw] ${tenantKey}: ${result.checkedClients} oyuncu${result.errors?.length ? `, ${result.errors.length} hata` : ''}`);
+      }
+    });
   });
 }
 
-/** Türkiye saatiyle 00:15 başlayan, idempotent ertesi gün bonus otomasyonu. */
+/**
+ * Ertesi gün bonus otomasyonu — her aktif site için.
+ *
+ * Lynon kapalı olsa bile KAYDEDİLİR: `enabled` artık tenant başına bir
+ * ayar ve süreç açılışındaki tek bir ENV değerine bakıp işi hiç
+ * kaydetmemek, Lynon'u açık olan alt sitelerin bonusunu sessizce
+ * öldürüyordu. Hangi sitenin çalışacağına işin kendisi karar verir.
+ */
 export async function registerNextDayBonusJob(): Promise<void> {
-  if (!config.lynon.enabled) {
-    console.log('[scheduler] Ertesi gün bonusu Lynon kapalı olduğu için atlandı.');
-    return;
-  }
   const { runNextDayBonusJob } = await import('./nextDayBonusJob.js');
-  scheduler.register('next-day-bonus-0015', 60_000, async () => {
-    const result = await runNextDayBonusJob();
-    if (!result.skipped) {
-      console.log(`[next-day-bonus] ${result.dateKey}: ${result.players} oyuncu, ${result.granted} ekleme, ${result.errors} hata`);
-    }
+  scheduler.register('next-day-bonus', 60_000, async () => {
+    await herTenantIcin('next-day-bonus', async (tenantKey) => {
+      const result = await runNextDayBonusJob(tenantKey);
+      if (!result.skipped) {
+        console.log(`[next-day-bonus] ${tenantKey} ${result.dateKey}: ${result.players} oyuncu, ${result.granted} ekleme, ${result.errors} hata`);
+      }
+    });
   });
 }
 
@@ -211,10 +219,12 @@ export async function registerHedefBakiyeJob(): Promise<void> {
   }
   const { runHedefBakiyeJob } = await import('./hedefBakiyeJob.js');
   scheduler.register('hedef-bakiye-kilidi', config.hedefBakiye.aralikMs, async () => {
-    const sonuc = await runHedefBakiyeJob();
-    if (sonuc.kapatilan > 0 || sonuc.hata > 0) {
-      console.log(`[hedef-bakiye] ${sonuc.kontrol} kontrol, ${sonuc.kapatilan} kapatıldı, ${sonuc.hata} hata`);
-    }
+    await herTenantIcin('hedef-bakiye', async (tenantKey) => {
+      const sonuc = await runHedefBakiyeJob();
+      if (sonuc.kapatilan > 0 || sonuc.hata > 0) {
+        console.log(`[hedef-bakiye] ${tenantKey}: ${sonuc.kontrol} kontrol, ${sonuc.kapatilan} kapatıldı, ${sonuc.hata} hata`);
+      }
+    });
   });
 }
 
@@ -236,10 +246,12 @@ export async function registerOtomatikKategoriJob(): Promise<void> {
     return;
   }
   scheduler.register('otomatik-kategori', 60 * 60 * 1000, async () => {
-    const sonuc = await runOtomatikKategoriJob();
-    if (sonuc.uygulanan > 0 || sonuc.hata > 0) {
-      console.log(`[otomatik-kategori] ${sonuc.uygulanan} uygulandı, ${sonuc.hata} hata (${sonuc.oneri} öneri)`);
-    }
+    await herTenantIcin('otomatik-kategori', async (tenantKey) => {
+      const sonuc = await runOtomatikKategoriJob();
+      if (sonuc.uygulanan > 0 || sonuc.hata > 0) {
+        console.log(`[otomatik-kategori] ${tenantKey}: ${sonuc.uygulanan} uygulandı, ${sonuc.hata} hata (${sonuc.oneri} öneri)`);
+      }
+    });
   });
 }
 
@@ -248,6 +260,13 @@ export async function registerOtomatikKategoriJob(): Promise<void> {
  *
  * Sohbet kimliği tanımlı değilse kaydedilmez — varsayılan bir sohbete
  * kasa raporu göndermek en kötü türden hata olurdu.
+ *
+ * TENANT'A YAYILMIYOR. Sohbet kimlikleri ortam değişkeninde, yani süreç
+ * genelinde TEK. Bu işi her site için çalıştırmak aynı Telegram grubuna
+ * her turda N ayrı sitenin kasa raporunu, hangisinin hangisi olduğu
+ * belirsiz halde düşürürdü. Alt siteler için Telegram akışı ancak sohbet
+ * kimlikleri de tenant kaydına taşındığında açılmalı; aynısı mutabakat ve
+ * anlık bakiye botu için de geçerli.
  */
 export async function registerTelegramRaporJob(): Promise<void> {
   if (!config.lynon.enabled) {
@@ -319,9 +338,11 @@ export async function registerOyuncuBakiyeJob(): Promise<void> {
 export async function registerLoyaltyRetentionJob(): Promise<void> {
   const { runLoyaltyRetentionSweep } = await import('./loyaltyRetentionJob.js');
   scheduler.register('loyalty-retention', 6 * 60 * 60 * 1000, async () => {
-    const result = await runLoyaltyRetentionSweep('default');
-    if (result.reminded > 0 || result.reset > 0 || result.errors > 0) {
-      console.log(`[loyalty-retention] SMS: ${result.reminded}, Puan silme: ${result.reset}, Hata: ${result.errors}`);
-    }
+    await herTenantIcin('loyalty-retention', async (tenantKey) => {
+      const result = await runLoyaltyRetentionSweep(tenantKey);
+      if (result.reminded > 0 || result.reset > 0 || result.errors > 0) {
+        console.log(`[loyalty-retention] ${tenantKey}: SMS ${result.reminded}, puan silme ${result.reset}, hata ${result.errors}`);
+      }
+    });
   });
 }
