@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { api, paraBicimi, useVeri } from '../../api';
-import { Buton, Bos, Egilim, Hata, Hucre, Kart, Olcu, Satir, Tablo, Yukleniyor } from '../../ui';
+import { Buton, Bos, Egilim, Hata, Hucre, Kart, Satir, Tablo, Yukleniyor } from '../../ui';
+import { CubukListesi, OlcuKarti, ZamanSerisi } from '../../grafik';
 
 interface OrtakOzeti {
   ortakAnahtari: string;
@@ -51,17 +52,43 @@ export function Ozet() {
     ? topla((o) => o.ftdSayisi ?? 0)
     : null;
 
+  // Tum ortaklarin gunluk GGR'si gune gore toplaniyor: tek tek serileri
+  // ust uste cizmek 20 ortakta okunamaz hale gelir.
+  const gunHaritasi = new Map<string, number>();
+  for (const o of ozetler) {
+    for (const g of o.gunlukGgr) gunHaritasi.set(g.gun, (gunHaritasi.get(g.gun) ?? 0) + g.ggr);
+  }
+  const gunlukToplam = [...gunHaritasi.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([gun, ggr]) => ({ etiket: gun.slice(5), deger: Math.round(ggr) }));
+
   return (
     <>
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Olcu etiket="Ortak" deger={String(ozetler.length)} alt="ölçümü olan" />
-        <Olcu etiket="Yatırım" deger={paraBicimi(topla((o) => o.yatirim))} />
-        <Olcu etiket="GGR" deger={paraBicimi(topla((o) => o.ggr))} />
-        <Olcu
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <OlcuKarti etiket="Ortak" deger={String(ozetler.length)} alt="ölçümü olan" />
+        <OlcuKarti etiket="Yatırım" deger={paraBicimi(topla((o) => o.yatirim))} />
+        <OlcuKarti etiket="GGR" deger={paraBicimi(topla((o) => o.ggr))} />
+        <OlcuKarti
           etiket="İlk yatırım"
           deger={ftdToplami === null ? '—' : String(ftdToplami)}
           alt={ftdToplami === null ? 'bu bağlantıdan ölçülemiyor' : undefined}
         />
+      </div>
+
+      <div className="grid gap-3 lg:grid-cols-2">
+        <Kart baslik="Toplam günlük GGR">
+          <ZamanSerisi noktalar={gunlukToplam} bosMesaj="Ölçüm yok." />
+        </Kart>
+        <Kart baslik="Ortak bazında GGR">
+          <CubukListesi
+            satirlar={ozetler.slice(0, 8).map((o) => ({
+              etiket: o.ortakAnahtari,
+              deger: Math.round(o.ggr),
+              alt: `${o.aktifOyuncuSayisi} aktif oyuncu`,
+            }))}
+            bosMesaj="Ölçüm yok."
+          />
+        </Kart>
       </div>
 
       <Kart

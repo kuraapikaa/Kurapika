@@ -24,7 +24,9 @@ export type AdaptorYetenegi =
   /** Backoffice'teki ortak listesini okuyabiliyor. */
   | 'ortak-listesi'
   /** Bir oyuncuyu bir ortağa bağlayabiliyor. */
-  | 'oyuncu-baglama';
+  | 'oyuncu-baglama'
+  /** Sitenin gerçek ödeme yöntemlerini listeleyebiliyor. */
+  | 'odeme-yontemleri';
 
 export type AlanTuru = 'metin' | 'parola' | 'sayi' | 'secim' | 'cokSatir';
 
@@ -87,6 +89,15 @@ export interface BackofficeAdaptoru {
   gunuCek(gun: string): Promise<HamOlcum[]>;
   ortaklariListele?(): Promise<HamOrtak[]>;
   oyuncuyuBagla?(girdi: OyuncuBagi): Promise<{ basarili: boolean; mesaj: string }>;
+  /**
+   * Sitenin gerçek ödeme yöntemleri.
+   *
+   * Ortağın ödeme yöntemini serbest metin olarak yazması, "Papara",
+   * "papara", "PAPARA TR" gibi üç ayrı değer üretiyor ve ödeme günü
+   * hangisinin hangisi olduğu elle çözülüyordu. Backoffice'in kendi
+   * listesinden seçtirmek bu belirsizliği kaynağında bitiriyor.
+   */
+  odemeYontemleri?(): Promise<string[]>;
 }
 
 export interface AdaptorTanimi {

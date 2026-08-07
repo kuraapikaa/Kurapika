@@ -57,6 +57,7 @@ import { bugscrmRoutes } from './routes/bugscrm.js';
 import { formsRoutes } from './routes/forms.js';
 import { masterRoutes } from './routes/master.js';
 import { loyaltyRoutes } from './routes/loyalty.js';
+import { crmKopruRoutes } from './routes/crmKopru.js';
 import { lynonRoutes } from './routes/lynon.js';
 import {
   scheduler,
@@ -108,6 +109,7 @@ app.addHook('preHandler', async (request, reply) => {
 // ─── İş Mantığı Rotaları ─────────────────────────────────────────────────────
 await app.register(dashboardRoutes, { prefix: '/api', config });
 await app.register(lynonRoutes, { prefix: '/api' });
+await app.register(crmKopruRoutes, { prefix: '/api' });
 await app.register(gamesRoutes, { prefix: '/api' });
 await app.register(formsRoutes, { prefix: '/api' });
 await app.register(affiliateRoutes, { prefix: '/api' });

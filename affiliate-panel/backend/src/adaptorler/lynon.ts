@@ -52,6 +52,7 @@ interface LynonAyari {
   otpSecret: string;
   paraBirimi: string;
   raporId: number;
+  odemeRaporId: number;
   slTimezone: number;
 }
 
@@ -77,6 +78,7 @@ function ayariCoz(ham: Record<string, string>): LynonAyari {
     otpSecret: String(ham.otpSecret ?? '').trim(),
     paraBirimi: String(ham.paraBirimi ?? 'TRY').trim().toUpperCase() || 'TRY',
     raporId: Number(ham.raporId) || 1841,
+    odemeRaporId: Number(ham.odemeRaporId) || 1842,
     slTimezone: Number.isFinite(Number(ham.slTimezone)) && String(ham.slTimezone ?? '').trim()
       ? Number(ham.slTimezone)
       : ISTANBUL_SL_TIMEZONE,
@@ -440,6 +442,53 @@ class LynonAdaptoru implements BackofficeAdaptoru {
     }));
   }
 
+  /**
+   * Sitenin ödeme yöntemleri.
+   *
+   * Kaynak, mutabakatın da kullandığı entegrasyon/ödeme raporu:
+   * satırlarda `Integration Name` ve `Payment Name` geliyor. Ayrı bir
+   * "ödeme yöntemleri" ucu aramak yerine bunu kullanmak bilinçli —
+   * rapor, gerçekten PARA GEÇMİŞ yöntemleri veriyor. Tanımlı ama hiç
+   * kullanılmamış bir yöntemi listeye koymak, ortağa seçtirip ödeme
+   * gününde "bu yöntem çalışmıyor" demek olurdu.
+   *
+   * Pencere son 90 gün: daha kısası mevsimlik yöntemleri kaçırır,
+   * daha uzunu kapanmış yöntemleri diriltir.
+   */
+  async odemeYontemleri(): Promise<string[]> {
+    const bugun = new Date();
+    const baslangic = new Date(bugun.getTime() - 90 * 24 * 60 * 60 * 1000);
+    const gun = (d: Date) => d.toISOString().slice(0, 10);
+
+    const yanit = await this.istek<Record<string, unknown>>(
+      `/api/report/api/v1.0/reportData/summarized/${this.ayar.odemeRaporId}`,
+      {
+        sorgu: {
+          startDate: gunBasi(gun(baslangic)),
+          endDate: gunSonu(gun(bugun)),
+          'tz-id': '13',
+          currency: this.ayar.paraBirimi,
+        },
+      },
+    );
+
+    const veri = kayitOku(yanit);
+    const ham = veri.reports ?? veri.Reports ?? veri.Result ?? veri.Objects;
+    const satirlar = Array.isArray(ham) ? (ham as Array<Record<string, unknown>>) : [];
+
+    const yontemler = new Set<string>();
+    for (const satir of satirlar) {
+      const yontem = ilkDolu(satir['Payment Name'], satir.PaymentName, satir.method, satir.paymentType);
+      if (!yontem) continue;
+      const entegrasyon = ilkDolu(satir['Integration Name'], satir.IntegrationName, satir.integration);
+      // Mutabakattaki anahtarla AYNI bicim: "Entegrasyon · Yontem".
+      // Farkli bicim kullanmak, ayni yontemin iki yerde iki ad tasimasi
+      // ve eslestirmenin elle yapilmasi demek olurdu.
+      yontemler.add(entegrasyon ? `${entegrasyon} · ${yontem}` : yontem);
+    }
+    return [...yontemler].sort((a, b) => a.localeCompare(b, 'tr'));
+  }
+
   async ortaklariListele(): Promise<HamOrtak[]> {
     const yanit = await this.istek<unknown>('/api/partner/api/v1.0/affiliates');
     const veri = kayitOku(yanit);
@@ -490,7 +539,7 @@ export const LYNON_TANIMI: AdaptorTanimi = {
   aciklama:
     'Panel kullanıcısıyla giriş yapıp Lynon raporlarını okur. Lynon third-party affiliate kaydı gerekmez. ' +
     'Veri toplam düzeyinde geldiği için ilk yatırım (FTD) sayısı bu yoldan ölçülemez.',
-  yetenekler: ['olcum-cekme', 'ortak-listesi', 'oyuncu-baglama'],
+  yetenekler: ['olcum-cekme', 'ortak-listesi', 'oyuncu-baglama', 'odeme-yontemleri'],
   alanlar: [
     { ad: 'backofficeUrl', etiket: 'Backoffice adresi', tur: 'metin', zorunlu: true, sir: false, ipucu: 'https://backoffice.ornek.com' },
     { ad: 'idUrl', etiket: 'Kimlik sunucusu', tur: 'metin', zorunlu: true, sir: false, ipucu: 'https://id.ornek.com' },
@@ -514,6 +563,15 @@ export const LYNON_TANIMI: AdaptorTanimi = {
       sir: false,
       varsayilan: '1841',
       ipucu: 'Rapor kimlikleri siteye özel. Backoffice > Raporlar adresinden okunur.',
+    },
+    {
+      ad: 'odemeRaporId',
+      etiket: 'Ödeme raporu kimliği',
+      tur: 'sayi',
+      zorunlu: false,
+      sir: false,
+      varsayilan: '1842',
+      ipucu: 'Entegrasyon/ödeme kırılımı raporu. Ödeme yöntemleri buradan okunuyor.',
     },
     {
       ad: 'slTimezone',

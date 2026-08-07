@@ -11,6 +11,11 @@ export type AuditAction =
   // CRM temas kaydi: kimin hangi oyuncuyla ne zaman temas ettigi denetlenebilir
   // olmali — musteri iletisimi bir islem, sessizce yapilmamali.
   | 'crm_temas'
+  // WhatsApp CRM'inden oyuncu hesabina bakiye yukleme. Para hareketi: hangi
+  // temsilcinin hangi oyuncuya ne kadar yukledigi burada duruyor. Basarisiz
+  // deneme de kaydediliyor — para gecmese de niyet denetlenebilir olmali.
+  | 'crm_bonus_credit'
+  | 'crm_bonus_credit_failed'
   // Ortak hesabi kimlik dogrulama verisi ve komisyon orani tutuyor; kimin
   // hangi orani degistirdigi denetlenebilir olmali — bu bir odeme karari.
   | 'affiliate_hesap_create'

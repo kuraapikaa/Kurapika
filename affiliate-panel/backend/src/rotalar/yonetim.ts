@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import {
+  adaptorAl,
   adaptorKatalogu,
   adaptorZorunlu,
   baglantiGorunumu,
@@ -37,6 +38,7 @@ import { olcumleriOku, ortakOzetleri } from '../servisler/olcum.js';
 import {
   gorunume,
   ortakGuncelle,
+  ortakParolasiSifirla,
   ortakOlustur,
   ortaklariListele,
   ortakSil,
@@ -92,6 +94,33 @@ export async function yonetimRotalari(app: FastifyInstance): Promise<void> {
   app.post('/baglanti/dogrula', async (istek) => {
     const adaptor = await adaptorZorunlu(istek.kiraci);
     return adaptor.dogrula();
+  });
+
+  /**
+   * Backoffice'in gercek odeme yontemleri.
+   *
+   * Ortagin odeme yontemini serbest metin yazmasi "Papara", "papara",
+   * "PAPARA TR" gibi uc ayri deger uretiyor ve odeme gunu hangisinin
+   * hangisi oldugu elle cozuluyordu. Liste backoffice'ten geldigi icin
+   * bu belirsizlik kaynaginda bitiyor.
+   */
+  app.get('/odeme-yontemleri', async (istek, yanit) => {
+    const adaptor = await adaptorAl(istek.kiraci);
+    if (!adaptor?.odemeYontemleri) {
+      // 501 DEGIL bos liste: baglanti yoksa da panel calismali, ortagin
+      // odeme yontemi alani serbest metne dusuyor.
+      return { yontemler: [], kaynak: 'yok' as const };
+    }
+    try {
+      return { yontemler: await adaptor.odemeYontemleri(), kaynak: 'backoffice' as const };
+    } catch (hata) {
+      yanit.status(200);
+      return {
+        yontemler: [],
+        kaynak: 'hata' as const,
+        mesaj: hata instanceof Error ? hata.message : 'Ödeme yöntemleri okunamadı.',
+      };
+    }
   });
 
   app.get('/baglanti/ortaklar', async (istek, yanit) => {
@@ -189,6 +218,19 @@ export async function yonetimRotalari(app: FastifyInstance): Promise<void> {
     await ortakSil(istek.kiraci, istek.params.id);
     return { silindi: true };
   });
+
+  /**
+   * Parola sifirlama.
+   *
+   * "Ortaklarin parolalarini listele" teknik olarak imkansiz: depoda
+   * scrypt ozeti var ve ozet geri cevrilemiyor. Yapilabilecek tek sey
+   * yeni bir parola uretip BIR KEZ gostermek.
+   *
+   * Uretilen parola yalnizca bu yanitta donuyor; hicbir listede,
+   * hicbir kayitta bir daha gorunmuyor.
+   */
+  app.post<{ Params: { id: string } }>('/ortaklar/:id/parola-sifirla', async (istek) =>
+    ortakParolasiSifirla(istek.kiraci, istek.params.id));
 
   // ── Komisyon planları ──────────────────────────────────────────────
 

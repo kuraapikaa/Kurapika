@@ -1,4 +1,5 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import { altLinkBul } from '../servisler/altLink.js';
 import { medyaBul, medyalariListele } from '../servisler/medya.js';
 import { ortakAnahtarindanBul, onayliMi } from '../servisler/ortaklar.js';
 import { postbackGonder } from '../servisler/postback.js';
@@ -101,4 +102,47 @@ export async function tiklamaRotalari(app: FastifyInstance): Promise<void> {
 
   app.get<{ Params: { ortakAnahtari: string; medyaId?: string } }>('/c/:ortakAnahtari/:medyaId', tiklamaYanit);
   app.get<{ Params: { ortakAnahtari: string; medyaId?: string } }>('/c/:ortakAnahtari', tiklamaYanit);
+
+  /**
+   * ALT LİNK — ortağın kendi kaydettiği kısa bağlantı.
+   *
+   * Ortak, medya ve alt kanal parametrelerini burada YAZMIYOR; hepsi
+   * kayıttan geliyor. Bu bilinçli: parametreleri adreste taşımak, hem
+   * ortağın kanal isimlendirmesini dışarıya gösterir hem de linki
+   * elle düzenleyen birinin trafiği başka bir kırılıma yazmasına izin
+   * verirdi.
+   *
+   * Sorgu dizesi yine de okunuyor ama YALNIZCA kayıtta boş bırakılmış
+   * alanlar için: ortak tek bir link üretip `?sub5=deneme` ile anlık
+   * bir işaret ekleyebilsin. Kayıtlı değer her zaman kazanıyor.
+   */
+  app.get<{ Params: { kod: string } }>('/l/:kod', async (istek, yanit) => {
+    const link = await altLinkBul(istek.kiraci, String(istek.params.kod ?? ''));
+    if (!link || !link.aktif) {
+      return yanit.status(404).send({ hata: 'Bağlantı bulunamadı.' });
+    }
+
+    const sonuc = await isle(
+      istek.kiraci,
+      link.ortakAnahtari,
+      link.medyaId,
+      { ...(istek.query as Record<string, unknown>), ...link.alt },
+      {
+        ip: istek.ip,
+        userAgent: String(istek.headers['user-agent'] ?? '') || null,
+        referrer: String(istek.headers.referer ?? '') || null,
+      },
+    );
+
+    if (!sonuc) return yanit.status(404).send({ hata: 'Bağlantı bulunamadı.' });
+
+    yanit.setCookie(TIKLAMA_CEREZI, sonuc.tiklama.clickId, {
+      httpOnly: false,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      path: '/',
+      maxAge: 30 * 24 * 60 * 60,
+    });
+    return yanit.redirect(302, sonuc.hedef);
+  });
 }
