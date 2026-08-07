@@ -1,22 +1,9 @@
 import { useState } from 'react';
 import { api, paraBicimi, useVeri } from '../../api';
 import { Alan, Bos, Buton, Hata, Hucre, Kart, Onay, Rozet, Satir, Tablo, Yukleniyor } from '../../ui';
+import type { KomisyonPlani as Plan } from '@sunucu/sozlesme.js';
 
-interface Kademe { esik: number; yuzde: number }
-
-interface Plan {
-  id: string;
-  ad: string;
-  tur: 'gelir-payi' | 'cpa' | 'hibrit';
-  gelirPayiYuzde: number;
-  gelirKademeleri: Kademe[];
-  kademeModu: 'topluca' | 'dilimli';
-  cpaTutari: number;
-  yonetimGideriYuzde: number;
-  asgariOdeme: number;
-  negatifDevir: boolean;
-  varsayilan: boolean;
-}
+type Kademe = Plan['gelirKademeleri'][number];
 
 const TUR_ETIKETI = { 'gelir-payi': 'Gelir payı', cpa: 'CPA', hibrit: 'Hibrit' } as const;
 

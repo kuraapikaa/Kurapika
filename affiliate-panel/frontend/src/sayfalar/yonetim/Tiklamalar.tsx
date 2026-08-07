@@ -1,21 +1,8 @@
 import { gunBicimi, useVeri } from '../../api';
 import { Bos, Hata, Hucre, Kart, Satir, Tablo, Yukleniyor } from '../../ui';
+import type { Tiklama, TiklamaOzeti as Ozet } from '@sunucu/sozlesme.js';
 
-interface Ozet {
-  ortakAnahtari: string;
-  toplam: number;
-  medyaBazinda: Array<{ medyaId: string | null; sayi: number }>;
-  altBazinda: Array<{ anahtar: string; deger: string; sayi: number }>;
-}
 
-interface Tiklama {
-  clickId: string;
-  ortakAnahtari: string;
-  medyaId: string | null;
-  alt: Record<string, string>;
-  referrer: string | null;
-  zaman: string;
-}
 
 export function Tiklamalar() {
   const { veri, yukleniyor, hata } = useVeri<{ ozet: Ozet[]; tiklamalar: Tiklama[] }>('/api/yonetim/tiklamalar');

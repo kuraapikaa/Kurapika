@@ -1,22 +1,7 @@
 import { useState } from 'react';
 import { api, gunBicimi, useVeri } from '../../api';
 import { Alan, Bos, Buton, Hata, Hucre, Kart, Olcu, Rozet, Satir, Tablo, Yukleniyor } from '../../ui';
-
-interface AltLink {
-  id: string;
-  kod: string;
-  ad: string;
-  medyaId: string;
-  alt: Record<string, string>;
-  aktif: boolean;
-  createdAt: string;
-  tamAdres: string | null;
-  medyaAdi: string | null;
-  tiklama: number;
-  sonTiklama: string | null;
-}
-
-interface Medya { id: string; ad: string; tur: string }
+import type { AltLinkGorunumu as AltLink, Medya } from '@sunucu/sozlesme.js';
 
 const ALTLAR = ['sub1', 'sub2', 'sub3', 'sub4', 'sub5'] as const;
 

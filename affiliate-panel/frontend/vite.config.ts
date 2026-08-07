@@ -1,3 +1,4 @@
+import { fileURLToPath, URL } from 'node:url';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
@@ -10,6 +11,13 @@ import { defineConfig } from 'vite';
  */
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    // Yalnizca `import type` icin kullaniliyor; tipler derlemede silindigi
+    // icin sunucu kodu pakete girmiyor. Takma ad yine de tanimli, ki
+    // yanlislikla deger import edilirse sessizce kirilmak yerine
+    // build'de patlasin.
+    alias: { '@sunucu': fileURLToPath(new URL('../backend/src', import.meta.url)) },
+  },
   build: {
     outDir: '../backend/genel',
     emptyOutDir: true,

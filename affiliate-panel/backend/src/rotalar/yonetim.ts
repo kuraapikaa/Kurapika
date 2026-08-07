@@ -1,4 +1,5 @@
 import type { FastifyInstance } from 'fastify';
+import type { YonetimUclari } from '../sozlesme.js';
 import {
   adaptorAl,
   adaptorKatalogu,
@@ -78,9 +79,9 @@ export async function yonetimRotalari(app: FastifyInstance): Promise<void> {
 
   // ── Backoffice bağlantısı ──────────────────────────────────────────
 
-  app.get('/adaptorler', async () => ({ adaptorler: adaptorKatalogu() }));
+  app.get('/adaptorler', async (): Promise<YonetimUclari['/adaptorler']> => ({ adaptorler: adaptorKatalogu() }));
 
-  app.get('/baglanti', async (istek) => baglantiGorunumu(istek.kiraci));
+  app.get('/baglanti', async (istek): Promise<YonetimUclari['/baglanti']> => baglantiGorunumu(istek.kiraci));
 
   app.put('/baglanti', async (istek) => {
     const govde = (istek.body ?? {}) as { adaptor?: string; ayar?: Record<string, unknown>; aktif?: boolean };
@@ -106,7 +107,7 @@ export async function yonetimRotalari(app: FastifyInstance): Promise<void> {
    * hangisi oldugu elle cozuluyordu. Liste backoffice'ten geldigi icin
    * bu belirsizlik kaynaginda bitiyor.
    */
-  app.get('/odeme-yontemleri', async (istek, yanit) => {
+  app.get('/odeme-yontemleri', async (istek, yanit): Promise<YonetimUclari['/odeme-yontemleri']> => {
     const adaptor = await adaptorAl(istek.kiraci);
     if (!adaptor?.odemeYontemleri) {
       // 501 DEGIL bos liste: baglanti yoksa da panel calismali, ortagin
@@ -161,7 +162,7 @@ export async function yonetimRotalari(app: FastifyInstance): Promise<void> {
 
   // ── Ölçümler ───────────────────────────────────────────────────────
 
-  app.get('/ozet', async (istek) => {
+  app.get('/ozet', async (istek): Promise<YonetimUclari['/ozet']> => {
     const sorgu = (istek.query ?? {}) as Record<string, unknown>;
     return {
       bugun: gunAnahtari(),
@@ -173,7 +174,7 @@ export async function yonetimRotalari(app: FastifyInstance): Promise<void> {
     };
   });
 
-  app.get('/olcumler', async (istek) => {
+  app.get('/olcumler', async (istek): Promise<YonetimUclari['/olcumler']> => {
     const sorgu = (istek.query ?? {}) as Record<string, unknown>;
     return {
       olcumler: await olcumleriOku(istek.kiraci, {
@@ -196,7 +197,7 @@ export async function yonetimRotalari(app: FastifyInstance): Promise<void> {
    * donuyor -- "78 risk" bir sey ifade etmiyor, "tiklamalarin %80'i tek
    * IP'den" ifade ediyor.
    */
-  app.get('/trafik-kalitesi', async (istek) => {
+  app.get('/trafik-kalitesi', async (istek): Promise<YonetimUclari['/trafik-kalitesi']> => {
     const sorgu = (istek.query ?? {}) as Record<string, unknown>;
     const [ortaklar, tiklamalar, olcumler] = await Promise.all([
       ortaklariListele(istek.kiraci),
@@ -238,7 +239,7 @@ export async function yonetimRotalari(app: FastifyInstance): Promise<void> {
    * ozetinde gorunmuyor, hakedis hesabina girmiyor ve kimseye
    * odenmiyor.
    */
-  app.get('/btag', async (istek) => {
+  app.get('/btag', async (istek): Promise<YonetimUclari['/btag']> => {
     const [ortaklar, olcumler, tiklamalar] = await Promise.all([
       ortaklariListele(istek.kiraci),
       olcumleriOku(istek.kiraci),
@@ -279,11 +280,11 @@ export async function yonetimRotalari(app: FastifyInstance): Promise<void> {
   });
 
   /** İlk yatırım ölçümünün durumu; kalibrasyon sürüyorsa panel söylesin. */
-  app.get('/ftd-durumu', async (istek) => ftdDurumu(istek.kiraci));
+  app.get('/ftd-durumu', async (istek): Promise<YonetimUclari['/ftd-durumu']> => ftdDurumu(istek.kiraci));
 
   // ── Ortaklar ───────────────────────────────────────────────────────
 
-  app.get('/ortaklar', async (istek) => ({ ortaklar: await ortaklariListele(istek.kiraci) }));
+  app.get('/ortaklar', async (istek): Promise<YonetimUclari['/ortaklar']> => ({ ortaklar: await ortaklariListele(istek.kiraci) }));
 
   /**
    * Bekleyen başvurular.
@@ -293,7 +294,7 @@ export async function yonetimRotalari(app: FastifyInstance): Promise<void> {
    * filtrelemek, ortak sayısı büyüdükçe boşa taşınan veri demek.
    * En eski başvuru başta — sırada bekleyen en uzun süre bekleyendir.
    */
-  app.get('/basvurular', async (istek) => {
+  app.get('/basvurular', async (istek): Promise<YonetimUclari['/basvurular']> => {
     const ortaklar = await ortaklariListele(istek.kiraci);
     return {
       basvurular: ortaklar
@@ -333,7 +334,7 @@ export async function yonetimRotalari(app: FastifyInstance): Promise<void> {
 
   // ── Komisyon planları ──────────────────────────────────────────────
 
-  app.get('/planlar', async (istek) => ({ planlar: await planlariListele(istek.kiraci) }));
+  app.get('/planlar', async (istek): Promise<YonetimUclari['/planlar']> => ({ planlar: await planlariListele(istek.kiraci) }));
 
   app.post('/planlar', async (istek, yanit) => {
     yanit.status(201);
@@ -350,7 +351,7 @@ export async function yonetimRotalari(app: FastifyInstance): Promise<void> {
 
   // ── Medya ──────────────────────────────────────────────────────────
 
-  app.get('/medya', async (istek) => ({ medyalar: await medyalariListele(istek.kiraci) }));
+  app.get('/medya', async (istek): Promise<YonetimUclari['/medya']> => ({ medyalar: await medyalariListele(istek.kiraci) }));
 
   app.post('/medya', async (istek, yanit) => {
     yanit.status(201);
@@ -367,7 +368,7 @@ export async function yonetimRotalari(app: FastifyInstance): Promise<void> {
 
   // ── Kademeler ──────────────────────────────────────────────────────
 
-  app.get('/kademeler', async (istek) => kademeDurumu(istek.kiraci));
+  app.get('/kademeler', async (istek): Promise<YonetimUclari['/kademeler']> => kademeDurumu(istek.kiraci));
 
   app.post('/kademeler/bag', async (istek) => {
     const govde = (istek.body ?? {}) as { ortakAnahtari?: string; ustOrtakAnahtari?: string };
@@ -386,7 +387,7 @@ export async function yonetimRotalari(app: FastifyInstance): Promise<void> {
 
   // ── Postback ───────────────────────────────────────────────────────
 
-  app.get('/postback', async (istek) => ({
+  app.get('/postback', async (istek): Promise<YonetimUclari['/postback']> => ({
     ayarlar: await postbackAyarlari(istek.kiraci),
     kayitlar: await postbackKayitlari(istek.kiraci),
   }));
@@ -404,7 +405,7 @@ export async function yonetimRotalari(app: FastifyInstance): Promise<void> {
 
   // ── Tıklamalar ─────────────────────────────────────────────────────
 
-  app.get('/tiklamalar', async (istek) => {
+  app.get('/tiklamalar', async (istek): Promise<YonetimUclari['/tiklamalar']> => {
     const sorgu = (istek.query ?? {}) as Record<string, unknown>;
     return {
       ozet: await tiklamaOzeti(istek.kiraci, {
@@ -423,7 +424,7 @@ export async function yonetimRotalari(app: FastifyInstance): Promise<void> {
 
   // ── Hakediş dönemleri ──────────────────────────────────────────────
 
-  app.get('/donemler', async (istek) => ({ donemler: await donemleriListele(istek.kiraci) }));
+  app.get('/donemler', async (istek): Promise<YonetimUclari['/donemler']> => ({ donemler: await donemleriListele(istek.kiraci) }));
 
   app.get<{ Params: { ay: string } }>('/donemler/:ay', async (istek, yanit) => {
     const donem = await donemOku(istek.kiraci, istek.params.ay);

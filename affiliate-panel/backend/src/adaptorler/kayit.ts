@@ -102,7 +102,6 @@ export async function baglantiyiYaz(
   simdi = new Date(),
 ): Promise<Baglanti> {
   const tanim = tanimBul(String(girdi.adaptor ?? '').trim());
-  const sirAlanlari = new Set(tanim.alanlar.filter((a) => a.sir).map((a) => a.ad));
   const gelen = girdi.ayar && typeof girdi.ayar === 'object' ? girdi.ayar : {};
 
   return degistir<Depo, Baglanti>(kiraci, ALAN, cozDepo, (depo) => {

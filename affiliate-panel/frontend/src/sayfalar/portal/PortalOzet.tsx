@@ -1,32 +1,7 @@
 import { paraBicimi, useVeri } from '../../api';
 import { CubukListesi, OlcuKarti, ZamanSerisi } from '../../grafik';
 import { Hata, Kart, Rozet, Yukleniyor } from '../../ui';
-
-interface Ozet {
-  ortakAnahtari: string;
-  gunSayisi: number;
-  oyuncuSayisi: number;
-  aktifOyuncuSayisi: number;
-  yatirim: number;
-  cekim: number;
-  ggr: number;
-  ftdSayisi: number | null;
-  gunlukGgr: Array<{ gun: string; ggr: number }>;
-}
-
-interface Ben {
-  ad: string;
-  ortakAnahtari: string;
-  durum: 'bekliyor' | 'onaylandi' | 'askida' | 'reddedildi';
-}
-
-interface TiklamaOzeti {
-  toplam: number;
-  medyaBazinda: Array<{ medyaId: string | null; sayi: number }>;
-  altBazinda: Array<{ anahtar: string; deger: string; sayi: number }>;
-}
-
-interface AltLink { id: string; kod: string; ad: string; aktif: boolean }
+import type { AltLinkGorunumu as AltLink, OrtakOzeti as Ozet, PortalBen as Ben, TiklamaOzeti } from '@sunucu/sozlesme.js';
 
 const DURUM_ETIKETI = {
   bekliyor: 'Başvurunuz inceleniyor', onaylandi: 'Onaylı', askida: 'Askıda', reddedildi: 'Reddedildi',

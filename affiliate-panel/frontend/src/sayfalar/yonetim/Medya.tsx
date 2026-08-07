@@ -1,17 +1,9 @@
 import { useState } from 'react';
 import { api, useVeri } from '../../api';
 import { Alan, Bos, Buton, Hata, Hucre, Kart, Onay, Rozet, Satir, Tablo, Yukleniyor } from '../../ui';
+import type { Medya as MedyaKaydi } from '@sunucu/sozlesme.js';
+type Medya = MedyaKaydi;
 
-interface Medya {
-  id: string;
-  ad: string;
-  tur: 'banner' | 'metin' | 'video' | 'landing';
-  varlikUrl: string | null;
-  hedefUrl: string;
-  olcu: string | null;
-  aktif: boolean;
-  ortakAnahtarlari: string[];
-}
 
 const BOS = { ad: '', tur: 'landing', hedefUrl: '', varlikUrl: '', olcu: '', ortakAnahtarlari: '', aktif: true };
 
