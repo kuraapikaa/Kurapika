@@ -24,11 +24,14 @@ import {
   medyalariListele, medyaOlustur, medyaGuncelle, medyaSil, MedyaHatasi, type MedyaGirdisi,
 } from '../services/affiliateCrm/medya.js';
 import {
-  kademeDurumu, kademeBagiKur, kademeBagiKaldir, kademeYuzdeleriniAyarla, KademeHatasi,
+  kademeDurumu, kademeBagiKur, kademeBagiKaldir, kademeYuzdeleriniAyarla, kademePaylariHesapla, KademeHatasi,
 } from '../services/affiliateCrm/kademeler.js';
 import {
   postbackAyarla, postbackAyarlari, postbackKayitlari, postbackGonder, PostbackHatasi, POSTBACK_OLAYLARI,
 } from '../services/affiliateCrm/postback.js';
+import {
+  tiklamaKaydet, tiklamalariListele, tiklamaOzeti, yonlendirmeAdresi, TIKLAMA_CEREZI,
+} from '../services/affiliateCrm/tiklama.js';
 import type { AffiliateUser } from '../types/betconstruct.js';
 import {
   AffiliateOdemeHatasi,
@@ -322,6 +325,71 @@ export async function affiliateRoutes(app: FastifyInstance): Promise<void> {
       return hataYanit(reply, err);
     }
   });
+
+  /**
+   * TIKLAMA UCU — genel, oturum yok.
+   *
+   * Ortağın banner'ındaki bağlantı buraya geliyor; tıklama kaydediliyor
+   * ve oyuncu hedef siteye yönlendiriliyor.
+   *
+   * AÇIK YÖNLENDİRME KORUMASI: hedef adres YALNIZCA sunucuda kayıtlı
+   * medyadan okunuyor, istekten ASLA. Adresi istekten almak, kendi alan
+   * adımızı oltalama bağlantısı taşıyıcısına çevirirdi — bağlantı bize
+   * ait göründüğü için de en ikna edicisinden.
+   *
+   * Medya bulunamazsa yönlendirme YAPILMIYOR: bilinmeyen bir kimlikle
+   * gelen isteği bir yere göndermek, korumayı anlamsız kılardı.
+   */
+  app.get<{ Params: { medyaId: string }; Querystring: Record<string, string> }>(
+    '/t/:medyaId',
+    { config: { rateLimit: { max: 240, timeWindow: '1 minute' } } },
+    async (request, reply) => {
+      const tenantKey = await resolveTenantKeyForRequest(request as any);
+      const bTag = String(request.query.btag ?? request.query.bTag ?? '').trim();
+      if (!bTag) return reply.status(400).send({ ok: false, message: 'btag zorunlu.' });
+
+      try {
+        const medyalar = await medyalariListele(tenantKey, bTag);
+        const medya = medyalar.find((m) => m.id === request.params.medyaId);
+        if (!medya) return reply.status(404).send({ ok: false, message: 'Medya bulunamadı veya bu ortağa açık değil.' });
+
+        const tiklama = await tiklamaKaydet(tenantKey, {
+          bTag,
+          medyaId: medya.id,
+          sorgu: request.query,
+          ip: (request.headers['x-forwarded-for'] as string | undefined)?.split(',')[0]?.trim() ?? request.ip,
+          userAgent: request.headers['user-agent'] as string | undefined,
+          referrer: request.headers.referer as string | undefined,
+        });
+
+        // Çerez yalnızca iniş sayfası kendi alan adımızdaysa işe yarar;
+        // asıl taşıyıcı hedef adrese eklenen `clickid`.
+        reply.setCookie(TIKLAMA_CEREZI, tiklama.clickId, {
+          path: '/',
+          httpOnly: true,
+          sameSite: 'lax',
+          maxAge: 30 * 24 * 60 * 60,
+        });
+        return reply.redirect(yonlendirmeAdresi(medya.hedefUrl, tiklama), 302);
+      } catch (err) {
+        return hataYanit(reply, err);
+      }
+    },
+  );
+
+  app.get<{ Querystring: { bTag?: string; medyaId?: string; start?: string; end?: string } }>(
+    '/admin/affiliate/tiklamalar',
+    async (request, reply) => {
+      const tenantKey = await resolveTenantKeyForRequest(request as any);
+      try {
+        return reply.send({
+          ok: true,
+          tiklamalar: await tiklamalariListele(tenantKey, request.query),
+          ozet: await tiklamaOzeti(tenantKey, request.query),
+        });
+      } catch (err) { return hataYanit(reply, err); }
+    },
+  );
 
   // ─── Medya yönetimi ────────────────────────────────────────────────────────
 
@@ -647,6 +715,31 @@ export async function affiliateRoutes(app: FastifyInstance): Promise<void> {
         if (admin) {
           audit(admin.username, admin.role, 'affiliate_odeme_update', kayit.bTag, `${kayit.donem} → ${kayit.durum}`);
         }
+
+        /**
+         * POSTBACK TETİKLEYİCİSİ.
+         *
+         * `onaylanan-komisyon` şu an gerçekten tetiklenebilen TEK olay.
+         * `kayit`, `ilk-yatirim` ve `yatirim` oyuncu bazında olay
+         * gerektiriyor; çekme yolu toplam düzeyinde veri verdiği için
+         * onları buradan üretmek uydurma olurdu — bir günün toplamını
+         * tek bir "yatırım" olayı gibi göndermek ortağın izleme
+         * sisteminde yanlış dönüşüm sayısı yaratırdı. O üçü itme
+         * adaptörüyle gelecek.
+         *
+         * Gönderim ödeme kaydını ETKİLEMİYOR: ortağın sunucusu kapalı
+         * diye durum güncellemesinin geri alınması orantısız olurdu.
+         */
+        if (kayit.durum === 'odendi') {
+          void postbackGonder(tenantKey, kayit.bTag, 'onaylanan-komisyon', {
+            payout: kayit.tutar,
+            donem: kayit.donem,
+            odemeid: kayit.id,
+          }).catch((hata) => {
+            request.log.warn({ err: hata }, '[affiliate] komisyon postback gönderilemedi');
+          });
+        }
+
         return reply.send({ ok: true, odeme: kayit });
       } catch (err) {
         return hataYanit(reply, err);
@@ -710,12 +803,35 @@ export async function affiliateRoutes(app: FastifyInstance): Promise<void> {
 
         const baglanmamis = zengin.filter((s) => !eslesenBTagler.has(bTagAnahtari(String(s.bTag ?? ''))));
 
+        /**
+         * KADEME PAYLARI.
+         *
+         * Hesap hazırdı ama hiçbir yerden çağrılmıyordu: kademe ağacı
+         * kuruluyor, yüzde ayarlanıyor ama ödeme raporunda görünmüyordu.
+         *
+         * Pay alt ortağın komisyonundan KESİLMİYOR, üst ortağa ayrıca
+         * yazılıyor — bir pazarlama gideri. Bu yüzden `toplamKomisyon`
+         * hem doğrudan komisyonları hem kademe paylarını içeriyor;
+         * ikisini ayrı da döndürüyoruz ki rapor hangi paranın nereden
+         * geldiğini gösterebilsin.
+         */
+        const { baglar, kademeYuzdeleri } = await kademeDurumu(tenantKey);
+        const kademeSatirlari = raporSatirlari.flatMap((satir) =>
+          kademePaylariHesapla(baglar, kademeYuzdeleri, satir.ortak.bTag, satir.komisyon.toplam)
+            .map((pay) => ({ ...pay, kaynakBTag: satir.ortak.bTag, kaynakAd: satir.ortak.ad })),
+        );
+        const toplamKademePayi = kademeSatirlari.reduce((t, p) => t + p.tutar, 0);
+        const toplamDogrudan = raporSatirlari.reduce((t, s) => t + s.komisyon.toplam, 0);
+
         return reply.send({
           ok: true,
           aralik: { startDate, endDate },
           satirlar: raporSatirlari,
           baglanmamis,
-          toplamKomisyon: raporSatirlari.reduce((t, s) => t + s.komisyon.toplam, 0),
+          kademeSatirlari,
+          toplamDogrudan,
+          toplamKademePayi,
+          toplamKomisyon: toplamDogrudan + toplamKademePayi,
         });
       } catch (err) {
         return hataYanit(reply, err);

@@ -60,6 +60,11 @@ const PUBLIC_PREFIXES = [
   '/api/games',
   '/api/forms',
   '/api/master',
+  // Affiliate tıklama ucu. Oturum OLAMAZ: bu adrese tıklayan kişi henüz
+  // oyuncu bile değil, ortağın banner'ından geliyor. Yalnızca sunucuda
+  // kayıtlı bir medyanın hedefine yönlendiriyor; adres istekten
+  // alınmadığı için açık yönlendirme taşıyıcısı değil.
+  '/api/t/',
 ];
 
 /** Bonus panel API'leri — admin veya bonus panel girişi yeterli. */
