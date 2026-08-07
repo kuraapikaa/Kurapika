@@ -124,6 +124,20 @@ async function post<T>(path: string, body: Record<string, unknown>): Promise<T> 
 
 
 
+async function put<T>(path: string, body: Record<string, unknown>): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(body),
+  });
+  const json = await parseJsonResponse(res);
+  if (!res.ok) {
+    throw new ApiError(hataMesaji(json, res), res.status);
+  }
+  return json as T;
+}
+
 async function del<T>(path: string): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
     method: 'DELETE',
@@ -1142,6 +1156,123 @@ export const affiliateAdminApi = {
       toplamKomisyon: number;
       message?: string;
     }>('/admin/affiliate/komisyon-raporu', body),
+
+  // ─── Ölçümler (kendi kayıtlarımızdan, eğilim serisiyle) ────────────────────
+  olcumler: (params?: { start?: string; end?: string; ortak?: string }) =>
+    get<{
+      ok: boolean;
+      aralik: { start: string; end: string };
+      ortaklar: OrtakOzeti[];
+      sonOlculenGun: string | null;
+      toplam: { yatirim: number; cekim: number; ggr: number };
+    }>('/admin/affiliate/olcumler', params as Record<string, string> | undefined),
+
+  // ─── Medya ────────────────────────────────────────────────────────────────
+  medyalar: () => get<{ ok: boolean; medyalar: Medya[] }>('/admin/affiliate/medya'),
+  medyaEkle: (body: MedyaGirdisi) => post<{ ok: boolean; medya?: Medya; message?: string }>('/admin/affiliate/medya', body),
+  medyaGuncelle: (id: string, body: MedyaGirdisi) =>
+    put<{ ok: boolean; medya?: Medya; message?: string }>(`/admin/affiliate/medya/${id}`, body),
+  medyaSil: (id: string) => del<{ ok: boolean; message?: string }>(`/admin/affiliate/medya/${id}`),
+
+  // ─── Kademeler ────────────────────────────────────────────────────────────
+  kademeler: () => get<{ ok: boolean; baglar: KademeBagi[]; kademeYuzdeleri: number[] }>('/admin/affiliate/kademeler'),
+  kademeBagiKur: (body: { bTag: string; ustBTag: string }) =>
+    post<{ ok: boolean; bag?: KademeBagi; message?: string }>('/admin/affiliate/kademeler', body),
+  kademeBagiKaldir: (bTag: string) =>
+    del<{ ok: boolean; message?: string }>(`/admin/affiliate/kademeler/${encodeURIComponent(bTag)}`),
+  kademeYuzdeleri: (yuzdeler: number[]) =>
+    put<{ ok: boolean; kademeYuzdeleri?: number[]; message?: string }>('/admin/affiliate/kademeler/yuzdeler', { yuzdeler }),
+
+  // ─── S2S postback ─────────────────────────────────────────────────────────
+  postback: () =>
+    get<{ ok: boolean; ayarlar: PostbackAyari[]; kayitlar: PostbackKaydi[]; olaylar: PostbackOlayi[] }>(
+      '/admin/affiliate/postback',
+    ),
+  postbackAyarla: (body: { bTag: string; sablon: string; olaylar: string[]; aktif?: boolean }) =>
+    put<{ ok: boolean; ayar?: PostbackAyari; message?: string }>('/admin/affiliate/postback', body),
+  postbackDene: (bTag: string) =>
+    post<{ ok: boolean; kayit?: PostbackKaydi; message?: string }>('/admin/affiliate/postback/dene', { bTag }),
+
+  // ─── Lynon entegrasyon katalogu ───────────────────────────────────────────
+  lynonEntegrasyon: () =>
+    get<{
+      ok: boolean;
+      siteId: number;
+      backofficeEkraniUrl: string;
+      onerilenTip: string | null;
+      postbackUcumuz: string;
+      postbackHazir: boolean;
+      saglayicilar: Array<{
+        saglayici: { id: number; type: string; name: string; description: string; iconUrl?: string; configKeys: string[] };
+        bizimkiyleEslesiyor: boolean;
+        hazirAnahtarlar: string[];
+        eksikAnahtarlar: string[];
+      }>;
+    }>('/admin/affiliate/lynon-entegrasyon'),
+};
+
+export type OrtakOzeti = {
+  ortakAnahtari: string;
+  gunSayisi: number;
+  oyuncuSayisi: number;
+  aktifOyuncuSayisi: number;
+  yatirim: number;
+  cekim: number;
+  ggr: number;
+  /** Yalnızca itme yolunda ölçülüyor; null = ölçülmedi (0 değil). */
+  ftdSayisi: number | null;
+  gunlukGgr: Array<{ gun: string; ggr: number }>;
+};
+
+export type MedyaTuru = 'banner' | 'metin' | 'video' | 'landing';
+
+export type Medya = {
+  id: string;
+  ad: string;
+  tur: MedyaTuru;
+  varlikUrl: string | null;
+  hedefUrl: string;
+  olcu: string | null;
+  aktif: boolean;
+  ortakBTaglari: string[];
+  not: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type MedyaGirdisi = {
+  ad?: string;
+  tur?: string;
+  varlikUrl?: string;
+  hedefUrl?: string;
+  olcu?: string;
+  aktif?: boolean;
+  ortakBTaglari?: string[];
+  not?: string;
+};
+
+export type KademeBagi = { bTag: string; ustBTag: string; createdAt: string };
+
+export type PostbackOlayi = 'kayit' | 'ilk-yatirim' | 'yatirim' | 'onaylanan-komisyon';
+
+export type PostbackAyari = {
+  bTag: string;
+  sablon: string;
+  olaylar: PostbackOlayi[];
+  aktif: boolean;
+  updatedAt: string;
+};
+
+export type PostbackKaydi = {
+  id: string;
+  bTag: string;
+  olay: PostbackOlayi;
+  url: string;
+  durum: 'basarili' | 'basarisiz' | 'engellendi';
+  httpDurum: number | null;
+  deneme: number;
+  mesaj: string | null;
+  gonderildi: string;
 };
 
 export type BugscrmDurum = {
