@@ -5,12 +5,24 @@
  * Eksik veya geçersiz değerler için anlaşılır hata mesajları üretir.
  */
 
+import { sifrelemeHazirMi } from './secretBox.js';
+
 interface EnvRule {
   key: string;
   required: boolean;
   description: string;
   validator?: (value: string) => boolean;
   validatorMessage?: string;
+  /**
+   * Değeri uyarı metnine YAZMA.
+   *
+   * Uyarılar geçersiz değerin ilk 20 karakterini logluyordu. Teşhis için
+   * mantıklı görünüyor ama `SESSION_SECRET` ve `TENANT_SECRET_KEY` gibi
+   * anahtarlarda bu, sırrın büyük bölümünü Railway'in kalıcı log akışına
+   * yazmak demek — hem de tam olarak "bu değer hatalı" diye dikkat çeken
+   * bir satırda.
+   */
+  secret?: boolean;
 }
 
 const ENV_RULES: EnvRule[] = [
@@ -48,6 +60,25 @@ const ENV_RULES: EnvRule[] = [
     description: 'Session cookie imzalama anahtarı (min 32 karakter)',
     validator: (v) => v.length >= 32,
     validatorMessage: 'En az 32 karakter olmalı',
+    secret: true,
+  },
+  {
+    /**
+     * Tanımlı olması ZORUNLU DEĞİL — tek siteli kurulumda hiç
+     * gerekmiyor. Ama tanımlıysa GEÇERLİ olmalı: geçersiz bir anahtarla
+     * sunucu sorunsuz açılır, panelde "kaydet" düğmesi görünür ve alt
+     * site kimlik bilgileri kaydedilemez. Bu, ancak kimse bonusları
+     * dağıtmadığında fark edilecek türden sessiz bir arıza.
+     *
+     * Kontrol `secretBox`'ın kendi mantığını çağırıyor; iki yerde ayrı
+     * ayrı yazılsalardı zamanla birbirinden ayrılırlardı.
+     */
+    key: 'TENANT_SECRET_KEY',
+    required: false,
+    description: 'Alt site kimlik bilgilerini şifreleyen anahtar (64 hane hex, 32 bayt base64 veya en az 16 karakter)',
+    validator: () => sifrelemeHazirMi(),
+    validatorMessage: 'Geçersiz biçim; panelden alt site kimlik bilgisi KAYDEDİLEMEZ. Üretmek için: openssl rand -hex 32',
+    secret: true,
   },
 
   // ─── Opsiyonel ─────────────────────────────────────────────────────────────
@@ -128,7 +159,8 @@ export function validateEnvironment(): EnvValidationResult {
     }
 
     if (value && rule.validator && !rule.validator(value)) {
-      warnings.push(`${rule.key}: ${rule.validatorMessage} (mevcut: "${value.slice(0, 20)}...")`);
+      const ipucu = rule.secret ? `${value.length} karakter` : `"${value.slice(0, 20)}..."`;
+      warnings.push(`${rule.key}: ${rule.validatorMessage} (mevcut: ${ipucu})`);
     }
 
     if (!value && !rule.required) {
