@@ -1,5 +1,6 @@
 import { adaptorZorunlu } from '../adaptorler/kayit.js';
 import { gunAnahtari, gunEkle, gunGecerliMi } from '../lib/gunler.js';
+import { ftdDurumu, ftdIsle } from './ilkYatirim.js';
 import { olcumleriYaz, sonOlculenGun } from './olcum.js';
 
 /**
@@ -21,14 +22,42 @@ export interface SenkronSonucu {
   hatali: Array<{ gun: string; mesaj: string }>;
   /** Sınıra takıldıysa dolu; sessiz kesme panelde "tamam" gibi görünürdü. */
   uyari: string | null;
+  /** İlk yatırım ölçümünün durumu; panelde açıkça gösteriliyor. */
+  ftd: { olculuyorMu: boolean; olcumBaslangici: string | null; defterdekiOyuncu: number };
 }
 
-/** Tek bir günü çekip yazar. */
-export async function gunuSenkronla(kiraci: string, gun: string, simdi = new Date()): Promise<number> {
+/**
+ * Tek bir günü çekip yazar.
+ *
+ * `kalibrasyonMu`, ilk yatırım defteri henüz dolmadan çekilen günler
+ * için: o günlerin oyuncuları deftere yazılıyor ama FTD `null`
+ * dönüyor. Defter boşken herkes "ilk kez yatırım yapıyor" görünür ve
+ * o rakam gerçek gibi durur — en tehlikelisi bu.
+ */
+export async function gunuSenkronla(
+  kiraci: string,
+  gun: string,
+  { kalibrasyonMu = false }: { kalibrasyonMu?: boolean } = {},
+  simdi = new Date(),
+): Promise<number> {
   if (!gunGecerliMi(gun)) throw new Error(`Geçersiz gün: ${gun}`);
   const adaptor = await adaptorZorunlu(kiraci);
   const olcumler = await adaptor.gunuCek(gun);
-  return olcumleriYaz(kiraci, olcumler.map((o) => ({ ...o, kaynak: 'cekme' as const })), simdi);
+
+  const zenginlestirilmis = [];
+  for (const olcum of olcumler) {
+    const { yatiranOyuncular, ...temel } = olcum;
+    // Adaptor FTD'yi kendi biliyorsa ona dokunmuyoruz; bilmiyorsa ve
+    // yatiran oyuncu listesi verdiyse defterden turetiliyor.
+    const ftd = temel.ftdSayisi !== null
+      ? temel.ftdSayisi
+      : yatiranOyuncular
+        ? (await ftdIsle(kiraci, gun, yatiranOyuncular, { kalibrasyonMu })).ftdSayisi
+        : null;
+    zenginlestirilmis.push({ ...temel, ftdSayisi: ftd, kaynak: 'cekme' as const });
+  }
+
+  return olcumleriYaz(kiraci, zenginlestirilmis, simdi);
 }
 
 /**
@@ -53,6 +82,11 @@ export async function eksikGunleriSenkronla(
   const son = await sonOlculenGun(kiraci);
   const baslangic = son && son <= bugun ? son : gunEkle(bugun, -Math.max(0, geriGun - 1));
 
+  // Defter bos ya da yarim doluysa BU TURUN TAMAMI kalibrasyon: gunler
+  // deftere yaziliyor, FTD yazilmiyor. Sonraki turlar olcum turu.
+  const ftd = await ftdDurumu(kiraci);
+  const kalibrasyonTuru = !ftd.olculuyorMu;
+
   const gunler: string[] = [];
   for (let g = baslangic; g <= bugun; g = gunEkle(g, 1)) gunler.push(g);
 
@@ -66,15 +100,25 @@ export async function eksikGunleriSenkronla(
     uyari: kesildi
       ? `${gunler.length} günlük boşluk var; bu turda ilk ${enFazlaGun} gün çekildi. Kalanı için senkronu tekrar çalıştırın.`
       : null,
+    ftd,
   };
 
   for (const gun of calisilacak) {
     try {
-      sonuc.yazilanOlcum += await gunuSenkronla(kiraci, gun, simdi);
+      // Son gun HARIC hepsi kalibrasyon: defterin dolmasi icin gecmis
+      // gerekiyor, ama son gunde olcume gecmezsek FTD hic baslamaz.
+      const sonGunMu = gun === calisilacak[calisilacak.length - 1];
+      sonuc.yazilanOlcum += await gunuSenkronla(
+        kiraci,
+        gun,
+        { kalibrasyonMu: kalibrasyonTuru && !sonGunMu },
+        simdi,
+      );
       sonuc.cekilenGun += 1;
     } catch (hata) {
       sonuc.hatali.push({ gun, mesaj: hata instanceof Error ? hata.message : String(hata) });
     }
   }
+  sonuc.ftd = await ftdDurumu(kiraci);
   return sonuc;
 }

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { api, gunBicimi, useVeri } from '../../api';
-import { Alan, Bos, Buton, Hata, Hucre, Kart, Rozet, Satir, Tablo, Yukleniyor } from '../../ui';
+import { Alan, Bos, Buton, Hata, Hucre, Kart, Olcu, Rozet, Satir, Tablo, Yukleniyor } from '../../ui';
 
 interface AltLink {
   id: string;
@@ -11,6 +11,9 @@ interface AltLink {
   aktif: boolean;
   createdAt: string;
   tamAdres: string | null;
+  medyaAdi: string | null;
+  tiklama: number;
+  sonTiklama: string | null;
 }
 
 interface Medya { id: string; ad: string; tur: string }
@@ -32,6 +35,7 @@ export function PortalAltLinkler() {
   const [alt, setAlt] = useState<Record<string, string>>({});
   const [hata, setHata] = useState<string | null>(null);
   const [kopyalanan, setKopyalanan] = useState<string | null>(null);
+  const [qr, setQr] = useState<{ id: string; ad: string; adres: string } | null>(null);
 
   const calistir = async (is: () => Promise<unknown>) => {
     setHata(null);
@@ -43,6 +47,15 @@ export function PortalAltLinkler() {
     }
   };
 
+  const linkler = liste.veri?.linkler ?? [];
+  const linkSayisi = linkler.length;
+  const aktifSayisi = linkler.filter((l) => l.aktif).length;
+  const toplamTiklama = linkler.reduce((t, l) => t + l.tiklama, 0);
+  // Hic tiklanmayan link, "paylastim mi?" sorusunun cevabi. Ortagin
+  // kendi hatasini gormesinin en hizli yolu bu sayi.
+  const tiklanmayan = linkler.filter((l) => l.tiklama === 0).length;
+  const enIyi = linkler.reduce<AltLink | null>((e, l) => (!e || l.tiklama > e.tiklama ? l : e), null);
+
   if (liste.yukleniyor) return <Yukleniyor />;
 
   const medyaSecenekleri = [
@@ -52,6 +65,21 @@ export function PortalAltLinkler() {
 
   return (
     <>
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <Olcu etiket="Link" deger={String(linkSayisi)} alt={`${aktifSayisi} aktif`} />
+        <Olcu etiket="Toplam tıklama" deger={String(toplamTiklama)} />
+        <Olcu
+          etiket="En çok tıklanan"
+          deger={enIyi ? String(enIyi.tiklama) : '—'}
+          alt={enIyi?.ad}
+        />
+        <Olcu
+          etiket="Hiç tıklanmayan"
+          deger={String(tiklanmayan)}
+          alt={tiklanmayan > 0 ? 'paylaşıldı mı?' : undefined}
+        />
+      </div>
+
       <Kart baslik="Yeni alt link">
         <p className="mb-3 text-sm" style={{ color: 'var(--metin-2)' }}>
           Kampanya başına bir link kurun, isim verin. Kısa adres alırsınız; parametreler adreste
@@ -100,11 +128,34 @@ export function PortalAltLinkler() {
         </Kart>
       )}
 
+      {qr && (
+        <Kart baslik={`QR · ${qr.ad}`} sag={<Buton onClick={() => setQr(null)}>Kapat</Buton>}>
+          <div className="flex flex-wrap items-center gap-4">
+            <img
+              src={`/api/portal/alt-linkler/${qr.id}/qr`}
+              alt={`${qr.ad} QR kodu`}
+              width={220}
+              height={220}
+              className="rounded-lg border"
+              style={{ borderColor: 'var(--kenar)', background: '#fff' }}
+            />
+            <div className="min-w-0 flex-1">
+              <p className="text-sm" style={{ color: 'var(--metin-2)' }}>
+                Basılı materyal, hikâye ve fiziksel mekân için. Kod bu sunucuda üretiliyor —
+                linkiniz üçüncü bir servise gönderilmiyor. Ayrı bir sayaç değildir: okutulan her
+                QR bu linkin tıklaması olarak sayılır.
+              </p>
+              <code className="mt-2 block break-all text-xs">{qr.adres}</code>
+            </div>
+          </div>
+        </Kart>
+      )}
+
       <Kart baslik="Alt linkleriniz">
         {(liste.veri?.linkler ?? []).length === 0 ? (
           <Bos mesaj="Henüz alt link yok." />
         ) : (
-          <Tablo basliklar={['Ad', 'Adres', 'Alt kanallar', 'Durum', 'Oluşturma', 'İşlem']}>
+          <Tablo basliklar={['Ad', 'Adres', 'Kreatif', 'Alt kanallar', 'Tıklama', 'Durum', 'İşlem']}>
             {liste.veri!.linkler.map((l) => (
               <Satir key={l.id}>
                 <Hucre><span className="font-medium">{l.ad}</span></Hucre>
@@ -135,10 +186,21 @@ export function PortalAltLinkler() {
                     {Object.entries(l.alt).map(([a, d]) => `${a}=${d}`).join(' · ') || '—'}
                   </span>
                 </Hucre>
+                <Hucre><span className="text-xs">{l.medyaAdi ?? '—'}</span></Hucre>
+                <Hucre sagda>
+                  <div className="font-medium tabular-nums">{l.tiklama}</div>
+                  <div className="text-xs" style={{ color: 'var(--metin-2)' }}>
+                    {l.sonTiklama ? gunBicimi(l.sonTiklama) : 'henüz yok'}
+                  </div>
+                </Hucre>
                 <Hucre><Rozet metin={l.aktif ? 'Aktif' : 'Kapalı'} renk={l.aktif ? 'olumlu' : 'notr'} /></Hucre>
-                <Hucre>{gunBicimi(l.createdAt)}</Hucre>
                 <Hucre>
                   <div className="flex gap-1">
+                    {l.tamAdres && (
+                      <Buton onClick={() => setQr(qr?.id === l.id ? null : { id: l.id, ad: l.ad, adres: l.tamAdres! })}>
+                        QR
+                      </Buton>
+                    )}
                     <Buton onClick={() => calistir(() => api.yaz(`/api/portal/alt-linkler/${l.id}`, { aktif: !l.aktif }))}>
                       {l.aktif ? 'Kapat' : 'Aç'}
                     </Buton>

@@ -397,6 +397,7 @@ class LynonAdaptoru implements BackofficeAdaptoru {
     const gruplar = new Map<string, {
       oyuncular: Set<string>;
       aktifler: Set<string>;
+      yatiranlar: Set<string>;
       yatirim: number;
       cekim: number;
       ggr: number;
@@ -420,10 +421,15 @@ class LynonAdaptoru implements BackofficeAdaptoru {
       const ggr = tutarSec(satir, ['GGR FILTERED (TRY)', 'GGR (TRY)', 'GGR'], bahis - kazanc);
 
       const grup = gruplar.get(ortakAnahtari) ?? {
-        oyuncular: new Set<string>(), aktifler: new Set<string>(), yatirim: 0, cekim: 0, ggr: 0,
+        oyuncular: new Set<string>(), aktifler: new Set<string>(), yatiranlar: new Set<string>(),
+        yatirim: 0, cekim: 0, ggr: 0,
       };
       grup.oyuncular.add(oyuncuId);
       if (yatirim || cekim || bahis || kazanc || ggr) grup.aktifler.add(oyuncuId);
+      // Ilk yatirim TURETMESI icin gerekli: kim o gun para yatirdi.
+      // Rapor "ilk yatirim" alani vermiyor ama oyuncu bazinda satir
+      // verdigi icin bilgi burada.
+      if (yatirim > 0) grup.yatiranlar.add(oyuncuId);
       grup.yatirim += yatirim;
       grup.cekim += cekim;
       grup.ggr += ggr;
@@ -438,7 +444,9 @@ class LynonAdaptoru implements BackofficeAdaptoru {
       yatirim: g.yatirim,
       cekim: g.cekim,
       ggr: g.ggr,
+      // Adaptor FTD'yi BILMIYOR; cekirdek `yatiranOyuncular`dan turetiyor.
       ftdSayisi: null,
+      yatiranOyuncular: [...g.yatiranlar],
     }));
   }
 

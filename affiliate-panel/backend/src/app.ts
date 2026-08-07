@@ -5,6 +5,7 @@ import rateLimit from '@fastify/rate-limit';
 import Fastify, { type FastifyInstance, type FastifyRequest } from 'fastify';
 import { guvenliKiraciAnahtari, varsayilanKiraci } from './lib/kiraci.js';
 import { jetonCoz, OTURUM_CEREZI, type OturumVerisi } from './kimlik/oturum.js';
+import { markaRotalari } from './rotalar/marka.js';
 import { oturumRotalari } from './rotalar/oturum.js';
 import { portalRotalari } from './rotalar/portal.js';
 import { tiklamaRotalari } from './rotalar/tiklamaUcu.js';
@@ -99,6 +100,7 @@ export async function uygulamaKur(): Promise<FastifyInstance> {
 
   app.get('/saglik', async () => ({ durum: 'ayakta', zaman: new Date().toISOString() }));
 
+  await app.register(markaRotalari, { prefix: '/api' });
   await app.register(oturumRotalari, { prefix: '/api/oturum' });
   await app.register(yonetimRotalari, { prefix: '/api/yonetim' });
   await app.register(portalRotalari, { prefix: '/api/portal' });
