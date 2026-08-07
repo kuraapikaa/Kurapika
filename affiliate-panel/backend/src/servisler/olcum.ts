@@ -1,5 +1,4 @@
-import { degistir, kayitOku, oku } from '../lib/depo.js';
-import type { HamOlcum } from '../adaptorler/tur.js';
+import { olcumDeposu } from '../depolar/olcumDeposu.js';
 
 /**
  * ÖLÇÜM ÇEKİRDEĞİ — protokolden bağımsız.
@@ -14,31 +13,18 @@ import type { HamOlcum } from '../adaptorler/tur.js';
  * "hangi hafta düştü" sorularına ASLA cevap veremez — çünkü geçmiş
  * hiçbir zaman kaydedilmez. Geriye dönük üretilemeyen tek şey budur:
  * bugün yazmazsak o gün sonsuza kadar kayıptır.
+ *
+ * Depolama `depolar/olcumDeposu.ts` içinde: Postgres varsa tablo,
+ * yoksa JSON belgesi.
  */
 
-const ALAN = 'olcumler';
-
-export type OlcumKaynagi = 'cekme' | 'itme';
-
-export interface OrtakGunlukOlcum extends HamOlcum {
-  /** Ölçümün hangi yoldan geldiği; karışık kaynakta ayırt edebilmek için. */
-  kaynak: OlcumKaynagi;
-  yazildi: string;
-}
-
-type Depo = {
-  version: 1;
-  /** Anahtar: `${gun}|${ortakAnahtari}` — gün başına tek satır. */
-  olcumler: Record<string, OrtakGunlukOlcum>;
-};
-
-const cozDepo = (ham: unknown): Depo => {
-  const olcumler = kayitOku(kayitOku(ham).olcumler) as Record<string, OrtakGunlukOlcum>;
-  return { version: 1, olcumler };
-};
-const olcumAnahtari = (gun: string, ortakAnahtari: string) => `${gun}|${ortakAnahtari}`;
-
-export type YazilacakOlcum = HamOlcum & { kaynak: OlcumKaynagi };
+export type {
+  OlcumKaynagi,
+  OlcumSorgusu,
+  OrtakGunlukOlcum,
+  YazilacakOlcum,
+} from '../depolar/olcumDeposu.js';
+import type { OlcumSorgusu, OrtakGunlukOlcum, YazilacakOlcum } from '../depolar/olcumDeposu.js';
 
 /**
  * Ölçümleri yazar. Aynı (gün, ortak) için tekrar yazmak ÜZERİNE YAZAR.
@@ -51,37 +37,17 @@ export type YazilacakOlcum = HamOlcum & { kaynak: OlcumKaynagi };
  * çekilenden daha kesin; sonradan çalışan bir çekme turu onu geri
  * götürmemeli.
  */
-export async function olcumleriYaz(kiraci: string, olcumler: YazilacakOlcum[], simdi = new Date()): Promise<number> {
+export async function olcumleriYaz(
+  kiraci: string,
+  olcumler: YazilacakOlcum[],
+  simdi = new Date(),
+): Promise<number> {
   if (!olcumler.length) return 0;
-  return degistir<Depo, number>(kiraci, ALAN, cozDepo, (depo) => {
-    let yazilan = 0;
-    for (const olcum of olcumler) {
-      const anahtar = olcumAnahtari(olcum.gun, olcum.ortakAnahtari);
-      const mevcut = depo.olcumler[anahtar];
-      if (mevcut?.kaynak === 'itme' && olcum.kaynak === 'cekme') continue;
-      depo.olcumler[anahtar] = { ...olcum, yazildi: simdi.toISOString() };
-      yazilan += 1;
-    }
-    return yazilan;
-  });
-}
-
-export interface OlcumSorgusu {
-  start?: string;
-  end?: string;
-  ortakAnahtari?: string;
+  return olcumDeposu().yaz(kiraci, olcumler, simdi);
 }
 
 export async function olcumleriOku(kiraci: string, sorgu: OlcumSorgusu = {}): Promise<OrtakGunlukOlcum[]> {
-  const depo = await oku<Depo>(kiraci, ALAN, cozDepo);
-  return Object.values(depo.olcumler)
-    .filter((o) => {
-      if (sorgu.start && o.gun < sorgu.start) return false;
-      if (sorgu.end && o.gun > sorgu.end) return false;
-      if (sorgu.ortakAnahtari && o.ortakAnahtari !== sorgu.ortakAnahtari) return false;
-      return true;
-    })
-    .sort((a, b) => (a.gun === b.gun ? a.ortakAnahtari.localeCompare(b.ortakAnahtari) : a.gun.localeCompare(b.gun)));
+  return olcumDeposu().listele(kiraci, sorgu);
 }
 
 export interface OrtakOzeti {
@@ -144,7 +110,5 @@ export async function ortakOzetleri(kiraci: string, sorgu: OlcumSorgusu = {}): P
 
 /** Kaydı olan en son gün; senkronun nereden devam edeceğini belirler. */
 export async function sonOlculenGun(kiraci: string): Promise<string | null> {
-  const depo = await oku<Depo>(kiraci, ALAN, cozDepo);
-  const gunler = Object.values(depo.olcumler).map((o) => o.gun).sort();
-  return gunler.length ? gunler[gunler.length - 1] : null;
+  return olcumDeposu().sonGun(kiraci);
 }
