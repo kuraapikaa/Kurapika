@@ -1,0 +1,74 @@
+# `main`e her itmede ana paneli Railway'e dagitir.
+#
+# Neden bu dosya var: Railway'in kendi GitHub baglantisi bu serviste
+# guvenilir calismadi. Olculen davranis suydu — `main`e birlestirilen
+# duzeltmeler canliya HIC inmedi, servis saatlerce eski surumu calistirdi
+# ve disaridan bakinca "deploy ediyorum, hicbir sey degismiyor" gibi
+# gorunuyordu. Ayni sorunu farkli hatalar sanip uc kez kovaladik. Bir kez
+# de dagitimin kendisi kod olsun, gorunur ve tekrarlanabilir olsun.
+#
+# `railway up` calisma dizinini yukleyip orada derliyor, yani dagitilan sey
+# tam olarak bu commit. `railway redeploy` ise MEVCUT anlik goruntuyu
+# yeniden calistirip yeni kodu getirmiyor — bu yuzden burada kullanilmiyor.
+#
+# GEREKLI: depo ayarlarinda `RAILWAY_TOKEN` secret'i. Railway'de proje
+# token'i uretilip (Project Settings -> Tokens) GitHub'da
+# Settings -> Secrets and variables -> Actions altina eklenir. Token yalniz
+# bu projeye yetkili olmali.
+name: Dağıtım — ana panel
+
+on:
+  push:
+    branches: [main]
+    # Yalnizca bu servisi ilgilendiren degisikliklerde. Affiliate
+    # arayuzundeki bir duzenleme icin canli siteyi yeniden dagitmanin
+    # anlami yok ve her dagitim kisa bir kesinti demek.
+    paths:
+      - 'server/**'
+      - 'client/**'
+      - 'Dockerfile'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/dagitim.yml'
+  # Elle de tetiklenebilsin: dusen bir dagitimi yeniden denemek icin bos
+  # commit atmak gerekmesin.
+  workflow_dispatch:
+
+# Ayni dala ust uste dagitim yapma. Yarida KESMIYORUZ: iptal edilen bir
+# dagitim, calisan surumu belirsiz birakabilir.
+concurrency:
+  group: dagitim-ana-panel
+  cancel-in-progress: false
+
+jobs:
+  dagit:
+    name: narcosbahis.vip
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Railway CLI kur
+        run: npm i -g @railway/cli
+
+      - name: Token var mi
+        # Token yoksa `railway up` anlasilmaz bir hatayla duser. Erken ve
+        # net soylemek, log okumaktan iyi.
+        run: |
+          if [ -z "${RAILWAY_TOKEN}" ]; then
+            echo "RAILWAY_TOKEN secret'i tanimli degil — depo ayarlarindan ekleyin." >&2
+            exit 1
+          fi
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+      # Servis ADI ile degil ID ile: CLI'nin isim cozumlemesi bu projede
+      # tutarsiz davrandi (ayni isim bir seferinde "Service not found"
+      # verdi, baska seferinde baska bir servise cozuldu). ID hic sasmadi.
+      - name: Dağıt
+        run: railway up --service 1bdd822a-3f35-4920-88ff-9d9a21c8bc16 --ci
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
