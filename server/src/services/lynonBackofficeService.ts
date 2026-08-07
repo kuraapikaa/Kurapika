@@ -1102,12 +1102,61 @@ export type OyuncuKpiSonucu =
  * toplam yatirim/cekim) zenginlestiriyor — burada AYRI bir arama
  * mantigi ya da ek Lynon istegi YOK, yalnizca sonucu yorumlama var.
  */
+/** Karsilastirma icin numaranin son 10 hanesi. */
+function sonOnHane(deger: unknown): string {
+  return String(deger ?? '').replace(/\D/g, '').slice(-10);
+}
+
+/**
+ * Telefon numarasindan Player ID cozer.
+ *
+ * Lynon'un `userBackOffice` aramasi telefonu KAPSAMIYOR: `query` alanina
+ * numara verildiginde bos donuyor. Olculdu — 905369824414, 5369824414,
+ * 05369824414 ve +905369824414 bicimlerinin dordu de bos dondu, ayni anda
+ * kullanici adi sorgusu aninda sonuc verdi.
+ *
+ * Oyuncu genel bakis raporu ise her oyuncunun numarasini tasiyor ve zaten
+ * onbellekte tutuluyor (lynonPlayerOverviewMap). Numarayi oradan Player ID'ye
+ * cevirip normal akisa donuyoruz.
+ *
+ * Son 10 hane uzerinden karsilastiriyoruz: WhatsApp numarayi her zaman ulke
+ * koduyla veriyor, Lynon kayitlarinda ise 0'li, +90'li ve kodsuz yazimlarin
+ * hepsi bulunabiliyor. Turkiye'de abone numarasi 10 hane oldugundan bu ekin
+ * tamamini yok sayip geri kalanini tam esitlikle karsilastirmak, bicim
+ * varyasyonlarini tek seferde eliyor.
+ */
+export async function lynonOyuncuIdTelefondan(telefon: string): Promise<string | null> {
+  const hedef = sonOnHane(telefon);
+  // 10 haneden kisa girdi ile arama yapmak yanlis oyuncu dondurebilir.
+  if (hedef.length < 10) return null;
+
+  const harita = await lynonPlayerOverviewMap();
+  for (const [id, satir] of harita) {
+    if (!id) continue;
+    const kayitli = sonOnHane(satir.PhoneNumber ?? satir['Phone Number'] ?? satir.Phone);
+    if (kayitli.length >= 10 && kayitli === hedef) return id;
+  }
+  return null;
+}
+
 export async function lynonOyuncuKpiSorgula(sorguMetin: string): Promise<OyuncuKpiSonucu> {
   const sorgu = String(sorguMetin ?? '').trim();
   if (!sorgu) return { durum: 'bulunamadi' };
 
   const res = await lynonPlayers({ query: sorgu, MaxRows: 6, SkeepRows: 0 });
-  const rows = arrayOf(res.Data?.Objects);
+  let rows = arrayOf(res.Data?.Objects);
+
+  // Telefonla arama Lynon tarafinda hicbir zaman eslesmiyor (bkz.
+  // lynonOyuncuIdTelefondan). Sonuc bossa ve sorgu bir numaraya benziyorsa
+  // numarayi Player ID'ye cevirip tekrar soruyoruz. Yalnizca bos sonucta
+  // devreye giriyor, dolayisiyla calisan hicbir aramanin davranisi degismiyor.
+  if (rows.length === 0 && sonOnHane(sorgu).length >= 10) {
+    const id = await lynonOyuncuIdTelefondan(sorgu);
+    if (id) {
+      rows = arrayOf((await lynonPlayers({ query: id, MaxRows: 6, SkeepRows: 0 })).Data?.Objects);
+    }
+  }
+
   if (rows.length === 0) return { durum: 'bulunamadi' };
   if (rows.length > 1) {
     return {
