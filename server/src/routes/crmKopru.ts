@@ -7,6 +7,7 @@ import {
   lynonErrorResponse,
   lynonOyuncuKpiSorgula,
   lynonPaymentTransactions,
+  lynonPlayerDetail,
 } from '../services/lynonBackofficeService.js';
 
 /**
@@ -44,6 +45,47 @@ function kimlikDogrula(request: FastifyRequest, reply: FastifyReply): string | n
     return null;
   }
   return tenant;
+}
+
+/**
+ * Oyuncu detayindan CRM'in ihtiyaci olan alanlari cikarir.
+ *
+ * Arama sonucu (`lynonOyuncuKpiSorgula`) yalnizca ozet donuyor: ad yok,
+ * numaranin ulke kodu yok, kisitlar yok. Detay ucu
+ * (`/userBackOffice/users/:id`) hepsini veriyor ve temsilcinin sohbette
+ * ihtiyaci olan sey tam olarak bunlar — kisiye adiyla hitap etmek ve
+ * "cekimim neden yatmiyor" sorusuna bakabilmek.
+ */
+function detaydanHesap(d: Record<string, unknown>) {
+  const ad = String(d.FirstName ?? '').trim();
+  const soyad = String(d.LastName ?? '').trim();
+
+  // Numara ulke kodundan AYRI tutuluyor: phoneNumber "5369824414",
+  // phoneCode "+90". Ikisini birlestirmeden WhatsApp'a adres olmaz.
+  const kod = String(d.phoneCode ?? '').replace(/\D/g, '');
+  const yerel = String(d.Phone ?? d.phoneNumber ?? '').replace(/\D/g, '');
+  const telefon = yerel ? (kod && !yerel.startsWith(kod) ? `${kod}${yerel}` : yerel) : null;
+
+  // Kisitlar CRM'de "cekim durumu" olarak gosteriliyor: kapali bir cekim
+  // yetkisi, temsilcinin oyuncuya soyleyebilecegi ilk sey.
+  const kisitlar: Record<string, boolean> = {};
+  for (const k of Array.isArray(d.restrictions) ? d.restrictions : []) {
+    const satir = k as { restriction?: { name?: string }; isRestricted?: boolean };
+    const ad2 = satir.restriction?.name;
+    if (ad2) kisitlar[ad2] = satir.isRestricted === true;
+  }
+
+  return {
+    firstName: ad || null,
+    lastName: soyad || null,
+    fullName: [ad, soyad].filter(Boolean).join(' ') || null,
+    phone: telefon,
+    email: (d.Email as string) ?? null,
+    category: (d.CategoryName as string) ?? null,
+    status: (d.Status as string) ?? null,
+    kycVerified: d.IsIdentityVerified === true,
+    restrictions: kisitlar,
+  };
 }
 
 /** Lynon KPI ozetini CRM'in bekledigi sekle cevirir. */
@@ -108,6 +150,18 @@ export async function crmKopruRoutes(app: FastifyInstance): Promise<void> {
       }
 
       const o = sonuc.ozet;
+
+      // Detay ucu ad, ulke kodlu numara ve kisitlari veriyor; arama sonucu
+      // vermiyor. Basarisiz olursa aramanin kendisi calismaya devam etmeli —
+      // eksik profil, hic profil olmamasindan iyidir.
+      let detay: ReturnType<typeof detaydanHesap> | null = null;
+      try {
+        const r = await runWithTenant(tenant, () => lynonPlayerDetail(o.id));
+        detay = detaydanHesap((r?.Data ?? {}) as Record<string, unknown>);
+      } catch {
+        detay = null;
+      }
+
       return reply.send({
         account: {
           userId: o.id,
@@ -115,8 +169,15 @@ export async function crmKopruRoutes(app: FastifyInstance): Promise<void> {
           // CRM kullanici adindan WhatsApp sohbeti aciyor; numarayi baska
           // yerden ogrenemiyor. Temsilciye gosterilmiyor, sunucu tarafinda
           // adres olarak kullaniliyor.
-          phone: o.telefon,
-          fullName: null,
+          phone: detay?.phone ?? o.telefon,
+          firstName: detay?.firstName ?? null,
+          lastName: detay?.lastName ?? null,
+          fullName: detay?.fullName ?? null,
+          email: detay?.email ?? o.eposta ?? null,
+          category: detay?.category ?? null,
+          status: detay?.status ?? null,
+          kycVerified: detay?.kycVerified ?? o.kimlikDogrulandi ?? false,
+          restrictions: detay?.restrictions ?? {},
           currency: o.paraBirimi,
           registeredAt: o.kayitTarihi,
         },
