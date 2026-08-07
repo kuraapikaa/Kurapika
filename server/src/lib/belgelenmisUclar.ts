@@ -26,6 +26,16 @@ import { sablonla } from './apiTrafik.js';
  * onemli degil; hepsi normalize ediliyor.
  */
 const BELGELENMIS_YOLLAR = [
+  // ── Affiliate / third-party entegrasyon ──────────────────────────────
+  //
+  // Gercek trafikten yakalandi. Buraya eklenmelerinin amaci belgelemek
+  // DEGIL, kapsami isaretlemek: bu uclar artik "belgesiz" listesinde
+  // gorunmeyecegi icin, affiliate ekranlarinda gezerken cikan HER YENI
+  // uc dogrudan one cikacak. Eksik uclari (entegrasyonu kaydetme,
+  // kurulu entegrasyonlari listeleme) aramanin en hizli yolu bu.
+  '/api/partner/api/v1.0/affiliates',
+  '/api/affiliate/api/v1.0/affiliatePlayers/{siteId}/{playerId}/register',
+
   '/api/bonusenginev2/api/v1/Campaign/site/{siteId}',
   '/api/bonusenginev2/api/v1/Campaign/{campaignId}',
   '/api/bonusenginev2/api/v1/Campaign/clone/{campaignId}',

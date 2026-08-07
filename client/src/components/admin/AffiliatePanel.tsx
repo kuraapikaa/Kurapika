@@ -2,14 +2,18 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  Activity,
   AlertCircle,
   BarChart3,
   ChevronLeft,
   Coins,
   Handshake,
+  Image,
   Mail,
   MapPin,
+  Network,
   PieChart,
+  Radio,
   Plus,
   Search,
   ShieldAlert,
@@ -32,6 +36,10 @@ import {
 import { formatDateDisplay, formatNumber } from '../../lib/format';
 import type { ClientItem } from '../../types/dashboard';
 import { BugscrmSekmesi } from './BugscrmSekmesi';
+import { OlcumSekmesi } from './affiliate/OlcumSekmesi';
+import { MedyaSekmesi } from './affiliate/MedyaSekmesi';
+import { KademeSekmesi } from './affiliate/KademeSekmesi';
+import { PostbackSekmesi } from './affiliate/PostbackSekmesi';
 
 /**
  * Affiliate merkezi.
@@ -45,7 +53,7 @@ import { BugscrmSekmesi } from './BugscrmSekmesi';
  * Komisyon (hakedis raporu).
  */
 
-type Sekme = 'performans' | 'ortaklar' | 'komisyon' | 'bugscrm';
+type Sekme = 'performans' | 'olcumler' | 'ortaklar' | 'komisyon' | 'medya' | 'kademeler' | 'postback' | 'bugscrm';
 
 type Siralama = 'netPozisyon' | 'netRevenue' | 'totalPlayers' | 'oyuncuBasiGelir' | 'cekimOrani';
 
@@ -560,6 +568,10 @@ export function AffiliatePanel() {
     { id: 'performans', ad: 'BTag performansı', ikon: BarChart3 },
     { id: 'ortaklar', ad: 'Ortaklar', ikon: Handshake },
     { id: 'komisyon', ad: 'Komisyon', ikon: Coins },
+    { id: 'olcumler', ad: 'Eğilimler', ikon: Activity },
+    { id: 'medya', ad: 'Medya', ikon: Image },
+    { id: 'kademeler', ad: 'Kademeler', ikon: Network },
+    { id: 'postback', ad: 'Postback', ikon: Radio },
     { id: 'bugscrm', ad: 'BugsCRM', ikon: Target },
   ];
 
@@ -594,6 +606,10 @@ export function AffiliatePanel() {
 
       {sekme === 'ortaklar' && <OrtaklarSekmesi />}
       {sekme === 'komisyon' && <KomisyonSekmesi range={range} />}
+      {sekme === 'olcumler' && <OlcumSekmesi range={range} />}
+      {sekme === 'medya' && <MedyaSekmesi />}
+      {sekme === 'kademeler' && <KademeSekmesi />}
+      {sekme === 'postback' && <PostbackSekmesi />}
       {sekme === 'bugscrm' && <BugscrmSekmesi />}
 
       {sekme === 'performans' && (
