@@ -83,3 +83,82 @@ export const olcumler = pgTable(
     index('aff_olcumler_kiraci_gun').on(t.kiraci, t.gun),
   ],
 );
+
+/**
+ * OYUNCU ↔ ORTAK EŞLEŞMESİ.
+ *
+ * Oyuncu referans linkiyle geldi, siteye Lynon üzerinden kaydoldu ve
+ * Lynon bize oyuncu kimliğini bildirdi. Bu tablo o kimliği getiren
+ * ortağa bağlıyor; hakedişin dayanağı bu bağ.
+ *
+ * ── BİRİNCİL ANAHTAR KURALIN KENDİSİ ──
+ *
+ * "Aynı oyuncu zaten başka bir ortağa aitse üzerine yazma" kuralı
+ * uygulama katmanında değil, `(kiraci, lynon_oyuncu_id)` birincil
+ * anahtarında yaşıyor. Ekleme `ON CONFLICT DO NOTHING` ile yapılıyor;
+ * ilk kayıt kazanıyor.
+ *
+ * Neden kodda "önce bak, yoksa yaz" DEĞİL: iki kayıt aynı anda gelirse
+ * ikisi de "yok" görür ve ikisi de yazar. Süreç içi bir kilit tek
+ * konteynerde bunu çözer ama yatay ölçeklemede çözmez. Veritabanı
+ * kısıtı her iki durumda da doğru — ve yanlışlıkla atlanamaz.
+ */
+export const oyuncuEslesmeleri = pgTable(
+  'aff_oyuncu_eslesmeleri',
+  {
+    kiraci: text('kiraci').notNull(),
+    /** Lynon'un döndürdüğü oyuncu kimliği. */
+    lynonOyuncuId: text('lynon_oyuncu_id').notNull(),
+    /** Ortağın kalıcı kimliği; hakediş buna bağlanıyor. */
+    ortakId: text('ortak_id').notNull(),
+    /**
+     * Kayıt anındaki ref kodu.
+     *
+     * Ortağın GÜNCEL anahtarının kopyası değil, o an kullanılan kodun
+     * kaydı: anahtar sonradan değişse bile hangi kodla gelindiği
+     * tartışmasız kalmalı. Hakediş `ortakId` üzerinden yürüyor.
+     */
+    ortakAnahtari: text('ortak_anahtari').notNull(),
+    /** Hangi tıklamadan geldiği; kanal kırılımını buna borçluyuz. */
+    clickId: text('click_id'),
+    medyaId: text('medya_id'),
+    alt: jsonb('alt').$type<Partial<Record<AltParametre, string>>>().notNull().default({}),
+    kaynak: text('kaynak').notNull(),
+    olusturuldu: timestamp('olusturuldu', { withTimezone: true }).notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.kiraci, t.lynonOyuncuId] }),
+    index('aff_eslesme_kiraci_ortak').on(t.kiraci, t.ortakId),
+    index('aff_eslesme_kiraci_zaman').on(t.kiraci, t.olusturuldu.desc()),
+  ],
+);
+
+/**
+ * REDDEDİLEN EŞLEŞME DENEMELERİ.
+ *
+ * Bir ortak, başka bir ortağa ait oyuncuyu talep ettiğinde istek sessizce
+ * yutulmuyor. Çoğu zaman masum (oyuncu ikinci kez, başka bir linkten
+ * geliyor) ama aynı ortaktan yığınla çakışma gelmesi ortağın başkasının
+ * trafiğini kendine yazmaya çalıştığının en net işareti.
+ *
+ * Sayı değil SATIR tutuluyor: "kim, kimin oyuncusunu, ne zaman" sorusu
+ * bir sayaçtan cevaplanamaz.
+ */
+export const eslesmeCakismalari = pgTable(
+  'aff_eslesme_cakismalari',
+  {
+    id: text('id').primaryKey(),
+    kiraci: text('kiraci').notNull(),
+    lynonOyuncuId: text('lynon_oyuncu_id').notNull(),
+    /** Oyuncuyu talep eden ortak. */
+    denenenOrtakId: text('denenen_ortak_id').notNull(),
+    denenenOrtakAnahtari: text('denenen_ortak_anahtari').notNull(),
+    /** Oyuncunun gerçekte ait olduğu ortak. */
+    mevcutOrtakId: text('mevcut_ortak_id').notNull(),
+    zaman: timestamp('zaman', { withTimezone: true }).notNull(),
+  },
+  (t) => [
+    index('aff_cakisma_kiraci_zaman').on(t.kiraci, t.zaman.desc()),
+    index('aff_cakisma_kiraci_denenen').on(t.kiraci, t.denenenOrtakId),
+  ],
+);

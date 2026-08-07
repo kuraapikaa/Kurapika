@@ -46,12 +46,14 @@ import {
   ortaklariListele,
   ortakSil,
 } from '../servisler/ortaklar.js';
+import { cakismalariListele, eslesmeleriListele } from '../servisler/oyuncuEslesme.js';
 import {
   postbackAyarla,
   postbackAyarlari,
   postbackAyariSil,
   postbackKayitlari,
 } from '../servisler/postback.js';
+import { anahtarDurumu, anahtarSil, anahtarUret } from '../servisler/s2sAnahtari.js';
 import { eksikGunleriSenkronla, gunuSenkronla } from '../servisler/senkron.js';
 import { tiklamalariListele, tiklamaOzeti } from '../servisler/tiklama.js';
 
@@ -281,6 +283,42 @@ export async function yonetimRotalari(app: FastifyInstance): Promise<void> {
 
   /** İlk yatırım ölçümünün durumu; kalibrasyon sürüyorsa panel söylesin. */
   app.get('/ftd-durumu', async (istek): Promise<YonetimUclari['/ftd-durumu']> => ftdDurumu(istek.kiraci));
+
+  // ── Oyuncu eşleşmeleri ─────────────────────────────────────────────
+
+  app.get('/oyuncu-eslesmeleri', async (istek): Promise<YonetimUclari['/oyuncu-eslesmeleri']> => {
+    const [eslesmeler, cakismalar, ortaklar, anahtar] = await Promise.all([
+      eslesmeleriListele(istek.kiraci, { limit: 500 }),
+      cakismalariListele(istek.kiraci, 200),
+      ortaklariListele(istek.kiraci),
+      anahtarDurumu(istek.kiraci),
+    ]);
+
+    const adlar = new Map(ortaklar.map((o) => [o.id, o.ad]));
+    return {
+      eslesmeler: eslesmeler.map((e) => ({ ...e, ortakAdi: adlar.get(e.ortakId) ?? null })),
+      cakismalar: cakismalar.map((c) => ({
+        ...c,
+        denenenOrtakAdi: adlar.get(c.denenenOrtakId) ?? null,
+        mevcutOrtakAdi: adlar.get(c.mevcutOrtakId) ?? null,
+      })),
+      anahtar,
+    };
+  });
+
+  /**
+   * S2S anahtarı üretir. Düz metin YALNIZCA burada, bir kez dönüyor;
+   * saklanmadığı için ikinci kez gösterilemez.
+   */
+  app.post('/s2s-anahtari', async (istek, yanit) => {
+    const anahtar = await anahtarUret(istek.kiraci);
+    return yanit.status(201).send({ anahtar, uyari: 'Bu anahtar bir daha gösterilmeyecek.' });
+  });
+
+  app.delete('/s2s-anahtari', async (istek, yanit) => {
+    await anahtarSil(istek.kiraci);
+    return yanit.status(204).send();
+  });
 
   // ── Ortaklar ───────────────────────────────────────────────────────
 

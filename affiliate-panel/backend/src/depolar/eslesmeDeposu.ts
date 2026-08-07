@@ -1,0 +1,246 @@
+import { randomUUID } from 'crypto';
+import { and, desc, eq } from 'drizzle-orm';
+import { degistir, diziOku, kayitOku, oku } from '../lib/depo.js';
+import { eslesmeCakismalari, oyuncuEslesmeleri } from '../lib/sema.js';
+import { veritabani } from '../lib/veritabani.js';
+import type { AltParametre } from '../servisler/izleme.js';
+
+/**
+ * OYUNCU EŞLEŞME DEPOSU.
+ *
+ * Kritik davranış tek bir yerde: `ekleYokSayarak`. "İlk kayıt kazanır"
+ * kuralı burada uygulanıyor ve iki uygulamada da AYNI sonucu vermek
+ * zorunda -- fark, bir ortağın başkasının oyuncusunu kapması demek.
+ */
+
+export type EslesmeKaynagi = 'kayit' | 'elle';
+
+export interface OyuncuEslesmesi {
+  lynonOyuncuId: string;
+  ortakId: string;
+  /** Kayıt anındaki ref kodu. */
+  ortakAnahtari: string;
+  clickId: string | null;
+  medyaId: string | null;
+  alt: Partial<Record<AltParametre, string>>;
+  kaynak: EslesmeKaynagi;
+  olusturuldu: string;
+}
+
+export interface EslesmeCakismasi {
+  id: string;
+  lynonOyuncuId: string;
+  denenenOrtakId: string;
+  denenenOrtakAnahtari: string;
+  mevcutOrtakId: string;
+  zaman: string;
+}
+
+export interface EslesmeSorgusu {
+  ortakId?: string;
+  limit?: number;
+}
+
+export interface EslesmeDeposu {
+  /**
+   * Ekler. Oyuncunun eşleşmesi ZATEN VARSA hiçbir şey yazmaz ve mevcut
+   * kaydı döndürür — üzerine yazmak yasak.
+   */
+  ekleYokSayarak(kiraci: string, eslesme: OyuncuEslesmesi): Promise<{ eklendi: boolean; kayitli: OyuncuEslesmesi }>;
+  bul(kiraci: string, lynonOyuncuId: string): Promise<OyuncuEslesmesi | null>;
+  listele(kiraci: string, sorgu: EslesmeSorgusu): Promise<OyuncuEslesmesi[]>;
+  cakismaYaz(kiraci: string, cakisma: EslesmeCakismasi): Promise<void>;
+  cakismalariListele(kiraci: string, limit: number): Promise<EslesmeCakismasi[]>;
+}
+
+const ALAN = 'oyuncu-eslesmeleri';
+const CAKISMA_ALANI = 'eslesme-cakismalari';
+/** Çakışma kaydı sınırsız büyümesin; belge uygulamasında en yeniler tutulur. */
+const CAKISMA_SINIRI = 2000;
+
+const sinirla = (limit: unknown): number => Math.min(1000, Math.max(1, Number(limit) || 200));
+
+// ─────────────────────────── Postgres ───────────────────────────
+
+const satirdanEslesme = (s: typeof oyuncuEslesmeleri.$inferSelect): OyuncuEslesmesi => ({
+  lynonOyuncuId: s.lynonOyuncuId,
+  ortakId: s.ortakId,
+  ortakAnahtari: s.ortakAnahtari,
+  clickId: s.clickId,
+  medyaId: s.medyaId,
+  alt: s.alt ?? {},
+  kaynak: s.kaynak as EslesmeKaynagi,
+  olusturuldu: s.olusturuldu.toISOString(),
+});
+
+const satirdanCakisma = (s: typeof eslesmeCakismalari.$inferSelect): EslesmeCakismasi => ({
+  id: s.id,
+  lynonOyuncuId: s.lynonOyuncuId,
+  denenenOrtakId: s.denenenOrtakId,
+  denenenOrtakAnahtari: s.denenenOrtakAnahtari,
+  mevcutOrtakId: s.mevcutOrtakId,
+  zaman: s.zaman.toISOString(),
+});
+
+export function postgresEslesmeDeposu(): EslesmeDeposu {
+  const vtZorunlu = () => {
+    const vt = veritabani();
+    if (!vt) throw new Error('Veritabanı hazır değil.');
+    return vt;
+  };
+
+  const bul = async (kiraci: string, lynonOyuncuId: string): Promise<OyuncuEslesmesi | null> => {
+    const satirlar = await vtZorunlu()
+      .select()
+      .from(oyuncuEslesmeleri)
+      .where(and(
+        eq(oyuncuEslesmeleri.kiraci, kiraci),
+        eq(oyuncuEslesmeleri.lynonOyuncuId, lynonOyuncuId),
+      ))
+      .limit(1);
+    return satirlar.length ? satirdanEslesme(satirlar[0]) : null;
+  };
+
+  return {
+    async ekleYokSayarak(kiraci, eslesme) {
+      /*
+       * Kural veritabanı kısıtında: `(kiraci, lynon_oyuncu_id)` birincil
+       * anahtar, ekleme de `DO NOTHING`. Iki istek ayni anda gelse bile
+       * ikincisi hicbir sey yazamaz -- "once bak sonra yaz" desenindeki
+       * yaris burada yok.
+       */
+      const eklenen = await vtZorunlu()
+        .insert(oyuncuEslesmeleri)
+        .values({
+          kiraci,
+          lynonOyuncuId: eslesme.lynonOyuncuId,
+          ortakId: eslesme.ortakId,
+          ortakAnahtari: eslesme.ortakAnahtari,
+          clickId: eslesme.clickId,
+          medyaId: eslesme.medyaId,
+          alt: eslesme.alt,
+          kaynak: eslesme.kaynak,
+          olusturuldu: new Date(eslesme.olusturuldu),
+        })
+        .onConflictDoNothing()
+        .returning();
+
+      if (eklenen.length) return { eklendi: true, kayitli: satirdanEslesme(eklenen[0]) };
+
+      const mevcut = await bul(kiraci, eslesme.lynonOyuncuId);
+      // Kisit yuzunden buraya ancak kayit VARSA dusulur; yine de savunmali
+      // davranmak, ilerideki bir sema degisikliginde sessiz null yerine
+      // acik hata verilmesini sagliyor.
+      if (!mevcut) throw new Error('Eşleşme yazılamadı ve mevcut kayıt da okunamadı.');
+      return { eklendi: false, kayitli: mevcut };
+    },
+
+    bul,
+
+    async listele(kiraci, sorgu) {
+      const kosullar = [eq(oyuncuEslesmeleri.kiraci, kiraci)];
+      if (sorgu.ortakId) kosullar.push(eq(oyuncuEslesmeleri.ortakId, sorgu.ortakId));
+      const satirlar = await vtZorunlu()
+        .select()
+        .from(oyuncuEslesmeleri)
+        .where(and(...kosullar))
+        .orderBy(desc(oyuncuEslesmeleri.olusturuldu), desc(oyuncuEslesmeleri.lynonOyuncuId))
+        .limit(sinirla(sorgu.limit));
+      return satirlar.map(satirdanEslesme);
+    },
+
+    async cakismaYaz(kiraci, cakisma) {
+      await vtZorunlu().insert(eslesmeCakismalari).values({
+        id: cakisma.id,
+        kiraci,
+        lynonOyuncuId: cakisma.lynonOyuncuId,
+        denenenOrtakId: cakisma.denenenOrtakId,
+        denenenOrtakAnahtari: cakisma.denenenOrtakAnahtari,
+        mevcutOrtakId: cakisma.mevcutOrtakId,
+        zaman: new Date(cakisma.zaman),
+      });
+    },
+
+    async cakismalariListele(kiraci, limit) {
+      const satirlar = await vtZorunlu()
+        .select()
+        .from(eslesmeCakismalari)
+        .where(eq(eslesmeCakismalari.kiraci, kiraci))
+        .orderBy(desc(eslesmeCakismalari.zaman), desc(eslesmeCakismalari.id))
+        .limit(sinirla(limit));
+      return satirlar.map(satirdanCakisma);
+    },
+  };
+}
+
+// ────────────────────────── Belge (JSON) ──────────────────────────
+
+type EslesmeBelgesi = { version: 1; eslesmeler: OyuncuEslesmesi[] };
+type CakismaBelgesi = { version: 1; cakismalar: EslesmeCakismasi[] };
+
+const cozEslesme = (ham: unknown): EslesmeBelgesi => ({
+  version: 1,
+  eslesmeler: diziOku<OyuncuEslesmesi>(kayitOku(ham).eslesmeler),
+});
+const cozCakisma = (ham: unknown): CakismaBelgesi => ({
+  version: 1,
+  cakismalar: diziOku<EslesmeCakismasi>(kayitOku(ham).cakismalar),
+});
+
+export function belgeEslesmeDeposu(): EslesmeDeposu {
+  return {
+    /*
+     * `degistir()` ayni anahtar icin okuma-yazmayi siraya soktugu icin
+     * kural TEK KONTEYNERDE dogru calisiyor. Yatay olceklemede iki surec
+     * ayni anda "yok" gorup ikisi de yazabilir; Postgres uygulamasinda
+     * boyle bir acik yok. Panel veritabanisiz calisabilsin diye bu
+     * uygulama duruyor, uretimde kullanilan o degil.
+     */
+    async ekleYokSayarak(kiraci, eslesme) {
+      return degistir<EslesmeBelgesi, { eklendi: boolean; kayitli: OyuncuEslesmesi }>(
+        kiraci, ALAN, cozEslesme, (belge) => {
+          const mevcut = belge.eslesmeler.find((e) => e.lynonOyuncuId === eslesme.lynonOyuncuId);
+          if (mevcut) return { eklendi: false, kayitli: mevcut };
+          belge.eslesmeler.push(eslesme);
+          return { eklendi: true, kayitli: eslesme };
+        },
+      );
+    },
+
+    async bul(kiraci, lynonOyuncuId) {
+      const belge = await oku<EslesmeBelgesi>(kiraci, ALAN, cozEslesme);
+      return belge.eslesmeler.find((e) => e.lynonOyuncuId === lynonOyuncuId) ?? null;
+    },
+
+    async listele(kiraci, sorgu) {
+      const belge = await oku<EslesmeBelgesi>(kiraci, ALAN, cozEslesme);
+      return belge.eslesmeler
+        .filter((e) => !sorgu.ortakId || e.ortakId === sorgu.ortakId)
+        .sort((a, b) => (b.olusturuldu.localeCompare(a.olusturuldu) || b.lynonOyuncuId.localeCompare(a.lynonOyuncuId)))
+        .slice(0, sinirla(sorgu.limit));
+    },
+
+    async cakismaYaz(kiraci, cakisma) {
+      await degistir<CakismaBelgesi, void>(kiraci, CAKISMA_ALANI, cozCakisma, (belge) => {
+        belge.cakismalar.push(cakisma);
+        if (belge.cakismalar.length > CAKISMA_SINIRI) {
+          belge.cakismalar = belge.cakismalar.slice(-CAKISMA_SINIRI);
+        }
+      });
+    },
+
+    async cakismalariListele(kiraci, limit) {
+      const belge = await oku<CakismaBelgesi>(kiraci, CAKISMA_ALANI, cozCakisma);
+      return [...belge.cakismalar]
+        .sort((a, b) => (b.zaman.localeCompare(a.zaman) || b.id.localeCompare(a.id)))
+        .slice(0, sinirla(limit));
+    },
+  };
+}
+
+/** Çalışan depolama biçimine göre uygulamayı seçer. */
+export function eslesmeDeposu(): EslesmeDeposu {
+  return veritabani() ? postgresEslesmeDeposu() : belgeEslesmeDeposu();
+}
+
+export const yeniCakismaId = (): string => randomUUID();
