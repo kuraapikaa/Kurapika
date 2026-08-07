@@ -58,8 +58,6 @@ import { formsRoutes } from './routes/forms.js';
 import { masterRoutes } from './routes/master.js';
 import { loyaltyRoutes } from './routes/loyalty.js';
 import { lynonRoutes } from './routes/lynon.js';
-import { apiTrafikRoutes } from './routes/apiTrafik.js';
-import { gelenTrafigiKaydet, gidenTrafigiKaydet } from './lib/apiTrafikKurulum.js';
 import {
   scheduler,
   registerAutoWithdrawJob,
@@ -79,11 +77,6 @@ import { closeRedis, getRedisStatus, initializeRedis } from './lib/redisClient.j
 import { hydrateTenantRuntime } from './lib/tenantRuntimeConfig.js';
 import { sifrelemeHazirMi } from './lib/secretBox.js';
 
-// ─── Giden API Trafigi Kaydi ────────────────────────────────────────────────
-// Global fetch sarmali; ilk dis cagridan ONCE kurulmali yoksa acilis
-// sirasindaki istekler (Lynon oturumu, token) kayda girmez.
-gidenTrafigiKaydet();
-
 // ─── Ortam Değişkeni Doğrulama ─────────────────────────────────────────────
 enforceEnvironment();
 
@@ -100,11 +93,6 @@ const { port } = config;
 
 // ─── Uygulama Oluşturma ─────────────────────────────────────────────────────
 const app = await buildApp();
-
-// ─── Gelen API Trafigi Kaydi ────────────────────────────────────────────────
-// `onRoute` kancasi rotalar kaydedilirken calisir; bu yuzden HERHANGI bir
-// rota kaydindan once eklenmeli, yoksa katalog eksik kalir.
-gelenTrafigiKaydet(app);
 
 // ─── Auth Rotaları (Login, Logout, Me, Bonus Panel) ─────────────────────────
 await app.register(authRoutes);
@@ -125,7 +113,6 @@ await app.register(affiliateRoutes, { prefix: '/api' });
 await app.register(bugscrmRoutes, { prefix: '/api' });
 await app.register(masterRoutes, { prefix: '/api' });
 await app.register(loyaltyRoutes, { prefix: '/api' });
-await app.register(apiTrafikRoutes, { prefix: '/api' });
 
 // ─── Audit Log (Sadece Admin) ────────────────────────────────────────────────
 app.get<{ Querystring: { limit?: string } }>('/api/audit', async (request: any, reply) => {

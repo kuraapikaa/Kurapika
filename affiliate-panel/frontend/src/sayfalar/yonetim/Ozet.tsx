@@ -1,0 +1,101 @@
+import { useState } from 'react';
+import { api, paraBicimi, useVeri } from '../../api';
+import { Buton, Bos, Egilim, Hata, Hucre, Kart, Olcu, Satir, Tablo, Yukleniyor } from '../../ui';
+
+interface OrtakOzeti {
+  ortakAnahtari: string;
+  gunSayisi: number;
+  oyuncuSayisi: number;
+  aktifOyuncuSayisi: number;
+  yatirim: number;
+  cekim: number;
+  ggr: number;
+  ftdSayisi: number | null;
+  gunlukGgr: Array<{ gun: string; ggr: number }>;
+}
+
+interface SenkronSonucu {
+  cekilenGun: number;
+  yazilanOlcum: number;
+  hatali: Array<{ gun: string; mesaj: string }>;
+  uyari: string | null;
+}
+
+export function Ozet() {
+  const { veri, yukleniyor, hata, yenile } = useVeri<{ bugun: string; ozetler: OrtakOzeti[] }>('/api/yonetim/ozet');
+  const [senkron, setSenkron] = useState<SenkronSonucu | null>(null);
+  const [senkronHatasi, setSenkronHatasi] = useState<string | null>(null);
+  const [calisiyor, setCalisiyor] = useState(false);
+
+  const senkronla = async () => {
+    setCalisiyor(true);
+    setSenkronHatasi(null);
+    try {
+      setSenkron(await api.gonder<SenkronSonucu>('/api/yonetim/senkron'));
+      yenile();
+    } catch (h) {
+      setSenkronHatasi(h instanceof Error ? h.message : 'Senkron başarısız.');
+    } finally {
+      setCalisiyor(false);
+    }
+  };
+
+  if (yukleniyor) return <Yukleniyor />;
+  if (hata) return <Hata mesaj={hata} />;
+
+  const ozetler = veri?.ozetler ?? [];
+  const topla = (secici: (o: OrtakOzeti) => number) => ozetler.reduce((t, o) => t + secici(o), 0);
+  // FTD hicbir ortakta olculmediyse `null`; sifir yazmak "hic ilk yatirim
+  // olmadi" demek olurdu, oysa dogrusu "bu baglantidan olculemiyor".
+  const ftdToplami = ozetler.some((o) => o.ftdSayisi !== null)
+    ? topla((o) => o.ftdSayisi ?? 0)
+    : null;
+
+  return (
+    <>
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <Olcu etiket="Ortak" deger={String(ozetler.length)} alt="ölçümü olan" />
+        <Olcu etiket="Yatırım" deger={paraBicimi(topla((o) => o.yatirim))} />
+        <Olcu etiket="GGR" deger={paraBicimi(topla((o) => o.ggr))} />
+        <Olcu
+          etiket="İlk yatırım"
+          deger={ftdToplami === null ? '—' : String(ftdToplami)}
+          alt={ftdToplami === null ? 'bu bağlantıdan ölçülemiyor' : undefined}
+        />
+      </div>
+
+      <Kart
+        baslik="Ortak performansı"
+        sag={<Buton onClick={senkronla} devredisi={calisiyor}>{calisiyor ? 'Çekiliyor…' : 'Backoffice’ten çek'}</Buton>}
+      >
+        {senkronHatasi && <div className="mb-3"><Hata mesaj={senkronHatasi} /></div>}
+        {senkron && (
+          <p className="mb-3 text-sm" style={{ color: 'var(--metin-2)' }}>
+            {senkron.cekilenGun} gün çekildi, {senkron.yazilanOlcum} ölçüm yazıldı.
+            {senkron.hatali.length > 0 && ` ${senkron.hatali.length} gün alınamadı.`}
+            {senkron.uyari && ` ${senkron.uyari}`}
+          </p>
+        )}
+
+        {ozetler.length === 0 ? (
+          <Bos mesaj="Henüz ölçüm yok. Backoffice bağlantısını kurup çekmeyi deneyin." />
+        ) : (
+          <Tablo basliklar={['Ortak', 'Gün', 'Oyuncu', 'Aktif', 'Yatırım', 'Çekim', 'GGR', 'Eğilim']}>
+            {ozetler.map((o) => (
+              <Satir key={o.ortakAnahtari}>
+                <Hucre><span className="font-medium">{o.ortakAnahtari}</span></Hucre>
+                <Hucre sagda>{o.gunSayisi}</Hucre>
+                <Hucre sagda>{o.oyuncuSayisi}</Hucre>
+                <Hucre sagda>{o.aktifOyuncuSayisi}</Hucre>
+                <Hucre sagda>{paraBicimi(o.yatirim)}</Hucre>
+                <Hucre sagda>{paraBicimi(o.cekim)}</Hucre>
+                <Hucre sagda>{paraBicimi(o.ggr)}</Hucre>
+                <Hucre><Egilim noktalar={o.gunlukGgr.map((g) => g.ggr)} /></Hucre>
+              </Satir>
+            ))}
+          </Tablo>
+        )}
+      </Kart>
+    </>
+  );
+}

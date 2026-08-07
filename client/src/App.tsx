@@ -32,7 +32,6 @@ import {
   Palette,
   Crown,
   Handshake,
-  Activity,
   LineChart,
   Layers,
   Scale,
@@ -112,10 +111,8 @@ const AdminTournamentSettings = lazy(() => import('./components/admin/AdminTourn
 
 const MasterLogin = lazy(() => import('./components/master/MasterLogin').then(m => ({ default: m.MasterLogin })));
 const MasterPanel = lazy(() => import('./components/master/MasterPanel').then(m => ({ default: m.MasterPanel })));
-const LynonApiDocs = lazy(() => import('./components/LynonApiDocs').then(m => ({ default: m.LynonApiDocs })));
-const ApiTrafik = lazy(() => import('./components/ApiTrafik').then(m => ({ default: m.ApiTrafik })));
 
-type TabId = 'dashboard' | 'bonuses' | 'players' | 'withdrawals' | 'deposits' | 'profile' | 'transactions' | 'autoWithdraw' | 'riskAnalizi' | 'oyuncuKategorileme' | 'manuelDuzeltmeler' | 'mutabakat' | 'liveRadar' | 'registrationStats' | 'providerReport' | 'bonusReport' | 'audit' | 'rules' | 'games' | 'forms' | 'master' | 'tournament' | 'iframeGen' | 'loyaltySettings' | 'userSystem' | 'wheelManager' | 'scratchManager' | 'predictionLeague' | 'millionaireShowcase' | 'lobbyDesign' | 'dailyTasks' | 'vipSettings' | 'affiliate' | 'lynonDocs' | 'apiTrafik';
+type TabId = 'dashboard' | 'bonuses' | 'players' | 'withdrawals' | 'deposits' | 'profile' | 'transactions' | 'autoWithdraw' | 'riskAnalizi' | 'oyuncuKategorileme' | 'manuelDuzeltmeler' | 'mutabakat' | 'liveRadar' | 'registrationStats' | 'providerReport' | 'bonusReport' | 'audit' | 'rules' | 'games' | 'forms' | 'master' | 'tournament' | 'iframeGen' | 'loyaltySettings' | 'userSystem' | 'wheelManager' | 'scratchManager' | 'predictionLeague' | 'millionaireShowcase' | 'lobbyDesign' | 'dailyTasks' | 'vipSettings' | 'affiliate';
 
 function pathToTab(pathname: string): TabId {
   if (pathname === '/bonuslar') return 'bonuses';
@@ -135,8 +132,6 @@ function pathToTab(pathname: string): TabId {
   if (pathname === '/saglayici-raporu') return 'providerReport';
   if (pathname === '/tum-bonus-raporu') return 'bonusReport';
   if (pathname === '/bonus-kurallari') return 'rules';
-  if (pathname === '/lynon-docs') return 'lynonDocs';
-  if (pathname === '/api-trafigi') return 'apiTrafik';
   if (pathname === '/audit') return 'audit';
   if (pathname === '/admin/oyun-ayarlari') return 'games';
   if (pathname === '/admin/formlar') return 'forms';
@@ -193,7 +188,7 @@ const TAB_META: Record<TabId, { eyebrow: string; title: string }> = {
   riskAnalizi: { eyebrow: 'İstihbarat', title: 'Risk analizi' },
   oyuncuKategorileme: { eyebrow: 'İstihbarat', title: 'Otomatik kategorileme' },
   manuelDuzeltmeler: { eyebrow: 'Denetim', title: 'Manuel düzeltmeler' },
-  mutabakat: { eyebrow: 'Denetim', title: 'Aylık mutabakat' },
+  mutabakat: { eyebrow: 'Denetim', title: 'Günlük mutabakat' },
   liveRadar: { eyebrow: 'İstihbarat', title: 'Canlı radar' },
   registrationStats: { eyebrow: 'CRM', title: 'Kayıt istatistikleri' },
   providerReport: { eyebrow: 'Raporlar', title: 'Sağlayıcı performansı' },
@@ -214,8 +209,6 @@ const TAB_META: Record<TabId, { eyebrow: string; title: string }> = {
   lobbyDesign: { eyebrow: 'Sistem', title: 'Lobi Tasarımı' },
   dailyTasks: { eyebrow: 'Etkinlik Yönetimi', title: 'Günlük Görevler' },  vipSettings: { eyebrow: 'Yapılandırma', title: 'VIP Ayarları' },
   affiliate: { eyebrow: 'CRM & Affiliate', title: 'Affiliate Merkezi' },
-  lynonDocs: { eyebrow: 'Entegrasyon & API', title: 'Lynon API Dökümantasyonu' },
-  apiTrafik: { eyebrow: 'Entegrasyon & API', title: 'API Trafiği' },
 };
 
 const TAB_DESCRIPTIONS: Record<TabId, string> = {
@@ -230,7 +223,7 @@ const TAB_DESCRIPTIONS: Record<TabId, string> = {
   riskAnalizi: 'Şüpheli davranışları ve finansal anomalileri öncelik sırasına göre inceleyin.',
   oyuncuKategorileme: 'Seviye eşikleri Lynon kategori açıklamalarından okunur; risk ve durgunluk kararı bekletebilir.',
   manuelDuzeltmeler: 'Lynon arayüzünden elle yapılan bakiye eklemeleri; hangi yönetici, hangi hesap, hangi gerekçe.',
-  mutabakat: 'Ödeme yöntemi kırılımı ve elle eklenen kalemler; rapor ile kasa arasındaki fark görünür.',
+  mutabakat: 'Günün ödeme yöntemi kırılımı, yöntem komisyonları ve elle eklenen kalemler; rapor ile kasa arasındaki fark görünür.',
   liveRadar: 'Canlı oyuncu ve işlem sinyallerini anlık olarak takip edin.',
   registrationStats: 'Yeni kayıtların kaynak, zaman ve dönüşüm performansını karşılaştırın.',
   providerReport: 'Sağlayıcı cirolarını, RTP değerlerini ve tahmini maliyetleri analiz edin.',
@@ -251,8 +244,6 @@ const TAB_DESCRIPTIONS: Record<TabId, string> = {
   lobbyDesign: 'Her siteye özel lobi renklerini, arkaplan görselini ve yatay banner alanını yönetin.',
   dailyTasks: 'API metrikleriyle tamamlanan günlük görevleri, XP değerlerini ve ödülleri yönetin.',  vipSettings: 'VIP kademelerini, avantajları, SSS ve başvuru formunu özelleştirin.',
   affiliate: 'BTag kaynaklarını, bağlı oyuncuları ve affiliate performansını tek merkezden takip edin.',
-  lynonDocs: 'Lynon Backoffice API uçlarını, metot parametrelerini ve proxy isteklerini anlık olarak inceleyin.',
-  apiTrafik: 'Panelin gelen ve giden tüm API isteklerini headers, payload, preview ve response görünümleriyle canlı inceleyin.',
 };
 
 
@@ -351,10 +342,8 @@ const NAV_GROUPS: Array<{ label: string; items: SidebarItem[] }> = [
     items: [
       { id: 'providerReport', label: 'Sağlayıcı raporu', path: '/saglayici-raporu', icon: BarChart2 },
       { id: 'manuelDuzeltmeler', label: 'Manuel düzeltmeler', path: '/manuel-duzeltmeler', icon: Scale },
-      { id: 'mutabakat', label: 'Aylık mutabakat', path: '/mutabakat', icon: BookOpen },
+      { id: 'mutabakat', label: 'Günlük mutabakat', path: '/mutabakat', icon: BookOpen },
       { id: 'audit', label: 'Audit kayıtları', path: '/audit', icon: ScrollText },
-      { id: 'apiTrafik', label: 'API trafiği', path: '/api-trafigi', icon: Activity },
-      { id: 'lynonDocs', label: 'Lynon API dökümanı', path: '/lynon-docs', icon: BookOpen },
     ],
   },
   {
@@ -1102,8 +1091,6 @@ export default function App() {
                   {activeTab === 'bonusReport' && <motion.div key="bonusReport" className="mt-4 min-h-0 flex-1"><ClientBonusReport /></motion.div>}
                   {activeTab === 'audit' && <motion.div key="audit" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}><AuditLogPage /></motion.div>}
                   {activeTab === 'rules' && <motion.div key="rules" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}><RulesManager /></motion.div>}
-                  {activeTab === 'lynonDocs' && <motion.div key="lynonDocs" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}><LynonApiDocs /></motion.div>}
-                  {activeTab === 'apiTrafik' && <motion.div key="apiTrafik" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}><ApiTrafik /></motion.div>}
                   {activeTab === 'games' && <motion.div key="games" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}><AdminGames /></motion.div>}
                   {activeTab === 'wheelManager' && <motion.div key="wheelManager" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}><AdminGames initialTab="wheel" /></motion.div>}
                   {activeTab === 'scratchManager' && <motion.div key="scratchManager" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}><AdminGames initialTab="scratch" /></motion.div>}

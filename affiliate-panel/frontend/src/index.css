@@ -1,0 +1,70 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/**
+ * Tema iki tam palet olarak yaziliyor, tek bir "koyu" varyant olarak
+ * degil. Once koyu yazip aciga varyant eklemek, her yeni bilesende
+ * aydinlik temayi UNUTMAYA davet: bilesen koyu temada dogru gorunur,
+ * acikta okunmaz ve bu ancak kullanici sikayetiyle fark edilir.
+ */
+:root {
+  color-scheme: light;
+  --zemin: #f6f7fb;
+  --yuzey: #ffffff;
+  --yuzey-2: #f0f2f8;
+  --kenar: #dfe3ee;
+  --metin: #16192b;
+  --metin-2: #5a6178;
+  --vurgu: #4f46e5;
+  --vurgu-metin: #ffffff;
+  --olumlu: #047857;
+  --uyari: #b45309;
+  --olumsuz: #be123c;
+}
+
+:root.koyu {
+  color-scheme: dark;
+  --zemin: #0b0d17;
+  --yuzey: #141828;
+  --yuzey-2: #1c2136;
+  --kenar: #2a3050;
+  --metin: #eef1fb;
+  --metin-2: #98a0bd;
+  --vurgu: #818cf8;
+  --vurgu-metin: #0b0d17;
+  --olumlu: #34d399;
+  --uyari: #fbbf24;
+  --olumsuz: #fb7185;
+}
+
+body {
+  margin: 0;
+  background: var(--zemin);
+  color: var(--metin);
+  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/**
+ * Form denetimleri tarayicinin kendi paletini kullaniyor ve degisken
+ * degisiminde her zaman yenilenmiyor. Rengi acikca vermek, tema
+ * gecisinde "beyaz zeminde beyaz yazi" durumunu engelliyor.
+ */
+input,
+select,
+textarea,
+button {
+  font: inherit;
+  color: var(--metin);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--metin-2);
+  opacity: 1;
+}
+
+table {
+  border-collapse: collapse;
+}

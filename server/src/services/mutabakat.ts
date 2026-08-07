@@ -225,6 +225,19 @@ export function ozetFarki(satirlar: MutabakatSatiri[], ozet: AnyRecord | null | 
 }
 
 /** Ayin ilk gunu ve bugun — Turkiye gununden. */
+/**
+ * Gunluk mutabakat araligi: tek gun.
+ *
+ * `ayinManuelKalemleri` filtreyi `startsWith` ile yapiyor; ikinci
+ * parametreye AY yerine TAM GUN verildiginde ayni fonksiyon o gunun
+ * kalemlerini dondurur. Ayri bir filtre yazmaya gerek yok, ve yazsaydik
+ * iki filtre zamanla birbirinden ayrilirdi.
+ */
+export function gunAraligi(gun: string): { startDate: string; endDate: string; ay: string } {
+  const g = String(gun ?? '').slice(0, 10);
+  return { startDate: g, endDate: g, ay: g };
+}
+
 export function ayAraligi(bugun: string): { startDate: string; endDate: string; ay: string } {
   const ay = bugun.slice(0, 7);
   return { startDate: `${ay}-01`, endDate: bugun, ay };

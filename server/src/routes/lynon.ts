@@ -1,6 +1,10 @@
 import type { FastifyInstance } from 'fastify';
 import { clearLynonSession, ensureLynonSession, getLynonAuthStatus, lynonRequest } from '../lib/lynonAuth.js';
 import { audit } from '../lib/auditLog.js';
+import { resolveTenantKeyForRequest } from '../lib/tenant.js';
+import {
+  komisyonOranlari, komisyonOraniKaydet, komisyonOraniSil, komisyonlariUygula, YontemKomisyonuHatasi,
+} from '../services/yontemKomisyonu.js';
 import { config } from '../config.js';
 import { ensureTelegramWebhook, sendTelegramMessage } from '../services/telegramService.js';
 import {
@@ -25,6 +29,7 @@ import {
   lynonAylikKapanisMutabakati,
   lynonYontemBazindaKasa,
   lynonAnlikOyuncuBakiyesi,
+  lynonGunlukMutabakat,
   mutabakatManuelKalemiEkle,
   mutabakatManuelKalemiSil,
   lynonMe,
@@ -48,6 +53,12 @@ import {
 } from '../services/lynonBackofficeService.js';
 
 function sendError(reply: any, error: unknown) {
+  // Komisyon orani dogrulama hatalari kullaniciya gosterilecek mesaj
+  // tasiyor; Lynon hata sarmalayicisindan gecirmek onlari "Lynon API
+  // hatasi" gibi gostererek yaniltirdi.
+  if (error instanceof YontemKomisyonuHatasi) {
+    return reply.status(error.statusCode).send({ ok: false, message: error.message });
+  }
   const { status, body } = lynonErrorResponse(error);
   return reply.status(status).send(body);
 }
@@ -327,7 +338,64 @@ export async function lynonRoutes(app: FastifyInstance) {
     },
   );
 
-  // ─── Aylık mutabakat ───────────────────────────────────────────────────
+  // ─── Mutabakat ─────────────────────────────────────────────────────────
+
+  /**
+   * GÜNLÜK mutabakat — tek günün ödeme yöntemi kırılımı.
+   *
+   * Aylık sürüm birikimli çalışıyordu; "bugün ne oldu" ancak dünkü
+   * toplamdan çıkararak cevaplanabiliyordu. Bu uç günü kapatırken
+   * sağlayıcı ekstresiyle karşılaştırılabilir tek bir rakam veriyor.
+   */
+  app.post<{ Body?: { gun?: string } }>('/lynon/mutabakat/gunluk', async (request, reply) => {
+    try {
+      const tenantKey = await resolveTenantKeyForRequest(request as any);
+      const mutabakat = await lynonGunlukMutabakat({ ...(request.body ?? {}), tenantKey });
+      // Komisyon oranlari mutabakatla BIRLIKTE donuyor: panelin ikinci
+      // bir istek atip iki cevabi elde birlestirmesi gereksiz ve iki
+      // istek arasinda oran degisirse tutarsiz gorunurdu.
+      const oranlar = await komisyonOranlari(tenantKey);
+      const satirlar = Array.isArray((mutabakat as any).satirlar) ? (mutabakat as any).satirlar : [];
+      const komisyon = komisyonlariUygula(oranlar, satirlar.map((sat: any) => ({
+        anahtar: String(sat.anahtar ?? ''),
+        yatirim: Number(sat.yatirim ?? 0),
+        cekim: Number(sat.cekim ?? 0),
+        islemSayisi: sat.islemSayisi ?? null,
+      })));
+      return reply.send({ ...mutabakat, komisyon, oranlar });
+    } catch (err) {
+      return sendError(reply, err);
+    }
+  });
+
+  /** Ödeme yöntemi komisyon oranları. */
+  app.get('/lynon/mutabakat/komisyon-oranlari', async (request, reply) => {
+    try {
+      const tenantKey = await resolveTenantKeyForRequest(request as any);
+      return reply.send({ ok: true, oranlar: await komisyonOranlari(tenantKey) });
+    } catch (err) {
+      return sendError(reply, err);
+    }
+  });
+
+  app.put<{ Body?: Record<string, unknown> }>('/lynon/mutabakat/komisyon-oranlari', async (request, reply) => {
+    try {
+      const tenantKey = await resolveTenantKeyForRequest(request as any);
+      return reply.send({ ok: true, oran: await komisyonOraniKaydet(tenantKey, request.body ?? {}) });
+    } catch (err) {
+      return sendError(reply, err);
+    }
+  });
+
+  app.delete<{ Params: { anahtar: string } }>('/lynon/mutabakat/komisyon-oranlari/:anahtar', async (request, reply) => {
+    try {
+      const tenantKey = await resolveTenantKeyForRequest(request as any);
+      await komisyonOraniSil(tenantKey, decodeURIComponent(request.params.anahtar));
+      return reply.send({ ok: true });
+    } catch (err) {
+      return sendError(reply, err);
+    }
+  });
 
   /** Ayın başından bugüne mutabakat: ödeme yöntemi kırılımı + elle eklenenler. */
   app.post<{ Body?: { bugun?: string } }>('/lynon/mutabakat', async (request, reply) => {
