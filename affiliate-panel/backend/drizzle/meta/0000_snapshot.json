@@ -1,0 +1,251 @@
+{
+  "id": "e01c70d9-3b2f-478a-9e53-2007af2aad93",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.aff_olcumler": {
+      "name": "aff_olcumler",
+      "schema": "",
+      "columns": {
+        "kiraci": {
+          "name": "kiraci",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "gun": {
+          "name": "gun",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ortak_anahtari": {
+          "name": "ortak_anahtari",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "oyuncu_sayisi": {
+          "name": "oyuncu_sayisi",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "aktif_oyuncu_sayisi": {
+          "name": "aktif_oyuncu_sayisi",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "yatirim": {
+          "name": "yatirim",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "cekim": {
+          "name": "cekim",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "ggr": {
+          "name": "ggr",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "ftd_sayisi": {
+          "name": "ftd_sayisi",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "kaynak": {
+          "name": "kaynak",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "yazildi": {
+          "name": "yazildi",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "aff_olcumler_kiraci_gun": {
+          "name": "aff_olcumler_kiraci_gun",
+          "columns": [
+            {
+              "expression": "kiraci",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "gun",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "aff_olcumler_kiraci_gun_ortak_anahtari_pk": {
+          "name": "aff_olcumler_kiraci_gun_ortak_anahtari_pk",
+          "columns": [
+            "kiraci",
+            "gun",
+            "ortak_anahtari"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.aff_tiklamalar": {
+      "name": "aff_tiklamalar",
+      "schema": "",
+      "columns": {
+        "click_id": {
+          "name": "click_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "kiraci": {
+          "name": "kiraci",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ortak_anahtari": {
+          "name": "ortak_anahtari",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "medya_id": {
+          "name": "medya_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "alt": {
+          "name": "alt",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        },
+        "ip": {
+          "name": "ip",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "user_agent": {
+          "name": "user_agent",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "referrer": {
+          "name": "referrer",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "zaman": {
+          "name": "zaman",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "aff_tiklamalar_kiraci_zaman": {
+          "name": "aff_tiklamalar_kiraci_zaman",
+          "columns": [
+            {
+              "expression": "kiraci",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "zaman",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "aff_tiklamalar_kiraci_ortak_zaman": {
+          "name": "aff_tiklamalar_kiraci_ortak_zaman",
+          "columns": [
+            {
+              "expression": "kiraci",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "ortak_anahtari",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "zaman",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

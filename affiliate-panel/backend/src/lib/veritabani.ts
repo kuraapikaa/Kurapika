@@ -1,4 +1,9 @@
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import pg from 'pg';
+import * as sema from './sema.js';
 
 /**
  * İSTEĞE BAĞLI POSTGRES.
@@ -9,15 +14,43 @@ import pg from 'pg';
  * olmadan da ayağa kalkabilmeli (deneme kurulumu), ama üretimde
  * Railway'in yeniden dağıtımı diski sıfırladığı için veritabanı şart.
  *
- * Şema TEK TABLO: `(kiraci, alan, veri jsonb)`. Her servis kendi
- * alanını (namespace) yazıyor. İlişkisel bir şema kurmak, bu
- * boyuttaki bir panelde her alan değişikliğini bir migrasyona
- * bağlardı; belge modeli değişimi ücretsiz kılıyor. Sorgu ihtiyacı
- * doğduğunda `jsonb` indekslenebilir.
+ * ── İKİ DEPOLAMA BİÇİMİ BİR ARADA ──
+ *
+ * `aff_belgeler` (kiraci, alan, veri jsonb): sınırlı boyuttaki her şey.
+ * Ortaklar, planlar, medya, kademeler. Belge modeli burada şema
+ * değişimini ücretsiz kılıyor ve hiçbir şey kaybettirmiyor.
+ *
+ * `sema.ts`'teki İLİŞKİSEL TABLOLAR: sınırsız büyüyen ve tarih
+ * aralığıyla sorgulanan tıklamalar ve ölçümler.
+ *
+ * `aff_belgeler` bilerek migrasyon şemasının DIŞINDA. Tablo üretimde
+ * çoktan var; migrasyon geçmişi ise boş. Şemaya dahil edilseydi ilk
+ * migrasyon "zaten var" diye düşer ve açılışı kilitlerdi. Kendi
+ * idempotent DDL'iyle kurulmaya devam ediyor.
  */
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+/**
+ * Migrasyon dosyaları derlemeye girmiyor, imaja ayrıca kopyalanıyor
+ * (bkz. Dockerfile). Yol iki ortamda da aynı yere çıkıyor:
+ * `src/lib/../..` → `backend/`, `dist/lib/../..` → `/uygulama`.
+ */
+const MIGRASYON_DIZINI = path.join(__dirname, '..', '..', 'drizzle');
+
 let havuz: pg.Pool | null = null;
+let vt: NodePgDatabase<typeof sema> | null = null;
 let hazir = false;
+
+/**
+ * Drizzle örneği; veritabanı yoksa `null`.
+ *
+ * Çağıranın `null` durumunu ele alması ZORUNLU — panel Postgres'siz de
+ * çalışabildiği için bu bir istisna değil, normal bir hâl.
+ */
+export function veritabani(): NodePgDatabase<typeof sema> | null {
+  return vt;
+}
 
 export function veritabaniHazirMi(): boolean {
   return hazir;
@@ -44,6 +77,9 @@ export async function veritabaniniBaslat(): Promise<boolean> {
       PRIMARY KEY (kiraci, alan)
     )
   `);
+
+  vt = drizzle(havuz, { schema: sema });
+  await migrate(vt, { migrationsFolder: MIGRASYON_DIZINI });
 
   hazir = true;
   return true;
@@ -78,5 +114,6 @@ export async function kiracilariListele(): Promise<string[]> {
 export async function veritabaniniKapat(): Promise<void> {
   await havuz?.end();
   havuz = null;
+  vt = null;
   hazir = false;
 }

@@ -44,6 +44,10 @@ RUN npm ci --omit=dev && npm cache clean --force
 
 COPY --from=sunucu /yapi/backend/dist ./dist
 COPY --from=arayuz /yapi/backend/genel ./genel
+# Migrasyonlar SQL dosyasi; derlemeye girmiyorlar, acilista `migrate()`
+# bunlari dizinden okuyor. Kopyalanmazsa tablolar hic olusmaz ve panel
+# ilk tiklama sorgusunda duser.
+COPY --from=sunucu /yapi/backend/drizzle ./drizzle
 
 EXPOSE 4100
 CMD ["node", "dist/index.js"]

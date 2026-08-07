@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import { uygulamaKur } from './app.js';
 import { anahtarParmakIzi, sifrelemeHazirMi } from './lib/sifre.js';
+import { belgeleriTablolaraTasi } from './lib/tasima.js';
 import { veritabaniniBaslat } from './lib/veritabani.js';
 import { duzParolaKullaniliyorMu, yoneticiKimligiVarMi } from './kimlik/oturum.js';
 
@@ -60,6 +61,12 @@ async function baslat(): Promise<void> {
   );
   if (!veritabani) {
     app.log.warn('DATABASE_URL yok; veriler diske yazılıyor. Kalıcı disk olmayan bir dağıtımda her yeniden başlatmada silinir.');
+  }
+
+  // Tiklama ve olcum gecmisi eskiden JSON belgesindeydi. Tabloya
+  // tasinmazsa panel calisir ama GECMIS BOS gorunur.
+  for (const sonuc of await belgeleriTablolaraTasi()) {
+    app.log.info(sonuc, 'Belgeler tabloya taşındı');
   }
 
   // Arayuz derlenmisse ayni sunucudan servis ediliyor. Ayri bir statik

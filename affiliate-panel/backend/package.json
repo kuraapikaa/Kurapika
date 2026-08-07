@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "sema:uret": "drizzle-kit generate",
     "ozet": "tsx src/scriptler/ozet.ts"
   },
   "dependencies": {
@@ -19,6 +20,7 @@
     "@fastify/rate-limit": "^9.1.0",
     "@fastify/static": "^7.0.4",
     "dotenv": "^16.4.5",
+    "drizzle-orm": "^0.45.2",
     "fastify": "^4.28.1",
     "pg": "^8.13.0",
     "qrcode": "^1.5.4"
@@ -27,6 +29,7 @@
     "@types/node": "^22.9.0",
     "@types/pg": "^8.11.10",
     "@types/qrcode": "^1.5.6",
+    "drizzle-kit": "^0.31.10",
     "tsx": "^4.19.2",
     "typescript": "^5.6.3",
     "vitest": "^2.1.4"
