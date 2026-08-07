@@ -1,14 +1,7 @@
 import { useState } from 'react';
 import { api, useVeri } from '../../api';
 import { Alan, Bos, Buton, Hata, Kart, Yukleniyor } from '../../ui';
-
-interface Medya {
-  id: string;
-  ad: string;
-  tur: string;
-  varlikUrl: string | null;
-  olcu: string | null;
-}
+import type { Medya } from '@sunucu/sozlesme.js';
 
 interface Link {
   dogrudanLink: string;

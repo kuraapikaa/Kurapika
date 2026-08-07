@@ -2,27 +2,9 @@ import { useState } from 'react';
 import { api, useVeri } from '../../api';
 import { Alan, Buton, Hata, Kart, Rozet, Yukleniyor } from '../../ui';
 import { FiltrePaneli, KisaKimlik, VeriTablosu, type Sutun } from '../../tablo';
+import type { KomisyonPlani as Plan, OdemeYontemleriYaniti as OdemeYontemleri, OrtakGorunumu as Ortak } from '@sunucu/sozlesme.js';
 
-interface Ortak {
-  id: string;
-  ortakAnahtari: string;
-  ad: string;
-  eposta: string;
-  durum: 'bekliyor' | 'onaylandi' | 'askida' | 'reddedildi';
-  planId: string | null;
-  trafikKaynagi: string | null;
-  parolaKurulu: boolean;
-  odemeYontemi: string | null;
-  createdAt: string;
-}
 
-interface Plan { id: string; ad: string }
-
-interface OdemeYontemleri {
-  yontemler: string[];
-  kaynak: 'backoffice' | 'yok' | 'hata';
-  mesaj?: string;
-}
 
 const DURUM_RENGI = {
   bekliyor: 'uyari', onaylandi: 'olumlu', askida: 'olumsuz', reddedildi: 'olumsuz',

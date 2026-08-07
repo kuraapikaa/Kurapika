@@ -2,22 +2,9 @@ import { paraBicimi, useVeri } from '../../api';
 import { OlcuKarti } from '../../grafik';
 import { KisaKimlik, VeriTablosu, type Sutun } from '../../tablo';
 import { Bos, Hata, Kart, Rozet, Yukleniyor } from '../../ui';
+import type { BtagAnahtari as Anahtar, SahipsizAnahtar as Sahipsiz } from '@sunucu/sozlesme.js';
 
-interface Anahtar {
-  anahtar: string;
-  ortakAdi: string;
-  durum: string;
-  olcumVar: boolean;
-  tiklamaVar: boolean;
-}
 
-interface Sahipsiz {
-  anahtar: string;
-  gunSayisi: number;
-  ggr: number;
-  yatirim: number;
-  sonGun: string | null;
-}
 
 /**
  * BTAG (İZLEME ANAHTARI) YÖNETİMİ.

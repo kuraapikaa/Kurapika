@@ -1,31 +1,8 @@
 import { useState } from 'react';
 import { api, gunBicimi, useVeri } from '../../api';
 import { Alan, Bos, Buton, Hata, Kart, Olcu, Rozet, Yukleniyor } from '../../ui';
+import type { KomisyonPlani as Plan, OrtakGorunumu as Ortak } from '@sunucu/sozlesme.js';
 
-interface Basvuru {
-  kanallar: string[];
-  promosyonYontemleri: string[];
-  ulkeler: string | null;
-  aylikOyuncu: number | null;
-  aylikTrafik: number | null;
-  mevcutProgramlar: string | null;
-  tercihEdilenModel: string | null;
-  aciklama: string | null;
-}
-
-interface Ortak {
-  id: string;
-  ad: string;
-  eposta: string;
-  ortakAnahtari: string;
-  trafikKaynagi: string | null;
-  odemeYontemi: string | null;
-  odemeDetayi: string | null;
-  basvuru: Basvuru;
-  createdAt: string;
-}
-
-interface Plan { id: string; ad: string }
 
 const YONTEM_ETIKETI: Record<string, string> = {
   seo: 'SEO', ppc: 'PPC', 'sosyal-medya': 'Sosyal medya', 'e-posta': 'E-posta',

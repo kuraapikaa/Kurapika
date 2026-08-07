@@ -1,16 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api, gunBicimi, useVeri } from '../../api';
 import { Alan, Bos, Buton, Hata, Hucre, Kart, Rozet, Satir, Tablo, Yukleniyor } from '../../ui';
-
-interface Ayar { sablon: string; olaylar: string[]; aktif: boolean; updatedAt: string }
-interface Kayit {
-  id: string;
-  olay: string;
-  durum: 'basarili' | 'basarisiz' | 'engellendi';
-  httpDurum: number | null;
-  mesaj: string | null;
-  gonderildi: string;
-}
+import type { PostbackAyari as Ayar, PostbackKaydi as Kayit } from '@sunucu/sozlesme.js';
 
 const OLAYLAR = ['tiklama', 'kayit', 'ilk-yatirim', 'yatirim', 'onaylanan-komisyon'];
 const DURUM_RENGI = { basarili: 'olumlu', basarisiz: 'olumsuz', engellendi: 'uyari' } as const;

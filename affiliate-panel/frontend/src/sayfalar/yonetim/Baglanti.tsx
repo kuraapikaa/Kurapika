@@ -1,29 +1,8 @@
 import { useEffect, useState } from 'react';
 import { api, gunBicimi, useVeri } from '../../api';
 import { Alan, Buton, Hata, Kart, Onay, Rozet, Yukleniyor } from '../../ui';
+import type { AdaptorTanimGorunumu as AdaptorTanimi, BaglantiGorunumu as Gorunum } from '@sunucu/sozlesme.js';
 
-interface AdaptorAlani {
-  ad: string;
-  etiket: string;
-  tur: 'metin' | 'parola' | 'sayi' | 'secim' | 'cokSatir';
-  zorunlu: boolean;
-  sir: boolean;
-  ipucu?: string;
-  varsayilan?: string;
-  secenekler?: Array<{ deger: string; etiket: string }>;
-}
-
-interface AdaptorTanimi {
-  ad: string;
-  etiket: string;
-  aciklama: string;
-  yetenekler: string[];
-  alanlar: AdaptorAlani[];
-}
-
-type Gorunum =
-  | { kurulu: false }
-  | { kurulu: true; adaptor: string; etiket: string; aktif: boolean; updatedAt: string; ayar: Record<string, string> };
 
 const YETENEK_ETIKETI: Record<string, string> = {
   'olcum-cekme': 'Ölçüm çekme',

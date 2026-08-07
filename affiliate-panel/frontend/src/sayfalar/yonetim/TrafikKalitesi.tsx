@@ -1,25 +1,9 @@
 import { useVeri } from '../../api';
 import { OlcuKarti } from '../../grafik';
 import { Bos, Hata, Kart, Rozet, Yukleniyor } from '../../ui';
+import type { KaliteRaporGorunumu as Rapor } from '@sunucu/sozlesme.js';
 
-interface Sinyal {
-  ad: string;
-  deger: string;
-  risk: number | null;
-  aciklama: string;
-}
 
-interface Rapor {
-  ortakAnahtari: string;
-  ortakAdi: string;
-  durum: string;
-  tiklama: number;
-  oyuncu: number;
-  riskSkoru: number | null;
-  sinyaller: Sinyal[];
-  skorsuzlukSebebi: string | null;
-  bant: 'veri-yok' | 'dusuk' | 'orta' | 'yuksek';
-}
 
 const BANT_ETIKETI = {
   'veri-yok': 'Veri yok', dusuk: 'Düşük', orta: 'Orta', yuksek: 'Yüksek',

@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { api, useVeri } from '../../api';
 import { Alan, Bos, Buton, Hata, Hucre, Kart, Satir, Tablo, Yukleniyor } from '../../ui';
+import type { YonetimUclari } from '@sunucu/sozlesme.js';
 
-interface Bag { ortakAnahtari: string; ustOrtakAnahtari: string; createdAt: string }
-interface Durum { baglar: Bag[]; kademeYuzdeleri: number[] }
+type Durum = YonetimUclari['/kademeler'];
 
 export function Kademeler() {
   const { veri, yukleniyor, hata, yenile } = useVeri<Durum>('/api/yonetim/kademeler');

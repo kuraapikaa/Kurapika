@@ -1,19 +1,6 @@
 import { gunBicimi, useVeri } from '../../api';
 import { Bos, Hata, Hucre, Kart, Olcu, Satir, Tablo, Yukleniyor } from '../../ui';
-
-interface Ozet {
-  toplam: number;
-  medyaBazinda: Array<{ medyaId: string | null; sayi: number }>;
-  altBazinda: Array<{ anahtar: string; deger: string; sayi: number }>;
-}
-
-interface Tiklama {
-  clickId: string;
-  medyaId: string | null;
-  alt: Record<string, string>;
-  referrer: string | null;
-  zaman: string;
-}
+import type { Tiklama, TiklamaOzeti as Ozet } from '@sunucu/sozlesme.js';
 
 export function PortalTiklamalar() {
   const { veri, yukleniyor, hata } = useVeri<{ ozet: Ozet | null; tiklamalar: Tiklama[] }>('/api/portal/tiklamalar');

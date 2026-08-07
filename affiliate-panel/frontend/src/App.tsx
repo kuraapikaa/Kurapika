@@ -22,14 +22,8 @@ import { PortalMedya } from './sayfalar/portal/PortalMedya';
 import { PortalOzet } from './sayfalar/portal/PortalOzet';
 import { PortalPostback } from './sayfalar/portal/PortalPostback';
 import { PortalTiklamalar } from './sayfalar/portal/PortalTiklamalar';
+import type { OturumYaniti as Oturum } from '@sunucu/sozlesme.js';
 
-interface Oturum {
-  girisli: boolean;
-  rol?: 'yonetici' | 'ortak';
-  ad?: string;
-  kiraci?: string;
-  ortakAnahtari?: string | null;
-}
 
 /**
  * Menü, sektördeki affiliate platformlarının düzenini izliyor:
