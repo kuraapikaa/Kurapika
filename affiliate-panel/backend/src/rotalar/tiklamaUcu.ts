@@ -1,8 +1,9 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { altLinkBul } from '../servisler/altLink.js';
-import { medyaBul, medyalariListele } from '../servisler/medya.js';
+import { medyaBul } from '../servisler/medya.js';
 import { ortakAnahtarindanBul, onayliMi } from '../servisler/ortaklar.js';
 import { postbackGonder } from '../servisler/postback.js';
+import { siteAdresiOku } from '../servisler/siteAdresi.js';
 import { tiklamaKaydet, TIKLAMA_CEREZI, yonlendirmeAdresi } from '../servisler/tiklama.js';
 
 /**
@@ -14,10 +15,10 @@ import { tiklamaKaydet, TIKLAMA_CEREZI, yonlendirmeAdresi } from '../servisler/t
  *
  * ── AÇIK YÖNLENDİRME ──
  *
- * Hedef adres YALNIZCA sunucudaki medya kaydından okunuyor. İstekten
- * bir `url` parametresi kabul etmek, bu alan adını oltalama bağlantısı
- * taşıyıcısına çevirirdi: bağlantı bize ait göründüğü için de en ikna
- * edicisinden.
+ * Hedef adres YALNIZCA sunucudaki medya kaydından ya da yönetimin
+ * kurduğu site adresinden okunuyor. İstekten bir `url` parametresi
+ * kabul etmek, bu alan adını oltalama bağlantısı taşıyıcısına
+ * çevirirdi: bağlantı bize ait göründüğü için de en ikna edicisinden.
  *
  * ── Neden 302, 301 değil ──
  *
@@ -42,16 +43,32 @@ export async function tiklamaRotalari(app: FastifyInstance): Promise<void> {
     // "bu trafigin odemesini yapmiyoruz" demeyi imkansiz kilardi.
     if (!ortak || !onayliMi(ortak)) return null;
 
-    const medya = medyaId
-      ? await medyaBul(kiraci, medyaId)
-      : (await medyalariListele(kiraci, ortakAnahtari)).find((m) => m.tur === 'landing' && m.aktif) ?? null;
+    let hedefUrl: string;
+    let medyaKimligi: string | null = null;
 
-    if (!medya || !medya.aktif) return null;
-    if (medya.ortakAnahtarlari.length > 0 && !medya.ortakAnahtarlari.includes(ortakAnahtari)) return null;
+    if (medyaId) {
+      const medya = await medyaBul(kiraci, medyaId);
+      if (!medya || !medya.aktif) return null;
+      if (medya.ortakAnahtarlari.length > 0 && !medya.ortakAnahtarlari.includes(ortakAnahtari)) return null;
+      hedefUrl = medya.hedefUrl;
+      medyaKimligi = medya.id;
+    } else {
+      /*
+       * MEDYASIZ TIKLAMA: belirli bir kreatife değil, sitenin GÜNCEL
+       * adresine gider (bkz. `siteAdresi.ts`). Önceden burada ortağa
+       * açık, aktif bir "landing" medya aranıyordu -- ama o medyanın
+       * var olması ve güncel kalması ayrı bir bakım yükümlülüğüydü ve
+       * unutulunca (ya da hiç kurulmadıysa) trafik sessizce 404'e
+       * düşüyordu. Merkezi tek adres bu bakım yükünü ortadan kaldırıyor.
+       */
+      const adres = await siteAdresiOku(kiraci);
+      if (!adres) return null;
+      hedefUrl = adres;
+    }
 
     const tiklama = await tiklamaKaydet(kiraci, {
       ortakAnahtari,
-      medyaId: medya.id,
+      medyaId: medyaKimligi,
       altLinkId,
       sorgu,
       ip: istekBilgisi.ip,
@@ -64,11 +81,11 @@ export async function tiklamaRotalari(app: FastifyInstance): Promise<void> {
     // zaten kendi kaydini tutuyor.
     void postbackGonder(kiraci, ortakAnahtari, 'tiklama', {
       clickid: tiklama.clickId,
-      mid: medya.id,
+      mid: medyaKimligi ?? '',
       ...tiklama.alt,
     }).catch(() => undefined);
 
-    return { tiklama, hedef: yonlendirmeAdresi(medya.hedefUrl, tiklama) };
+    return { tiklama, hedef: yonlendirmeAdresi(hedefUrl, tiklama) };
   };
 
   type TiklamaIstegi = FastifyRequest<{ Params: { ortakAnahtari: string; medyaId?: string } }>;
