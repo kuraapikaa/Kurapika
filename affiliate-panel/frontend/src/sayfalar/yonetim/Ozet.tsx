@@ -22,11 +22,22 @@ interface SenkronSonucu {
   uyari: string | null;
 }
 
+interface GecmisGGRSonucu {
+  tarananGun: number;
+  eslesenOyuncuGunu: number;
+  yazilanOlcum: number;
+  hatali: Array<{ gun: string; mesaj: string }>;
+  uyari: string | null;
+}
+
 export function Ozet() {
   const { veri, yukleniyor, hata, yenile } = useVeri<{ bugun: string; ozetler: OrtakOzeti[] }>('/api/yonetim/ozet');
   const [senkron, setSenkron] = useState<SenkronSonucu | null>(null);
   const [senkronHatasi, setSenkronHatasi] = useState<string | null>(null);
   const [calisiyor, setCalisiyor] = useState(false);
+  const [gecmis, setGecmis] = useState<GecmisGGRSonucu | null>(null);
+  const [gecmisHatasi, setGecmisHatasi] = useState<string | null>(null);
+  const [gecmisCalisiyor, setGecmisCalisiyor] = useState(false);
 
   const senkronla = async () => {
     setCalisiyor(true);
@@ -38,6 +49,19 @@ export function Ozet() {
       setSenkronHatasi(h instanceof Error ? h.message : 'Senkron başarısız.');
     } finally {
       setCalisiyor(false);
+    }
+  };
+
+  const gecmisiDoldur = async () => {
+    setGecmisCalisiyor(true);
+    setGecmisHatasi(null);
+    try {
+      setGecmis(await api.gonder<GecmisGGRSonucu>('/api/yonetim/gecmis-ggr-doldur'));
+      yenile();
+    } catch (h) {
+      setGecmisHatasi(h instanceof Error ? h.message : 'Geçmiş doldurma başarısız.');
+    } finally {
+      setGecmisCalisiyor(false);
     }
   };
 
@@ -93,7 +117,14 @@ export function Ozet() {
 
       <Kart
         baslik="Ortak performansı"
-        sag={<Buton onClick={senkronla} devredisi={calisiyor}>{calisiyor ? 'Çekiliyor…' : 'Backoffice’ten çek'}</Buton>}
+        sag={
+          <div className="flex gap-2">
+            <Buton onClick={senkronla} devredisi={calisiyor}>{calisiyor ? 'Çekiliyor…' : 'Backoffice’ten çek'}</Buton>
+            <Buton onClick={gecmisiDoldur} devredisi={gecmisCalisiyor}>
+              {gecmisCalisiyor ? 'Dolduruluyor…' : 'Geçmiş GGR’yi doldur'}
+            </Buton>
+          </div>
+        }
       >
         {senkronHatasi && <div className="mb-3"><Hata mesaj={senkronHatasi} /></div>}
         {senkron && (
@@ -101,6 +132,14 @@ export function Ozet() {
             {senkron.cekilenGun} gün çekildi, {senkron.yazilanOlcum} ölçüm yazıldı.
             {senkron.hatali.length > 0 && ` ${senkron.hatali.length} gün alınamadı.`}
             {senkron.uyari && ` ${senkron.uyari}`}
+          </p>
+        )}
+        {gecmisHatasi && <div className="mb-3"><Hata mesaj={gecmisHatasi} /></div>}
+        {gecmis && (
+          <p className="mb-3 text-sm" style={{ color: 'var(--metin-2)' }}>
+            {gecmis.tarananGun} gün tarandı, {gecmis.eslesenOyuncuGunu} eşleşen oyuncu günü, {gecmis.yazilanOlcum} ölçüm yazıldı.
+            {gecmis.hatali.length > 0 && ` ${gecmis.hatali.length} gün alınamadı.`}
+            {gecmis.uyari && ` ${gecmis.uyari}`}
           </p>
         )}
 

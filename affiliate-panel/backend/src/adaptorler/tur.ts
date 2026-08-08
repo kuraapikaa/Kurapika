@@ -26,7 +26,9 @@ export type AdaptorYetenegi =
   /** Bir oyuncuyu bir ortağa bağlayabiliyor. */
   | 'oyuncu-baglama'
   /** Sitenin gerçek ödeme yöntemlerini listeleyebiliyor. */
-  | 'odeme-yontemleri';
+  | 'odeme-yontemleri'
+  /** Gün bazında OYUNCU düzeyinde veri okuyabiliyor (BTag'e bakmadan). */
+  | 'gecmis-doldurma';
 
 export type AlanTuru = 'metin' | 'parola' | 'sayi' | 'secim' | 'cokSatir';
 
@@ -72,6 +74,24 @@ export interface HamOlcum {
    * Veremeyen adaptörlerde boş; o durumda FTD `null` kalır.
    */
   yatiranOyuncular?: string[];
+}
+
+/**
+ * Adaptörün OYUNCU düzeyinde döndürdüğü ham günlük veri. `HamOlcum`dan
+ * farkı: BTag'e göre GRUPLANMAMIŞ, BTag'i olmayan satırlar da dahil.
+ *
+ * Neden gerekli: panel Lynon'un third-party affiliate kaydına hiç
+ * katılmıyor, dolayısıyla `gunuCek`in filtrelediği "BTag'siz" satırların
+ * büyük kısmı aslında BU panelin trafiği. Atfı Lynon'un BTag'i değil,
+ * panelin kendi `oyuncu_eslesmeleri` kaydı belirliyor; bu yüzden ham
+ * veri oyuncu bazında, atıfsız geliyor (bkz. `servisler/gecmisGGR.ts`).
+ */
+export interface HamOyuncuGunu {
+  oyuncuId: string;
+  yatirim: number;
+  cekim: number;
+  bahis: number;
+  kazanc: number;
 }
 
 export interface HamOrtak {
@@ -124,6 +144,13 @@ export interface BackofficeAdaptoru {
    * listesinden seçtirmek bu belirsizliği kaynağında bitiriyor.
    */
   odemeYontemleri?(): Promise<string[]>;
+  /**
+   * Bir günün OYUNCU bazlı ham verisi; BTag'e bakmadan, filtresiz.
+   *
+   * Geçmişe dönük GGR doldurma bunu kullanıyor: atfı Lynon'un BTag'i
+   * değil, panelin kendi eşleşme kaydı yapıyor (bkz. `HamOyuncuGunu`).
+   */
+  oyuncuGunuCek?(gun: string): Promise<HamOyuncuGunu[]>;
 }
 
 export interface AdaptorTanimi {
