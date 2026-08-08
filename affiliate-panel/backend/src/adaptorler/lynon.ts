@@ -8,6 +8,7 @@ import {
   type BackofficeAdaptoru,
   type HamOlcum,
   type HamOrtak,
+  type HamOyuncuGunu,
   type OyuncuBagi,
 } from './tur.js';
 
@@ -370,14 +371,8 @@ class LynonAdaptoru implements BackofficeAdaptoru {
     }
   }
 
-  /**
-   * Bir günün ortak bazlı ölçümleri.
-   *
-   * Rapor OYUNCU satırı döndürüyor; BTag'e göre grupluyoruz. Oyuncu
-   * sayısı `Set` ile sayılıyor: aynı oyuncu birden çok satırda
-   * görünebiliyor ve satır saymak sayıyı şişirirdi.
-   */
-  async gunuCek(gun: string): Promise<HamOlcum[]> {
+  /** Oyuncu raporunun HAM satırlarını getirir; `gunuCek` ve `oyuncuGunuCek` bunu paylaşır. */
+  private async raporSatirlariniGetir(gun: string): Promise<Array<Record<string, unknown>>> {
     const yanit = await this.istek<Record<string, unknown>>(
       `/api/report/api/v1.0/reportData/summarized/${this.ayar.raporId}`,
       {
@@ -392,7 +387,18 @@ class LynonAdaptoru implements BackofficeAdaptoru {
 
     const veri = kayitOku(yanit);
     const ham = veri.reports ?? veri.Reports ?? veri.Result ?? veri.Objects;
-    const satirlar = Array.isArray(ham) ? (ham as Array<Record<string, unknown>>) : [];
+    return Array.isArray(ham) ? (ham as Array<Record<string, unknown>>) : [];
+  }
+
+  /**
+   * Bir günün ortak bazlı ölçümleri.
+   *
+   * Rapor OYUNCU satırı döndürüyor; BTag'e göre grupluyoruz. Oyuncu
+   * sayısı `Set` ile sayılıyor: aynı oyuncu birden çok satırda
+   * görünebiliyor ve satır saymak sayıyı şişirirdi.
+   */
+  async gunuCek(gun: string): Promise<HamOlcum[]> {
+    const satirlar = await this.raporSatirlariniGetir(gun);
 
     const gruplar = new Map<string, {
       oyuncular: Set<string>;
@@ -448,6 +454,37 @@ class LynonAdaptoru implements BackofficeAdaptoru {
       ftdSayisi: null,
       yatiranOyuncular: [...g.yatiranlar],
     }));
+  }
+
+  /**
+   * Bir günün OYUNCU bazlı ham verisi -- `gunuCek`in aksine BTag'e HİÇ
+   * bakmaz, filtrelemez. Aynı oyuncu birden çok satırda görünebiliyor;
+   * bu yüzden oyuncu kimliğine göre toplanıyor.
+   */
+  async oyuncuGunuCek(gun: string): Promise<HamOyuncuGunu[]> {
+    const satirlar = await this.raporSatirlariniGetir(gun);
+
+    const gruplar = new Map<string, { yatirim: number; cekim: number; bahis: number; kazanc: number }>();
+    for (const [indeks, satir] of satirlar.entries()) {
+      const oyuncuId = ilkDolu(satir['Player ID'], satir.PlayerId, satir['Player Login'], satir.Login) || `satir-${indeks}`;
+      const yatirim = tutarSec(satir, [
+        'TOTAL DEPOSITS AMOUNT FILTERED (TRY)', 'TOTAL DEPOSITS AMOUNT (TRY)', 'TOTAL DEPOSITS AMOUNT',
+      ]);
+      const cekim = tutarSec(satir, [
+        'TOTAL WITHDRAWALS AMOUNT FILTERED (TRY)', 'TOTAL WITHDRAWALS AMOUNT (TRY)', 'TOTAL WITHDRAWALS AMOUNT',
+      ]);
+      const bahis = tutarSec(satir, ['TOTAL BET AMOUNT FILTERED (TRY)', 'TOTAL BET AMOUNT (TRY)', 'TOTAL BET AMOUNT']);
+      const kazanc = tutarSec(satir, ['TOTAL WIN AMOUNT FILTERED (TRY)', 'TOTAL WIN AMOUNT (TRY)', 'TOTAL WIN AMOUNT']);
+
+      const grup = gruplar.get(oyuncuId) ?? { yatirim: 0, cekim: 0, bahis: 0, kazanc: 0 };
+      grup.yatirim += yatirim;
+      grup.cekim += cekim;
+      grup.bahis += bahis;
+      grup.kazanc += kazanc;
+      gruplar.set(oyuncuId, grup);
+    }
+
+    return [...gruplar.entries()].map(([oyuncuId, g]) => ({ oyuncuId, ...g }));
   }
 
   /**
@@ -579,7 +616,7 @@ export const LYNON_TANIMI: AdaptorTanimi = {
   aciklama:
     'Panel kullanıcısıyla giriş yapıp Lynon raporlarını okur. Lynon third-party affiliate kaydı gerekmez. ' +
     'Veri toplam düzeyinde geldiği için ilk yatırım (FTD) sayısı bu yoldan ölçülemez.',
-  yetenekler: ['olcum-cekme', 'ortak-listesi', 'oyuncu-baglama', 'odeme-yontemleri'],
+  yetenekler: ['olcum-cekme', 'ortak-listesi', 'oyuncu-baglama', 'odeme-yontemleri', 'gecmis-doldurma'],
   alanlar: [
     { ad: 'backofficeUrl', etiket: 'Backoffice adresi', tur: 'metin', zorunlu: true, sir: false, ipucu: 'https://backoffice.ornek.com' },
     { ad: 'idUrl', etiket: 'Kimlik sunucusu', tur: 'metin', zorunlu: true, sir: false, ipucu: 'https://id.ornek.com' },

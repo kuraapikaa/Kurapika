@@ -58,6 +58,7 @@ import {
 } from '../servisler/postback.js';
 import { anahtarDurumu, anahtarSil, anahtarUret } from '../servisler/s2sAnahtari.js';
 import { eksikGunleriSenkronla, gunuSenkronla } from '../servisler/senkron.js';
+import { gecmisGGRDoldur } from '../servisler/gecmisGGR.js';
 import { sirDurumu, sirUret, sirriSil, sirriYaz } from '../servisler/webhookSirri.js';
 import { siteAdresiDurumu, siteAdresiYaz } from '../servisler/siteAdresi.js';
 import { olayKuyrugu } from '../depolar/olayKuyrugu.js';
@@ -170,6 +171,18 @@ export async function yonetimRotalari(app: FastifyInstance): Promise<void> {
       return { cekilenGun: 1, yazilanOlcum: yazilan, hatali: [], uyari: null };
     }
     return eksikGunleriSenkronla(istek.kiraci, { geriGun: Number(govde.geriGun) || 30 });
+  });
+
+  /**
+   * Normal senkron BTag'siz satırları atlıyor -- panelin trafiği hiç
+   * BTag taşımadığı için hep sıfır satır yazıyordu. Bu uç aynı raporu
+   * OYUNCU bazında okuyup atfı panelin kendi eşleşme kaydından yapıyor
+   * (bkz. `servisler/gecmisGGR.ts`).
+   */
+  app.post('/gecmis-ggr-doldur', async (istek) => {
+    const govde = (istek.body ?? {}) as { geriGun?: number };
+    const adaptor = await adaptorZorunlu(istek.kiraci);
+    return gecmisGGRDoldur(istek.kiraci, adaptor, { geriGun: Number(govde.geriGun) || 30 });
   });
 
   // ── Ölçümler ───────────────────────────────────────────────────────
