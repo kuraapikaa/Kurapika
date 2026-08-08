@@ -134,6 +134,14 @@ export const oyuncuEslesmeleri = pgTable(
     medyaId: text('medya_id'),
     /** Tıklamanın taşıdığı alt link; alt link bazlı yatırım/çekim raporunun dayanağı. */
     altLinkId: text('alt_link_id'),
+    /**
+     * Oyuncunun backoffice kullanıcı adı; VARSA. S2S kayıt bildirimi
+     * verirse ya da toplu geçişte (kullanıcı adından arama zaten kendi
+     * elinde) doluyor. Raporlarda oyuncuyu opak `lynon_oyuncu_id` yerine
+     * okunur bir adla göstermek için — ID'nin kendisi hiçbir yerde
+     * kullanıcıya anlamlı gelmiyor.
+     */
+    kullaniciAdi: text('kullanici_adi'),
     alt: jsonb('alt').$type<Partial<Record<AltParametre, string>>>().notNull().default({}),
     kaynak: text('kaynak').notNull(),
     olusturuldu: timestamp('olusturuldu', { withTimezone: true }).notNull(),

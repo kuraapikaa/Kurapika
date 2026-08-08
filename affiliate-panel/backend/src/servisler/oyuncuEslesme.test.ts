@@ -37,6 +37,25 @@ describe('oyuncu eslesmesi', () => {
     expect(await eslesmeBul(k, '90001')).toMatchObject({ ortakId: ortak.id });
   });
 
+  it('kullanici adi verilirse eslesmeyle birlikte saklar', async () => {
+    const k = kiraci();
+    await onayliOrtak(k, 'ORT1');
+
+    const sonuc = await oyuncuyuEslestir(k, { lynonOyuncuId: '90012', ref: 'ORT1', kullaniciAdi: 'ayse42' });
+
+    expect(sonuc.eslesme.kullaniciAdi).toBe('ayse42');
+    expect(await eslesmeBul(k, '90012')).toMatchObject({ kullaniciAdi: 'ayse42' });
+  });
+
+  it('kullanici adi verilmezse null kalir', async () => {
+    const k = kiraci();
+    await onayliOrtak(k, 'ORT1');
+
+    const sonuc = await oyuncuyuEslestir(k, { lynonOyuncuId: '90013', ref: 'ORT1' });
+
+    expect(sonuc.eslesme.kullaniciAdi).toBeNull();
+  });
+
   /**
    * Tiklama kimligi tercih ediliyor: medya ve alt kanal yalnizca onda var.
    * Ortak bilgisi de tiklamadan aliniyor -- tiklama sunucunun kendi kaydi,
@@ -254,6 +273,33 @@ describe('oyuncu eslesmesi', () => {
       });
       await expect(oyuncuyuYenidenAta(k, { lynonOyuncuId: '80005', ortakAnahtari: 'ORT9' }))
         .rejects.toThrow(/onaylı değil/i);
+    });
+
+    it('kullanici adi verilirse kaydeder', async () => {
+      const k = kiraci();
+      await onayliOrtak(k, 'ORT1');
+
+      const sonuc = await oyuncuyuYenidenAta(k, { lynonOyuncuId: '80007', ortakAnahtari: 'ORT1', kullaniciAdi: 'mehmet99' });
+
+      expect(sonuc.eslesme.kullaniciAdi).toBe('mehmet99');
+      expect(await eslesmeBul(k, '80007')).toMatchObject({ kullaniciAdi: 'mehmet99' });
+    });
+
+    /**
+     * Toplu gecis, oyuncuyu tasirken kullanici adi VERMEYEBILIR (arama
+     * sonucu bazen bos donebilir) -- bu durumda daha once ogrenilmis
+     * adi SILMEMELI, S2S kaydinin kazandigi bilgiyi kaybetmemek icin.
+     */
+    it('kullanici adi verilmezse mevcut adi KORUR', async () => {
+      const k = kiraci();
+      const eski = await onayliOrtak(k, 'ORT1', 'Eski');
+      await onayliOrtak(k, 'ORT2', 'Yeni');
+      await oyuncuyuEslestir(k, { lynonOyuncuId: '80008', ref: 'ORT1', kullaniciAdi: 'korunan-ad' });
+
+      const sonuc = await oyuncuyuYenidenAta(k, { lynonOyuncuId: '80008', ortakAnahtari: 'ORT2' });
+
+      expect(sonuc.eslesme.ortakId).not.toBe(eski.id);
+      expect(sonuc.eslesme.kullaniciAdi).toBe('korunan-ad');
     });
 
     it('bilinmeyen ortak anahtari reddedilir', async () => {

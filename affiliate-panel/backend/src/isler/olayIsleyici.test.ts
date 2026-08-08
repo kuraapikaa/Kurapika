@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { olaylariIsle } from './olayIsleyici.js';
 import { olayKuyrugu, type OlayTuru } from '../depolar/olayKuyrugu.js';
-import { oyuncuGunluk, webhookOlaylari } from '../lib/sema.js';
+import { olcumler, oyuncuEslesmeleri, oyuncuGunluk, webhookOlaylari } from '../lib/sema.js';
 import { veritabani, veritabaniniBaslat, veritabaniniKapat } from '../lib/veritabani.js';
 import { testVeritabaniAc } from '../../test/testVeritabani.js';
 
@@ -43,6 +43,8 @@ varsaCalistir('webhook kuyrugu ve iscisi', () => {
     const vt = veritabani()!;
     await vt.delete(webhookOlaylari);
     await vt.delete(oyuncuGunluk);
+    await vt.delete(oyuncuEslesmeleri);
+    await vt.delete(olcumler);
   });
 
   const gunluk = async (oyuncuId: string) => {
@@ -139,5 +141,47 @@ varsaCalistir('webhook kuyrugu ve iscisi', () => {
     await kuyruk.ekle('baska-kiraci', olay('deposit', 'p8', 999));
     expect(await olaylariIsle(KIRACI)).toEqual({ alinan: 0, tamam: 0, hatali: 0 });
     expect(await gunluk('p8')).toBeNull();
+  });
+
+  /**
+   * KOPRU: tur sonunda dokunulan oyuncular kendi ortaklarina cozulup
+   * `olcumler`e yaziliyor -- Lynon'un raporuna hic bakmadan. Bu, panelin
+   * kendi trafigini raporlayabilmesinin dayanagi (bkz. olayIsleyici.ts).
+   */
+  describe('ortak gelir koprusu', () => {
+    const olcumBul = async (ortakAnahtari: string) => {
+      const satirlar = await veritabani()!
+        .select().from(olcumler).where(eq(olcumler.ortakAnahtari, ortakAnahtari));
+      return satirlar[0] ?? null;
+    };
+
+    it('eslesmis oyuncunun olaylari olculere kaynak=itme ile yazilir', async () => {
+      const vt = veritabani()!;
+      await vt.insert(oyuncuEslesmeleri).values({
+        kiraci: KIRACI, lynonOyuncuId: 'p9', ortakId: 'ortak-9', ortakAnahtari: 'ORTAK-9',
+        clickId: null, medyaId: null, altLinkId: null, kullaniciAdi: null, alt: {},
+        kaynak: 'kayit', olusturuldu: new Date('2026-08-01T00:00:00Z'),
+      });
+      const kuyruk = olayKuyrugu();
+      await kuyruk.ekle(KIRACI, olay('deposit', 'p9', 500, { alindi: '2026-08-09T12:00:00.000Z' }));
+      await kuyruk.ekle(KIRACI, olay('bet', 'p9', 1000, { alindi: '2026-08-09T12:05:00.000Z' }));
+      await kuyruk.ekle(KIRACI, olay('win', 'p9', 400, { alindi: '2026-08-09T12:10:00.000Z' }));
+
+      await olaylariIsle(KIRACI);
+
+      expect(await olcumBul('ORTAK-9')).toMatchObject({
+        gun: '2026-08-09', oyuncuSayisi: 1, aktifOyuncuSayisi: 1,
+        yatirim: 500, cekim: 0, ggr: 600, ftdSayisi: null, kaynak: 'itme',
+      });
+    });
+
+    it('eslesmemis oyuncu icin olcum satiri yazilmaz', async () => {
+      const kuyruk = olayKuyrugu();
+      await kuyruk.ekle(KIRACI, olay('deposit', 'p10', 300));
+
+      await olaylariIsle(KIRACI);
+
+      expect(await veritabani()!.select().from(olcumler)).toHaveLength(0);
+    });
   });
 });

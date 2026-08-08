@@ -32,7 +32,7 @@ import type { Medya, MedyaTuru } from './servisler/medya.js';
 import type { OrtakGunlukOlcum, OrtakOzeti } from './servisler/olcum.js';
 import type { OrtakDurumu, OrtakGorunumu } from './servisler/ortaklar.js';
 import type { OtoBonusAyari, OtoBonusDurumuYaniti, OtoBonusKaydi } from './servisler/otoBonus.js';
-import type { EslesmeCakismasi, OyuncuEslesmesi } from './servisler/oyuncuEslesme.js';
+import type { AltLinkOyuncusu, EslesmeCakismasi, OyuncuEslesmesi } from './servisler/oyuncuEslesme.js';
 import type { TopluAtamaSatiri, TopluAtamaSonucu } from './servisler/topluAtama.js';
 import type { PostbackAyari, PostbackKaydi } from './servisler/postback.js';
 import type { KuyrukOzeti } from './depolar/olayKuyrugu.js';
@@ -52,7 +52,7 @@ export type {
   KaliteSinyali, KomisyonPlani, Marka, Medya, MedyaTuru, MusteriYolculuguSonucu, OrtakDurumu,
   OrtakGorunumu, OrtakGunlukOlcum, OrtakHakedisi, OrtakOzeti, OtoBonusAyari,
   OtoBonusDurumuYaniti, OtoBonusKaydi, PostbackAyari, PostbackKaydi, SenkronSonucu,
-  Tiklama, TiklamaOzeti, TopluAtamaSatiri, TopluAtamaSonucu, SiteAdresiDurumu,
+  Tiklama, TiklamaOzeti, TopluAtamaSatiri, TopluAtamaSonucu, SiteAdresiDurumu, AltLinkOyuncusu,
 };
 
 /* ── Oturum ──────────────────────────────────────────────────────── */

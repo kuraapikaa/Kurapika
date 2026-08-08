@@ -1,0 +1,877 @@
+{
+  "id": "28102d96-771e-4648-8689-f6200b6a1bdc",
+  "prevId": "8b175c95-6f70-4597-86a5-bee131f24227",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.aff_cuzdan_hareketleri": {
+      "name": "aff_cuzdan_hareketleri",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "kiraci": {
+          "name": "kiraci",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ortak_id": {
+          "name": "ortak_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tur": {
+          "name": "tur",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tutar": {
+          "name": "tutar",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "donem": {
+          "name": "donem",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "aciklama": {
+          "name": "aciklama",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "kaynak_anahtari": {
+          "name": "kaynak_anahtari",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "olusturuldu": {
+          "name": "olusturuldu",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "aff_cuzdan_kiraci_kaynak": {
+          "name": "aff_cuzdan_kiraci_kaynak",
+          "columns": [
+            {
+              "expression": "kiraci",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "kaynak_anahtari",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "aff_cuzdan_kiraci_ortak": {
+          "name": "aff_cuzdan_kiraci_ortak",
+          "columns": [
+            {
+              "expression": "kiraci",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "ortak_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.aff_eslesme_cakismalari": {
+      "name": "aff_eslesme_cakismalari",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "kiraci": {
+          "name": "kiraci",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "lynon_oyuncu_id": {
+          "name": "lynon_oyuncu_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "denenen_ortak_id": {
+          "name": "denenen_ortak_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "denenen_ortak_anahtari": {
+          "name": "denenen_ortak_anahtari",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "mevcut_ortak_id": {
+          "name": "mevcut_ortak_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "zaman": {
+          "name": "zaman",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "aff_cakisma_kiraci_zaman": {
+          "name": "aff_cakisma_kiraci_zaman",
+          "columns": [
+            {
+              "expression": "kiraci",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "zaman",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "aff_cakisma_kiraci_denenen": {
+          "name": "aff_cakisma_kiraci_denenen",
+          "columns": [
+            {
+              "expression": "kiraci",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "denenen_ortak_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.aff_olcumler": {
+      "name": "aff_olcumler",
+      "schema": "",
+      "columns": {
+        "kiraci": {
+          "name": "kiraci",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "gun": {
+          "name": "gun",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ortak_anahtari": {
+          "name": "ortak_anahtari",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "oyuncu_sayisi": {
+          "name": "oyuncu_sayisi",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "aktif_oyuncu_sayisi": {
+          "name": "aktif_oyuncu_sayisi",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "yatirim": {
+          "name": "yatirim",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "cekim": {
+          "name": "cekim",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "ggr": {
+          "name": "ggr",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "ftd_sayisi": {
+          "name": "ftd_sayisi",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "kaynak": {
+          "name": "kaynak",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "yazildi": {
+          "name": "yazildi",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "aff_olcumler_kiraci_gun": {
+          "name": "aff_olcumler_kiraci_gun",
+          "columns": [
+            {
+              "expression": "kiraci",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "gun",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "aff_olcumler_kiraci_gun_ortak_anahtari_pk": {
+          "name": "aff_olcumler_kiraci_gun_ortak_anahtari_pk",
+          "columns": [
+            "kiraci",
+            "gun",
+            "ortak_anahtari"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.aff_oyuncu_eslesmeleri": {
+      "name": "aff_oyuncu_eslesmeleri",
+      "schema": "",
+      "columns": {
+        "kiraci": {
+          "name": "kiraci",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "lynon_oyuncu_id": {
+          "name": "lynon_oyuncu_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ortak_id": {
+          "name": "ortak_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ortak_anahtari": {
+          "name": "ortak_anahtari",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "click_id": {
+          "name": "click_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "medya_id": {
+          "name": "medya_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "alt_link_id": {
+          "name": "alt_link_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "kullanici_adi": {
+          "name": "kullanici_adi",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "alt": {
+          "name": "alt",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        },
+        "kaynak": {
+          "name": "kaynak",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "olusturuldu": {
+          "name": "olusturuldu",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "aff_eslesme_kiraci_ortak": {
+          "name": "aff_eslesme_kiraci_ortak",
+          "columns": [
+            {
+              "expression": "kiraci",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "ortak_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "aff_eslesme_kiraci_zaman": {
+          "name": "aff_eslesme_kiraci_zaman",
+          "columns": [
+            {
+              "expression": "kiraci",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "olusturuldu",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "aff_eslesme_kiraci_altlink": {
+          "name": "aff_eslesme_kiraci_altlink",
+          "columns": [
+            {
+              "expression": "kiraci",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "alt_link_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "aff_oyuncu_eslesmeleri_kiraci_lynon_oyuncu_id_pk": {
+          "name": "aff_oyuncu_eslesmeleri_kiraci_lynon_oyuncu_id_pk",
+          "columns": [
+            "kiraci",
+            "lynon_oyuncu_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.aff_oyuncu_gunluk": {
+      "name": "aff_oyuncu_gunluk",
+      "schema": "",
+      "columns": {
+        "kiraci": {
+          "name": "kiraci",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "gun": {
+          "name": "gun",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "oyuncu_id": {
+          "name": "oyuncu_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "yatirim": {
+          "name": "yatirim",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "cekim": {
+          "name": "cekim",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "bahis": {
+          "name": "bahis",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "kazanc": {
+          "name": "kazanc",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "olay_sayisi": {
+          "name": "olay_sayisi",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "guncellendi": {
+          "name": "guncellendi",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "aff_oyuncu_gunluk_kiraci_gun": {
+          "name": "aff_oyuncu_gunluk_kiraci_gun",
+          "columns": [
+            {
+              "expression": "kiraci",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "gun",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "aff_oyuncu_gunluk_kiraci_gun_oyuncu_id_pk": {
+          "name": "aff_oyuncu_gunluk_kiraci_gun_oyuncu_id_pk",
+          "columns": [
+            "kiraci",
+            "gun",
+            "oyuncu_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.aff_tiklamalar": {
+      "name": "aff_tiklamalar",
+      "schema": "",
+      "columns": {
+        "click_id": {
+          "name": "click_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "kiraci": {
+          "name": "kiraci",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ortak_anahtari": {
+          "name": "ortak_anahtari",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "medya_id": {
+          "name": "medya_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "alt_link_id": {
+          "name": "alt_link_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "alt": {
+          "name": "alt",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        },
+        "ip": {
+          "name": "ip",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "user_agent": {
+          "name": "user_agent",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "referrer": {
+          "name": "referrer",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "zaman": {
+          "name": "zaman",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "aff_tiklamalar_kiraci_zaman": {
+          "name": "aff_tiklamalar_kiraci_zaman",
+          "columns": [
+            {
+              "expression": "kiraci",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "zaman",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "aff_tiklamalar_kiraci_ortak_zaman": {
+          "name": "aff_tiklamalar_kiraci_ortak_zaman",
+          "columns": [
+            {
+              "expression": "kiraci",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "ortak_anahtari",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "zaman",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "aff_tiklamalar_kiraci_altlink": {
+          "name": "aff_tiklamalar_kiraci_altlink",
+          "columns": [
+            {
+              "expression": "kiraci",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "alt_link_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.aff_webhook_olaylari": {
+      "name": "aff_webhook_olaylari",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "kiraci": {
+          "name": "kiraci",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "imza": {
+          "name": "imza",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "olay_turu": {
+          "name": "olay_turu",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "oyuncu_id": {
+          "name": "oyuncu_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tutar": {
+          "name": "tutar",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "govde": {
+          "name": "govde",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "durum": {
+          "name": "durum",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "deneme": {
+          "name": "deneme",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "son_hata": {
+          "name": "son_hata",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "alindi": {
+          "name": "alindi",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "islendi": {
+          "name": "islendi",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "aff_webhook_kiraci_imza": {
+          "name": "aff_webhook_kiraci_imza",
+          "columns": [
+            {
+              "expression": "kiraci",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "imza",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "aff_webhook_kiraci_durum_alindi": {
+          "name": "aff_webhook_kiraci_durum_alindi",
+          "columns": [
+            {
+              "expression": "kiraci",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "durum",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "alindi",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

@@ -1,6 +1,7 @@
-import { sql } from 'drizzle-orm';
+import { and, eq, inArray, sql } from 'drizzle-orm';
 import { olayKuyrugu, type KuyruktakiOlay } from '../depolar/olayKuyrugu.js';
-import { oyuncuGunluk } from '../lib/sema.js';
+import { oyuncuEslesmeleri, oyuncuGunluk } from '../lib/sema.js';
+import { ortakGunlukGeliriGuncelle } from '../servisler/oyuncuEslesme.js';
 import { veritabani } from '../lib/veritabani.js';
 
 /**
@@ -22,6 +23,19 @@ import { veritabani } from '../lib/veritabani.js';
  * Olayın düştüğü gün, alındığı anın UTC tarihi. Yerel saate göre
  * bölmek, saat farkıyla birlikte gün sınırındaki olayları bir önceki ya
  * da sonraki güne kaydırırdı; backoffice raporu da UTC gün kullanıyor.
+ *
+ * ── Tur SONUNDA ortak gelirini güncelleme ──
+ *
+ * `oyuncu_gunluk`a yazmak tek başına yetmiyor: Özet ekranındaki
+ * GGR/Yatırım/Çekim `olcumler` tablosundan okunuyor ve o tablo şimdiye
+ * kadar yalnızca Lynon'un backoffice raporundan besleniyordu — panel
+ * Lynon'un third-party affiliate kaydına katılmadığı için o rapor
+ * panelin ürettiği trafiği hiç göremiyor (bkz. `oyuncuEslesme.ts` ·
+ * `ortakGunlukGeliriGuncelle`). Bu yüzden her turun SONUNDA, o turda
+ * dokunulan (gün, oyuncu) çiftleri kendi ortağına çözülüp `olcumler`e
+ * `kaynak: 'itme'` ile yazılıyor. Her olayda değil tur sonunda: aynı
+ * oyuncu bir turda beş kez bahis oynarsa beş kez yeniden hesaplamak
+ * gereksiz.
  */
 
 /** Bir turda alınacak olay sayısı. */
@@ -79,10 +93,59 @@ export interface IslemeSonucu {
   hatali: number;
 }
 
+/**
+ * Turda dokunulan (gün, oyuncu) çiftlerini kendi ortağına çözüp
+ * `olcumler`e yazar. Eşleşmeyen oyuncular (henüz hiçbir ortağa
+ * bağlanmamış) sessizce atlanır — parayı kimin getirdiği bilinmiyorsa
+ * bir ortağa yazmak yanlış olurdu.
+ */
+async function ortakGelirleriniGuncelle(
+  kiraci: string,
+  dokunulanlar: Set<string>,
+  simdi: Date,
+): Promise<void> {
+  const vt = veritabani();
+  if (!vt || dokunulanlar.size === 0) return;
+
+  const cozumlenmis = new Map<string, { gun: string; oyuncuId: string }>();
+  for (const anahtar of dokunulanlar) {
+    const ayrikGun = anahtar.indexOf('|');
+    cozumlenmis.set(anahtar, { gun: anahtar.slice(0, ayrikGun), oyuncuId: anahtar.slice(ayrikGun + 1) });
+  }
+  const oyuncuIdler = [...new Set([...cozumlenmis.values()].map((d) => d.oyuncuId))];
+
+  const eslesmeler = await vt
+    .select({
+      lynonOyuncuId: oyuncuEslesmeleri.lynonOyuncuId,
+      ortakId: oyuncuEslesmeleri.ortakId,
+      ortakAnahtari: oyuncuEslesmeleri.ortakAnahtari,
+    })
+    .from(oyuncuEslesmeleri)
+    .where(and(eq(oyuncuEslesmeleri.kiraci, kiraci), inArray(oyuncuEslesmeleri.lynonOyuncuId, oyuncuIdler)));
+
+  const oyuncudanOrtaga = new Map(eslesmeler.map((e) => [e.lynonOyuncuId, e]));
+
+  // Ayni (gun, ortak) birden cok oyuncu uzerinden birden cok kez
+  // tetiklenebilir; her biri zaten TUM ortagi yeniden hesapliyor, tekrar
+  // yazmak yanlis degil ama gereksiz -- bu yuzden tekillestiriliyor.
+  const gunOrtakCiftleri = new Map<string, { gun: string; ortakId: string; ortakAnahtari: string }>();
+  for (const { gun, oyuncuId } of cozumlenmis.values()) {
+    const eslesme = oyuncudanOrtaga.get(oyuncuId);
+    if (!eslesme) continue;
+    gunOrtakCiftleri.set(`${gun}|${eslesme.ortakId}`, { gun, ortakId: eslesme.ortakId, ortakAnahtari: eslesme.ortakAnahtari });
+  }
+
+  for (const { gun, ortakId, ortakAnahtari } of gunOrtakCiftleri.values()) {
+    // Tek bir ortagin hesabindaki bir hata digerlerini durdurmamali.
+    await ortakGunlukGeliriGuncelle(kiraci, gun, ortakId, ortakAnahtari, simdi).catch(() => undefined);
+  }
+}
+
 /** Kuyruğu boşalana kadar işler. Testler bunu doğrudan çağırıyor. */
 export async function olaylariIsle(kiraci: string, simdi = new Date()): Promise<IslemeSonucu> {
   const kuyruk = olayKuyrugu();
   const sonuc: IslemeSonucu = { alinan: 0, tamam: 0, hatali: 0 };
+  const dokunulanlar = new Set<string>();
 
   for (;;) {
     const olaylar = await kuyruk.sahiplen(kiraci, TUR_BOYU);
@@ -94,6 +157,7 @@ export async function olaylariIsle(kiraci: string, simdi = new Date()): Promise<
         await olayiUygula(kiraci, olay, simdi);
         await kuyruk.tamamla(kiraci, olay.id, simdi);
         sonuc.tamam += 1;
+        dokunulanlar.add(`${gunuBul(olay.alindi)}|${olay.oyuncuId}`);
       } catch (hata) {
         // Tek bir bozuk olay turun tamamini durdurmamali; hata kaydediliyor
         // ve olay denemesi bitene kadar tekrar alinacak.
@@ -102,6 +166,8 @@ export async function olaylariIsle(kiraci: string, simdi = new Date()): Promise<
       }
     }
   }
+
+  await ortakGelirleriniGuncelle(kiraci, dokunulanlar, simdi);
 
   return sonuc;
 }
