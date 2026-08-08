@@ -254,15 +254,35 @@ class LynonAdaptoru implements BackofficeAdaptoru {
     return kavanoz;
   }
 
+  /**
+   * Yönlendirme zincirlerinin (`donusUrlBul`, `yonlendirmeyiTamamla`) ortak
+   * GET adımı -- ikisi de zaman aşımı OLMADAN `fetch` çağırıyordu.
+   * `jsonGonder`/`istek`in aksine burada `AbortController` yoktu: Lynon
+   * bağlantıyı kabul edip hiç yanıt vermezse (sessiz düşen paket, IP
+   * engeli) `await fetch(...)` SONSUZA KADAR asılı kalıyor -- ne hata ne
+   * zaman aşımı. Bu, oturum açan HER Lynon çağrısını (toplu atama dahil)
+   * geri dönüşsüz kilitleyebiliyordu; arayüzde "İşleniyor…" hiç bitmiyordu.
+   */
+  private async yonlendirmeGetIste(url: string, kavanoz: CerezKavanozu): Promise<Response> {
+    const kontrol = new AbortController();
+    const zamanlayici = setTimeout(() => kontrol.abort(), ZAMAN_ASIMI_MS);
+    try {
+      return await fetch(url, {
+        method: 'GET',
+        signal: kontrol.signal,
+        redirect: 'manual',
+        headers: { ...this.ortakBasliklar(url), Cookie: kavanoz.baslik(url) },
+      });
+    } finally {
+      clearTimeout(zamanlayici);
+    }
+  }
+
   /** Backoffice, giriş sonrası nereye dönüleceğini yönlendirmede söylüyor. */
   private async donusUrlBul(kavanoz: CerezKavanozu): Promise<string> {
     let mevcut = this.ayar.backofficeUrl;
     for (let i = 0; i < 8; i += 1) {
-      const yanit = await fetch(mevcut, {
-        method: 'GET',
-        redirect: 'manual',
-        headers: { ...this.ortakBasliklar(mevcut), Cookie: kavanoz.baslik(mevcut) },
-      });
+      const yanit = await this.yonlendirmeGetIste(mevcut, kavanoz);
       kavanoz.yanittanAl(yanit.headers, mevcut);
       const konum = yanit.headers.get('location');
       if (!konum) break;
@@ -282,11 +302,7 @@ class LynonAdaptoru implements BackofficeAdaptoru {
       : `${this.ayar.idUrl}/${donusUrl.replace(/^\//, '')}`;
 
     for (let i = 0; i < 8; i += 1) {
-      const yanit = await fetch(mevcut, {
-        method: 'GET',
-        redirect: 'manual',
-        headers: { ...this.ortakBasliklar(mevcut), Cookie: kavanoz.baslik(mevcut) },
-      });
+      const yanit = await this.yonlendirmeGetIste(mevcut, kavanoz);
       kavanoz.yanittanAl(yanit.headers, mevcut);
       const konum = yanit.headers.get('location');
       if (!konum || yanit.status < 300 || yanit.status >= 400) return;
