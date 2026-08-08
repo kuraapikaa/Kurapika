@@ -150,6 +150,62 @@ export async function oyuncuyuEslestir(
   return { durum: 'baska-ortaga-ait', eslesme: kayitli };
 }
 
+export type YenidenAtamaDurumu = 'olusturuldu' | 'tasindi' | 'zaten-bu-ortakta';
+
+export interface YenidenAtamaSonucu {
+  durum: YenidenAtamaDurumu;
+  eslesme: OyuncuEslesmesi;
+  /** Yalnızca `tasindi` durumunda dolu: geçiş öncesi sahip. */
+  oncekiOrtakId: string | null;
+}
+
+/**
+ * ADMIN GEÇERSİZ KILMASI — `oyuncuyuEslestir`'den bilerek AYRI.
+ *
+ * `oyuncuyuEslestir`, doğrulanmamış S2S bildirimleri için: "ilk kayıt
+ * kazanır" kuralı orada sahtekarlığa karşı bir siper. Bu fonksiyon ise
+ * PANELDEN, kimliği doğrulanmış bir admin eylemi için — admin ground
+ * truth'u düzeltiyor ("bu oyuncular aslında X ortağına ait", "Y ortağı
+ * kapandı, oyuncuları Z'ye devrediyoruz"). O yüzden üzerine YAZMASI
+ * doğru davranış; siper burada anlamsız olurdu.
+ *
+ * Ref her zaman doğrudan ORTAK ANAHTARI (tıklama kimliği değil): toplu
+ * geçişte elde tıklama geçmişi yok, yalnızca kullanıcı adı ve hedef
+ * ortak var.
+ */
+export async function oyuncuyuYenidenAta(
+  kiraci: string,
+  girdi: { lynonOyuncuId: string; ortakAnahtari: string },
+  simdi = new Date(),
+): Promise<YenidenAtamaSonucu> {
+  const lynonOyuncuId = metin(girdi.lynonOyuncuId);
+  if (!lynonOyuncuId) throw new EslesmeHatasi('lynonOyuncuId zorunlu.');
+
+  const ortakAnahtari = metin(girdi.ortakAnahtari);
+  const ortak = await ortakAnahtarindanBul(kiraci, ortakAnahtari);
+  if (!ortak) throw new EslesmeHatasi(`Ref karşılığı ortak bulunamadı: ${ortakAnahtari}`, 404);
+  if (!onayliMi(ortak)) {
+    throw new EslesmeHatasi('Ortak onaylı değil; oyuncu eşleştirilemez.', 403);
+  }
+
+  const aday: OyuncuEslesmesi = {
+    lynonOyuncuId,
+    ortakId: ortak.id,
+    ortakAnahtari,
+    clickId: null,
+    medyaId: null,
+    alt: {},
+    kaynak: 'elle',
+    olusturuldu: simdi.toISOString(),
+  };
+
+  const { oncekiKayit } = await eslesmeDeposu().zorlaAta(kiraci, aday);
+
+  if (!oncekiKayit) return { durum: 'olusturuldu', eslesme: aday, oncekiOrtakId: null };
+  if (oncekiKayit.ortakId === ortak.id) return { durum: 'zaten-bu-ortakta', eslesme: aday, oncekiOrtakId: null };
+  return { durum: 'tasindi', eslesme: aday, oncekiOrtakId: oncekiKayit.ortakId };
+}
+
 export async function eslesmeBul(kiraci: string, lynonOyuncuId: string): Promise<OyuncuEslesmesi | null> {
   const temiz = metin(lynonOyuncuId);
   if (!temiz) return null;

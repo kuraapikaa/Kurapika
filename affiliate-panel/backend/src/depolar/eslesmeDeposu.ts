@@ -59,6 +59,14 @@ export interface EslesmeDeposu {
    * kaydı döndürür — üzerine yazmak yasak.
    */
   ekleYokSayarak(kiraci: string, eslesme: OyuncuEslesmesi): Promise<{ eklendi: boolean; kayitli: OyuncuEslesmesi }>;
+  /**
+   * Yazar; kayıt VARSA üzerine yazar. Yalnızca admin eylemlerinden
+   * (toplu geçiş, elle düzeltme) çağrılır -- `ekleYokSayarak`'ın aksine
+   * "ilk kayıt kazanır" kuralını BİLEREK atlıyor: admin burada ground
+   * truth'u düzeltiyor, tahmin etmiyor. Önceki kaydı (varsa) döndürür ki
+   * çağıran "neydi, ne oldu" diyebilsin.
+   */
+  zorlaAta(kiraci: string, eslesme: OyuncuEslesmesi): Promise<{ oncekiKayit: OyuncuEslesmesi | null }>;
   bul(kiraci: string, lynonOyuncuId: string): Promise<OyuncuEslesmesi | null>;
   listele(kiraci: string, sorgu: EslesmeSorgusu): Promise<OyuncuEslesmesi[]>;
   cakismaYaz(kiraci: string, cakisma: EslesmeCakismasi): Promise<void>;
@@ -155,6 +163,36 @@ export function postgresEslesmeDeposu(): EslesmeDeposu {
       return { eklendi: false, kayitli: mevcut };
     },
 
+    async zorlaAta(kiraci, eslesme) {
+      const oncekiKayit = await bul(kiraci, eslesme.lynonOyuncuId);
+      await vtZorunlu()
+        .insert(oyuncuEslesmeleri)
+        .values({
+          kiraci,
+          lynonOyuncuId: eslesme.lynonOyuncuId,
+          ortakId: eslesme.ortakId,
+          ortakAnahtari: eslesme.ortakAnahtari,
+          clickId: eslesme.clickId,
+          medyaId: eslesme.medyaId,
+          alt: eslesme.alt,
+          kaynak: eslesme.kaynak,
+          olusturuldu: new Date(eslesme.olusturuldu),
+        })
+        .onConflictDoUpdate({
+          target: [oyuncuEslesmeleri.kiraci, oyuncuEslesmeleri.lynonOyuncuId],
+          set: {
+            ortakId: eslesme.ortakId,
+            ortakAnahtari: eslesme.ortakAnahtari,
+            clickId: eslesme.clickId,
+            medyaId: eslesme.medyaId,
+            alt: eslesme.alt,
+            kaynak: eslesme.kaynak,
+            olusturuldu: new Date(eslesme.olusturuldu),
+          },
+        });
+      return { oncekiKayit };
+    },
+
     bul,
 
     async listele(kiraci, sorgu) {
@@ -242,6 +280,18 @@ export function belgeEslesmeDeposu(): EslesmeDeposu {
           if (mevcut) return { eklendi: false, kayitli: mevcut };
           belge.eslesmeler.push(eslesme);
           return { eklendi: true, kayitli: eslesme };
+        },
+      );
+    },
+
+    async zorlaAta(kiraci, eslesme) {
+      return degistir<EslesmeBelgesi, { oncekiKayit: OyuncuEslesmesi | null }>(
+        kiraci, ALAN, cozEslesme, (belge) => {
+          const index = belge.eslesmeler.findIndex((e) => e.lynonOyuncuId === eslesme.lynonOyuncuId);
+          const oncekiKayit = index >= 0 ? belge.eslesmeler[index] : null;
+          if (index >= 0) belge.eslesmeler[index] = eslesme;
+          else belge.eslesmeler.push(eslesme);
+          return { oncekiKayit };
         },
       );
     },

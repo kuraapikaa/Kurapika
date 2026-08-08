@@ -49,6 +49,7 @@ import {
 } from '../servisler/ortaklar.js';
 import { otoBonusAyarla, otoBonusDurumu } from '../servisler/otoBonus.js';
 import { cakismalariListele, eslesmeleriListele } from '../servisler/oyuncuEslesme.js';
+import { topluAtamaYap, TOPLU_ATAMA_LIMITI } from '../servisler/topluAtama.js';
 import {
   postbackAyarla,
   postbackAyarlari,
@@ -394,6 +395,28 @@ export async function yonetimRotalari(app: FastifyInstance): Promise<void> {
       anahtar,
     };
   });
+
+  /**
+   * KULLANICI ADINDAN TOPLU AFFİLİATE GEÇİŞİ.
+   *
+   * Girdi doğrudan büyük olabilir (yapıştırılmış liste); alan doğrulaması
+   * ve satır bazlı sonuç `topluAtamaYap` içinde. Burada yalnızca adaptörü
+   * çözüp iş kuralına devrediyoruz.
+   */
+  app.post('/oyuncu-eslesmeleri/toplu-atama', async (istek) => {
+    const govde = (istek.body ?? {}) as { kullaniciAdlari?: unknown; ortakAnahtari?: unknown };
+    const adaptor = await adaptorZorunlu(istek.kiraci);
+    return topluAtamaYap(
+      istek.kiraci,
+      adaptor,
+      String(govde.kullaniciAdlari ?? ''),
+      String(govde.ortakAnahtari ?? ''),
+    );
+  });
+
+  app.get('/oyuncu-eslesmeleri/toplu-atama-siniri', async (): Promise<YonetimUclari['/oyuncu-eslesmeleri/toplu-atama-siniri']> => ({
+    limit: TOPLU_ATAMA_LIMITI,
+  }));
 
   /**
    * S2S anahtarı üretir. Düz metin YALNIZCA burada, bir kez dönüyor;

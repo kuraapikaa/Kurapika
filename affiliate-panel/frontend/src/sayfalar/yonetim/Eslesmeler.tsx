@@ -1,9 +1,16 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { api, gunBicimi, useVeri } from '../../api';
 import { OlcuKarti } from '../../grafik';
 import { KisaKimlik, VeriTablosu, type Sutun } from '../../tablo';
 import { Bos, Hata, Kart, Rozet, Yukleniyor } from '../../ui';
-import type { CakismaGorunumu, EslesmeGorunumu, YonetimUclari } from '@sunucu/sozlesme.js';
+import type {
+  CakismaGorunumu,
+  EslesmeGorunumu,
+  OrtakGorunumu,
+  TopluAtamaSatiri,
+  TopluAtamaSonucu,
+  YonetimUclari,
+} from '@sunucu/sozlesme.js';
 
 /**
  * OYUNCU ↔ ORTAK EŞLEŞMELERİ.
@@ -24,6 +31,7 @@ export function Eslesmeler() {
   const { veri, yukleniyor, hata, yenile } = useVeri<YonetimUclari['/oyuncu-eslesmeleri']>(
     '/api/yonetim/oyuncu-eslesmeleri',
   );
+  const ortaklarVeri = useVeri<YonetimUclari['/ortaklar']>('/api/yonetim/ortaklar');
 
   if (yukleniyor) return <Yukleniyor />;
   if (hata) return <Hata mesaj={hata} />;
@@ -132,6 +140,8 @@ export function Eslesmeler() {
         />
       </div>
 
+      <TopluAtamaKarti ortaklar={ortaklarVeri.veri?.ortaklar ?? []} yenile={yenile} />
+
       <Kart baslik="Kayıt bildirimi bağlantısı">
         <p className="mb-3 text-sm" style={{ color: 'var(--metin-2)' }}>
           Oyuncu Lynon’a kaydolduğunda siteniz aşağıdaki uca bildirim gönderir ve eşleşme kurulur.
@@ -211,5 +221,191 @@ Content-Type: application/json
         )}
       </Kart>
     </>
+  );
+}
+
+const KULLANICI_ADI_AYIRICI = /[\r\n,;]+/;
+
+function satirSayisiHesapla(ham: string): number {
+  return ham.split(KULLANICI_ADI_AYIRICI).map((s) => s.trim()).filter(Boolean).length;
+}
+
+const EAD_SONUC_RENGI: Record<TopluAtamaSatiri['durum'], 'olumlu' | 'notr' | 'olumsuz'> = {
+  basarili: 'olumlu',
+  bulunamadi: 'notr',
+  hata: 'olumsuz',
+};
+const EAD_SONUC_ETIKETI: Record<TopluAtamaSatiri['durum'], string> = {
+  basarili: 'Atandı',
+  bulunamadi: 'Bulunamadı',
+  hata: 'Hata',
+};
+
+/**
+ * KULLANICI ADINDAN TOPLU AFFİLİATE GEÇİŞİ.
+ *
+ * Girdi kullanıcı adı listesi + hedef ortak. Zaten başka bir ortakta
+ * olan bir oyuncu da BİLEREK taşınabiliyor — "geçiş" tam olarak bu:
+ * admin ground truth'u düzeltiyor, "ilk kayıt kazanır" siperi burada
+ * (S2S bildirimlerinin aksine) devre dışı.
+ */
+function TopluAtamaKarti({ ortaklar, yenile }: { ortaklar: OrtakGorunumu[]; yenile: () => void }) {
+  const [hedefOrtak, setHedefOrtak] = useState('');
+  const [kullaniciAdlari, setKullaniciAdlari] = useState('');
+  const [isliyor, setIsliyor] = useState(false);
+  const [hata, setHata] = useState<string | null>(null);
+  const [sonuc, setSonuc] = useState<TopluAtamaSonucu | null>(null);
+
+  const sinirVeri = useVeri<YonetimUclari['/oyuncu-eslesmeleri/toplu-atama-siniri']>(
+    '/api/yonetim/oyuncu-eslesmeleri/toplu-atama-siniri',
+  );
+  const limit = sinirVeri.veri?.limit ?? null;
+
+  const onayliOrtaklar = useMemo(() => ortaklar.filter((o) => o.durum === 'onaylandi'), [ortaklar]);
+  const ortakAdi = useMemo(() => new Map(ortaklar.map((o) => [o.id, o.ad])), [ortaklar]);
+  const satirSayisi = useMemo(() => satirSayisiHesapla(kullaniciAdlari), [kullaniciAdlari]);
+  const sinirAsildi = limit != null && satirSayisi > limit;
+
+  const gonderilebilir = Boolean(hedefOrtak) && satirSayisi > 0 && !sinirAsildi && !isliyor;
+
+  const gonder = async () => {
+    setIsliyor(true);
+    setHata(null);
+    setSonuc(null);
+    try {
+      const yanit = await api.gonder<TopluAtamaSonucu>('/api/yonetim/oyuncu-eslesmeleri/toplu-atama', {
+        kullaniciAdlari,
+        ortakAnahtari: hedefOrtak,
+      });
+      setSonuc(yanit);
+      yenile();
+    } catch (h) {
+      setHata((h as Error).message);
+    } finally {
+      setIsliyor(false);
+    }
+  };
+
+  const sonucSutunlari: Array<Sutun<TopluAtamaSatiri>> = [
+    { ad: 'kullanici', etiket: 'Kullanıcı adı', deger: (s) => s.kullaniciAdi },
+    {
+      ad: 'durum',
+      etiket: 'Durum',
+      deger: (s) => s.durum,
+      hucre: (s) => <Rozet metin={EAD_SONUC_ETIKETI[s.durum]} renk={EAD_SONUC_RENGI[s.durum]} />,
+    },
+    {
+      ad: 'detay',
+      etiket: 'Detay',
+      deger: (s) => s.eslesmeDurumu ?? s.hata ?? '',
+      hucre: (s) => {
+        if (s.durum === 'hata') return <span className="text-xs" style={{ color: 'var(--olumsuz)' }}>{s.hata}</span>;
+        if (s.durum === 'bulunamadi') {
+          return <span className="text-xs" style={{ color: 'var(--metin-2)' }}>Kullanıcı adı backoffice'te yok</span>;
+        }
+        if (s.eslesmeDurumu === 'tasindi') {
+          const onceki = s.oncekiOrtakId ? (ortakAdi.get(s.oncekiOrtakId) ?? s.oncekiOrtakId) : '—';
+          return <span className="text-xs">Taşındı — önceki: {onceki}</span>;
+        }
+        if (s.eslesmeDurumu === 'zaten-bu-ortakta') {
+          return <span className="text-xs" style={{ color: 'var(--metin-2)' }}>Zaten bu ortakta</span>;
+        }
+        return <span className="text-xs">Yeni eşleşme</span>;
+      },
+    },
+    {
+      ad: 'backoffice',
+      etiket: 'Backoffice',
+      deger: (s) => (s.backofficeBasarili === undefined ? '' : s.backofficeBasarili ? 1 : 0),
+      hucre: (s) => {
+        if (s.durum !== 'basarili') return <span className="text-xs" style={{ color: 'var(--metin-2)' }}>—</span>;
+        if (s.backofficeBasarili === undefined) return <span className="text-xs" style={{ color: 'var(--metin-2)' }}>—</span>;
+        return s.backofficeBasarili
+          ? <Rozet metin="Senkron" renk="olumlu" />
+          : <span title={s.backofficeMesaji}><Rozet metin="Senkron değil" renk="uyari" /></span>;
+      },
+    },
+  ];
+
+  return (
+    <Kart baslik="Kullanıcı adından toplu affiliate geçişi">
+      <p className="mb-3 text-sm" style={{ color: 'var(--metin-2)' }}>
+        Destek üzerinden ya da izleme linki olmadan kaydolmuş oyuncuları toplu hâlde bir ortağa
+        bağlar. <strong>Zaten başka bir ortakta olan bir oyuncu da taşınır</strong> — bu, S2S
+        bildirimindeki "ilk kayıt kazanır" korumasından bilerek farklı: burada ground truth'u
+        siz düzeltiyorsunuz.
+      </p>
+
+      <div className="grid gap-3 sm:grid-cols-[220px_1fr]">
+        <div>
+          <label className="mb-1 block text-xs font-semibold" style={{ color: 'var(--metin-2)' }}>
+            Hedef ortak
+          </label>
+          <select
+            value={hedefOrtak}
+            onChange={(e) => setHedefOrtak(e.target.value)}
+            className="h-10 w-full rounded-lg px-3 text-sm"
+            style={{ background: 'var(--yuzey-2)', border: '1px solid var(--kenar)', color: 'var(--metin-1)' }}
+          >
+            <option value="">Seçin…</option>
+            {onayliOrtaklar.map((o) => (
+              <option key={o.id} value={o.ortakAnahtari}>{o.ad} ({o.ortakAnahtari})</option>
+            ))}
+          </select>
+          {onayliOrtaklar.length === 0 && (
+            <p className="mt-1 text-xs" style={{ color: 'var(--uyari)' }}>Onaylı ortak yok.</p>
+          )}
+
+          <p className="mt-3 text-xs" style={{ color: 'var(--metin-2)' }}>
+            {satirSayisi} kullanıcı adı
+            {limit != null && ` / en fazla ${limit}`}
+          </p>
+          {sinirAsildi && (
+            <p className="mt-1 text-xs" style={{ color: 'var(--olumsuz)' }}>
+              Sınır aşıldı — listeyi bölüp ayrı ayrı gönderin.
+            </p>
+          )}
+        </div>
+
+        <textarea
+          value={kullaniciAdlari}
+          onChange={(e) => setKullaniciAdlari(e.target.value)}
+          placeholder={'kullanici1\nkullanici2\nkullanici3'}
+          rows={6}
+          className="w-full rounded-lg px-3 py-2 font-mono text-xs"
+          style={{ background: 'var(--yuzey-2)', border: '1px solid var(--kenar)', color: 'var(--metin-1)' }}
+        />
+      </div>
+
+      {hata && <p className="mt-3 text-sm" style={{ color: 'var(--olumsuz)' }}>{hata}</p>}
+
+      <button
+        type="button"
+        onClick={gonder}
+        disabled={!gonderilebilir}
+        className="mt-3 rounded-lg px-4 py-2 text-sm font-semibold transition-opacity disabled:opacity-50"
+        style={{ background: 'var(--vurgu)', color: 'var(--vurgu-uzeri)' }}
+      >
+        {isliyor ? 'İşleniyor…' : 'Toplu ata'}
+      </button>
+
+      {sonuc && (
+        <div className="mt-4">
+          <div className="mb-3 flex flex-wrap gap-2 text-xs">
+            <Rozet metin={`${sonuc.basarili} atandı`} renk="olumlu" />
+            {sonuc.bulunamadi > 0 && <Rozet metin={`${sonuc.bulunamadi} bulunamadı`} renk="notr" />}
+            {sonuc.hatali > 0 && <Rozet metin={`${sonuc.hatali} hata`} renk="olumsuz" />}
+            {sonuc.tekrarSayisi > 0 && (
+              <span style={{ color: 'var(--metin-2)' }}>({sonuc.tekrarSayisi} tekrar eden ad atlandı)</span>
+            )}
+          </div>
+          <VeriTablosu
+            satirlar={sonuc.satirlar}
+            anahtar={(s) => s.kullaniciAdi}
+            sutunlar={sonucSutunlari}
+          />
+        </div>
+      )}
+    </Kart>
   );
 }

@@ -296,6 +296,30 @@ varsaCalistir('depo denkligi', () => {
       });
     });
 
+    describe('zorlaAta (admin gecersiz kilmasi)', () => {
+      it('kayit yoksa olusturur, onceki kayit null doner', async () => {
+        const sonuc = await ikisindeDe(eslesmeUygulamalari, async (depo: EslesmeDeposu) => {
+          const { oncekiKayit } = await depo.zorlaAta(KIRACI, eslesme('p10', 'ortak-a'));
+          const kalan = await depo.bul(KIRACI, 'p10');
+          return { oncekiKayit, kalanOrtak: kalan?.ortakId };
+        });
+        expect(sonuc).toEqual({ oncekiKayit: null, kalanOrtak: 'ortak-a' });
+      });
+
+      /** ekleYokSayarak'in aksine burada IKINCI yazma KAZANIR. */
+      it('mevcut kaydin UZERINE yazar ve eskisini dondurur', async () => {
+        const sonuc = await ikisindeDe(eslesmeUygulamalari, async (depo: EslesmeDeposu) => {
+          await depo.zorlaAta(KIRACI, eslesme('p11', 'ortak-a', { olusturuldu: '2026-08-01T00:00:00.000Z' }));
+          const { oncekiKayit } = await depo.zorlaAta(
+            KIRACI, eslesme('p11', 'ortak-b', { olusturuldu: '2026-08-09T00:00:00.000Z' }),
+          );
+          const kalan = await depo.bul(KIRACI, 'p11');
+          return { oncekiOrtak: oncekiKayit?.ortakId, kalanOrtak: kalan?.ortakId, kalanZaman: kalan?.olusturuldu };
+        });
+        expect(sonuc).toEqual({ oncekiOrtak: 'ortak-a', kalanOrtak: 'ortak-b', kalanZaman: '2026-08-09T00:00:00.000Z' });
+      });
+    });
+
     it('ortaga gore suzer, en yeni once', async () => {
       const sonuc = await ikisindeDe(eslesmeUygulamalari, async (depo: EslesmeDeposu) => {
         await depo.ekleYokSayarak(KIRACI, eslesme('p1', 'ortak-a', { olusturuldu: '2026-08-01T00:00:00.000Z' }));

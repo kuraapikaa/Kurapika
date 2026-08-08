@@ -29,6 +29,8 @@ export interface MenuOgesi {
   altlar?: Array<{ yol: string; etiket: string }>;
   /** `end` yalnızca tam eşleşmede seçili sayar; kök yollar için gerekli. */
   tam?: boolean;
+  /** Bu ögeden ÖNCE ince bir ayraç çizilir; genelde ayarlar/idari bölüm başlangıcı. */
+  bolumOnce?: boolean;
 }
 
 export function Kabuk({
@@ -79,7 +81,12 @@ export function Kabuk({
         </div>
 
         <nav className="flex-1 space-y-0.5 overflow-y-auto p-2">
-          {menu.map((oge) => <MenuSatiri key={oge.yol} oge={oge} />)}
+          {menu.map((oge) => (
+            <div key={oge.yol}>
+              {oge.bolumOnce && <BolumAyraci />}
+              <MenuSatiri oge={oge} />
+            </div>
+          ))}
         </nav>
       </aside>
 
@@ -130,6 +137,32 @@ function Kirintilar({ menu }: { menu: MenuOgesi[] }) {
   return <p className="truncate text-sm font-medium">Panel</p>;
 }
 
+/**
+ * Bölüm boşluğu — üçüncü grup öncesi (Ayarlar).
+ *
+ * Yeni bir metin etiketi eklemiyor ("büyük harf yok" kuralı zaten
+ * dekoratif HUD başlıklarını reddediyor); bunun yerine tek, ince bir
+ * çizgiyle üstü diğerlerinden ayırıyor. `.ray` yüzeyinde bu çizgi
+ * zaten kurulu dilin bir parçası ("ince çizgiler, mavi vurgu").
+ */
+function BolumAyraci() {
+  return <div className="my-2 border-t" style={{ borderColor: 'var(--kenar)' }} />;
+}
+
+function Sevron({ acik }: { acik: boolean }) {
+  return (
+    <svg
+      width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+      className="ml-auto shrink-0 opacity-60 transition-transform duration-150"
+      style={{ transform: acik ? 'rotate(90deg)' : 'none' }}
+      aria-hidden
+    >
+      <path d="m9 6 6 6-6 6" />
+    </svg>
+  );
+}
+
 function MenuSatiri({ oge }: { oge: MenuOgesi }) {
   const { pathname } = useLocation();
   const icerdeMi = Boolean(oge.altlar?.some((a) => a.yol === pathname));
@@ -142,16 +175,25 @@ function MenuSatiri({ oge }: { oge: MenuOgesi }) {
   }, [icerdeMi]);
 
   // Secili oge macOS kenar cubugu gibi: yumusak mavi dolgu, mavi
-  // metin. Cizgi, isilti, buyuk harf yok.
-  const stil = ({ isActive }: { isActive: boolean }) => ({
+  // metin. Cizgi, isilti, buyuk harf yok. Secili OLMAYAN oge fareyle
+  // uzerine gelince hafifce belirginlesir -- oncesinde hicbir geri
+  // bildirim yoktu, tikanabilir bir hedef mi degil mi belirsizdi.
+  const stilVer = ({ isActive }: { isActive: boolean }) => ({
     background: isActive ? 'var(--vurgu-yumusak)' : 'transparent',
     color: isActive ? 'var(--vurgu)' : 'var(--metin-2)',
     fontWeight: isActive ? 500 : 400,
   });
 
+  const hover = 'transition-colors duration-100 hover:[background:var(--yuzey-2)]';
+
   if (!oge.altlar?.length) {
     return (
-      <NavLink to={oge.yol} end={oge.tam} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm" style={stil}>
+      <NavLink
+        to={oge.yol}
+        end={oge.tam}
+        className={({ isActive }) => `flex items-center gap-2 rounded-lg px-3 py-2 text-sm ${isActive ? '' : hover}`}
+        style={stilVer}
+      >
         <span className="shrink-0 opacity-80">{oge.ikon}</span>
         <span className="truncate">{oge.etiket}</span>
       </NavLink>
@@ -162,18 +204,24 @@ function MenuSatiri({ oge }: { oge: MenuOgesi }) {
     <div>
       <button
         type="button"
-        className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm"
+        className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm ${icerdeMi ? '' : hover}`}
         style={{ color: icerdeMi ? 'var(--vurgu)' : 'var(--metin-2)', fontWeight: icerdeMi ? 500 : 400 }}
         onClick={() => setAcik(!acik)}
+        aria-expanded={acik}
       >
         <span className="shrink-0 opacity-80">{oge.ikon}</span>
         <span className="truncate">{oge.etiket}</span>
-        <span className="ml-auto text-xs" aria-hidden>{acik ? '⌄' : '›'}</span>
+        <Sevron acik={acik} />
       </button>
       {acik && (
         <div className="ml-4 space-y-0.5 border-l pl-2" style={{ borderColor: 'var(--kenar)' }}>
           {oge.altlar.map((a) => (
-            <NavLink key={a.yol} to={a.yol} className="block truncate rounded-lg px-3 py-1.5 text-sm" style={stil}>
+            <NavLink
+              key={a.yol}
+              to={a.yol}
+              className={({ isActive }) => `block truncate rounded-lg px-3 py-1.5 text-sm ${isActive ? '' : hover}`}
+              style={stilVer}
+            >
               {a.etiket}
             </NavLink>
           ))}

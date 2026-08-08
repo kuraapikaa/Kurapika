@@ -5,6 +5,7 @@ import {
   eslesmeBul,
   eslesmeleriListele,
   oyuncuyuEslestir,
+  oyuncuyuYenidenAta,
 } from './oyuncuEslesme.js';
 import { ortakGuncelle, ortakOlustur } from './ortaklar.js';
 import { tiklamaKaydet } from './tiklama.js';
@@ -163,6 +164,83 @@ describe('oyuncu eslesmesi', () => {
 
     expect((await eslesmeleriListele(k)).map((e) => e.lynonOyuncuId)).toEqual(['3', '2', '1']);
     expect((await eslesmeleriListele(k, { ortakId: a.id })).map((e) => e.lynonOyuncuId)).toEqual(['3', '1']);
+  });
+
+  describe('admin gecersiz kilmasi (oyuncuyuYenidenAta)', () => {
+    it('kayit yoksa olusturur', async () => {
+      const k = kiraci();
+      const ortak = await onayliOrtak(k, 'ORT1');
+
+      const sonuc = await oyuncuyuYenidenAta(k, { lynonOyuncuId: '80001', ortakAnahtari: 'ORT1' });
+
+      expect(sonuc).toMatchObject({ durum: 'olusturuldu', oncekiOrtakId: null });
+      expect(sonuc.eslesme.ortakId).toBe(ortak.id);
+      expect(sonuc.eslesme.kaynak).toBe('elle');
+      expect(await eslesmeBul(k, '80001')).toMatchObject({ ortakId: ortak.id });
+    });
+
+    /**
+     * ASIL FARK: oyuncuyuEslestir'in aksine burada IKINCI cagri
+     * KAZANIR. Admin eylemi icin dogru davranis bu -- "ilk kayit
+     * kazanir" siperi yalnizca S2S bildirimleri icin.
+     */
+    it('baska ortaktaki oyuncuyu TASIR, oncekiOrtakId doner', async () => {
+      const k = kiraci();
+      const eski = await onayliOrtak(k, 'ORT1', 'Eski');
+      const yeni = await onayliOrtak(k, 'ORT2', 'Yeni');
+
+      await oyuncuyuEslestir(k, { lynonOyuncuId: '80002', ref: 'ORT1' });
+      const sonuc = await oyuncuyuYenidenAta(k, { lynonOyuncuId: '80002', ortakAnahtari: 'ORT2' });
+
+      expect(sonuc.durum).toBe('tasindi');
+      expect(sonuc.oncekiOrtakId).toBe(eski.id);
+      expect(sonuc.eslesme.ortakId).toBe(yeni.id);
+      expect(await eslesmeBul(k, '80002')).toMatchObject({ ortakId: yeni.id });
+    });
+
+    it('tasima cakisma olarak yazilmaz -- bu bir hata degil, admin karari', async () => {
+      const k = kiraci();
+      await onayliOrtak(k, 'ORT1');
+      await onayliOrtak(k, 'ORT2');
+
+      await oyuncuyuEslestir(k, { lynonOyuncuId: '80003', ref: 'ORT1' });
+      await oyuncuyuYenidenAta(k, { lynonOyuncuId: '80003', ortakAnahtari: 'ORT2' });
+
+      expect(await cakismalariListele(k)).toHaveLength(0);
+    });
+
+    it('zaten bu ortaktaysa tasindi DEGIL, zaten-bu-ortakta doner', async () => {
+      const k = kiraci();
+      const ortak = await onayliOrtak(k, 'ORT1');
+      await oyuncuyuEslestir(k, { lynonOyuncuId: '80004', ref: 'ORT1' });
+
+      const sonuc = await oyuncuyuYenidenAta(k, { lynonOyuncuId: '80004', ortakAnahtari: 'ORT1' });
+
+      expect(sonuc.durum).toBe('zaten-bu-ortakta');
+      expect(sonuc.oncekiOrtakId).toBeNull();
+      expect(sonuc.eslesme.ortakId).toBe(ortak.id);
+    });
+
+    it('onaysiz ortaga atama reddedilir', async () => {
+      const k = kiraci();
+      await ortakOlustur(k, {
+        ad: 'Bekleyen', eposta: 'bekleyen@ornek.test', parola: 'cok-guclu-parola', ortakAnahtari: 'ORT9',
+      });
+      await expect(oyuncuyuYenidenAta(k, { lynonOyuncuId: '80005', ortakAnahtari: 'ORT9' }))
+        .rejects.toThrow(/onaylı değil/i);
+    });
+
+    it('bilinmeyen ortak anahtari reddedilir', async () => {
+      await expect(oyuncuyuYenidenAta(kiraci(), { lynonOyuncuId: '80006', ortakAnahtari: 'YOK' }))
+        .rejects.toThrow(/bulunamadı/i);
+    });
+
+    it('oyuncu kimligi zorunlu', async () => {
+      const k = kiraci();
+      await onayliOrtak(k, 'ORT1');
+      await expect(oyuncuyuYenidenAta(k, { lynonOyuncuId: '  ', ortakAnahtari: 'ORT1' }))
+        .rejects.toThrow(/lynonOyuncuId/);
+    });
   });
 
   it('kiracilar birbirinin eslesmesini gormez', async () => {
