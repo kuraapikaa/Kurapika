@@ -1,6 +1,10 @@
 import { randomUUID } from 'crypto';
-import { describe, expect, it } from 'vitest';
+import { eq } from 'drizzle-orm';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { BackofficeAdaptoru } from '../adaptorler/tur.js';
+import { olcumler as olcumTablosu, oyuncuGunluk as gunlukTablosu } from '../lib/sema.js';
+import { veritabani, veritabaniniBaslat, veritabaniniKapat } from '../lib/veritabani.js';
+import { testVeritabaniAc } from '../../test/testVeritabani.js';
 import { eslesmeBul, oyuncuyuEslestir } from './oyuncuEslesme.js';
 import { ortakGuncelle, ortakOlustur } from './ortaklar.js';
 import { kullaniciAdlariniAyikla, topluAtamaYap, TOPLU_ATAMA_LIMITI } from './topluAtama.js';
@@ -183,5 +187,56 @@ describe('topluAtamaYap', () => {
 
     expect(sonuc.toplam).toBe(1);
     expect(sonuc.tekrarSayisi).toBe(2);
+  });
+});
+
+const varsaCalistir = String(process.env.TEST_DATABASE_URL || '').trim() ? describe : describe.skip;
+
+/**
+ * Toplu geçişin hedef ortağın ÖZETİNE de yansıdığını doğruluyor —
+ * yalnızca eşleşme kaydının doğru olması yetmez, ortak sayfasında GGR
+ * ve yatırım/çekim rakamlarını GÖREBİLMESİ de gerekiyor (bkz. dosya
+ * başındaki `oyunculariIcinGelirleriGuncelle` çağrısı).
+ */
+varsaCalistir('topluAtamaYap: gecmis webhook verisini hedef ortaga yansitma', () => {
+  beforeAll(async () => {
+    process.env.DATABASE_URL = (await testVeritabaniAc('aff_test_toplu_atama'))!;
+    await veritabaniniBaslat();
+  });
+
+  afterAll(async () => {
+    await veritabaniniKapat();
+    delete process.env.DATABASE_URL;
+  });
+
+  it('devredilen oyuncunun onceki gunu hedef ortagin ozetinde hemen gorunur', async () => {
+    const k = kiraci();
+    await onayliOrtak(k, 'HEDEF1');
+    const adaptor = sahteAdaptor({ devreden: '555' });
+
+    // Oyuncu, toplu gecisten ONCE zaten webhook'tan biriken bir gune
+    // sahip (baska bir baglamdan -- eslesme henuz yokken de olabilir).
+    await veritabani()!.insert(gunlukTablosu).values({
+      kiraci: k, gun: '2026-08-05', oyuncuId: '555',
+      yatirim: 300, cekim: 20, bahis: 0, kazanc: 0, olaySayisi: 1, guncellendi: new Date(),
+    });
+
+    await topluAtamaYap(k, adaptor, 'devreden', 'HEDEF1');
+
+    const satirlar = await veritabani()!.select().from(olcumTablosu).where(eq(olcumTablosu.kiraci, k));
+    expect(satirlar).toHaveLength(1);
+    expect(satirlar[0]).toMatchObject({
+      gun: '2026-08-05', ortakAnahtari: 'HEDEF1', yatirim: 300, cekim: 20, kaynak: 'itme',
+    });
+  });
+
+  it('webhook gecmisi olmayan oyuncu icin olcum satiri uretmez', async () => {
+    const k = kiraci();
+    await onayliOrtak(k, 'HEDEF2');
+    const adaptor = sahteAdaptor({ taze: '556' });
+
+    await topluAtamaYap(k, adaptor, 'taze', 'HEDEF2');
+
+    expect(await veritabani()!.select().from(olcumTablosu).where(eq(olcumTablosu.kiraci, k))).toHaveLength(0);
   });
 });
