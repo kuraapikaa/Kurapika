@@ -15,7 +15,7 @@ import {
   tiklamalar as tiklamaTablosu,
 } from '../lib/sema.js';
 import { veritabani, veritabaniniBaslat, veritabaniniKapat } from '../lib/veritabani.js';
-import { altLinkFinansOzeti } from '../servisler/oyuncuEslesme.js';
+import { altLinkFinansOzeti, altLinkOyuncuListesi, ortakGunlukGeliriGuncelle } from '../servisler/oyuncuEslesme.js';
 import { testVeritabaniAc } from '../../test/testVeritabani.js';
 
 /**
@@ -301,6 +301,7 @@ varsaCalistir('depo denkligi', () => {
       clickId: null,
       medyaId: null,
       altLinkId: null,
+      kullaniciAdi: null,
       alt: {},
       kaynak: 'kayit',
       olusturuldu: '2026-08-01T00:00:00.000Z',
@@ -545,6 +546,127 @@ varsaCalistir('depo denkligi', () => {
       expect(await altLinkFinansOzeti(KIRACI, 'ortak-a')).toEqual([
         { altLinkId: 'link-a', oyuncuSayisi: 1, yatirim: 0, cekim: 0 },
       ]);
+    });
+  });
+
+  describe('altLinkOyuncuListesi', () => {
+    it('linkten gelen oyunculari kullanici adi ve tutarlarla listeler', async () => {
+      const vt = veritabani()!;
+      await vt.insert(eslesmeTablosu).values([
+        {
+          kiraci: KIRACI, lynonOyuncuId: 'p10', ortakId: 'ortak-a', ortakAnahtari: 'ORTAK-A',
+          clickId: null, medyaId: null, altLinkId: 'link-liste', kullaniciAdi: 'ahmet01', alt: {},
+          kaynak: 'kayit', olusturuldu: new Date('2026-08-01T10:00:00Z'),
+        },
+        {
+          // Kullanici adi bilinmiyor -- eski (bu ozellikten once) bir kayit olabilir.
+          kiraci: KIRACI, lynonOyuncuId: 'p11', ortakId: 'ortak-a', ortakAnahtari: 'ORTAK-A',
+          clickId: null, medyaId: null, altLinkId: 'link-liste', kullaniciAdi: null, alt: {},
+          kaynak: 'kayit', olusturuldu: new Date('2026-08-02T10:00:00Z'),
+        },
+        {
+          // Baska bir link: listede gorunmemeli.
+          kiraci: KIRACI, lynonOyuncuId: 'p12', ortakId: 'ortak-a', ortakAnahtari: 'ORTAK-A',
+          clickId: null, medyaId: null, altLinkId: 'baska-link', kullaniciAdi: 'baska', alt: {},
+          kaynak: 'kayit', olusturuldu: new Date('2026-08-01T10:00:00Z'),
+        },
+      ]);
+      await vt.insert(gunlukTablosu).values([
+        { kiraci: KIRACI, gun: '2026-08-01', oyuncuId: 'p10', yatirim: 200, cekim: 50, bahis: 0, kazanc: 0, olaySayisi: 1, guncellendi: new Date() },
+        { kiraci: KIRACI, gun: '2026-08-02', oyuncuId: 'p10', yatirim: 100, cekim: 0, bahis: 0, kazanc: 0, olaySayisi: 1, guncellendi: new Date() },
+      ]);
+
+      const liste = await altLinkOyuncuListesi(KIRACI, 'link-liste');
+      // En yeni once.
+      expect(liste).toEqual([
+        { lynonOyuncuId: 'p11', kullaniciAdi: null, yatirim: 0, cekim: 0, olusturuldu: '2026-08-02T10:00:00.000Z' },
+        { lynonOyuncuId: 'p10', kullaniciAdi: 'ahmet01', yatirim: 300, cekim: 50, olusturuldu: '2026-08-01T10:00:00.000Z' },
+      ]);
+    });
+
+    it('esleseni olmayan link icin bos liste doner', async () => {
+      expect(await altLinkOyuncuListesi(KIRACI, 'yok-boyle-link')).toEqual([]);
+    });
+  });
+
+  /**
+   * `ortakGunlukGeliriGuncelle`, webhook'tan gelen `oyuncuGunluk`u
+   * `oyuncuEslesmeleri` ile birlestirip `olcumler`e `kaynak: 'itme'` ile
+   * yaziyor -- Lynon'un BTag raporuna hic ihtiyac duymadan. Bu, panelin
+   * kendi trafigini Lynon'un third-party affiliate kaydina hic katilmadan
+   * dogru raporlayabilmesinin dayanagi.
+   */
+  describe('ortakGunlukGeliriGuncelle', () => {
+    it('ortaga baglı oyuncularin gunluk toplamini olculere kaynak=itme ile yazar', async () => {
+      const vt = veritabani()!;
+      await vt.insert(eslesmeTablosu).values([
+        {
+          kiraci: KIRACI, lynonOyuncuId: 'g1', ortakId: 'ortak-gelir', ortakAnahtari: 'ORTAK-GELIR',
+          clickId: null, medyaId: null, altLinkId: null, alt: {}, kaynak: 'kayit',
+          olusturuldu: new Date('2026-08-01T00:00:00Z'),
+        },
+        {
+          kiraci: KIRACI, lynonOyuncuId: 'g2', ortakId: 'ortak-gelir', ortakAnahtari: 'ORTAK-GELIR',
+          clickId: null, medyaId: null, altLinkId: null, alt: {}, kaynak: 'kayit',
+          olusturuldu: new Date('2026-08-01T00:00:00Z'),
+        },
+      ]);
+      await vt.insert(gunlukTablosu).values([
+        { kiraci: KIRACI, gun: '2026-08-05', oyuncuId: 'g1', yatirim: 100, cekim: 10, bahis: 500, kazanc: 300, olaySayisi: 2, guncellendi: new Date() },
+        { kiraci: KIRACI, gun: '2026-08-05', oyuncuId: 'g2', yatirim: 0, cekim: 0, bahis: 200, kazanc: 250, olaySayisi: 1, guncellendi: new Date() },
+      ]);
+
+      const sonuc = await ortakGunlukGeliriGuncelle(KIRACI, '2026-08-05', 'ortak-gelir', 'ORTAK-GELIR', new Date());
+      expect(sonuc).toEqual({ yazildiMi: true, yatirim: 100, cekim: 10 });
+
+      const satirlar = await vt.select().from(olcumTablosu);
+      expect(satirlar).toHaveLength(1);
+      expect(satirlar[0]).toMatchObject({
+        kiraci: KIRACI, gun: '2026-08-05', ortakAnahtari: 'ORTAK-GELIR',
+        oyuncuSayisi: 2, aktifOyuncuSayisi: 2,
+        yatirim: 100, cekim: 10,
+        ggr: 700 - 550, // toplam bahis - toplam kazanc = 150
+        ftdSayisi: null, kaynak: 'itme',
+      });
+    });
+
+    it('itme yazdiktan sonra gelen cekme (Lynon senkronu) onu EZMEZ', async () => {
+      const vt = veritabani()!;
+      await vt.insert(eslesmeTablosu).values({
+        kiraci: KIRACI, lynonOyuncuId: 'g3', ortakId: 'ortak-ezmez', ortakAnahtari: 'ORTAK-EZMEZ',
+        clickId: null, medyaId: null, altLinkId: null, alt: {}, kaynak: 'kayit',
+        olusturuldu: new Date('2026-08-01T00:00:00Z'),
+      });
+      await vt.insert(gunlukTablosu).values({
+        kiraci: KIRACI, gun: '2026-08-06', oyuncuId: 'g3', yatirim: 50, cekim: 0, bahis: 0, kazanc: 0, olaySayisi: 1, guncellendi: new Date(),
+      });
+
+      await ortakGunlukGeliriGuncelle(KIRACI, '2026-08-06', 'ortak-ezmez', 'ORTAK-EZMEZ', new Date());
+
+      const { olcumleriYaz } = await import('../servisler/olcum.js');
+      await olcumleriYaz(KIRACI, [{
+        gun: '2026-08-06', ortakAnahtari: 'ORTAK-EZMEZ', oyuncuSayisi: 999, aktifOyuncuSayisi: 999,
+        yatirim: 0, cekim: 0, ggr: 0, ftdSayisi: 3, kaynak: 'cekme',
+      }], new Date());
+
+      const satirlar = await vt.select().from(olcumTablosu);
+      // Cekme yok sayildi; itme deger korundu.
+      expect(satirlar.find((s) => s.ortakAnahtari === 'ORTAK-EZMEZ')).toMatchObject({
+        yatirim: 50, oyuncuSayisi: 1, kaynak: 'itme',
+      });
+    });
+
+    it('o gun ortaga ait hic olay yoksa yazmaz', async () => {
+      const vt = veritabani()!;
+      await vt.insert(eslesmeTablosu).values({
+        kiraci: KIRACI, lynonOyuncuId: 'g4', ortakId: 'ortak-bos', ortakAnahtari: 'ORTAK-BOS',
+        clickId: null, medyaId: null, altLinkId: null, alt: {}, kaynak: 'kayit',
+        olusturuldu: new Date('2026-08-01T00:00:00Z'),
+      });
+
+      const sonuc = await ortakGunlukGeliriGuncelle(KIRACI, '2026-08-07', 'ortak-bos', 'ORTAK-BOS', new Date());
+      expect(sonuc).toEqual({ yazildiMi: false, yatirim: 0, cekim: 0 });
+      expect(await vt.select().from(olcumTablosu)).toHaveLength(0);
     });
   });
 });

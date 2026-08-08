@@ -126,7 +126,13 @@ export async function topluAtamaYap(
 
       const eslesme = await oyuncuyuYenidenAta(
         kiraci,
-        { lynonOyuncuId: bulunan.oyuncuId, ortakAnahtari: temizOrtakAnahtari },
+        {
+          lynonOyuncuId: bulunan.oyuncuId,
+          ortakAnahtari: temizOrtakAnahtari,
+          // Zaten elde: kullanici adindan arandigi icin backoffice ayni
+          // yanitta kullanici adini da dondurdu.
+          kullaniciAdi: bulunan.kullaniciAdi,
+        },
         simdi,
       );
 

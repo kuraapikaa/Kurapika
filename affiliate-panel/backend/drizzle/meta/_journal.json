@@ -36,6 +36,13 @@
       "when": 1786177246463,
       "tag": "0004_alt_link_id",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1786223911099,
+      "tag": "0005_kullanici_adi",
+      "breakpoints": true
     }
   ]
 }

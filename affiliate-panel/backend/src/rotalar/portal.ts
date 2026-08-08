@@ -14,7 +14,7 @@ import { altParametreleriTemizle } from '../servisler/izleme.js';
 import { medyaIzlemeLinki, medyalariListele } from '../servisler/medya.js';
 import { ortakOzetleri } from '../servisler/olcum.js';
 import { ftdDurumu } from '../servisler/ilkYatirim.js';
-import { altLinkFinansOzeti } from '../servisler/oyuncuEslesme.js';
+import { altLinkFinansOzeti, altLinkOyuncuListesi } from '../servisler/oyuncuEslesme.js';
 import { ortakBul, onayZorunlu } from '../servisler/ortaklar.js';
 import { postbackAyarla, postbackAyarlari, postbackKayitlari } from '../servisler/postback.js';
 import { altLinkTiklamaOzeti, tiklamalariListele, tiklamaOzeti } from '../servisler/tiklama.js';
@@ -259,6 +259,24 @@ export async function portalRotalari(app: FastifyInstance): Promise<void> {
     yanit.header('Cache-Control', 'no-store');
     yanit.type('image/svg+xml');
     return svg;
+  });
+
+  /**
+   * ALT LİNK → OYUNCU YOLCULUĞU.
+   *
+   * Ortağa "kaç tıklama" değil, GERÇEKTEN kayıt olan kullanıcıları
+   * gösteriyor. Sahiplik yine listeden geliyor (QR ucuyla aynı desen):
+   * kimlikten dogrudan sorgulamak, baskasinin linkinin oyuncularini
+   * gormeye izin verirdi.
+   */
+  app.get<{ Params: { id: string } }>('/alt-linkler/:id/oyuncular', async (istek, yanit) => {
+    const linkler = await altLinkleriListele(istek.kiraci, istek.oturum!.ortakAnahtari);
+    const link = linkler.find((l) => l.id === istek.params.id);
+    if (!link) {
+      yanit.status(404);
+      return { hata: 'Alt link bulunamadı.' };
+    }
+    return { oyuncular: await altLinkOyuncuListesi(istek.kiraci, link.id) };
   });
 
   app.put<{ Params: { id: string } }>('/alt-linkler/:id', async (istek) => {

@@ -1,4 +1,4 @@
-import { and, eq, isNotNull, sql } from 'drizzle-orm';
+import { and, desc, eq, isNotNull, sql } from 'drizzle-orm';
 import {
   eslesmeDeposu,
   yeniCakismaId,
@@ -10,6 +10,7 @@ import {
 } from '../depolar/eslesmeDeposu.js';
 import { oyuncuEslesmeleri, oyuncuGunluk } from '../lib/sema.js';
 import { veritabani } from '../lib/veritabani.js';
+import { olcumleriYaz } from './olcum.js';
 import { onayliMi, ortakAnahtarindanBul, type Ortak } from './ortaklar.js';
 import { tiklamaBul } from './tiklama.js';
 
@@ -57,6 +58,8 @@ export interface EslesmeIstegi {
    */
   ref: string;
   kaynak?: EslesmeKaynagi;
+  /** Sitenin bildirimde verdiği kullanıcı adı; varsa. */
+  kullaniciAdi?: string;
 }
 
 export interface EslesmeSonucu {
@@ -128,6 +131,7 @@ export async function oyuncuyuEslestir(
     clickId: cozulmus.clickId,
     medyaId: cozulmus.medyaId,
     altLinkId: cozulmus.altLinkId,
+    kullaniciAdi: metin(istek.kullaniciAdi) || null,
     alt: cozulmus.alt,
     kaynak: istek.kaynak === 'elle' ? 'elle' : 'kayit',
     olusturuldu: simdi.toISOString(),
@@ -181,7 +185,7 @@ export interface YenidenAtamaSonucu {
  */
 export async function oyuncuyuYenidenAta(
   kiraci: string,
-  girdi: { lynonOyuncuId: string; ortakAnahtari: string },
+  girdi: { lynonOyuncuId: string; ortakAnahtari: string; kullaniciAdi?: string },
   simdi = new Date(),
 ): Promise<YenidenAtamaSonucu> {
   const lynonOyuncuId = metin(girdi.lynonOyuncuId);
@@ -194,6 +198,13 @@ export async function oyuncuyuYenidenAta(
     throw new EslesmeHatasi('Ortak onaylı değil; oyuncu eşleştirilemez.', 403);
   }
 
+  // Cagiran kullanici adini bilmiyorsa (ornegin admin formundan tekil
+  // duzeltme), mevcut kayittaki adi SILMIYORUZ -- zorlaAta diger baglam
+  // alanlarini (medyaId, clickId...) bilerek sifirliyor ama kullanici adi
+  // baska bir yoldan (S2S bildirimi, toplu gecis) zaten ogrenilmis olabilir.
+  const mevcut = await eslesmeDeposu().bul(kiraci, lynonOyuncuId);
+  const kullaniciAdi = metin(girdi.kullaniciAdi) || mevcut?.kullaniciAdi || null;
+
   const aday: OyuncuEslesmesi = {
     lynonOyuncuId,
     ortakId: ortak.id,
@@ -201,6 +212,7 @@ export async function oyuncuyuYenidenAta(
     clickId: null,
     medyaId: null,
     altLinkId: null,
+    kullaniciAdi,
     alt: {},
     kaynak: 'elle',
     olusturuldu: simdi.toISOString(),
@@ -291,6 +303,140 @@ export async function altLinkFinansOzeti(kiraci: string, ortakId?: string): Prom
       yatirim: Number(s.yatirim),
       cekim: Number(s.cekim),
     }));
+}
+
+export interface AltLinkOyuncusu {
+  lynonOyuncuId: string;
+  /** Backoffice kullanıcı adı; bilinmiyorsa `null` — çağıran taraf o zaman ID'yi gösterir. */
+  kullaniciAdi: string | null;
+  yatirim: number;
+  cekim: number;
+  olusturuldu: string;
+}
+
+/**
+ * Bir alt linkten kayıt olan oyuncuların listesi.
+ *
+ * "Kaç tıklama" `altLinkOzeti`de var; bu, ondan bir adım ötesi — GERÇEKTEN
+ * kayıt olup eşleşen oyuncuları TEK TEK gösteriyor. Ortak "linkim
+ * çalıştı mı" sorusunu artık sadece tıklama sayısıyla değil, hangi
+ * kullanıcı adının kayıt olduğuyla cevaplayabiliyor.
+ */
+export async function altLinkOyuncuListesi(kiraci: string, altLinkId: string): Promise<AltLinkOyuncusu[]> {
+  const vt = veritabani();
+  if (!vt) return [];
+
+  const satirlar = await vt
+    .select({
+      lynonOyuncuId: oyuncuEslesmeleri.lynonOyuncuId,
+      kullaniciAdi: oyuncuEslesmeleri.kullaniciAdi,
+      olusturuldu: oyuncuEslesmeleri.olusturuldu,
+      yatirim: sql<number>`coalesce(sum(${oyuncuGunluk.yatirim}), 0)`,
+      cekim: sql<number>`coalesce(sum(${oyuncuGunluk.cekim}), 0)`,
+    })
+    .from(oyuncuEslesmeleri)
+    .leftJoin(oyuncuGunluk, and(
+      eq(oyuncuGunluk.kiraci, oyuncuEslesmeleri.kiraci),
+      eq(oyuncuGunluk.oyuncuId, oyuncuEslesmeleri.lynonOyuncuId),
+    ))
+    .where(and(eq(oyuncuEslesmeleri.kiraci, kiraci), eq(oyuncuEslesmeleri.altLinkId, altLinkId)))
+    .groupBy(oyuncuEslesmeleri.lynonOyuncuId, oyuncuEslesmeleri.kullaniciAdi, oyuncuEslesmeleri.olusturuldu)
+    .orderBy(desc(oyuncuEslesmeleri.olusturuldu));
+
+  return satirlar.map((s) => ({
+    lynonOyuncuId: s.lynonOyuncuId,
+    kullaniciAdi: s.kullaniciAdi,
+    yatirim: Number(s.yatirim),
+    cekim: Number(s.cekim),
+    olusturuldu: s.olusturuldu.toISOString(),
+  }));
+}
+
+export interface OrtakGunlukGelirSonucu {
+  yazildiMi: boolean;
+  yatirim: number;
+  cekim: number;
+}
+
+/**
+ * Bir günün, bir ortağa ait webhook kaynaklı gelirini hesaplayıp
+ * `olcumler`e yazar — Lynon'un günlük RAPORUNA hiç ihtiyaç duymadan.
+ *
+ * ── Neden gerekli ──
+ *
+ * `olcumler` şimdiye kadar YALNIZCA Lynon'un backoffice raporundan
+ * (`kaynak: 'cekme'`) besleniyordu. O rapor, oyuncuyu ancak Lynon'un
+ * KENDİ third-party affiliate kaydından geçmişse bir ortağa bağlıyor —
+ * panel bu kayda hiç katılmıyor, dolayısıyla panelin ürettiği HİÇBİR
+ * trafik o raporda görünmüyor ve GGR/Yatırım/Çekim boş kalıyor.
+ *
+ * `oyuncu_gunluk` (webhook'tan) ile `oyuncu_eslesmeleri` (panelin kendi
+ * atıf kaydı) birleşimi, Lynon'un BTag'ine hiç bakmadan aynı rakamı
+ * üretiyor. Bunu `kaynak: 'itme'` ile yazmak, `olcumDeposu`daki mevcut
+ * "itme çekmeyi ezmez" kuralını (bkz. `depolar/olcumDeposu.ts`) —
+ * kod zaten vardı, hiçbir çağıran yoktu — devreye sokuyor.
+ *
+ * ── FTD bilerek `null` ──
+ *
+ * İlk yatırım defteri (`ilkYatirim.ts`) yalnızca Lynon senkron yolundan
+ * besleniyor; onu buradan da beslemek aynı günü iki kez işleyip defteri
+ * bozabilir. Bu yol FTD'yi ölçmüyor, "null" bırakıyor — yanlış saymaktan
+ * iyi.
+ */
+export async function ortakGunlukGeliriGuncelle(
+  kiraci: string,
+  gun: string,
+  ortakId: string,
+  ortakAnahtari: string,
+  simdi = new Date(),
+): Promise<OrtakGunlukGelirSonucu> {
+  const vt = veritabani();
+  if (!vt) return { yazildiMi: false, yatirim: 0, cekim: 0 };
+
+  const satirlar = await vt
+    .select({
+      oyuncuSayisi: sql<number>`count(distinct ${oyuncuEslesmeleri.lynonOyuncuId})::int`,
+      aktifOyuncuSayisi: sql<number>`count(distinct case
+        when ${oyuncuGunluk.yatirim} > 0 or ${oyuncuGunluk.cekim} > 0
+          or ${oyuncuGunluk.bahis} > 0 or ${oyuncuGunluk.kazanc} > 0
+        then ${oyuncuEslesmeleri.lynonOyuncuId}
+      end)::int`,
+      yatirim: sql<number>`coalesce(sum(${oyuncuGunluk.yatirim}), 0)`,
+      cekim: sql<number>`coalesce(sum(${oyuncuGunluk.cekim}), 0)`,
+      bahis: sql<number>`coalesce(sum(${oyuncuGunluk.bahis}), 0)`,
+      kazanc: sql<number>`coalesce(sum(${oyuncuGunluk.kazanc}), 0)`,
+    })
+    .from(oyuncuEslesmeleri)
+    .innerJoin(oyuncuGunluk, and(
+      eq(oyuncuGunluk.kiraci, oyuncuEslesmeleri.kiraci),
+      eq(oyuncuGunluk.oyuncuId, oyuncuEslesmeleri.lynonOyuncuId),
+      eq(oyuncuGunluk.gun, gun),
+    ))
+    .where(and(eq(oyuncuEslesmeleri.kiraci, kiraci), eq(oyuncuEslesmeleri.ortakId, ortakId)));
+
+  const s = satirlar[0];
+  // O ortagin o gun hic olayi yoksa yazacak bir sey yok; bos satir
+  // yazmak "o gun olculdu ama sifirdi" ile "hic bakilmadi" ayrimini
+  // kaybettirirdi.
+  if (!s || s.oyuncuSayisi === 0) return { yazildiMi: false, yatirim: 0, cekim: 0 };
+
+  const yatirim = Number(s.yatirim);
+  const cekim = Number(s.cekim);
+  const ggr = Number(s.bahis) - Number(s.kazanc);
+
+  const yazilan = await olcumleriYaz(kiraci, [{
+    gun,
+    ortakAnahtari,
+    oyuncuSayisi: Number(s.oyuncuSayisi),
+    aktifOyuncuSayisi: Number(s.aktifOyuncuSayisi),
+    yatirim,
+    cekim,
+    ggr,
+    ftdSayisi: null,
+    kaynak: 'itme',
+  }], simdi);
+
+  return { yazildiMi: yazilan > 0, yatirim, cekim };
 }
 
 export type { EslesmeCakismasi, EslesmeKaynagi, GunlukSayi, OyuncuEslesmesi };

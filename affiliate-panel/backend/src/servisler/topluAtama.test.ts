@@ -79,6 +79,9 @@ describe('topluAtamaYap', () => {
     expect(sonuc).toMatchObject({ toplam: 2, basarili: 2, bulunamadi: 0, hatali: 0 });
     expect(await eslesmeBul(k, '111')).toMatchObject({ ortakId: ortak.id });
     expect(await eslesmeBul(k, '222')).toMatchObject({ ortakId: ortak.id });
+    // Adaptorun oyuncuAra'dan donen kullanici adi eslesmeye de gecmeli --
+    // raporda opak lynonOyuncuId yerine okunur adi gostermenin dayanagi bu.
+    expect(await eslesmeBul(k, '111')).toMatchObject({ kullaniciAdi: 'oyuncu1' });
   });
 
   it('bulunamayan kullanici ayri sayilir, digerlerini engellemez', async () => {

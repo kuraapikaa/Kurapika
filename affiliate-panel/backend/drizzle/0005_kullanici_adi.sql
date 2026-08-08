@@ -1,0 +1,1 @@
+ALTER TABLE "aff_oyuncu_eslesmeleri" ADD COLUMN "kullanici_adi" text;

@@ -27,6 +27,8 @@ import { anahtarGecerliMi } from '../servisler/s2sAnahtari.js';
 interface KayitGovdesi {
   lynonOyuncuId?: unknown;
   ref?: unknown;
+  /** Opsiyonel: site bildirimde kullanıcı adını da verirse raporlarda okunur ad görünür. */
+  kullaniciAdi?: unknown;
 }
 
 function anahtarOku(istek: FastifyRequest): string {
@@ -56,6 +58,7 @@ export async function kayitRotalari(app: FastifyInstance): Promise<void> {
       const sonuc: EslesmeSonucu = await oyuncuyuEslestir(istek.kiraci, {
         lynonOyuncuId: metin(govde.lynonOyuncuId),
         ref: metin(govde.ref),
+        kullaniciAdi: metin(govde.kullaniciAdi) || undefined,
       });
 
       return yanit.send({
@@ -66,6 +69,7 @@ export async function kayitRotalari(app: FastifyInstance): Promise<void> {
           ortakAnahtari: sonuc.eslesme.ortakAnahtari,
           clickId: sonuc.eslesme.clickId,
           medyaId: sonuc.eslesme.medyaId,
+          kullaniciAdi: sonuc.eslesme.kullaniciAdi,
           olusturuldu: sonuc.eslesme.olusturuldu,
         },
       });

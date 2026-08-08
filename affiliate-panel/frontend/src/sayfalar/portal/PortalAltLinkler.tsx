@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { api, gunBicimi, paraBicimi, useVeri } from '../../api';
 import { Alan, Bos, Buton, Hata, Hucre, Kart, Olcu, Rozet, Satir, Tablo, Yukleniyor } from '../../ui';
-import type { AltLinkGorunumu as AltLink, Medya, MedyaTuru } from '@sunucu/sozlesme.js';
+import type { AltLinkGorunumu as AltLink, AltLinkOyuncusu, Medya, MedyaTuru } from '@sunucu/sozlesme.js';
 
 const ALTLAR = ['sub1', 'sub2', 'sub3', 'sub4', 'sub5'] as const;
 
@@ -89,6 +89,23 @@ export function PortalAltLinkler() {
   const [hata, setHata] = useState<string | null>(null);
   const [kopyalanan, setKopyalanan] = useState<string | null>(null);
   const [qr, setQr] = useState<{ id: string; ad: string; adres: string } | null>(null);
+  const [oyuncular, setOyuncular] = useState<{
+    id: string; ad: string; yukleniyor: boolean; liste: AltLinkOyuncusu[];
+  } | null>(null);
+
+  const oyunculariGetir = async (link: AltLink) => {
+    if (oyuncular?.id === link.id) {
+      setOyuncular(null);
+      return;
+    }
+    setOyuncular({ id: link.id, ad: link.ad, yukleniyor: true, liste: [] });
+    try {
+      const sonuc = await api.al<{ oyuncular: AltLinkOyuncusu[] }>(`/api/portal/alt-linkler/${link.id}/oyuncular`);
+      setOyuncular({ id: link.id, ad: link.ad, yukleniyor: false, liste: sonuc.oyuncular });
+    } catch {
+      setOyuncular({ id: link.id, ad: link.ad, yukleniyor: false, liste: [] });
+    }
+  };
 
   const calistir = async (is: () => Promise<unknown>) => {
     setHata(null);
@@ -244,6 +261,32 @@ export function PortalAltLinkler() {
         </Kart>
       )}
 
+      {oyuncular && (
+        <Kart baslik={`Oyuncular · ${oyuncular.ad}`} sag={<Buton onClick={() => setOyuncular(null)}>Kapat</Buton>}>
+          {oyuncular.yukleniyor ? (
+            <Yukleniyor />
+          ) : oyuncular.liste.length === 0 ? (
+            <Bos mesaj="Bu linkten henüz kayıt olan yok." />
+          ) : (
+            <Tablo basliklar={['Kullanıcı', 'Kayıt', 'Yatırım', 'Çekim']}>
+              {oyuncular.liste.map((o) => (
+                <Satir key={o.lynonOyuncuId}>
+                  <Hucre>
+                    <span className="font-medium">{o.kullaniciAdi ?? o.lynonOyuncuId}</span>
+                    {!o.kullaniciAdi && (
+                      <span className="ml-1 text-xs" style={{ color: 'var(--metin-2)' }}>(kullanıcı adı bilinmiyor)</span>
+                    )}
+                  </Hucre>
+                  <Hucre><span className="text-xs">{gunBicimi(o.olusturuldu)}</span></Hucre>
+                  <Hucre sagda><span className="tabular-nums">{paraBicimi(o.yatirim)}</span></Hucre>
+                  <Hucre sagda><span className="tabular-nums">{paraBicimi(o.cekim)}</span></Hucre>
+                </Satir>
+              ))}
+            </Tablo>
+          )}
+        </Kart>
+      )}
+
       <Kart baslik="Alt linkleriniz">
         {(liste.veri?.linkler ?? []).length === 0 ? (
           <Bos mesaj="Henüz alt link yok." />
@@ -295,6 +338,9 @@ export function PortalAltLinkler() {
                 <Hucre><Rozet metin={l.aktif ? 'Aktif' : 'Kapalı'} renk={l.aktif ? 'olumlu' : 'notr'} /></Hucre>
                 <Hucre>
                   <div className="flex gap-1">
+                    <Buton onClick={() => oyunculariGetir(l)}>
+                      {oyuncular?.id === l.id ? 'Kapat' : 'Oyuncular'}
+                    </Buton>
                     {l.tamAdres && (
                       <Buton onClick={() => setQr(qr?.id === l.id ? null : { id: l.id, ad: l.ad, adres: l.tamAdres! })}>
                         QR
