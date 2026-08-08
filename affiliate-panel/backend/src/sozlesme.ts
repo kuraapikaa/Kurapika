@@ -37,6 +37,7 @@ import type { TopluAtamaSatiri, TopluAtamaSonucu } from './servisler/topluAtama.
 import type { PostbackAyari, PostbackKaydi } from './servisler/postback.js';
 import type { KuyrukOzeti } from './depolar/olayKuyrugu.js';
 import type { SirDurumu } from './servisler/webhookSirri.js';
+import type { SiteAdresiDurumu } from './servisler/siteAdresi.js';
 import type { CuzdanHareketi, OrtakBakiyesi } from './servisler/cuzdan.js';
 import type { AnahtarDurumu } from './servisler/s2sAnahtari.js';
 import type { SenkronSonucu } from './servisler/senkron.js';
@@ -51,7 +52,7 @@ export type {
   KaliteSinyali, KomisyonPlani, Marka, Medya, MedyaTuru, MusteriYolculuguSonucu, OrtakDurumu,
   OrtakGorunumu, OrtakGunlukOlcum, OrtakHakedisi, OrtakOzeti, OtoBonusAyari,
   OtoBonusDurumuYaniti, OtoBonusKaydi, PostbackAyari, PostbackKaydi, SenkronSonucu,
-  Tiklama, TiklamaOzeti, TopluAtamaSatiri, TopluAtamaSonucu,
+  Tiklama, TiklamaOzeti, TopluAtamaSatiri, TopluAtamaSonucu, SiteAdresiDurumu,
 };
 
 /* ── Oturum ──────────────────────────────────────────────────────── */
@@ -137,6 +138,7 @@ export interface YonetimUclari {
   '/ortaklar': { ortaklar: OrtakGorunumu[] };
   '/basvurular': { basvurular: OrtakGorunumu[] };
   '/planlar': { planlar: KomisyonPlani[] };
+  '/site-adresi': SiteAdresiDurumu;
   '/medya': { medyalar: Medya[] };
   '/kademeler': { baglar: KademeBagi[]; kademeYuzdeleri: number[] };
   '/postback': { ayarlar: PostbackAyari[]; kayitlar: PostbackKaydi[] };

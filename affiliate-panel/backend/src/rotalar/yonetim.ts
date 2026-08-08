@@ -59,6 +59,7 @@ import {
 import { anahtarDurumu, anahtarSil, anahtarUret } from '../servisler/s2sAnahtari.js';
 import { eksikGunleriSenkronla, gunuSenkronla } from '../servisler/senkron.js';
 import { sirDurumu, sirUret, sirriSil, sirriYaz } from '../servisler/webhookSirri.js';
+import { siteAdresiDurumu, siteAdresiYaz } from '../servisler/siteAdresi.js';
 import { olayKuyrugu } from '../depolar/olayKuyrugu.js';
 import { bakiyeler, hareketEkle, hareketleriListele } from '../servisler/cuzdan.js';
 import { geceHakedisiIsle } from '../isler/geceIsi.js';
@@ -497,6 +498,22 @@ export async function yonetimRotalari(app: FastifyInstance): Promise<void> {
   app.delete<{ Params: { id: string } }>('/planlar/:id', async (istek) => {
     await planSil(istek.kiraci, istek.params.id);
     return { silindi: true };
+  });
+
+  // ── Site adresi ────────────────────────────────────────────────────
+
+  /**
+   * Sitenin güncel (erişim engeli sonrası değişebilen) adresi.
+   *
+   * Medyasız alt linkler (bkz. `tiklamaUcu.ts`) buraya yönlendirir; her
+   * medya kaydında ayrı ayrı güncellenmesi gereken bir alan olsaydı biri
+   * unutulduğunda o kanal sessizce ölü bir adrese düşerdi.
+   */
+  app.get('/site-adresi', async (istek): Promise<YonetimUclari['/site-adresi']> => siteAdresiDurumu(istek.kiraci));
+
+  app.put('/site-adresi', async (istek) => {
+    const govde = (istek.body ?? {}) as { adres?: string };
+    return siteAdresiYaz(istek.kiraci, String(govde.adres ?? ''));
   });
 
   // ── Medya ──────────────────────────────────────────────────────────
