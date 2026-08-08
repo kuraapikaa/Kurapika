@@ -11,9 +11,11 @@ import {
   eslesmeCakismalari as cakismaTablosu,
   olcumler as olcumTablosu,
   oyuncuEslesmeleri as eslesmeTablosu,
+  oyuncuGunluk as gunlukTablosu,
   tiklamalar as tiklamaTablosu,
 } from '../lib/sema.js';
 import { veritabani, veritabaniniBaslat, veritabaniniKapat } from '../lib/veritabani.js';
+import { altLinkFinansOzeti } from '../servisler/oyuncuEslesme.js';
 import { testVeritabaniAc } from '../../test/testVeritabani.js';
 
 /**
@@ -35,6 +37,7 @@ const varsaCalistir = TEST_URL ? describe : describe.skip;
 const tiklama = (ek: Partial<Tiklama> & { clickId: string; zaman: string }): Tiklama => ({
   ortakAnahtari: 'ortak-a',
   medyaId: null,
+  altLinkId: null,
   alt: {},
   ip: null,
   userAgent: null,
@@ -78,6 +81,7 @@ varsaCalistir('depo denkligi', () => {
     await vt!.delete(olcumTablosu);
     await vt!.delete(eslesmeTablosu);
     await vt!.delete(cakismaTablosu);
+    await vt!.delete(gunlukTablosu);
     // Belge uygulamasi ayni kiraciyi kullaniyor; onun da sifirlanmasi sart.
     const { yaz } = await import('../lib/depo.js');
     await yaz(KIRACI, 'tiklamalar', { version: 1, tiklamalar: [] });
@@ -177,6 +181,43 @@ varsaCalistir('depo denkligi', () => {
       expect(ozet[1].altBazinda).toEqual([]);
       expect(ozet[1].medyaBazinda).toEqual([{ medyaId: null, sayi: 2 }]);
     });
+
+    /**
+     * KESİN eşleştirme: `altLinkId`'ye göre, imza (medya+alt) TAHMİNİNE
+     * göre değil. `altLinkId`'siz tıklamalar (c1..c5, yukarıdaki
+     * `ornekler`) burada hiç görünmemeli.
+     */
+    it('altLinkId tasiyanlari kesin sayar, tasimayanlari yok sayar', async () => {
+      const ozet = await ikisindeDe(tiklamaUygulamalari, async (depo: TiklamaDeposu) => {
+        await doldur(depo);
+        await depo.ekle(KIRACI, tiklama({
+          clickId: 'l1', zaman: '2026-08-06T10:00:00.000Z', altLinkId: 'link-1',
+        }));
+        await depo.ekle(KIRACI, tiklama({
+          clickId: 'l2', zaman: '2026-08-07T10:00:00.000Z', altLinkId: 'link-1',
+        }));
+        await depo.ekle(KIRACI, tiklama({
+          clickId: 'l3', zaman: '2026-08-06T10:00:00.000Z', ortakAnahtari: 'ortak-b', altLinkId: 'link-2',
+        }));
+        return depo.altLinkOzeti(KIRACI);
+      });
+
+      expect(ozet.sort((a, b) => a.altLinkId.localeCompare(b.altLinkId))).toEqual([
+        { altLinkId: 'link-1', sayi: 2, sonTiklama: '2026-08-07T10:00:00.000Z' },
+        { altLinkId: 'link-2', sayi: 1, sonTiklama: '2026-08-06T10:00:00.000Z' },
+      ]);
+    });
+
+    it('ortak anahtarina gore suzulebiliyor', async () => {
+      const ozet = await ikisindeDe(tiklamaUygulamalari, async (depo: TiklamaDeposu) => {
+        await depo.ekle(KIRACI, tiklama({ clickId: 'x1', zaman: '2026-08-06T10:00:00.000Z', altLinkId: 'link-a' }));
+        await depo.ekle(KIRACI, tiklama({
+          clickId: 'x2', zaman: '2026-08-06T10:00:00.000Z', ortakAnahtari: 'ortak-b', altLinkId: 'link-b',
+        }));
+        return depo.altLinkOzeti(KIRACI, 'ortak-a');
+      });
+      expect(ozet).toEqual([{ altLinkId: 'link-a', sayi: 1, sonTiklama: '2026-08-06T10:00:00.000Z' }]);
+    });
   });
 
   describe('olcumler', () => {
@@ -259,6 +300,7 @@ varsaCalistir('depo denkligi', () => {
       ortakAnahtari: ortakId.toUpperCase(),
       clickId: null,
       medyaId: null,
+      altLinkId: null,
       alt: {},
       kaynak: 'kayit',
       olusturuldu: '2026-08-01T00:00:00.000Z',
@@ -410,6 +452,99 @@ varsaCalistir('depo denkligi', () => {
       const sahip = sonuclar.find((s) => s.eklendi)!.kayitli.ortakId;
       expect(sonuclar.every((s) => s.kayitli.ortakId === sahip)).toBe(true);
       expect((await depo.bul(KIRACI, 'cok-talep'))?.ortakId).toBe(sahip);
+    });
+  });
+
+  /**
+   * `altLinkFinansOzeti`, `oyuncuEslesmeleri` (hangi oyuncu hangi linkten
+   * geldi) ile `oyuncuGunluk`u (webhook'tan katlanan gerçek tutarlar)
+   * oyuncu kimliğinden birleştiriyor. Webhook borusu Postgres'e özel
+   * olduğu için bu fonksiyonun tek gerçek testi burada, ilişkisel
+   * tablolara doğrudan satır yazarak.
+   */
+  describe('altLinkFinansOzeti', () => {
+    it('altLinkId tasiyan oyuncularin gunluk toplamlarini linke gore birlestirir', async () => {
+      const vt = veritabani()!;
+      await vt.insert(eslesmeTablosu).values([
+        {
+          kiraci: KIRACI, lynonOyuncuId: 'p1', ortakId: 'ortak-a', ortakAnahtari: 'ORTAK-A',
+          clickId: null, medyaId: null, altLinkId: 'link-1', alt: {}, kaynak: 'kayit',
+          olusturuldu: new Date('2026-08-01T00:00:00Z'),
+        },
+        {
+          kiraci: KIRACI, lynonOyuncuId: 'p2', ortakId: 'ortak-a', ortakAnahtari: 'ORTAK-A',
+          clickId: null, medyaId: null, altLinkId: 'link-1', alt: {}, kaynak: 'kayit',
+          olusturuldu: new Date('2026-08-01T00:00:00Z'),
+        },
+        {
+          // altLinkId YOK: dogrudan /c/... linkinden geldi, raporda gorunmemeli.
+          kiraci: KIRACI, lynonOyuncuId: 'p3', ortakId: 'ortak-a', ortakAnahtari: 'ORTAK-A',
+          clickId: null, medyaId: null, altLinkId: null, alt: {}, kaynak: 'kayit',
+          olusturuldu: new Date('2026-08-01T00:00:00Z'),
+        },
+      ]);
+
+      await vt.insert(gunlukTablosu).values([
+        // p1: iki farkli gun, toplanmali.
+        {
+          kiraci: KIRACI, gun: '2026-08-01', oyuncuId: 'p1', yatirim: 100, cekim: 20, bahis: 0, kazanc: 0,
+          olaySayisi: 1, guncellendi: new Date('2026-08-01T00:00:00Z'),
+        },
+        {
+          kiraci: KIRACI, gun: '2026-08-02', oyuncuId: 'p1', yatirim: 50, cekim: 0, bahis: 0, kazanc: 0,
+          olaySayisi: 1, guncellendi: new Date('2026-08-02T00:00:00Z'),
+        },
+        {
+          kiraci: KIRACI, gun: '2026-08-01', oyuncuId: 'p2', yatirim: 30, cekim: 10, bahis: 0, kazanc: 0,
+          olaySayisi: 1, guncellendi: new Date('2026-08-01T00:00:00Z'),
+        },
+        {
+          kiraci: KIRACI, gun: '2026-08-01', oyuncuId: 'p3', yatirim: 999, cekim: 999, bahis: 0, kazanc: 0,
+          olaySayisi: 1, guncellendi: new Date('2026-08-01T00:00:00Z'),
+        },
+      ]);
+
+      const ozet = await altLinkFinansOzeti(KIRACI);
+
+      expect(ozet).toEqual([{
+        altLinkId: 'link-1',
+        oyuncuSayisi: 2,
+        yatirim: 180, // p1: 100+50, p2: 30
+        cekim: 30, // p1: 20+0, p2: 10
+      }]);
+    });
+
+    it('oyuncuGunluk satiri olmayan oyuncu icin sifir dondurur (fan-out yok)', async () => {
+      const vt = veritabani()!;
+      await vt.insert(eslesmeTablosu).values({
+        kiraci: KIRACI, lynonOyuncuId: 'p4', ortakId: 'ortak-a', ortakAnahtari: 'ORTAK-A',
+        clickId: null, medyaId: null, altLinkId: 'link-2', alt: {}, kaynak: 'kayit',
+        olusturuldu: new Date('2026-08-01T00:00:00Z'),
+      });
+
+      expect(await altLinkFinansOzeti(KIRACI)).toEqual([
+        { altLinkId: 'link-2', oyuncuSayisi: 1, yatirim: 0, cekim: 0 },
+      ]);
+    });
+
+    it('ortakId ile suzulebiliyor', async () => {
+      const vt = veritabani()!;
+      await vt.insert(eslesmeTablosu).values([
+        {
+          kiraci: KIRACI, lynonOyuncuId: 'p5', ortakId: 'ortak-a', ortakAnahtari: 'ORTAK-A',
+          clickId: null, medyaId: null, altLinkId: 'link-a', alt: {}, kaynak: 'kayit',
+          olusturuldu: new Date('2026-08-01T00:00:00Z'),
+        },
+        {
+          kiraci: KIRACI, lynonOyuncuId: 'p6', ortakId: 'ortak-b', ortakAnahtari: 'ORTAK-B',
+          clickId: null, medyaId: null, altLinkId: 'link-b', alt: {}, kaynak: 'kayit',
+          olusturuldu: new Date('2026-08-01T00:00:00Z'),
+        },
+      ]);
+
+      expect(await altLinkFinansOzeti(KIRACI, 'ortak-a')).toEqual([
+        { altLinkId: 'link-a', oyuncuSayisi: 1, yatirim: 0, cekim: 0 },
+      ]);
     });
   });
 });

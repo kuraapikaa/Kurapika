@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { api, gunBicimi, useVeri } from '../../api';
+import { api, gunBicimi, paraBicimi, useVeri } from '../../api';
 import { Alan, Bos, Buton, Hata, Hucre, Kart, Olcu, Rozet, Satir, Tablo, Yukleniyor } from '../../ui';
 import type { AltLinkGorunumu as AltLink, Medya } from '@sunucu/sozlesme.js';
 
@@ -36,6 +36,8 @@ export function PortalAltLinkler() {
   const linkSayisi = linkler.length;
   const aktifSayisi = linkler.filter((l) => l.aktif).length;
   const toplamTiklama = linkler.reduce((t, l) => t + l.tiklama, 0);
+  const toplamYatirim = linkler.reduce((t, l) => t + l.yatirim, 0);
+  const toplamCekim = linkler.reduce((t, l) => t + l.cekim, 0);
   // Hic tiklanmayan link, "paylastim mi?" sorusunun cevabi. Ortagin
   // kendi hatasini gormesinin en hizli yolu bu sayi.
   const tiklanmayan = linkler.filter((l) => l.tiklama === 0).length;
@@ -44,13 +46,13 @@ export function PortalAltLinkler() {
   if (liste.yukleniyor) return <Yukleniyor />;
 
   const medyaSecenekleri = [
-    { deger: '', etiket: 'Medya seçin' },
+    { deger: '', etiket: 'Medyasız (aktif landing sayfanız)' },
     ...(medyalar.veri?.medyalar ?? []).map((m) => ({ deger: m.id, etiket: `${m.ad} (${m.tur})` })),
   ];
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
         <Olcu etiket="Link" deger={String(linkSayisi)} alt={`${aktifSayisi} aktif`} />
         <Olcu etiket="Toplam tıklama" deger={String(toplamTiklama)} />
         <Olcu
@@ -63,6 +65,8 @@ export function PortalAltLinkler() {
           deger={String(tiklanmayan)}
           alt={tiklanmayan > 0 ? 'paylaşıldı mı?' : undefined}
         />
+        <Olcu etiket="Toplam yatırım" deger={paraBicimi(toplamYatirim)} />
+        <Olcu etiket="Toplam çekim" deger={paraBicimi(toplamCekim)} />
       </div>
 
       <Kart baslik="Yeni alt link">
@@ -79,6 +83,7 @@ export function PortalAltLinkler() {
             deger={form.medyaId}
             degisti={(v) => setForm({ ...form, medyaId: v })}
             secenekler={medyaSecenekleri}
+            ipucu="Boş bırakabilirsiniz: link doğrudan aktif landing sayfanıza yönlendirir."
           />
         </div>
 
@@ -140,7 +145,7 @@ export function PortalAltLinkler() {
         {(liste.veri?.linkler ?? []).length === 0 ? (
           <Bos mesaj="Henüz alt link yok." />
         ) : (
-          <Tablo basliklar={['Ad', 'Adres', 'Kreatif', 'Alt kanallar', 'Tıklama', 'Durum', 'İşlem']}>
+          <Tablo basliklar={['Ad', 'Adres', 'Kreatif', 'Alt kanallar', 'Tıklama', 'Yatırım', 'Çekim', 'Durum', 'İşlem']}>
             {liste.veri!.linkler.map((l) => (
               <Satir key={l.id}>
                 <Hucre><span className="font-medium">{l.ad}</span></Hucre>
@@ -177,6 +182,12 @@ export function PortalAltLinkler() {
                   <div className="text-xs" style={{ color: 'var(--metin-2)' }}>
                     {l.sonTiklama ? gunBicimi(l.sonTiklama) : 'henüz yok'}
                   </div>
+                </Hucre>
+                <Hucre sagda>
+                  <span className="tabular-nums">{paraBicimi(l.yatirim)}</span>
+                </Hucre>
+                <Hucre sagda>
+                  <span className="tabular-nums">{paraBicimi(l.cekim)}</span>
                 </Hucre>
                 <Hucre><Rozet metin={l.aktif ? 'Aktif' : 'Kapalı'} renk={l.aktif ? 'olumlu' : 'notr'} /></Hucre>
                 <Hucre>

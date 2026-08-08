@@ -53,10 +53,24 @@ describe('alt link', () => {
     await expect(altLinkOlustur(k, 'ORT2', girdi)).resolves.toBeTruthy();
   });
 
-  it('ad ve medyaId zorunlu', async () => {
+  it('ad zorunlu', async () => {
     const k = kiraci();
     await expect(altLinkOlustur(k, 'ORT1', { ad: '', medyaId: 'm1' })).rejects.toThrow(/ad/);
-    await expect(altLinkOlustur(k, 'ORT1', { ad: 'x', medyaId: '' })).rejects.toThrow(/medyaId/);
+  });
+
+  /**
+   * MEDYASIZ LİNK. Ortağın tek bir kreatifi yoksa ya da yalnızca kendi
+   * bağlantısını izlemek istiyorsa medya seçmeye zorlamak gereksiz bir
+   * engel; link `medyaId: null` ile kayıtlanıp tıklama ucunda ortağın
+   * aktif landing sayfasına düşüyor (bkz. `rotalar/tiklamaUcu.ts`).
+   */
+  it('medyasiz link olusturulabiliyor', async () => {
+    const k = kiraci();
+    const link = await altLinkOlustur(k, 'ORT1', { ad: 'Medyasiz', alt: { sub1: 'bio' } });
+    expect(link.medyaId).toBeNull();
+    await expect(altLinkOlustur(k, 'ORT1', { ad: 'Medyasiz2', medyaId: '' })).resolves.toMatchObject({
+      medyaId: null,
+    });
   });
 
   it('gecersiz alt parametreleri ayikliyor', async () => {

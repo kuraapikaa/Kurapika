@@ -29,8 +29,12 @@ export { kaynakAdi } from './izleme.js';
  * yoksa JSON belgesi. Bu servis hangisi olduğunu bilmiyor.
  */
 
-export type { GunlukSayi, KaynakSayisi, Tiklama, TiklamaOzeti, TiklamaSorgusu } from '../depolar/tiklamaDeposu.js';
-import type { GunlukSayi, KaynakSayisi, Tiklama, TiklamaOzeti, TiklamaSorgusu } from '../depolar/tiklamaDeposu.js';
+export type {
+  AltLinkTiklamaSayisi, GunlukSayi, KaynakSayisi, Tiklama, TiklamaOzeti, TiklamaSorgusu,
+} from '../depolar/tiklamaDeposu.js';
+import type {
+  AltLinkTiklamaSayisi, GunlukSayi, KaynakSayisi, Tiklama, TiklamaOzeti, TiklamaSorgusu,
+} from '../depolar/tiklamaDeposu.js';
 
 export const TIKLAMA_CEREZI = 'aff_click';
 
@@ -39,6 +43,8 @@ const metin = (deger: unknown): string => (typeof deger === 'string' ? deger.tri
 export interface TiklamaGirdisi {
   ortakAnahtari: string;
   medyaId?: string | null;
+  /** Alt linkten geldiyse o linkin kimliği. */
+  altLinkId?: string | null;
   sorgu?: Record<string, unknown>;
   ip?: string | null;
   userAgent?: string | null;
@@ -57,6 +63,7 @@ export async function tiklamaKaydet(
     clickId: randomUUID(),
     ortakAnahtari,
     medyaId: metin(girdi.medyaId) || null,
+    altLinkId: metin(girdi.altLinkId) || null,
     alt: altParametreleriTemizle(girdi.sorgu),
     ip: metin(girdi.ip) || null,
     // Uzun bir user-agent kaydi sisirir; teshis icin bas kismi yeter.
@@ -117,4 +124,12 @@ export async function tiklamaGunlukSayilar(kiraci: string, sorgu: TiklamaSorgusu
 /** Trafiğin nereden geldiği; çoktan aza sıralı kaynak kırılımı. */
 export async function tiklamaKaynakOzeti(kiraci: string, sorgu: TiklamaSorgusu = {}): Promise<KaynakSayisi[]> {
   return tiklamaDeposu().kaynakOzeti(kiraci, sorgu);
+}
+
+/** Alt link başına kesin tıklama sayısı; bkz. `TiklamaDeposu.altLinkOzeti`. */
+export async function altLinkTiklamaOzeti(
+  kiraci: string,
+  ortakAnahtari?: string,
+): Promise<AltLinkTiklamaSayisi[]> {
+  return tiklamaDeposu().altLinkOzeti(kiraci, ortakAnahtari);
 }

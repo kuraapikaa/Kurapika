@@ -14,9 +14,10 @@ import { altParametreleriTemizle } from '../servisler/izleme.js';
 import { medyaIzlemeLinki, medyalariListele } from '../servisler/medya.js';
 import { ortakOzetleri } from '../servisler/olcum.js';
 import { ftdDurumu } from '../servisler/ilkYatirim.js';
+import { altLinkFinansOzeti } from '../servisler/oyuncuEslesme.js';
 import { ortakBul, onayZorunlu } from '../servisler/ortaklar.js';
 import { postbackAyarla, postbackAyarlari, postbackKayitlari } from '../servisler/postback.js';
-import { tiklamalariListele, tiklamaOzeti } from '../servisler/tiklama.js';
+import { altLinkTiklamaOzeti, tiklamalariListele, tiklamaOzeti } from '../servisler/tiklama.js';
 import { musteriYolculugu } from '../servisler/yolculuk.js';
 
 /**
@@ -140,40 +141,59 @@ export async function portalRotalari(app: FastifyInstance): Promise<void> {
    * başkasının adına link üretip trafiği ona yazdırabilirdi.
    */
   app.get('/alt-linkler', async (istek) => {
+    const oturum = istek.oturum!;
     const temel = String(process.env.AFF_TIKLAMA_TEMEL_URL || '').trim().replace(/\/$/, '');
-    const [linkler, tiklamalar, medyalar] = await Promise.all([
-      altLinkleriListele(istek.kiraci, istek.oturum!.ortakAnahtari),
-      tiklamalariListele(istek.kiraci, { ortakAnahtari: istek.oturum!.ortakAnahtari, limit: 1000 }),
-      medyalariListele(istek.kiraci, istek.oturum!.ortakAnahtari),
+    const ortak = oturum.ortakId ? await ortakBul(istek.kiraci, oturum.ortakId) : null;
+
+    const [linkler, tiklamalar, medyalar, kesinTiklama, finans] = await Promise.all([
+      altLinkleriListele(istek.kiraci, oturum.ortakAnahtari),
+      tiklamalariListele(istek.kiraci, { ortakAnahtari: oturum.ortakAnahtari, limit: 1000 }),
+      medyalariListele(istek.kiraci, oturum.ortakAnahtari),
+      altLinkTiklamaOzeti(istek.kiraci, oturum.ortakAnahtari),
+      ortak ? altLinkFinansOzeti(istek.kiraci, ortak.id) : Promise.resolve([]),
     ]);
 
-    // Link basina tiklama. Kayitli alt parametreler tiklamada aynen
-    // gorunuyor; eslesme bunun uzerinden kuruluyor. Yalnizca medyaId'ye
-    // bakmak, ayni medyayi kullanan iki linki birbirine karistirirdi.
+    /**
+     * ESKİ tıklamalar için imza sezgiseli — YALNIZCA `altLinkId`
+     * taşımayan (bu özellikten ÖNCEKİ) tıklamaları kapsar. Yeni her
+     * tıklama artık kendi alt linkinin kimliğini taşıyor ve aşağıdaki
+     * `kesinSayaclar`dan kesin olarak sayılıyor; imza yalnızca geçmişi
+     * kaybetmemek için burada duruyor.
+     */
     const imza = (medyaId: string | null, alt: Record<string, string>) =>
       JSON.stringify([medyaId, Object.entries(alt).sort()]);
-    const sayaclar = new Map<string, { toplam: number; sonTiklama: string | null }>();
+    const eskiSayaclar = new Map<string, { toplam: number; sonTiklama: string | null }>();
     for (const t of tiklamalar) {
+      if (t.altLinkId) continue;
       const anahtar = imza(t.medyaId, t.alt as Record<string, string>);
-      const mevcut = sayaclar.get(anahtar) ?? { toplam: 0, sonTiklama: null };
+      const mevcut = eskiSayaclar.get(anahtar) ?? { toplam: 0, sonTiklama: null };
       mevcut.toplam += 1;
       if (!mevcut.sonTiklama || t.zaman > mevcut.sonTiklama) mevcut.sonTiklama = t.zaman;
-      sayaclar.set(anahtar, mevcut);
+      eskiSayaclar.set(anahtar, mevcut);
     }
 
+    const kesinSayaclar = new Map(kesinTiklama.map((k) => [k.altLinkId, k]));
+    const finansMap = new Map(finans.map((f) => [f.altLinkId, f]));
     const medyaAdi = new Map(medyalar.map((m) => [m.id, m.ad]));
 
     return {
       // Tam adres SUNUCUDA kuruluyor; arayüzün kökü kendi tahmin etmesi,
       // ortağın yanlış alan adıyla link paylaşmasına yol açardı.
       linkler: linkler.map((l) => {
-        const sayac = sayaclar.get(imza(l.medyaId, l.alt as Record<string, string>));
+        const kesin = kesinSayaclar.get(l.id);
+        const eski = eskiSayaclar.get(imza(l.medyaId, l.alt as Record<string, string>));
+        const f = finansMap.get(l.id);
+        const sonTiklamalar = [kesin?.sonTiklama, eski?.sonTiklama].filter((z): z is string => Boolean(z));
+
         return {
           ...l,
           tamAdres: temel ? `${temel}/l/${l.kod}` : null,
-          medyaAdi: medyaAdi.get(l.medyaId) ?? null,
-          tiklama: sayac?.toplam ?? 0,
-          sonTiklama: sayac?.sonTiklama ?? null,
+          medyaAdi: l.medyaId ? medyaAdi.get(l.medyaId) ?? null : null,
+          tiklama: (kesin?.sayi ?? 0) + (eski?.toplam ?? 0),
+          sonTiklama: sonTiklamalar.length ? sonTiklamalar.reduce((a, b) => (a > b ? a : b)) : null,
+          oyuncuSayisi: f?.oyuncuSayisi ?? 0,
+          yatirim: f?.yatirim ?? 0,
+          cekim: f?.cekim ?? 0,
         };
       }),
       temelHazir: Boolean(temel),
@@ -191,10 +211,12 @@ export async function portalRotalari(app: FastifyInstance): Promise<void> {
     onayZorunlu(ortak);
 
     const govde = (istek.body ?? {}) as { ad?: string; medyaId?: string; alt?: Record<string, unknown> };
-    // Medya erisimi BURADA da kontrol ediliyor: kisitli bir medyanin
-    // kimligini bilen ortak, aksi halde ona kapali bir kreatif icin
-    // link uretebilirdi.
-    await medyaIzlemeLinki(istek.kiraci, String(govde.medyaId ?? ''), ortak.ortakAnahtari);
+    const medyaId = String(govde.medyaId ?? '').trim();
+    // Medya SECILDIYSE erisim BURADA kontrol ediliyor: kisitli bir
+    // medyanin kimligini bilen ortak, aksi halde ona kapali bir kreatif
+    // icin link uretebilirdi. Medyasiz link (bos birakilirsa) bu kontrolu
+    // atlar — tiklama ucunda ortagin aktif landing sayfasina duser.
+    if (medyaId) await medyaIzlemeLinki(istek.kiraci, medyaId, ortak.ortakAnahtari);
 
     yanit.status(201);
     return altLinkOlustur(istek.kiraci, ortak.ortakAnahtari, govde);

@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, lte, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, isNotNull, lte, sql } from 'drizzle-orm';
 import { degistir, diziOku, kayitOku, oku } from '../lib/depo.js';
 import { bitisGunSonuAni, gunAnahtari } from '../lib/gunler.js';
 import { tiklamalar as tablo } from '../lib/sema.js';
@@ -26,6 +26,8 @@ export interface Tiklama {
   clickId: string;
   ortakAnahtari: string;
   medyaId: string | null;
+  /** Alt linkten geldiyse o linkin kimliği; düz `/c/...` linkinde `null`. */
+  altLinkId: string | null;
   alt: Partial<Record<AltParametre, string>>;
   /** Kaba konum/bot ayıklaması için; kimlik olarak KULLANILMAZ. */
   ip: string | null;
@@ -61,6 +63,12 @@ export interface KaynakSayisi {
   sayi: number;
 }
 
+export interface AltLinkTiklamaSayisi {
+  altLinkId: string;
+  sayi: number;
+  sonTiklama: string | null;
+}
+
 export interface TiklamaDeposu {
   ekle(kiraci: string, tiklama: Tiklama): Promise<Tiklama>;
   listele(kiraci: string, sorgu: TiklamaSorgusu): Promise<Tiklama[]>;
@@ -70,6 +78,15 @@ export interface TiklamaDeposu {
   gunlukSayilar(kiraci: string, sorgu: TiklamaSorgusu): Promise<GunlukSayi[]>;
   /** Kaynağa (yönlendiren) göre kırılım, çoktan aza sıralı. */
   kaynakOzeti(kiraci: string, sorgu: TiklamaSorgusu): Promise<KaynakSayisi[]>;
+  /**
+   * Alt link başına KESİN tıklama sayısı.
+   *
+   * `ozetle()`'deki medya+alt kırılımından bilerek ayrı: o kırılım bir
+   * TAHMİN (imza eşleşmesi), bu ise doğrudan `altLinkId` eşitliği.
+   * `altLinkId` boş olan (bu özellikten önceki) tıklamalar burada hiç
+   * görünmez — çağıran taraf onları eski imza yöntemiyle ayrıca kapsar.
+   */
+  altLinkOzeti(kiraci: string, ortakAnahtari?: string): Promise<AltLinkTiklamaSayisi[]>;
 }
 
 const ALAN = 'tiklamalar';
@@ -101,6 +118,7 @@ const satirdanTiklama = (s: typeof tablo.$inferSelect): Tiklama => ({
   clickId: s.clickId,
   ortakAnahtari: s.ortakAnahtari,
   medyaId: s.medyaId,
+  altLinkId: s.altLinkId,
   alt: s.alt ?? {},
   ip: s.ip,
   userAgent: s.userAgent,
@@ -122,6 +140,7 @@ export function postgresTiklamaDeposu(): TiklamaDeposu {
         kiraci,
         ortakAnahtari: tiklama.ortakAnahtari,
         medyaId: tiklama.medyaId,
+        altLinkId: tiklama.altLinkId,
         alt: tiklama.alt,
         ip: tiklama.ip,
         userAgent: tiklama.userAgent,
@@ -231,6 +250,31 @@ export function postgresTiklamaDeposu(): TiklamaDeposu {
         kaynaklar.set(k, (kaynaklar.get(k) ?? 0) + s.sayi);
       }
       return kaynaklaraGoreSirala(kaynaklar);
+    },
+
+    async altLinkOzeti(kiraci, ortakAnahtari) {
+      const kosullar = [eq(tablo.kiraci, kiraci), isNotNull(tablo.altLinkId)];
+      if (ortakAnahtari) kosullar.push(eq(tablo.ortakAnahtari, ortakAnahtari));
+
+      const satirlar = await vtZorunlu()
+        .select({
+          altLinkId: tablo.altLinkId,
+          sayi: sql<number>`count(*)::int`,
+          sonTiklama: sql<string>`max(${tablo.zaman})`,
+        })
+        .from(tablo)
+        .where(and(...kosullar))
+        .groupBy(tablo.altLinkId);
+
+      return satirlar
+        // `altLinkId IS NOT NULL` kosuluyla suzuldugu icin burada hep dolu;
+        // tur daraltmasi yalnizca TypeScript'in bunu bilmesi icin.
+        .filter((s): s is typeof s & { altLinkId: string } => s.altLinkId !== null)
+        .map((s) => ({
+          altLinkId: s.altLinkId,
+          sayi: s.sayi,
+          sonTiklama: s.sonTiklama ? new Date(s.sonTiklama).toISOString() : null,
+        }));
     },
   };
 }
@@ -379,6 +423,20 @@ export function belgeTiklamaDeposu(): TiklamaDeposu {
         kaynaklar.set(k, (kaynaklar.get(k) ?? 0) + 1);
       }
       return kaynaklaraGoreSirala(kaynaklar);
+    },
+
+    async altLinkOzeti(kiraci, ortakAnahtari) {
+      const depo = await oku<BelgeDepo>(kiraci, ALAN, cozDepo);
+      const gruplar = new Map<string, { sayi: number; sonTiklama: string | null }>();
+      for (const t of depo.tiklamalar) {
+        if (!t.altLinkId) continue;
+        if (ortakAnahtari && t.ortakAnahtari !== ortakAnahtari) continue;
+        const mevcut = gruplar.get(t.altLinkId) ?? { sayi: 0, sonTiklama: null };
+        mevcut.sayi += 1;
+        if (!mevcut.sonTiklama || t.zaman > mevcut.sonTiklama) mevcut.sonTiklama = t.zaman;
+        gruplar.set(t.altLinkId, mevcut);
+      }
+      return [...gruplar.entries()].map(([altLinkId, v]) => ({ altLinkId, ...v }));
     },
   };
 }

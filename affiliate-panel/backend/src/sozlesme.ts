@@ -195,6 +195,10 @@ export interface AltLinkGorunumu extends AltLink {
   medyaAdi: string | null;
   tiklama: number;
   sonTiklama: string | null;
+  /** Bu linkten gelip bir oyuncuya eşleşen kayıt sayısı. */
+  oyuncuSayisi: number;
+  yatirim: number;
+  cekim: number;
 }
 
 export interface PortalUclari {

@@ -39,7 +39,13 @@ export interface AltLink {
   /** Adreste görünen kısa kod. */
   kod: string;
   ortakAnahtari: string;
-  medyaId: string;
+  /**
+   * `null` = medyasız link. Ortağın aktif landing sayfasına yönlendirir
+   * (bkz. `rotalar/tiklamaUcu.ts`); ortağın tek bir kreatifi yoksa ya da
+   * yalnızca kendi bağlantısını izlemek istiyorsa medya seçmeye
+   * zorlamak gereksiz bir adımdı.
+   */
+  medyaId: string | null;
   /** Ortağın verdiği isim; panelde bunu görüyor. */
   ad: string;
   alt: Partial<Record<AltParametre, string>>;
@@ -103,8 +109,9 @@ export async function altLinkOlustur(
 ): Promise<AltLink> {
   const ad = metin(girdi.ad);
   if (!ad) throw new AltLinkHatasi('ad zorunlu.');
-  const medyaId = metin(girdi.medyaId);
-  if (!medyaId) throw new AltLinkHatasi('medyaId zorunlu.');
+  // Medya OPSIYONEL: bos birakilirsa link, tiklama ucunda ortagin aktif
+  // landing sayfasina duser.
+  const medyaId = metin(girdi.medyaId) || null;
 
   return degistir<Depo, AltLink>(kiraci, ALAN, cozDepo, (depo) => {
     const kendi = depo.linkler.filter((l) => l.ortakAnahtari === ortakAnahtari);

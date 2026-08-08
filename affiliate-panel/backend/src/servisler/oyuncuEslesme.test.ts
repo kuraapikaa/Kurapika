@@ -60,6 +60,32 @@ describe('oyuncu eslesmesi', () => {
     expect(sonuc.eslesme.alt).toEqual({ sub1: 'facebook', sub2: 'tr' });
   });
 
+  /**
+   * Alt link bazlı yatırım/çekim raporunun (bkz. `altLinkFinansOzeti`)
+   * dayanağı: tıklamanın taşıdığı `altLinkId` eşleşmeye kopyalanmalı.
+   */
+  it('tiklama altLinkId tasiyorsa eslesmeye kopyalar', async () => {
+    const k = kiraci();
+    await onayliOrtak(k, 'ORT1');
+    const tiklama = await tiklamaKaydet(k, {
+      ortakAnahtari: 'ORT1',
+      medyaId: null,
+      altLinkId: 'alt-link-1',
+      sorgu: {},
+    });
+
+    const sonuc = await oyuncuyuEslestir(k, { lynonOyuncuId: '90010', ref: tiklama.clickId });
+
+    expect(sonuc.eslesme.altLinkId).toBe('alt-link-1');
+  });
+
+  it('tiklamasiz (dogrudan ortak anahtariyla) eslesmede altLinkId null', async () => {
+    const k = kiraci();
+    await onayliOrtak(k, 'ORT1');
+    const sonuc = await oyuncuyuEslestir(k, { lynonOyuncuId: '90011', ref: 'ORT1' });
+    expect(sonuc.eslesme.altLinkId).toBeNull();
+  });
+
   describe('ilk kayit kazanir', () => {
     it('baska ortak devralamaz, ilk sahip korunur', async () => {
       const k = kiraci();

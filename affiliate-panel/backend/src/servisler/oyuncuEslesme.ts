@@ -1,3 +1,4 @@
+import { and, eq, isNotNull, sql } from 'drizzle-orm';
 import {
   eslesmeDeposu,
   yeniCakismaId,
@@ -7,6 +8,8 @@ import {
   type GunlukSayi,
   type OyuncuEslesmesi,
 } from '../depolar/eslesmeDeposu.js';
+import { oyuncuEslesmeleri, oyuncuGunluk } from '../lib/sema.js';
+import { veritabani } from '../lib/veritabani.js';
 import { onayliMi, ortakAnahtarindanBul, type Ortak } from './ortaklar.js';
 import { tiklamaBul } from './tiklama.js';
 
@@ -69,6 +72,7 @@ interface CozulmusRef {
   ortakAnahtari: string;
   clickId: string | null;
   medyaId: string | null;
+  altLinkId: string | null;
   alt: OyuncuEslesmesi['alt'];
 }
 
@@ -101,6 +105,7 @@ async function refCoz(kiraci: string, ref: string): Promise<CozulmusRef> {
     ortakAnahtari,
     clickId: tiklama ? tiklama.clickId : null,
     medyaId: tiklama ? tiklama.medyaId : null,
+    altLinkId: tiklama ? tiklama.altLinkId : null,
     alt: tiklama ? tiklama.alt : {},
   };
 }
@@ -122,6 +127,7 @@ export async function oyuncuyuEslestir(
     ortakAnahtari: cozulmus.ortakAnahtari,
     clickId: cozulmus.clickId,
     medyaId: cozulmus.medyaId,
+    altLinkId: cozulmus.altLinkId,
     alt: cozulmus.alt,
     kaynak: istek.kaynak === 'elle' ? 'elle' : 'kayit',
     olusturuldu: simdi.toISOString(),
@@ -194,6 +200,7 @@ export async function oyuncuyuYenidenAta(
     ortakAnahtari,
     clickId: null,
     medyaId: null,
+    altLinkId: null,
     alt: {},
     kaynak: 'elle',
     olusturuldu: simdi.toISOString(),
@@ -229,6 +236,61 @@ export async function eslesmeGunlukSayilar(
   sorgu: GunlukEslesmeSorgusu = {},
 ): Promise<GunlukSayi[]> {
   return eslesmeDeposu().gunlukSayilar(kiraci, sorgu);
+}
+
+export interface AltLinkFinansOzeti {
+  altLinkId: string;
+  oyuncuSayisi: number;
+  yatirim: number;
+  cekim: number;
+}
+
+/**
+ * Alt link başına toplam yatırım/çekim.
+ *
+ * `oyuncuEslesmeleri.altLinkId` hangi oyuncunun hangi linkten geldiğini
+ * söylüyor; `oyuncuGunluk` webhook olaylarından katlanan gerçek tutarları
+ * tutuyor (bkz. `isler/olayIsleyici.ts`). İkisini oyuncu kimliğinden
+ * birleştirmek alt link bazlı rakamı veriyor.
+ *
+ * Webhook borusu Postgres'e özel (bkz. `depolar/olayKuyrugu.ts`); veritabanı
+ * yoksa rakam UYDURULMUYOR, boş dönüyor.
+ */
+export async function altLinkFinansOzeti(kiraci: string, ortakId?: string): Promise<AltLinkFinansOzeti[]> {
+  const vt = veritabani();
+  if (!vt) return [];
+
+  const kosullar = [eq(oyuncuEslesmeleri.kiraci, kiraci), isNotNull(oyuncuEslesmeleri.altLinkId)];
+  if (ortakId) kosullar.push(eq(oyuncuEslesmeleri.ortakId, ortakId));
+
+  const satirlar = await vt
+    .select({
+      altLinkId: oyuncuEslesmeleri.altLinkId,
+      // `oyuncuGunluk` gun basina bir satir tutuyor; JOIN oyuncu basina
+      // birden cok satira genisliyor, bu yuzden DISTINCT sart -- yoksa
+      // oyuncu sayisi gun sayisi kadar sisirdi.
+      oyuncuSayisi: sql<number>`count(distinct ${oyuncuEslesmeleri.lynonOyuncuId})::int`,
+      yatirim: sql<number>`coalesce(sum(${oyuncuGunluk.yatirim}), 0)`,
+      cekim: sql<number>`coalesce(sum(${oyuncuGunluk.cekim}), 0)`,
+    })
+    .from(oyuncuEslesmeleri)
+    .leftJoin(oyuncuGunluk, and(
+      eq(oyuncuGunluk.kiraci, oyuncuEslesmeleri.kiraci),
+      eq(oyuncuGunluk.oyuncuId, oyuncuEslesmeleri.lynonOyuncuId),
+    ))
+    .where(and(...kosullar))
+    .groupBy(oyuncuEslesmeleri.altLinkId);
+
+  return satirlar
+    // `altLinkId IS NOT NULL` kosuluyla suzuldugu icin hep dolu; tur
+    // daraltmasi yalnizca TypeScript'in bunu bilmesi icin.
+    .filter((s): s is typeof s & { altLinkId: string } => s.altLinkId !== null)
+    .map((s) => ({
+      altLinkId: s.altLinkId,
+      oyuncuSayisi: Number(s.oyuncuSayisi),
+      yatirim: Number(s.yatirim),
+      cekim: Number(s.cekim),
+    }));
 }
 
 export type { EslesmeCakismasi, EslesmeKaynagi, GunlukSayi, OyuncuEslesmesi };

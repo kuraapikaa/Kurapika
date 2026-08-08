@@ -45,6 +45,13 @@ export const tiklamalar = pgTable(
     kiraci: text('kiraci').notNull(),
     ortakAnahtari: text('ortak_anahtari').notNull(),
     medyaId: text('medya_id'),
+    /**
+     * Hangi alt linkten geldiği; ALT LİNK ÜZERİNDEN gelmediyse (düz
+     * `/c/...` linki) `null`. Alt link sayfası önceden `medyaId`+`alt`
+     * imzasıyla tahmin yürütüyordu — iki medyasız alt link aynı imzayı
+     * taşıdığı için ayırt edilemiyordu. Bu sütun kesin eşleştirme sağlar.
+     */
+    altLinkId: text('alt_link_id'),
     alt: jsonb('alt').$type<Partial<Record<AltParametre, string>>>().notNull().default({}),
     /** Kaba konum/bot ayıklaması için; kimlik olarak KULLANILMAZ. */
     ip: text('ip'),
@@ -57,6 +64,7 @@ export const tiklamalar = pgTable(
     // siraliyor; indeks bu sirayi birebir karsiliyor.
     index('aff_tiklamalar_kiraci_zaman').on(t.kiraci, t.zaman.desc()),
     index('aff_tiklamalar_kiraci_ortak_zaman').on(t.kiraci, t.ortakAnahtari, t.zaman.desc()),
+    index('aff_tiklamalar_kiraci_altlink').on(t.kiraci, t.altLinkId),
   ],
 );
 
@@ -124,6 +132,8 @@ export const oyuncuEslesmeleri = pgTable(
     /** Hangi tıklamadan geldiği; kanal kırılımını buna borçluyuz. */
     clickId: text('click_id'),
     medyaId: text('medya_id'),
+    /** Tıklamanın taşıdığı alt link; alt link bazlı yatırım/çekim raporunun dayanağı. */
+    altLinkId: text('alt_link_id'),
     alt: jsonb('alt').$type<Partial<Record<AltParametre, string>>>().notNull().default({}),
     kaynak: text('kaynak').notNull(),
     olusturuldu: timestamp('olusturuldu', { withTimezone: true }).notNull(),
@@ -132,6 +142,7 @@ export const oyuncuEslesmeleri = pgTable(
     primaryKey({ columns: [t.kiraci, t.lynonOyuncuId] }),
     index('aff_eslesme_kiraci_ortak').on(t.kiraci, t.ortakId),
     index('aff_eslesme_kiraci_zaman').on(t.kiraci, t.olusturuldu.desc()),
+    index('aff_eslesme_kiraci_altlink').on(t.kiraci, t.altLinkId),
   ],
 );
 
