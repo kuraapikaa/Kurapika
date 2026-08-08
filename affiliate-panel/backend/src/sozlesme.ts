@@ -33,6 +33,7 @@ import type { OrtakGunlukOlcum, OrtakOzeti } from './servisler/olcum.js';
 import type { OrtakDurumu, OrtakGorunumu } from './servisler/ortaklar.js';
 import type { OtoBonusAyari, OtoBonusDurumuYaniti, OtoBonusKaydi } from './servisler/otoBonus.js';
 import type { EslesmeCakismasi, OyuncuEslesmesi } from './servisler/oyuncuEslesme.js';
+import type { TopluAtamaSatiri, TopluAtamaSonucu } from './servisler/topluAtama.js';
 import type { PostbackAyari, PostbackKaydi } from './servisler/postback.js';
 import type { KuyrukOzeti } from './depolar/olayKuyrugu.js';
 import type { SirDurumu } from './servisler/webhookSirri.js';
@@ -50,7 +51,7 @@ export type {
   KaliteSinyali, KomisyonPlani, Marka, Medya, MusteriYolculuguSonucu, OrtakDurumu,
   OrtakGorunumu, OrtakGunlukOlcum, OrtakHakedisi, OrtakOzeti, OtoBonusAyari,
   OtoBonusDurumuYaniti, OtoBonusKaydi, PostbackAyari, PostbackKaydi, SenkronSonucu,
-  Tiklama, TiklamaOzeti,
+  Tiklama, TiklamaOzeti, TopluAtamaSatiri, TopluAtamaSonucu,
 };
 
 /* ── Oturum ──────────────────────────────────────────────────────── */
@@ -156,6 +157,7 @@ export interface YonetimUclari {
     cakismalar: CakismaGorunumu[];
     anahtar: AnahtarDurumu;
   };
+  '/oyuncu-eslesmeleri/toplu-atama-siniri': { limit: number };
 }
 
 /**

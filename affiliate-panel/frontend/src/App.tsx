@@ -67,6 +67,7 @@ const YONETIM_MENUSU: MenuOgesi[] = [
     yol: '/baglanti',
     etiket: 'Ayarlar',
     ikon: IKON.ayar,
+    bolumOnce: true,
     altlar: [
       { yol: '/baglanti', etiket: 'Backoffice bağlantısı' },
       { yol: '/postback', etiket: 'Postback' },

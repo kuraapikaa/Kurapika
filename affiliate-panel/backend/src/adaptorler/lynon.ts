@@ -539,6 +539,38 @@ class LynonAdaptoru implements BackofficeAdaptoru {
     );
     return { basarili: true, mesaj: `Oyuncu ${oyuncuId}, ${girdi.ortakAnahtari} ortağına bağlandı.` };
   }
+
+  /**
+   * Kullanıcı adından oyuncu kimliği bulur.
+   *
+   * SADECE TAM EŞLEŞME kabul edilir; Lynon araması bulanık ("test"
+   * sorgusu "test777" hesabını da getirebilir). Site kimliği ayrıca
+   * doğrulanıyor: farklı bir Lynon sitesindeki aynı kullanıcı adı bu
+   * tenant'ın oyuncusu SAYILMAZ.
+   */
+  async oyuncuAra(kullaniciAdi: string): Promise<{ oyuncuId: string; kullaniciAdi: string } | null> {
+    const temiz = String(kullaniciAdi ?? '').trim();
+    if (!temiz) return null;
+
+    const yanit = await this.istek<unknown>('/api/user/api/v1.0/userBackOffice', {
+      sorgu: { siteId: this.ayar.siteId, query: temiz, page: 1, countPerPage: 50 },
+    });
+    const veri = kayitOku(yanit);
+    const ham = Array.isArray(yanit) ? yanit : (veri.Data ?? veri.data ?? veri.Objects);
+    const satirlar = Array.isArray(ham) ? (ham as Array<Record<string, unknown>>) : [];
+
+    const hedef = temiz.toLocaleLowerCase('tr-TR');
+    const eslesen = satirlar.find((satir) => {
+      const girisAdi = ilkDolu(satir.userName, satir.username, satir.login, satir.Login).toLocaleLowerCase('tr-TR');
+      const siteId = ilkDolu(satir.siteId, satir.SiteId);
+      return girisAdi === hedef && siteId === String(this.ayar.siteId);
+    });
+    if (!eslesen) return null;
+
+    const oyuncuId = ilkDolu(eslesen.userId, eslesen.id, eslesen.playerId, eslesen.Id);
+    if (!oyuncuId) return null;
+    return { oyuncuId, kullaniciAdi: temiz };
+  }
 }
 
 export const LYNON_TANIMI: AdaptorTanimi = {

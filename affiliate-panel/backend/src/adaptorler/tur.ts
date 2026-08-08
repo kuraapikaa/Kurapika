@@ -103,6 +103,19 @@ export interface BackofficeAdaptoru {
   ortaklariListele?(): Promise<HamOrtak[]>;
   oyuncuyuBagla?(girdi: OyuncuBagi): Promise<{ basarili: boolean; mesaj: string }>;
   /**
+   * Kullanıcı adından backoffice oyuncu kimliğini bulur.
+   *
+   * `oyuncuyuBagla` yalnızca kimliği kabul ediyor; toplu geçişte elde
+   * olan tek şey kullanıcı adı. Bu, o kimliği bulan adım — `oyuncu-baglama`
+   * yeteneğiyle BİRLİKTE var olması bekleniyor, ayrı bir yetenek değil.
+   *
+   * Tam eşleşme YOKSA `null` döner, en yakın adayı DÖNMEZ: Lynon araması
+   * bulanık, "test" sorgusu "test777" hesabını da getirebilir. Yanlış
+   * oyuncuyu bir ortağa bağlamak, o oyuncunun tüm geçmiş ve gelecek
+   * kazancını yanlış kişiye yazdırır.
+   */
+  oyuncuAra?(kullaniciAdi: string): Promise<{ oyuncuId: string; kullaniciAdi: string } | null>;
+  /**
    * Sitenin gerçek ödeme yöntemleri.
    *
    * Ortağın ödeme yöntemini serbest metin olarak yazması, "Papara",
