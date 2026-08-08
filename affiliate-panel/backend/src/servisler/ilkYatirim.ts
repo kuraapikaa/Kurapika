@@ -63,6 +63,13 @@ export interface FtdSonucu {
   ftdSayisi: number | null;
   /** Bu turda deftere eklenen yeni oyuncu sayısı; teşhis için. */
   deftereEklenen: number;
+  /**
+   * Ölçüm modunda ilk yatırımı TESPİT EDİLEN oyuncular; oto bonus
+   * bunları kullanıyor. Kalibrasyonda BOŞ: kalibrasyon geçmişi
+   * dolduruyor ve haftalar önceki bir yatırıma şimdi bonus tanımlamak
+   * yanlış olurdu.
+   */
+  yeniOyuncular: string[];
 }
 
 /**
@@ -88,14 +95,14 @@ export async function ftdIsle(
     if (!defter.ilkGun) defter.ilkGun = gun;
 
     if (kalibrasyonMu) {
-      return { ftdSayisi: null, deftereEklenen: yeniler.length };
+      return { ftdSayisi: null, deftereEklenen: yeniler.length, yeniOyuncular: [] };
     }
 
     // Kalibrasyon bittigi ilk gunde esik yaziliyor; panel "olcum su
     // gunden itibaren guvenilir" diyebilsin.
     if (!defter.olcumBaslangici) defter.olcumBaslangici = gun;
 
-    return { ftdSayisi: yeniler.length, deftereEklenen: yeniler.length };
+    return { ftdSayisi: yeniler.length, deftereEklenen: yeniler.length, yeniOyuncular: yeniler };
   });
 }
 

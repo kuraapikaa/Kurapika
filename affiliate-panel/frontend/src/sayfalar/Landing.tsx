@@ -3,6 +3,10 @@ import { BasvuruFormu } from './Basvuru';
 import { Alan, Buton, Hata, useTema } from '../ui';
 import { api } from '../api';
 import { Logo, useMarka } from '../marka';
+// Kullanicinin sagladigi marka gorseli (Photoroom ile arka plani
+// silinmis surum). WebP bilerek: ayni cutout PNG olarak 1,9 MB,
+// WebP olarak 171 KB — alfa kanali korunuyor, kalite farki yok.
+import siberKiz from '../gorseller/siber-kiz.webp';
 
 /**
  * ORTAKLIK PROGRAMI LANDING SAYFASI.
@@ -11,20 +15,16 @@ import { Logo, useMarka } from '../marka';
  * ekranı. Buraya gelen kişi henüz ortak değil ve programı hiç
  * bilmiyor — tek işi onu ikna etmek.
  *
- * ── Tasarımdaki üç karar ──
+ * ── Tasarım tezi: gece şehri terminali ──
  *
- * BÜYÜK RAKAMLAR, AZ METİN. Önceki hâli paragraflardan oluşuyordu ve
- * hiçbir şey öne çıkmıyordu. Bir ortağın sorduğu tek soru "ne
- * kazanırım"; oranlar artık sayfanın en büyük ögesi.
+ * Güven sözü aynı: rakam bir kez yazılır, bir daha değişmez. Sahne
+ * cyberpunk: kahraman bölümünde markanın siber kızı avucundaki
+ * hologramı ziyaretçiye uzatıyor; o elin hizasına DONDURULMUŞ hakediş
+ * pusulası biniyor. Davet eden şehir, değişmeyen rakam — ikna eden
+ * karşıtlık bu.
  *
- * TEK SÜTUN, GENİŞ NEFES. Panel yoğun olmalı (veri ekranı), landing
- * ferah. Aynı yoğunlukta bir landing "form" gibi görünüyor ve
- * okunmadan kapatılıyor.
- *
- * SORULAR AÇIKÇA CEVAPLANIYOR. Ödemenin ne zaman, hangi eşikte ve
- * hangi kuralla yapıldığı gizlenmiyor. Affiliate dünyasında en büyük
- * güvensizlik kaynağı bu belirsizlik; peşinen cevaplamak hem dürüst
- * hem de dönüşümü artıran şey.
+ * Kalan kararlar öncekiyle aynı: büyük rakamlar az metin, tek sütun
+ * geniş nefes, sorulara açık cevap.
  */
 
 type Gorunum = 'tanitim' | 'basvuru' | 'giris';
@@ -88,7 +88,10 @@ export function Landing({ girisYapildi }: { girisYapildi: () => void }) {
   };
 
   return (
-    <div className="min-h-screen">
+    // Giris gorunumu ARACIN kapisi: sayfa o anda butunuyle `aqua`
+    // kimligine gecer (baslik ve altbilgi dahil). Vitrin ile panel
+    // arasindaki esik burasi — kapida kimlik degisir, iceride surer.
+    <div className={`min-h-screen ${gorunum === 'giris' ? 'aqua' : ''}`}>
       <header
         className="sticky top-0 z-20 border-b"
         style={{
@@ -112,7 +115,7 @@ export function Landing({ girisYapildi }: { girisYapildi: () => void }) {
       <main className="mx-auto max-w-6xl px-5 pb-20">
         {bilgi && (
           <p
-            className="mt-6 rounded-xl border px-4 py-3 text-sm"
+            className="mt-6 border px-4 py-3 text-sm"
             style={{ color: 'var(--olumlu)', borderColor: 'var(--olumlu)', background: 'var(--yuzey)' }}
           >
             {bilgi}
@@ -123,7 +126,7 @@ export function Landing({ girisYapildi }: { girisYapildi: () => void }) {
 
         {gorunum === 'basvuru' && (
           <section className="mx-auto max-w-3xl py-10">
-            <h1 className="text-3xl font-semibold tracking-tight">Ortaklık başvurusu</h1>
+            <h1 className="gosterim text-3xl font-extrabold tracking-tight">Ortaklık başvurusu</h1>
             <p className="mt-2 text-base" style={{ color: 'var(--metin-2)' }}>
               Yıldızlı alanlar dışında hiçbiri zorunlu değil. Trafiğinizi anlatan alanlar
               değerlendirmeyi hızlandırır.
@@ -143,7 +146,7 @@ export function Landing({ girisYapildi }: { girisYapildi: () => void }) {
       </main>
 
       <footer className="border-t" style={{ borderColor: 'var(--kenar)' }}>
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-5 py-6 text-xs" style={{ color: 'var(--metin-2)' }}>
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-5 py-6 font-mono text-[11px] uppercase tracking-wider" style={{ color: 'var(--metin-2)' }}>
           <span>{marka.ad}</span>
           <span className="ml-auto">18+ · Sorumlu oyun</span>
         </div>
@@ -155,66 +158,81 @@ export function Landing({ girisYapildi }: { girisYapildi: () => void }) {
 function Tanitim({ git }: { git: (g: Gorunum) => void }) {
   return (
     <>
-      {/* Degrade YALNIZCA kahraman bolumunde. Her bolume koymak,
-          hicbirinin one cikmamasi demek olurdu. */}
-      <section className="relative mt-6 overflow-hidden rounded-3xl px-6 py-16 md:px-12 md:py-20">
+      {/* Kahraman: solda iddia, sagda gece sehri. Izgara ve neon sis
+          yalnizca bu bolumde — her bolume yayilsa desen gurultu olur. */}
+      <section className="relative mt-10 lg:mt-16">
+        <div aria-hidden className="izgara absolute -inset-x-10 -top-10 bottom-0 -z-10" />
         <div
           aria-hidden
-          className="absolute inset-0 -z-10"
+          className="absolute -inset-x-10 -top-10 bottom-0 -z-10"
           style={{
             background:
-              'radial-gradient(ellipse 80% 60% at 20% 0%, color-mix(in srgb, var(--vurgu) 26%, transparent), transparent 70%),'
-              + ' radial-gradient(ellipse 60% 50% at 90% 20%, color-mix(in srgb, var(--vurgu) 14%, transparent), transparent 70%)',
+              'radial-gradient(ellipse 55% 45% at 18% 12%, color-mix(in srgb, var(--vurgu) 14%, transparent), transparent 70%),'
+              + ' radial-gradient(ellipse 45% 40% at 88% 30%, color-mix(in srgb, var(--vurgu-2) 12%, transparent), transparent 70%)',
           }}
         />
-        <p className="text-sm font-medium uppercase tracking-widest" style={{ color: 'var(--vurgu)' }}>
-          Ortaklık Programı
-        </p>
-        <h1 className="mt-3 max-w-3xl text-4xl font-semibold leading-[1.1] tracking-tight md:text-6xl">
-          Getirdiğiniz oyuncunun geliri,<br className="hidden md:block" /> her ay payınıza yazılır.
-        </h1>
-        <p className="mt-5 max-w-xl text-lg" style={{ color: 'var(--metin-2)' }}>
-          Kampanya başına ayrı link, günlük güncellenen rakamlar ve hangi kanalın dönüştürdüğünü
-          gösteren kırılım.
-        </p>
-        <div className="mt-8 flex flex-wrap gap-3">
-          <Buton tur="birincil" onClick={() => git('basvuru')}>Başvuruyu başlat</Buton>
-          <Buton onClick={() => git('giris')}>Hesabım var</Buton>
-        </div>
 
-        <dl className="mt-12 grid max-w-2xl grid-cols-2 gap-x-8 gap-y-6 sm:grid-cols-4">
-          {[
-            ['%45', 'en yüksek gelir payı'],
-            ['Günlük', 'rakam güncellemesi'],
-            ['5', 'alt kanal etiketi'],
-            ['Aylık', 'ödeme dönemi'],
-          ].map(([deger, etiket]) => (
-            <div key={etiket}>
-              <dt className="text-2xl font-semibold tabular-nums md:text-3xl">{deger}</dt>
-              <dd className="mt-1 text-xs" style={{ color: 'var(--metin-2)' }}>{etiket}</dd>
+        <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14">
+          <div>
+            <p className="font-mono text-xs font-medium uppercase tracking-[0.2em]" style={{ color: 'var(--vurgu)' }}>
+              <span aria-hidden>{'// '}</span>Ortaklık programı
+            </p>
+            <h1 className="gosterim isilti-metin mt-4 text-4xl font-extrabold leading-[1.05] tracking-tight md:text-5xl lg:text-[3.4rem]">
+              Getirdiğiniz oyuncunun geliri, her ay payınıza yazılır.
+            </h1>
+            <p className="mt-5 max-w-xl text-lg" style={{ color: 'var(--metin-2)' }}>
+              Kampanya başına ayrı link, günlük güncellenen rakamlar — ve onaylandığı gün
+              dondurulan, bir daha değişmeyen hakediş.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Buton tur="birincil" onClick={() => git('basvuru')}>Başvuruyu başlat</Buton>
+              <Buton onClick={() => git('giris')}>Hesabım var</Buton>
             </div>
-          ))}
-        </dl>
+
+            <dl className="mt-12 grid max-w-2xl grid-cols-2 gap-x-8 gap-y-6 sm:grid-cols-4">
+              {[
+                ['%45', 'en yüksek gelir payı'],
+                ['Günlük', 'rakam güncellemesi'],
+                ['5', 'alt kanal etiketi'],
+                ['Aylık', 'ödeme dönemi'],
+              ].map(([deger, etiket]) => (
+                <div key={etiket}>
+                  <dt className="font-mono text-xl font-semibold tabular-nums md:text-2xl">{deger}</dt>
+                  <dd className="mt-1 text-xs" style={{ color: 'var(--metin-2)' }}>{etiket}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+
+          <HoloEkran />
+        </div>
       </section>
 
       <Bolum etiket="Kazanç" baslik="Gelir payı kademeleri" aciklama="Aylık net geliriniz büyüdükçe oranınız artar.">
-        <div className="grid gap-4 md:grid-cols-3">
+        {/* Oran tabelasi: uc ayri kart degil tek cetvel. Kademeler ayni
+            olcegin basamaklari; yan yana kartlar onlari uc ayri urun gibi
+            gosteriyordu. */}
+        <div className="overflow-hidden border" style={{ background: 'var(--yuzey)', borderColor: 'var(--kenar)' }}>
           {KADEMELER.map((k) => (
             <div
               key={k.esik}
-              className="rounded-2xl border p-6"
+              className="grid grid-cols-[1fr_auto] items-center gap-4 border-b px-5 py-4 last:border-0 sm:grid-cols-[minmax(0,11rem)_1fr_auto] sm:px-6"
               style={{
-                background: k.one ? 'color-mix(in srgb, var(--vurgu) 8%, var(--yuzey))' : 'var(--yuzey)',
-                borderColor: k.one ? 'var(--vurgu)' : 'var(--kenar)',
+                borderColor: 'var(--kenar)',
+                background: k.one ? 'var(--vurgu-yumusak)' : undefined,
+                boxShadow: k.one ? 'inset 3px 0 0 var(--vurgu)' : undefined,
               }}
             >
-              <span className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--metin-2)' }}>
+              <span className="font-mono text-[11px] font-medium uppercase tracking-[0.14em]" style={{ color: 'var(--metin-2)' }}>
                 {k.not}
               </span>
-              <p className="mt-3 text-5xl font-semibold tabular-nums" style={{ color: k.one ? 'var(--vurgu)' : 'inherit' }}>
+              <span className="col-start-1 font-mono text-sm sm:col-start-2">{k.esik}</span>
+              <span
+                className="gosterim col-start-2 row-span-2 row-start-1 self-center text-4xl font-extrabold tabular-nums sm:col-start-3 sm:row-span-1 md:text-5xl"
+                style={{ color: k.one ? 'var(--vurgu)' : undefined }}
+              >
                 %{k.oran}
-              </p>
-              <p className="mt-3 text-sm" style={{ color: 'var(--metin-2)' }}>{k.esik}</p>
+              </span>
             </div>
           ))}
         </div>
@@ -229,9 +247,9 @@ function Tanitim({ git }: { git: (g: Gorunum) => void }) {
       <Bolum etiket="Süreç" baslik="Nasıl çalışıyor">
         <ol className="grid gap-4 md:grid-cols-4">
           {ADIMLAR.map((a, i) => (
-            <li key={a.baslik} className="rounded-2xl border p-5" style={{ background: 'var(--yuzey)', borderColor: 'var(--kenar)' }}>
+            <li key={a.baslik} className="border p-5" style={{ background: 'var(--yuzey)', borderColor: 'var(--kenar)' }}>
               <span
-                className="flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold"
+                className="flex h-7 w-7 items-center justify-center font-mono text-sm font-semibold"
                 style={{ background: 'color-mix(in srgb, var(--vurgu) 14%, transparent)', color: 'var(--vurgu)' }}
               >
                 {i + 1}
@@ -246,7 +264,7 @@ function Tanitim({ git }: { git: (g: Gorunum) => void }) {
       <Bolum etiket="Panel" baslik="Elinizde ne olacak">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {OZELLIKLER.map((o) => (
-            <div key={o.baslik} className="rounded-2xl border p-5" style={{ background: 'var(--yuzey)', borderColor: 'var(--kenar)' }}>
+            <div key={o.baslik} className="border p-5" style={{ background: 'var(--yuzey)', borderColor: 'var(--kenar)' }}>
               <h3 className="font-medium">{o.baslik}</h3>
               <p className="mt-1.5 text-sm leading-relaxed" style={{ color: 'var(--metin-2)' }}>{o.metin}</p>
             </div>
@@ -258,7 +276,7 @@ function Tanitim({ git }: { git: (g: Gorunum) => void }) {
           kendiliğinden doğru. Elle yazılmış bir akordeonun
           erişilebilirliğini bu kadar doğru yapmak fazladan iş. */}
       <Bolum etiket="Sorular" baslik="Merak edilenler">
-        <div className="divide-y rounded-2xl border" style={{ background: 'var(--yuzey)', borderColor: 'var(--kenar)' }}>
+        <div className="divide-y border" style={{ background: 'var(--yuzey)', borderColor: 'var(--kenar)' }}>
           {SORULAR.map((q) => (
             <details key={q.s} className="group px-5 py-4">
               <summary className="flex cursor-pointer list-none items-center gap-3 font-medium">
@@ -274,10 +292,10 @@ function Tanitim({ git }: { git: (g: Gorunum) => void }) {
       </Bolum>
 
       <section
-        className="mt-16 rounded-3xl border px-6 py-12 text-center md:px-12"
-        style={{ background: 'color-mix(in srgb, var(--vurgu) 10%, var(--yuzey))', borderColor: 'var(--vurgu)' }}
+        className="mt-16 border px-6 py-12 text-center md:px-12"
+        style={{ background: 'var(--vurgu-yumusak)', borderColor: 'var(--vurgu)' }}
       >
-        <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">Başlamak birkaç dakika.</h2>
+        <h2 className="gosterim text-2xl font-extrabold tracking-tight md:text-3xl">Başlamak birkaç dakika.</h2>
         <p className="mx-auto mt-2 max-w-md text-sm" style={{ color: 'var(--metin-2)' }}>
           Zorunlu alanlar dört tane. Gerisini sonra da doldurabilirsiniz.
         </p>
@@ -286,6 +304,120 @@ function Tanitim({ git }: { git: (g: Gorunum) => void }) {
         </div>
       </section>
     </>
+  );
+}
+
+/**
+ * HOLO SAHNE — imza kompozisyon: marka kızı avucundaki hologramı
+ * uzatıyor, dondurulmuş pusula o elin hizasına biniyor. Görsel şeffaf
+ * cutout; çerçeve yok, ızgaranın üstünde neon sisiyle duruyor. Alt
+ * kenar maskeyle eriyor ki kesik bir fotoğraf değil sahnenin parçası
+ * gibi otursun.
+ */
+function HoloEkran() {
+  const altaEriyen = 'linear-gradient(to bottom, #000 88%, transparent)';
+  return (
+    <div className="relative lg:mb-16">
+      <img
+        src={siberKiz}
+        alt="Avucunda hologram taşıyan, mor neonlu siber anime kız"
+        className="mx-auto block w-full max-w-md"
+        style={{
+          filter: 'drop-shadow(0 0 36px color-mix(in srgb, var(--vurgu) 28%, transparent))',
+          maskImage: altaEriyen,
+          WebkitMaskImage: altaEriyen,
+        }}
+      />
+
+      <div className="relative z-10 mx-4 -mt-20 max-w-sm sm:mx-auto lg:absolute lg:-bottom-12 lg:-left-8 lg:mx-0 lg:mt-0 lg:w-80">
+        <Pusula />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * PUSULA — dondurulmuş hakediş belgesi, holo-terminal çıktısı.
+ *
+ * Rakamlar temsilî ama TUTARLI: 84.210 − %18 işletme payı (15.158)
+ * − 3.400 devreden zarar = 65.652 taban; %45'i 29.543. Hesap sırası
+ * ürünün gerçek sırası (önce işletme payı, sonra devir, en son yüzde).
+ *
+ * Satırlar sırayla yazılıyor, kilit en son vuruluyor; vurulduktan
+ * sonra arada bir neon gibi seğiriyor. `prefers-reduced-motion`
+ * durumunda belge bitmiş hâliyle durur.
+ */
+function Pusula() {
+  const kalemler: Array<{ ad: string; deger: string; vurgulu?: boolean }> = [
+    { ad: 'Brüt oyuncu geliri', deger: '84.210 ₺' },
+    { ad: 'İşletme payı (%18)', deger: '−15.158 ₺' },
+    { ad: 'Devreden zarar', deger: '−3.400 ₺' },
+    { ad: 'Gelir tabanı', deger: '65.652 ₺' },
+    { ad: 'Ortak payı (%45)', deger: '29.543 ₺', vurgulu: true },
+  ];
+
+  return (
+    <figure>
+      <div
+        className="relative rotate-[-1.2deg] border font-mono shadow-[0_28px_56px_-28px_rgba(0,0,10,0.6)]"
+        style={{
+          background: 'color-mix(in srgb, var(--yuzey) 82%, transparent)',
+          borderColor: 'color-mix(in srgb, var(--vurgu) 35%, var(--kenar))',
+          backdropFilter: 'blur(10px)',
+        }}
+      >
+        <div
+          className="flex items-baseline justify-between border-b px-5 py-3 text-[11px] uppercase tracking-[0.14em]"
+          style={{ borderColor: 'var(--kenar)', color: 'var(--metin-2)' }}
+        >
+          <span>Hakediş pusulası</span>
+          <span>Mart 2026</span>
+        </div>
+
+        <div className="px-5 py-4">
+          {kalemler.map((k, i) => (
+            <div
+              key={k.ad}
+              className="pusula-satir flex items-baseline gap-2 py-1.5 text-[13px]"
+              style={{ animationDelay: `${200 + i * 110}ms` }}
+            >
+              <span style={{ color: k.vurgulu ? 'var(--metin)' : 'var(--metin-2)' }}>{k.ad}</span>
+              <span aria-hidden className="flex-1 border-b border-dotted" style={{ borderColor: 'var(--kenar)' }} />
+              <span className="tabular-nums" style={{ fontWeight: k.vurgulu ? 600 : 400 }}>{k.deger}</span>
+            </div>
+          ))}
+
+          <div
+            className="pusula-satir mt-3 flex items-baseline gap-2 border-t pt-3"
+            style={{ borderColor: 'var(--kenar)', animationDelay: '820ms' }}
+          >
+            <span className="text-[11px] font-medium uppercase tracking-[0.14em]">Ödenecek</span>
+            <span aria-hidden className="flex-1" />
+            <span className="text-xl font-semibold tabular-nums" style={{ color: 'var(--vurgu)' }}>29.543 ₺</span>
+          </div>
+
+          <p className="pusula-satir mt-3 text-[11px]" style={{ color: 'var(--metin-2)', animationDelay: '940ms' }}>
+            Onaylandı · 01.04.2026 · Bir daha değişmez.
+          </p>
+        </div>
+
+        <span
+          className="damga absolute -right-3 -top-3 border-2 px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.16em]"
+          style={{
+            color: 'var(--vurgu)',
+            borderColor: 'var(--vurgu)',
+            background: 'color-mix(in srgb, var(--vurgu) 10%, var(--yuzey))',
+            boxShadow: 'var(--isilti)',
+            animationDelay: '1150ms',
+          }}
+        >
+          Donduruldu
+        </span>
+      </div>
+      <figcaption className="mt-3 text-center font-mono text-[11px]" style={{ color: 'var(--metin-2)' }}>
+        Örnek dönem — rakamlar temsilîdir, hesap sırası gerçektir.
+      </figcaption>
+    </figure>
   );
 }
 
@@ -299,8 +431,10 @@ function Bolum({
 }) {
   return (
     <section className="mt-16">
-      <p className="text-xs font-medium uppercase tracking-widest" style={{ color: 'var(--vurgu)' }}>{etiket}</p>
-      <h2 className="mt-2 text-2xl font-semibold tracking-tight md:text-3xl">{baslik}</h2>
+      <p className="font-mono text-xs font-medium uppercase tracking-[0.2em]" style={{ color: 'var(--vurgu)' }}>
+        <span aria-hidden>{'// '}</span>{etiket}
+      </p>
+      <h2 className="gosterim mt-2 text-2xl font-extrabold tracking-tight md:text-3xl">{baslik}</h2>
       {aciklama && <p className="mt-2 text-sm" style={{ color: 'var(--metin-2)' }}>{aciklama}</p>}
       <div className="mt-6">{children}</div>
     </section>
@@ -313,6 +447,10 @@ function Bolum({
  * Tek uçta birleştirip rolü sunucunun tahmin etmesi, aynı e-postanın
  * iki tarafta da bulunması durumunda hangi rolün kazandığını belirsiz
  * bırakırdı.
+ *
+ * Rol seçimi gizli bir alt link değil, iki parçalı anahtar: yönetici
+ * girişini aramak zorunda kalmak bir güvenlik önlemi değil, sadece
+ * sürtünmeydi.
  */
 function GirisKutusu({ girisYapildi }: { girisYapildi: () => void }) {
   const [yonetici, setYonetici] = useState(false);
@@ -337,17 +475,44 @@ function GirisKutusu({ girisYapildi }: { girisYapildi: () => void }) {
     }
   };
 
+  const rolSec = (yeni: boolean) => {
+    setYonetici(yeni);
+    setHata(null);
+  };
+
   return (
     <section className="mx-auto max-w-sm py-16">
-      <h1 className="mb-1 text-2xl font-semibold tracking-tight">
-        {yonetici ? 'Yönetici girişi' : 'Ortak girişi'}
-      </h1>
+      <h1 className="mb-1 text-2xl font-semibold tracking-tight">Giriş</h1>
       <p className="mb-6 text-sm" style={{ color: 'var(--metin-2)' }}>
         {yonetici ? 'Panel yönetimi için.' : 'Kazancınızı ve linklerinizi görmek için.'}
       </p>
 
+      {/* iOS parcali denetim: gri yuvada beyaz secili hap. */}
+      <div
+        className="mb-4 grid grid-cols-2 gap-0.5 rounded-[10px] p-0.5 text-sm font-medium"
+        style={{ background: 'var(--yuzey-2)' }}
+        role="tablist"
+        aria-label="Giriş türü"
+      >
+        {([['Ortak', false], ['Yönetici', true]] as const).map(([ad, deger]) => (
+          <button
+            key={ad}
+            type="button"
+            role="tab"
+            aria-selected={yonetici === deger}
+            className="rounded-lg px-3 py-1.5"
+            style={yonetici === deger
+              ? { background: 'var(--yuzey)', color: 'var(--metin)', boxShadow: '0 1px 3px rgba(0,0,0,0.12)' }
+              : { color: 'var(--metin-2)' }}
+            onClick={() => rolSec(deger)}
+          >
+            {ad}
+          </button>
+        ))}
+      </div>
+
       <form
-        className="space-y-4 rounded-2xl border p-6"
+        className="hud space-y-4 border p-6"
         style={{ background: 'var(--yuzey)', borderColor: 'var(--kenar)' }}
         onSubmit={gonder}
       >
@@ -363,15 +528,6 @@ function GirisKutusu({ girisYapildi }: { girisYapildi: () => void }) {
           {gonderiliyor ? 'Giriş yapılıyor…' : 'Giriş yap'}
         </Buton>
       </form>
-
-      <button
-        type="button"
-        className="mt-4 w-full text-center text-xs underline"
-        style={{ color: 'var(--metin-2)' }}
-        onClick={() => { setYonetici(!yonetici); setHata(null); }}
-      >
-        {yonetici ? 'Ortak girişine dön' : 'Yönetici girişi'}
-      </button>
     </section>
   );
 }

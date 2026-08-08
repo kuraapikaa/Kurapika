@@ -49,7 +49,10 @@ export function Kabuk({
   useEffect(() => setAcik(false), [konum.pathname]);
 
   return (
-    <div className="flex min-h-screen">
+    // `aqua`: backoffice Apple kimliginde — kok degiskenleri ve sus
+    // siniflarini index.css'teki kapsam eziyor. Vitrin (Landing) bu
+    // sarmalayicinin disinda, cyberpunk kimliginde kaliyor.
+    <div className="aqua flex min-h-screen">
       {acik && (
         <button
           type="button"
@@ -59,11 +62,14 @@ export function Kabuk({
         />
       )}
 
+      {/* `ray`: macOS kenar cubugu gibi temayla acilip kararan sakin
+          yuzey. Renkleri index.css'te kapsamli degiskenlerle geliyor;
+          buradaki her `var()` kendiliginden ray paletine duser. */}
       <aside
-        className={`fixed inset-y-0 left-0 z-30 flex w-60 flex-col border-r transition-transform lg:static lg:translate-x-0 ${
+        className={`ray fixed inset-y-0 left-0 z-30 flex w-60 flex-col border-r transition-transform lg:static lg:translate-x-0 ${
           acik ? 'translate-x-0' : '-translate-x-full'
         }`}
-        style={{ background: 'var(--yuzey)', borderColor: 'var(--kenar)' }}
+        style={{ borderColor: 'var(--kenar)', color: 'var(--metin)' }}
       >
         <div className="border-b px-4 py-4" style={{ borderColor: 'var(--kenar)' }}>
           <Logo marka={marka} />
@@ -80,12 +86,16 @@ export function Kabuk({
       <div className="flex min-w-0 flex-1 flex-col">
         <header
           className="sticky top-0 z-10 flex items-center gap-3 border-b px-4 py-3"
-          style={{ background: 'var(--yuzey)', borderColor: 'var(--kenar)' }}
+          style={{
+            background: 'color-mix(in srgb, var(--zemin) 90%, transparent)',
+            borderColor: 'var(--kenar)',
+            backdropFilter: 'blur(8px)',
+          }}
         >
           <button
             type="button"
             aria-label="Menü"
-            className="rounded-lg border px-2 py-1 text-sm lg:hidden"
+            className="border px-2 py-1 text-sm lg:hidden"
             style={{ borderColor: 'var(--kenar)' }}
             onClick={() => setAcik(true)}
           >
@@ -131,6 +141,8 @@ function MenuSatiri({ oge }: { oge: MenuOgesi }) {
     if (icerdeMi) setAcik(true);
   }, [icerdeMi]);
 
+  // Secili oge macOS kenar cubugu gibi: yumusak mavi dolgu, mavi
+  // metin. Cizgi, isilti, buyuk harf yok.
   const stil = ({ isActive }: { isActive: boolean }) => ({
     background: isActive ? 'var(--vurgu-yumusak)' : 'transparent',
     color: isActive ? 'var(--vurgu)' : 'var(--metin-2)',

@@ -2,6 +2,12 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { HashRouter } from 'react-router-dom';
 import { App } from './App';
+// Yazi tipleri pakete gomulu (fontsource): CDN yok, dis istek yok.
+// `wdth.css` genislik eksenini de getiriyor — `.gosterim` sesi ona dayali.
+import '@fontsource-variable/archivo/wdth.css';
+import '@fontsource/ibm-plex-mono/400.css';
+import '@fontsource/ibm-plex-mono/500.css';
+import '@fontsource/ibm-plex-mono/600.css';
 import './index.css';
 
 /**

@@ -2,6 +2,7 @@ import { adaptorZorunlu } from '../adaptorler/kayit.js';
 import { gunAnahtari, gunEkle, gunGecerliMi } from '../lib/gunler.js';
 import { ftdDurumu, ftdIsle } from './ilkYatirim.js';
 import { olcumleriYaz, sonOlculenGun } from './olcum.js';
+import { ftdBonuslariniIsle } from './otoBonus.js';
 
 /**
  * ÇEKME SENKRONU.
@@ -45,19 +46,32 @@ export async function gunuSenkronla(
   const olcumler = await adaptor.gunuCek(gun);
 
   const zenginlestirilmis = [];
+  // Ilk yatirimi bu turda tespit edilenler; oto bonusa gidecekler.
+  // Kume, ayni oyuncunun iki ortagin satirinda gorunmesini tekillestirir.
+  const yeniFtdliler = new Set<string>();
   for (const olcum of olcumler) {
     const { yatiranOyuncular, ...temel } = olcum;
     // Adaptor FTD'yi kendi biliyorsa ona dokunmuyoruz; bilmiyorsa ve
     // yatiran oyuncu listesi verdiyse defterden turetiliyor.
-    const ftd = temel.ftdSayisi !== null
-      ? temel.ftdSayisi
-      : yatiranOyuncular
-        ? (await ftdIsle(kiraci, gun, yatiranOyuncular, { kalibrasyonMu })).ftdSayisi
-        : null;
+    let ftd = temel.ftdSayisi;
+    if (ftd === null && yatiranOyuncular) {
+      const sonuc = await ftdIsle(kiraci, gun, yatiranOyuncular, { kalibrasyonMu });
+      ftd = sonuc.ftdSayisi;
+      for (const oyuncu of sonuc.yeniOyuncular) yeniFtdliler.add(oyuncu);
+    }
     zenginlestirilmis.push({ ...temel, ftdSayisi: ftd, kaynak: 'cekme' as const });
   }
 
-  return olcumleriYaz(kiraci, zenginlestirilmis, simdi);
+  const yazilan = await olcumleriYaz(kiraci, zenginlestirilmis, simdi);
+
+  // Oto bonus OLCUMDEN SONRA ve firlatmadan: bonus tarafindaki hicbir
+  // aksaklik gunun olcumunu dusurmemeli. Servis kendi icinde aktiflik,
+  // yapilandirma ve tazelik kontrolu yapiyor.
+  if (yeniFtdliler.size > 0) {
+    await ftdBonuslariniIsle(kiraci, gun, [...yeniFtdliler], simdi);
+  }
+
+  return yazilan;
 }
 
 /**

@@ -164,7 +164,7 @@ export function CubukListesi({
               {bicim(s.deger)}{birim ? ` ${birim}` : ''}
             </span>
           </div>
-          <div className="h-2 overflow-hidden rounded-full" style={{ background: 'var(--yuzey-2)' }}>
+          <div className="h-1.5 overflow-hidden rounded-full" style={{ background: 'var(--yuzey-2)' }}>
             <div
               className="h-full rounded-full"
               style={{
@@ -183,7 +183,7 @@ export function CubukListesi({
 function BosGrafik({ mesaj, yukseklik }: { mesaj: string; yukseklik: number }) {
   return (
     <div
-      className="flex items-center justify-center rounded-lg border border-dashed text-sm"
+      className="flex items-center justify-center rounded-xl border border-dashed text-sm"
       style={{ height: yukseklik, borderColor: 'var(--kenar)', color: 'var(--metin-2)' }}
     >
       {mesaj}
@@ -207,9 +207,9 @@ export function OlcuKarti({
     : degisim >= 0 ? 'var(--olumlu)' : 'var(--olumsuz)';
 
   return (
-    <div className="rounded-xl border p-4" style={{ background: 'var(--yuzey)', borderColor: 'var(--kenar)' }}>
+    <div className="hud border p-4" style={{ background: 'var(--yuzey)', borderColor: 'var(--kenar)' }}>
       <div className="flex items-center justify-between">
-        <p className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--metin-2)' }}>{etiket}</p>
+        <p className="text-xs font-medium" style={{ color: 'var(--metin-2)' }}>{etiket}</p>
         {ikon}
       </div>
       <p className="mt-2 text-2xl font-semibold tabular-nums">{deger}</p>

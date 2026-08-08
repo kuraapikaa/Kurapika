@@ -3,89 +3,230 @@
 @tailwind utilities;
 
 /**
- * Tema iki tam palet olarak yaziliyor, tek bir "koyu" varyant olarak
- * degil. Once koyu yazip aciga varyant eklemek, her yeni bilesende
- * aydinlik temayi UNUTMAYA davet: bilesen koyu temada dogru gorunur,
- * acikta okunmaz ve bu ancak kullanici sikayetiyle fark edilir.
+ * İKİ KİMLİK, TEK UYGULAMA.
+ *
+ * VİTRİN (kök kapsam) — "gece şehri" cyberpunk'ı: landing, başvuru ve
+ * giriş. Neon mor, ızgara, pahlı köşeler, damga. Ziyaretçiyi davet
+ * eden sahne bu.
+ *
+ * ARAÇ (`.aqua` kapsamı) — backoffice, Apple estetiğinde: yönetim ve
+ * ortak paneli. Sistem yazı tipi, yumuşak köşeler, ince çizgiler,
+ * mavi vurgu, sıfır ışıltı. Günde sekiz saat bakılan ekran süs değil
+ * sükûnet ister.
+ *
+ * Mekanizma: kök değişkenler cyberpunk'ı taşıyor; `.aqua` sarmalayıcı
+ * aynı değişken adlarını kendi paletiyle eziyor ve süs sınıflarını
+ * (hud, kesik, ışıltı) kapsam içinde etkisizleştiriyor. Bileşenler
+ * hangi kimlikte olduklarını bilmiyor.
+ *
+ * Tema her iki kimlikte de iki tam palet: tek koyu varyant yazmak,
+ * aydınlık temayı unutmaya davet — o doktrin duruyor.
  */
 :root {
   color-scheme: light;
-  --zemin: #f6f7fb;
-  --yuzey: #ffffff;
-  --yuzey-2: #f0f2f8;
-  --kenar: #dfe3ee;
-  --metin: #16192b;
-  --metin-2: #5a6178;
-  --vurgu: #7d5c0d;
-  --vurgu-metin: #ffffff;
-  /* Secili menu ogesinin zemini; vurgunun cok acik hali. */
-  --vurgu-yumusak: #f7efd8;
   /*
-   * MARKA DEGRADESI — logodaki altin.
-   *
-   * Uc durak: ust parlak, orta doygun, alt koyu. Iki duraklı bir
-   * degrade altini "sari" gosteriyor; metalik his ucuncu duraktan
-   * geliyor.
-   *
-   * Vurgu renginden AYRI tutuldu: vurgu metin ve dugmelerde
-   * kullaniliyor ve kontrast esigini gecmek zorunda.
-   *
-   * ACIK TEMADA DURAKLAR KOYU. Ilk denemede parlak altin (#f3dfa2)
-   * ust durakti; koyu zeminde guzel ama BEYAZ uzerinde neredeyse
-   * gorunmuyordu. Referans logo koyu zeminde duruyor ve o paleti
-   * aydinlik temaya oldugu gibi tasimak, logonun kaybolmasi demekti.
-   *
-   * Vurgu da olcumle secildi: #9a7213 beyaz uzerinde 4.40:1 ve
-   * %14'luk altin tonu uzerinde 4.38:1 veriyordu -- ikisi de esigin
-   * altinda. #7d5c0d sirasiyla 6.21 ve 5.10.
-   *
-   * Logolar WCAG kontrast kuralindan MUAF, ama muafiyet "okunmasin"
-   * demek degil. Ilk denemede acik temadaki ust durak beyaz uzerinde
-   * 1.96:1 idi -- yani logonun bas harfleri neredeyse gorunmuyordu.
-   * Duraklar 3.04 -> 7 araligina cekildi: metalik rampa korunuyor,
-   * en acik ucu bile buyuk metin esigini geciyor.
+   * MENEKŞE KROM — soguk lavanta-beyaz, camli ofis isigi. Neon gunduz
+   * yanmaz: vurgular ayni ailenin KOYU uclari, isilti kapali.
    */
-  --marka-ust: #b8860b;
-  --marka-orta: #8a660f;
-  --marka-alt: #6b4f0b;
+  --zemin: #f1eff7;
+  --yuzey: #ffffff;
+  --yuzey-2: #e8e4f3;
+  --kenar: #d3cce6;
+  --metin: #140e24;
+  --metin-2: #574d78;
+  /* Beyaz uzerinde ~7.0:1 (violet-700 olcumu) — AA esigini rahat geciyor. */
+  --vurgu: #6d28d9;
+  --vurgu-metin: #ffffff;
+  --vurgu-yumusak: #ece2fb;
+  /* Ikincil neon: magenta. Yalnizca degrade, cizgi ve suslemede;
+     metin olarak kullanilacaksa bu koyu deger (beyazda ~5.9:1). */
+  --vurgu-2: #a21caf;
+  /*
+   * MARKA DEGRADESI — metin logosu hologram kromu: menekseden
+   * magentaya. Acik temada duraklar koyu (beyaz zeminde okunur),
+   * koyu temada parlak. Kiraci logosu gorselse bu degrade hic
+   * gorunmuyor; kiraci --vurgu ezmesi de aynen calisiyor.
+   */
+  --marka-ust: #7c3aed;
+  --marka-orta: #6d28d9;
+  --marka-alt: #a21caf;
   --olumlu: #047857;
   --uyari: #b45309;
   --olumsuz: #be123c;
+  /* Isilti acik temada YOK: gunduz neonu solgun bir leke olurdu. */
+  --isilti: 0 0 0 rgba(0, 0, 0, 0);
 }
 
 :root.koyu {
   color-scheme: dark;
-  --zemin: #0b0d17;
-  --yuzey: #141828;
-  --yuzey-2: #1c2136;
-  --kenar: #2a3050;
-  --metin: #eef1fb;
-  --metin-2: #98a0bd;
-  --vurgu: #e0bf5f;
-  --vurgu-metin: #0b0d17;
-  --vurgu-yumusak: #2d2410;
-  /* Koyu temada degrade daha parlak: koyu zeminde ayni altin soner. */
-  --marka-ust: #fff3cf;
-  --marka-orta: #e8c56a;
-  --marka-alt: #c9a227;
+  /*
+   * GECE ŞEHRİ — mor bosluk. Saf siyah degil: neonun uzerine dusecegi
+   * menekse bir sis. Vurgu neon mor; magenta ikinci ses olarak
+   * degradelerde ve aksanlarda. Kahraman gorselinin paletiyle ayni
+   * aile — sahne ile arayuz tek isik altinda.
+   */
+  --zemin: #08060f;
+  --yuzey: #100c1c;
+  --yuzey-2: #171226;
+  --kenar: #272040;
+  --metin: #ece9fb;
+  --metin-2: #9b93bf;
+  --vurgu: #c084fc;
+  --vurgu-metin: #14061f;
+  --vurgu-yumusak: #241639;
+  --vurgu-2: #f26df9;
+  --marka-ust: #efd8ff;
+  --marka-orta: #c084fc;
+  --marka-alt: #f26df9;
   --olumlu: #34d399;
   --uyari: #fbbf24;
   --olumsuz: #fb7185;
+  --isilti: 0 0 18px color-mix(in srgb, var(--vurgu) 40%, transparent);
+}
+
+/*
+ * AQUA — backoffice kimligi. Panel kabugunun kok sarmalayicisinda;
+ * icindeki her bilesen ayni degisken adlarindan Apple paletini aliyor.
+ * Isilti SIFIR: arac neon tasimiyor.
+ */
+.aqua {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif;
+  background: var(--zemin);
+  color: var(--metin);
+  --zemin: #f5f5f7;
+  --yuzey: #ffffff;
+  --yuzey-2: #f2f2f4;
+  --kenar: #e3e3e8;
+  --metin: #1d1d1f;
+  --metin-2: #6e6e73;
+  /* Beyaz uzerinde ~4.6:1 — dolgu dugmesinde beyaz metinle Apple'in
+     kendi kullanimi; kucuk gri etiketler --metin-2 ile ~4.7:1. */
+  --vurgu: #0071e3;
+  --vurgu-metin: #ffffff;
+  --vurgu-yumusak: #e8f1fd;
+  --vurgu-2: #0071e3;
+  /* Metin logosu panelde grafit: renk marka vitrinin isi. */
+  --marka-ust: #48484a;
+  --marka-orta: #1d1d1f;
+  --marka-alt: #000000;
+  --olumlu: #15803d;
+  --uyari: #b45309;
+  --olumsuz: #d70015;
+  --isilti: 0 0 0 rgba(0, 0, 0, 0);
+}
+
+.koyu .aqua {
+  --zemin: #111113;
+  --yuzey: #1c1c1e;
+  --yuzey-2: #2c2c2e;
+  --kenar: #3a3a3c;
+  --metin: #f5f5f7;
+  --metin-2: #98989d;
+  --vurgu: #0a84ff;
+  --vurgu-metin: #ffffff;
+  --vurgu-yumusak: #14304a;
+  --vurgu-2: #0a84ff;
+  --marka-ust: #f5f5f7;
+  --marka-orta: #c7c7cc;
+  --marka-alt: #8e8e93;
+  --olumlu: #30d158;
+  --uyari: #ff9f0a;
+  --olumsuz: #ff453a;
+  --isilti: 0 0 0 rgba(0, 0, 0, 0);
+}
+
+/*
+ * RAY — panel kenar cubugu, macOS kenar cubugu gibi: temayla birlikte
+ * acilip kararan, icerikten bir tik ayrisan sakin bir yuzey.
+ */
+.ray {
+  background: #ececef;
+  --yuzey: #ececef;
+  --yuzey-2: #e2e2e6;
+  --kenar: #d9d9de;
+  --metin: #1d1d1f;
+  --metin-2: #6e6e73;
+  --vurgu: #0071e3;
+  --vurgu-metin: #ffffff;
+  --vurgu-yumusak: #dce9fb;
+  --marka-ust: #48484a;
+  --marka-orta: #1d1d1f;
+  --marka-alt: #000000;
+  --isilti: 0 0 0 rgba(0, 0, 0, 0);
+}
+
+.koyu .ray {
+  background: #161618;
+  --yuzey: #161618;
+  --yuzey-2: #242426;
+  --kenar: #2c2c2e;
+  --metin: #f5f5f7;
+  --metin-2: #98989d;
+  --vurgu: #0a84ff;
+  --vurgu-yumusak: #14304a;
+  --marka-ust: #f5f5f7;
+  --marka-orta: #c7c7cc;
+  --marka-alt: #8e8e93;
+}
+
+/*
+ * Aqua icinde vitrinin sus siniflari etkisiz: kartlar kose tirnaksiz
+ * ve yumusak koseli, pah yok, kose yaricaplari Apple dilinde.
+ */
+.aqua .hud {
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.aqua .hud::before,
+.aqua .hud::after {
+  content: none;
+}
+
+.aqua .kesik {
+  clip-path: none;
+}
+
+.aqua button {
+  border-radius: 8px;
+}
+
+.aqua input,
+.aqua select,
+.aqua textarea {
+  border-radius: 8px;
+}
+
+.aqua .hata {
+  border-radius: 10px;
 }
 
 body {
   margin: 0;
   background: var(--zemin);
   color: var(--metin);
-  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Archivo Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-stretch: 100%;
   -webkit-font-smoothing: antialiased;
 }
 
-/**
- * Form denetimleri tarayicinin kendi paletini kullaniyor ve degisken
- * degisiminde her zaman yenilenmiyor. Rengi acikca vermek, tema
- * gecisinde "beyaz zeminde beyaz yazi" durumunu engelliyor.
- */
+/* GOSTERIM SESI — genisletilmis Archivo; tabela/oran panosu. */
+.gosterim {
+  font-family: 'Archivo Variable', ui-sans-serif, system-ui, sans-serif;
+  font-stretch: 116%;
+  letter-spacing: -0.015em;
+}
+
+/* Koyu temada buyuk basliklara hafif neon halesi. Acik temada sinif
+   etkisiz — koyu metne cyan hale gunduz "kirli baski" gibi gorunur. */
+.koyu .isilti-metin {
+  text-shadow: 0 0 28px color-mix(in srgb, var(--vurgu) 35%, transparent);
+}
+
+code, kbd, samp, pre {
+  font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
 input,
 select,
 textarea,
@@ -102,4 +243,114 @@ textarea::placeholder {
 
 table {
   border-collapse: collapse;
+}
+
+:focus-visible {
+  outline: 2px solid var(--vurgu);
+  outline-offset: 2px;
+}
+
+/*
+ * HUD KOSE TIRNAKLARI — kartlarin sol-ust ve sag-alt kosesine vurgu
+ * renginde iki "L". Cerceve cizmeden "bu bir panel katmani" diyor;
+ * cyberpunk arayuzlerin en eski isareti. Icerige karismasin diye
+ * yari saydam.
+ */
+.hud {
+  position: relative;
+}
+
+.hud::before,
+.hud::after {
+  content: '';
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border: 1px solid color-mix(in srgb, var(--vurgu) 55%, transparent);
+  pointer-events: none;
+}
+
+.hud::before {
+  top: -1px;
+  left: -1px;
+  border-right: 0;
+  border-bottom: 0;
+}
+
+.hud::after {
+  right: -1px;
+  bottom: -1px;
+  border-left: 0;
+  border-top: 0;
+}
+
+/*
+ * KESIK KOSE — birincil dugme ve damga icin pahli (chamfer) kontur.
+ * Yalnizca dolgusu duz elemanlarda: clip-path kenarligi da kestigi
+ * icin cerceveli bir kutuya uygulanirsa kose cizgisi kopuk gorunur.
+ */
+.kesik {
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+}
+
+/*
+ * IZGARA — kahraman bolumunun zeminindeki veri agi. Kenarlara dogru
+ * radyal maskeyle eriyor; sayfa geneline yayilsa desen degil gurultu
+ * olurdu.
+ */
+.izgara {
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--vurgu) 9%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--vurgu) 9%, transparent) 1px, transparent 1px);
+  background-size: 44px 44px;
+  -webkit-mask-image: radial-gradient(ellipse 75% 65% at 50% 35%, #000 30%, transparent 75%);
+  mask-image: radial-gradient(ellipse 75% 65% at 50% 35%, #000 30%, transparent 75%);
+}
+
+/*
+ * PUSULA — dondurulmus hakedis, artik holo-terminal cikti.
+ * Satirlar yine sirayla yaziliyor, kilit en son vuruluyor.
+ * Hareket azaltilmissa belge bitmis halinde durur.
+ */
+@keyframes pusula-satir-gel {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes damga-vur {
+  0% { opacity: 0; transform: rotate(-8deg) scale(1.8); }
+  62% { opacity: 1; transform: rotate(-8deg) scale(0.93); }
+  100% { opacity: 1; transform: rotate(-8deg) scale(1); }
+}
+
+/*
+ * Damga vurulduktan sonra seyrek, kisa bir neon seğirmesi: %96'lik
+ * dilimde hic kipirdamiyor — surekli titreyen yazi okunmaz, arada bir
+ * segiren tabela sehir dokusu.
+ */
+@keyframes neon-segirme {
+  0%, 96%, 100% { opacity: 1; text-shadow: var(--isilti); }
+  96.5% { opacity: 0.6; text-shadow: 1px 0 0 var(--vurgu-2), -1px 0 0 var(--vurgu); }
+  97% { opacity: 1; text-shadow: var(--isilti); }
+  98% { opacity: 0.75; text-shadow: -1.5px 0 0 var(--vurgu-2), 1.5px 0 0 var(--vurgu); }
+}
+
+.pusula-satir {
+  opacity: 0;
+  animation: pusula-satir-gel 0.45s ease-out forwards;
+}
+
+.damga {
+  opacity: 0;
+  transform: rotate(-8deg);
+  animation: damga-vur 0.5s cubic-bezier(0.2, 0.8, 0.3, 1) forwards,
+    neon-segirme 7s linear 1.8s infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pusula-satir,
+  .damga {
+    animation: none;
+    opacity: 1;
+  }
 }

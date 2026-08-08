@@ -12,6 +12,7 @@ import { Eslesmeler } from './sayfalar/yonetim/Eslesmeler';
 import { Kademeler } from './sayfalar/yonetim/Kademeler';
 import { Medya } from './sayfalar/yonetim/Medya';
 import { Ortaklar } from './sayfalar/yonetim/Ortaklar';
+import { OtoBonus } from './sayfalar/yonetim/OtoBonus';
 import { Ozet } from './sayfalar/yonetim/Ozet';
 import { Planlar } from './sayfalar/yonetim/Planlar';
 import { Postback } from './sayfalar/yonetim/Postback';
@@ -64,6 +65,7 @@ const YONETIM_MENUSU: MenuOgesi[] = [
     altlar: [
       { yol: '/baglanti', etiket: 'Backoffice bağlantısı' },
       { yol: '/postback', etiket: 'Postback' },
+      { yol: '/oto-bonus', etiket: 'Oto bonus' },
     ],
   },
 ];
@@ -129,6 +131,7 @@ export function App() {
             <Route path="/medya" element={<Medya />} />
             <Route path="/kademeler" element={<Kademeler />} />
             <Route path="/postback" element={<Postback />} />
+            <Route path="/oto-bonus" element={<OtoBonus />} />
             <Route path="/tiklamalar" element={<Tiklamalar />} />
             <Route path="/trafik-kalitesi" element={<TrafikKalitesi />} />
             <Route path="/btag" element={<BTag />} />

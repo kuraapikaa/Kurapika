@@ -31,6 +31,7 @@ import type { KomisyonPlani } from './servisler/komisyon.js';
 import type { Medya } from './servisler/medya.js';
 import type { OrtakGunlukOlcum, OrtakOzeti } from './servisler/olcum.js';
 import type { OrtakDurumu, OrtakGorunumu } from './servisler/ortaklar.js';
+import type { OtoBonusAyari, OtoBonusDurumuYaniti, OtoBonusKaydi } from './servisler/otoBonus.js';
 import type { EslesmeCakismasi, OyuncuEslesmesi } from './servisler/oyuncuEslesme.js';
 import type { PostbackAyari, PostbackKaydi } from './servisler/postback.js';
 import type { AnahtarDurumu } from './servisler/s2sAnahtari.js';
@@ -43,8 +44,8 @@ import type { Marka } from './rotalar/marka.js';
 export type {
   AdaptorAlani, AdaptorYetenegi, AltLink, Baglanti, Donem, KademeBagi,
   KaliteSinyali, KomisyonPlani, Marka, Medya, OrtakDurumu, OrtakGorunumu,
-  OrtakGunlukOlcum, OrtakHakedisi, OrtakOzeti, PostbackAyari, PostbackKaydi,
-  SenkronSonucu, Tiklama, TiklamaOzeti,
+  OrtakGunlukOlcum, OrtakHakedisi, OrtakOzeti, OtoBonusAyari, OtoBonusDurumuYaniti,
+  OtoBonusKaydi, PostbackAyari, PostbackKaydi, SenkronSonucu, Tiklama, TiklamaOzeti,
 };
 
 /* ── Oturum ──────────────────────────────────────────────────────── */
@@ -133,6 +134,7 @@ export interface YonetimUclari {
   '/medya': { medyalar: Medya[] };
   '/kademeler': { baglar: KademeBagi[]; kademeYuzdeleri: number[] };
   '/postback': { ayarlar: PostbackAyari[]; kayitlar: PostbackKaydi[] };
+  '/oto-bonus': OtoBonusDurumuYaniti;
   '/tiklamalar': { ozet: TiklamaOzeti[]; tiklamalar: Tiklama[] };
   '/trafik-kalitesi': { raporlar: KaliteRaporGorunumu[] };
   '/btag': { anahtarlar: BtagAnahtari[]; sahipsiz: SahipsizAnahtar[]; olcumsuzSayisi: number };

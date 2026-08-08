@@ -46,6 +46,7 @@ import {
   ortaklariListele,
   ortakSil,
 } from '../servisler/ortaklar.js';
+import { otoBonusAyarla, otoBonusDurumu } from '../servisler/otoBonus.js';
 import { cakismalariListele, eslesmeleriListele } from '../servisler/oyuncuEslesme.js';
 import {
   postbackAyarla,
@@ -439,6 +440,19 @@ export async function yonetimRotalari(app: FastifyInstance): Promise<void> {
   app.delete<{ Params: { ortakAnahtari: string } }>('/postback/:ortakAnahtari', async (istek) => {
     await postbackAyariSil(istek.kiraci, istek.params.ortakAnahtari);
     return { silindi: true };
+  });
+
+  // ── Oto bonus (WhatsApp CRM) ───────────────────────────────────────
+
+  app.get('/oto-bonus', async (istek): Promise<YonetimUclari['/oto-bonus']> =>
+    otoBonusDurumu(istek.kiraci));
+
+  app.put('/oto-bonus', async (istek): Promise<YonetimUclari['/oto-bonus']> => {
+    await otoBonusAyarla(
+      istek.kiraci,
+      (istek.body ?? {}) as { aktif?: unknown; tutarKurus?: unknown; bonusKodu?: unknown; not?: unknown },
+    );
+    return otoBonusDurumu(istek.kiraci);
   });
 
   // ── Tıklamalar ─────────────────────────────────────────────────────

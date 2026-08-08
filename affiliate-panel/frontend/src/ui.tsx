@@ -10,15 +10,20 @@ import { useEffect, useState, type ReactNode } from 'react';
  * şikâyetiyle fark edilen bir hata türü.
  */
 
-export const KART = 'rounded-xl border p-4';
+export const KART = 'hud border p-4';
 export const kartStil = { background: 'var(--yuzey)', borderColor: 'var(--kenar)' };
+
+/* Kart basligi Apple dilinde: kucuk, gri, sakin. Bu sabiti kullanan
+   her bilesen panelde yasiyor; vitrindeki etiketler kendi mono sesini
+   Landing icinde tasiyor. */
+export const ETIKET_YAZI = 'text-xs font-medium';
 
 export function Kart({ baslik, sag, children }: { baslik?: string; sag?: ReactNode; children: ReactNode }) {
   return (
     <section className={KART} style={kartStil}>
       {(baslik || sag) && (
         <header className="mb-3 flex items-center justify-between gap-3">
-          {baslik && <h2 className="text-sm font-semibold uppercase tracking-wide" style={{ color: 'var(--metin-2)' }}>{baslik}</h2>}
+          {baslik && <h2 className={ETIKET_YAZI} style={{ color: 'var(--metin-2)' }}>{baslik}</h2>}
           {sag}
         </header>
       )}
@@ -50,8 +55,10 @@ export function Buton({
   devredisi?: boolean;
   tam?: boolean;
 }) {
+  // Birincil dugme pahli (kesik) ve isiltili: sahnedeki tek neon dolgu.
+  // Kenarlikli turlere pah verilmiyor — clip-path kenarligi da keser.
   const stiller: Record<string, React.CSSProperties> = {
-    birincil: { background: 'var(--vurgu)', color: 'var(--vurgu-metin)', borderColor: 'var(--vurgu)' },
+    birincil: { background: 'var(--vurgu)', color: 'var(--vurgu-metin)', borderColor: 'var(--vurgu)', boxShadow: 'var(--isilti)' },
     ikincil: { background: 'var(--yuzey-2)', color: 'var(--metin)', borderColor: 'var(--kenar)' },
     tehlike: { background: 'transparent', color: 'var(--olumsuz)', borderColor: 'var(--olumsuz)' },
   };
@@ -60,7 +67,7 @@ export function Buton({
       type={tip}
       onClick={onClick}
       disabled={devredisi}
-      className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-opacity disabled:opacity-50 ${tam ? 'w-full' : ''}`}
+      className={`border px-3 py-1.5 text-sm font-medium transition-opacity disabled:opacity-50 ${tur === 'birincil' ? 'kesik' : ''} ${tam ? 'w-full' : ''}`}
       style={stiller[tur]}
     >
       {children}
@@ -79,7 +86,7 @@ export function Alan({
   cokSatir?: boolean;
   secenekler?: Array<{ deger: string; etiket: string }>;
 }) {
-  const ortak = 'w-full rounded-lg border px-3 py-2 text-sm outline-none';
+  const ortak = 'w-full border px-3 py-2 text-sm outline-none';
   const stil = { background: 'var(--yuzey-2)', borderColor: 'var(--kenar)', color: 'var(--metin)' };
 
   return (
@@ -112,10 +119,12 @@ export function Rozet({ metin, renk = 'notr' }: { metin: string; renk?: 'notr' |
   const renkler = {
     notr: 'var(--metin-2)', olumlu: 'var(--olumlu)', uyari: 'var(--uyari)', olumsuz: 'var(--olumsuz)',
   };
+  // Apple kapsulu: cerceve yerine yumusak renk tonunda dolgu.
+  // Rozet yalnizca panelde kullaniliyor; vitrinin damgasi ayri.
   return (
     <span
-      className="inline-block rounded-full border px-2 py-0.5 text-xs font-medium"
-      style={{ color: renkler[renk], borderColor: renkler[renk] }}
+      className="inline-block rounded-full px-2 py-0.5 text-xs font-medium"
+      style={{ color: renkler[renk], background: `color-mix(in srgb, ${renkler[renk]} 12%, transparent)` }}
     >
       {metin}
     </span>
@@ -127,8 +136,10 @@ export function Bos({ mesaj }: { mesaj: string }) {
 }
 
 export function Hata({ mesaj }: { mesaj: string }) {
+  // `hata` sinifi yalnizca bir kanca: vitrinde keskin kose, aqua
+  // kapsaminda yumusak — fark index.css'te.
   return (
-    <p className="rounded-lg border px-3 py-2 text-sm" style={{ color: 'var(--olumsuz)', borderColor: 'var(--olumsuz)' }}>
+    <p className="hata border px-3 py-2 text-sm" style={{ color: 'var(--olumsuz)', borderColor: 'var(--olumsuz)' }}>
       {mesaj}
     </p>
   );
@@ -147,7 +158,7 @@ export function Tablo({ basliklar, children }: { basliklar: string[]; children: 
         <thead>
           <tr style={{ color: 'var(--metin-2)' }}>
             {basliklar.map((b) => (
-              <th key={b} className="whitespace-nowrap border-b px-2 py-2 text-xs font-semibold uppercase" style={{ borderColor: 'var(--kenar)' }}>
+              <th key={b} className="whitespace-nowrap border-b px-2 py-2 text-xs font-medium" style={{ borderColor: 'var(--kenar)' }}>
                 {b}
               </th>
             ))}
@@ -164,6 +175,8 @@ export function Satir({ children }: { children: ReactNode }) {
 }
 
 export function Hucre({ children, sagda = false }: { children: ReactNode; sagda?: boolean }) {
+  // Sagda hizali hucre SAYI demek; sistem yazisinin tablo rakamlariyla
+  // hizalaniyor — panelde ayri bir "para yazisi" yok.
   return <td className={`px-2 py-2 ${sagda ? 'text-right tabular-nums' : ''}`}>{children}</td>;
 }
 
@@ -171,7 +184,7 @@ export function Hucre({ children, sagda = false }: { children: ReactNode; sagda?
 export function Olcu({ etiket, deger, alt }: { etiket: string; deger: string; alt?: string }) {
   return (
     <div className={KART} style={kartStil}>
-      <p className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--metin-2)' }}>{etiket}</p>
+      <p className={ETIKET_YAZI} style={{ color: 'var(--metin-2)' }}>{etiket}</p>
       <p className="mt-1 text-2xl font-semibold tabular-nums">{deger}</p>
       {alt && <p className="mt-1 text-xs" style={{ color: 'var(--metin-2)' }}>{alt}</p>}
     </div>
@@ -210,7 +223,9 @@ export function useTema(): [boolean, () => void] {
   const [koyu, setKoyu] = useState(() => {
     const kayitli = localStorage.getItem(TEMA_ANAHTARI);
     if (kayitli) return kayitli === 'koyu';
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    // Marka karari: varsayilan GECE. Cyberpunk kimligin asil sahnesi
+    // koyu tema; isletim sistemi tercihi degil kayitli secim eziyor.
+    return true;
   });
 
   useEffect(() => {
