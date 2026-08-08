@@ -1139,6 +1139,51 @@ export async function lynonOyuncuIdTelefondan(telefon: string): Promise<string |
   return null;
 }
 
+/**
+ * Az once kaydolmus oyuncuyu telefonla bulur — rapor tabanli aramanin
+ * KACIRDIGI tam bu durum.
+ *
+ * `lynonOyuncuIdTelefondan`in dayandigi "Players Overview" raporu (1841)
+ * Lynon tarafinda PERIYODIK uretiliyor, anlik degil. Olculdu: 03:23'te
+ * kaydolan bir oyuncu 04:32'de (70+ dakika sonra) hala raporda YOKTU — 981
+ * satirlik raporda hic gecmiyordu, oysa ayni oyuncu ID/kullanici adiyla
+ * aninda sorgulanabiliyordu. Rapor tazelense de kaynaginda gecikme var;
+ * kendi 5 dakikalik onbellegimiz bunu duzeltemez.
+ *
+ * Cozum rapor degil ham liste: `userBackOffice` filtresiz cagrildiginda
+ * (query YOK) en-yeni-kayit-once sirali donuyor ve her satirda telefon
+ * var (olculdu). Rapor arastirmasi bossa son birkac yuz kaydi burdan
+ * tariyoruz — eski bir oyuncu icin bu hep bosa cikar (rapor onu zaten
+ * bulur) o yuzden yalniz fallback olarak calisiyor, ekstra maliyeti
+ * yalniz "rapor kacirdi" durumunda.
+ */
+async function lynonOyuncuIdSonKayitlardan(telefon: string): Promise<string | null> {
+  const hedef = sonOnHane(telefon);
+  if (hedef.length < 10) return null;
+
+  const SAYFA_BUYUKLUGU = 100;
+  const TARANACAK_SAYFA = 3;
+  const siteId = lynonCfg().siteId;
+
+  for (let page = 1; page <= TARANACAK_SAYFA; page++) {
+    const rows = arrayOf(
+      await lynonRequest('/api/user/api/v1.0/userBackOffice', {
+        query: { siteId, page, countPerPage: SAYFA_BUYUKLUGU },
+      }),
+    );
+    if (rows.length === 0) return null;
+    for (const row of rows) {
+      const kayitli = sonOnHane(row.phoneNumber ?? row.mobileNumber ?? row.phone);
+      if (kayitli.length >= 10 && kayitli === hedef) {
+        const id = row.userId ?? row.id ?? row.playerId;
+        return id != null ? String(id) : null;
+      }
+    }
+    if (rows.length < SAYFA_BUYUKLUGU) return null; // son sayfaydi
+  }
+  return null;
+}
+
 export async function lynonOyuncuKpiSorgula(sorguMetin: string): Promise<OyuncuKpiSonucu> {
   const sorgu = String(sorguMetin ?? '').trim();
   if (!sorgu) return { durum: 'bulunamadi' };
@@ -1150,8 +1195,10 @@ export async function lynonOyuncuKpiSorgula(sorguMetin: string): Promise<OyuncuK
   // lynonOyuncuIdTelefondan). Sonuc bossa ve sorgu bir numaraya benziyorsa
   // numarayi Player ID'ye cevirip tekrar soruyoruz. Yalnizca bos sonucta
   // devreye giriyor, dolayisiyla calisan hicbir aramanin davranisi degismiyor.
+  // Rapor-tabanli arama BULAMAZSA (az once kaydolmus biri, rapor henuz
+  // yetismedi) son kayitlar taramasi devreye giriyor — bkz. yorumu.
   if (rows.length === 0 && sonOnHane(sorgu).length >= 10) {
-    const id = await lynonOyuncuIdTelefondan(sorgu);
+    const id = (await lynonOyuncuIdTelefondan(sorgu)) ?? (await lynonOyuncuIdSonKayitlardan(sorgu));
     if (id) {
       rows = arrayOf((await lynonPlayers({ query: id, MaxRows: 6, SkeepRows: 0 })).Data?.Objects);
     }
