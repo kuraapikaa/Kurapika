@@ -17,6 +17,7 @@ import { ftdDurumu } from '../servisler/ilkYatirim.js';
 import { ortakBul, onayZorunlu } from '../servisler/ortaklar.js';
 import { postbackAyarla, postbackAyarlari, postbackKayitlari } from '../servisler/postback.js';
 import { tiklamalariListele, tiklamaOzeti } from '../servisler/tiklama.js';
+import { musteriYolculugu } from '../servisler/yolculuk.js';
 
 /**
  * ORTAK PORTALI.
@@ -259,6 +260,19 @@ export async function portalRotalari(app: FastifyInstance): Promise<void> {
         limit: 200,
       }),
     };
+  });
+
+  /**
+   * MÜŞTERİ YOLCULUĞU — kendi trafiğinin tıklamadan ilk yatırıma hunisi.
+   *
+   * `ortakAnahtari` GÖVDEDEN/SORGUDAN DEĞİL oturumdan: kabul etseydik
+   * bir ortak başkasının anahtarını yazarak onun huninisini görebilirdi
+   * (bu dosyanın en üstündeki kural, burada da aynen geçerli).
+   */
+  app.get('/yolculuk', async (istek) => {
+    const oturum = istek.oturum!;
+    const aralik = tarihAraligi((istek.query ?? {}) as Record<string, unknown>);
+    return musteriYolculugu(istek.kiraci, { ...aralik, ortakAnahtari: oturum.ortakAnahtari });
   });
 
   app.get('/hakedis', async (istek) => {

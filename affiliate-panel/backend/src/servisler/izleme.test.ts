@@ -4,6 +4,7 @@ import {
   altParametreleriTemizle,
   izlemeBaglamiCoz,
   izlemeLinki,
+  kaynakAdi,
   makrolariUygula,
   sablondakiMakrolar,
 } from './izleme.js';
@@ -91,5 +92,40 @@ describe('makrolar', () => {
 
   it('sablondaki makrolari tekrarsiz listeler', () => {
     expect(sablondakiMakrolar('{a}{b}{a}')).toEqual(['a', 'b']);
+  });
+});
+
+describe('trafik kaynagi', () => {
+  it('bos ya da null referrer icin Dogrudan doner', () => {
+    expect(kaynakAdi(null)).toBe('Doğrudan');
+    expect(kaynakAdi(undefined)).toBe('Doğrudan');
+    expect(kaynakAdi('  ')).toBe('Doğrudan');
+  });
+
+  it('URL olmayan bir deger icin Diger doner (Dogrudan ile KARISTIRILMAZ)', () => {
+    // Bos degilse GERCEKTEN bir yonlendiren gelmis demektir; "Dogrudan"
+    // yazmak, tiklamanin baska bir siteden geldigi bilgisini gizlerdi.
+    expect(kaynakAdi('bozuk-deger')).toBe('Diğer');
+  });
+
+  it('bilinen sosyal medya alan adlarini tanir', () => {
+    expect(kaynakAdi('https://www.instagram.com/p/abc')).toBe('Instagram');
+    expect(kaynakAdi('https://l.instagram.com/?u=x')).toBe('Instagram');
+    expect(kaynakAdi('https://t.me/kanal')).toBe('Telegram');
+    expect(kaynakAdi('https://m.facebook.com/x')).toBe('Facebook');
+  });
+
+  it('google alt alanlarini tek isimde toplar', () => {
+    expect(kaynakAdi('https://www.google.com/search?q=x')).toBe('Google');
+    expect(kaynakAdi('https://www.google.com.tr/search?q=x')).toBe('Google');
+    expect(kaynakAdi('https://google.de/search?q=x')).toBe('Google');
+  });
+
+  it('bilinmeyen alan adini oldugu gibi kaynak sayar', () => {
+    expect(kaynakAdi('https://haber-sitesi.example/yazi')).toBe('haber-sitesi.example');
+  });
+
+  it('www onekini yok sayar ki ayni kaynak ikiye bolunmesin', () => {
+    expect(kaynakAdi('https://www.ornek-blog.com/x')).toBe(kaynakAdi('https://ornek-blog.com/x'));
   });
 });

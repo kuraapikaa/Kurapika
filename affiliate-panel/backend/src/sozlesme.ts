@@ -41,14 +41,16 @@ import type { AnahtarDurumu } from './servisler/s2sAnahtari.js';
 import type { SenkronSonucu } from './servisler/senkron.js';
 import type { Tiklama, TiklamaOzeti } from './servisler/tiklama.js';
 import type { KaliteSinyali } from './servisler/trafikKalitesi.js';
+import type { MusteriYolculuguSonucu } from './servisler/yolculuk.js';
 import type { Marka } from './rotalar/marka.js';
 
 /* ── Alan tipleri; arayüz bunları doğrudan kullanıyor ────────────── */
 export type {
   AdaptorAlani, AdaptorYetenegi, AltLink, Baglanti, Donem, KademeBagi,
-  KaliteSinyali, KomisyonPlani, Marka, Medya, OrtakDurumu, OrtakGorunumu,
-  OrtakGunlukOlcum, OrtakHakedisi, OrtakOzeti, OtoBonusAyari, OtoBonusDurumuYaniti,
-  OtoBonusKaydi, PostbackAyari, PostbackKaydi, SenkronSonucu, Tiklama, TiklamaOzeti,
+  KaliteSinyali, KomisyonPlani, Marka, Medya, MusteriYolculuguSonucu, OrtakDurumu,
+  OrtakGorunumu, OrtakGunlukOlcum, OrtakHakedisi, OrtakOzeti, OtoBonusAyari,
+  OtoBonusDurumuYaniti, OtoBonusKaydi, PostbackAyari, PostbackKaydi, SenkronSonucu,
+  Tiklama, TiklamaOzeti,
 };
 
 /* ── Oturum ──────────────────────────────────────────────────────── */
@@ -138,6 +140,7 @@ export interface YonetimUclari {
   '/kademeler': { baglar: KademeBagi[]; kademeYuzdeleri: number[] };
   '/postback': { ayarlar: PostbackAyari[]; kayitlar: PostbackKaydi[] };
   '/oto-bonus': OtoBonusDurumuYaniti;
+  '/yolculuk': MusteriYolculuguSonucu;
   '/tiklamalar': { ozet: TiklamaOzeti[]; tiklamalar: Tiklama[] };
   '/trafik-kalitesi': { raporlar: KaliteRaporGorunumu[] };
   '/btag': { anahtarlar: BtagAnahtari[]; sahipsiz: SahipsizAnahtar[]; olcumsuzSayisi: number };
@@ -205,6 +208,7 @@ export interface PortalUclari {
   '/tiklamalar': { ozet: TiklamaOzeti | null; tiklamalar: Tiklama[] };
   '/hakedis': { donemler: Array<{ ay: string; durum: Donem['durum']; satir: OrtakHakedisi | null }> };
   '/postback': { ayar: PostbackAyari | null; kayitlar: PostbackKaydi[] };
+  '/yolculuk': MusteriYolculuguSonucu;
 }
 
 /* ── Yardımcılar ─────────────────────────────────────────────────── */

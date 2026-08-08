@@ -3,6 +3,8 @@ import {
   yeniCakismaId,
   type EslesmeCakismasi,
   type EslesmeKaynagi,
+  type GunlukEslesmeSorgusu,
+  type GunlukSayi,
   type OyuncuEslesmesi,
 } from '../depolar/eslesmeDeposu.js';
 import { onayliMi, ortakAnahtarindanBul, type Ortak } from './ortaklar.js';
@@ -165,4 +167,12 @@ export async function cakismalariListele(kiraci: string, limit = 200): Promise<E
   return eslesmeDeposu().cakismalariListele(kiraci, limit);
 }
 
-export type { EslesmeCakismasi, EslesmeKaynagi, OyuncuEslesmesi };
+/** Gün başına yeni kayıt sayısı; müşteri yolculuğu grafiğinin "kayıt" basamağı. */
+export async function eslesmeGunlukSayilar(
+  kiraci: string,
+  sorgu: GunlukEslesmeSorgusu = {},
+): Promise<GunlukSayi[]> {
+  return eslesmeDeposu().gunlukSayilar(kiraci, sorgu);
+}
+
+export type { EslesmeCakismasi, EslesmeKaynagi, GunlukSayi, OyuncuEslesmesi };

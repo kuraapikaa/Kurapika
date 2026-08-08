@@ -12,6 +12,7 @@ import { Donemler } from './sayfalar/yonetim/Donemler';
 import { Eslesmeler } from './sayfalar/yonetim/Eslesmeler';
 import { Kademeler } from './sayfalar/yonetim/Kademeler';
 import { Medya } from './sayfalar/yonetim/Medya';
+import { MusteriYolculugu } from './sayfalar/yonetim/MusteriYolculugu';
 import { Ortaklar } from './sayfalar/yonetim/Ortaklar';
 import { OtoBonus } from './sayfalar/yonetim/OtoBonus';
 import { Ozet } from './sayfalar/yonetim/Ozet';
@@ -25,6 +26,7 @@ import { PortalMedya } from './sayfalar/portal/PortalMedya';
 import { PortalOzet } from './sayfalar/portal/PortalOzet';
 import { PortalPostback } from './sayfalar/portal/PortalPostback';
 import { PortalTiklamalar } from './sayfalar/portal/PortalTiklamalar';
+import { PortalYolculuk } from './sayfalar/portal/PortalYolculuk';
 import type { OturumYaniti as Oturum } from '@sunucu/sozlesme.js';
 
 
@@ -56,6 +58,7 @@ const YONETIM_MENUSU: MenuOgesi[] = [
     ikon: IKON.istatistik,
     altlar: [
       { yol: '/tiklamalar', etiket: 'Tıklamalar' },
+      { yol: '/yolculuk', etiket: 'Müşteri yolculuğu' },
       { yol: '/trafik-kalitesi', etiket: 'Trafik kalitesi' },
     ],
   },
@@ -77,6 +80,7 @@ const PORTAL_MENUSU: MenuOgesi[] = [
   { yol: '/portal/alt-linkler', etiket: 'Alt linkler', ikon: IKON.link },
   { yol: '/portal/medya', etiket: 'Medya', ikon: IKON.medya },
   { yol: '/portal/tiklamalar', etiket: 'Tıklamalar', ikon: IKON.istatistik },
+  { yol: '/portal/yolculuk', etiket: 'Yolculuğunuz', ikon: IKON.istatistik },
   { yol: '/portal/hakedis', etiket: 'Hakediş', ikon: IKON.odeme },
   { yol: '/portal/postback', etiket: 'Postback', ikon: IKON.ayar },
 ];
@@ -135,6 +139,7 @@ export function App() {
             <Route path="/postback" element={<Postback />} />
             <Route path="/oto-bonus" element={<OtoBonus />} />
             <Route path="/tiklamalar" element={<Tiklamalar />} />
+            <Route path="/yolculuk" element={<MusteriYolculugu />} />
             <Route path="/trafik-kalitesi" element={<TrafikKalitesi />} />
             <Route path="/btag" element={<BTag />} />
             <Route path="/cuzdanlar" element={<Cuzdanlar />} />
@@ -149,6 +154,7 @@ export function App() {
             <Route path="/portal/alt-linkler" element={<PortalAltLinkler />} />
             <Route path="/portal/medya" element={<PortalMedya />} />
             <Route path="/portal/tiklamalar" element={<PortalTiklamalar />} />
+            <Route path="/portal/yolculuk" element={<PortalYolculuk />} />
             <Route path="/portal/hakedis" element={<PortalHakedis />} />
             <Route path="/portal/postback" element={<PortalPostback />} />
             <Route path="*" element={<Navigate to="/portal" replace />} />

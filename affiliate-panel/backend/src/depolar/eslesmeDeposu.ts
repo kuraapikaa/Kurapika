@@ -1,6 +1,7 @@
 import { randomUUID } from 'crypto';
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, gte, lte, sql } from 'drizzle-orm';
 import { degistir, diziOku, kayitOku, oku } from '../lib/depo.js';
+import { bitisGunSonuAni, gunAnahtari } from '../lib/gunler.js';
 import { eslesmeCakismalari, oyuncuEslesmeleri } from '../lib/sema.js';
 import { veritabani } from '../lib/veritabani.js';
 import type { AltParametre } from '../servisler/izleme.js';
@@ -41,6 +42,17 @@ export interface EslesmeSorgusu {
   limit?: number;
 }
 
+export interface GunlukEslesmeSorgusu {
+  ortakId?: string;
+  start?: string;
+  end?: string;
+}
+
+export interface GunlukSayi {
+  gun: string;
+  sayi: number;
+}
+
 export interface EslesmeDeposu {
   /**
    * Ekler. Oyuncunun eşleşmesi ZATEN VARSA hiçbir şey yazmaz ve mevcut
@@ -51,6 +63,14 @@ export interface EslesmeDeposu {
   listele(kiraci: string, sorgu: EslesmeSorgusu): Promise<OyuncuEslesmesi[]>;
   cakismaYaz(kiraci: string, cakisma: EslesmeCakismasi): Promise<void>;
   cakismalariListele(kiraci: string, limit: number): Promise<EslesmeCakismasi[]>;
+  /**
+   * Gün başına yeni kayıt (eşleşme) sayısı; müşteri yolculuğu
+   * grafiğinin "kayıt" basamağı. `listele()`'nin sabit üst sınırı var
+   * (bkz. `sinirla`) — yüksek hacimli bir kiracıda bunu bellekte
+   * gruplamak, geriye dönük düzeltilemeyecek şekilde EKSİK bir grafik
+   * çizerdi. Bu yüzden ayrı, sınırsız bir toplama.
+   */
+  gunlukSayilar(kiraci: string, sorgu: GunlukEslesmeSorgusu): Promise<GunlukSayi[]>;
 }
 
 const ALAN = 'oyuncu-eslesmeleri';
@@ -170,6 +190,25 @@ export function postgresEslesmeDeposu(): EslesmeDeposu {
         .limit(sinirla(limit));
       return satirlar.map(satirdanCakisma);
     },
+
+    /** Gün sınırı kiracının zaman diliminde; bkz. `tiklamaDeposu.gunlukSayilar`. */
+    async gunlukSayilar(kiraci, sorgu) {
+      const kosullar = [eq(oyuncuEslesmeleri.kiraci, kiraci)];
+      if (sorgu.ortakId) kosullar.push(eq(oyuncuEslesmeleri.ortakId, sorgu.ortakId));
+      if (sorgu.start) kosullar.push(gte(oyuncuEslesmeleri.olusturuldu, new Date(sorgu.start)));
+      if (sorgu.end) kosullar.push(lte(oyuncuEslesmeleri.olusturuldu, bitisGunSonuAni(sorgu.end)));
+
+      const dilim = String(process.env.AFF_ZAMAN_DILIMI || 'Europe/Istanbul');
+      const satirlar = await vtZorunlu().execute<{ gun: string; sayi: number }>(sql`
+        SELECT to_char((${oyuncuEslesmeleri.olusturuldu} AT TIME ZONE ${dilim}), 'YYYY-MM-DD') AS gun,
+               count(*)::int AS sayi
+        FROM ${oyuncuEslesmeleri}
+        WHERE ${and(...kosullar)}
+        GROUP BY 1
+        ORDER BY 1
+      `);
+      return satirlar.rows.map((r) => ({ gun: r.gun, sayi: Number(r.sayi) }));
+    },
   };
 }
 
@@ -234,6 +273,24 @@ export function belgeEslesmeDeposu(): EslesmeDeposu {
       return [...belge.cakismalar]
         .sort((a, b) => (b.zaman.localeCompare(a.zaman) || b.id.localeCompare(a.id)))
         .slice(0, sinirla(limit));
+    },
+
+    async gunlukSayilar(kiraci, sorgu) {
+      const belge = await oku<EslesmeBelgesi>(kiraci, ALAN, cozEslesme);
+      const baslangic = sorgu.start ? new Date(sorgu.start).toISOString() : null;
+      const bitis = sorgu.end ? bitisGunSonuAni(sorgu.end).toISOString() : null;
+
+      const gunler = new Map<string, number>();
+      for (const e of belge.eslesmeler) {
+        if (sorgu.ortakId && e.ortakId !== sorgu.ortakId) continue;
+        if (baslangic && e.olusturuldu < baslangic) continue;
+        if (bitis && e.olusturuldu > bitis) continue;
+        const gun = gunAnahtari(new Date(e.olusturuldu));
+        gunler.set(gun, (gunler.get(gun) ?? 0) + 1);
+      }
+      return [...gunler.entries()]
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .map(([gun, sayi]) => ({ gun, sayi }));
     },
   };
 }

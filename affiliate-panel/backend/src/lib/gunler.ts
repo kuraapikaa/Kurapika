@@ -30,6 +30,23 @@ export function gunGecerliMi(gun: unknown): boolean {
 }
 
 /**
+ * Bir gün anahtarının (`YYYY-MM-DD`) o günün SONUNU temsil eden anı.
+ *
+ * Zaman aralığı sorgularında kullanıcı gün seçiyor, an değil:
+ * `end=2026-08-07` o günün TAMAMINI kapsamalı. Ham `new Date(end)`
+ * gün 00:00'da kesilir ve o günün tüm kayıtları sorgudan düşer.
+ *
+ * Tıklama ve oyuncu eşleşme depoları aynı mantığı ayrı ayrı yazmak
+ * yerine buradan paylaşıyor — ikisi de gün sınırını farklı yorumlarsa
+ * "aynı aralık" iki farklı sonuç üretir.
+ */
+export function bitisGunSonuAni(end: string): Date {
+  const son = new Date(end);
+  son.setUTCHours(23, 59, 59, 999);
+  return son;
+}
+
+/**
  * Gün anahtarına gün ekler/çıkarır.
  *
  * Hesap ÖĞLEN UTC üzerinden yapılıyor: gece yarısından hesaplamak,

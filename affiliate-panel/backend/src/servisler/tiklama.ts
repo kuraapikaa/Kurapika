@@ -3,6 +3,8 @@ import { tiklamaDeposu } from '../depolar/tiklamaDeposu.js';
 import { altParametreleriTemizle } from './izleme.js';
 import { izlemeLinki } from './izleme.js';
 
+export { kaynakAdi } from './izleme.js';
+
 /**
  * TIKLAMA KAYDI — izleme döngüsünün kapanan halkası.
  *
@@ -27,8 +29,8 @@ import { izlemeLinki } from './izleme.js';
  * yoksa JSON belgesi. Bu servis hangisi olduğunu bilmiyor.
  */
 
-export type { Tiklama, TiklamaOzeti, TiklamaSorgusu } from '../depolar/tiklamaDeposu.js';
-import type { Tiklama, TiklamaOzeti, TiklamaSorgusu } from '../depolar/tiklamaDeposu.js';
+export type { GunlukSayi, KaynakSayisi, Tiklama, TiklamaOzeti, TiklamaSorgusu } from '../depolar/tiklamaDeposu.js';
+import type { GunlukSayi, KaynakSayisi, Tiklama, TiklamaOzeti, TiklamaSorgusu } from '../depolar/tiklamaDeposu.js';
 
 export const TIKLAMA_CEREZI = 'aff_click';
 
@@ -105,4 +107,14 @@ export async function tiklamaBul(kiraci: string, clickId: string): Promise<Tikla
  */
 export async function tiklamaOzeti(kiraci: string, sorgu: TiklamaSorgusu = {}): Promise<TiklamaOzeti[]> {
   return tiklamaDeposu().ozetle(kiraci, sorgu);
+}
+
+/** Gün başına toplam tıklama; müşteri yolculuğu grafiğinin girdisi. */
+export async function tiklamaGunlukSayilar(kiraci: string, sorgu: TiklamaSorgusu = {}): Promise<GunlukSayi[]> {
+  return tiklamaDeposu().gunlukSayilar(kiraci, sorgu);
+}
+
+/** Trafiğin nereden geldiği; çoktan aza sıralı kaynak kırılımı. */
+export async function tiklamaKaynakOzeti(kiraci: string, sorgu: TiklamaSorgusu = {}): Promise<KaynakSayisi[]> {
+  return tiklamaDeposu().kaynakOzeti(kiraci, sorgu);
 }

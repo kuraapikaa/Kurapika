@@ -63,6 +63,7 @@ import { bakiyeler, hareketEkle, hareketleriListele } from '../servisler/cuzdan.
 import { geceHakedisiIsle } from '../isler/geceIsi.js';
 import { veritabani } from '../lib/veritabani.js';
 import { tiklamalariListele, tiklamaOzeti } from '../servisler/tiklama.js';
+import { musteriYolculugu } from '../servisler/yolculuk.js';
 
 /**
  * YÖNETİM ROTALARI.
@@ -559,6 +560,22 @@ export async function yonetimRotalari(app: FastifyInstance): Promise<void> {
         limit: Number(sorgu.limit) || 200,
       }),
     };
+  });
+
+  /**
+   * MÜŞTERİ YOLCULUĞU — tıklamadan ilk yatırıma huni.
+   *
+   * `ortakAnahtari` boşsa TÜM ortaklar birlikte. Bu uç, tek bir ortağın
+   * portaldan gördüğü uçla (`/api/portal/yolculuk`) aynı servisi
+   * çağırıyor; fark yalnızca filtrenin nereden geldiği.
+   */
+  app.get('/yolculuk', async (istek): Promise<YonetimUclari['/yolculuk']> => {
+    const sorgu = (istek.query ?? {}) as Record<string, unknown>;
+    return musteriYolculugu(istek.kiraci, {
+      start: sorguMetni(sorgu.start),
+      end: sorguMetni(sorgu.end),
+      ortakAnahtari: sorguMetni(sorgu.ortakAnahtari),
+    });
   });
 
   // ── Hakediş dönemleri ──────────────────────────────────────────────

@@ -1,8 +1,9 @@
 import { and, desc, eq, gte, lte, sql } from 'drizzle-orm';
 import { degistir, diziOku, kayitOku, oku } from '../lib/depo.js';
+import { bitisGunSonuAni, gunAnahtari } from '../lib/gunler.js';
 import { tiklamalar as tablo } from '../lib/sema.js';
 import { veritabani } from '../lib/veritabani.js';
-import type { AltParametre } from '../servisler/izleme.js';
+import { kaynakAdi, type AltParametre } from '../servisler/izleme.js';
 
 /**
  * TIKLAMA DEPOSU — iki uygulama, tek arayüz.
@@ -50,11 +51,25 @@ export interface TiklamaOzeti {
   altBazinda: Array<{ anahtar: string; deger: string; sayi: number }>;
 }
 
+export interface GunlukSayi {
+  gun: string;
+  sayi: number;
+}
+
+export interface KaynakSayisi {
+  kaynak: string;
+  sayi: number;
+}
+
 export interface TiklamaDeposu {
   ekle(kiraci: string, tiklama: Tiklama): Promise<Tiklama>;
   listele(kiraci: string, sorgu: TiklamaSorgusu): Promise<Tiklama[]>;
   bul(kiraci: string, clickId: string): Promise<Tiklama | null>;
   ozetle(kiraci: string, sorgu: TiklamaSorgusu): Promise<TiklamaOzeti[]>;
+  /** Gün başına toplam tıklama; müşteri yolculuğu grafiğinin girdisi. */
+  gunlukSayilar(kiraci: string, sorgu: TiklamaSorgusu): Promise<GunlukSayi[]>;
+  /** Kaynağa (yönlendiren) göre kırılım, çoktan aza sıralı. */
+  kaynakOzeti(kiraci: string, sorgu: TiklamaSorgusu): Promise<KaynakSayisi[]>;
 }
 
 const ALAN = 'tiklamalar';
@@ -64,19 +79,6 @@ const KAYIT_SINIRI = Math.max(1000, Number(process.env.TIKLAMA_KAYIT_SINIRI) || 
 
 const sinirla = (limit: unknown): number => Math.min(1000, Math.max(1, Number(limit) || 200));
 
-/**
- * Bitiş günü SONUNA kadar dahil.
- *
- * Kullanıcı gün seçiyor, an değil; `end=2026-08-07` o günün tamamını
- * kapsamalı. Ham tarih kullanılsaydı gün 00:00'da kesilir ve o günün
- * bütün tıklamaları rapordan düşerdi.
- */
-function bitisAni(end: string): Date {
-  const son = new Date(end);
-  son.setUTCHours(23, 59, 59, 999);
-  return son;
-}
-
 // ─────────────────────────── Postgres ───────────────────────────
 
 function pgKosullar(kiraci: string, sorgu: TiklamaSorgusu) {
@@ -84,8 +86,15 @@ function pgKosullar(kiraci: string, sorgu: TiklamaSorgusu) {
   if (sorgu.ortakAnahtari) kosullar.push(eq(tablo.ortakAnahtari, sorgu.ortakAnahtari));
   if (sorgu.medyaId) kosullar.push(eq(tablo.medyaId, sorgu.medyaId));
   if (sorgu.start) kosullar.push(gte(tablo.zaman, new Date(sorgu.start)));
-  if (sorgu.end) kosullar.push(lte(tablo.zaman, bitisAni(sorgu.end)));
+  if (sorgu.end) kosullar.push(lte(tablo.zaman, bitisGunSonuAni(sorgu.end)));
   return and(...kosullar);
+}
+
+/** Kaynak kırılımını çoktan aza, eşitlikte ada göre sıralar. */
+function kaynaklaraGoreSirala(kaynaklar: Map<string, number>): KaynakSayisi[] {
+  return [...kaynaklar.entries()]
+    .map(([kaynak, sayi]) => ({ kaynak, sayi }))
+    .sort((a, b) => b.sayi - a.sayi || a.kaynak.localeCompare(b.kaynak));
 }
 
 const satirdanTiklama = (s: typeof tablo.$inferSelect): Tiklama => ({
@@ -181,6 +190,48 @@ export function postgresTiklamaDeposu(): TiklamaDeposu {
 
       return birlestir(medyaSatirlari, altSatirlari.rows);
     },
+
+    /**
+     * Gün sınırı KİRACININ ZAMAN DİLİMİNDE.
+     *
+     * `zaman` sütunu `timestamptz`; `AT TIME ZONE` bir zaman dilimi
+     * adına uygulandığında o dilimdeki duvar saatini veriyor. Ham
+     * UTC'ye göre gruplamak, Türkiye saatiyle gece 00:00–03:00 arası
+     * tıklamaları bir önceki güne yazardı — panelin geri kalanı bu
+     * hatadan kaçınmak için aynı yaklaşımı kullanıyor (bkz. `gunler.ts`).
+     */
+    async gunlukSayilar(kiraci, sorgu) {
+      const dilim = String(process.env.AFF_ZAMAN_DILIMI || 'Europe/Istanbul');
+      const satirlar = await vtZorunlu().execute<{ gun: string; sayi: number }>(sql`
+        SELECT to_char((${tablo.zaman} AT TIME ZONE ${dilim}), 'YYYY-MM-DD') AS gun,
+               count(*)::int AS sayi
+        FROM ${tablo}
+        WHERE ${pgKosullar(kiraci, sorgu)}
+        GROUP BY 1
+        ORDER BY 1
+      `);
+      return satirlar.rows.map((r) => ({ gun: r.gun, sayi: Number(r.sayi) }));
+    },
+
+    async kaynakOzeti(kiraci, sorgu) {
+      // Ham `referrer` degeriyle grupluyoruz; alan adi cozumleme
+      // (`kaynakAdi`) uygulama katmaninda oluyor cunku SQL'de tasinabilir
+      // bir hostname ayristirici yok. Satir sayisi ham referrer cesidi
+      // kadar -- tiklama sayisi kadar DEGIL -- bu yuzden tek sorguda
+      // rahatlikla toplaniyor.
+      const satirlar = await vtZorunlu()
+        .select({ referrer: tablo.referrer, sayi: sql<number>`count(*)::int` })
+        .from(tablo)
+        .where(pgKosullar(kiraci, sorgu))
+        .groupBy(tablo.referrer);
+
+      const kaynaklar = new Map<string, number>();
+      for (const s of satirlar) {
+        const k = kaynakAdi(s.referrer);
+        kaynaklar.set(k, (kaynaklar.get(k) ?? 0) + s.sayi);
+      }
+      return kaynaklaraGoreSirala(kaynaklar);
+    },
   };
 }
 
@@ -244,7 +295,7 @@ const cozDepo = (ham: unknown): BelgeDepo => ({
 
 function belgeSuz(tiklamalar: Tiklama[], sorgu: TiklamaSorgusu): Tiklama[] {
   const baslangic = sorgu.start ? new Date(sorgu.start).toISOString() : null;
-  const bitis = sorgu.end ? bitisAni(sorgu.end).toISOString() : null;
+  const bitis = sorgu.end ? bitisGunSonuAni(sorgu.end).toISOString() : null;
   return tiklamalar.filter((t) => {
     if (sorgu.ortakAnahtari && t.ortakAnahtari !== sorgu.ortakAnahtari) return false;
     if (sorgu.medyaId && t.medyaId !== sorgu.medyaId) return false;
@@ -304,6 +355,30 @@ export function belgeTiklamaDeposu(): TiklamaDeposu {
           return { ortak_anahtari, anahtar, deger, sayi };
         }),
       );
+    },
+
+    async gunlukSayilar(kiraci, sorgu) {
+      const depo = await oku<BelgeDepo>(kiraci, ALAN, cozDepo);
+      const gunler = new Map<string, number>();
+      for (const t of belgeSuz(depo.tiklamalar, sorgu)) {
+        // Kiracinin zaman dilimindeki gun anahtari: `gunler.ts`'teki
+        // ayni fonksiyon panelin her yerinde gun sinirini belirliyor.
+        const gun = gunAnahtari(new Date(t.zaman));
+        gunler.set(gun, (gunler.get(gun) ?? 0) + 1);
+      }
+      return [...gunler.entries()]
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .map(([gun, sayi]) => ({ gun, sayi }));
+    },
+
+    async kaynakOzeti(kiraci, sorgu) {
+      const depo = await oku<BelgeDepo>(kiraci, ALAN, cozDepo);
+      const kaynaklar = new Map<string, number>();
+      for (const t of belgeSuz(depo.tiklamalar, sorgu)) {
+        const k = kaynakAdi(t.referrer);
+        kaynaklar.set(k, (kaynaklar.get(k) ?? 0) + 1);
+      }
+      return kaynaklaraGoreSirala(kaynaklar);
     },
   };
 }
