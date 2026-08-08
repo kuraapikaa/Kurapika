@@ -32,6 +32,7 @@ server/src/data/prediction-entries/
 server/src/data/prediction-settlements/
 server/src/data/engagement/
 server/src/data/next-day-bonus-runs/
+server/src/data/nakit-bonus-defteri/
 server/src/data/game-settings/*.json
 server/src/data/*.bak.*
 server/src/data/**/*.bak.*

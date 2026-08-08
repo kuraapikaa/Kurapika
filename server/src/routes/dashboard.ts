@@ -2045,48 +2045,97 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
             }
 
             /**
-             * MUKERRER KORUMASI.
+             * MUKERRER KORUMASI — IKI KATMAN.
              *
              * Nakit bonus bakiye duzeltmesi olarak yaziliyor; Lynon'un bonus
-             * listesinde gorunmuyor. Bu yolda "bugun verildi mi" diye bakan
-             * HICBIR kontrol yoktu — ertesi gun isinde vardi (cashAlreadyCredited),
-             * oyuncuya acik charge yolunda yoktu.
+             * listesinde gorunmuyor. Onceki korumadan sonra bile gercek bir
+             * sizinti kaydedildi: oyuncu 2492369, 2026-08-03 22:01-22:03
+             * arasinda AYNI %30 KAYIP BONUSU'nu UC KEZ aldi (2.500 TRY x3),
+             * denemeler arasinda tam bir dakika vardi.
              *
-             * Sonuc: oyuncu bonusu aliyor, kaybediyor, bakiye tekrar esigin
-             * altina dusuyor ve ayni bonusu tekrar aliyordu. Her turda yeni
-             * bir correction; oyuncu defalarca bedava bakiye kazaniyordu.
+             * Lynon'dan TURETILEN kontrol (nakitBonusGecmisi.ts) bunu
+             * yakalayamadi cunku iki dis bagimliligi var: Lynon'un az once
+             * yazilan duzeltmeyi bir sonraki okumada goster mesi VE not
+             * metninin dogru ayristirilmasi. Bir dakikalik araliginin
+             * hicbirinde yakalanmamis olmasi, sorunun tek basina eszamanli
+             * bir yaris olmadigini gosteriyor.
+             *
+             * Katman 1 — YEREL DEFTER (nakitBonusDefteri.ts): bizim
+             * yazdigimiz her nakit bonus KENDI kaydimiza geciyor; kontrol
+             * dis bir sistemin okuma tutarliligina bagli degil.
+             * Katman 2 — KILIT: ayni oyuncu + ayni kural icin check+rezerve+
+             * yazma tek parca calisir; iki istek ayni anda gelse kontrolu
+             * BIRLIKTE gecemez. Ayni desen games.ts gunluk gorev talebinde
+             * zaten kanitlandi.
+             *
+             * Lynon-turetilmis kontrol KALDIRILMADI: bu rotanin disinda
+             * (Lynon panelinden elle) yapilan bir duzeltmeyi yalnizca o
+             * yakalayabilir.
              *
              * Kural allowSameDayRepeat ile acikca izin vermedikce ayni kural
              * ayni oyuncuya gunde bir kez verilir.
              */
             const kuralAnahtari = String(resolvedRule?.key ?? BonusId);
-            if ((spec as { allowSameDayRepeat?: boolean }).allowSameDayRepeat !== true) {
-              const { bugunVerilmisMi, nakitKullanimlari } = await import('../services/nakitBonusGecmisi.js');
-              const gunBaslangici = Date.now() - 24 * 60 * 60 * 1000;
-              const kullanimlar = nakitKullanimlari(
-                ((currentAccount as unknown as { balanceCorrections?: unknown }).balanceCorrections ?? []) as never,
-              );
-              if (bugunVerilmisMi(kullanimlar, kuralAnahtari, gunBaslangici)) {
-                request.log.warn(
-                  { ClientId, kuralAnahtari },
-                  'Nakit bonus mukerrer talep engellendi.',
-                );
-                return reply.status(409).send({
-                  HasError: true,
-                  AlertMessage: 'Bu bonus bu oyuncuya son 24 saatte zaten tanımlanmış.',
-                });
-              }
+            const sameDayRepeatAllowed = (spec as { allowSameDayRepeat?: boolean }).allowSameDayRepeat === true;
+
+            const { kilitle, odulAnahtari } = await import('../lib/odulKilidi.js');
+            const { bugunYerelVerilmisMi, rezerveEt, tamamlandiIsaretle, rezervasyonuKaldir } =
+              await import('../services/nakitBonusDefteri.js');
+
+            const sonuc = await kilitle(
+              odulAnahtari(String(ClientId), 'nakit-bonus', kuralAnahtari),
+              async (): Promise<
+                { tur: 'engellendi' } | { tur: 'verildi'; result: unknown }
+              > => {
+                if (!sameDayRepeatAllowed) {
+                  if (await bugunYerelVerilmisMi(tenantKey, ClientId, kuralAnahtari)) {
+                    request.log.warn({ ClientId, kuralAnahtari }, 'Nakit bonus mukerrer talep engellendi (yerel defter).');
+                    return { tur: 'engellendi' };
+                  }
+                  const { bugunVerilmisMi, nakitKullanimlari } = await import('../services/nakitBonusGecmisi.js');
+                  const gunBaslangici = Date.now() - 24 * 60 * 60 * 1000;
+                  const kullanimlar = nakitKullanimlari(
+                    ((currentAccount as unknown as { balanceCorrections?: unknown }).balanceCorrections ?? []) as never,
+                  );
+                  if (bugunVerilmisMi(kullanimlar, kuralAnahtari, gunBaslangici)) {
+                    request.log.warn({ ClientId, kuralAnahtari }, 'Nakit bonus mukerrer talep engellendi (Lynon gecmisi).');
+                    return { tur: 'engellendi' };
+                  }
+                }
+
+                // ONCE REZERVE ET, SONRA VER — games.ts'teki gunluk gorev
+                // talebiyle ayni desen: yazma basarisiz olursa rezervasyon
+                // geri alinir, oyuncu tekrar deneyebilir.
+                const kayitId = sameDayRepeatAllowed
+                  ? null
+                  : await rezerveEt(tenantKey, ClientId, kuralAnahtari, effectiveAmount);
+
+                try {
+                  const result = await lynonAdjustPlayerMainAccount({
+                    playerId: ClientId,
+                    amount: effectiveAmount,
+                    correctionType: 'crediting',
+                    // Not bicimi SABIT: `Bonus <kuralAnahtari> / <kullanici>`.
+                    // nakitBonusGecmisi bu bicimden kural anahtarini cikariyor;
+                    // degistirilirse mukerrer korumasi kor kalir.
+                    note: `Bonus ${kuralAnahtari} / ${username}`.slice(0, 50),
+                  });
+                  if (kayitId) await tamamlandiIsaretle(tenantKey, kayitId);
+                  return { tur: 'verildi', result };
+                } catch (hata) {
+                  if (kayitId) await rezervasyonuKaldir(tenantKey, kayitId);
+                  throw hata;
+                }
+              },
+            );
+
+            if (sonuc.tur === 'engellendi') {
+              return reply.status(409).send({
+                HasError: true,
+                AlertMessage: 'Bu bonus bu oyuncuya son 24 saatte zaten tanımlanmış.',
+              });
             }
 
-            const result = await lynonAdjustPlayerMainAccount({
-              playerId: ClientId,
-              amount: effectiveAmount,
-              correctionType: 'crediting',
-              // Not bicimi SABIT: `Bonus <kuralAnahtari> / <kullanici>`.
-              // nakitBonusGecmisi bu bicimden kural anahtarini cikariyor;
-              // degistirilirse mukerrer korumasi kor kalir.
-              note: `Bonus ${kuralAnahtari} / ${username}`.slice(0, 50),
-            });
             // Denetim kaydi artik bonusun KENDISINI anlatiyor: adi, turu,
             // tutarin nereden geldigi ve hangi yatirima karsilik verildigi.
             audit(username, role, 'bonus_charge_as_cash', String(ClientId), bonusDenetimAciklamasi({
@@ -2102,7 +2151,7 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
               HasError: false,
               AlertType: 'success',
               AlertMessage: 'Nakit bonus Player Main hesabına crediting düzeltmesi olarak işlendi.',
-              Data: result,
+              Data: sonuc.result,
               lynon: true,
             });
           }
