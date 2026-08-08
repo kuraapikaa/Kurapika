@@ -20,6 +20,7 @@ import { Planlar } from './sayfalar/yonetim/Planlar';
 import { Postback } from './sayfalar/yonetim/Postback';
 import { Tiklamalar } from './sayfalar/yonetim/Tiklamalar';
 import { TrafikKalitesi } from './sayfalar/yonetim/TrafikKalitesi';
+import { Webhook } from './sayfalar/yonetim/Webhook';
 import { PortalAltLinkler } from './sayfalar/portal/PortalAltLinkler';
 import { PortalHakedis } from './sayfalar/portal/PortalHakedis';
 import { PortalMedya } from './sayfalar/portal/PortalMedya';
@@ -70,6 +71,7 @@ const YONETIM_MENUSU: MenuOgesi[] = [
     bolumOnce: true,
     altlar: [
       { yol: '/baglanti', etiket: 'Backoffice bağlantısı' },
+      { yol: '/webhook', etiket: 'Webhook' },
       { yol: '/postback', etiket: 'Postback' },
       { yol: '/oto-bonus', etiket: 'Oto bonus' },
     ],
@@ -137,6 +139,7 @@ export function App() {
             <Route path="/planlar" element={<Planlar />} />
             <Route path="/medya" element={<Medya />} />
             <Route path="/kademeler" element={<Kademeler />} />
+            <Route path="/webhook" element={<Webhook />} />
             <Route path="/postback" element={<Postback />} />
             <Route path="/oto-bonus" element={<OtoBonus />} />
             <Route path="/tiklamalar" element={<Tiklamalar />} />
