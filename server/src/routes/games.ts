@@ -606,7 +606,11 @@ const DEFAULT_GAME_SETTINGS = {
     description: 'Gün içindeki gerçek aktivitenizi tamamlayın, XP ve ödül kazanın.',
     resetHour: 0,
     tasks: [
-      { id: 'daily-login', title: 'Günlük giriş', description: 'Lobiye giriş yap.', metric: 'login', target: 1, xp: 50, rewardLabel: '25 TL Freebet', rewardBonusId: 1875, rewardAmount: 25, active: true },
+      // perWeekLimit: gorev gunde bir kez tamamlanabiliyor (target: 1), bu
+      // yalnizca AYNI GUN icinde tekrari engelliyor. perWeekLimit haftanin
+      // FARKLI gunlerinde odulun kac kez alinabilecegini ayrica sinirliyor —
+      // ikisi olmadan oyuncu haftanin 7 gununde de odul alabilirdi.
+      { id: 'daily-login', title: 'Günlük giriş', description: 'Lobiye giriş yap.', metric: 'login', target: 1, xp: 50, rewardLabel: '25 TL Freebet', rewardBonusId: 1875, rewardAmount: 25, active: true, perWeekLimit: 3 },
       { id: 'daily-deposit', title: 'Günlük yatırım', description: 'Bugün toplam 500 TL yatırım yap.', metric: 'deposit_total', target: 500, xp: 120, rewardLabel: '50 TL Bonus', rewardBonusId: 1876, rewardAmount: 50, active: true },
       { id: 'daily-wager', title: 'Bahis hacmi', description: 'Bugün toplam 1.000 TL oyun hacmine ulaş.', metric: 'wager_total', target: 1000, xp: 160, rewardLabel: '100 TL Bonus', rewardBonusId: 1877, rewardAmount: 100, active: true }
     ]
@@ -1279,12 +1283,28 @@ function buildDailyTasksPayload(settings: any, claims: any, activity: any, usern
   const { dateKey } = dailyWindow(cfg.resetHour);
   const dailyClaims = claims.daily.filter((claim: any) => claim.username === username && claim.dateKey === dateKey);
 
+  // Haftalik sinir arayuze de yansitiliyor ki oyuncu sunucuya sormadan
+  // once "bu hafta kullanildi" gorsun; asil kontrol yine sunucuda
+  // (claim ucunda), burasi yalnizca gosterim.
+  const week = turkeyPeriodWindow('weekly', new Date());
+  const weekStartKey = toDateKey(week.from);
+  const weekEndKeyExclusive = toDateKey(week.to);
+  const weeklyClaims = claims.daily.filter((claim: any) =>
+    claim.username === username && claim.dateKey >= weekStartKey && claim.dateKey < weekEndKeyExclusive
+  );
+
   const tasks = cfg.tasks
     .filter((task: any) => task.active !== false)
     .map((task: any) => {
       const target = Math.max(Number(task.target || 1), 1);
       const value = metricValue(activity, task.metric);
       const claimed = dailyClaims.some((claim: any) => claim.taskId === task.id);
+      const perWeekLimit = Number.isFinite(Number(task.perWeekLimit)) && Number(task.perWeekLimit) > 0
+        ? Number(task.perWeekLimit)
+        : null;
+      const weeklyClaimedCount = perWeekLimit
+        ? weeklyClaims.filter((claim: any) => claim.taskId === task.id).length
+        : null;
       return {
         ...task,
         metricLabel: metricLabel(task.metric),
@@ -1292,7 +1312,9 @@ function buildDailyTasksPayload(settings: any, claims: any, activity: any, usern
         target,
         progress: clampProgress(value, target),
         completed: value >= target,
-        claimed
+        claimed,
+        weeklyClaimedCount,
+        weeklyLimitReached: perWeekLimit != null && weeklyClaimedCount != null && weeklyClaimedCount >= perWeekLimit
       };
     });
 
@@ -2884,6 +2906,34 @@ const selectedSlice = selected.slice;
       claim.username === bonusPanelUser.login && claim.dateKey === dateKey && claim.taskId === task.id
     );
     if (alreadyClaimed) return reply.status(400).send({ ok: false, message: 'Bu görev ödülü bugün zaten alındı.' });
+
+    /**
+     * HAFTALIK SINIR.
+     *
+     * `target: 1` gorevin AYNI GUN icinde tekrarini engelliyor, ama
+     * haftanin farkli gunlerinde kac kez alinabilecegine dair bir sinir
+     * koymuyor — perWeekLimit tanimlanmadan oyuncu haftanin 7 gununde de
+     * odulu alabilirdi. `dateKey` zaten kayitli oldugu icin ek okuma
+     * gerekmiyor; ayni kilit altinda sayiliyor.
+     */
+    if (Number.isFinite(Number(task.perWeekLimit)) && Number(task.perWeekLimit) > 0) {
+      const perWeekLimit = Number(task.perWeekLimit);
+      const week = turkeyPeriodWindow('weekly', new Date());
+      const weekStartKey = toDateKey(week.from);
+      const weekEndKeyExclusive = toDateKey(week.to);
+      const weeklyCount = claims.daily.filter((claim: any) =>
+        claim.username === bonusPanelUser.login && claim.taskId === task.id
+        && claim.dateKey >= weekStartKey && claim.dateKey < weekEndKeyExclusive
+      ).length;
+      if (weeklyCount >= perWeekLimit) {
+        return reply.status(400).send({
+          ok: false,
+          message: `Bu görev haftada en fazla ${perWeekLimit} kez alınabilir.`,
+          weeklyCount,
+          perWeekLimit,
+        });
+      }
+    }
 
     const reward = dailyTaskReward(task);
 
