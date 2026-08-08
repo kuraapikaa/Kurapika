@@ -23,6 +23,8 @@ export interface OyuncuEslesmesi {
   ortakAnahtari: string;
   clickId: string | null;
   medyaId: string | null;
+  /** Tıklamanın taşıdığı alt link; alt link bazlı yatırım/çekim raporunun dayanağı. */
+  altLinkId: string | null;
   alt: Partial<Record<AltParametre, string>>;
   kaynak: EslesmeKaynagi;
   olusturuldu: string;
@@ -96,6 +98,7 @@ const satirdanEslesme = (s: typeof oyuncuEslesmeleri.$inferSelect): OyuncuEslesm
   ortakAnahtari: s.ortakAnahtari,
   clickId: s.clickId,
   medyaId: s.medyaId,
+  altLinkId: s.altLinkId,
   alt: s.alt ?? {},
   kaynak: s.kaynak as EslesmeKaynagi,
   olusturuldu: s.olusturuldu.toISOString(),
@@ -146,6 +149,7 @@ export function postgresEslesmeDeposu(): EslesmeDeposu {
           ortakAnahtari: eslesme.ortakAnahtari,
           clickId: eslesme.clickId,
           medyaId: eslesme.medyaId,
+          altLinkId: eslesme.altLinkId,
           alt: eslesme.alt,
           kaynak: eslesme.kaynak,
           olusturuldu: new Date(eslesme.olusturuldu),
@@ -174,6 +178,7 @@ export function postgresEslesmeDeposu(): EslesmeDeposu {
           ortakAnahtari: eslesme.ortakAnahtari,
           clickId: eslesme.clickId,
           medyaId: eslesme.medyaId,
+          altLinkId: eslesme.altLinkId,
           alt: eslesme.alt,
           kaynak: eslesme.kaynak,
           olusturuldu: new Date(eslesme.olusturuldu),
@@ -185,6 +190,7 @@ export function postgresEslesmeDeposu(): EslesmeDeposu {
             ortakAnahtari: eslesme.ortakAnahtari,
             clickId: eslesme.clickId,
             medyaId: eslesme.medyaId,
+            altLinkId: eslesme.altLinkId,
             alt: eslesme.alt,
             kaynak: eslesme.kaynak,
             olusturuldu: new Date(eslesme.olusturuldu),

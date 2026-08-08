@@ -34,6 +34,7 @@ export async function tiklamaRotalari(app: FastifyInstance): Promise<void> {
     medyaId: string | null,
     sorgu: Record<string, unknown>,
     istekBilgisi: { ip: string; userAgent: string | null; referrer: string | null },
+    altLinkId: string | null = null,
   ) => {
     const ortak = await ortakAnahtarindanBul(kiraci, ortakAnahtari);
     // Bilinmeyen ya da onaysiz anahtar: tiklama KAYDEDILMIYOR ve
@@ -51,6 +52,7 @@ export async function tiklamaRotalari(app: FastifyInstance): Promise<void> {
     const tiklama = await tiklamaKaydet(kiraci, {
       ortakAnahtari,
       medyaId: medya.id,
+      altLinkId,
       sorgu,
       ip: istekBilgisi.ip,
       userAgent: istekBilgisi.userAgent,
@@ -132,6 +134,7 @@ export async function tiklamaRotalari(app: FastifyInstance): Promise<void> {
         userAgent: String(istek.headers['user-agent'] ?? '') || null,
         referrer: String(istek.headers.referer ?? '') || null,
       },
+      link.id,
     );
 
     if (!sonuc) return yanit.status(404).send({ hata: 'Bağlantı bulunamadı.' });

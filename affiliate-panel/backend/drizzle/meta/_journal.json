@@ -29,6 +29,13 @@
       "when": 1786155250758,
       "tag": "0003_webhook_kuyrugu",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1786177246463,
+      "tag": "0004_alt_link_id",
+      "breakpoints": true
     }
   ]
 }
