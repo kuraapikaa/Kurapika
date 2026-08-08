@@ -7,6 +7,7 @@ import { uygulamaKur } from './app.js';
 import { anahtarParmakIzi, sifrelemeHazirMi } from './lib/sifre.js';
 import { belgeleriTablolaraTasi } from './lib/tasima.js';
 import { veritabaniniBaslat } from './lib/veritabani.js';
+import { geceIsiniZamanla } from './isler/zamanlayici.js';
 import { duzParolaKullaniliyorMu, yoneticiKimligiVarMi } from './kimlik/oturum.js';
 
 dotenv.config();
@@ -61,6 +62,13 @@ async function baslat(): Promise<void> {
   );
   if (!veritabani) {
     app.log.warn('DATABASE_URL yok; veriler diske yazılıyor. Kalıcı disk olmayan bir dağıtımda her yeniden başlatmada silinir.');
+  }
+
+  // Gece hakedisi: her yerel gun degisiminde cuzdanlara farki yaziyor.
+  // Cuzdan kalici depolama istedigi icin veritabanisiz calismiyor.
+  if (veritabani) {
+    geceIsiniZamanla(app.log);
+    app.log.info('Gece hakediş işi zamanlandı.');
   }
 
   // Tiklama ve olcum gecmisi eskiden JSON belgesindeydi. Tabloya

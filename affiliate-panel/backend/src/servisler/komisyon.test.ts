@@ -10,6 +10,7 @@ const plan = (ek: Partial<KomisyonPlani> = {}): KomisyonPlani => ({
   kademeModu: 'topluca',
   cpaTutari: 0,
   yonetimGideriYuzde: 20,
+  yonetimGideriSabit: 0,
   asgariOdeme: 0,
   negatifDevir: true,
   varsayilan: true,
@@ -212,5 +213,56 @@ describe('kademeli gelir payi', () => {
     delete eski.gelirKademeleri;
     delete eski.kademeModu;
     expect(gelirPayiHesapla(eski as KomisyonPlani, 10_000).tutar).toBe(3_000);
+  });
+});
+
+describe('sabit isletme gideri', () => {
+  it('yuzdeye EK olarak dusuluyor', () => {
+    const h = hakedisHesapla(plan({ yonetimGideriYuzde: 20, yonetimGideriSabit: 1000 }), {
+      ggr: 10_000, ftdSayisi: null,
+    });
+    expect(h.yonetimGideri).toBe(3000); // 2000 yuzde + 1000 sabit
+    expect(h.netGelir).toBe(7000);
+    expect(h.gelirPayi).toBe(2100);
+  });
+
+  it('tek basina da kullanilabiliyor', () => {
+    const h = hakedisHesapla(plan({ yonetimGideriYuzde: 0, yonetimGideriSabit: 2500 }), {
+      ggr: 10_000, ftdSayisi: null,
+    });
+    expect(h.yonetimGideri).toBe(2500);
+    expect(h.netGelir).toBe(7500);
+  });
+
+  /**
+   * Gelirin olmadigi bir ayda sabit ucreti ortaga yuklemek, ortagi hic
+   * kazanc getirmedigi bir donem icin BORCLU cikarirdi; o borc zarar
+   * devriyle sonraki aylara da tasinirdi.
+   */
+  it('brut geliri ASAMAZ', () => {
+    const h = hakedisHesapla(plan({ yonetimGideriYuzde: 0, yonetimGideriSabit: 5000 }), {
+      ggr: 3000, ftdSayisi: null,
+    });
+    expect(h.yonetimGideri).toBe(3000);
+    expect(h.netGelir).toBe(0);
+    expect(h.gelirPayi).toBe(0);
+  });
+
+  it('negatif ayda gider yazilmaz, zarar buyumez', () => {
+    const h = hakedisHesapla(plan({ yonetimGideriYuzde: 20, yonetimGideriSabit: 5000 }), {
+      ggr: -4000, ftdSayisi: null,
+    });
+    expect(h.yonetimGideri).toBe(0);
+    expect(h.netGelir).toBe(-4000);
+    expect(h.sonrakiDevredenZarar).toBe(-4000);
+  });
+
+  /** Eski planlarda alan yok; `undefined` hesaba girip NaN uretmemeli. */
+  it('alani olmayan eski plan sifir sabit gider sayilir', () => {
+    const eski = plan();
+    delete (eski as Partial<KomisyonPlani>).yonetimGideriSabit;
+    const h = hakedisHesapla(eski, { ggr: 10_000, ftdSayisi: null });
+    expect(h.yonetimGideri).toBe(2000);
+    expect(Number.isNaN(h.gelirPayi)).toBe(false);
   });
 });
