@@ -93,6 +93,20 @@ export interface KomisyonPlani {
    * siteye yükler. Sözleşmede genelde tek bir yüzde olarak geçer.
    */
   yonetimGideriYuzde: number;
+  /**
+   * Brüt gelirden düşülen SABİT işletme payı (dönem başına).
+   *
+   * Bazı sağlayıcılar ücreti yüzde değil sabit tutar olarak kesiyor;
+   * ikisi bir arada da kullanılabiliyor (yüzde + aylık sabit ücret).
+   *
+   * ── Neden brüt geliri AŞAMAZ ──
+   *
+   * Gelirin olmadığı bir ayda sabit ücreti ortağa yüklemek, ortağı hiç
+   * kazanç getirmediği bir dönem için BORÇLU çıkarırdı; o borç zarar
+   * devriyle sonraki aylara da taşınırdı. Gider, brüt gelirle
+   * sınırlanıyor: en fazla geliri sıfırlar, eksiye düşürmez.
+   */
+  yonetimGideriSabit: number;
   /** Bu tutarın altındaki hakediş ödenmez, sonraki aya devreder. */
   asgariOdeme: number;
   negatifDevir: boolean;
@@ -104,10 +118,11 @@ export interface KomisyonPlani {
 type Depo = { version: 1; planlar: KomisyonPlani[] };
 
 /**
- * Kademe alanları SONRADAN eklendi. Eski kayıtlarda yoklar ve
- * `plan.gelirKademeleri.length` gibi bir erişim patlar. Okurken
- * dolduruyoruz: eski plan, kademesiz (düz oranlı) bir plan olarak
- * geçerliliğini koruyor.
+ * Kademe ve sabit gider alanları SONRADAN eklendi. Eski kayıtlarda
+ * yoklar; `plan.gelirKademeleri.length` gibi bir erişim patlar,
+ * `yonetimGideriSabit` ise `undefined` olarak hesaba girip tutarı
+ * `NaN` yapardı. Okurken dolduruyoruz: eski plan, kademesiz ve sabit
+ * gidersiz bir plan olarak geçerliliğini koruyor.
  */
 const cozPlan = (ham: unknown): KomisyonPlani => {
   const p = kayitOku(ham) as Partial<KomisyonPlani>;
@@ -115,6 +130,7 @@ const cozPlan = (ham: unknown): KomisyonPlani => {
     ...(p as KomisyonPlani),
     gelirKademeleri: diziOku<GelirKademesi>(p.gelirKademeleri),
     kademeModu: KADEME_MODLARI.includes(p.kademeModu as KademeModu) ? (p.kademeModu as KademeModu) : 'topluca',
+    yonetimGideriSabit: Number(p.yonetimGideriSabit) || 0,
   };
 };
 
@@ -167,6 +183,7 @@ export interface PlanGirdisi {
   kademeModu?: unknown;
   cpaTutari?: unknown;
   yonetimGideriYuzde?: unknown;
+  yonetimGideriSabit?: unknown;
   asgariOdeme?: unknown;
   negatifDevir?: boolean;
   varsayilan?: boolean;
@@ -245,6 +262,7 @@ function planGovdesi(girdi: PlanGirdisi): Omit<KomisyonPlani, 'id' | 'createdAt'
     kademeModu,
     cpaTutari,
     yonetimGideriYuzde: yuzdeOku(girdi.yonetimGideriYuzde, 'yonetimGideriYuzde'),
+    yonetimGideriSabit: tutarOku(girdi.yonetimGideriSabit, 'yonetimGideriSabit'),
     asgariOdeme: tutarOku(girdi.asgariOdeme, 'asgariOdeme'),
     negatifDevir: girdi.negatifDevir !== false,
   };
@@ -403,7 +421,10 @@ export interface Hakedis {
  */
 export function hakedisHesapla(plan: KomisyonPlani, girdi: HakedisGirdisi): Hakedis {
   const brutGelir = Number(girdi.ggr) || 0;
-  const yonetimGideri = kurusa(Math.max(0, brutGelir) * (plan.yonetimGideriYuzde / 100));
+  // Sabit gider brut geliri asamaz; bkz. `yonetimGideriSabit` aciklamasi.
+  const yuzdeGideri = kurusa(Math.max(0, brutGelir) * (plan.yonetimGideriYuzde / 100));
+  const sabitGider = Math.max(0, Number(plan.yonetimGideriSabit) || 0);
+  const yonetimGideri = kurusa(Math.min(Math.max(0, brutGelir), yuzdeGideri + sabitGider));
   const netGelir = kurusa(brutGelir - yonetimGideri);
   // Devreden zarar yalnizca NEGATIF olabilir; pozitif bir deger gelirse
   // yok sayiliyor, aksi halde gecmis bir ay ortaga iki kez kazanc yazardi.

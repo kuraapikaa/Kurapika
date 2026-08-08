@@ -1,4 +1,6 @@
-import { doublePrecision, index, integer, jsonb, pgTable, primaryKey, text, timestamp } from 'drizzle-orm/pg-core';
+import { doublePrecision, index, integer, jsonb, pgTable, primaryKey, text, timestamp,
+  uniqueIndex,
+} from 'drizzle-orm/pg-core';
 import type { AltParametre } from '../servisler/izleme.js';
 
 /**
@@ -160,5 +162,42 @@ export const eslesmeCakismalari = pgTable(
   (t) => [
     index('aff_cakisma_kiraci_zaman').on(t.kiraci, t.zaman.desc()),
     index('aff_cakisma_kiraci_denenen').on(t.kiraci, t.denenenOrtakId),
+  ],
+);
+
+/**
+ * ORTAK CÜZDANI — hareket defteri.
+ *
+ * Bakiye bir SÜTUN değil, hareketlerin toplamı. Sütun tutmak, bakiyenin
+ * "neden bu rakam" sorusuna cevap veremeyen bir sayıya dönmesi demekti;
+ * bir hata olduğunda geriye doğru izlenemezdi. Para söz konusuysa defter
+ * şart.
+ *
+ * ── `kaynak_anahtari` neden BENZERSİZ ──
+ *
+ * Gece işi her gece çalışıyor ve iki konteynerde aynı anda çalışabilir.
+ * Anahtar, "şu ay şu ortak için şu günkü hakediş" gibi bir kimlik
+ * taşıyor; benzersiz kısıt aynı hakedişin iki kez alacak yazılmasını
+ * VERİTABANI düzeyinde engelliyor.
+ */
+export const cuzdanHareketleri = pgTable(
+  'aff_cuzdan_hareketleri',
+  {
+    id: text('id').primaryKey(),
+    kiraci: text('kiraci').notNull(),
+    ortakId: text('ortak_id').notNull(),
+    /** `hakedis` (alacak) | `odeme` (borç) | `duzeltme` (elle). */
+    tur: text('tur').notNull(),
+    /** Alacak pozitif, borç negatif. */
+    tutar: doublePrecision('tutar').notNull(),
+    /** Hangi döneme ait: `YYYY-MM`. */
+    donem: text('donem'),
+    aciklama: text('aciklama'),
+    kaynakAnahtari: text('kaynak_anahtari').notNull(),
+    olusturuldu: timestamp('olusturuldu', { withTimezone: true }).notNull(),
+  },
+  (t) => [
+    uniqueIndex('aff_cuzdan_kiraci_kaynak').on(t.kiraci, t.kaynakAnahtari),
+    index('aff_cuzdan_kiraci_ortak').on(t.kiraci, t.ortakId),
   ],
 );

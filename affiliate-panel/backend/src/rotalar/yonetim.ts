@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import type { FastifyInstance } from 'fastify';
 import type { YonetimUclari } from '../sozlesme.js';
 import {
@@ -56,6 +57,9 @@ import {
 } from '../servisler/postback.js';
 import { anahtarDurumu, anahtarSil, anahtarUret } from '../servisler/s2sAnahtari.js';
 import { eksikGunleriSenkronla, gunuSenkronla } from '../servisler/senkron.js';
+import { bakiyeler, hareketEkle, hareketleriListele } from '../servisler/cuzdan.js';
+import { geceHakedisiIsle } from '../isler/geceIsi.js';
+import { veritabani } from '../lib/veritabani.js';
 import { tiklamalariListele, tiklamaOzeti } from '../servisler/tiklama.js';
 
 /**
@@ -280,6 +284,56 @@ export async function yonetimRotalari(app: FastifyInstance): Promise<void> {
       // ortakta normal, eski ortakta "link paylasildi mi?" sorusu.
       olcumsuzSayisi: ortaklar.filter((o) => !olcumAnahtarlari.has(o.ortakAnahtari)).length,
     };
+  });
+
+  // ── Cüzdanlar ──────────────────────────────────────────────────────
+
+  app.get('/cuzdanlar', async (istek): Promise<YonetimUclari['/cuzdanlar']> => {
+    if (!veritabani()) return { bakiyeler: [], hareketler: [], veritabaniVarMi: false };
+    const [liste, hareketler, ortaklar] = await Promise.all([
+      bakiyeler(istek.kiraci),
+      hareketleriListele(istek.kiraci, { limit: 200 }),
+      ortaklariListele(istek.kiraci),
+    ]);
+    const adlar = new Map(ortaklar.map((o) => [o.id, o.ad]));
+    return {
+      bakiyeler: liste.map((b) => ({ ...b, ortakAdi: adlar.get(b.ortakId) ?? null })),
+      hareketler: hareketler.map((h) => ({ ...h, ortakAdi: adlar.get(h.ortakId) ?? null })),
+      veritabaniVarMi: true,
+    };
+  });
+
+  /**
+   * Ortağa yapılan ödemeyi deftere yazar (bakiyeden düşer).
+   *
+   * Tutar POZİTİF geliyor, deftere NEGATİF yazılıyor: kullanıcı "5000
+   * ödedim" der, defter "bakiye 5000 azaldı" tutar.
+   */
+  app.post('/cuzdan/odeme', async (istek, yanit) => {
+    const govde = (istek.body ?? {}) as { ortakId?: unknown; tutar?: unknown; aciklama?: unknown };
+    const ortakId = String(govde.ortakId ?? '').trim();
+    const tutar = Number(govde.tutar);
+    if (!ortakId) return yanit.status(400).send({ hata: 'ortakId zorunlu.' });
+    if (!Number.isFinite(tutar) || tutar <= 0) {
+      return yanit.status(400).send({ hata: 'tutar sıfırdan büyük olmalı.' });
+    }
+
+    await hareketEkle(istek.kiraci, {
+      ortakId,
+      tur: 'odeme',
+      tutar: -Math.abs(tutar),
+      aciklama: String(govde.aciklama ?? '').trim() || 'Ödeme',
+      // Her odeme ayri bir olay; tekrar korumasi yok cunku ayni tutarda
+      // iki gercek odeme yapilabilir.
+      kaynakAnahtari: `odeme:${randomUUID()}`,
+    });
+    return yanit.status(201).send({ durum: 'yazildi' });
+  });
+
+  /** Gece işini elle tetikler; beklemeden dönmüyor ki sonuç görülebilsin. */
+  app.post('/cuzdan/tahakkuk', async (istek, yanit) => {
+    if (!veritabani()) return yanit.status(503).send({ hata: 'Cüzdan için veritabanı gerekli.' });
+    return yanit.send(await geceHakedisiIsle(istek.kiraci));
   });
 
   /** İlk yatırım ölçümünün durumu; kalibrasyon sürüyorsa panel söylesin. */
