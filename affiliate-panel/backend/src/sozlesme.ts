@@ -28,7 +28,7 @@ import type { AltLink } from './servisler/altLink.js';
 import type { Donem, OrtakHakedisi } from './servisler/hakedis.js';
 import type { KademeBagi } from './servisler/kademeler.js';
 import type { KomisyonPlani } from './servisler/komisyon.js';
-import type { Medya } from './servisler/medya.js';
+import type { Medya, MedyaTuru } from './servisler/medya.js';
 import type { OrtakGunlukOlcum, OrtakOzeti } from './servisler/olcum.js';
 import type { OrtakDurumu, OrtakGorunumu } from './servisler/ortaklar.js';
 import type { OtoBonusAyari, OtoBonusDurumuYaniti, OtoBonusKaydi } from './servisler/otoBonus.js';
@@ -48,7 +48,7 @@ import type { Marka } from './rotalar/marka.js';
 /* ── Alan tipleri; arayüz bunları doğrudan kullanıyor ────────────── */
 export type {
   AdaptorAlani, AdaptorYetenegi, AltLink, Baglanti, Donem, KademeBagi,
-  KaliteSinyali, KomisyonPlani, Marka, Medya, MusteriYolculuguSonucu, OrtakDurumu,
+  KaliteSinyali, KomisyonPlani, Marka, Medya, MedyaTuru, MusteriYolculuguSonucu, OrtakDurumu,
   OrtakGorunumu, OrtakGunlukOlcum, OrtakHakedisi, OrtakOzeti, OtoBonusAyari,
   OtoBonusDurumuYaniti, OtoBonusKaydi, PostbackAyari, PostbackKaydi, SenkronSonucu,
   Tiklama, TiklamaOzeti, TopluAtamaSatiri, TopluAtamaSonucu,

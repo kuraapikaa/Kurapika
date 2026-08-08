@@ -1,9 +1,76 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { api, gunBicimi, paraBicimi, useVeri } from '../../api';
 import { Alan, Bos, Buton, Hata, Hucre, Kart, Olcu, Rozet, Satir, Tablo, Yukleniyor } from '../../ui';
-import type { AltLinkGorunumu as AltLink, Medya } from '@sunucu/sozlesme.js';
+import type { AltLinkGorunumu as AltLink, Medya, MedyaTuru } from '@sunucu/sozlesme.js';
 
 const ALTLAR = ['sub1', 'sub2', 'sub3', 'sub4', 'sub5'] as const;
+
+/**
+ * HEDEF İKONLARI — nav ikonlarından (`kabuk.tsx`) BİLEREK ayrı.
+ *
+ * Orada rota simgesi, burada içerik TÜRÜ simgesi; ikisi aynı görsel
+ * dilde ama farklı anlam taşıyor, tek bir sette karıştırmak ikisinin
+ * de okunurluğunu düşürür.
+ */
+const hedefIkon = (d: ReactNode) => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+    {d}
+  </svg>
+);
+
+const HEDEF_IKONLARI: Record<MedyaTuru | 'medyasiz', ReactNode> = {
+  medyasiz: hedefIkon(<><path d="m3 11 9-8 9 8" /><path d="M5 10v10h14V10" /><path d="M10 20v-6h4v6" /></>),
+  landing: hedefIkon(<><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 9h18" /><circle cx="6.5" cy="6.5" r=".5" fill="currentColor" /><circle cx="9" cy="6.5" r=".5" fill="currentColor" /></>),
+  banner: hedefIkon(<><rect x="3" y="5" width="18" height="14" rx="2" /><circle cx="9" cy="10" r="1.5" /><path d="m21 15-5-4-9 8" /></>),
+  video: hedefIkon(<><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m10 9 5 3-5 3Z" /></>),
+  metin: hedefIkon(<><path d="M4 6h16M4 12h16M4 18h10" /></>),
+};
+
+const TUR_ETIKETI: Record<MedyaTuru, string> = {
+  landing: 'Landing sayfası', banner: 'Banner', video: 'Video', metin: 'Metin linki',
+};
+
+/**
+ * HEDEF SEÇİCİ — dönüşen liste yerine görsel kartlar.
+ *
+ * Bir kutu içinden metin okuyup "landing (banner)" gibi bir şey seçmek,
+ * ortağın az önce yüklediği kreatifi tekrar tanımasını gerektiriyordu.
+ * Kart; banner'da GERÇEK görseli, diğerlerinde tür ikonunu gösteriyor —
+ * tanımak, okumaktan hızlı.
+ */
+function HedefKarti({
+  secili, ikon, baslik, altBaslik, onClick,
+}: {
+  secili: boolean;
+  ikon: ReactNode;
+  baslik: string;
+  altBaslik: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex items-center gap-3 rounded-lg border p-2.5 text-left transition-opacity"
+      style={{
+        borderColor: secili ? 'var(--vurgu)' : 'var(--kenar)',
+        background: secili ? 'var(--vurgu-yumusak)' : 'var(--yuzey-2)',
+        borderWidth: secili ? 2 : 1,
+      }}
+    >
+      <span
+        className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-md"
+        style={{ background: 'var(--yuzey)', color: secili ? 'var(--vurgu)' : 'var(--metin-2)' }}
+      >
+        {ikon}
+      </span>
+      <span className="min-w-0">
+        <span className="block truncate text-sm font-medium">{baslik}</span>
+        <span className="block truncate text-xs" style={{ color: 'var(--metin-2)' }}>{altBaslik}</span>
+      </span>
+    </button>
+  );
+}
 
 /**
  * ALT LİNKLER — ortağın kendi kampanya bağlantıları.
@@ -18,6 +85,7 @@ export function PortalAltLinkler() {
   const medyalar = useVeri<{ medyalar: Medya[] }>('/api/portal/medya');
   const [form, setForm] = useState({ ad: '', medyaId: '' });
   const [alt, setAlt] = useState<Record<string, string>>({});
+  const [etiketlerAcik, setEtiketlerAcik] = useState(false);
   const [hata, setHata] = useState<string | null>(null);
   const [kopyalanan, setKopyalanan] = useState<string | null>(null);
   const [qr, setQr] = useState<{ id: string; ad: string; adres: string } | null>(null);
@@ -45,11 +113,6 @@ export function PortalAltLinkler() {
 
   if (liste.yukleniyor) return <Yukleniyor />;
 
-  const medyaSecenekleri = [
-    { deger: '', etiket: 'Medyasız (aktif landing sayfanız)' },
-    ...(medyalar.veri?.medyalar ?? []).map((m) => ({ deger: m.id, etiket: `${m.ad} (${m.tur})` })),
-  ];
-
   return (
     <>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
@@ -70,36 +133,76 @@ export function PortalAltLinkler() {
       </div>
 
       <Kart baslik="Yeni alt link">
-        <p className="mb-3 text-sm" style={{ color: 'var(--metin-2)' }}>
+        <p className="mb-4 text-sm" style={{ color: 'var(--metin-2)' }}>
           Kampanya başına bir link kurun, isim verin. Kısa adres alırsınız; parametreler adreste
           <strong> görünmez</strong>, kayıttan gelir. Böylece kanal isimlendirmeniz dışarıya sızmaz
           ve linki elle düzenleyen biri trafiği başka bir kırılıma yazamaz.
         </p>
 
-        <div className="grid gap-3 md:grid-cols-2">
+        <div className="max-w-sm">
           <Alan etiket="Link adı" deger={form.ad} degisti={(v) => setForm({ ...form, ad: v })} ipucu="örn. Instagram bio — Ekim" />
+        </div>
+
+        <div className="mt-4">
+          <span className="mb-2 block text-xs font-medium" style={{ color: 'var(--metin-2)' }}>Nereye gitsin?</span>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+            <HedefKarti
+              secili={form.medyaId === ''}
+              ikon={HEDEF_IKONLARI.medyasiz}
+              baslik="Medyasız"
+              altBaslik="Aktif landing sayfanız"
+              onClick={() => setForm({ ...form, medyaId: '' })}
+            />
+            {(medyalar.veri?.medyalar ?? []).map((m) => (
+              <HedefKarti
+                key={m.id}
+                secili={form.medyaId === m.id}
+                ikon={
+                  m.tur === 'banner' && m.varlikUrl ? (
+                    <img src={m.varlikUrl} alt="" className="h-full w-full object-cover" />
+                  ) : HEDEF_IKONLARI[m.tur]
+                }
+                baslik={m.ad}
+                altBaslik={TUR_ETIKETI[m.tur]}
+                onClick={() => setForm({ ...form, medyaId: m.id })}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-4">
           <Alan
-            etiket="Medya"
-            deger={form.medyaId}
-            degisti={(v) => setForm({ ...form, medyaId: v })}
-            secenekler={medyaSecenekleri}
-            ipucu="Boş bırakabilirsiniz: link doğrudan aktif landing sayfanıza yönlendirir."
+            etiket="Kanal etiketi (opsiyonel)"
+            deger={alt.sub1 ?? ''}
+            degisti={(v) => setAlt({ ...alt, sub1: v })}
+            ipucu="örn. instagram, tiktok, hikaye — aynı hedefe giden birden çok linki birbirinden ayırt eder."
           />
+          {!etiketlerAcik ? (
+            <button
+              type="button"
+              className="mt-2 text-xs underline"
+              style={{ color: 'var(--metin-2)' }}
+              onClick={() => setEtiketlerAcik(true)}
+            >
+              + Daha fazla etiket ekle
+            </button>
+          ) : (
+            <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {ALTLAR.slice(1).map((a) => (
+                <Alan key={a} etiket={a} deger={alt[a] ?? ''} degisti={(v) => setAlt({ ...alt, [a]: v })} />
+              ))}
+            </div>
+          )}
         </div>
 
-        <div className="mt-3 grid gap-3 md:grid-cols-5">
-          {ALTLAR.map((a) => (
-            <Alan key={a} etiket={a} deger={alt[a] ?? ''} degisti={(v) => setAlt({ ...alt, [a]: v })} />
-          ))}
-        </div>
-
-        <div className="mt-3">
+        <div className="mt-4">
           <Buton
             tur="birincil"
             onClick={() => calistir(async () => {
               await api.gonder('/api/portal/alt-linkler', { ...form, alt });
               setForm({ ad: '', medyaId: '' });
               setAlt({});
+              setEtiketlerAcik(false);
             })}
           >
             Oluştur
