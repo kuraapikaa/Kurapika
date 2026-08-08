@@ -1,5 +1,5 @@
 import { AdaptorHatasi, type BackofficeAdaptoru } from '../adaptorler/tur.js';
-import { oyuncuyuYenidenAta, type YenidenAtamaDurumu } from './oyuncuEslesme.js';
+import { oyunculariIcinGelirleriGuncelle, oyuncuyuYenidenAta, type YenidenAtamaDurumu } from './oyuncuEslesme.js';
 
 /**
  * KULLANICI ADINDAN TOPLU AFFİLİATE GEÇİŞİ.
@@ -11,6 +11,12 @@ import { oyuncuyuYenidenAta, type YenidenAtamaDurumu } from './oyuncuEslesme.js'
  *      Lynon'un kendi BTag raporu da tutarlı kalsın.
  *   3. Panelin KENDİ eşleşme kaydı da güncellenir (`oyuncuyuYenidenAta`)
  *      — hakediş hesabının dayandığı taraf bu.
+ *
+ * Turun SONUNDA, başarıyla taşınan tüm oyuncuların daha önce webhook'tan
+ * biriken günleri hedef ortağın özetine (`olcumler`) hemen yansıtılır
+ * (`oyunculariIcinGelirleriGuncelle`) — aksi halde ortak, kendisine
+ * devredilen bir oyuncunun geçmiş yatırım/çekim/GGR'sini bir sonraki
+ * webhook olayına kadar hiç göremezdi.
  *
  * ── Sıra bilerek İÇ ÖNCE, DIŞ SONRA ──
  *
@@ -160,6 +166,15 @@ export async function topluAtamaYap(
       satirlar.push({ kullaniciAdi, durum: 'hata', hata: (hata as Error).message });
     }
   }
+
+  // Basariyla tasinan oyuncularin ONCEDEN webhook'tan biriken gunleri
+  // varsa, hedef ortagin ozetine HEMEN yansitiliyor -- aksi halde ortak,
+  // kendisine devredilen oyuncunun gecmis verisini bir sonraki webhook
+  // olayina kadar hic goremezdi (bkz. oyunculariIcinGelirleriGuncelle).
+  const tasinanOyuncuIdler = satirlar
+    .filter((s) => s.durum === 'basarili' && s.oyuncuId)
+    .map((s) => s.oyuncuId!);
+  await oyunculariIcinGelirleriGuncelle(kiraci, tasinanOyuncuIdler, simdi).catch(() => undefined);
 
   return {
     ortakAnahtari: temizOrtakAnahtari,

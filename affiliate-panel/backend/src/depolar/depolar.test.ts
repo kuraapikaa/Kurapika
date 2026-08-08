@@ -15,7 +15,12 @@ import {
   tiklamalar as tiklamaTablosu,
 } from '../lib/sema.js';
 import { veritabani, veritabaniniBaslat, veritabaniniKapat } from '../lib/veritabani.js';
-import { altLinkFinansOzeti, altLinkOyuncuListesi, ortakGunlukGeliriGuncelle } from '../servisler/oyuncuEslesme.js';
+import {
+  altLinkFinansOzeti,
+  altLinkOyuncuListesi,
+  ortakGunlukGeliriGuncelle,
+  oyunculariIcinGelirleriGuncelle,
+} from '../servisler/oyuncuEslesme.js';
 import { testVeritabaniAc } from '../../test/testVeritabani.js';
 
 /**
@@ -667,6 +672,87 @@ varsaCalistir('depo denkligi', () => {
       const sonuc = await ortakGunlukGeliriGuncelle(KIRACI, '2026-08-07', 'ortak-bos', 'ORTAK-BOS', new Date());
       expect(sonuc).toEqual({ yazildiMi: false, yatirim: 0, cekim: 0 });
       expect(await vt.select().from(olcumTablosu)).toHaveLength(0);
+    });
+  });
+
+  /**
+   * Kullanıcı adından toplu affiliate geçişi sonrası, transfer edilen
+   * oyuncunun ÖNCEDEN birikmiş webhook günlerinin hedef ortağa hemen
+   * yansıması bu fonksiyona dayanıyor (bkz. `topluAtama.ts`).
+   */
+  describe('oyunculariIcinGelirleriGuncelle', () => {
+    it('transfer edilen oyuncunun onceki gunlerini YENI ortaga yazar', async () => {
+      const vt = veritabani()!;
+      // Oyuncu simdi 'ortak-yeni'ye ait ama 3 gun once (eski ortaktayken
+      // ya da hic eslesme yokken) webhook verisi birikmis.
+      await vt.insert(eslesmeTablosu).values({
+        kiraci: KIRACI, lynonOyuncuId: 'tasinan-1', ortakId: 'ortak-yeni', ortakAnahtari: 'ORTAK-YENI',
+        clickId: null, medyaId: null, altLinkId: null, alt: {}, kaynak: 'elle',
+        olusturuldu: new Date('2026-08-08T00:00:00Z'),
+      });
+      await vt.insert(gunlukTablosu).values([
+        { kiraci: KIRACI, gun: '2026-08-01', oyuncuId: 'tasinan-1', yatirim: 200, cekim: 0, bahis: 0, kazanc: 0, olaySayisi: 1, guncellendi: new Date() },
+        { kiraci: KIRACI, gun: '2026-08-02', oyuncuId: 'tasinan-1', yatirim: 0, cekim: 50, bahis: 0, kazanc: 0, olaySayisi: 1, guncellendi: new Date() },
+      ]);
+
+      const sonuc = await oyunculariIcinGelirleriGuncelle(KIRACI, ['tasinan-1'], new Date());
+      expect(sonuc).toEqual({ guncellenenOrtakGunu: 2 });
+
+      const satirlar = await vt.select().from(olcumTablosu);
+      expect(satirlar.map((s) => [s.gun, s.ortakAnahtari, s.yatirim, s.cekim]).sort()).toEqual([
+        ['2026-08-01', 'ORTAK-YENI', 200, 0],
+        ['2026-08-02', 'ORTAK-YENI', 0, 50],
+      ]);
+    });
+
+    it('esleseni olmayan oyuncu icin bir sey yazmaz', async () => {
+      const vt = veritabani()!;
+      await vt.insert(gunlukTablosu).values({
+        kiraci: KIRACI, gun: '2026-08-03', oyuncuId: 'yetim-1', yatirim: 500, cekim: 0, bahis: 0, kazanc: 0, olaySayisi: 1, guncellendi: new Date(),
+      });
+
+      const sonuc = await oyunculariIcinGelirleriGuncelle(KIRACI, ['yetim-1'], new Date());
+      expect(sonuc).toEqual({ guncellenenOrtakGunu: 0 });
+      expect(await vt.select().from(olcumTablosu)).toHaveLength(0);
+    });
+
+    it('webhook gunu hic yoksa bos doner', async () => {
+      const vt = veritabani()!;
+      await vt.insert(eslesmeTablosu).values({
+        kiraci: KIRACI, lynonOyuncuId: 'yeni-uye-1', ortakId: 'ortak-taze', ortakAnahtari: 'ORTAK-TAZE',
+        clickId: null, medyaId: null, altLinkId: null, alt: {}, kaynak: 'elle',
+        olusturuldu: new Date(),
+      });
+
+      const sonuc = await oyunculariIcinGelirleriGuncelle(KIRACI, ['yeni-uye-1'], new Date());
+      expect(sonuc).toEqual({ guncellenenOrtakGunu: 0 });
+      expect(await vt.select().from(olcumTablosu)).toHaveLength(0);
+    });
+
+    it('ayni gunde birden fazla transfer edilen oyuncuyu TEK satirda toplar', async () => {
+      const vt = veritabani()!;
+      await vt.insert(eslesmeTablosu).values([
+        {
+          kiraci: KIRACI, lynonOyuncuId: 'coklu-1', ortakId: 'ortak-coklu', ortakAnahtari: 'ORTAK-COKLU',
+          clickId: null, medyaId: null, altLinkId: null, alt: {}, kaynak: 'elle', olusturuldu: new Date(),
+        },
+        {
+          kiraci: KIRACI, lynonOyuncuId: 'coklu-2', ortakId: 'ortak-coklu', ortakAnahtari: 'ORTAK-COKLU',
+          clickId: null, medyaId: null, altLinkId: null, alt: {}, kaynak: 'elle', olusturuldu: new Date(),
+        },
+      ]);
+      await vt.insert(gunlukTablosu).values([
+        { kiraci: KIRACI, gun: '2026-08-04', oyuncuId: 'coklu-1', yatirim: 100, cekim: 0, bahis: 0, kazanc: 0, olaySayisi: 1, guncellendi: new Date() },
+        { kiraci: KIRACI, gun: '2026-08-04', oyuncuId: 'coklu-2', yatirim: 50, cekim: 0, bahis: 0, kazanc: 0, olaySayisi: 1, guncellendi: new Date() },
+      ]);
+
+      const sonuc = await oyunculariIcinGelirleriGuncelle(KIRACI, ['coklu-1', 'coklu-2'], new Date());
+      // Ayni (gun, ortak) cifti tekillestirildi: 2 oyuncu ama 1 guncelleme.
+      expect(sonuc).toEqual({ guncellenenOrtakGunu: 1 });
+
+      const satirlar = await vt.select().from(olcumTablosu);
+      expect(satirlar).toHaveLength(1);
+      expect(satirlar[0]).toMatchObject({ gun: '2026-08-04', ortakAnahtari: 'ORTAK-COKLU', yatirim: 150, oyuncuSayisi: 2 });
     });
   });
 });

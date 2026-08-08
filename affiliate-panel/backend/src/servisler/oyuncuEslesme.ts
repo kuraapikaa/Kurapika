@@ -1,4 +1,4 @@
-import { and, desc, eq, isNotNull, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNotNull, sql } from 'drizzle-orm';
 import {
   eslesmeDeposu,
   yeniCakismaId,
@@ -437,6 +437,75 @@ export async function ortakGunlukGeliriGuncelle(
   }], simdi);
 
   return { yazildiMi: yazilan > 0, yatirim, cekim };
+}
+
+/**
+ * Verilen oyuncuların TÜM webhook günlerini güncel ortaklarına göre
+ * yeniden hesaplayıp yazar.
+ *
+ * ── Neden gerekli ──
+ *
+ * `ortakGunlukGeliriGuncelle` bir (gün, ortak) çifti için çalışıyor;
+ * `olayIsleyici.ts` bunu her webhook turunun SONUNDA, o turda dokunulan
+ * günler için çağırıyor. Ama kullanıcı adından toplu affiliate geçişi
+ * (`topluAtama.ts`) farklı bir tetikleyici: oyuncu YENİ bir ortağa
+ * bağlandığında, o oyuncunun DAHA ÖNCE webhook'tan biriken günleri hâlâ
+ * ESKİ ortağın (ya da hiç kimsenin) özetinde duruyor olabilir. Geçiş
+ * anında bu fonksiyon çağrılmazsa, hedef ortak transfer edilen oyuncunun
+ * geçmiş verisini ancak bir sonraki webhook olayına ya da elle
+ * "Geçmiş GGR'yi doldur" çalıştırmasına kadar hiç göremez.
+ *
+ * ── Neden `oyuncu_gunluk`'tan, Lynon raporundan değil ──
+ *
+ * Bu, geçmişe dönük Lynon rapor taraması (`gecmisGGR.ts`) DEĞİL — o,
+ * dış bir API'ye oyuncu başına ayrı çağrı gerektirdiği için toplu
+ * geçişin kendi isteğini yavaşlatır/zaman aşımına sokar. Bu fonksiyon
+ * yalnızca PANELİN ZATEN SAHİP OLDUĞU webhook verisini (varsa) hemen
+ * doğru ortağa yansıtıyor; Lynon'un geçmiş raporunu istemiyorsa admin
+ * ayrıca "Geçmiş GGR'yi doldur"u çalıştırabilir.
+ */
+export async function oyunculariIcinGelirleriGuncelle(
+  kiraci: string,
+  lynonOyuncuIdleri: string[],
+  simdi = new Date(),
+): Promise<{ guncellenenOrtakGunu: number }> {
+  const vt = veritabani();
+  const oyuncuIdler = [...new Set(lynonOyuncuIdleri.map((id) => metin(id)).filter(Boolean))];
+  if (!vt || oyuncuIdler.length === 0) return { guncellenenOrtakGunu: 0 };
+
+  const gunOyuncuSatirlari = await vt
+    .selectDistinct({ gun: oyuncuGunluk.gun, oyuncuId: oyuncuGunluk.oyuncuId })
+    .from(oyuncuGunluk)
+    .where(and(eq(oyuncuGunluk.kiraci, kiraci), inArray(oyuncuGunluk.oyuncuId, oyuncuIdler)));
+  if (gunOyuncuSatirlari.length === 0) return { guncellenenOrtakGunu: 0 };
+
+  const eslesmeler = await vt
+    .select({
+      lynonOyuncuId: oyuncuEslesmeleri.lynonOyuncuId,
+      ortakId: oyuncuEslesmeleri.ortakId,
+      ortakAnahtari: oyuncuEslesmeleri.ortakAnahtari,
+    })
+    .from(oyuncuEslesmeleri)
+    .where(and(eq(oyuncuEslesmeleri.kiraci, kiraci), inArray(oyuncuEslesmeleri.lynonOyuncuId, oyuncuIdler)));
+  const oyuncudanOrtaga = new Map(eslesmeler.map((e) => [e.lynonOyuncuId, e]));
+
+  // Ayni (gun, ortak) cifti birden fazla transfer edilen oyuncu
+  // uzerinden tekrar tetiklenebilir; her biri zaten TUM ortagi yeniden
+  // hesapliyor, tekillestirmek gereksiz tekrari onluyor.
+  const gunOrtakCiftleri = new Map<string, { gun: string; ortakId: string; ortakAnahtari: string }>();
+  for (const { gun, oyuncuId } of gunOyuncuSatirlari) {
+    const eslesme = oyuncudanOrtaga.get(oyuncuId);
+    if (!eslesme) continue;
+    gunOrtakCiftleri.set(`${gun}|${eslesme.ortakId}`, { gun, ortakId: eslesme.ortakId, ortakAnahtari: eslesme.ortakAnahtari });
+  }
+
+  let guncellenenOrtakGunu = 0;
+  for (const { gun, ortakId, ortakAnahtari } of gunOrtakCiftleri.values()) {
+    // Tek bir (gun, ortak) hesabindaki hata digerlerini durdurmamali.
+    await ortakGunlukGeliriGuncelle(kiraci, gun, ortakId, ortakAnahtari, simdi).catch(() => undefined);
+    guncellenenOrtakGunu += 1;
+  }
+  return { guncellenenOrtakGunu };
 }
 
 export type { EslesmeCakismasi, EslesmeKaynagi, GunlukSayi, OyuncuEslesmesi };
