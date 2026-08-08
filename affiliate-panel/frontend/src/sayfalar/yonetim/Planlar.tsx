@@ -7,9 +7,18 @@ type Kademe = Plan['gelirKademeleri'][number];
 
 const TUR_ETIKETI = { 'gelir-payi': 'Gelir payı', cpa: 'CPA', hibrit: 'Hibrit' } as const;
 
+/**
+ * İşletme payı varsayılanı 0.
+ *
+ * Önceden %20 hazır geliyordu. Bu alan ortağın payının hesaplandığı
+ * TABANI küçültüyor; hazır gelen bir değer, kimsenin karar vermediği
+ * bir kesintinin sessizce uygulanması demek. Sıfırdan başlayıp bilinçli
+ * girilmesi doğru.
+ */
 const BOS_PLAN = {
   ad: '', tur: 'gelir-payi', gelirPayiYuzde: '30', cpaTutari: '0',
-  yonetimGideriYuzde: '20', asgariOdeme: '0', negatifDevir: true, varsayilan: false,
+  yonetimGideriYuzde: '0', yonetimGideriSabit: '0',
+  asgariOdeme: '0', negatifDevir: true, varsayilan: false,
   // "esik:yuzde" ciftleri, satir satir. Bos birakilirsa duz oran gecerli.
   kademeler: '', kademeModu: 'topluca',
 };
@@ -128,7 +137,14 @@ export function Planlar() {
             deger={form.yonetimGideriYuzde}
             degisti={(v) => setForm({ ...form, yonetimGideriYuzde: v })}
             tip="number"
-            ipucu="Brütten düşülüp net gelir bulunur."
+            ipucu="KENDİ giderleriniz (ödeme/oyun sağlayıcı payı). Brütten düşülür, kalan üzerinden ortak payı hesaplanır. Backoffice sizden ücret almıyorsa 0 bırakın."
+          />
+          <Alan
+            etiket="İşletme payı (sabit)"
+            deger={form.yonetimGideriSabit}
+            degisti={(v) => setForm({ ...form, yonetimGideriSabit: v })}
+            tip="number"
+            ipucu="Dönem başına sabit gider. Brüt geliri aşamaz: gelirin olmadığı ay ortağı borçlu çıkarmaz."
           />
           <Alan
             etiket="Gelir payı %"
@@ -187,6 +203,7 @@ export function Planlar() {
                 gelirPayiYuzde: Number(form.gelirPayiYuzde),
                 cpaTutari: Number(form.cpaTutari),
                 yonetimGideriYuzde: Number(form.yonetimGideriYuzde),
+                yonetimGideriSabit: Number(form.yonetimGideriSabit),
                 asgariOdeme: Number(form.asgariOdeme),
                 gelirKademeleri: kademeleriCoz(form.kademeler),
                 kademeModu: form.kademeModu,
@@ -215,7 +232,12 @@ export function Planlar() {
                 <Hucre>{TUR_ETIKETI[p.tur]}</Hucre>
                 <Hucre><span className="text-xs">{kademeOzeti(p)}</span></Hucre>
                 <Hucre sagda>{paraBicimi(p.cpaTutari)}</Hucre>
-                <Hucre sagda>%{p.yonetimGideriYuzde}</Hucre>
+                <Hucre sagda>
+                  %{p.yonetimGideriYuzde}
+                  {p.yonetimGideriSabit > 0 && (
+                    <span className="text-xs"> + {paraBicimi(p.yonetimGideriSabit)}</span>
+                  )}
+                </Hucre>
                 <Hucre sagda>{paraBicimi(p.asgariOdeme)}</Hucre>
                 <Hucre>{p.negatifDevir ? 'Açık' : 'Kapalı'}</Hucre>
                 <Hucre>
