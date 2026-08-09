@@ -311,6 +311,7 @@ varsaCalistir('depo denkligi', () => {
       alt: {},
       kaynak: 'kayit',
       olusturuldu: '2026-08-01T00:00:00.000Z',
+      kayitTarihi: null,
       ...ek,
     });
 
@@ -585,8 +586,8 @@ varsaCalistir('depo denkligi', () => {
       const liste = await altLinkOyuncuListesi(KIRACI, 'link-liste');
       // En yeni once.
       expect(liste).toEqual([
-        { lynonOyuncuId: 'p11', kullaniciAdi: null, yatirim: 0, cekim: 0, olusturuldu: '2026-08-02T10:00:00.000Z' },
-        { lynonOyuncuId: 'p10', kullaniciAdi: 'ahmet01', yatirim: 300, cekim: 50, olusturuldu: '2026-08-01T10:00:00.000Z' },
+        { lynonOyuncuId: 'p11', kullaniciAdi: null, yatirim: 0, cekim: 0, olusturuldu: '2026-08-02T10:00:00.000Z', kayitTarihi: null },
+        { lynonOyuncuId: 'p10', kullaniciAdi: 'ahmet01', yatirim: 300, cekim: 50, olusturuldu: '2026-08-01T10:00:00.000Z', kayitTarihi: null },
       ]);
     });
 
@@ -609,9 +610,11 @@ varsaCalistir('depo denkligi', () => {
       await vt.insert(eslesmeTablosu).values([
         {
           // Toplu gecisle tasinan oyuncu: altLinkId YOK, tiklama gecmisi yok.
+          // kayitTarihi, Lynon'dan bulunan GERCEK kayit ani -- `olusturuldu`
+          // (gecis anindan) FARKLI olmali; ekran bunu tercih etmeli.
           kiraci: KIRACI, lynonOyuncuId: 'p20', ortakId: 'ortak-b', ortakAnahtari: 'ORTAK-B',
           clickId: null, medyaId: null, altLinkId: null, kullaniciAdi: 'gecis-kullanicisi', alt: {},
-          kaynak: 'elle', olusturuldu: new Date('2026-08-03T10:00:00Z'),
+          kaynak: 'elle', olusturuldu: new Date('2026-08-03T10:00:00Z'), kayitTarihi: new Date('2019-05-01T00:00:00Z'),
         },
         {
           // Organik gelen oyuncu: altLinkId VAR.
@@ -633,8 +636,14 @@ varsaCalistir('depo denkligi', () => {
       const liste = await ortakOyuncuListesi(KIRACI, 'ortak-b');
       // En yeni once.
       expect(liste).toEqual([
-        { lynonOyuncuId: 'p20', kullaniciAdi: 'gecis-kullanicisi', yatirim: 500, cekim: 120, olusturuldu: '2026-08-03T10:00:00.000Z' },
-        { lynonOyuncuId: 'p21', kullaniciAdi: 'organik01', yatirim: 0, cekim: 0, olusturuldu: '2026-08-01T10:00:00.000Z' },
+        {
+          lynonOyuncuId: 'p20', kullaniciAdi: 'gecis-kullanicisi', yatirim: 500, cekim: 120,
+          olusturuldu: '2026-08-03T10:00:00.000Z', kayitTarihi: '2019-05-01T00:00:00.000Z',
+        },
+        {
+          lynonOyuncuId: 'p21', kullaniciAdi: 'organik01', yatirim: 0, cekim: 0,
+          olusturuldu: '2026-08-01T10:00:00.000Z', kayitTarihi: null,
+        },
       ]);
     });
 

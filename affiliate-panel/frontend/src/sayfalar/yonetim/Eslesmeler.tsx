@@ -95,7 +95,13 @@ export function Eslesmeler() {
         // da alt kanaldan geldigi bilinmiyor.
         : <Rozet metin="Yalnızca ref" renk="notr" />),
     },
-    { ad: 'zaman', etiket: 'Kayıt', deger: (e) => e.olusturuldu, hucre: (e) => gunBicimi(e.olusturuldu) },
+    {
+      // Toplu gecişte `olusturuldu` admin'in geçişi yaptığı andır, oyuncunun
+      // Lynon'a kaydolduğu an DEĞİL; `kayitTarihi` varsa o gerçek anı taşır.
+      ad: 'zaman', etiket: 'Kayıt',
+      deger: (e) => e.kayitTarihi ?? e.olusturuldu,
+      hucre: (e) => gunBicimi(e.kayitTarihi ?? e.olusturuldu),
+    },
   ];
 
   const cakismaSutunlari: Array<Sutun<CakismaGorunumu>> = [

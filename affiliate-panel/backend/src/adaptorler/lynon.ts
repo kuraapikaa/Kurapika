@@ -681,7 +681,7 @@ class LynonAdaptoru implements BackofficeAdaptoru {
    * doğrulanıyor: farklı bir Lynon sitesindeki aynı kullanıcı adı bu
    * tenant'ın oyuncusu SAYILMAZ.
    */
-  async oyuncuAra(kullaniciAdi: string): Promise<{ oyuncuId: string; kullaniciAdi: string } | null> {
+  async oyuncuAra(kullaniciAdi: string): Promise<{ oyuncuId: string; kullaniciAdi: string; kayitTarihi: string | null } | null> {
     const temiz = String(kullaniciAdi ?? '').trim();
     if (!temiz) return null;
 
@@ -702,7 +702,21 @@ class LynonAdaptoru implements BackofficeAdaptoru {
 
     const oyuncuId = ilkDolu(eslesen.userId, eslesen.id, eslesen.playerId, eslesen.Id);
     if (!oyuncuId) return null;
-    return { oyuncuId, kullaniciAdi: temiz };
+
+    // Alan adı DOGRULANMAMIS -- 2.5'teki rapor tutarsizligiyla ayni sebep:
+    // resmi bir sema yok, gozlemlenen adaylar deneniyor. Yanlissa (ya da
+    // hicbiri tutmuyorsa) sadece kayitTarihi null kalir, akis bozulmaz --
+    // cagiran taraf zaten kendi eslesme kaydinin olusturulma anina duser.
+    const hamTarih = ilkDolu(
+      eslesen.registrationDate, eslesen.RegistrationDate, eslesen.regDate, eslesen.RegDate,
+      eslesen.registerDate, eslesen.RegisterDate, eslesen.createDate, eslesen.CreateDate,
+      eslesen.creationDate, eslesen.CreationDate, eslesen.registeredAt, eslesen.RegisteredAt,
+      eslesen.signUpDate, eslesen.SignUpDate,
+    );
+    const ayrisan = hamTarih ? new Date(hamTarih) : null;
+    const kayitTarihi = ayrisan && !Number.isNaN(ayrisan.getTime()) ? ayrisan.toISOString() : null;
+
+    return { oyuncuId, kullaniciAdi: temiz, kayitTarihi };
   }
 }
 

@@ -302,6 +302,34 @@ describe('oyuncu eslesmesi', () => {
       expect(sonuc.eslesme.kullaniciAdi).toBe('korunan-ad');
     });
 
+    it('kayit tarihi verilirse kaydeder (gecis aninin UZERINE yazmaz)', async () => {
+      const k = kiraci();
+      await onayliOrtak(k, 'ORT1');
+
+      const sonuc = await oyuncuyuYenidenAta(k, {
+        lynonOyuncuId: '80009', ortakAnahtari: 'ORT1', kayitTarihi: '2019-05-01T00:00:00.000Z',
+      });
+
+      expect(sonuc.eslesme.kayitTarihi).toBe('2019-05-01T00:00:00.000Z');
+      expect(sonuc.eslesme.olusturuldu).not.toBe('2019-05-01T00:00:00.000Z');
+      expect(await eslesmeBul(k, '80009')).toMatchObject({ kayitTarihi: '2019-05-01T00:00:00.000Z' });
+    });
+
+    /** kullanici adindaki ayni korunma kurali: adaptor bu turda tarihi bulamadiysa oncekini SILME. */
+    it('kayit tarihi verilmezse mevcut olani KORUR', async () => {
+      const k = kiraci();
+      const eski = await onayliOrtak(k, 'ORT1', 'Eski');
+      await onayliOrtak(k, 'ORT2', 'Yeni');
+      await oyuncuyuYenidenAta(k, {
+        lynonOyuncuId: '80010', ortakAnahtari: 'ORT1', kayitTarihi: '2018-01-01T00:00:00.000Z',
+      });
+
+      const sonuc = await oyuncuyuYenidenAta(k, { lynonOyuncuId: '80010', ortakAnahtari: 'ORT2' });
+
+      expect(sonuc.eslesme.ortakId).not.toBe(eski.id);
+      expect(sonuc.eslesme.kayitTarihi).toBe('2018-01-01T00:00:00.000Z');
+    });
+
     it('bilinmeyen ortak anahtari reddedilir', async () => {
       await expect(oyuncuyuYenidenAta(kiraci(), { lynonOyuncuId: '80006', ortakAnahtari: 'YOK' }))
         .rejects.toThrow(/bulunamadı/i);
