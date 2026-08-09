@@ -1,11 +1,13 @@
 import { randomUUID } from 'crypto';
 import { describe, expect, it } from 'vitest';
+import type { BackofficeAdaptoru } from '../adaptorler/tur.js';
 import {
   cakismalariListele,
   eslesmeBul,
   eslesmeleriListele,
   oyuncuyuEslestir,
   oyuncuyuYenidenAta,
+  varsayilanEslesmeleriDagit,
 } from './oyuncuEslesme.js';
 import { ortakGuncelle, ortakOlustur } from './ortaklar.js';
 import { tiklamaKaydet } from './tiklama.js';
@@ -376,5 +378,141 @@ describe('oyuncu eslesmesi', () => {
     // farkli oyuncu.
     const digeri = await oyuncuyuEslestir(iki, { lynonOyuncuId: '777', ref: 'ORT1' });
     expect(digeri.durum).toBe('olusturuldu');
+  });
+
+  describe('varsayilanEslesmeleriDagit', () => {
+    /** `oyuncular`da olmayan bir ad/oyuncuId `null` döner -- gerçek Lynon aramasıyla aynı. */
+    function sahteAramaAdaptoru(oyuncular: Record<string, string>): BackofficeAdaptoru {
+      return {
+        tanimAdi: 'sahte',
+        async dogrula() {
+          return { baglandi: true, mesaj: 'ok' };
+        },
+        async gunuCek() {
+          return [];
+        },
+        async oyuncuAra(kullaniciAdi: string) {
+          const oyuncuId = oyuncular[kullaniciAdi.toLocaleLowerCase('tr-TR')];
+          if (!oyuncuId) return null;
+          return { oyuncuId, kullaniciAdi, kayitTarihi: null };
+        },
+      };
+    }
+
+    it('kullanici adi TEK bir baglantida bulunursa oraya tasir', async () => {
+      const k = kiraci();
+      const ortak = await onayliOrtak(k, 'ORT1');
+      await oyuncuyuYenidenAta(k, {
+        baglantiId: 'varsayilan', lynonOyuncuId: '50001', ortakAnahtari: 'ORT1', kullaniciAdi: 'gocOyuncusu',
+      });
+
+      const adaptorlar: Record<string, BackofficeAdaptoru> = {
+        a: sahteAramaAdaptoru({ gocoyuncusu: '50001' }),
+        b: sahteAramaAdaptoru({}),
+      };
+      const sonuc = await varsayilanEslesmeleriDagit(
+        k, [{ id: 'a', ad: 'Site A' }, { id: 'b', ad: 'Site B' }], async (id) => adaptorlar[id],
+      );
+
+      expect(sonuc.incelenen).toBe(1);
+      expect(sonuc.tasinan).toEqual([{ lynonOyuncuId: '50001', kullaniciAdi: 'gocOyuncusu', baglantiAdi: 'Site A' }]);
+      expect(sonuc.belirsiz).toEqual([]);
+      expect(await eslesmeBul(k, '50001', 'a')).toMatchObject({ ortakId: ortak.id, baglantiId: 'a' });
+      expect(await eslesmeBul(k, '50001', 'varsayilan')).toBeNull();
+    });
+
+    it('hicbir baglantida bulunamazsa dokunmaz, belirsiz listesine duser', async () => {
+      const k = kiraci();
+      await onayliOrtak(k, 'ORT1');
+      await oyuncuyuYenidenAta(k, {
+        baglantiId: 'varsayilan', lynonOyuncuId: '50002', ortakAnahtari: 'ORT1', kullaniciAdi: 'siliniOyuncu',
+      });
+
+      const adaptorlar: Record<string, BackofficeAdaptoru> = { a: sahteAramaAdaptoru({}), b: sahteAramaAdaptoru({}) };
+      const sonuc = await varsayilanEslesmeleriDagit(
+        k, [{ id: 'a', ad: 'Site A' }, { id: 'b', ad: 'Site B' }], async (id) => adaptorlar[id],
+      );
+
+      expect(sonuc.tasinan).toEqual([]);
+      expect(sonuc.belirsiz).toEqual([{
+        lynonOyuncuId: '50002', kullaniciAdi: 'siliniOyuncu',
+        sebep: 'hiçbir aktif bağlantıda bu kullanıcı adı/ID eşleşmesi bulunamadı',
+      }]);
+      // Bulunamadi -- kayit oldugu gibi 'varsayilan'da kalir, TAHMIN edilip baska yere yazilmaz.
+      expect(await eslesmeBul(k, '50002', 'varsayilan')).toMatchObject({ baglantiId: 'varsayilan' });
+    });
+
+    it('birden fazla baglantida bulunursa (coliziyon) dokunmaz, belirsiz listesine duser', async () => {
+      const k = kiraci();
+      await onayliOrtak(k, 'ORT1');
+      await oyuncuyuYenidenAta(k, {
+        baglantiId: 'varsayilan', lynonOyuncuId: '50003', ortakAnahtari: 'ORT1', kullaniciAdi: 'ikiSiteliOyuncu',
+      });
+
+      const adaptorlar: Record<string, BackofficeAdaptoru> = {
+        a: sahteAramaAdaptoru({ ikisitelioyuncu: '50003' }),
+        b: sahteAramaAdaptoru({ ikisitelioyuncu: '50003' }),
+      };
+      const sonuc = await varsayilanEslesmeleriDagit(
+        k, [{ id: 'a', ad: 'Site A' }, { id: 'b', ad: 'Site B' }], async (id) => adaptorlar[id],
+      );
+
+      expect(sonuc.tasinan).toEqual([]);
+      expect(sonuc.belirsiz[0]).toMatchObject({ lynonOyuncuId: '50003', sebep: 'birden fazla bağlantıda bulundu: Site A, Site B' });
+      expect(await eslesmeBul(k, '50003', 'varsayilan')).toMatchObject({ baglantiId: 'varsayilan' });
+    });
+
+    it('kullanici adi bilinmiyorsa otomatik doğrulanamaz, dokunmaz', async () => {
+      const k = kiraci();
+      await onayliOrtak(k, 'ORT1');
+      // kullaniciAdi VERILMEDEN olusturulan bir eslesme -- eski webhook/S2S kayitlarinin cogunu temsil ediyor.
+      await oyuncuyuEslestir(k, { lynonOyuncuId: '50004', ref: 'ORT1' });
+
+      const adaptorlar: Record<string, BackofficeAdaptoru> = { a: sahteAramaAdaptoru({}) };
+      const sonuc = await varsayilanEslesmeleriDagit(k, [{ id: 'a', ad: 'Site A' }], async (id) => adaptorlar[id]);
+
+      expect(sonuc.tasinan).toEqual([]);
+      expect(sonuc.belirsiz).toEqual([{
+        lynonOyuncuId: '50004', kullaniciAdi: null, sebep: 'kullanıcı adı bilinmiyor, otomatik doğrulanamadı',
+      }]);
+    });
+
+    it('zaten AKTIF bir baglantiya etiketli eslesmelere dokunmaz (orphan degil)', async () => {
+      const k = kiraci();
+      await onayliOrtak(k, 'ORT1');
+      await oyuncuyuYenidenAta(k, {
+        baglantiId: 'a', lynonOyuncuId: '50005', ortakAnahtari: 'ORT1', kullaniciAdi: 'zatenDogruSitede',
+      });
+
+      const adaptorlar: Record<string, BackofficeAdaptoru> = { a: sahteAramaAdaptoru({ zatendogrusitede: '50005' }) };
+      const sonuc = await varsayilanEslesmeleriDagit(k, [{ id: 'a', ad: 'Site A' }], async (id) => adaptorlar[id]);
+
+      expect(sonuc.incelenen).toBe(0);
+      expect(sonuc.tasinan).toEqual([]);
+    });
+
+    it('hedefte zaten ayri bir kayit varsa tasimaz, belirsiz listesine duser', async () => {
+      const k = kiraci();
+      const a = await onayliOrtak(k, 'ORT1', 'Ortak A');
+      const b = await onayliOrtak(k, 'ORT2', 'Ortak B');
+      await oyuncuyuYenidenAta(k, {
+        baglantiId: 'varsayilan', lynonOyuncuId: '50006', ortakAnahtari: 'ORT1', kullaniciAdi: 'cakisanOyuncu',
+      });
+      // Hedef baglantida AYNI lynonOyuncuId'ye sahip, BASKA bir kayit zaten var.
+      await oyuncuyuYenidenAta(k, {
+        baglantiId: 'site-a', lynonOyuncuId: '50006', ortakAnahtari: 'ORT2', kullaniciAdi: 'cakisanOyuncu',
+      });
+
+      const adaptorlar: Record<string, BackofficeAdaptoru> = { 'site-a': sahteAramaAdaptoru({ cakisanoyuncu: '50006' }) };
+      const sonuc = await varsayilanEslesmeleriDagit(
+        k, [{ id: 'site-a', ad: 'Site A' }], async (id) => adaptorlar[id],
+      );
+
+      expect(sonuc.tasinan).toEqual([]);
+      expect(sonuc.belirsiz[0]).toMatchObject({ lynonOyuncuId: '50006', sebep: 'Site A altında zaten ayrı bir kayıt var' });
+      // Ikisi de yerinde kalir -- hicbiri EZILMEDI.
+      expect(await eslesmeBul(k, '50006', 'varsayilan')).toMatchObject({ ortakId: a.id });
+      expect(await eslesmeBul(k, '50006', 'site-a')).toMatchObject({ ortakId: b.id });
+    });
   });
 });

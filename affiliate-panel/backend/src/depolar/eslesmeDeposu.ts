@@ -81,6 +81,16 @@ export interface EslesmeDeposu {
    * davranışını birebir koruyor.
    */
   bul(kiraci: string, lynonOyuncuId: string, baglantiId?: string): Promise<OyuncuEslesmesi | null>;
+  /**
+   * Bir eşleşmenin `baglantiId`sini değiştirir; `lynonOyuncuId` aynı kalır.
+   * Çoklu bağlantıya geçmeden ÖNCE `'varsayilan'`a yazılmış kayıtları
+   * gerçek bağlantısına taşımak için (bkz. `oyuncuEslesme.ts` ·
+   * `varsayilanEslesmeleriDagit`). Hedefte ZATEN bir kayıt varsa (örn.
+   * admin aynı oyuncuyu ayrıca elle de atadıysa) hiçbir şey yapmaz ve
+   * `false` döner — üzerine yazmak burada da yasak, kaynak kayıt
+   * taşınmadan olduğu gibi kalır.
+   */
+  baglantiDegistir(kiraci: string, eskiBaglantiId: string, lynonOyuncuId: string, yeniBaglantiId: string): Promise<boolean>;
   listele(kiraci: string, sorgu: EslesmeSorgusu): Promise<OyuncuEslesmesi[]>;
   cakismaYaz(kiraci: string, cakisma: EslesmeCakismasi): Promise<void>;
   cakismalariListele(kiraci: string, limit: number): Promise<EslesmeCakismasi[]>;
@@ -233,6 +243,21 @@ export function postgresEslesmeDeposu(): EslesmeDeposu {
 
     bul,
 
+    async baglantiDegistir(kiraci, eskiBaglantiId, lynonOyuncuId, yeniBaglantiId) {
+      const hedefte = await bul(kiraci, lynonOyuncuId, yeniBaglantiId);
+      if (hedefte) return false;
+      const guncellenen = await vtZorunlu()
+        .update(oyuncuEslesmeleri)
+        .set({ baglantiId: yeniBaglantiId })
+        .where(and(
+          eq(oyuncuEslesmeleri.kiraci, kiraci),
+          eq(oyuncuEslesmeleri.baglantiId, eskiBaglantiId),
+          eq(oyuncuEslesmeleri.lynonOyuncuId, lynonOyuncuId),
+        ))
+        .returning({ lynonOyuncuId: oyuncuEslesmeleri.lynonOyuncuId });
+      return guncellenen.length > 0;
+    },
+
     async listele(kiraci, sorgu) {
       const kosullar = [eq(oyuncuEslesmeleri.kiraci, kiraci)];
       if (sorgu.ortakId) kosullar.push(eq(oyuncuEslesmeleri.ortakId, sorgu.ortakId));
@@ -341,6 +366,21 @@ export function belgeEslesmeDeposu(): EslesmeDeposu {
     async bul(kiraci, lynonOyuncuId, baglantiId = VARSAYILAN_BAGLANTI_ID) {
       const belge = await oku<EslesmeBelgesi>(kiraci, ALAN, cozEslesme);
       return belge.eslesmeler.find((e) => e.lynonOyuncuId === lynonOyuncuId && e.baglantiId === baglantiId) ?? null;
+    },
+
+    async baglantiDegistir(kiraci, eskiBaglantiId, lynonOyuncuId, yeniBaglantiId) {
+      return degistir<EslesmeBelgesi, boolean>(kiraci, ALAN, cozEslesme, (belge) => {
+        const hedefVarMi = belge.eslesmeler.some(
+          (e) => e.lynonOyuncuId === lynonOyuncuId && e.baglantiId === yeniBaglantiId,
+        );
+        if (hedefVarMi) return false;
+        const index = belge.eslesmeler.findIndex(
+          (e) => e.lynonOyuncuId === lynonOyuncuId && e.baglantiId === eskiBaglantiId,
+        );
+        if (index < 0) return false;
+        belge.eslesmeler[index] = { ...belge.eslesmeler[index], baglantiId: yeniBaglantiId };
+        return true;
+      });
     },
 
     async listele(kiraci, sorgu) {

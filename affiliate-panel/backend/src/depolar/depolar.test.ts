@@ -373,6 +373,46 @@ varsaCalistir('depo denkligi', () => {
       });
     });
 
+    describe('baglantiDegistir', () => {
+      it('baglantiId degistirir, lynonOyuncuId ayni kalir', async () => {
+        const sonuc = await ikisindeDe(eslesmeUygulamalari, async (depo: EslesmeDeposu) => {
+          await depo.ekleYokSayarak(KIRACI, eslesme('p20', 'ortak-a'));
+          const tasindiMi = await depo.baglantiDegistir(KIRACI, 'varsayilan', 'p20', 'site-a');
+          return {
+            tasindiMi,
+            eski: await depo.bul(KIRACI, 'p20', 'varsayilan'),
+            yeni: await depo.bul(KIRACI, 'p20', 'site-a'),
+          };
+        });
+        expect(sonuc.tasindiMi).toBe(true);
+        expect(sonuc.eski).toBeNull();
+        expect(sonuc.yeni).toMatchObject({ ortakId: 'ortak-a', baglantiId: 'site-a' });
+      });
+
+      it('hedefte zaten kayit varsa UZERINE YAZMAZ, false doner', async () => {
+        const sonuc = await ikisindeDe(eslesmeUygulamalari, async (depo: EslesmeDeposu) => {
+          await depo.ekleYokSayarak(KIRACI, eslesme('p21', 'ortak-a'));
+          await depo.zorlaAta(KIRACI, eslesme('p21', 'ortak-b', { baglantiId: 'site-a' }));
+          const tasindiMi = await depo.baglantiDegistir(KIRACI, 'varsayilan', 'p21', 'site-a');
+          return {
+            tasindiMi,
+            eski: await depo.bul(KIRACI, 'p21', 'varsayilan'),
+            hedef: await depo.bul(KIRACI, 'p21', 'site-a'),
+          };
+        });
+        expect(sonuc.tasindiMi).toBe(false);
+        // Ikisi de degismeden kalir -- hicbiri EZILMEDI.
+        expect(sonuc.eski).toMatchObject({ ortakId: 'ortak-a' });
+        expect(sonuc.hedef).toMatchObject({ ortakId: 'ortak-b' });
+      });
+
+      it('kaynakta kayit yoksa false doner', async () => {
+        const sonuc = await ikisindeDe(eslesmeUygulamalari, async (depo: EslesmeDeposu) =>
+          depo.baglantiDegistir(KIRACI, 'varsayilan', 'yok-boyle-bir-id', 'site-a'));
+        expect(sonuc).toBe(false);
+      });
+    });
+
     it('ortaga gore suzer, en yeni once', async () => {
       const sonuc = await ikisindeDe(eslesmeUygulamalari, async (depo: EslesmeDeposu) => {
         await depo.ekleYokSayarak(KIRACI, eslesme('p1', 'ortak-a', { olusturuldu: '2026-08-01T00:00:00.000Z' }));

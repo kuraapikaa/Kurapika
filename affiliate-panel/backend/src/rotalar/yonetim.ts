@@ -51,7 +51,7 @@ import {
   ortakSil,
 } from '../servisler/ortaklar.js';
 import { otoBonusAyarla, otoBonusDurumu } from '../servisler/otoBonus.js';
-import { cakismalariListele, eslesmeleriListele } from '../servisler/oyuncuEslesme.js';
+import { cakismalariListele, eslesmeleriListele, varsayilanEslesmeleriDagit } from '../servisler/oyuncuEslesme.js';
 import { topluAtamaYap, TOPLU_ATAMA_LIMITI } from '../servisler/topluAtama.js';
 import {
   postbackAyarla,
@@ -533,6 +533,29 @@ export async function yonetimRotalari(app: FastifyInstance): Promise<void> {
   app.get('/oyuncu-eslesmeleri/toplu-atama-siniri', async (): Promise<YonetimUclari['/oyuncu-eslesmeleri/toplu-atama-siniri']> => ({
     limit: TOPLU_ATAMA_LIMITI,
   }));
+
+  /**
+   * ÇOKLU BAĞLANTI GÖÇÜ.
+   *
+   * Çoklu bağlantıya geçmeden önce yazılmış eşleşmeler `'varsayilan'`
+   * taşıyor; o kimlik artık hiçbir aktif bağlantıyla eşleşmiyorsa bu
+   * oyuncular geçmiş GGR taramasında sonsuza dek atlanır (bkz.
+   * `oyuncuEslesme.ts` · `varsayilanEslesmeleriDagit`). Bu uç, her
+   * orphan kaydı aktif bağlantıların KENDİ backoffice'inde arayarak
+   * doğrulayıp doğru bağlantıya taşır -- tahmin etmez, bulamadığını
+   * ya da birden fazla yerde bulduğunu olduğu gibi bırakır.
+   */
+  app.post('/oyuncu-eslesmeleri/varsayilan-dagit', async (istek): Promise<YonetimUclari['/oyuncu-eslesmeleri/varsayilan-dagit']> => {
+    const baglantilar = await aktifBaglantilar(istek.kiraci);
+    if (baglantilar.length === 0) {
+      throw new AdaptorHatasi('Backoffice bağlantısı kurulu değil ya da pasif.', 409);
+    }
+    return varsayilanEslesmeleriDagit(
+      istek.kiraci,
+      baglantilar.map((b) => ({ id: b.id, ad: b.ad })),
+      (baglantiId) => adaptorZorunlu(istek.kiraci, baglantiId),
+    );
+  });
 
   /**
    * S2S anahtarı üretir. Düz metin YALNIZCA burada, bir kez dönüyor;

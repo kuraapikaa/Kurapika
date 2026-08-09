@@ -22,6 +22,7 @@ import type {
   OrtakGorunumu,
   TopluAtamaSatiri,
   TopluAtamaSonucu,
+  VarsayilanGocSonucu,
   YonetimUclari,
 } from '@sunucu/sozlesme.js';
 
@@ -166,6 +167,8 @@ export function Eslesmeler() {
       </div>
 
       <TopluAtamaKarti ortaklar={ortaklarVeri.veri?.ortaklar ?? []} baglantilar={baglantilar} yenile={yenile} />
+
+      {cokluSite && <VarsayilanGocKarti yenile={yenile} />}
 
       <ShadCard>
         <CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">Kayıt bildirimi bağlantısı</CardTitle></CardHeader>
@@ -463,6 +466,84 @@ function TopluAtamaKarti(
             </Table>
           </div>
         )}
+      </CardContent>
+    </ShadCard>
+  );
+}
+
+/**
+ * ÇOKLU BAĞLANTI GÖÇÜ.
+ *
+ * Çoklu bağlantıya geçmeden önce yazılmış eşleşmeler "varsayılan"
+ * taşıyor -- bu kimlik artık hiçbir aktif bağlantıyla eşleşmediği için
+ * o oyuncular geçmiş GGR taramasında sonsuza dek atlanır. Bu kart, her
+ * kaydı kullanıcı adından aktif her bağlantının kendi backoffice'inde
+ * arayarak doğrulayıp doğru bağlantıya taşıyan tek seferlik bir bakım
+ * eylemi -- tahmin YOK: bulunamayan ya da birden fazla yerde bulunan
+ * kayıtlara dokunulmuyor, admin elle karar versin diye listeleniyor.
+ */
+function VarsayilanGocKarti({ yenile }: { yenile: () => void }) {
+  const [calisiyor, setCalisiyor] = useState(false);
+  const [hata, setHata] = useState<string | null>(null);
+  const [sonuc, setSonuc] = useState<VarsayilanGocSonucu | null>(null);
+
+  const calistir = async () => {
+    if (!window.confirm('Eski eşleşmeler taranıp doğru bağlantıya taşınsın mı? Yalnızca kullanıcı adı tek bir bağlantıda doğrulanan kayıtlar taşınır.')) return;
+    setCalisiyor(true);
+    setHata(null);
+    try {
+      setSonuc(await api.gonder<VarsayilanGocSonucu>('/api/yonetim/oyuncu-eslesmeleri/varsayilan-dagit', {}));
+      yenile();
+    } catch (h) {
+      setHata((h as Error).message);
+    } finally {
+      setCalisiyor(false);
+    }
+  };
+
+  return (
+    <ShadCard>
+      <CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">Eski eşleşmeleri gerçek bağlantılara dağıt</CardTitle></CardHeader>
+      <CardContent>
+        <p className="mb-3 text-sm text-muted-foreground">
+          Birden fazla bağlantıya geçmeden önce kaydedilmiş oyuncular hâlâ eski, artık hiçbir aktif
+          bağlantıyla eşleşmeyen bir kimlik taşıyabilir -- bu yüzden geçmiş GGR taraması onları hiç
+          bulamaz. Bu işlem her böyle kaydı, kullanıcı adını aktif her bağlantının kendi
+          backoffice'inde arayarak doğrulayıp doğru bağlantıya taşır. Bulunamayan ya da birden fazla
+          yerde bulunan kayıtlara <strong>dokunulmaz</strong> -- aşağıda listelenir, elle kontrol gerekir.
+        </p>
+
+        {hata && <p className="mb-3 text-sm text-destructive">{hata}</p>}
+
+        {sonuc && (
+          <div className="mb-3 space-y-3 text-sm">
+            <p className="text-muted-foreground">
+              {sonuc.incelenen} kayıt incelendi, <strong>{sonuc.tasinan.length}</strong> taşındı,{' '}
+              <strong>{sonuc.belirsiz.length}</strong> elle kontrol gerektiriyor.
+            </p>
+            {sonuc.tasinan.length > 0 && (
+              <ul className="list-disc space-y-0.5 pl-5 text-xs text-muted-foreground">
+                {sonuc.tasinan.map((t) => (
+                  <li key={t.lynonOyuncuId}>{t.kullaniciAdi ?? t.lynonOyuncuId} → {t.baglantiAdi}</li>
+                ))}
+              </ul>
+            )}
+            {sonuc.belirsiz.length > 0 && (
+              <div>
+                <p className="mb-1 text-xs font-medium text-amber-600 dark:text-amber-400">Elle kontrol gerekiyor:</p>
+                <ul className="list-disc space-y-0.5 pl-5 text-xs text-muted-foreground">
+                  {sonuc.belirsiz.map((b) => (
+                    <li key={b.lynonOyuncuId}>{b.kullaniciAdi ?? b.lynonOyuncuId}: {b.sebep}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+
+        <Button onClick={calistir} disabled={calisiyor}>
+          {calisiyor ? 'Dağıtılıyor…' : 'Eski eşleşmeleri dağıt'}
+        </Button>
       </CardContent>
     </ShadCard>
   );

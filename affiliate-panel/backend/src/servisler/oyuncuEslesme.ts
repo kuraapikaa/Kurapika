@@ -1,4 +1,5 @@
 import { and, desc, eq, inArray, isNotNull, sql } from 'drizzle-orm';
+import type { BackofficeAdaptoru } from '../adaptorler/tur.js';
 import {
   eslesmeDeposu,
   yeniCakismaId,
@@ -690,6 +691,109 @@ export async function oyunculariIcinGelirleriGuncelle(
     guncellenenOrtakGunu += 1;
   }
   return { guncellenenOrtakGunu };
+}
+
+export interface VarsayilanGocKaydi {
+  lynonOyuncuId: string;
+  kullaniciAdi: string | null;
+  baglantiAdi: string;
+}
+
+export interface VarsayilanGocBelirsiz {
+  lynonOyuncuId: string;
+  kullaniciAdi: string | null;
+  sebep: string;
+}
+
+export interface VarsayilanGocSonucu {
+  incelenen: number;
+  tasinan: VarsayilanGocKaydi[];
+  belirsiz: VarsayilanGocBelirsiz[];
+}
+
+/**
+ * ÇOKLU BAĞLANTI GÖÇÜ: `'varsayilan'`a etiketlenmiş eşleşmeleri gerçek
+ * bağlantılara dağıtır.
+ *
+ * Çoklu bağlantı özelliğinden ÖNCE (tek bağlantı döneminde) yazılmış
+ * her eşleşme `baglantiId: 'varsayilan'` taşıyor. Bir kiracı sonradan
+ * o tek bağlantıyı silip yerine adlandırılmış birden çok bağlantı
+ * (bkz. `adaptorler/kayit.ts`) kurarsa, `'varsayilan'` artık HİÇBİR
+ * aktif bağlantının gerçek kimliğiyle eşleşmez — o oyuncular geçmiş
+ * GGR taramasında sonsuza dek "bulunamadı" kalır (bkz. `gecmisGGR.ts`).
+ *
+ * Kör bir toplu taşıma (hepsini tek bağlantıya yaz) burada YANLIŞ:
+ * `lynonOyuncuId` yalnızca kendi sitesi içinde benzersiz, bu yüzden
+ * eski kayıtlar birden fazla siteden gelmiş olabilir (bkz. `sema.ts`).
+ * Bu fonksiyon her orphan kaydı, kullanıcı adını AKTİF HER bağlantının
+ * kendi backoffice'inde arayarak doğruluyor (`oyuncuAra`) — yalnızca
+ * TEK bir bağlantıda ve AYNI `lynonOyuncuId` ile bulunursa taşıyor.
+ * Kullanıcı adı bilinmiyorsa, birden fazla bağlantıda bulunursa ya da
+ * hiçbirinde bulunamazsa dokunmuyor: `belirsiz` listesine düşüyor,
+ * admin elle karar versin diye — burada tahmin YOK, tahmin parayı
+ * yanlış siteye/oyuncuya yazdırabilir.
+ */
+export async function varsayilanEslesmeleriDagit(
+  kiraci: string,
+  baglantilar: Array<{ id: string; ad: string }>,
+  adaptorGetir: (baglantiId: string) => Promise<BackofficeAdaptoru>,
+): Promise<VarsayilanGocSonucu> {
+  const sonuc: VarsayilanGocSonucu = { incelenen: 0, tasinan: [], belirsiz: [] };
+  if (baglantilar.length === 0) return sonuc;
+
+  const depo = eslesmeDeposu();
+  const tumEslesmeler = await depo.listele(kiraci, {});
+  const aktifIdler = new Set(baglantilar.map((b) => b.id));
+  const orphanlar = tumEslesmeler.filter((e) => !aktifIdler.has(e.baglantiId));
+  sonuc.incelenen = orphanlar.length;
+
+  for (const orphan of orphanlar) {
+    if (!orphan.kullaniciAdi) {
+      sonuc.belirsiz.push({
+        lynonOyuncuId: orphan.lynonOyuncuId, kullaniciAdi: null,
+        sebep: 'kullanıcı adı bilinmiyor, otomatik doğrulanamadı',
+      });
+      continue;
+    }
+
+    const bulunanlar: Array<{ id: string; ad: string }> = [];
+    for (const baglanti of baglantilar) {
+      try {
+        const adaptor = await adaptorGetir(baglanti.id);
+        if (!adaptor.oyuncuAra) continue;
+        const bulunan = await adaptor.oyuncuAra(orphan.kullaniciAdi);
+        if (bulunan && bulunan.oyuncuId === orphan.lynonOyuncuId) bulunanlar.push(baglanti);
+      } catch {
+        // Bu baglantida arama basarisiz oldu (oturum/aglar hatasi) --
+        // digerlerinde aramaya devam, bulunamama olarak sayilmiyor.
+      }
+    }
+
+    if (bulunanlar.length === 1) {
+      const hedef = bulunanlar[0];
+      const tasindiMi = await depo.baglantiDegistir(kiraci, orphan.baglantiId, orphan.lynonOyuncuId, hedef.id);
+      if (tasindiMi) {
+        sonuc.tasinan.push({ lynonOyuncuId: orphan.lynonOyuncuId, kullaniciAdi: orphan.kullaniciAdi, baglantiAdi: hedef.ad });
+      } else {
+        sonuc.belirsiz.push({
+          lynonOyuncuId: orphan.lynonOyuncuId, kullaniciAdi: orphan.kullaniciAdi,
+          sebep: `${hedef.ad} altında zaten ayrı bir kayıt var`,
+        });
+      }
+    } else if (bulunanlar.length === 0) {
+      sonuc.belirsiz.push({
+        lynonOyuncuId: orphan.lynonOyuncuId, kullaniciAdi: orphan.kullaniciAdi,
+        sebep: 'hiçbir aktif bağlantıda bu kullanıcı adı/ID eşleşmesi bulunamadı',
+      });
+    } else {
+      sonuc.belirsiz.push({
+        lynonOyuncuId: orphan.lynonOyuncuId, kullaniciAdi: orphan.kullaniciAdi,
+        sebep: `birden fazla bağlantıda bulundu: ${bulunanlar.map((b) => b.ad).join(', ')}`,
+      });
+    }
+  }
+
+  return sonuc;
 }
 
 export type { EslesmeCakismasi, EslesmeKaynagi, GunlukSayi, OyuncuEslesmesi };
