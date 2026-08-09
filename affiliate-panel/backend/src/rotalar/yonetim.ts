@@ -246,6 +246,10 @@ export async function yonetimRotalari(app: FastifyInstance): Promise<void> {
     };
     const uyarilar: string[] = [];
     for (const baglanti of baglantilar) {
+      // GECICI TANI: gecmisGGR.ts'teki loglar yalnizca baglantiId basiyor,
+      // hangi ID'nin hangi baglantiya (ada) ait oldugunu burada eslestiriyoruz.
+      // railway logs ile okunacak, kok neden bulununca kaldirilacak.
+      console.error('[gecmis-ggr-tani-baglanti]', { id: baglanti.id, ad: baglanti.ad });
       try {
         const adaptor = await adaptorZorunlu(istek.kiraci, baglanti.id);
         const parca = await gecmisGGRDoldur(istek.kiraci, adaptor, baglanti.id, { geriGun: Number(govde.geriGun) || 30 });
