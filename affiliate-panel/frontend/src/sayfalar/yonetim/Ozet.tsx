@@ -1,7 +1,13 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { AgGridReact } from 'ag-grid-react';
+import type { ColDef, ICellRendererParams } from 'ag-grid-community';
+import { AreaChart, BarList, Card, Metric, SparkAreaChart, Text } from '@tremor/react';
 import { api, paraBicimi, useVeri } from '../../api';
-import { Buton, Bos, Egilim, Hata, Hucre, Kart, Satir, Tablo, Yukleniyor } from '../../ui';
-import { CubukListesi, OlcuKarti, ZamanSerisi } from '../../grafik';
+import { Button } from '../../components/ui/button';
+import { Card as ShadCard, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { BosDurum, HataMesaji, Yukleniyor } from '../../components/durum';
+import { agTemaAcik, agTemaKoyu } from '../../lib/agGrid';
+import { useTema } from '../../lib/tema';
 
 interface OrtakOzeti {
   ortakAnahtari: string;
@@ -30,14 +36,41 @@ interface GecmisGGRSonucu {
   uyari: string | null;
 }
 
+/** Tablo hücresindeki eğilim sütunu — günlük GGR'nin küçük bir alan grafiği. */
+function EgilimHucresi({ value }: ICellRendererParams<OrtakOzeti, OrtakOzeti['gunlukGgr']>) {
+  const noktalar = value ?? [];
+  if (noktalar.length < 2) return <span className="text-xs text-muted-foreground">—</span>;
+  return (
+    <SparkAreaChart
+      data={noktalar}
+      index="gun"
+      categories={['ggr']}
+      colors={['blue']}
+      className="mt-1.5 h-7 w-24"
+    />
+  );
+}
+
 export function Ozet() {
   const { veri, yukleniyor, hata, yenile } = useVeri<{ bugun: string; ozetler: OrtakOzeti[] }>('/api/yonetim/ozet');
+  const [koyu] = useTema();
   const [senkron, setSenkron] = useState<SenkronSonucu | null>(null);
   const [senkronHatasi, setSenkronHatasi] = useState<string | null>(null);
   const [calisiyor, setCalisiyor] = useState(false);
   const [gecmis, setGecmis] = useState<GecmisGGRSonucu | null>(null);
   const [gecmisHatasi, setGecmisHatasi] = useState<string | null>(null);
   const [gecmisCalisiyor, setGecmisCalisiyor] = useState(false);
+
+  const sutunlar = useMemo<ColDef<OrtakOzeti>[]>(() => [
+    { field: 'ortakAnahtari', headerName: 'Ortak', pinned: 'left', minWidth: 150, cellClass: 'font-medium' },
+    { field: 'gunSayisi', headerName: 'Gün', type: 'numericColumn', width: 90 },
+    { field: 'oyuncuSayisi', headerName: 'Oyuncu', type: 'numericColumn', width: 100 },
+    { field: 'aktifOyuncuSayisi', headerName: 'Aktif', type: 'numericColumn', width: 90 },
+    { field: 'yatirim', headerName: 'Yatırım', type: 'numericColumn', width: 130, valueFormatter: (p) => paraBicimi(p.value ?? 0) },
+    { field: 'cekim', headerName: 'Çekim', type: 'numericColumn', width: 130, valueFormatter: (p) => paraBicimi(p.value ?? 0) },
+    { field: 'ggr', headerName: 'GGR', type: 'numericColumn', width: 130, sort: 'desc', valueFormatter: (p) => paraBicimi(p.value ?? 0) },
+    { field: 'gunlukGgr', headerName: 'Eğilim', width: 150, sortable: false, filter: false, cellRenderer: EgilimHucresi },
+  ], []);
 
   const senkronla = async () => {
     setCalisiyor(true);
@@ -65,8 +98,8 @@ export function Ozet() {
     }
   };
 
-  if (yukleniyor) return <Yukleniyor />;
-  if (hata) return <Hata mesaj={hata} />;
+  if (yukleniyor) return <Yukleniyor satir={5} />;
+  if (hata) return <HataMesaji mesaj={hata} />;
 
   const ozetler = veri?.ozetler ?? [];
   const topla = (secici: (o: OrtakOzeti) => number) => ozetler.reduce((t, o) => t + secici(o), 0);
@@ -84,84 +117,115 @@ export function Ozet() {
   }
   const gunlukToplam = [...gunHaritasi.entries()]
     .sort((a, b) => a[0].localeCompare(b[0]))
-    .map(([gun, ggr]) => ({ etiket: gun.slice(5), deger: Math.round(ggr) }));
+    .map(([gun, ggr]) => ({ gun: gun.slice(5), GGR: Math.round(ggr) }));
+
+  const ortakSiralamasi = ozetler
+    .slice()
+    .sort((a, b) => b.ggr - a.ggr)
+    .slice(0, 8)
+    .map((o) => ({ name: o.ortakAnahtari, value: Math.round(o.ggr) }));
 
   return (
     <>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <OlcuKarti etiket="Ortak" deger={String(ozetler.length)} alt="ölçümü olan" />
-        <OlcuKarti etiket="Yatırım" deger={paraBicimi(topla((o) => o.yatirim))} />
-        <OlcuKarti etiket="GGR" deger={paraBicimi(topla((o) => o.ggr))} />
-        <OlcuKarti
-          etiket="İlk yatırım"
-          deger={ftdToplami === null ? '—' : String(ftdToplami)}
-          alt={ftdToplami === null ? 'bu bağlantıdan ölçülemiyor' : undefined}
-        />
+        <Card>
+          <Text>Ortak</Text>
+          <Metric>{ozetler.length}</Metric>
+          <Text className="mt-1 text-xs">ölçümü olan</Text>
+        </Card>
+        <Card>
+          <Text>Yatırım</Text>
+          <Metric>{paraBicimi(topla((o) => o.yatirim))}</Metric>
+        </Card>
+        <Card>
+          <Text>GGR</Text>
+          <Metric>{paraBicimi(topla((o) => o.ggr))}</Metric>
+        </Card>
+        <Card>
+          <Text>İlk yatırım</Text>
+          <Metric>{ftdToplami === null ? '—' : ftdToplami}</Metric>
+          {ftdToplami === null && <Text className="mt-1 text-xs">bu bağlantıdan ölçülemiyor</Text>}
+        </Card>
       </div>
 
       <div className="grid gap-3 lg:grid-cols-2">
-        <Kart baslik="Toplam günlük GGR">
-          <ZamanSerisi noktalar={gunlukToplam} bosMesaj="Ölçüm yok." />
-        </Kart>
-        <Kart baslik="Ortak bazında GGR">
-          <CubukListesi
-            satirlar={ozetler.slice(0, 8).map((o) => ({
-              etiket: o.ortakAnahtari,
-              deger: Math.round(o.ggr),
-              alt: `${o.aktifOyuncuSayisi} aktif oyuncu`,
-            }))}
-            bosMesaj="Ölçüm yok."
-          />
-        </Kart>
+        <Card>
+          <Text className="font-medium text-foreground">Toplam günlük GGR</Text>
+          {gunlukToplam.length === 0 ? (
+            <div className="flex h-44 items-center justify-center">
+              <Text>Ölçüm yok.</Text>
+            </div>
+          ) : (
+            <AreaChart
+              className="mt-4 h-44"
+              data={gunlukToplam}
+              index="gun"
+              categories={['GGR']}
+              colors={['blue']}
+              valueFormatter={(v) => paraBicimi(v)}
+              showLegend={false}
+            />
+          )}
+        </Card>
+        <Card>
+          <Text className="font-medium text-foreground">Ortak bazında GGR</Text>
+          {ortakSiralamasi.length === 0 ? (
+            <div className="flex h-44 items-center justify-center">
+              <Text>Ölçüm yok.</Text>
+            </div>
+          ) : (
+            <BarList data={ortakSiralamasi} color="blue" valueFormatter={paraBicimi} className="mt-4" />
+          )}
+        </Card>
       </div>
 
-      <Kart
-        baslik="Ortak performansı"
-        sag={
+      <ShadCard>
+        <CardHeader className="flex-row items-center justify-between space-y-0">
+          <CardTitle className="text-sm font-medium text-muted-foreground">Ortak performansı</CardTitle>
           <div className="flex gap-2">
-            <Buton onClick={senkronla} devredisi={calisiyor}>{calisiyor ? 'Çekiliyor…' : 'Backoffice’ten çek'}</Buton>
-            <Buton onClick={gecmisiDoldur} devredisi={gecmisCalisiyor}>
+            <Button variant="outline" size="sm" onClick={senkronla} disabled={calisiyor}>
+              {calisiyor ? 'Çekiliyor…' : 'Backoffice’ten çek'}
+            </Button>
+            <Button variant="outline" size="sm" onClick={gecmisiDoldur} disabled={gecmisCalisiyor}>
               {gecmisCalisiyor ? 'Dolduruluyor…' : 'Geçmiş GGR’yi doldur'}
-            </Buton>
+            </Button>
           </div>
-        }
-      >
-        {senkronHatasi && <div className="mb-3"><Hata mesaj={senkronHatasi} /></div>}
-        {senkron && (
-          <p className="mb-3 text-sm" style={{ color: 'var(--metin-2)' }}>
-            {senkron.cekilenGun} gün çekildi, {senkron.yazilanOlcum} ölçüm yazıldı.
-            {senkron.hatali.length > 0 && ` ${senkron.hatali.length} gün alınamadı.`}
-            {senkron.uyari && ` ${senkron.uyari}`}
-          </p>
-        )}
-        {gecmisHatasi && <div className="mb-3"><Hata mesaj={gecmisHatasi} /></div>}
-        {gecmis && (
-          <p className="mb-3 text-sm" style={{ color: 'var(--metin-2)' }}>
-            {gecmis.tarananGun} gün tarandı, {gecmis.eslesenOyuncuGunu} eşleşen oyuncu günü, {gecmis.yazilanOlcum} ölçüm yazıldı.
-            {gecmis.hatali.length > 0 && ` ${gecmis.hatali.length} gün alınamadı.`}
-            {gecmis.uyari && ` ${gecmis.uyari}`}
-          </p>
-        )}
+        </CardHeader>
+        <CardContent>
+          {senkronHatasi && <div className="mb-3"><HataMesaji mesaj={senkronHatasi} /></div>}
+          {senkron && (
+            <p className="mb-3 text-sm text-muted-foreground">
+              {senkron.cekilenGun} gün çekildi, {senkron.yazilanOlcum} ölçüm yazıldı.
+              {senkron.hatali.length > 0 && ` ${senkron.hatali.length} gün alınamadı.`}
+              {senkron.uyari && ` ${senkron.uyari}`}
+            </p>
+          )}
+          {gecmisHatasi && <div className="mb-3"><HataMesaji mesaj={gecmisHatasi} /></div>}
+          {gecmis && (
+            <p className="mb-3 text-sm text-muted-foreground">
+              {gecmis.tarananGun} gün tarandı, {gecmis.eslesenOyuncuGunu} eşleşen oyuncu günü, {gecmis.yazilanOlcum} ölçüm yazıldı.
+              {gecmis.hatali.length > 0 && ` ${gecmis.hatali.length} gün alınamadı.`}
+              {gecmis.uyari && ` ${gecmis.uyari}`}
+            </p>
+          )}
 
-        {ozetler.length === 0 ? (
-          <Bos mesaj="Henüz ölçüm yok. Backoffice bağlantısını kurup çekmeyi deneyin." />
-        ) : (
-          <Tablo basliklar={['Ortak', 'Gün', 'Oyuncu', 'Aktif', 'Yatırım', 'Çekim', 'GGR', 'Eğilim']}>
-            {ozetler.map((o) => (
-              <Satir key={o.ortakAnahtari}>
-                <Hucre><span className="font-medium">{o.ortakAnahtari}</span></Hucre>
-                <Hucre sagda>{o.gunSayisi}</Hucre>
-                <Hucre sagda>{o.oyuncuSayisi}</Hucre>
-                <Hucre sagda>{o.aktifOyuncuSayisi}</Hucre>
-                <Hucre sagda>{paraBicimi(o.yatirim)}</Hucre>
-                <Hucre sagda>{paraBicimi(o.cekim)}</Hucre>
-                <Hucre sagda>{paraBicimi(o.ggr)}</Hucre>
-                <Hucre><Egilim noktalar={o.gunlukGgr.map((g) => g.ggr)} /></Hucre>
-              </Satir>
-            ))}
-          </Tablo>
-        )}
-      </Kart>
+          {ozetler.length === 0 ? (
+            <BosDurum mesaj="Henüz ölçüm yok. Backoffice bağlantısını kurup çekmeyi deneyin." />
+          ) : (
+            <div style={{ height: 420 }}>
+              <AgGridReact
+                theme={koyu ? agTemaKoyu : agTemaAcik}
+                rowData={ozetler}
+                columnDefs={sutunlar}
+                defaultColDef={{ sortable: true, resizable: true }}
+                pagination
+                paginationPageSize={10}
+                paginationPageSizeSelector={false}
+              />
+            </div>
+          )}
+        </CardContent>
+      </ShadCard>
     </>
   );
 }
