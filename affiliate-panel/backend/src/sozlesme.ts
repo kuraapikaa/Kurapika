@@ -160,6 +160,8 @@ export interface YonetimUclari {
  */
 export interface EslesmeGorunumu extends OyuncuEslesmesi {
   ortakAdi: string | null;
+  /** Bağlantı bulunamadıysa (silinmişse) ham `baglantiId` — hiçbir zaman `null` değil. */
+  baglantiAdi: string;
 }
 
 export interface CakismaGorunumu extends EslesmeCakismasi {

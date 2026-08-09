@@ -5,6 +5,7 @@ import {
   adaptorAl,
   adaptorKatalogu,
   adaptorZorunlu,
+  aktifBaglantilar,
   baglantilarGorunumu,
   baglantiyiSil,
   baglantiyiYaz,
@@ -105,14 +106,23 @@ export async function yonetimRotalari(app: FastifyInstance): Promise<void> {
    * bağlantıya dağılabiliyor, hakediş ortak bazında toplanıyor (bkz.
    * `adaptorler/kayit.ts` dosya başı açıklaması).
    *
-   * Senkron/toplu atama/geçmiş GGR doldurma şu an hâlâ yalnızca İLK
-   * aktif bağlantıyı kullanıyor (`varsayilanBaglantiId`) -- ikinci bir
-   * bağlantı buradan eklenip test edilebilir ama diğer özellikler onu
-   * henüz KULLANMIYOR. Oyuncu kimlikleri yalnızca TEK bir Lynon sitesi
-   * içinde benzersiz; iki siteyi aynı anda beslemek, aynı sayısal
-   * kimliğe sahip iki farklı oyuncuyu birbirine karıştırma riski taşıyor
-   * ve bu risk kaldırılmadan (ayrı bir şema değişikliğiyle) ikinci
-   * bağlantıyı canlı veriye katmak güvenli değil.
+   * Oyuncu kimlikleri yalnızca TEK bir Lynon sitesi içinde benzersiz;
+   * bu yüzden `oyuncu_eslesmeleri`/`oyuncu_gunluk_rapor` artık bir
+   * `baglantiId` sütunu taşıyor (bkz. `sema.ts`) ve toplu atama +
+   * geçmiş GGR doldurma bunu KULLANIYOR:
+   *
+   *   - Toplu atama, isteğin gövdesindeki `baglantiId` ile HANGİ siteden
+   *     arama yapılacağını admin'den açıkça alıyor (bkz. aşağıdaki uç).
+   *   - Geçmiş GGR doldurma artık TEK bağlantı değil, TÜM aktif
+   *     bağlantıları sırayla tarıyor (`aktifBaglantilar`) -- toplu
+   *     atamayla ikinci bir siteden transfer edilen bir oyuncunun
+   *     finansal verisi de bu sayede çekilebiliyor.
+   *
+   * `/senkron` (Lynon'un KENDİ third-party affiliate/BTag raporu) hâlâ
+   * yalnızca İLK aktif bağlantıyı kullanıyor -- bu panelin ürettiği
+   * trafik zaten BTag taşımadığı için o rapor pratikte hep boş dönüyor
+   * (bkz. `gecmisGGR.ts` dosya başı), ikinci bir bağlantıya genişletmenin
+   * bugün somut bir faydası yok.
    */
   app.get('/baglantilar', async (istek): Promise<YonetimUclari['/baglantilar']> => ({
     baglantilar: await baglantilarGorunumu(istek.kiraci),
@@ -215,11 +225,42 @@ export async function yonetimRotalari(app: FastifyInstance): Promise<void> {
    * BTag taşımadığı için hep sıfır satır yazıyordu. Bu uç aynı raporu
    * OYUNCU bazında okuyup atfı panelin kendi eşleşme kaydından yapıyor
    * (bkz. `servisler/gecmisGGR.ts`).
+   *
+   * TÜM aktif bağlantılar sırayla taranıyor (tek değil): toplu atamayla
+   * ikinci bir siteden transfer edilen bir oyuncunun rakamı da yalnızca
+   * O sitenin raporundan gelebilir -- tek bağlantıda kalsaydı böyle bir
+   * oyuncu kalıcı olarak 0 gösterirdi. Bağlantılardan biri geçici olarak
+   * çökse bile (oturum/ağ hatası) diğerleri taranmaya devam ediyor.
    */
   app.post('/gecmis-ggr-doldur', async (istek) => {
     const govde = (istek.body ?? {}) as { geriGun?: number };
-    const adaptor = await calisilacakAdaptor(istek.kiraci);
-    return gecmisGGRDoldur(istek.kiraci, adaptor, { geriGun: Number(govde.geriGun) || 30 });
+    const baglantilar = await aktifBaglantilar(istek.kiraci);
+    if (baglantilar.length === 0) {
+      throw new AdaptorHatasi('Backoffice bağlantısı kurulu değil ya da pasif.', 409);
+    }
+
+    const sonuc = {
+      tarananGun: 0, eslesenOyuncuGunu: 0, yazilanOlcum: 0,
+      hatali: [] as Array<{ gun: string; mesaj: string }>,
+      uyari: null as string | null,
+    };
+    const uyarilar: string[] = [];
+    for (const baglanti of baglantilar) {
+      try {
+        const adaptor = await adaptorZorunlu(istek.kiraci, baglanti.id);
+        const parca = await gecmisGGRDoldur(istek.kiraci, adaptor, baglanti.id, { geriGun: Number(govde.geriGun) || 30 });
+        sonuc.tarananGun += parca.tarananGun;
+        sonuc.eslesenOyuncuGunu += parca.eslesenOyuncuGunu;
+        sonuc.yazilanOlcum += parca.yazilanOlcum;
+        sonuc.hatali.push(...parca.hatali);
+        if (parca.uyari) uyarilar.push(`${baglanti.ad}: ${parca.uyari}`);
+      } catch (hata) {
+        // Bir baglantinin hatasi digerlerinin taranmasini engellememeli.
+        uyarilar.push(`${baglanti.ad}: ${hata instanceof Error ? hata.message : 'bilinmeyen hata'}`);
+      }
+    }
+    sonuc.uyari = uyarilar.length > 0 ? uyarilar.join(' · ') : null;
+    return sonuc;
   });
 
   // ── Ölçümler ───────────────────────────────────────────────────────
@@ -428,16 +469,25 @@ export async function yonetimRotalari(app: FastifyInstance): Promise<void> {
   // ── Oyuncu eşleşmeleri ─────────────────────────────────────────────
 
   app.get('/oyuncu-eslesmeleri', async (istek): Promise<YonetimUclari['/oyuncu-eslesmeleri']> => {
-    const [eslesmeler, cakismalar, ortaklar, anahtar] = await Promise.all([
+    const [eslesmeler, cakismalar, ortaklar, anahtar, baglantilar] = await Promise.all([
       eslesmeleriListele(istek.kiraci, { limit: 500 }),
       cakismalariListele(istek.kiraci, 200),
       ortaklariListele(istek.kiraci),
       anahtarDurumu(istek.kiraci),
+      baglantilarGorunumu(istek.kiraci),
     ]);
 
     const adlar = new Map(ortaklar.map((o) => [o.id, o.ad]));
+    // Birden fazla baglanti varsa admin hangi eslesmenin hangi Lynon
+    // sitesinden geldigini gormeli -- tek baglantili kiracida hep tek
+    // deger cikar, ekranda gereksiz gurultu yaratmaz (bkz. Eslesmeler.tsx).
+    const baglantiAdlari = new Map(baglantilar.map((b) => [b.id, b.ad]));
     return {
-      eslesmeler: eslesmeler.map((e) => ({ ...e, ortakAdi: adlar.get(e.ortakId) ?? null })),
+      eslesmeler: eslesmeler.map((e) => ({
+        ...e,
+        ortakAdi: adlar.get(e.ortakId) ?? null,
+        baglantiAdi: baglantiAdlari.get(e.baglantiId) ?? e.baglantiId,
+      })),
       cakismalar: cakismalar.map((c) => ({
         ...c,
         denenenOrtakAdi: adlar.get(c.denenenOrtakId) ?? null,
@@ -453,13 +503,21 @@ export async function yonetimRotalari(app: FastifyInstance): Promise<void> {
    * Girdi doğrudan büyük olabilir (yapıştırılmış liste); alan doğrulaması
    * ve satır bazlı sonuç `topluAtamaYap` içinde. Burada yalnızca adaptörü
    * çözüp iş kuralına devrediyoruz.
+   *
+   * `baglantiId` gövdeden geliyor: admin HANGİ Lynon sitesinden arama
+   * yapılacağını seçiyor (bkz. `Eslesmeler.tsx`'teki site seçici).
+   * Boş/eksikse ilk aktif bağlantıya düşer -- tek bağlantılı (bugüne
+   * kadarki HER) kiracıda davranış birebir aynı kalır.
    */
   app.post('/oyuncu-eslesmeleri/toplu-atama', async (istek) => {
-    const govde = (istek.body ?? {}) as { kullaniciAdlari?: unknown; ortakAnahtari?: unknown };
-    const adaptor = await calisilacakAdaptor(istek.kiraci);
+    const govde = (istek.body ?? {}) as { kullaniciAdlari?: unknown; ortakAnahtari?: unknown; baglantiId?: unknown };
+    const baglantiId = String(govde.baglantiId ?? '').trim() || await varsayilanBaglantiId(istek.kiraci);
+    if (!baglantiId) throw new AdaptorHatasi('Backoffice bağlantısı kurulu değil ya da pasif.', 409);
+    const adaptor = await adaptorZorunlu(istek.kiraci, baglantiId);
     return topluAtamaYap(
       istek.kiraci,
       adaptor,
+      baglantiId,
       String(govde.kullaniciAdlari ?? ''),
       String(govde.ortakAnahtari ?? ''),
     );

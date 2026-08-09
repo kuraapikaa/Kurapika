@@ -1,5 +1,6 @@
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import { olayKuyrugu, type KuyruktakiOlay } from '../depolar/olayKuyrugu.js';
+import { VARSAYILAN_BAGLANTI_ID } from '../depolar/eslesmeDeposu.js';
 import { oyuncuEslesmeleri, oyuncuGunluk } from '../lib/sema.js';
 import { ortakGunlukGeliriGuncelle } from '../servisler/oyuncuEslesme.js';
 import { veritabani } from '../lib/veritabani.js';
@@ -121,7 +122,14 @@ async function ortakGelirleriniGuncelle(
       ortakAnahtari: oyuncuEslesmeleri.ortakAnahtari,
     })
     .from(oyuncuEslesmeleri)
-    .where(and(eq(oyuncuEslesmeleri.kiraci, kiraci), inArray(oyuncuEslesmeleri.lynonOyuncuId, oyuncuIdler)));
+    .where(and(
+      eq(oyuncuEslesmeleri.kiraci, kiraci),
+      inArray(oyuncuEslesmeleri.lynonOyuncuId, oyuncuIdler),
+      // Webhook siteyi bilmiyor (tek paylasilan sir, baglanti basina
+      // degil) -- yalnizca 'varsayilan' baglantili oyunculara eslesebilir,
+      // aksi halde baska bir sitedeki ayni numarali ID'yle cakisirdi.
+      eq(oyuncuEslesmeleri.baglantiId, VARSAYILAN_BAGLANTI_ID),
+    ));
 
   const oyuncudanOrtaga = new Map(eslesmeler.map((e) => [e.lynonOyuncuId, e]));
 

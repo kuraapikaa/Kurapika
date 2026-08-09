@@ -216,7 +216,7 @@ describe('oyuncu eslesmesi', () => {
       const k = kiraci();
       const ortak = await onayliOrtak(k, 'ORT1');
 
-      const sonuc = await oyuncuyuYenidenAta(k, { lynonOyuncuId: '80001', ortakAnahtari: 'ORT1' });
+      const sonuc = await oyuncuyuYenidenAta(k, { baglantiId: 'varsayilan', lynonOyuncuId: '80001', ortakAnahtari: 'ORT1' });
 
       expect(sonuc).toMatchObject({ durum: 'olusturuldu', oncekiOrtakId: null });
       expect(sonuc.eslesme.ortakId).toBe(ortak.id);
@@ -235,7 +235,7 @@ describe('oyuncu eslesmesi', () => {
       const yeni = await onayliOrtak(k, 'ORT2', 'Yeni');
 
       await oyuncuyuEslestir(k, { lynonOyuncuId: '80002', ref: 'ORT1' });
-      const sonuc = await oyuncuyuYenidenAta(k, { lynonOyuncuId: '80002', ortakAnahtari: 'ORT2' });
+      const sonuc = await oyuncuyuYenidenAta(k, { baglantiId: 'varsayilan', lynonOyuncuId: '80002', ortakAnahtari: 'ORT2' });
 
       expect(sonuc.durum).toBe('tasindi');
       expect(sonuc.oncekiOrtakId).toBe(eski.id);
@@ -249,7 +249,7 @@ describe('oyuncu eslesmesi', () => {
       await onayliOrtak(k, 'ORT2');
 
       await oyuncuyuEslestir(k, { lynonOyuncuId: '80003', ref: 'ORT1' });
-      await oyuncuyuYenidenAta(k, { lynonOyuncuId: '80003', ortakAnahtari: 'ORT2' });
+      await oyuncuyuYenidenAta(k, { baglantiId: 'varsayilan', lynonOyuncuId: '80003', ortakAnahtari: 'ORT2' });
 
       expect(await cakismalariListele(k)).toHaveLength(0);
     });
@@ -259,7 +259,7 @@ describe('oyuncu eslesmesi', () => {
       const ortak = await onayliOrtak(k, 'ORT1');
       await oyuncuyuEslestir(k, { lynonOyuncuId: '80004', ref: 'ORT1' });
 
-      const sonuc = await oyuncuyuYenidenAta(k, { lynonOyuncuId: '80004', ortakAnahtari: 'ORT1' });
+      const sonuc = await oyuncuyuYenidenAta(k, { baglantiId: 'varsayilan', lynonOyuncuId: '80004', ortakAnahtari: 'ORT1' });
 
       expect(sonuc.durum).toBe('zaten-bu-ortakta');
       expect(sonuc.oncekiOrtakId).toBeNull();
@@ -271,7 +271,7 @@ describe('oyuncu eslesmesi', () => {
       await ortakOlustur(k, {
         ad: 'Bekleyen', eposta: 'bekleyen@ornek.test', parola: 'cok-guclu-parola', ortakAnahtari: 'ORT9',
       });
-      await expect(oyuncuyuYenidenAta(k, { lynonOyuncuId: '80005', ortakAnahtari: 'ORT9' }))
+      await expect(oyuncuyuYenidenAta(k, { baglantiId: 'varsayilan', lynonOyuncuId: '80005', ortakAnahtari: 'ORT9' }))
         .rejects.toThrow(/onaylı değil/i);
     });
 
@@ -279,7 +279,7 @@ describe('oyuncu eslesmesi', () => {
       const k = kiraci();
       await onayliOrtak(k, 'ORT1');
 
-      const sonuc = await oyuncuyuYenidenAta(k, { lynonOyuncuId: '80007', ortakAnahtari: 'ORT1', kullaniciAdi: 'mehmet99' });
+      const sonuc = await oyuncuyuYenidenAta(k, { baglantiId: 'varsayilan', lynonOyuncuId: '80007', ortakAnahtari: 'ORT1', kullaniciAdi: 'mehmet99' });
 
       expect(sonuc.eslesme.kullaniciAdi).toBe('mehmet99');
       expect(await eslesmeBul(k, '80007')).toMatchObject({ kullaniciAdi: 'mehmet99' });
@@ -296,7 +296,7 @@ describe('oyuncu eslesmesi', () => {
       await onayliOrtak(k, 'ORT2', 'Yeni');
       await oyuncuyuEslestir(k, { lynonOyuncuId: '80008', ref: 'ORT1', kullaniciAdi: 'korunan-ad' });
 
-      const sonuc = await oyuncuyuYenidenAta(k, { lynonOyuncuId: '80008', ortakAnahtari: 'ORT2' });
+      const sonuc = await oyuncuyuYenidenAta(k, { baglantiId: 'varsayilan', lynonOyuncuId: '80008', ortakAnahtari: 'ORT2' });
 
       expect(sonuc.eslesme.ortakId).not.toBe(eski.id);
       expect(sonuc.eslesme.kullaniciAdi).toBe('korunan-ad');
@@ -307,7 +307,7 @@ describe('oyuncu eslesmesi', () => {
       await onayliOrtak(k, 'ORT1');
 
       const sonuc = await oyuncuyuYenidenAta(k, {
-        lynonOyuncuId: '80009', ortakAnahtari: 'ORT1', kayitTarihi: '2019-05-01T00:00:00.000Z',
+        baglantiId: 'varsayilan', lynonOyuncuId: '80009', ortakAnahtari: 'ORT1', kayitTarihi: '2019-05-01T00:00:00.000Z',
       });
 
       expect(sonuc.eslesme.kayitTarihi).toBe('2019-05-01T00:00:00.000Z');
@@ -321,24 +321,44 @@ describe('oyuncu eslesmesi', () => {
       const eski = await onayliOrtak(k, 'ORT1', 'Eski');
       await onayliOrtak(k, 'ORT2', 'Yeni');
       await oyuncuyuYenidenAta(k, {
-        lynonOyuncuId: '80010', ortakAnahtari: 'ORT1', kayitTarihi: '2018-01-01T00:00:00.000Z',
+        baglantiId: 'varsayilan', lynonOyuncuId: '80010', ortakAnahtari: 'ORT1', kayitTarihi: '2018-01-01T00:00:00.000Z',
       });
 
-      const sonuc = await oyuncuyuYenidenAta(k, { lynonOyuncuId: '80010', ortakAnahtari: 'ORT2' });
+      const sonuc = await oyuncuyuYenidenAta(k, { baglantiId: 'varsayilan', lynonOyuncuId: '80010', ortakAnahtari: 'ORT2' });
 
       expect(sonuc.eslesme.ortakId).not.toBe(eski.id);
       expect(sonuc.eslesme.kayitTarihi).toBe('2018-01-01T00:00:00.000Z');
     });
 
+    /**
+     * ASIL GUVENCE: iki farkli Lynon sitesindeki ayni numarali oyuncu
+     * kimligi FARKLI gercek oyunculardir -- ayni satirin ustune yazip
+     * BIRINI KAYBETMEMELI.
+     */
+    it('ayni numarali ID iki farkli baglantida AYRI kayittir, birbirini EZMEZ', async () => {
+      const k = kiraci();
+      const a = await onayliOrtak(k, 'ORT1', 'Ortak A');
+      const b = await onayliOrtak(k, 'ORT2', 'Ortak B');
+
+      await oyuncuyuYenidenAta(k, { baglantiId: 'varsayilan', lynonOyuncuId: '90099', ortakAnahtari: 'ORT1' });
+      const sonuc = await oyuncuyuYenidenAta(k, { baglantiId: 'site-b', lynonOyuncuId: '90099', ortakAnahtari: 'ORT2' });
+
+      // Ikinci cagri, BIRINCININ ustune yazan bir "tasima" DEGIL -- yeni bir kayit.
+      expect(sonuc.durum).toBe('olusturuldu');
+      expect(sonuc.oncekiOrtakId).toBeNull();
+      expect(await eslesmeBul(k, '90099', 'varsayilan')).toMatchObject({ ortakId: a.id, baglantiId: 'varsayilan' });
+      expect(await eslesmeBul(k, '90099', 'site-b')).toMatchObject({ ortakId: b.id, baglantiId: 'site-b' });
+    });
+
     it('bilinmeyen ortak anahtari reddedilir', async () => {
-      await expect(oyuncuyuYenidenAta(kiraci(), { lynonOyuncuId: '80006', ortakAnahtari: 'YOK' }))
+      await expect(oyuncuyuYenidenAta(kiraci(), { baglantiId: 'varsayilan', lynonOyuncuId: '80006', ortakAnahtari: 'YOK' }))
         .rejects.toThrow(/bulunamadı/i);
     });
 
     it('oyuncu kimligi zorunlu', async () => {
       const k = kiraci();
       await onayliOrtak(k, 'ORT1');
-      await expect(oyuncuyuYenidenAta(k, { lynonOyuncuId: '  ', ortakAnahtari: 'ORT1' }))
+      await expect(oyuncuyuYenidenAta(k, { baglantiId: 'varsayilan', lynonOyuncuId: '  ', ortakAnahtari: 'ORT1' }))
         .rejects.toThrow(/lynonOyuncuId/);
     });
   });

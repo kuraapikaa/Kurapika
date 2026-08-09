@@ -303,6 +303,7 @@ varsaCalistir('depo denkligi', () => {
 
   describe('oyuncu eslesmeleri', () => {
     const eslesme = (lynonOyuncuId: string, ortakId: string, ek: Partial<OyuncuEslesmesi> = {}): OyuncuEslesmesi => ({
+      baglantiId: 'varsayilan',
       lynonOyuncuId,
       ortakId,
       ortakAnahtari: ortakId.toUpperCase(),

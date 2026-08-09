@@ -17,6 +17,8 @@ import type { AltParametre } from '../servisler/izleme.js';
 export type EslesmeKaynagi = 'kayit' | 'elle';
 
 export interface OyuncuEslesmesi {
+  /** Hangi Lynon bağlantısından/sitesinden geldiği; bkz. `sema.ts`. */
+  baglantiId: string;
   lynonOyuncuId: string;
   ortakId: string;
   /** Kayıt anındaki ref kodu. */
@@ -73,7 +75,12 @@ export interface EslesmeDeposu {
    * çağıran "neydi, ne oldu" diyebilsin.
    */
   zorlaAta(kiraci: string, eslesme: OyuncuEslesmesi): Promise<{ oncekiKayit: OyuncuEslesmesi | null }>;
-  bul(kiraci: string, lynonOyuncuId: string): Promise<OyuncuEslesmesi | null>;
+  /**
+   * `baglantiId` verilmezse `'varsayilan'`a düşer -- S2S kaydı/webhook
+   * gibi siteyi hiç bilmeyen çağıranlar için, mevcut tek-bağlantı
+   * davranışını birebir koruyor.
+   */
+  bul(kiraci: string, lynonOyuncuId: string, baglantiId?: string): Promise<OyuncuEslesmesi | null>;
   listele(kiraci: string, sorgu: EslesmeSorgusu): Promise<OyuncuEslesmesi[]>;
   cakismaYaz(kiraci: string, cakisma: EslesmeCakismasi): Promise<void>;
   cakismalariListele(kiraci: string, limit: number): Promise<EslesmeCakismasi[]>;
@@ -87,6 +94,13 @@ export interface EslesmeDeposu {
   gunlukSayilar(kiraci: string, sorgu: GunlukEslesmeSorgusu): Promise<GunlukSayi[]>;
 }
 
+/**
+ * Siteyi hiç bilmeyen çağıranların (S2S kaydı, webhook eşleştirmesi)
+ * düştüğü bağlantı kimliği. Bir kiracının ilk (ve göç öncesi TEK)
+ * bağlantısıyla birebir aynı (bkz. `adaptorler/kayit.ts`).
+ */
+export const VARSAYILAN_BAGLANTI_ID = 'varsayilan';
+
 const ALAN = 'oyuncu-eslesmeleri';
 const CAKISMA_ALANI = 'eslesme-cakismalari';
 /** Çakışma kaydı sınırsız büyümesin; belge uygulamasında en yeniler tutulur. */
@@ -97,6 +111,7 @@ const sinirla = (limit: unknown): number => Math.min(1000, Math.max(1, Number(li
 // ─────────────────────────── Postgres ───────────────────────────
 
 const satirdanEslesme = (s: typeof oyuncuEslesmeleri.$inferSelect): OyuncuEslesmesi => ({
+  baglantiId: s.baglantiId,
   lynonOyuncuId: s.lynonOyuncuId,
   ortakId: s.ortakId,
   ortakAnahtari: s.ortakAnahtari,
@@ -126,12 +141,15 @@ export function postgresEslesmeDeposu(): EslesmeDeposu {
     return vt;
   };
 
-  const bul = async (kiraci: string, lynonOyuncuId: string): Promise<OyuncuEslesmesi | null> => {
+  const bul = async (
+    kiraci: string, lynonOyuncuId: string, baglantiId: string = VARSAYILAN_BAGLANTI_ID,
+  ): Promise<OyuncuEslesmesi | null> => {
     const satirlar = await vtZorunlu()
       .select()
       .from(oyuncuEslesmeleri)
       .where(and(
         eq(oyuncuEslesmeleri.kiraci, kiraci),
+        eq(oyuncuEslesmeleri.baglantiId, baglantiId),
         eq(oyuncuEslesmeleri.lynonOyuncuId, lynonOyuncuId),
       ))
       .limit(1);
@@ -150,6 +168,7 @@ export function postgresEslesmeDeposu(): EslesmeDeposu {
         .insert(oyuncuEslesmeleri)
         .values({
           kiraci,
+          baglantiId: eslesme.baglantiId,
           lynonOyuncuId: eslesme.lynonOyuncuId,
           ortakId: eslesme.ortakId,
           ortakAnahtari: eslesme.ortakAnahtari,
@@ -167,7 +186,7 @@ export function postgresEslesmeDeposu(): EslesmeDeposu {
 
       if (eklenen.length) return { eklendi: true, kayitli: satirdanEslesme(eklenen[0]) };
 
-      const mevcut = await bul(kiraci, eslesme.lynonOyuncuId);
+      const mevcut = await bul(kiraci, eslesme.lynonOyuncuId, eslesme.baglantiId);
       // Kisit yuzunden buraya ancak kayit VARSA dusulur; yine de savunmali
       // davranmak, ilerideki bir sema degisikliginde sessiz null yerine
       // acik hata verilmesini sagliyor.
@@ -176,11 +195,12 @@ export function postgresEslesmeDeposu(): EslesmeDeposu {
     },
 
     async zorlaAta(kiraci, eslesme) {
-      const oncekiKayit = await bul(kiraci, eslesme.lynonOyuncuId);
+      const oncekiKayit = await bul(kiraci, eslesme.lynonOyuncuId, eslesme.baglantiId);
       await vtZorunlu()
         .insert(oyuncuEslesmeleri)
         .values({
           kiraci,
+          baglantiId: eslesme.baglantiId,
           lynonOyuncuId: eslesme.lynonOyuncuId,
           ortakId: eslesme.ortakId,
           ortakAnahtari: eslesme.ortakAnahtari,
@@ -194,7 +214,7 @@ export function postgresEslesmeDeposu(): EslesmeDeposu {
           kayitTarihi: eslesme.kayitTarihi ? new Date(eslesme.kayitTarihi) : null,
         })
         .onConflictDoUpdate({
-          target: [oyuncuEslesmeleri.kiraci, oyuncuEslesmeleri.lynonOyuncuId],
+          target: [oyuncuEslesmeleri.kiraci, oyuncuEslesmeleri.baglantiId, oyuncuEslesmeleri.lynonOyuncuId],
           set: {
             ortakId: eslesme.ortakId,
             ortakAnahtari: eslesme.ortakAnahtari,
@@ -294,7 +314,9 @@ export function belgeEslesmeDeposu(): EslesmeDeposu {
     async ekleYokSayarak(kiraci, eslesme) {
       return degistir<EslesmeBelgesi, { eklendi: boolean; kayitli: OyuncuEslesmesi }>(
         kiraci, ALAN, cozEslesme, (belge) => {
-          const mevcut = belge.eslesmeler.find((e) => e.lynonOyuncuId === eslesme.lynonOyuncuId);
+          const mevcut = belge.eslesmeler.find(
+            (e) => e.lynonOyuncuId === eslesme.lynonOyuncuId && e.baglantiId === eslesme.baglantiId,
+          );
           if (mevcut) return { eklendi: false, kayitli: mevcut };
           belge.eslesmeler.push(eslesme);
           return { eklendi: true, kayitli: eslesme };
@@ -305,7 +327,9 @@ export function belgeEslesmeDeposu(): EslesmeDeposu {
     async zorlaAta(kiraci, eslesme) {
       return degistir<EslesmeBelgesi, { oncekiKayit: OyuncuEslesmesi | null }>(
         kiraci, ALAN, cozEslesme, (belge) => {
-          const index = belge.eslesmeler.findIndex((e) => e.lynonOyuncuId === eslesme.lynonOyuncuId);
+          const index = belge.eslesmeler.findIndex(
+            (e) => e.lynonOyuncuId === eslesme.lynonOyuncuId && e.baglantiId === eslesme.baglantiId,
+          );
           const oncekiKayit = index >= 0 ? belge.eslesmeler[index] : null;
           if (index >= 0) belge.eslesmeler[index] = eslesme;
           else belge.eslesmeler.push(eslesme);
@@ -314,9 +338,9 @@ export function belgeEslesmeDeposu(): EslesmeDeposu {
       );
     },
 
-    async bul(kiraci, lynonOyuncuId) {
+    async bul(kiraci, lynonOyuncuId, baglantiId = VARSAYILAN_BAGLANTI_ID) {
       const belge = await oku<EslesmeBelgesi>(kiraci, ALAN, cozEslesme);
-      return belge.eslesmeler.find((e) => e.lynonOyuncuId === lynonOyuncuId) ?? null;
+      return belge.eslesmeler.find((e) => e.lynonOyuncuId === lynonOyuncuId && e.baglantiId === baglantiId) ?? null;
     },
 
     async listele(kiraci, sorgu) {

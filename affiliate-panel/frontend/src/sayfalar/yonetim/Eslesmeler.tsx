@@ -16,6 +16,7 @@ import { KisaKimlik } from '../../tablo';
 import { agTemaAcik, agTemaKoyu } from '../../lib/agGrid';
 import { useTema } from '../../lib/tema';
 import type {
+  BaglantiGorunumu,
   CakismaGorunumu,
   EslesmeGorunumu,
   OrtakGorunumu,
@@ -72,6 +73,15 @@ export function Eslesmeler() {
     '/api/yonetim/oyuncu-eslesmeleri',
   );
   const ortaklarVeri = useVeri<YonetimUclari['/ortaklar']>('/api/yonetim/ortaklar');
+  const baglantilarVeri = useVeri<YonetimUclari['/baglantilar']>('/api/yonetim/baglantilar');
+  const baglantilar = useMemo(
+    () => (baglantilarVeri.veri?.baglantilar ?? []).filter((b) => b.aktif),
+    [baglantilarVeri.veri],
+  );
+  // Coklu site YALNIZCA birden fazla AKTIF baglanti varsa gorunur oluyor --
+  // tek baglantili (bugune kadarki HER) kiracida site secimi/sutunu
+  // gereksiz gurultu olurdu.
+  const cokluSite = baglantilar.length > 1;
 
   const eslesmeler = veri?.eslesmeler ?? [];
   const cakismalar = veri?.cakismalar ?? [];
@@ -104,6 +114,10 @@ export function Eslesmeler() {
       field: 'ortakAnahtari', headerName: 'Ref kodu', width: 130,
       cellRenderer: (p: ICellRendererParams<EslesmeGorunumu, string>) => <code className="text-xs">{p.value}</code>,
     },
+    // Yalnizca birden fazla aktif Lynon baglantisi varsa gorunur -- tek
+    // baglantili kiracida her satir zaten ayni degeri tasir, sutun
+    // gereksiz gurultu olurdu.
+    ...(cokluSite ? [{ field: 'baglantiAdi', headerName: 'Site', width: 130 } as ColDef<EslesmeGorunumu>] : []),
     { headerName: 'Kanal', minWidth: 160, sortable: false, cellRenderer: KanalHucresi },
     { headerName: 'Tıklama', width: 130, sortable: false, cellRenderer: TiklamaHucresi },
     {
@@ -113,7 +127,7 @@ export function Eslesmeler() {
       valueGetter: (p) => p.data?.kayitTarihi ?? p.data?.olusturuldu ?? '',
       valueFormatter: (p) => (p.value ? gunBicimi(p.value) : ''),
     },
-  ], []);
+  ], [cokluSite]);
 
   // Ayni ortaktan gelen tekrarli talepler asil sinyal; tek tek bakmak
   // sorunu gostermiyor.
@@ -151,7 +165,7 @@ export function Eslesmeler() {
         </Card>
       </div>
 
-      <TopluAtamaKarti ortaklar={ortaklarVeri.veri?.ortaklar ?? []} yenile={yenile} />
+      <TopluAtamaKarti ortaklar={ortaklarVeri.veri?.ortaklar ?? []} baglantilar={baglantilar} yenile={yenile} />
 
       <ShadCard>
         <CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">Kayıt bildirimi bağlantısı</CardTitle></CardHeader>
@@ -286,12 +300,20 @@ const EAD_SONUC_ETIKETI: Record<TopluAtamaSatiri['durum'], string> = {
  * admin ground truth'u düzeltiyor, "ilk kayıt kazanır" siperi burada
  * (S2S bildirimlerinin aksine) devre dışı.
  */
-function TopluAtamaKarti({ ortaklar, yenile }: { ortaklar: OrtakGorunumu[]; yenile: () => void }) {
+function TopluAtamaKarti(
+  { ortaklar, baglantilar, yenile }: { ortaklar: OrtakGorunumu[]; baglantilar: BaglantiGorunumu[]; yenile: () => void },
+) {
   const [hedefOrtak, setHedefOrtak] = useState('');
   const [kullaniciAdlari, setKullaniciAdlari] = useState('');
+  // Varsayilan: ilk aktif baglanti -- backend zaten ayni fallback'i
+  // uyguluyor (bkz. yonetim.ts), burada onceden secili gostermek sadece
+  // kullanicinin ne secildigini gorebilmesi icin.
+  const [baglantiId, setBaglantiId] = useState('');
   const [isliyor, setIsliyor] = useState(false);
   const [hata, setHata] = useState<string | null>(null);
   const [sonuc, setSonuc] = useState<TopluAtamaSonucu | null>(null);
+  const cokluSite = baglantilar.length > 1;
+  const secilenBaglantiId = baglantiId || baglantilar[0]?.id || '';
 
   const sinirVeri = useVeri<YonetimUclari['/oyuncu-eslesmeleri/toplu-atama-siniri']>(
     '/api/yonetim/oyuncu-eslesmeleri/toplu-atama-siniri',
@@ -313,6 +335,7 @@ function TopluAtamaKarti({ ortaklar, yenile }: { ortaklar: OrtakGorunumu[]; yeni
       const yanit = await api.gonder<TopluAtamaSonucu>('/api/yonetim/oyuncu-eslesmeleri/toplu-atama', {
         kullaniciAdlari,
         ortakAnahtari: hedefOrtak,
+        baglantiId: secilenBaglantiId,
       });
       setSonuc(yanit);
       yenile();
@@ -366,6 +389,21 @@ function TopluAtamaKarti({ ortaklar, yenile }: { ortaklar: OrtakGorunumu[]; yeni
               </SelectContent>
             </Select>
             {onayliOrtaklar.length === 0 && <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">Onaylı ortak yok.</p>}
+
+            {cokluSite && (
+              <div className="mt-3">
+                <label className="mb-1 block text-xs font-semibold text-muted-foreground">Site</label>
+                <Select value={secilenBaglantiId} onValueChange={setBaglantiId}>
+                  <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {baglantilar.map((b) => <SelectItem key={b.id} value={b.id}>{b.ad}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Arama bu Lynon sitesinde yapılır — aynı numaralı ID farklı sitelerde farklı oyunculara ait olabilir.
+                </p>
+              </div>
+            )}
 
             <p className="mt-3 text-xs text-muted-foreground">
               {satirSayisi} kullanıcı adı

@@ -55,9 +55,11 @@ varsaCalistir('gecmisGGRDoldur', () => {
     await vt.delete(raporTablosu);
   });
 
-  const eslestir = async (lynonOyuncuId: string, ortakId: string, ortakAnahtari: string) => {
+  const eslestir = async (
+    lynonOyuncuId: string, ortakId: string, ortakAnahtari: string, baglantiId = 'varsayilan',
+  ) => {
     await veritabani()!.insert(eslesmeTablosu).values({
-      kiraci: KIRACI, lynonOyuncuId, ortakId, ortakAnahtari,
+      kiraci: KIRACI, baglantiId, lynonOyuncuId, ortakId, ortakAnahtari,
       clickId: null, medyaId: null, altLinkId: null, kullaniciAdi: null, alt: {},
       kaynak: 'kayit', olusturuldu: new Date('2026-08-01T00:00:00Z'),
     });
@@ -75,7 +77,7 @@ varsaCalistir('gecmisGGRDoldur', () => {
       '2026-08-05': [{ oyuncuId: 'h1', yatirim: 100, cekim: 20, bahis: 500, kazanc: 300 }],
     });
 
-    const sonuc = await gecmisGGRDoldur(KIRACI, adaptor, { bugun: '2026-08-05', geriGun: 1 });
+    const sonuc = await gecmisGGRDoldur(KIRACI, adaptor, 'varsayilan', { bugun: '2026-08-05', geriGun: 1 });
 
     expect(sonuc).toMatchObject({ tarananGun: 1, eslesenOyuncuGunu: 1, yazilanOlcum: 1, hatali: [] });
     expect(await olcumBul('ORTAK-H')).toMatchObject({
@@ -96,10 +98,34 @@ varsaCalistir('gecmisGGRDoldur', () => {
       '2026-08-05': [{ oyuncuId: 'h1b', yatirim: 100, cekim: 20, bahis: 500, kazanc: 300 }],
     });
 
-    await gecmisGGRDoldur(KIRACI, adaptor, { bugun: '2026-08-05', geriGun: 1 });
+    await gecmisGGRDoldur(KIRACI, adaptor, 'varsayilan', { bugun: '2026-08-05', geriGun: 1 });
 
     const satirlar = await veritabani()!.select().from(raporTablosu).where(eq(raporTablosu.oyuncuId, 'h1b'));
     expect(satirlar).toMatchObject([{ gun: '2026-08-05', yatirim: 100, cekim: 20, bahis: 500, kazanc: 300 }]);
+  });
+
+  /**
+   * ASIL GUVENCE: iki farkli Lynon sitesi ayni numarali oyuncu ID'sini
+   * FARKLI gercek oyunculara verebilir. Bu test, "site-b" raporunu
+   * islerken "varsayilan" baglantidaki ayni ID'li (ama TAMAMEN alakasiz)
+   * oyuncuya YANLISLIKLA atif yapilmadigini kanitliyor.
+   */
+  it('coklu site: ayni numarali ID iki farkli baglantida CAKISMAZ', async () => {
+    // Ayni lynonOyuncuId ('99'), iki FARKLI siteden iki FARKLI oyuncuya ait.
+    await eslestir('99', 'ortak-varsayilan', 'ORTAK-VARSAYILAN', 'varsayilan');
+    await eslestir('99', 'ortak-site-b', 'ORTAK-SITE-B', 'site-b');
+    const adaptor = sahteAdaptor({
+      '2026-08-12': [{ oyuncuId: '99', yatirim: 777 }],
+    });
+
+    await gecmisGGRDoldur(KIRACI, adaptor, 'site-b', { bugun: '2026-08-12', geriGun: 1 });
+
+    // Yalnizca site-b'nin ortagina yazilmali.
+    expect(await olcumBul('ORTAK-SITE-B')).toMatchObject({ gun: '2026-08-12', yatirim: 777 });
+    expect(await olcumBul('ORTAK-VARSAYILAN')).toBeNull();
+
+    const raporSatirlari = await veritabani()!.select().from(raporTablosu).where(eq(raporTablosu.oyuncuId, '99'));
+    expect(raporSatirlari).toMatchObject([{ baglantiId: 'site-b', yatirim: 777 }]);
   });
 
   it('ayni gun tekrar calistirilinca UZERINE yazar, ustune EKLEMEZ', async () => {
@@ -107,8 +133,8 @@ varsaCalistir('gecmisGGRDoldur', () => {
     const ilkTur = sahteAdaptor({ '2026-08-05': [{ oyuncuId: 'h1c', yatirim: 100 }] });
     const ikinciTur = sahteAdaptor({ '2026-08-05': [{ oyuncuId: 'h1c', yatirim: 100 }] });
 
-    await gecmisGGRDoldur(KIRACI, ilkTur, { bugun: '2026-08-05', geriGun: 1 });
-    await gecmisGGRDoldur(KIRACI, ikinciTur, { bugun: '2026-08-05', geriGun: 1 });
+    await gecmisGGRDoldur(KIRACI, ilkTur, 'varsayilan', { bugun: '2026-08-05', geriGun: 1 });
+    await gecmisGGRDoldur(KIRACI, ikinciTur, 'varsayilan', { bugun: '2026-08-05', geriGun: 1 });
 
     const satirlar = await veritabani()!.select().from(raporTablosu).where(eq(raporTablosu.oyuncuId, 'h1c'));
     // 200 DEGIL 100: rapor idempotent, tekrar calistirmak katlamamali.
@@ -120,7 +146,7 @@ varsaCalistir('gecmisGGRDoldur', () => {
       '2026-08-06': [{ oyuncuId: 'yabanci', yatirim: 500 }],
     });
 
-    const sonuc = await gecmisGGRDoldur(KIRACI, adaptor, { bugun: '2026-08-06', geriGun: 1 });
+    const sonuc = await gecmisGGRDoldur(KIRACI, adaptor, 'varsayilan', { bugun: '2026-08-06', geriGun: 1 });
 
     expect(sonuc).toMatchObject({ tarananGun: 1, eslesenOyuncuGunu: 0, yazilanOlcum: 0 });
     expect(await veritabani()!.select().from(olcumTablosu)).toHaveLength(0);
@@ -137,7 +163,7 @@ varsaCalistir('gecmisGGRDoldur', () => {
       ],
     });
 
-    await gecmisGGRDoldur(KIRACI, adaptor, { bugun: '2026-08-07', geriGun: 1 });
+    await gecmisGGRDoldur(KIRACI, adaptor, 'varsayilan', { bugun: '2026-08-07', geriGun: 1 });
 
     expect(await olcumBul('ORTAK-I')).toMatchObject({ oyuncuSayisi: 2, aktifOyuncuSayisi: 2, yatirim: 150, cekim: 10 });
   });
@@ -149,7 +175,7 @@ varsaCalistir('gecmisGGRDoldur', () => {
       '2026-08-09': [{ oyuncuId: 'h4', yatirim: 20 }],
     });
 
-    const sonuc = await gecmisGGRDoldur(KIRACI, adaptor, { bugun: '2026-08-09', geriGun: 2 });
+    const sonuc = await gecmisGGRDoldur(KIRACI, adaptor, 'varsayilan', { bugun: '2026-08-09', geriGun: 2 });
 
     expect(sonuc.tarananGun).toBe(2);
     const satirlar = await veritabani()!
@@ -169,7 +195,7 @@ varsaCalistir('gecmisGGRDoldur', () => {
       },
     };
 
-    const sonuc = await gecmisGGRDoldur(KIRACI, patlayan, { bugun: '2026-08-11', geriGun: 2 });
+    const sonuc = await gecmisGGRDoldur(KIRACI, patlayan, 'varsayilan', { bugun: '2026-08-11', geriGun: 2 });
 
     expect(sonuc.tarananGun).toBe(1);
     expect(sonuc.hatali).toEqual([{ gun: '2026-08-10', mesaj: 'rapor gecici olarak alinamadi' }]);
@@ -182,7 +208,7 @@ varsaCalistir('gecmisGGRDoldur', () => {
       async dogrula() { return { baglandi: true, mesaj: 'ok' }; },
       async gunuCek() { return []; },
     };
-    await expect(gecmisGGRDoldur(KIRACI, destekesiz, { bugun: '2026-08-09', geriGun: 1 }))
+    await expect(gecmisGGRDoldur(KIRACI, destekesiz, 'varsayilan', { bugun: '2026-08-09', geriGun: 1 }))
       .rejects.toThrow(/desteklemiyor/i);
   });
 
@@ -190,7 +216,7 @@ varsaCalistir('gecmisGGRDoldur', () => {
     await eslestir('h6', 'ortak-l', 'ORTAK-L');
     const adaptor = sahteAdaptor({});
 
-    const sonuc = await gecmisGGRDoldur(KIRACI, adaptor, { bugun: '2026-08-09', geriGun: 10, enFazlaGun: 3 });
+    const sonuc = await gecmisGGRDoldur(KIRACI, adaptor, 'varsayilan', { bugun: '2026-08-09', geriGun: 10, enFazlaGun: 3 });
 
     expect(sonuc.tarananGun).toBe(3);
     expect(sonuc.uyari).toMatch(/10 günlük/);

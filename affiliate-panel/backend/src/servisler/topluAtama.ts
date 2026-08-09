@@ -100,6 +100,8 @@ export function kullaniciAdlariniAyikla(ham: string): { adlar: string[]; tekrarS
 export async function topluAtamaYap(
   kiraci: string,
   adaptor: BackofficeAdaptoru,
+  /** Adaptörün hangi bağlantıdan (`Baglanti.id`) çözüldüğü; bkz. `sema.ts`. */
+  baglantiId: string,
   hamKullaniciAdlari: string,
   ortakAnahtari: string,
   simdi = new Date(),
@@ -133,6 +135,7 @@ export async function topluAtamaYap(
       const eslesme = await oyuncuyuYenidenAta(
         kiraci,
         {
+          baglantiId,
           lynonOyuncuId: bulunan.oyuncuId,
           ortakAnahtari: temizOrtakAnahtari,
           // Zaten elde: kullanici adindan arandigi icin backoffice ayni

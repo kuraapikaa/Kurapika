@@ -80,7 +80,7 @@ describe('topluAtamaYap', () => {
     const ortak = await onayliOrtak(k, 'ORT1');
     const adaptor = sahteAdaptor({ oyuncu1: '111', oyuncu2: '222' });
 
-    const sonuc = await topluAtamaYap(k, adaptor, 'oyuncu1\noyuncu2', 'ORT1');
+    const sonuc = await topluAtamaYap(k, adaptor, 'varsayilan', 'oyuncu1\noyuncu2', 'ORT1');
 
     expect(sonuc).toMatchObject({ toplam: 2, basarili: 2, bulunamadi: 0, hatali: 0 });
     expect(await eslesmeBul(k, '111')).toMatchObject({ ortakId: ortak.id });
@@ -98,7 +98,7 @@ describe('topluAtamaYap', () => {
       { kayitTarihleri: { oyuncu1: '2020-01-15T00:00:00.000Z' } },
     );
 
-    await topluAtamaYap(k, adaptor, 'oyuncu1', 'ORT1');
+    await topluAtamaYap(k, adaptor, 'varsayilan', 'oyuncu1', 'ORT1');
 
     // Gecis "simdi" yapiliyor ama gosterilecek tarih Lynon'un bildirdigi
     // GERCEK kayit ani -- transfer islemi bunu simdiki zamana EZMEMELI.
@@ -110,7 +110,7 @@ describe('topluAtamaYap', () => {
     await onayliOrtak(k, 'ORT1');
     const adaptor = sahteAdaptor({ oyuncu1: '111' });
 
-    const sonuc = await topluAtamaYap(k, adaptor, 'oyuncu1\nhayalet-kullanici', 'ORT1');
+    const sonuc = await topluAtamaYap(k, adaptor, 'varsayilan', 'oyuncu1\nhayalet-kullanici', 'ORT1');
 
     expect(sonuc).toMatchObject({ toplam: 2, basarili: 1, bulunamadi: 1 });
     const bulunamayan = sonuc.satirlar.find((s) => s.kullaniciAdi === 'hayalet-kullanici');
@@ -128,7 +128,7 @@ describe('topluAtamaYap', () => {
     await oyuncuyuEslestir(k, { lynonOyuncuId: '111', ref: 'ORT1' });
 
     const adaptor = sahteAdaptor({ oyuncu1: '111' });
-    const sonuc = await topluAtamaYap(k, adaptor, 'oyuncu1', 'ORT2');
+    const sonuc = await topluAtamaYap(k, adaptor, 'varsayilan', 'oyuncu1', 'ORT2');
 
     expect(sonuc.satirlar[0]).toMatchObject({ durum: 'basarili', eslesmeDurumu: 'tasindi', oncekiOrtakId: eski.id });
     expect(await eslesmeBul(k, '111')).toMatchObject({ ortakId: yeni.id });
@@ -144,7 +144,7 @@ describe('topluAtamaYap', () => {
     const ortak = await onayliOrtak(k, 'ORT1');
     const adaptor = sahteAdaptor({ oyuncu1: '111' }, { baglamaBasarisiz: new Set(['111']) });
 
-    const sonuc = await topluAtamaYap(k, adaptor, 'oyuncu1', 'ORT1');
+    const sonuc = await topluAtamaYap(k, adaptor, 'varsayilan', 'oyuncu1', 'ORT1');
 
     expect(sonuc.satirlar[0]).toMatchObject({ durum: 'basarili', backofficeBasarili: false });
     expect(sonuc.satirlar[0].backofficeMesaji).toMatch(/zaman aşımı/i);
@@ -159,19 +159,19 @@ describe('topluAtamaYap', () => {
       async dogrula() { return { baglandi: true, mesaj: 'ok' }; },
       async gunuCek() { return []; },
     };
-    await expect(topluAtamaYap(k, adaptorArasiz, 'oyuncu1', 'ORT1')).rejects.toThrow(/arama desteklemiyor/i);
+    await expect(topluAtamaYap(k, adaptorArasiz, 'varsayilan', 'oyuncu1', 'ORT1')).rejects.toThrow(/arama desteklemiyor/i);
   });
 
   it('bos kullanici listesi reddedilir', async () => {
     const k = kiraci();
     await onayliOrtak(k, 'ORT1');
     const adaptor = sahteAdaptor({});
-    await expect(topluAtamaYap(k, adaptor, '   ', 'ORT1')).rejects.toThrow(/en az bir/i);
+    await expect(topluAtamaYap(k, adaptor, 'varsayilan', '   ', 'ORT1')).rejects.toThrow(/en az bir/i);
   });
 
   it('bos ortak anahtari reddedilir', async () => {
     const adaptor = sahteAdaptor({ oyuncu1: '111' });
-    await expect(topluAtamaYap(kiraci(), adaptor, 'oyuncu1', '')).rejects.toThrow(/ortakAnahtari/);
+    await expect(topluAtamaYap(kiraci(), adaptor, 'varsayilan', 'oyuncu1', '')).rejects.toThrow(/ortakAnahtari/);
   });
 
   it('bilinmeyen ortak anahtari satir bazinda hata sayilir, tur durmaz', async () => {
@@ -179,7 +179,7 @@ describe('topluAtamaYap', () => {
     await onayliOrtak(k, 'ORT1');
     const adaptor = sahteAdaptor({ oyuncu1: '111', oyuncu2: '222' });
 
-    const sonuc = await topluAtamaYap(k, adaptor, 'oyuncu1\noyuncu2', 'YOK-ORTAK');
+    const sonuc = await topluAtamaYap(k, adaptor, 'varsayilan', 'oyuncu1\noyuncu2', 'YOK-ORTAK');
 
     expect(sonuc.hatali).toBe(2);
     expect(sonuc.satirlar.every((s) => s.durum === 'hata')).toBe(true);
@@ -192,7 +192,28 @@ describe('topluAtamaYap', () => {
     const cok = Array.from({ length: TOPLU_ATAMA_LIMITI + 1 }, (_, i) => `oyuncu${i}`).join('\n');
     const adaptor = sahteAdaptor({});
 
-    await expect(topluAtamaYap(k, adaptor, cok, 'ORT1')).rejects.toThrow(new RegExp(`en fazla ${TOPLU_ATAMA_LIMITI}`));
+    await expect(topluAtamaYap(k, adaptor, 'varsayilan', cok, 'ORT1')).rejects.toThrow(new RegExp(`en fazla ${TOPLU_ATAMA_LIMITI}`));
+  });
+
+  /**
+   * ASIL DEGER: admin HANGI Lynon sitesinden arama yapilacagini
+   * secebiliyor -- ayni numarali ID iki farkli sitede iki farkli
+   * gercek oyuncu olabilir, birbirinin ustune yazmamali.
+   */
+  it('baglantiId farkli siteden gecisi ayri kayit olarak tutar', async () => {
+    const k = kiraci();
+    const a = await onayliOrtak(k, 'ORT1', 'Ortak A');
+    const b = await onayliOrtak(k, 'ORT2', 'Ortak B');
+    // Iki FARKLI adaptor (iki farkli site), ayni numarali ID'yi FARKLI
+    // kullanici adlarina baglamis -- gercekte de boyle olurdu.
+    const siteA = sahteAdaptor({ kullanicia: '500' });
+    const siteB = sahteAdaptor({ kullanicib: '500' });
+
+    await topluAtamaYap(k, siteA, 'varsayilan', 'kullaniciA', 'ORT1');
+    await topluAtamaYap(k, siteB, 'site-b', 'kullaniciB', 'ORT2');
+
+    expect(await eslesmeBul(k, '500', 'varsayilan')).toMatchObject({ ortakId: a.id, kullaniciAdi: 'kullaniciA' });
+    expect(await eslesmeBul(k, '500', 'site-b')).toMatchObject({ ortakId: b.id, kullaniciAdi: 'kullaniciB' });
   });
 
   it('tekrar eden kullanici adlari bir kez islenir', async () => {
@@ -200,7 +221,7 @@ describe('topluAtamaYap', () => {
     await onayliOrtak(k, 'ORT1');
     const adaptor = sahteAdaptor({ oyuncu1: '111' });
 
-    const sonuc = await topluAtamaYap(k, adaptor, 'oyuncu1\nOyuncu1\nOYUNCU1', 'ORT1');
+    const sonuc = await topluAtamaYap(k, adaptor, 'varsayilan', 'oyuncu1\nOyuncu1\nOYUNCU1', 'ORT1');
 
     expect(sonuc.toplam).toBe(1);
     expect(sonuc.tekrarSayisi).toBe(2);
@@ -238,7 +259,7 @@ varsaCalistir('topluAtamaYap: gecmis webhook verisini hedef ortaga yansitma', ()
       yatirim: 300, cekim: 20, bahis: 0, kazanc: 0, olaySayisi: 1, guncellendi: new Date(),
     });
 
-    await topluAtamaYap(k, adaptor, 'devreden', 'HEDEF1');
+    await topluAtamaYap(k, adaptor, 'varsayilan', 'devreden', 'HEDEF1');
 
     const satirlar = await veritabani()!.select().from(olcumTablosu).where(eq(olcumTablosu.kiraci, k));
     expect(satirlar).toHaveLength(1);
@@ -252,7 +273,7 @@ varsaCalistir('topluAtamaYap: gecmis webhook verisini hedef ortaga yansitma', ()
     await onayliOrtak(k, 'HEDEF2');
     const adaptor = sahteAdaptor({ taze: '556' });
 
-    await topluAtamaYap(k, adaptor, 'taze', 'HEDEF2');
+    await topluAtamaYap(k, adaptor, 'varsayilan', 'taze', 'HEDEF2');
 
     expect(await veritabani()!.select().from(olcumTablosu).where(eq(olcumTablosu.kiraci, k))).toHaveLength(0);
   });

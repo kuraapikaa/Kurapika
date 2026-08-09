@@ -2,6 +2,7 @@ import { and, desc, eq, inArray, isNotNull, sql } from 'drizzle-orm';
 import {
   eslesmeDeposu,
   yeniCakismaId,
+  VARSAYILAN_BAGLANTI_ID,
   type EslesmeCakismasi,
   type EslesmeKaynagi,
   type GunlukEslesmeSorgusu,
@@ -125,6 +126,9 @@ export async function oyuncuyuEslestir(
   const depo = eslesmeDeposu();
 
   const aday: OyuncuEslesmesi = {
+    // S2S bildirimi hangi Lynon sitesinden geldigini hic soylemiyor (tek
+    // paylasilan anahtar, baglanti basina degil) -- bkz. `sema.ts`.
+    baglantiId: VARSAYILAN_BAGLANTI_ID,
     lynonOyuncuId,
     ortakId: cozulmus.ortak.id,
     ortakAnahtari: cozulmus.ortakAnahtari,
@@ -189,11 +193,20 @@ export interface YenidenAtamaSonucu {
  */
 export async function oyuncuyuYenidenAta(
   kiraci: string,
-  girdi: { lynonOyuncuId: string; ortakAnahtari: string; kullaniciAdi?: string; kayitTarihi?: string | null },
+  girdi: {
+    lynonOyuncuId: string;
+    ortakAnahtari: string;
+    kullaniciAdi?: string;
+    kayitTarihi?: string | null;
+    /** Hangi Lynon bağlantısından/sitesinden geldiği; bkz. `sema.ts`. */
+    baglantiId: string;
+  },
   simdi = new Date(),
 ): Promise<YenidenAtamaSonucu> {
   const lynonOyuncuId = metin(girdi.lynonOyuncuId);
   if (!lynonOyuncuId) throw new EslesmeHatasi('lynonOyuncuId zorunlu.');
+
+  const baglantiId = metin(girdi.baglantiId) || VARSAYILAN_BAGLANTI_ID;
 
   const ortakAnahtari = metin(girdi.ortakAnahtari);
   const ortak = await ortakAnahtarindanBul(kiraci, ortakAnahtari);
@@ -208,12 +221,14 @@ export async function oyuncuyuYenidenAta(
   // baska bir yoldan (S2S bildirimi, toplu gecis) zaten ogrenilmis olabilir.
   // kayitTarihi de ayni mantikla korunuyor: caginan taraf bu turda Lynon'dan
   // bulamadiysa (adaptor desteklemiyor, alan bos donduyor...) daha once
-  // ogrenilmis olan tarihi SILMIYORUZ.
-  const mevcut = await eslesmeDeposu().bul(kiraci, lynonOyuncuId);
+  // ogrenilmis olan tarihi SILMIYORUZ. Arama AYNI baglantiId'de: baska bir
+  // sitede ayni numarali ID varsa o BASKA bir oyuncu, bu satirla ilgisi yok.
+  const mevcut = await eslesmeDeposu().bul(kiraci, lynonOyuncuId, baglantiId);
   const kullaniciAdi = metin(girdi.kullaniciAdi) || mevcut?.kullaniciAdi || null;
   const kayitTarihi = girdi.kayitTarihi ?? mevcut?.kayitTarihi ?? null;
 
   const aday: OyuncuEslesmesi = {
+    baglantiId,
     lynonOyuncuId,
     ortakId: ortak.id,
     ortakAnahtari,
@@ -234,10 +249,12 @@ export async function oyuncuyuYenidenAta(
   return { durum: 'tasindi', eslesme: aday, oncekiOrtakId: oncekiKayit.ortakId };
 }
 
-export async function eslesmeBul(kiraci: string, lynonOyuncuId: string): Promise<OyuncuEslesmesi | null> {
+export async function eslesmeBul(
+  kiraci: string, lynonOyuncuId: string, baglantiId?: string,
+): Promise<OyuncuEslesmesi | null> {
   const temiz = metin(lynonOyuncuId);
   if (!temiz) return null;
-  return eslesmeDeposu().bul(kiraci, temiz);
+  return eslesmeDeposu().bul(kiraci, temiz, baglantiId);
 }
 
 export async function eslesmeleriListele(
@@ -264,13 +281,24 @@ interface OyuncuFinans {
   cekim: number;
 }
 
+/** `oyuncuFinansHaritasi`'nin döndürdüğü haritanın anahtarı; bkz. orada. */
+const finansAnahtari = (baglantiId: string, lynonOyuncuId: string): string => `${baglantiId} ${lynonOyuncuId}`;
+
 /**
- * Oyuncu başına yatırım/çekim — İKİ kaynağı birleştirir.
+ * Oyuncu başına yatırım/çekim — İKİ kaynağı birleştirir, BAĞLANTI bazında.
  *
  * `oyuncuGunluk` webhook olaylarından katlanır (bkz. `isler/olayIsleyici.ts`);
  * `oyuncuGunlukRapor` Lynon'un backoffice raporundan (bkz. `gecmisGGR.ts`)
  * gün bazında KESİNLEŞMİŞ rakamlarla dolar. Webhook hiç kurulmamış bir
  * tenant'ta ilki hep boş kalır -- rapor bunun için var.
+ *
+ * `lynonOyuncuId` yalnızca TEK bir Lynon sitesi içinde benzersiz (bkz.
+ * `sema.ts`), bu yüzden dönen harita `baglantiId` ile birlikte
+ * anahtarlanıyor -- yoksa iki farklı sitedeki aynı numaralı ID'ye sahip
+ * iki FARKLI oyuncunun rakamları toplanır/karışırdı. Webhook'un kendisi
+ * siteyi bilmiyor (tek paylaşılan sır), bu yüzden yalnızca `'varsayilan'`
+ * bağlantılı satırlar için anlamlı -- diğer bağlantılar yalnızca rapordan
+ * besleniyor.
  *
  * İkisi AYRI sorgularla toplanıp burada birleştiriliyor, TEK sorguda iki
  * kez JOIN edilmiyor: `oyuncuGunluk` ve `oyuncuGunlukRapor` ikisi de
@@ -284,37 +312,62 @@ interface OyuncuFinans {
 async function oyuncuFinansHaritasi(
   vt: NonNullable<ReturnType<typeof veritabani>>,
   kiraci: string,
-  oyuncuIdler: string[],
+  satirlar: Array<{ lynonOyuncuId: string; baglantiId: string }>,
 ): Promise<Map<string, OyuncuFinans>> {
-  if (oyuncuIdler.length === 0) return new Map();
+  if (satirlar.length === 0) return new Map();
 
-  const [webhookSatirlari, raporSatirlari] = await Promise.all([
-    vt.select({
+  const varsayilanIdler = [...new Set(
+    satirlar.filter((s) => s.baglantiId === VARSAYILAN_BAGLANTI_ID).map((s) => s.lynonOyuncuId),
+  )];
+  // Cogu kiracida tek baglanti var; bu, pratikte hep TEK gruba (dolayisiyla
+  // tek rapor sorgusuna) daraliyor -- baglanti basina ayri sorgu yalnizca
+  // gercekten coklu-site kullanan kiracida coguluyor.
+  const baglantiBazindaIdler = new Map<string, Set<string>>();
+  for (const s of satirlar) {
+    const set = baglantiBazindaIdler.get(s.baglantiId) ?? new Set<string>();
+    set.add(s.lynonOyuncuId);
+    baglantiBazindaIdler.set(s.baglantiId, set);
+  }
+
+  const [webhookSatirlari, raporSatirGruplari] = await Promise.all([
+    varsayilanIdler.length === 0 ? [] : vt.select({
       oyuncuId: oyuncuGunluk.oyuncuId,
       yatirim: sql<number>`coalesce(sum(${oyuncuGunluk.yatirim}), 0)`,
       cekim: sql<number>`coalesce(sum(${oyuncuGunluk.cekim}), 0)`,
     })
       .from(oyuncuGunluk)
-      .where(and(eq(oyuncuGunluk.kiraci, kiraci), inArray(oyuncuGunluk.oyuncuId, oyuncuIdler)))
+      .where(and(eq(oyuncuGunluk.kiraci, kiraci), inArray(oyuncuGunluk.oyuncuId, varsayilanIdler)))
       .groupBy(oyuncuGunluk.oyuncuId),
-    vt.select({
-      oyuncuId: oyuncuGunlukRapor.oyuncuId,
-      yatirim: sql<number>`coalesce(sum(${oyuncuGunlukRapor.yatirim}), 0)`,
-      cekim: sql<number>`coalesce(sum(${oyuncuGunlukRapor.cekim}), 0)`,
-    })
-      .from(oyuncuGunlukRapor)
-      .where(and(eq(oyuncuGunlukRapor.kiraci, kiraci), inArray(oyuncuGunlukRapor.oyuncuId, oyuncuIdler)))
-      .groupBy(oyuncuGunlukRapor.oyuncuId),
+    Promise.all([...baglantiBazindaIdler.entries()].map(async ([baglantiId, idler]) => {
+      const satirlar = await vt.select({
+        oyuncuId: oyuncuGunlukRapor.oyuncuId,
+        yatirim: sql<number>`coalesce(sum(${oyuncuGunlukRapor.yatirim}), 0)`,
+        cekim: sql<number>`coalesce(sum(${oyuncuGunlukRapor.cekim}), 0)`,
+      })
+        .from(oyuncuGunlukRapor)
+        .where(and(
+          eq(oyuncuGunlukRapor.kiraci, kiraci),
+          eq(oyuncuGunlukRapor.baglantiId, baglantiId),
+          inArray(oyuncuGunlukRapor.oyuncuId, [...idler]),
+        ))
+        .groupBy(oyuncuGunlukRapor.oyuncuId);
+      return satirlar.map((s) => ({ ...s, baglantiId }));
+    })),
   ]);
 
   const harita = new Map<string, OyuncuFinans>();
-  for (const s of webhookSatirlari) harita.set(s.oyuncuId, { yatirim: Number(s.yatirim), cekim: Number(s.cekim) });
-  for (const s of raporSatirlari) {
-    const mevcut = harita.get(s.oyuncuId);
-    harita.set(s.oyuncuId, {
-      yatirim: Math.max(mevcut?.yatirim ?? 0, Number(s.yatirim)),
-      cekim: Math.max(mevcut?.cekim ?? 0, Number(s.cekim)),
-    });
+  for (const s of webhookSatirlari) {
+    harita.set(finansAnahtari(VARSAYILAN_BAGLANTI_ID, s.oyuncuId), { yatirim: Number(s.yatirim), cekim: Number(s.cekim) });
+  }
+  for (const grup of raporSatirGruplari) {
+    for (const s of grup) {
+      const anahtar = finansAnahtari(s.baglantiId, s.oyuncuId);
+      const mevcut = harita.get(anahtar);
+      harita.set(anahtar, {
+        yatirim: Math.max(mevcut?.yatirim ?? 0, Number(s.yatirim)),
+        cekim: Math.max(mevcut?.cekim ?? 0, Number(s.cekim)),
+      });
+    }
   }
   return harita;
 }
@@ -342,23 +395,28 @@ export async function altLinkFinansOzeti(kiraci: string, ortakId?: string): Prom
   if (ortakId) kosullar.push(eq(oyuncuEslesmeleri.ortakId, ortakId));
 
   const satirlar = await vt
-    .select({ altLinkId: oyuncuEslesmeleri.altLinkId, lynonOyuncuId: oyuncuEslesmeleri.lynonOyuncuId })
+    .select({
+      altLinkId: oyuncuEslesmeleri.altLinkId,
+      lynonOyuncuId: oyuncuEslesmeleri.lynonOyuncuId,
+      baglantiId: oyuncuEslesmeleri.baglantiId,
+    })
     .from(oyuncuEslesmeleri)
     .where(and(...kosullar));
 
-  const finansHaritasi = await oyuncuFinansHaritasi(vt, kiraci, [...new Set(satirlar.map((s) => s.lynonOyuncuId))]);
+  const finansHaritasi = await oyuncuFinansHaritasi(vt, kiraci, satirlar);
 
   const gruplar = new Map<string, { oyuncular: Set<string>; yatirim: number; cekim: number }>();
   for (const s of satirlar) {
     // `isNotNull(altLinkId)` kosuluyla suzuldugu icin hep dolu; tur
     // daraltmasi yalnizca TypeScript'in bunu bilmesi icin.
     if (s.altLinkId === null) continue;
+    const anahtar = finansAnahtari(s.baglantiId, s.lynonOyuncuId);
     const grup = gruplar.get(s.altLinkId) ?? { oyuncular: new Set<string>(), yatirim: 0, cekim: 0 };
-    if (!grup.oyuncular.has(s.lynonOyuncuId)) {
-      const finans = finansHaritasi.get(s.lynonOyuncuId);
+    if (!grup.oyuncular.has(anahtar)) {
+      const finans = finansHaritasi.get(anahtar);
       grup.yatirim += finans?.yatirim ?? 0;
       grup.cekim += finans?.cekim ?? 0;
-      grup.oyuncular.add(s.lynonOyuncuId);
+      grup.oyuncular.add(anahtar);
     }
     gruplar.set(s.altLinkId, grup);
   }
@@ -398,6 +456,7 @@ export async function altLinkOyuncuListesi(kiraci: string, altLinkId: string): P
   const satirlar = await vt
     .select({
       lynonOyuncuId: oyuncuEslesmeleri.lynonOyuncuId,
+      baglantiId: oyuncuEslesmeleri.baglantiId,
       kullaniciAdi: oyuncuEslesmeleri.kullaniciAdi,
       olusturuldu: oyuncuEslesmeleri.olusturuldu,
       kayitTarihi: oyuncuEslesmeleri.kayitTarihi,
@@ -406,10 +465,10 @@ export async function altLinkOyuncuListesi(kiraci: string, altLinkId: string): P
     .where(and(eq(oyuncuEslesmeleri.kiraci, kiraci), eq(oyuncuEslesmeleri.altLinkId, altLinkId)))
     .orderBy(desc(oyuncuEslesmeleri.olusturuldu));
 
-  const finansHaritasi = await oyuncuFinansHaritasi(vt, kiraci, satirlar.map((s) => s.lynonOyuncuId));
+  const finansHaritasi = await oyuncuFinansHaritasi(vt, kiraci, satirlar);
 
   return satirlar.map((s) => {
-    const finans = finansHaritasi.get(s.lynonOyuncuId);
+    const finans = finansHaritasi.get(finansAnahtari(s.baglantiId, s.lynonOyuncuId));
     return {
       lynonOyuncuId: s.lynonOyuncuId,
       kullaniciAdi: s.kullaniciAdi,
@@ -439,6 +498,7 @@ export async function ortakOyuncuListesi(kiraci: string, ortakId: string): Promi
   const satirlar = await vt
     .select({
       lynonOyuncuId: oyuncuEslesmeleri.lynonOyuncuId,
+      baglantiId: oyuncuEslesmeleri.baglantiId,
       kullaniciAdi: oyuncuEslesmeleri.kullaniciAdi,
       olusturuldu: oyuncuEslesmeleri.olusturuldu,
       kayitTarihi: oyuncuEslesmeleri.kayitTarihi,
@@ -447,10 +507,10 @@ export async function ortakOyuncuListesi(kiraci: string, ortakId: string): Promi
     .where(and(eq(oyuncuEslesmeleri.kiraci, kiraci), eq(oyuncuEslesmeleri.ortakId, ortakId)))
     .orderBy(desc(oyuncuEslesmeleri.olusturuldu));
 
-  const finansHaritasi = await oyuncuFinansHaritasi(vt, kiraci, satirlar.map((s) => s.lynonOyuncuId));
+  const finansHaritasi = await oyuncuFinansHaritasi(vt, kiraci, satirlar);
 
   return satirlar.map((s) => {
-    const finans = finansHaritasi.get(s.lynonOyuncuId);
+    const finans = finansHaritasi.get(finansAnahtari(s.baglantiId, s.lynonOyuncuId));
     return {
       lynonOyuncuId: s.lynonOyuncuId,
       kullaniciAdi: s.kullaniciAdi,
@@ -522,7 +582,14 @@ export async function ortakGunlukGeliriGuncelle(
       eq(oyuncuGunluk.oyuncuId, oyuncuEslesmeleri.lynonOyuncuId),
       eq(oyuncuGunluk.gun, gun),
     ))
-    .where(and(eq(oyuncuEslesmeleri.kiraci, kiraci), eq(oyuncuEslesmeleri.ortakId, ortakId)));
+    .where(and(
+      eq(oyuncuEslesmeleri.kiraci, kiraci),
+      eq(oyuncuEslesmeleri.ortakId, ortakId),
+      // Webhook siteyi bilmiyor (tek paylasilan sir) -- yalnizca
+      // 'varsayilan' baglantili oyunculara ait olabilir; baska turlu
+      // farkli bir sitedeki ayni numarali ID'ye sahip oyuncuyla cakisirdi.
+      eq(oyuncuEslesmeleri.baglantiId, VARSAYILAN_BAGLANTI_ID),
+    ));
 
   const s = satirlar[0];
   // O ortagin o gun hic olayi yoksa yazacak bir sey yok; bos satir
@@ -596,7 +663,14 @@ export async function oyunculariIcinGelirleriGuncelle(
       ortakAnahtari: oyuncuEslesmeleri.ortakAnahtari,
     })
     .from(oyuncuEslesmeleri)
-    .where(and(eq(oyuncuEslesmeleri.kiraci, kiraci), inArray(oyuncuEslesmeleri.lynonOyuncuId, oyuncuIdler)));
+    .where(and(
+      eq(oyuncuEslesmeleri.kiraci, kiraci),
+      inArray(oyuncuEslesmeleri.lynonOyuncuId, oyuncuIdler),
+      // `oyuncu_gunluk` webhook'tan geliyor, webhook siteyi bilmiyor --
+      // bu yuzden bu yeniden-dagitim yalnizca 'varsayilan' baglantili
+      // oyuncular icin anlamli (bkz. ortakGunlukGeliriGuncelle).
+      eq(oyuncuEslesmeleri.baglantiId, VARSAYILAN_BAGLANTI_ID),
+    ));
   const oyuncudanOrtaga = new Map(eslesmeler.map((e) => [e.lynonOyuncuId, e]));
 
   // Ayni (gun, ortak) cifti birden fazla transfer edilen oyuncu

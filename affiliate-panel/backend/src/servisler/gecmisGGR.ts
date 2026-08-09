@@ -1,5 +1,6 @@
 import { and, eq, inArray } from 'drizzle-orm';
 import { type BackofficeAdaptoru } from '../adaptorler/tur.js';
+import { VARSAYILAN_BAGLANTI_ID } from '../depolar/eslesmeDeposu.js';
 import { gunAnahtari, gunEkle, gunGecerliMi } from '../lib/gunler.js';
 import { oyuncuEslesmeleri, oyuncuGunlukRapor } from '../lib/sema.js';
 import { veritabani } from '../lib/veritabani.js';
@@ -59,6 +60,7 @@ export interface GecmisGGRSonucu {
 
 async function gunuDoldur(
   kiraci: string,
+  baglantiId: string,
   gun: string,
   adaptor: BackofficeAdaptoru,
   simdi: Date,
@@ -77,7 +79,15 @@ async function gunuDoldur(
       ortakAnahtari: oyuncuEslesmeleri.ortakAnahtari,
     })
     .from(oyuncuEslesmeleri)
-    .where(and(eq(oyuncuEslesmeleri.kiraci, kiraci), inArray(oyuncuEslesmeleri.lynonOyuncuId, oyuncuIdler)));
+    .where(and(
+      eq(oyuncuEslesmeleri.kiraci, kiraci),
+      inArray(oyuncuEslesmeleri.lynonOyuncuId, oyuncuIdler),
+      // Bu rapor TEK bir Lynon sitesinden geliyor; oyuncu kimlikleri
+      // yalnizca o site icinde benzersiz. Baglanti filtresi olmadan
+      // baska bir sitedeki ayni numarali ID'ye sahip FARKLI bir oyuncuyu
+      // yanlislikla eslestirebilirdi (bkz. sema.ts).
+      eq(oyuncuEslesmeleri.baglantiId, baglantiId),
+    ));
   const eslesmeMap = new Map(eslesmeler.map((e) => [e.lynonOyuncuId, e]));
 
   const gruplar = new Map<string, {
@@ -104,12 +114,12 @@ async function gunuDoldur(
     await vt
       .insert(oyuncuGunlukRapor)
       .values({
-        kiraci, gun, oyuncuId: satir.oyuncuId,
+        kiraci, baglantiId, gun, oyuncuId: satir.oyuncuId,
         yatirim: satir.yatirim, cekim: satir.cekim, bahis: satir.bahis, kazanc: satir.kazanc,
         guncellendi: simdi,
       })
       .onConflictDoUpdate({
-        target: [oyuncuGunlukRapor.kiraci, oyuncuGunlukRapor.gun, oyuncuGunlukRapor.oyuncuId],
+        target: [oyuncuGunlukRapor.kiraci, oyuncuGunlukRapor.baglantiId, oyuncuGunlukRapor.gun, oyuncuGunlukRapor.oyuncuId],
         set: {
           yatirim: satir.yatirim, cekim: satir.cekim, bahis: satir.bahis, kazanc: satir.kazanc,
           guncellendi: simdi,
@@ -161,10 +171,17 @@ async function gunuDoldur(
  * Adaptör `topluAtamaYap` deseninde DIŞARIDAN veriliyor (çağıran
  * `adaptorZorunlu` ile çözüyor) -- test edilebilirlik için: gerçek bir
  * Lynon bağlantısı olmadan sahte adaptörle sınanabiliyor.
+ *
+ * `baglantiId`, adaptörün HANGİ bağlantıdan (`Baglanti.id`, bkz.
+ * `adaptorler/kayit.ts`) çözüldüğünü söylüyor -- rapordaki oyuncu
+ * kimlikleri yalnızca o bağlantının/site'ın içinde benzersiz. Birden
+ * çok bağlantısı olan bir kiracıda, çağıran (bkz. `rotalar/yonetim.ts`)
+ * bu fonksiyonu her AKTİF bağlantı için ayrı ayrı çağırır.
  */
 export async function gecmisGGRDoldur(
   kiraci: string,
   adaptor: BackofficeAdaptoru,
+  baglantiId: string = VARSAYILAN_BAGLANTI_ID,
   { bugun = gunAnahtari(), geriGun = 30, enFazlaGun = 60 }: { bugun?: string; geriGun?: number; enFazlaGun?: number } = {},
   simdi = new Date(),
 ): Promise<GecmisGGRSonucu> {
@@ -190,7 +207,7 @@ export async function gecmisGGRDoldur(
 
   for (const gun of calisilacak) {
     try {
-      const { eslesen, yazilan } = await gunuDoldur(kiraci, gun, adaptor, simdi);
+      const { eslesen, yazilan } = await gunuDoldur(kiraci, baglantiId, gun, adaptor, simdi);
       sonuc.eslesenOyuncuGunu += eslesen;
       sonuc.yazilanOlcum += yazilan;
       sonuc.tarananGun += 1;

@@ -117,6 +117,22 @@ export const oyuncuEslesmeleri = pgTable(
   'aff_oyuncu_eslesmeleri',
   {
     kiraci: text('kiraci').notNull(),
+    /**
+     * Hangi Lynon/backoffice BAĞLANTISINDAN geldiği (bkz. `adaptorler/kayit.ts`
+     * · `Baglanti.id`). `lynon_oyuncu_id` yalnızca TEK bir Lynon sitesi
+     * içinde benzersiz — iki farklı site aynı numaralı kimliği FARKLI
+     * gerçek oyunculara verebilir. Bu sütun olmadan ikinci bir bağlantıdan
+     * toplu geçiş yapmak, ilk bağlantıdaki aynı ID'li oyuncunun kaydının
+     * SESSİZCE üzerine yazabilirdi (bkz. `zorlaAta`).
+     *
+     * S2S kayıt bildirimi ve webhook siteyi HİÇ bilmiyor (tek paylaşılan
+     * anahtar/sır, bağlantı başına değil) — bu yollardan gelen her satır
+     * `'varsayilan'`a düşüyor; bu da ilk (ve bugüne kadar HER kiracının
+     * tek) bağlantının sabit kimliğiyle birebir aynı (bkz. `kayit.ts`
+     * belge göçü). Yalnızca toplu geçiş, admin'in seçtiği GERÇEK
+     * bağlantı kimliğini yazıyor.
+     */
+    baglantiId: text('baglanti_id').notNull().default('varsayilan'),
     /** Lynon'un döndürdüğü oyuncu kimliği. */
     lynonOyuncuId: text('lynon_oyuncu_id').notNull(),
     /** Ortağın kalıcı kimliği; hakediş buna bağlanıyor. */
@@ -155,7 +171,7 @@ export const oyuncuEslesmeleri = pgTable(
     kayitTarihi: timestamp('kayit_tarihi', { withTimezone: true }),
   },
   (t) => [
-    primaryKey({ columns: [t.kiraci, t.lynonOyuncuId] }),
+    primaryKey({ columns: [t.kiraci, t.baglantiId, t.lynonOyuncuId] }),
     index('aff_eslesme_kiraci_ortak').on(t.kiraci, t.ortakId),
     index('aff_eslesme_kiraci_zaman').on(t.kiraci, t.olusturuldu.desc()),
     index('aff_eslesme_kiraci_altlink').on(t.kiraci, t.altLinkId),
@@ -277,6 +293,17 @@ export const webhookOlaylari = pgTable(
  * AYRI bilerek: o, backoffice raporundan geliyor ve gün sonunda
  * kesinleşiyor. Aynı tabloya yazsalardı gün içi olaylar gün sonu
  * raporuyla çelişir ve hangisinin doğru olduğu belirsizleşirdi.
+ *
+ * ── Bilerek `baglantiId` YOK ──
+ *
+ * Webhook, TEK paylaşılan bir sırla tüm kiracıya bağlı — hangi Lynon
+ * bağlantısından/sitesinden geldiğini hiç bilmiyor (bkz.
+ * `webhookSirri.ts`). Bu yüzden her satır örtük biçimde tenant'ın
+ * `'varsayilan'` (birincil/tek kurulan) sitesine ait sayılıyor; okuma
+ * tarafı (`oyuncuFinansHaritasi`) bunu yalnızca `baglantiId: 'varsayilan'`
+ * eşleşmeler için dikkate alıyor. İkinci bir siteden webhook almak
+ * istenirse önce bağlantı başına ayrı bir webhook sırrı/ucu gerekir —
+ * bu ayrı bir iş.
  */
 export const oyuncuGunluk = pgTable(
   'aff_oyuncu_gunluk',
@@ -316,6 +343,14 @@ export const oyuncuGunlukRapor = pgTable(
   'aff_oyuncu_gunluk_rapor',
   {
     kiraci: text('kiraci').notNull(),
+    /**
+     * Hangi bağlantının raporundan geldiği (bkz. `oyuncuEslesmeleri.baglantiId`
+     * aynı gerekçe). `gecmisGGRDoldur` artık TÜM aktif bağlantıları
+     * gezdiği için, iki farklı sitenin raporu aynı günde aynı numaralı
+     * oyuncu için ayrı satır yazabilmeli -- aksi halde ikinci sitenin
+     * raporu birincinin rakamını sessizce ezerdi.
+     */
+    baglantiId: text('baglanti_id').notNull().default('varsayilan'),
     gun: text('gun').notNull(),
     oyuncuId: text('oyuncu_id').notNull(),
     yatirim: doublePrecision('yatirim').notNull().default(0),
@@ -325,7 +360,7 @@ export const oyuncuGunlukRapor = pgTable(
     guncellendi: timestamp('guncellendi', { withTimezone: true }).notNull(),
   },
   (t) => [
-    primaryKey({ columns: [t.kiraci, t.gun, t.oyuncuId] }),
+    primaryKey({ columns: [t.kiraci, t.baglantiId, t.gun, t.oyuncuId] }),
     index('aff_oyuncu_gunluk_rapor_kiraci_gun').on(t.kiraci, t.gun),
   ],
 );
