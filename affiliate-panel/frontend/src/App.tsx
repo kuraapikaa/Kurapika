@@ -12,7 +12,6 @@ import { BTag } from './sayfalar/yonetim/BTag';
 import { Cuzdanlar } from './sayfalar/yonetim/Cuzdanlar';
 import { Kademeler } from './sayfalar/yonetim/Kademeler';
 import { Medya } from './sayfalar/yonetim/Medya';
-import { MusteriYolculugu } from './sayfalar/yonetim/MusteriYolculugu';
 import { OtoBonus } from './sayfalar/yonetim/OtoBonus';
 import { Planlar } from './sayfalar/yonetim/Planlar';
 import { Postback } from './sayfalar/yonetim/Postback';
@@ -25,16 +24,19 @@ import { PortalMedya } from './sayfalar/portal/PortalMedya';
 import { PortalOzet } from './sayfalar/portal/PortalOzet';
 import { PortalPostback } from './sayfalar/portal/PortalPostback';
 import { PortalTiklamalar } from './sayfalar/portal/PortalTiklamalar';
-import { PortalYolculuk } from './sayfalar/portal/PortalYolculuk';
 import type { OturumYaniti as Oturum } from '@sunucu/sozlesme.js';
 
 // AG Grid + Tremor birlikte ~1 MB'a yakin getiriyor; bunlari kullanan
-// her sayfa tembel yukleniyor ki digerleri (landing, giris, portal,
-// henuz tasinmamis yonetim sayfalari) bu maliyeti odemesin.
+// her sayfa tembel yukleniyor ki digerleri (landing, giris, geri kalan
+// portal ve henuz tasinmamis yonetim sayfalari) bu maliyeti odemesin.
+// Musteri Yolculugu / Yolculugunuz Tremor'a (AreaChart, BarList) gectigi
+// icin buraya tasindi -- portaldeki TEK agir sayfa bu.
 const Ozet = lazy(() => import('./sayfalar/yonetim/Ozet').then((m) => ({ default: m.Ozet })));
 const Ortaklar = lazy(() => import('./sayfalar/yonetim/Ortaklar').then((m) => ({ default: m.Ortaklar })));
 const Eslesmeler = lazy(() => import('./sayfalar/yonetim/Eslesmeler').then((m) => ({ default: m.Eslesmeler })));
 const Donemler = lazy(() => import('./sayfalar/yonetim/Donemler').then((m) => ({ default: m.Donemler })));
+const MusteriYolculugu = lazy(() => import('./sayfalar/yonetim/MusteriYolculugu').then((m) => ({ default: m.MusteriYolculugu })));
+const PortalYolculuk = lazy(() => import('./sayfalar/portal/PortalYolculuk').then((m) => ({ default: m.PortalYolculuk })));
 
 /**
  * Menü, sektördeki affiliate platformlarının düzenini izliyor:

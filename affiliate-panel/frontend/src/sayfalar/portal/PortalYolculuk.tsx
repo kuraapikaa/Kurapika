@@ -1,7 +1,10 @@
 import { useState } from 'react';
+import { AreaChart, BarList, Card, Metric, Text } from '@tremor/react';
 import { useVeri } from '../../api';
-import { Alan, Bos, Buton, Hata, Kart, Yukleniyor } from '../../ui';
-import { CubukListesi, Huni, OlcuKarti, ZamanSerisi } from '../../grafik';
+import { BosDurum, HataMesaji, Yukleniyor } from '../../components/durum';
+import { Button } from '../../components/ui/button';
+import { Card as ShadCard, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Input } from '../../components/ui/input';
 import type { MusteriYolculuguSonucu as Sonuc } from '@sunucu/sozlesme.js';
 
 /**
@@ -25,96 +28,167 @@ export function PortalYolculuk() {
 
   return (
     <>
-      <Kart
-        baslik="Tarih aralığı"
-        sag={<Buton tur="birincil" onClick={() => setFiltre(taslak)}>Uygula</Buton>}
-      >
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Alan etiket="Başlangıç" tip="date" deger={taslak.start} degisti={(v) => setTaslak((t) => ({ ...t, start: v }))} />
-          <Alan etiket="Bitiş" tip="date" deger={taslak.end} degisti={(v) => setTaslak((t) => ({ ...t, end: v }))} />
-        </div>
-      </Kart>
+      <ShadCard>
+        <CardHeader className="flex-row items-center justify-between space-y-0">
+          <CardTitle className="text-sm font-medium text-muted-foreground">Tarih aralığı</CardTitle>
+          <Button size="sm" onClick={() => setFiltre(taslak)}>Uygula</Button>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-medium text-muted-foreground">Başlangıç</span>
+              <Input type="date" value={taslak.start} onChange={(e) => setTaslak((t) => ({ ...t, start: e.target.value }))} />
+            </label>
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-medium text-muted-foreground">Bitiş</span>
+              <Input type="date" value={taslak.end} onChange={(e) => setTaslak((t) => ({ ...t, end: e.target.value }))} />
+            </label>
+          </div>
+        </CardContent>
+      </ShadCard>
 
       {yukleniyor ? (
-        <Yukleniyor />
+        <Yukleniyor satir={5} />
       ) : hata ? (
-        <Hata mesaj={hata} />
+        <HataMesaji mesaj={hata} />
       ) : !veri || (veri.toplam.tiklama === 0 && veri.toplam.kayit === 0) ? (
-        <Kart><Bos mesaj="Bu aralıkta tıklama ya da kayıt yok. İlk tıklamadan sonra burası dolmaya başlar." /></Kart>
+        <ShadCard>
+          <CardContent className="pt-6">
+            <BosDurum mesaj="Bu aralıkta tıklama ya da kayıt yok. İlk tıklamadan sonra burası dolmaya başlar." />
+          </CardContent>
+        </ShadCard>
       ) : (
         <>
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <OlcuKarti etiket="Tıklama" deger={String(veri.toplam.tiklama)} alt={`${veri.aralik.start} – ${veri.aralik.end}`} />
-            <OlcuKarti
-              etiket="Kayıt"
-              deger={String(veri.toplam.kayit)}
-              alt={veri.donusum.tiklamaKayit === null ? 'dönüşüm hesaplanamıyor' : `%${veri.donusum.tiklamaKayit} dönüşüm`}
-            />
-            <OlcuKarti
-              etiket="İlk yatırım"
-              deger={veri.toplam.ilkYatirim === null ? '—' : String(veri.toplam.ilkYatirim)}
-              alt={
-                veri.toplam.ilkYatirim === null
+            <Card>
+              <Text>Tıklama</Text>
+              <Metric>{veri.toplam.tiklama}</Metric>
+              <Text className="mt-1 text-xs">{veri.aralik.start} – {veri.aralik.end}</Text>
+            </Card>
+            <Card>
+              <Text>Kayıt</Text>
+              <Metric>{veri.toplam.kayit}</Metric>
+              <Text className="mt-1 text-xs">
+                {veri.donusum.tiklamaKayit === null ? 'dönüşüm hesaplanamıyor' : `%${veri.donusum.tiklamaKayit} dönüşüm`}
+              </Text>
+            </Card>
+            <Card>
+              <Text>İlk yatırım</Text>
+              <Metric>{veri.toplam.ilkYatirim === null ? '—' : veri.toplam.ilkYatirim}</Metric>
+              <Text className="mt-1 text-xs">
+                {veri.toplam.ilkYatirim === null
                   ? 'bu dönemde ölçülemiyor'
-                  : veri.donusum.kayitIlkYatirim === null ? undefined : `%${veri.donusum.kayitIlkYatirim} dönüşüm`
-              }
-            />
-            <OlcuKarti etiket="Aktif oyuncu" deger={String(veri.toplam.aktifOyuncu)} alt="bu aralıkta işlem yapan" />
+                  : veri.donusum.kayitIlkYatirim === null ? '' : `%${veri.donusum.kayitIlkYatirim} dönüşüm`}
+              </Text>
+            </Card>
+            <Card>
+              <Text>Aktif oyuncu</Text>
+              <Metric>{veri.toplam.aktifOyuncu}</Metric>
+              <Text className="mt-1 text-xs">bu aralıkta işlem yapan</Text>
+            </Card>
           </div>
 
-          <Kart baslik="Dönüşüm hunisi">
-            <p className="mb-4 text-sm" style={{ color: 'var(--metin-2)' }}>
-              Her satır bir önceki aşamanın ne kadarının ilerlediğini gösterir: kaç tıklamanız
-              kayda, kaç kaydınız ilk yatırıma dönüştü.
-            </p>
-            <Huni
-              asamalar={[
-                { etiket: 'Tıklama', deger: veri.toplam.tiklama },
-                { etiket: 'Kayıt', deger: veri.toplam.kayit },
-                { etiket: 'İlk yatırım', deger: veri.toplam.ilkYatirim },
-              ]}
-            />
-          </Kart>
+          <ShadCard>
+            <CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">Dönüşüm hunisi</CardTitle></CardHeader>
+            <CardContent>
+              <p className="mb-4 text-sm text-muted-foreground">
+                Her satır bir önceki aşamanın ne kadarının ilerlediğini gösterir: kaç tıklamanız
+                kayda, kaç kaydınız ilk yatırıma dönüştü.
+              </p>
+              <BarList
+                data={[
+                  { name: 'Tıklama', value: veri.toplam.tiklama },
+                  {
+                    name: veri.donusum.tiklamaKayit === null ? 'Kayıt' : `Kayıt · %${veri.donusum.tiklamaKayit} dönüşüm`,
+                    value: veri.toplam.kayit,
+                  },
+                  ...(veri.toplam.ilkYatirim !== null
+                    ? [{
+                        name: veri.donusum.kayitIlkYatirim === null
+                          ? 'İlk yatırım'
+                          : `İlk yatırım · %${veri.donusum.kayitIlkYatirim} dönüşüm`,
+                        value: veri.toplam.ilkYatirim,
+                      }]
+                    : []),
+                ]}
+                color="blue"
+              />
+              {veri.toplam.ilkYatirim === null && (
+                <p className="mt-3 text-xs text-muted-foreground">
+                  İlk yatırım bu dönemde ölçülmüyor; huni yalnızca tıklama ve kayıt aşamalarını gösteriyor.
+                </p>
+              )}
+            </CardContent>
+          </ShadCard>
 
           <div className="grid gap-3 lg:grid-cols-3">
-            <Kart baslik="Günlük tıklama">
-              <ZamanSerisi
-                noktalar={veri.gunluk.map((g) => ({ etiket: g.gun.slice(5), deger: g.tiklama }))}
-                bosMesaj="Ölçüm yok."
-              />
-            </Kart>
-            <Kart baslik="Günlük kayıt">
-              <ZamanSerisi
-                noktalar={veri.gunluk.map((g) => ({ etiket: g.gun.slice(5), deger: g.kayit }))}
-                bosMesaj="Ölçüm yok."
-              />
-            </Kart>
-            <Kart baslik="Günlük ilk yatırım">
-              {veri.gunluk.every((g) => g.ilkYatirim === null) ? (
-                <Bos mesaj="Bu aralıkta ölçülemiyor." />
-              ) : (
-                <ZamanSerisi
-                  noktalar={veri.gunluk.map((g) => ({ etiket: g.gun.slice(5), deger: g.ilkYatirim ?? 0 }))}
-                  bosMesaj="Ölçüm yok."
-                />
-              )}
-            </Kart>
+            <ShadCard>
+              <CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">Günlük tıklama</CardTitle></CardHeader>
+              <CardContent>
+                {veri.gunluk.length === 0 ? (
+                  <div className="flex h-44 items-center justify-center"><Text>Ölçüm yok.</Text></div>
+                ) : (
+                  <AreaChart
+                    className="h-44"
+                    data={veri.gunluk.map((g) => ({ gun: g.gun.slice(5), Tıklama: g.tiklama }))}
+                    index="gun"
+                    categories={['Tıklama']}
+                    colors={['blue']}
+                    showLegend={false}
+                  />
+                )}
+              </CardContent>
+            </ShadCard>
+            <ShadCard>
+              <CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">Günlük kayıt</CardTitle></CardHeader>
+              <CardContent>
+                {veri.gunluk.length === 0 ? (
+                  <div className="flex h-44 items-center justify-center"><Text>Ölçüm yok.</Text></div>
+                ) : (
+                  <AreaChart
+                    className="h-44"
+                    data={veri.gunluk.map((g) => ({ gun: g.gun.slice(5), Kayıt: g.kayit }))}
+                    index="gun"
+                    categories={['Kayıt']}
+                    colors={['blue']}
+                    showLegend={false}
+                  />
+                )}
+              </CardContent>
+            </ShadCard>
+            <ShadCard>
+              <CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">Günlük ilk yatırım</CardTitle></CardHeader>
+              <CardContent>
+                {veri.gunluk.every((g) => g.ilkYatirim === null) ? (
+                  <div className="flex h-44 items-center justify-center"><Text>Bu aralıkta ölçülemiyor.</Text></div>
+                ) : (
+                  <AreaChart
+                    className="h-44"
+                    data={veri.gunluk.map((g) => ({ gun: g.gun.slice(5), 'İlk yatırım': g.ilkYatirim ?? 0 }))}
+                    index="gun"
+                    categories={['İlk yatırım']}
+                    colors={['blue']}
+                    showLegend={false}
+                  />
+                )}
+              </CardContent>
+            </ShadCard>
           </div>
 
-          <Kart baslik="Trafiğiniz nereden geliyor">
-            {veri.kaynaklar.length === 0 ? (
-              <Bos mesaj="Bu aralıkta tıklama yok." />
-            ) : (
-              <CubukListesi
-                satirlar={veri.kaynaklar.map((k) => ({
-                  etiket: k.kaynak,
-                  deger: k.tiklama,
-                  alt: `%${k.yuzde}`,
-                }))}
-                birim="tıklama"
-              />
-            )}
-          </Kart>
+          <ShadCard>
+            <CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">Trafiğiniz nereden geliyor</CardTitle></CardHeader>
+            <CardContent>
+              {veri.kaynaklar.length === 0 ? (
+                <BosDurum mesaj="Bu aralıkta tıklama yok." />
+              ) : (
+                <BarList
+                  data={veri.kaynaklar.map((k) => ({ name: k.kaynak, value: k.tiklama }))}
+                  color="blue"
+                  valueFormatter={(v: number) => v.toLocaleString('tr-TR')}
+                />
+              )}
+            </CardContent>
+          </ShadCard>
         </>
       )}
     </>
