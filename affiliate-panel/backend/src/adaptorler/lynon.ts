@@ -167,8 +167,6 @@ class LynonAdaptoru implements BackofficeAdaptoru {
       });
       kavanoz.yanittanAl(yanit.headers, url);
       const sunucuAni = Date.parse(yanit.headers.get('date') ?? '');
-      const u = new URL(url);
-      console.error('[lynon-tani] jsonGonder', { istek: `${u.hostname}${u.pathname}`, durum: yanit.status });
       return {
         durum: yanit.status,
         tamam: yanit.ok,
@@ -221,10 +219,6 @@ class LynonAdaptoru implements BackofficeAdaptoru {
       await this.yonlendirmeyiTamamla(donusUrl, kavanoz);
       this.kavanoz = kavanoz;
       this.girisAni = Date.now();
-      // GECICI TANI: 401 ile giris basariliyken sonraki cagrilarin neden
-      // reddedildigini anlamak icin. Yalnizca cerez ADLARI -- degerler
-      // oturum anahtari, loga yazilmiyor.
-      console.error('[lynon-tani] giris tamamlandi, cerezler:', kavanoz.adlar());
       return kavanoz;
     }
 
@@ -273,36 +267,15 @@ class LynonAdaptoru implements BackofficeAdaptoru {
     const kontrol = new AbortController();
     const zamanlayici = setTimeout(() => kontrol.abort(), ZAMAN_ASIMI_MS);
     try {
-      const yanit = await fetch(url, {
+      return await fetch(url, {
         method: 'GET',
         signal: kontrol.signal,
         redirect: 'manual',
         headers: { ...this.ortakBasliklar(url), Cookie: kavanoz.baslik(url) },
       });
-      this.hopLogla(url, yanit);
-      return yanit;
     } finally {
       clearTimeout(zamanlayici);
     }
-  }
-
-  /** GECICI TANI: sorgu/parca ATILIYOR -- OIDC kodu/token orada olabilir, loga hic girmemeli. */
-  private hopLogla(url: string, yanit: Response): void {
-    const konum = yanit.headers.get('location');
-    let konumOzet = konum;
-    try {
-      if (konum) {
-        const k = new URL(konum, url);
-        konumOzet = `${k.hostname}${k.pathname}`;
-      }
-    } catch { /* konum goreli/bozuksa oldugu gibi birak */ }
-    const u = new URL(url);
-    console.error('[lynon-tani] hop', {
-      istek: `${u.hostname}${u.pathname}`,
-      durum: yanit.status,
-      contentType: yanit.headers.get('content-type'),
-      location: konumOzet,
-    });
   }
 
   /**
@@ -350,10 +323,6 @@ class LynonAdaptoru implements BackofficeAdaptoru {
         },
         body: govde.toString(),
       });
-      this.hopLogla(hedefUrl, yanit);
-      // GECICI TANI: alan ADLARI (degerleri degil) -- form_post beklentimiz
-      // dogru mu, yoksa Lynon farkli bir sey mi donuyor gormek icin.
-      console.error('[lynon-tani] form-post gonderildi', { alanAdlari: [...govde.keys()] });
       return yanit;
     } finally {
       clearTimeout(zamanlayici);
@@ -454,17 +423,6 @@ class LynonAdaptoru implements BackofficeAdaptoru {
       });
       kavanoz.yanittanAl(yanit.headers, url.toString());
       const veri = jsonCoz(await yanit.text());
-
-      if (!yanit.ok) {
-        // GECICI TANI: hangi cerezlerin GONDERILDIGINI (adlariyla) ve
-        // yanitin ne dedigini goruyoruz. Deger yok, yalnizca ad + durum.
-        console.error('[lynon-tani] basarisiz cagri', {
-          yol: url.pathname,
-          durum: yanit.status,
-          gonderilenCerezAdlari: kavanoz.adlar(),
-          govdeOzeti: JSON.stringify(veri).slice(0, 300),
-        });
-      }
 
       // Oturum dustuyse (401/403 ya da giris sayfasina yonlendirme) BIR KEZ
       // yeniden giris denenir. Sinirsiz denemek, gercekten yetkisiz bir
