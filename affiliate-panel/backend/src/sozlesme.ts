@@ -22,7 +22,7 @@
  * kılar.
  */
 
-import type { Baglanti } from './adaptorler/kayit.js';
+import type { Baglanti, BaglantiGorunumu } from './adaptorler/kayit.js';
 import type { AdaptorAlani, AdaptorYetenegi } from './adaptorler/tur.js';
 import type { AltLink } from './servisler/altLink.js';
 import type { Donem, OrtakHakedisi } from './servisler/hakedis.js';
@@ -48,7 +48,7 @@ import type { Marka } from './rotalar/marka.js';
 
 /* ── Alan tipleri; arayüz bunları doğrudan kullanıyor ────────────── */
 export type {
-  AdaptorAlani, AdaptorYetenegi, AltLink, Baglanti, Donem, KademeBagi,
+  AdaptorAlani, AdaptorYetenegi, AltLink, Baglanti, BaglantiGorunumu, Donem, KademeBagi,
   KaliteSinyali, KomisyonPlani, Marka, Medya, MedyaTuru, MusteriYolculuguSonucu, OrtakDurumu,
   OrtakGorunumu, OrtakGunlukOlcum, OrtakHakedisi, OrtakOzeti, OtoBonusAyari,
   OtoBonusDurumuYaniti, OtoBonusKaydi, PostbackAyari, PostbackKaydi, SenkronSonucu,
@@ -74,18 +74,6 @@ export interface AdaptorTanimGorunumu {
   yetenekler: AdaptorYetenegi[];
   alanlar: AdaptorAlani[];
 }
-
-export type BaglantiGorunumu =
-  | { kurulu: false }
-  | {
-      kurulu: true;
-      adaptor: string;
-      etiket: string;
-      aktif: boolean;
-      updatedAt: string;
-      /** Sır alanları MASKELİ; düz değer buradan asla dönmez. */
-      ayar: Record<string, string>;
-    };
 
 export interface OdemeYontemleriYaniti {
   yontemler: string[];
@@ -130,7 +118,7 @@ export interface SahipsizAnahtar {
 
 export interface YonetimUclari {
   '/adaptorler': { adaptorler: AdaptorTanimGorunumu[] };
-  '/baglanti': BaglantiGorunumu;
+  '/baglantilar': { baglantilar: BaglantiGorunumu[] };
   '/odeme-yontemleri': OdemeYontemleriYaniti;
   '/ftd-durumu': FtdDurumu;
   '/ozet': { bugun: string; ozetler: OrtakOzeti[] };

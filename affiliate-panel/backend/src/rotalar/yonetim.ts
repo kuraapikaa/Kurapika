@@ -5,10 +5,12 @@ import {
   adaptorAl,
   adaptorKatalogu,
   adaptorZorunlu,
-  baglantiGorunumu,
+  baglantilarGorunumu,
   baglantiyiSil,
   baglantiyiYaz,
+  varsayilanBaglantiId,
 } from '../adaptorler/kayit.js';
+import { AdaptorHatasi } from '../adaptorler/tur.js';
 import { yoneticiZorunlu } from '../kimlik/koruma.js';
 import { gunAnahtari } from '../lib/gunler.js';
 import {
@@ -90,25 +92,51 @@ export async function yonetimRotalari(app: FastifyInstance): Promise<void> {
     if (!yoneticiZorunlu(istek, yanit)) return yanit;
   });
 
-  // ── Backoffice bağlantısı ──────────────────────────────────────────
+  // ── Backoffice bağlantıları ──────────────────────────────────────────
 
   app.get('/adaptorler', async (): Promise<YonetimUclari['/adaptorler']> => ({ adaptorler: adaptorKatalogu() }));
 
-  app.get('/baglanti', async (istek): Promise<YonetimUclari['/baglanti']> => baglantiGorunumu(istek.kiraci));
+  /**
+   * ÇOKLU BAĞLANTI.
+   *
+   * Bir kiracı (marka) birden fazla Lynon SİTESİ işletebiliyor -- her
+   * sitenin kendi backoffice adresi, kendi girişi var. Ortaklar TEK
+   * listede kalıyor; bir ortağın getirdiği oyuncular birden fazla
+   * bağlantıya dağılabiliyor, hakediş ortak bazında toplanıyor (bkz.
+   * `adaptorler/kayit.ts` dosya başı açıklaması).
+   *
+   * Senkron/toplu atama/geçmiş GGR doldurma şu an hâlâ yalnızca İLK
+   * aktif bağlantıyı kullanıyor (`varsayilanBaglantiId`) -- ikinci bir
+   * bağlantı buradan eklenip test edilebilir ama diğer özellikler onu
+   * henüz KULLANMIYOR. Oyuncu kimlikleri yalnızca TEK bir Lynon sitesi
+   * içinde benzersiz; iki siteyi aynı anda beslemek, aynı sayısal
+   * kimliğe sahip iki farklı oyuncuyu birbirine karıştırma riski taşıyor
+   * ve bu risk kaldırılmadan (ayrı bir şema değişikliğiyle) ikinci
+   * bağlantıyı canlı veriye katmak güvenli değil.
+   */
+  app.get('/baglantilar', async (istek): Promise<YonetimUclari['/baglantilar']> => ({
+    baglantilar: await baglantilarGorunumu(istek.kiraci),
+  }));
 
-  app.put('/baglanti', async (istek) => {
-    const govde = (istek.body ?? {}) as { adaptor?: string; ayar?: Record<string, unknown>; aktif?: boolean };
-    await baglantiyiYaz(istek.kiraci, govde);
-    return baglantiGorunumu(istek.kiraci);
+  app.post('/baglantilar', async (istek): Promise<YonetimUclari['/baglantilar']> => {
+    const govde = (istek.body ?? {}) as { ad?: string; adaptor?: string; ayar?: Record<string, unknown>; aktif?: boolean };
+    await baglantiyiYaz(istek.kiraci, null, govde);
+    return { baglantilar: await baglantilarGorunumu(istek.kiraci) };
   });
 
-  app.delete('/baglanti', async (istek) => {
-    await baglantiyiSil(istek.kiraci);
+  app.put<{ Params: { id: string } }>('/baglantilar/:id', async (istek): Promise<YonetimUclari['/baglantilar']> => {
+    const govde = (istek.body ?? {}) as { ad?: string; adaptor?: string; ayar?: Record<string, unknown>; aktif?: boolean };
+    await baglantiyiYaz(istek.kiraci, istek.params.id, govde);
+    return { baglantilar: await baglantilarGorunumu(istek.kiraci) };
+  });
+
+  app.delete<{ Params: { id: string } }>('/baglantilar/:id', async (istek) => {
+    await baglantiyiSil(istek.kiraci, istek.params.id);
     return { silindi: true };
   });
 
-  app.post('/baglanti/dogrula', async (istek) => {
-    const adaptor = await adaptorZorunlu(istek.kiraci);
+  app.post<{ Params: { id: string } }>('/baglantilar/:id/dogrula', async (istek) => {
+    const adaptor = await adaptorZorunlu(istek.kiraci, istek.params.id);
     return adaptor.dogrula();
   });
 
@@ -121,7 +149,8 @@ export async function yonetimRotalari(app: FastifyInstance): Promise<void> {
    * bu belirsizlik kaynaginda bitiyor.
    */
   app.get('/odeme-yontemleri', async (istek, yanit): Promise<YonetimUclari['/odeme-yontemleri']> => {
-    const adaptor = await adaptorAl(istek.kiraci);
+    const baglantiId = await varsayilanBaglantiId(istek.kiraci);
+    const adaptor = baglantiId ? await adaptorAl(istek.kiraci, baglantiId) : null;
     if (!adaptor?.odemeYontemleri) {
       // 501 DEGIL bos liste: baglanti yoksa da panel calismali, ortagin
       // odeme yontemi alani serbest metne dusuyor.
@@ -139,8 +168,8 @@ export async function yonetimRotalari(app: FastifyInstance): Promise<void> {
     }
   });
 
-  app.get('/baglanti/ortaklar', async (istek, yanit) => {
-    const adaptor = await adaptorZorunlu(istek.kiraci);
+  app.get<{ Params: { id: string } }>('/baglantilar/:id/ortaklar', async (istek, yanit) => {
+    const adaptor = await adaptorZorunlu(istek.kiraci, istek.params.id);
     if (!adaptor.ortaklariListele) {
       yanit.status(501);
       return { hata: 'Bu adaptör backoffice ortak listesini okuyamıyor.' };
@@ -148,8 +177,8 @@ export async function yonetimRotalari(app: FastifyInstance): Promise<void> {
     return { ortaklar: await adaptor.ortaklariListele() };
   });
 
-  app.post('/baglanti/oyuncu-bagla', async (istek, yanit) => {
-    const adaptor = await adaptorZorunlu(istek.kiraci);
+  app.post<{ Params: { id: string } }>('/baglantilar/:id/oyuncu-bagla', async (istek, yanit) => {
+    const adaptor = await adaptorZorunlu(istek.kiraci, istek.params.id);
     if (!adaptor.oyuncuyuBagla) {
       yanit.status(501);
       return { hata: 'Bu adaptör oyuncu bağlamayı desteklemiyor.' };
@@ -162,15 +191,23 @@ export async function yonetimRotalari(app: FastifyInstance): Promise<void> {
     });
   });
 
+  /** Birden çok bağlantı varken hangisinin kullanılacağını çözer; hiçbiri kurulu değilse açıklayıcı hata. */
+  async function calisilacakAdaptor(kiraci: string) {
+    const id = await varsayilanBaglantiId(kiraci);
+    if (!id) throw new AdaptorHatasi('Backoffice bağlantısı kurulu değil ya da pasif.', 409);
+    return adaptorZorunlu(kiraci, id);
+  }
+
   // ── Senkron ────────────────────────────────────────────────────────
 
   app.post('/senkron', async (istek) => {
     const govde = (istek.body ?? {}) as { gun?: string; geriGun?: number };
+    const adaptor = await calisilacakAdaptor(istek.kiraci);
     if (govde.gun) {
-      const yazilan = await gunuSenkronla(istek.kiraci, String(govde.gun));
+      const yazilan = await gunuSenkronla(istek.kiraci, adaptor, String(govde.gun));
       return { cekilenGun: 1, yazilanOlcum: yazilan, hatali: [], uyari: null };
     }
-    return eksikGunleriSenkronla(istek.kiraci, { geriGun: Number(govde.geriGun) || 30 });
+    return eksikGunleriSenkronla(istek.kiraci, adaptor, { geriGun: Number(govde.geriGun) || 30 });
   });
 
   /**
@@ -181,7 +218,7 @@ export async function yonetimRotalari(app: FastifyInstance): Promise<void> {
    */
   app.post('/gecmis-ggr-doldur', async (istek) => {
     const govde = (istek.body ?? {}) as { geriGun?: number };
-    const adaptor = await adaptorZorunlu(istek.kiraci);
+    const adaptor = await calisilacakAdaptor(istek.kiraci);
     return gecmisGGRDoldur(istek.kiraci, adaptor, { geriGun: Number(govde.geriGun) || 30 });
   });
 
@@ -419,7 +456,7 @@ export async function yonetimRotalari(app: FastifyInstance): Promise<void> {
    */
   app.post('/oyuncu-eslesmeleri/toplu-atama', async (istek) => {
     const govde = (istek.body ?? {}) as { kullaniciAdlari?: unknown; ortakAnahtari?: unknown };
-    const adaptor = await adaptorZorunlu(istek.kiraci);
+    const adaptor = await calisilacakAdaptor(istek.kiraci);
     return topluAtamaYap(
       istek.kiraci,
       adaptor,

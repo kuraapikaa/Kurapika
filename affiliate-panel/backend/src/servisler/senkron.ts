@@ -1,4 +1,4 @@
-import { adaptorZorunlu } from '../adaptorler/kayit.js';
+import type { BackofficeAdaptoru } from '../adaptorler/tur.js';
 import { gunAnahtari, gunEkle, gunGecerliMi } from '../lib/gunler.js';
 import { ftdDurumu, ftdIsle } from './ilkYatirim.js';
 import { olcumleriYaz, sonOlculenGun } from './olcum.js';
@@ -37,12 +37,12 @@ export interface SenkronSonucu {
  */
 export async function gunuSenkronla(
   kiraci: string,
+  adaptor: BackofficeAdaptoru,
   gun: string,
   { kalibrasyonMu = false }: { kalibrasyonMu?: boolean } = {},
   simdi = new Date(),
 ): Promise<number> {
   if (!gunGecerliMi(gun)) throw new Error(`Geçersiz gün: ${gun}`);
-  const adaptor = await adaptorZorunlu(kiraci);
   const olcumler = await adaptor.gunuCek(gun);
 
   const zenginlestirilmis = [];
@@ -88,6 +88,7 @@ export async function gunuSenkronla(
  */
 export async function eksikGunleriSenkronla(
   kiraci: string,
+  adaptor: BackofficeAdaptoru,
   { bugun = gunAnahtari(), geriGun = 30, enFazlaGun = 60 }: { bugun?: string; geriGun?: number; enFazlaGun?: number } = {},
   simdi = new Date(),
 ): Promise<SenkronSonucu> {
@@ -124,6 +125,7 @@ export async function eksikGunleriSenkronla(
       const sonGunMu = gun === calisilacak[calisilacak.length - 1];
       sonuc.yazilanOlcum += await gunuSenkronla(
         kiraci,
+        adaptor,
         gun,
         { kalibrasyonMu: kalibrasyonTuru && !sonGunMu },
         simdi,

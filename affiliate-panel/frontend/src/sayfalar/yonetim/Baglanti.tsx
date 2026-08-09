@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api, gunBicimi, useVeri } from '../../api';
-import { Alan, Buton, Hata, Kart, Onay, Rozet, Yukleniyor } from '../../ui';
+import { Alan, Bos, Buton, Hata, Hucre, Kart, Onay, Rozet, Satir, Tablo, Yukleniyor } from '../../ui';
 import type { AdaptorTanimGorunumu as AdaptorTanimi, BaglantiGorunumu as Gorunum } from '@sunucu/sozlesme.js';
 
 
@@ -10,46 +10,71 @@ const YETENEK_ETIKETI: Record<string, string> = {
   'oyuncu-baglama': 'Oyuncu bağlama',
 };
 
+type Dogrulama = { baglandi: boolean; mesaj: string; ayrinti?: Record<string, unknown> };
+
 export function Baglanti() {
   const katalog = useVeri<{ adaptorler: AdaptorTanimi[] }>('/api/yonetim/adaptorler');
-  const mevcut = useVeri<Gorunum>('/api/yonetim/baglanti');
+  const baglantilar = useVeri<{ baglantilar: Gorunum[] }>('/api/yonetim/baglantilar');
 
+  const [duzenlenenId, setDuzenlenenId] = useState<string | null>(null);
+  const [ad, setAd] = useState('');
   const [secilen, setSecilen] = useState('');
   const [ayar, setAyar] = useState<Record<string, string>>({});
   const [aktif, setAktif] = useState(true);
   const [islemHatasi, setIslemHatasi] = useState<string | null>(null);
-  const [dogrulama, setDogrulama] = useState<{ baglandi: boolean; mesaj: string; ayrinti?: Record<string, unknown> } | null>(null);
+  const [dogrulamalar, setDogrulamalar] = useState<Record<string, Dogrulama>>({});
   const [calisiyor, setCalisiyor] = useState(false);
 
   const tanimlar = katalog.veri?.adaptorler ?? [];
   const tanim = tanimlar.find((t) => t.ad === secilen) ?? null;
 
-  useEffect(() => {
-    if (!tanimlar.length) return;
-    const kurulu = mevcut.veri?.kurulu ? mevcut.veri.adaptor : '';
-    setSecilen((onceki) => onceki || kurulu || tanimlar[0].ad);
-  }, [tanimlar.length, mevcut.veri]);
-
-  useEffect(() => {
-    if (!tanim) return;
-    const kayitli = mevcut.veri?.kurulu && mevcut.veri.adaptor === tanim.ad ? mevcut.veri.ayar : {};
-    const baslangic: Record<string, string> = {};
-    for (const alan of tanim.alanlar) {
+  const varsayilanAyar = (t: AdaptorTanimi | undefined, kayitli: Record<string, string> = {}) => {
+    const cikti: Record<string, string> = {};
+    for (const alan of t?.alanlar ?? []) {
       // SIR alanlari BOS baslatiliyor. Kayitli deger maskeli geliyor
       // ("••••1234"); formu maskeyle doldurmak, kullanici baska bir alani
       // degistirdiginde parolanin maskeye ezilmesi demek olurdu.
-      baslangic[alan.ad] = alan.sir ? '' : (kayitli[alan.ad] ?? alan.varsayilan ?? '');
+      cikti[alan.ad] = alan.sir ? '' : (kayitli[alan.ad] ?? alan.varsayilan ?? '');
     }
-    setAyar(baslangic);
-    if (mevcut.veri?.kurulu) setAktif(mevcut.veri.aktif);
-  }, [tanim, mevcut.veri]);
+    return cikti;
+  };
+
+  useEffect(() => {
+    if (!tanimlar.length || secilen) return;
+    setSecilen(tanimlar[0].ad);
+    setAyar(varsayilanAyar(tanimlar[0]));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tanimlar.length]);
+
+  const adaptorDegistir = (yeni: string) => {
+    setSecilen(yeni);
+    setAyar(varsayilanAyar(tanimlar.find((t) => t.ad === yeni)));
+  };
+
+  const baslaYeni = () => {
+    setDuzenlenenId(null);
+    setAd('');
+    setAktif(true);
+    if (tanimlar.length) {
+      setSecilen(tanimlar[0].ad);
+      setAyar(varsayilanAyar(tanimlar[0]));
+    }
+  };
+
+  const baslaDuzenle = (b: Gorunum) => {
+    setDuzenlenenId(b.id);
+    setAd(b.ad);
+    setSecilen(b.adaptor);
+    setAktif(b.aktif);
+    setAyar(varsayilanAyar(tanimlar.find((t) => t.ad === b.adaptor), b.ayar));
+  };
 
   const calistir = async (is: () => Promise<unknown>) => {
     setIslemHatasi(null);
     setCalisiyor(true);
     try {
       await is();
-      mevcut.yenile();
+      baglantilar.yenile();
     } catch (h) {
       setIslemHatasi(h instanceof Error ? h.message : 'İşlem başarısız.');
     } finally {
@@ -57,55 +82,77 @@ export function Baglanti() {
     }
   };
 
-  if (katalog.yukleniyor || mevcut.yukleniyor) return <Yukleniyor />;
+  if (katalog.yukleniyor || baglantilar.yukleniyor) return <Yukleniyor />;
+
+  const liste = baglantilar.veri?.baglantilar ?? [];
 
   return (
     <>
-      <Kart baslik="Mevcut bağlantı">
-        {mevcut.veri?.kurulu ? (
-          <div className="flex flex-wrap items-center gap-3 text-sm">
-            <strong>{mevcut.veri.etiket}</strong>
-            <Rozet metin={mevcut.veri.aktif ? 'Aktif' : 'Pasif'} renk={mevcut.veri.aktif ? 'olumlu' : 'notr'} />
-            <span style={{ color: 'var(--metin-2)' }}>Güncellendi: {gunBicimi(mevcut.veri.updatedAt)}</span>
-            <div className="ml-auto flex gap-2">
-              <Buton
-                devredisi={calisiyor}
-                onClick={() => calistir(async () => setDogrulama(await api.gonder('/api/yonetim/baglanti/dogrula')))}
-              >
-                Bağlantıyı sına
-              </Buton>
-              <Buton tur="tehlike" devredisi={calisiyor} onClick={() => calistir(() => api.sil('/api/yonetim/baglanti'))}>
-                Kaldır
-              </Buton>
-            </div>
-          </div>
+      <Kart baslik="Bağlantılar">
+        {liste.length === 0 ? (
+          <Bos mesaj="Henüz backoffice bağlantısı kurulu değil. Panelin geri kalanı (ortaklar, medya, hakediş) çalışmaya devam eder; yalnızca ölçüm çekilemez." />
         ) : (
-          <p className="text-sm" style={{ color: 'var(--metin-2)' }}>
-            Bağlantı kurulu değil. Panelin geri kalanı (ortaklar, medya, hakediş) çalışmaya devam eder;
-            yalnızca ölçüm çekilemez.
-          </p>
+          <Tablo basliklar={['Ad', 'Tür', 'Durum', 'Güncellendi', 'İşlem']}>
+            {liste.map((b) => (
+              <Satir key={b.id}>
+                <Hucre><strong>{b.ad}</strong></Hucre>
+                <Hucre>{b.etiket}</Hucre>
+                <Hucre><Rozet metin={b.aktif ? 'Aktif' : 'Pasif'} renk={b.aktif ? 'olumlu' : 'notr'} /></Hucre>
+                <Hucre>{gunBicimi(b.updatedAt)}</Hucre>
+                <Hucre>
+                  <div className="flex flex-wrap gap-1">
+                    <Buton
+                      devredisi={calisiyor}
+                      onClick={() => calistir(async () => {
+                        const sonuc = await api.gonder<Dogrulama>(`/api/yonetim/baglantilar/${b.id}/dogrula`);
+                        setDogrulamalar((onceki) => ({ ...onceki, [b.id]: sonuc }));
+                      })}
+                    >
+                      Sına
+                    </Buton>
+                    <Buton devredisi={calisiyor} onClick={() => baslaDuzenle(b)}>Düzenle</Buton>
+                    <Buton
+                      tur="tehlike"
+                      devredisi={calisiyor}
+                      onClick={() => calistir(async () => {
+                        await api.sil(`/api/yonetim/baglantilar/${b.id}`);
+                        if (duzenlenenId === b.id) baslaYeni();
+                      })}
+                    >
+                      Kaldır
+                    </Buton>
+                  </div>
+                </Hucre>
+              </Satir>
+            ))}
+          </Tablo>
         )}
 
-        {dogrulama && (
-          <div className="mt-3 rounded-lg border px-3 py-2 text-sm" style={{ borderColor: dogrulama.baglandi ? 'var(--olumlu)' : 'var(--olumsuz)' }}>
-            <p style={{ color: dogrulama.baglandi ? 'var(--olumlu)' : 'var(--olumsuz)' }}>{dogrulama.mesaj}</p>
-            {dogrulama.ayrinti && (
-              <pre className="mt-2 overflow-x-auto text-xs" style={{ color: 'var(--metin-2)' }}>
-                {JSON.stringify(dogrulama.ayrinti, null, 2)}
-              </pre>
-            )}
-          </div>
-        )}
+        {Object.entries(dogrulamalar).map(([id, d]) => {
+          const b = liste.find((x) => x.id === id);
+          if (!b) return null;
+          return (
+            <div key={id} className="mt-3 rounded-lg border px-3 py-2 text-sm" style={{ borderColor: d.baglandi ? 'var(--olumlu)' : 'var(--olumsuz)' }}>
+              <p style={{ color: d.baglandi ? 'var(--olumlu)' : 'var(--olumsuz)' }}>{b.ad}: {d.mesaj}</p>
+              {d.ayrinti && (
+                <pre className="mt-2 overflow-x-auto text-xs" style={{ color: 'var(--metin-2)' }}>
+                  {JSON.stringify(d.ayrinti, null, 2)}
+                </pre>
+              )}
+            </div>
+          );
+        })}
       </Kart>
 
       {islemHatasi && <Hata mesaj={islemHatasi} />}
 
-      <Kart baslik="Bağlantı kur">
-        <div className="mb-3 max-w-sm">
+      <Kart baslik={duzenlenenId ? 'Bağlantıyı düzenle' : 'Yeni bağlantı ekle'}>
+        <div className="mb-3 grid gap-3 md:grid-cols-2">
+          <Alan etiket="Ad" deger={ad} degisti={setAd} ipucu="örn. Narcosbahis. Boş bırakılırsa backoffice türü kullanılır." />
           <Alan
             etiket="Backoffice türü"
             deger={secilen}
-            degisti={setSecilen}
+            degisti={adaptorDegistir}
             secenekler={tanimlar.map((t) => ({ deger: t.ad, etiket: t.etiket }))}
           />
         </div>
@@ -118,22 +165,25 @@ export function Baglanti() {
             </div>
 
             <div className="grid gap-3 md:grid-cols-2">
-              {tanim.alanlar.map((alan) => (
-                <Alan
-                  key={alan.ad}
-                  etiket={`${alan.etiket}${alan.zorunlu ? ' *' : ''}`}
-                  deger={ayar[alan.ad] ?? ''}
-                  degisti={(v) => setAyar({ ...ayar, [alan.ad]: v })}
-                  tip={alan.tur === 'parola' ? 'password' : alan.tur === 'sayi' ? 'number' : 'text'}
-                  cokSatir={alan.tur === 'cokSatir'}
-                  secenekler={alan.secenekler}
-                  ipucu={
-                    alan.sir && mevcut.veri?.kurulu && mevcut.veri.adaptor === tanim.ad
-                      ? `${alan.ipucu ? `${alan.ipucu} · ` : ''}Kayıtlı: ${mevcut.veri.ayar[alan.ad] ?? '—'}. Boş bırakılırsa değişmez.`
-                      : alan.ipucu
-                  }
-                />
-              ))}
+              {tanim.alanlar.map((alan) => {
+                const duzenlenen = duzenlenenId ? liste.find((b) => b.id === duzenlenenId) : null;
+                return (
+                  <Alan
+                    key={alan.ad}
+                    etiket={`${alan.etiket}${alan.zorunlu ? ' *' : ''}`}
+                    deger={ayar[alan.ad] ?? ''}
+                    degisti={(v) => setAyar({ ...ayar, [alan.ad]: v })}
+                    tip={alan.tur === 'parola' ? 'password' : alan.tur === 'sayi' ? 'number' : 'text'}
+                    cokSatir={alan.tur === 'cokSatir'}
+                    secenekler={alan.secenekler}
+                    ipucu={
+                      alan.sir && duzenlenen
+                        ? `${alan.ipucu ? `${alan.ipucu} · ` : ''}Kayıtlı: ${duzenlenen.ayar[alan.ad] ?? '—'}. Boş bırakılırsa değişmez.`
+                        : alan.ipucu
+                    }
+                  />
+                );
+              })}
             </div>
 
             <div className="mt-3 flex items-center gap-4">
@@ -141,10 +191,21 @@ export function Baglanti() {
               <Buton
                 tur="birincil"
                 devredisi={calisiyor}
-                onClick={() => calistir(() => api.yaz('/api/yonetim/baglanti', { adaptor: tanim.ad, ayar, aktif }))}
+                onClick={() => calistir(async () => {
+                  const govde = { ad, adaptor: tanim.ad, ayar, aktif };
+                  if (duzenlenenId) {
+                    await api.yaz(`/api/yonetim/baglantilar/${duzenlenenId}`, govde);
+                  } else {
+                    await api.gonder('/api/yonetim/baglantilar', govde);
+                  }
+                  baslaYeni();
+                })}
               >
-                Kaydet
+                {duzenlenenId ? 'Güncelle' : 'Ekle'}
               </Buton>
+              {duzenlenenId && (
+                <Buton devredisi={calisiyor} onClick={baslaYeni}>Vazgeç</Buton>
+              )}
             </div>
           </>
         )}
