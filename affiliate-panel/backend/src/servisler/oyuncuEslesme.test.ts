@@ -509,7 +509,9 @@ describe('oyuncu eslesmesi', () => {
       );
 
       expect(sonuc.tasinan).toEqual([]);
-      expect(sonuc.belirsiz[0]).toMatchObject({ lynonOyuncuId: '50006', sebep: 'Site A altında zaten ayrı bir kayıt var' });
+      expect(sonuc.belirsiz[0]).toMatchObject({
+        lynonOyuncuId: '50006', sebep: 'Site A altında zaten ayrı bir kayıt var (orada ORT2, burada ORT1)',
+      });
       // Ikisi de yerinde kalir -- hicbiri EZILMEDI.
       expect(await eslesmeBul(k, '50006', 'varsayilan')).toMatchObject({ ortakId: a.id });
       expect(await eslesmeBul(k, '50006', 'site-a')).toMatchObject({ ortakId: b.id });

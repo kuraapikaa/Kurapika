@@ -2,7 +2,7 @@ import { gunBicimi, paraBicimi, useVeri } from '../../api';
 import { CubukListesi, OlcuKarti, ZamanSerisi } from '../../grafik';
 import { Hata, Hucre, Kart, Rozet, Satir, Tablo, Yukleniyor } from '../../ui';
 import type {
-  AltLinkGorunumu as AltLink, AltLinkOyuncusu, OrtakOzeti as Ozet, PortalBen as Ben, TiklamaOzeti,
+  AltLinkGorunumu as AltLink, OrtakOzeti as Ozet, PortalBen as Ben, PortalOyuncusu, TiklamaOzeti,
 } from '@sunucu/sozlesme.js';
 
 const DURUM_ETIKETI = {
@@ -35,7 +35,7 @@ export function PortalOzet() {
   }>('/api/portal/ozet');
   const tiklama = useVeri<{ ozet: TiklamaOzeti | null }>('/api/portal/tiklamalar');
   const linkler = useVeri<{ linkler: AltLink[] }>('/api/portal/alt-linkler');
-  const oyuncularim = useVeri<{ oyuncular: AltLinkOyuncusu[] }>('/api/portal/oyuncularim');
+  const oyuncularim = useVeri<{ oyuncular: PortalOyuncusu[] }>('/api/portal/oyuncularim');
 
   if (ben.yukleniyor || ozet.yukleniyor) return <Yukleniyor />;
   if (ben.hata) return <Hata mesaj={ben.hata} />;
@@ -138,25 +138,35 @@ export function PortalOzet() {
           oyuncunun tiklama gecmisi yoktur, bu yuzden hicbir alt link
           altinda gorunmez. Bu tablo, hangi yoldan geldigine bakmadan
           size esles mis TUM oyunculari gosteriyor. */}
-      {!oyuncularim.yukleniyor && (oyuncularim.veri?.oyuncular.length ?? 0) > 0 && (
-        <Kart baslik="Oyuncularınız">
-          <Tablo basliklar={['Kullanıcı', 'Kayıt', 'Yatırım', 'Çekim']}>
-            {oyuncularim.veri!.oyuncular.map((o) => (
-              <Satir key={o.lynonOyuncuId}>
-                <Hucre>
-                  <span className="font-medium">{o.kullaniciAdi ?? o.lynonOyuncuId}</span>
-                  {!o.kullaniciAdi && (
-                    <span className="ml-1 text-xs" style={{ color: 'var(--metin-2)' }}>(kullanıcı adı bilinmiyor)</span>
-                  )}
-                </Hucre>
-                <Hucre><span className="text-xs">{gunBicimi(o.kayitTarihi ?? o.olusturuldu)}</span></Hucre>
-                <Hucre sagda><span className="tabular-nums">{paraBicimi(o.yatirim)}</span></Hucre>
-                <Hucre sagda><span className="tabular-nums">{paraBicimi(o.cekim)}</span></Hucre>
-              </Satir>
-            ))}
-          </Tablo>
-        </Kart>
-      )}
+      {!oyuncularim.yukleniyor && (oyuncularim.veri?.oyuncular.length ?? 0) > 0 && (() => {
+        const oyuncular = oyuncularim.veri!.oyuncular;
+        // Site adi yalnizca birden fazla marka icin trafik getiriyorsaniz
+        // anlamli -- tek siteli ortakta her satir zaten ayni degeri
+        // taşırdı, sütun gereksiz gürültü olurdu.
+        const cokluSite = new Set(oyuncular.map((o) => o.baglantiAdi)).size > 1;
+        return (
+          <Kart baslik="Oyuncularınız">
+            <Tablo basliklar={['Kullanıcı', 'Kayıt', 'Yatırım', 'Çekim']}>
+              {oyuncular.map((o) => (
+                <Satir key={o.lynonOyuncuId}>
+                  <Hucre>
+                    <span className="font-medium">{o.kullaniciAdi ?? o.lynonOyuncuId}</span>
+                    {!o.kullaniciAdi && (
+                      <span className="ml-1 text-xs" style={{ color: 'var(--metin-2)' }}>(kullanıcı adı bilinmiyor)</span>
+                    )}
+                    {cokluSite && (
+                      <span className="ml-1 text-xs" style={{ color: 'var(--metin-2)' }}>· {o.baglantiAdi}</span>
+                    )}
+                  </Hucre>
+                  <Hucre><span className="text-xs">{gunBicimi(o.kayitTarihi ?? o.olusturuldu)}</span></Hucre>
+                  <Hucre sagda><span className="tabular-nums">{paraBicimi(o.yatirim)}</span></Hucre>
+                  <Hucre sagda><span className="tabular-nums">{paraBicimi(o.cekim)}</span></Hucre>
+                </Satir>
+              ))}
+            </Tablo>
+          </Kart>
+        );
+      })()}
 
       {(ozet.veri?.altOrtaklar ?? []).length > 0 && (
         <Kart baslik="Getirdiğiniz ortaklar">

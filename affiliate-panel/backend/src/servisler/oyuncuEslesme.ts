@@ -432,6 +432,8 @@ export async function altLinkFinansOzeti(kiraci: string, ortakId?: string): Prom
 
 export interface AltLinkOyuncusu {
   lynonOyuncuId: string;
+  /** Hangi Lynon bağlantısından/sitesinden geldiği; çağıran taraf isme çevirir (bkz. `rotalar/portal.ts`). */
+  baglantiId: string;
   /** Backoffice kullanıcı adı; bilinmiyorsa `null` — çağıran taraf o zaman ID'yi gösterir. */
   kullaniciAdi: string | null;
   yatirim: number;
@@ -472,6 +474,7 @@ export async function altLinkOyuncuListesi(kiraci: string, altLinkId: string): P
     const finans = finansHaritasi.get(finansAnahtari(s.baglantiId, s.lynonOyuncuId));
     return {
       lynonOyuncuId: s.lynonOyuncuId,
+      baglantiId: s.baglantiId,
       kullaniciAdi: s.kullaniciAdi,
       yatirim: finans?.yatirim ?? 0,
       cekim: finans?.cekim ?? 0,
@@ -514,6 +517,7 @@ export async function ortakOyuncuListesi(kiraci: string, ortakId: string): Promi
     const finans = finansHaritasi.get(finansAnahtari(s.baglantiId, s.lynonOyuncuId));
     return {
       lynonOyuncuId: s.lynonOyuncuId,
+      baglantiId: s.baglantiId,
       kullaniciAdi: s.kullaniciAdi,
       yatirim: finans?.yatirim ?? 0,
       cekim: finans?.cekim ?? 0,
@@ -775,9 +779,13 @@ export async function varsayilanEslesmeleriDagit(
       if (tasindiMi) {
         sonuc.tasinan.push({ lynonOyuncuId: orphan.lynonOyuncuId, kullaniciAdi: orphan.kullaniciAdi, baglantiAdi: hedef.ad });
       } else {
+        // Hedefte AYRI bir kayit zaten var -- hangi ortaga ait oldugunu da
+        // gosteriyoruz, admin Eslesmeler'de tek tek aramadan hangi ikisinin
+        // catistigini gorsun diye.
+        const catisan = await depo.bul(kiraci, orphan.lynonOyuncuId, hedef.id);
         sonuc.belirsiz.push({
           lynonOyuncuId: orphan.lynonOyuncuId, kullaniciAdi: orphan.kullaniciAdi,
-          sebep: `${hedef.ad} altında zaten ayrı bir kayıt var`,
+          sebep: `${hedef.ad} altında zaten ayrı bir kayıt var (orada ${catisan?.ortakAnahtari ?? 'bilinmeyen ortak'}, burada ${orphan.ortakAnahtari})`,
         });
       }
     } else if (bulunanlar.length === 0) {

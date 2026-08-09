@@ -664,8 +664,8 @@ varsaCalistir('depo denkligi', () => {
       const liste = await altLinkOyuncuListesi(KIRACI, 'link-liste');
       // En yeni once.
       expect(liste).toEqual([
-        { lynonOyuncuId: 'p11', kullaniciAdi: null, yatirim: 0, cekim: 0, olusturuldu: '2026-08-02T10:00:00.000Z', kayitTarihi: null },
-        { lynonOyuncuId: 'p10', kullaniciAdi: 'ahmet01', yatirim: 300, cekim: 50, olusturuldu: '2026-08-01T10:00:00.000Z', kayitTarihi: null },
+        { lynonOyuncuId: 'p11', baglantiId: 'varsayilan', kullaniciAdi: null, yatirim: 0, cekim: 0, olusturuldu: '2026-08-02T10:00:00.000Z', kayitTarihi: null },
+        { lynonOyuncuId: 'p10', baglantiId: 'varsayilan', kullaniciAdi: 'ahmet01', yatirim: 300, cekim: 50, olusturuldu: '2026-08-01T10:00:00.000Z', kayitTarihi: null },
       ]);
     });
 
@@ -681,7 +681,7 @@ varsaCalistir('depo denkligi', () => {
       ]);
 
       expect(await altLinkOyuncuListesi(KIRACI, 'link-rapor-liste')).toEqual([
-        { lynonOyuncuId: 'p13', kullaniciAdi: 'raporlu01', yatirim: 250, cekim: 40, olusturuldu: '2026-08-01T10:00:00.000Z', kayitTarihi: null },
+        { lynonOyuncuId: 'p13', baglantiId: 'varsayilan', kullaniciAdi: 'raporlu01', yatirim: 250, cekim: 40, olusturuldu: '2026-08-01T10:00:00.000Z', kayitTarihi: null },
       ]);
     });
 
@@ -731,11 +731,11 @@ varsaCalistir('depo denkligi', () => {
       // En yeni once.
       expect(liste).toEqual([
         {
-          lynonOyuncuId: 'p20', kullaniciAdi: 'gecis-kullanicisi', yatirim: 500, cekim: 120,
+          lynonOyuncuId: 'p20', baglantiId: 'varsayilan', kullaniciAdi: 'gecis-kullanicisi', yatirim: 500, cekim: 120,
           olusturuldu: '2026-08-03T10:00:00.000Z', kayitTarihi: '2019-05-01T00:00:00.000Z',
         },
         {
-          lynonOyuncuId: 'p21', kullaniciAdi: 'organik01', yatirim: 0, cekim: 0,
+          lynonOyuncuId: 'p21', baglantiId: 'varsayilan', kullaniciAdi: 'organik01', yatirim: 0, cekim: 0,
           olusturuldu: '2026-08-01T10:00:00.000Z', kayitTarihi: null,
         },
       ]);
@@ -761,7 +761,7 @@ varsaCalistir('depo denkligi', () => {
       ]);
 
       expect(await ortakOyuncuListesi(KIRACI, 'ortak-d')).toEqual([{
-        lynonOyuncuId: 'p23', kullaniciAdi: 'gecis-raporlu', yatirim: 1500, cekim: 200,
+        lynonOyuncuId: 'p23', baglantiId: 'varsayilan', kullaniciAdi: 'gecis-raporlu', yatirim: 1500, cekim: 200,
         olusturuldu: '2026-08-03T10:00:00.000Z', kayitTarihi: null,
       }]);
     });

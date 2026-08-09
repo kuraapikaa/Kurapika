@@ -195,6 +195,16 @@ export interface AltLinkGorunumu extends AltLink {
   cekim: number;
 }
 
+/**
+ * `AltLinkOyuncusu`'nun ortağa dönen hâli: ham `baglantiId` yerine
+ * okunur bir site adı taşıyor — ortak hangi bağlantının hangi Lynon
+ * kurulumuna karşılık geldiğini bilmiyor/bilmemeli, yalnızca "hangi
+ * markadan geldi"yi görmesi yeterli (bkz. `rotalar/portal.ts`).
+ */
+export interface PortalOyuncusu extends Omit<AltLinkOyuncusu, 'baglantiId'> {
+  baglantiAdi: string;
+}
+
 export interface PortalUclari {
   '/ben': PortalBen;
   '/ozet': {
@@ -204,7 +214,7 @@ export interface PortalUclari {
     ftd: FtdDurumu;
   };
   '/medya': { medyalar: Medya[] };
-  '/oyuncularim': { oyuncular: AltLinkOyuncusu[] };
+  '/oyuncularim': { oyuncular: PortalOyuncusu[] };
   '/alt-linkler': { linkler: AltLinkGorunumu[]; temelHazir: boolean };
   '/tiklamalar': { ozet: TiklamaOzeti | null; tiklamalar: Tiklama[] };
   '/hakedis': { donemler: Array<{ ay: string; durum: Donem['durum']; satir: OrtakHakedisi | null }> };

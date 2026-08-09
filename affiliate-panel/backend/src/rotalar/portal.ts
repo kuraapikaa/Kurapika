@@ -1,6 +1,7 @@
 import QRCode from 'qrcode';
 import type { FastifyInstance } from 'fastify';
 import { ortakZorunlu } from '../kimlik/koruma.js';
+import { baglantilarGorunumu } from '../adaptorler/kayit.js';
 import {
   altLinkDurumDegistir,
   altLinkleriListele,
@@ -14,11 +15,14 @@ import { altParametreleriTemizle } from '../servisler/izleme.js';
 import { medyaIzlemeLinki, medyalariListele } from '../servisler/medya.js';
 import { ortakOzetleri } from '../servisler/olcum.js';
 import { ftdDurumu } from '../servisler/ilkYatirim.js';
-import { altLinkFinansOzeti, altLinkOyuncuListesi, ortakOyuncuListesi } from '../servisler/oyuncuEslesme.js';
+import {
+  altLinkFinansOzeti, altLinkOyuncuListesi, ortakOyuncuListesi, type AltLinkOyuncusu,
+} from '../servisler/oyuncuEslesme.js';
 import { ortakBul, onayZorunlu } from '../servisler/ortaklar.js';
 import { postbackAyarla, postbackAyarlari, postbackKayitlari } from '../servisler/postback.js';
 import { altLinkTiklamaOzeti, tiklamalariListele, tiklamaOzeti } from '../servisler/tiklama.js';
 import { musteriYolculugu } from '../servisler/yolculuk.js';
+import type { PortalOyuncusu } from '../sozlesme.js';
 
 /**
  * ORTAK PORTALI.
@@ -34,6 +38,20 @@ const tarihAraligi = (sorgu: Record<string, unknown>) => {
   const baslangic = String(sorgu.start ?? '').trim() || gunEkle(bitis, -29);
   return { start: baslangic, end: bitis };
 };
+
+/**
+ * `AltLinkOyuncusu.baglantiId` ham bir Lynon bağlantı kimliği — ortağa
+ * anlamsız. Bağlantı adına çevirip yerine koyuyoruz; ham kimliği ortağa
+ * hiç göndermiyoruz (iç mimariyi sızdırmanın bir faydası yok).
+ */
+async function oyuncularaSiteEtiketiEkle(kiraci: string, oyuncular: AltLinkOyuncusu[]): Promise<PortalOyuncusu[]> {
+  const baglantilar = await baglantilarGorunumu(kiraci);
+  const adlar = new Map(baglantilar.map((b) => [b.id, b.ad]));
+  return oyuncular.map(({ baglantiId, ...gerisi }) => ({
+    ...gerisi,
+    baglantiAdi: adlar.get(baglantiId) ?? baglantiId,
+  }));
+}
 
 export async function portalRotalari(app: FastifyInstance): Promise<void> {
   app.addHook('onRequest', async (istek, yanit) => {
@@ -102,7 +120,7 @@ export async function portalRotalari(app: FastifyInstance): Promise<void> {
       yanit.status(401);
       return { hata: 'Hesap bulunamadı.' };
     }
-    return { oyuncular: await ortakOyuncuListesi(istek.kiraci, ortak.id) };
+    return { oyuncular: await oyuncularaSiteEtiketiEkle(istek.kiraci, await ortakOyuncuListesi(istek.kiraci, ortak.id)) };
   });
 
   app.get('/medya', async (istek) => ({
@@ -295,7 +313,7 @@ export async function portalRotalari(app: FastifyInstance): Promise<void> {
       yanit.status(404);
       return { hata: 'Alt link bulunamadı.' };
     }
-    return { oyuncular: await altLinkOyuncuListesi(istek.kiraci, link.id) };
+    return { oyuncular: await oyuncularaSiteEtiketiEkle(istek.kiraci, await altLinkOyuncuListesi(istek.kiraci, link.id)) };
   });
 
   app.put<{ Params: { id: string } }>('/alt-linkler/:id', async (istek) => {

@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { api, gunBicimi, paraBicimi, useVeri } from '../../api';
 import { Alan, Bos, Buton, Hata, Hucre, Kart, Olcu, Rozet, Satir, Tablo, Yukleniyor } from '../../ui';
-import type { AltLinkGorunumu as AltLink, AltLinkOyuncusu, Medya, MedyaTuru } from '@sunucu/sozlesme.js';
+import type { AltLinkGorunumu as AltLink, PortalOyuncusu, Medya, MedyaTuru } from '@sunucu/sozlesme.js';
 
 const ALTLAR = ['sub1', 'sub2', 'sub3', 'sub4', 'sub5'] as const;
 
@@ -90,7 +90,7 @@ export function PortalAltLinkler() {
   const [kopyalanan, setKopyalanan] = useState<string | null>(null);
   const [qr, setQr] = useState<{ id: string; ad: string; adres: string } | null>(null);
   const [oyuncular, setOyuncular] = useState<{
-    id: string; ad: string; yukleniyor: boolean; liste: AltLinkOyuncusu[];
+    id: string; ad: string; yukleniyor: boolean; liste: PortalOyuncusu[];
   } | null>(null);
 
   const oyunculariGetir = async (link: AltLink) => {
@@ -100,7 +100,7 @@ export function PortalAltLinkler() {
     }
     setOyuncular({ id: link.id, ad: link.ad, yukleniyor: true, liste: [] });
     try {
-      const sonuc = await api.al<{ oyuncular: AltLinkOyuncusu[] }>(`/api/portal/alt-linkler/${link.id}/oyuncular`);
+      const sonuc = await api.al<{ oyuncular: PortalOyuncusu[] }>(`/api/portal/alt-linkler/${link.id}/oyuncular`);
       setOyuncular({ id: link.id, ad: link.ad, yukleniyor: false, liste: sonuc.oyuncular });
     } catch {
       setOyuncular({ id: link.id, ad: link.ad, yukleniyor: false, liste: [] });
@@ -267,23 +267,31 @@ export function PortalAltLinkler() {
             <Yukleniyor />
           ) : oyuncular.liste.length === 0 ? (
             <Bos mesaj="Bu linkten henüz kayıt olan yok." />
-          ) : (
-            <Tablo basliklar={['Kullanıcı', 'Kayıt', 'Yatırım', 'Çekim']}>
-              {oyuncular.liste.map((o) => (
-                <Satir key={o.lynonOyuncuId}>
-                  <Hucre>
-                    <span className="font-medium">{o.kullaniciAdi ?? o.lynonOyuncuId}</span>
-                    {!o.kullaniciAdi && (
-                      <span className="ml-1 text-xs" style={{ color: 'var(--metin-2)' }}>(kullanıcı adı bilinmiyor)</span>
-                    )}
-                  </Hucre>
-                  <Hucre><span className="text-xs">{gunBicimi(o.kayitTarihi ?? o.olusturuldu)}</span></Hucre>
-                  <Hucre sagda><span className="tabular-nums">{paraBicimi(o.yatirim)}</span></Hucre>
-                  <Hucre sagda><span className="tabular-nums">{paraBicimi(o.cekim)}</span></Hucre>
-                </Satir>
-              ))}
-            </Tablo>
-          )}
+          ) : (() => {
+            // Site adi yalnizca birden fazla marka icin trafik
+            // getiriyorsaniz anlamli -- tek siteli ortakta gereksiz gurultu.
+            const cokluSite = new Set(oyuncular.liste.map((o) => o.baglantiAdi)).size > 1;
+            return (
+              <Tablo basliklar={['Kullanıcı', 'Kayıt', 'Yatırım', 'Çekim']}>
+                {oyuncular.liste.map((o) => (
+                  <Satir key={o.lynonOyuncuId}>
+                    <Hucre>
+                      <span className="font-medium">{o.kullaniciAdi ?? o.lynonOyuncuId}</span>
+                      {!o.kullaniciAdi && (
+                        <span className="ml-1 text-xs" style={{ color: 'var(--metin-2)' }}>(kullanıcı adı bilinmiyor)</span>
+                      )}
+                      {cokluSite && (
+                        <span className="ml-1 text-xs" style={{ color: 'var(--metin-2)' }}>· {o.baglantiAdi}</span>
+                      )}
+                    </Hucre>
+                    <Hucre><span className="text-xs">{gunBicimi(o.kayitTarihi ?? o.olusturuldu)}</span></Hucre>
+                    <Hucre sagda><span className="tabular-nums">{paraBicimi(o.yatirim)}</span></Hucre>
+                    <Hucre sagda><span className="tabular-nums">{paraBicimi(o.cekim)}</span></Hucre>
+                  </Satir>
+                ))}
+              </Tablo>
+            );
+          })()}
         </Kart>
       )}
 
