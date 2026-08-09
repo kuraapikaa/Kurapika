@@ -139,10 +139,11 @@ describe('baglanti uclari', () => {
 
   it('kaydedilen sir maskelenmis doner', async () => {
     const yaz = await app.inject({
-      method: 'PUT',
-      url: '/api/yonetim/baglanti',
+      method: 'POST',
+      url: '/api/yonetim/baglantilar',
       headers: basliklar(),
       payload: {
+        ad: 'Test bağlantısı',
         adaptor: 'lynon',
         ayar: {
           backofficeUrl: 'https://backoffice.ornek.test',
@@ -157,7 +158,8 @@ describe('baglanti uclari', () => {
     expect(yaz.statusCode).toBe(200);
     expect(yaz.body).not.toContain('gizli-parola-1234');
     expect(yaz.body).not.toContain('JBSWY3DPEHPK3PXP');
-    expect(yaz.json().ayar.parola).toMatch(/1234$/);
+    const eklenen = yaz.json().baglantilar.find((b: { ayar: { siteId: string } }) => b.ayar.siteId === '99');
+    expect(eklenen.ayar.parola).toMatch(/1234$/);
   });
 
   /**
@@ -166,9 +168,27 @@ describe('baglanti uclari', () => {
    * istediginde parola maskeyle ezilirdi.
    */
   it('bos gelen sir alani mevcut degeri korur', async () => {
+    const ilk = await app.inject({
+      method: 'POST',
+      url: '/api/yonetim/baglantilar',
+      headers: basliklar(),
+      payload: {
+        ad: 'Korunacak',
+        adaptor: 'lynon',
+        ayar: {
+          backofficeUrl: 'https://backoffice.ornek.test',
+          idUrl: 'https://id.ornek.test',
+          siteId: '100',
+          kullanici: 'panel-botu',
+          parola: 'gizli-parola-1234',
+        },
+      },
+    });
+    const id = ilk.json().baglantilar.find((b: { ayar: { siteId: string } }) => b.ayar.siteId === '100').id;
+
     const yanit = await app.inject({
       method: 'PUT',
-      url: '/api/yonetim/baglanti',
+      url: `/api/yonetim/baglantilar/${id}`,
       headers: basliklar(),
       payload: {
         adaptor: 'lynon',
@@ -182,14 +202,15 @@ describe('baglanti uclari', () => {
       },
     });
     expect(yanit.statusCode).toBe(200);
-    expect(yanit.json().ayar.siteId).toBe('100');
-    expect(yanit.json().ayar.parola).toMatch(/1234$/);
+    const guncellenen = yanit.json().baglantilar.find((b: { id: string }) => b.id === id);
+    expect(guncellenen.ayar.siteId).toBe('100');
+    expect(guncellenen.ayar.parola).toMatch(/1234$/);
   });
 
   it('zorunlu alan eksikse reddeder', async () => {
     const yanit = await app.inject({
-      method: 'PUT',
-      url: '/api/yonetim/baglanti',
+      method: 'POST',
+      url: '/api/yonetim/baglantilar',
       headers: basliklar(),
       payload: { adaptor: 'genel-rest', ayar: { temelUrl: 'https://api.ornek.test' } },
     });
