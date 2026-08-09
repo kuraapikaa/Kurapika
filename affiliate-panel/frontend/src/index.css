@@ -2,6 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * FAZ 1'DEN KALAN DUZELTME: Tailwind'in Preflight sifirlamasi HER
+ * elemana varsayilan olarak sabit bir gri (#e5e7eb) border-color
+ * atiyor -- `.border` sinifinin kendisi yalnizca genisligi ayarliyor,
+ * rengi degil. Shadcn bilesenleri (Card, Input, Sheet, Tabs...) bu
+ * varsayilanin ustune yaziyordu ve dort kapsamin hicbirinde `--border`
+ * token'ini gormuyordu. Standart Shadcn duzeltmesi: evrensel sifirlamayi
+ * kendi token'imizla eziyoruz.
+ */
+@layer base {
+  * {
+    @apply border-border;
+  }
+}
+
 /**
  * İKİ KİMLİK, TEK UYGULAMA.
  *
@@ -253,6 +268,20 @@
   --marka-orta: #1d1d1f;
   --marka-alt: #000000;
   --isilti: 0 0 0 rgba(0, 0, 0, 0);
+
+  /* Shadcn token'lari -- `--background` kasten eziLMİYOR (ray ayri bir
+     zemin degil, icerikten bir tik ayrisan bir yuzey; sayfa zemini
+     hala `.aqua`'nin `--background`'i). */
+  --card: 240 9% 93%;
+  --card-foreground: 240 3% 12%;
+  --popover: 240 9% 93%;
+  --popover-foreground: 240 3% 12%;
+  --secondary: 240 7% 89%;
+  --secondary-foreground: 240 3% 12%;
+  --muted: 240 7% 89%;
+  --accent: 215 79% 92%;
+  --border: 240 7% 86%;
+  --input: 240 7% 86%;
 }
 
 .koyu .ray {
@@ -267,6 +296,17 @@
   --marka-ust: #f5f5f7;
   --marka-orta: #c7c7cc;
   --marka-alt: #8e8e93;
+
+  --card: 240 4% 9%;
+  --card-foreground: 240 11% 96%;
+  --popover: 240 4% 9%;
+  --popover-foreground: 240 11% 96%;
+  --secondary: 240 3% 15%;
+  --secondary-foreground: 240 11% 96%;
+  --muted: 240 3% 15%;
+  --accent: 209 57% 18%;
+  --border: 240 2% 18%;
+  --input: 240 2% 18%;
 }
 
 /*
