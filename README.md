@@ -18,13 +18,4 @@ npm.cmd run dev
 
 Ayrıntılı ortam değişkenleri, veritabanı, test ve production adımları için [KURULUM.md](KURULUM.md) dosyasını okuyun.
 
-## Güvenlik
 
-Kimlik bilgilerini, `.env` dosyalarını, backoffice oturumlarını, logları ve oyuncu verilerini repoya eklemeyin. Production dağıtımından önce [SECURE_DEPLOY.md](SECURE_DEPLOY.md) kontrol listesini uygulayın.
-
-## Dokümantasyon
-
-- [Kurulum](KURULUM.md)
-- [Kalıcı veri](PERSISTENCE.md)
-- [Railway dağıtımı](RAILWAY.md)
-- [Güvenli dağıtım](SECURE_DEPLOY.md)
