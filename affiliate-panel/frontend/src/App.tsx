@@ -10,7 +10,6 @@ import { Baglanti } from './sayfalar/yonetim/Baglanti';
 import { Basvurular } from './sayfalar/yonetim/Basvurular';
 import { BTag } from './sayfalar/yonetim/BTag';
 import { Cuzdanlar } from './sayfalar/yonetim/Cuzdanlar';
-import { Donemler } from './sayfalar/yonetim/Donemler';
 import { Kademeler } from './sayfalar/yonetim/Kademeler';
 import { Medya } from './sayfalar/yonetim/Medya';
 import { MusteriYolculugu } from './sayfalar/yonetim/MusteriYolculugu';
@@ -35,6 +34,7 @@ import type { OturumYaniti as Oturum } from '@sunucu/sozlesme.js';
 const Ozet = lazy(() => import('./sayfalar/yonetim/Ozet').then((m) => ({ default: m.Ozet })));
 const Ortaklar = lazy(() => import('./sayfalar/yonetim/Ortaklar').then((m) => ({ default: m.Ortaklar })));
 const Eslesmeler = lazy(() => import('./sayfalar/yonetim/Eslesmeler').then((m) => ({ default: m.Eslesmeler })));
+const Donemler = lazy(() => import('./sayfalar/yonetim/Donemler').then((m) => ({ default: m.Donemler })));
 
 /**
  * Menü, sektördeki affiliate platformlarının düzenini izliyor:
