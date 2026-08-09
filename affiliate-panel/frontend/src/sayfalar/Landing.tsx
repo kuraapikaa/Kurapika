@@ -22,8 +22,9 @@ import maskotKarakter from '../gorseller/maskot-karakter.webp';
  *
  * Güven sözü aynı: rakam bir kez yazılır, bir daha değişmez. Sahne
  * cyberpunk: kahraman bölümünde markanın maskotu avucundaki hologramı
- * ziyaretçiye uzatıyor; o elin hizasına DONDURULMUŞ hakediş pusulası
- * biniyor. Davet eden şehir, değişmeyen rakam — ikna eden karşıtlık bu.
+ * ziyaretçiye uzatıyor; DONDURULMUŞ hakediş pusulası onun yanında,
+ * sağında duruyor — üzerine binmiyor, maskotun yüzü hep açık kalıyor.
+ * Davet eden şehir, değişmeyen rakam — ikna eden karşıtlık bu.
  *
  * Kalan kararlar öncekiyle aynı: büyük rakamlar az metin, tek sütun
  * geniş nefes, sorulara açık cevap.
@@ -161,8 +162,17 @@ function Tanitim({ git }: { git: (g: Gorunum) => void }) {
   return (
     <>
       {/* Kahraman: solda iddia, sagda gece sehri. Izgara ve neon sis
-          yalnizca bu bolumde — her bolume yayilsa desen gurultu olur. */}
-      <section className="relative mt-10 lg:mt-16">
+          yalnizca bu bolumde — her bolume yayilsa desen gurultu olur.
+
+          `overflow-hidden` BILEREK burada: izgara/sis katmanlari
+          `-inset-x-10` ile bolumun disina 40px tasiyor. Sayfa
+          `max-w-6xl` genisligini asan genis ekranlarda bu bosluk
+          disariya sigiyordu ama konteyner viewport'u doldurdugu her
+          ekranda (kabaca ≤1230px — yani NEREDEYSE TUM tabletler ve
+          kucuk masaustleri) o 40px sayfanin kendisini yatay
+          kaydirilabilir yapiyordu. Kesme yalnizca bu bolume kapsanmis;
+          sayfanin geri kalanindaki `sticky` basligi ETKILEMIYOR. */}
+      <section className="relative mt-10 overflow-hidden lg:mt-16">
         <div aria-hidden className="izgara absolute -inset-x-10 -top-10 bottom-0 -z-10" />
         <div
           aria-hidden
@@ -174,7 +184,7 @@ function Tanitim({ git }: { git: (g: Gorunum) => void }) {
           }}
         />
 
-        <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14">
+        <div className="grid items-center gap-12 lg:grid-cols-[1fr_1.25fr] lg:gap-10">
           <div>
             <p className="font-mono text-xs font-medium uppercase tracking-[0.2em]" style={{ color: 'var(--vurgu)' }}>
               <span aria-hidden>{'// '}</span>Ortaklık programı
@@ -312,19 +322,24 @@ function Tanitim({ git }: { git: (g: Gorunum) => void }) {
 
 /**
  * HOLO SAHNE — imza kompozisyon: maskot avucundaki hologramı uzatıyor,
- * dondurulmuş pusula o elin hizasına biniyor. Görsel şeffaf cutout;
- * çerçeve yok, ızgaranın üstünde neon sisiyle duruyor. Alt kenar
- * maskeyle eriyor ki kesik bir fotoğraf değil sahnenin parçası gibi
- * otursun.
+ * dondurulmuş pusula elinin yanında, SAĞINDA duruyor. Görsel şeffaf
+ * cutout; çerçeve yok, ızgaranın üstünde neon sisiyle duruyor.
+ *
+ * Pusula bilerek maskotun ÜZERİNE binmiyor — önceki sürüm bunu negatif
+ * kenar boşluğuyla mutlak konumlandırıyordu ve masaüstünde kartın sol
+ * kenarı maskotun yüzünü kapatıyordu. Şimdi ikisi aynı flex satırının
+ * kardeşleri: üst üste binme geometrik olarak İMKANSIZ, hangi ekran
+ * genişliğinde olursa olsun. Dar ekranda satır sütuna dönüyor —
+ * maskot üstte, pusula altta, yine çakışmasız.
  */
 function HoloEkran() {
-  const altaEriyen = 'linear-gradient(to bottom, #000 88%, transparent)';
+  const altaEriyen = 'linear-gradient(to bottom, #000 92%, transparent)';
   return (
-    <div className="relative lg:mb-16">
+    <div className="flex flex-col items-center gap-8 lg:flex-row lg:items-center lg:justify-center lg:gap-6">
       <img
         src={maskotKarakter}
         alt="Avucunda hologram taşıyan, mor neonlu Bugs Affiliate maskotu"
-        className="mx-auto block w-full max-w-md"
+        className="block w-full max-w-xs shrink-0 sm:max-w-sm lg:max-w-[240px] xl:max-w-[270px]"
         style={{
           filter: 'drop-shadow(0 0 36px color-mix(in srgb, var(--vurgu) 28%, transparent))',
           maskImage: altaEriyen,
@@ -332,7 +347,7 @@ function HoloEkran() {
         }}
       />
 
-      <div className="relative z-10 mx-4 -mt-20 max-w-sm sm:mx-auto lg:absolute lg:-bottom-8 lg:-left-32 lg:mx-0 lg:mt-0 lg:w-72">
+      <div className="w-full max-w-sm shrink-0 lg:w-72">
         <Pusula />
       </div>
     </div>
@@ -342,9 +357,12 @@ function HoloEkran() {
 /**
  * PUSULA — dondurulmuş hakediş belgesi, holo-terminal çıktısı.
  *
- * Rakamlar temsilî ama TUTARLI: 84.210 − %18 işletme payı (15.158)
- * − 3.400 devreden zarar = 65.652 taban; %45'i 29.543. Hesap sırası
+ * Rakamlar temsilî ama TUTARLI: 235.800 − %18 işletme payı (42.444)
+ * − 8.900 devreden zarar = 184.456 taban; %45'i 83.005. Hesap sırası
  * ürünün gerçek sırası (önce işletme payı, sonra devir, en son yüzde).
+ * Deneyimli, orta-üst hacimli bir ortağı temsil edecek büyüklükte
+ * seçildi — kartın amacı "böyle bir ay mümkün" demek, giriş seviyesi
+ * bir örnek değil.
  *
  * Satırlar sırayla yazılıyor, kilit en son vuruluyor; vurulduktan
  * sonra arada bir neon gibi seğiriyor. `prefers-reduced-motion`
@@ -352,11 +370,11 @@ function HoloEkran() {
  */
 function Pusula() {
   const kalemler: Array<{ ad: string; deger: string; vurgulu?: boolean }> = [
-    { ad: 'Brüt oyuncu geliri', deger: '84.210 ₺' },
-    { ad: 'İşletme payı (%18)', deger: '−15.158 ₺' },
-    { ad: 'Devreden zarar', deger: '−3.400 ₺' },
-    { ad: 'Gelir tabanı', deger: '65.652 ₺' },
-    { ad: 'Ortak payı (%45)', deger: '29.543 ₺', vurgulu: true },
+    { ad: 'Brüt oyuncu geliri', deger: '235.800 ₺' },
+    { ad: 'İşletme payı (%18)', deger: '−42.444 ₺' },
+    { ad: 'Devreden zarar', deger: '−8.900 ₺' },
+    { ad: 'Gelir tabanı', deger: '184.456 ₺' },
+    { ad: 'Ortak payı (%45)', deger: '83.005 ₺', vurgulu: true },
   ];
 
   return (
@@ -381,7 +399,7 @@ function Pusula() {
           {kalemler.map((k, i) => (
             <div
               key={k.ad}
-              className="pusula-satir flex items-baseline gap-2 py-1.5 text-[13px]"
+              className="pusula-satir flex items-baseline gap-2 py-1.5 text-sm"
               style={{ animationDelay: `${200 + i * 110}ms` }}
             >
               <span style={{ color: k.vurgulu ? 'var(--metin)' : 'var(--metin-2)' }}>{k.ad}</span>
@@ -394,9 +412,9 @@ function Pusula() {
             className="pusula-satir mt-3 flex items-baseline gap-2 border-t pt-3"
             style={{ borderColor: 'var(--kenar)', animationDelay: '820ms' }}
           >
-            <span className="text-[11px] font-medium uppercase tracking-[0.14em]">Ödenecek</span>
+            <span className="text-xs font-medium uppercase tracking-[0.14em]">Ödenecek</span>
             <span aria-hidden className="flex-1" />
-            <span className="text-xl font-semibold tabular-nums" style={{ color: 'var(--vurgu)' }}>29.543 ₺</span>
+            <span className="text-3xl font-bold tabular-nums" style={{ color: 'var(--vurgu)' }}>83.005 ₺</span>
           </div>
 
           <p className="pusula-satir mt-3 text-[11px]" style={{ color: 'var(--metin-2)', animationDelay: '940ms' }}>

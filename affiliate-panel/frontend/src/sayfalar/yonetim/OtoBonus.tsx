@@ -68,7 +68,7 @@ export function OtoBonus() {
         </p>
       )}
 
-      <Kart baslik="Kural" sag={<Buton tur="birincil" onClick={kaydet} devredisi={kaydediliyor}>{kaydediliyor ? 'Kaydediliyor…' : 'Kaydet'}</Buton>}>
+      <Kart baslik="Bonus kuralı" sag={<Buton tur="birincil" onClick={kaydet} devredisi={kaydediliyor}>{kaydediliyor ? 'Kaydediliyor…' : 'Kaydet'}</Buton>}>
         <div className="space-y-4">
           <Onay etiket="İlk yatırımda otomatik bonus gönder" deger={aktif} degisti={setAktif} />
           <div className="grid gap-4 sm:grid-cols-3">

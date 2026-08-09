@@ -33,7 +33,7 @@ export function MusteriYolculugu() {
   return (
     <>
       <Kart
-        baslik="Aralık"
+        baslik="Tarih aralığı"
         sag={<Buton tur="birincil" onClick={() => setFiltre(taslak)}>Uygula</Buton>}
       >
         <div className="grid gap-3 sm:grid-cols-3">
@@ -43,7 +43,7 @@ export function MusteriYolculugu() {
             etiket="Ortak anahtarı"
             deger={taslak.ortakAnahtari}
             degisti={(v) => setTaslak((t) => ({ ...t, ortakAnahtari: v }))}
-            ipucu="Boş bırakılırsa tüm ortaklar birlikte."
+            ipucu="Boş bırakılırsa tüm ortaklar birlikte gösterilir."
           />
         </div>
       </Kart>
@@ -72,10 +72,14 @@ export function MusteriYolculugu() {
                   : veri.donusum.kayitIlkYatirim === null ? undefined : `%${veri.donusum.kayitIlkYatirim} dönüşüm`
               }
             />
-            <OlcuKarti etiket="Aktif oyuncu" deger={String(veri.toplam.aktifOyuncu)} />
+            <OlcuKarti etiket="Aktif oyuncu" deger={String(veri.toplam.aktifOyuncu)} alt="bu aralıkta işlem yapan" />
           </div>
 
-          <Kart baslik="Huni">
+          <Kart baslik="Dönüşüm hunisi">
+            <p className="mb-4 text-sm" style={{ color: 'var(--metin-2)' }}>
+              Her satır bir önceki aşamanın ne kadarının ilerlediğini gösterir: kaç tıklama kayda,
+              kaç kayıt ilk yatırıma dönüştü.
+            </p>
             <Huni
               asamalar={[
                 { etiket: 'Tıklama', deger: veri.toplam.tiklama },
