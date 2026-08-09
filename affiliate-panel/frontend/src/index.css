@@ -72,6 +72,21 @@
   --isilti: 0 0 0 rgba(0, 0, 0, 0);
 
   /*
+   * TAYF — gradyan cyberpunk'in dort durağı.
+   *
+   * Yeni bir palet DEĞİL: dört durakdan üçü zaten var olan, ölçülmüş
+   * renkler (--vurgu, --vurgu-2, --olumsuz) — yalnızca "siyan" yeni.
+   * Amaç: vitrin artık TEK bir vurgu rengi değil, uçtan uca bir tayf
+   * taşıyor; ama o tayf rastgele değil, markanın zaten sahip olduğu
+   * üç sesin üzerine kurulu. Mor hâlâ merkez, sadece artık yalnız değil.
+   */
+  --tayf-1: #0e7490; /* siyan — soguk uc, YENI */
+  --tayf-2: #6d28d9; /* mor — marka merkezi, = --vurgu */
+  --tayf-3: #a21caf; /* macenta — = --vurgu-2 */
+  --tayf-4: #be123c; /* mercan-kirmizi — sicak uc, = --olumsuz */
+  --tayf-degrade: linear-gradient(100deg, var(--tayf-1) 0%, var(--tayf-2) 38%, var(--tayf-3) 68%, var(--tayf-4) 100%);
+
+  /*
    * SHADCN TOKEN'LARI — yukaridaki hex paletin `H S% L%` (hsl() govdesi)
    * karsiligi, ayni renk iki bicimde. Shadcn bilesenleri opaklik
    * degistiricileri icin (`bg-primary/90` gibi) bu formati bekliyor;
@@ -130,6 +145,14 @@
   --uyari: #fbbf24;
   --olumsuz: #fb7185;
   --isilti: 0 0 18px color-mix(in srgb, var(--vurgu) 40%, transparent);
+
+  /* Koyuda tayf parlıyor: aynı üç kimlik (siyan yeni, mor/macenta/mercan
+     zaten ölçülü), yalnızca gece parlaklığına çekilmiş uçları. */
+  --tayf-1: #22d3ee;
+  --tayf-2: #c084fc;
+  --tayf-3: #f26df9;
+  --tayf-4: #fb7185;
+  --tayf-degrade: linear-gradient(100deg, var(--tayf-1) 0%, var(--tayf-2) 38%, var(--tayf-3) 68%, var(--tayf-4) 100%);
 
   --background: 253 43% 4%;
   --foreground: 250 69% 95%;
@@ -361,6 +384,67 @@ body {
    etkisiz — koyu metne cyan hale gunduz "kirli baski" gibi gorunur. */
 .koyu .isilti-metin {
   text-shadow: 0 0 28px color-mix(in srgb, var(--vurgu) 35%, transparent);
+}
+
+/*
+ * TAYF METNİ — gradyan dolgulu yazı.
+ *
+ * `color` ÖNCE yazılıyor: `background-clip: text` desteklemeyen bir
+ * tarayıcıda (ya da yazı tipi henüz yüklenmeden ilk boyamada) düz mor
+ * renk devrede kalıyor — görünmez metin yerine okunur metin.
+ */
+.tayf-metin {
+  color: var(--tayf-2);
+  background-image: var(--tayf-degrade);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/*
+ * TAYF KENARI — gradyan çerçeve.
+ *
+ * İki katmanlı arka plan: içteki (`padding-box`) düz yüzey rengini,
+ * dıştaki (`border-box`) tayfı taşıyor — yalnızca aradaki 1-2px'lik
+ * kenarlıkta gradyan görünüyor. Sözde-eleman ya da `mask-composite`
+ * gerekmiyor; tüm modern tarayıcılarda çalışan standart teknik.
+ * `--kenar-zemin` kullanan yer içeriği neyle dolduracağını (opak ya
+ * da yarı saydam "cam") kendi belirliyor.
+ */
+.tayf-kenar {
+  border: 1px solid transparent;
+  background-origin: border-box;
+  background-image: linear-gradient(var(--kenar-zemin, var(--yuzey)), var(--kenar-zemin, var(--yuzey))), var(--tayf-degrade);
+  background-clip: padding-box, border-box;
+}
+
+/*
+ * TAYF AURORA — kahramanın atmosferi.
+ *
+ * Önceki sürüm iki tek renkli ışık lekesi kullanıyordu (spot ışığı
+ * gibi); bu, tayfın DÖRT durağını da ayrı ayrı, yumuşak ve birbirine
+ * karışan lekeler olarak seriyor — "neon şehrin üstünde asılı kalmış
+ * gerçek bir gökkuşağı sisi" hissi, tek renkli bir parıltı değil.
+ * Çok yavaş kayıyor (28s): fark edilir ama dikkat çekmez, "canlı"
+ * hissi yeter. `prefers-reduced-motion` sabit kare olarak durur.
+ */
+.tayf-aurora {
+  background-image:
+    radial-gradient(ellipse 42% 38% at 14% 18%, color-mix(in srgb, var(--tayf-1) 22%, transparent), transparent 72%),
+    radial-gradient(ellipse 38% 34% at 62% 8%, color-mix(in srgb, var(--tayf-2) 20%, transparent), transparent 70%),
+    radial-gradient(ellipse 40% 36% at 88% 32%, color-mix(in srgb, var(--tayf-3) 18%, transparent), transparent 72%),
+    radial-gradient(ellipse 36% 32% at 46% 38%, color-mix(in srgb, var(--tayf-4) 14%, transparent), transparent 74%);
+  background-size: 130% 130%;
+  animation: tayf-kay 32s ease-in-out infinite alternate;
+}
+
+@keyframes tayf-kay {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 100% 12%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tayf-aurora { animation: none; }
 }
 
 code, kbd, samp, pre {

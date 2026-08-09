@@ -18,13 +18,19 @@ import maskotKarakter from '../gorseller/maskot-karakter.webp';
  * ekranı. Buraya gelen kişi henüz ortak değil ve programı hiç
  * bilmiyor — tek işi onu ikna etmek.
  *
- * ── Tasarım tezi: gece şehri terminali ──
+ * ── Tasarım tezi: tayf (gradyan cyberpunk) ──
  *
- * Güven sözü aynı: rakam bir kez yazılır, bir daha değişmez. Sahne
- * cyberpunk: kahraman bölümünde markanın maskotu avucundaki hologramı
- * ziyaretçiye uzatıyor; DONDURULMUŞ hakediş pusulası onun yanında,
- * sağında duruyor — üzerine binmiyor, maskotun yüzü hep açık kalıyor.
- * Davet eden şehir, değişmeyen rakam — ikna eden karşıtlık bu.
+ * Şehir artık tek renkte parlamıyor — dört durak (siyan → mor →
+ * macenta → mercan) aynı anda yanıyor, başlıkta, düğmelerde, kartların
+ * kenarında. Ama bu kaos KASITLI bir karşıtlık kuruyor: tayf ne kadar
+ * hareketli olursa olsun, hakediş pusulası ve "Ödenecek" rakamı
+ * DÜZ kalıyor — hiç gradyan yok, hiç hareket yok. Şehir renk
+ * değiştirir, ödediğimiz rakam değiştirmez. Bu sayfanın tek gerçek
+ * iddiası bu karşıtlıkta okunuyor: değişken ile sabit yan yana.
+ *
+ * Maskotun avucundaki hologram bu tayfın kaynağı gibi duruyor;
+ * DONDURULMUŞ hakediş pusulası onun yanında, sağında — üzerine
+ * binmiyor, maskotun yüzü hep açık kalıyor.
  *
  * Kalan kararlar öncekiyle aynı: büyük rakamlar az metin, tek sütun
  * geniş nefes, sorulara açık cevap.
@@ -161,10 +167,10 @@ export function Landing({ girisYapildi }: { girisYapildi: () => void }) {
 function Tanitim({ git }: { git: (g: Gorunum) => void }) {
   return (
     <>
-      {/* Kahraman: solda iddia, sagda gece sehri. Izgara ve neon sis
+      {/* Kahraman: solda iddia, sagda gece sehri. Izgara ve tayf aurorasi
           yalnizca bu bolumde — her bolume yayilsa desen gurultu olur.
 
-          `overflow-hidden` BILEREK burada: izgara/sis katmanlari
+          `overflow-hidden` BILEREK burada: izgara/aurora katmanlari
           `-inset-x-10` ile bolumun disina 40px tasiyor. Sayfa
           `max-w-6xl` genisligini asan genis ekranlarda bu bosluk
           disariya sigiyordu ama konteyner viewport'u doldurdugu her
@@ -174,22 +180,14 @@ function Tanitim({ git }: { git: (g: Gorunum) => void }) {
           sayfanin geri kalanindaki `sticky` basligi ETKILEMIYOR. */}
       <section className="relative mt-10 overflow-hidden lg:mt-16">
         <div aria-hidden className="izgara absolute -inset-x-10 -top-10 bottom-0 -z-10" />
-        <div
-          aria-hidden
-          className="absolute -inset-x-10 -top-10 bottom-0 -z-10"
-          style={{
-            background:
-              'radial-gradient(ellipse 55% 45% at 18% 12%, color-mix(in srgb, var(--vurgu) 14%, transparent), transparent 70%),'
-              + ' radial-gradient(ellipse 45% 40% at 88% 30%, color-mix(in srgb, var(--vurgu-2) 12%, transparent), transparent 70%)',
-          }}
-        />
+        <div aria-hidden className="tayf-aurora absolute -inset-x-10 -top-10 bottom-0 -z-10" />
 
         <div className="grid items-center gap-12 lg:grid-cols-[1fr_1.25fr] lg:gap-10">
           <div>
-            <p className="font-mono text-xs font-medium uppercase tracking-[0.2em]" style={{ color: 'var(--vurgu)' }}>
+            <p className="tayf-metin font-mono text-xs font-medium uppercase tracking-[0.2em]">
               <span aria-hidden>{'// '}</span>Ortaklık programı
             </p>
-            <h1 className="gosterim isilti-metin mt-4 text-4xl font-extrabold leading-[1.05] tracking-tight md:text-5xl lg:text-[3.4rem]">
+            <h1 className="tayf-metin gosterim mt-4 text-4xl font-extrabold leading-[1.05] tracking-tight md:text-5xl lg:text-[3.4rem]">
               Getirdiğiniz oyuncunun geliri, her ay payınıza yazılır.
             </h1>
             <p className="mt-5 max-w-xl text-lg" style={{ color: 'var(--metin-2)' }}>
@@ -197,7 +195,13 @@ function Tanitim({ git }: { git: (g: Gorunum) => void }) {
               dondurulan, bir daha değişmeyen hakediş.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Button size="lg" onClick={() => git('basvuru')}>Başvuruyu başlat</Button>
+              <Button
+                size="lg"
+                onClick={() => git('basvuru')}
+                style={{ backgroundImage: 'var(--tayf-degrade)', color: '#fff', borderColor: 'transparent' }}
+              >
+                Başvuruyu başlat
+              </Button>
               <Button size="lg" variant="outline" onClick={() => git('giris')}>Hesabım var</Button>
             </div>
 
@@ -231,8 +235,13 @@ function Tanitim({ git }: { git: (g: Gorunum) => void }) {
               className="grid grid-cols-[1fr_auto] items-center gap-4 border-b px-5 py-4 last:border-0 sm:grid-cols-[minmax(0,11rem)_1fr_auto] sm:px-6"
               style={{
                 borderColor: 'var(--kenar)',
-                background: k.one ? 'var(--vurgu-yumusak)' : undefined,
-                boxShadow: k.one ? 'inset 3px 0 0 var(--vurgu)' : undefined,
+                // Duz vurgu-yumusak yerine tayfin kendisi, cok dusuk
+                // opaklikta: en yuksek kademe satiri da "tek renk" degil
+                // "spektrumun ucu" gibi okunsun.
+                backgroundImage: k.one
+                  ? 'linear-gradient(100deg, color-mix(in srgb, var(--tayf-1) 10%, transparent), color-mix(in srgb, var(--tayf-2) 12%, transparent) 45%, color-mix(in srgb, var(--tayf-3) 12%, transparent))'
+                  : undefined,
+                boxShadow: k.one ? 'inset 3px 0 0 var(--tayf-3)' : undefined,
               }}
             >
               <Badge variant={k.one ? 'default' : 'secondary'} className="w-fit font-mono text-[11px] font-medium uppercase tracking-[0.1em]">
@@ -240,8 +249,7 @@ function Tanitim({ git }: { git: (g: Gorunum) => void }) {
               </Badge>
               <span className="col-start-1 font-mono text-sm sm:col-start-2">{k.esik}</span>
               <span
-                className="gosterim col-start-2 row-span-2 row-start-1 self-center text-4xl font-extrabold tabular-nums sm:col-start-3 sm:row-span-1 md:text-5xl"
-                style={{ color: k.one ? 'var(--vurgu)' : undefined }}
+                className={`gosterim col-start-2 row-span-2 row-start-1 self-center text-4xl font-extrabold tabular-nums sm:col-start-3 sm:row-span-1 md:text-5xl ${k.one ? 'tayf-metin' : ''}`}
               >
                 %{k.oran}
               </span>
@@ -305,15 +313,21 @@ function Tanitim({ git }: { git: (g: Gorunum) => void }) {
       </Bolum>
 
       <section
-        className="mt-16 border px-6 py-12 text-center md:px-12"
-        style={{ background: 'var(--vurgu-yumusak)', borderColor: 'var(--vurgu)' }}
+        className="tayf-kenar mt-16 px-6 py-12 text-center md:px-12"
+        style={{ '--kenar-zemin': 'var(--vurgu-yumusak)' } as React.CSSProperties}
       >
         <h2 className="gosterim text-2xl font-extrabold tracking-tight md:text-3xl">Başlamak birkaç dakika.</h2>
         <p className="mx-auto mt-2 max-w-md text-sm" style={{ color: 'var(--metin-2)' }}>
           Zorunlu alanlar dört tane. Gerisini sonra da doldurabilirsiniz.
         </p>
         <div className="mt-6 flex justify-center">
-          <Button size="lg" onClick={() => git('basvuru')}>Başvuruyu başlat</Button>
+          <Button
+            size="lg"
+            onClick={() => git('basvuru')}
+            style={{ backgroundImage: 'var(--tayf-degrade)', color: '#fff', borderColor: 'transparent' }}
+          >
+            Başvuruyu başlat
+          </Button>
         </div>
       </section>
     </>
@@ -323,7 +337,12 @@ function Tanitim({ git }: { git: (g: Gorunum) => void }) {
 /**
  * HOLO SAHNE — imza kompozisyon: maskot avucundaki hologramı uzatıyor,
  * dondurulmuş pusula elinin yanında, SAĞINDA duruyor. Görsel şeffaf
- * cutout; çerçeve yok, ızgaranın üstünde neon sisiyle duruyor.
+ * cutout; çerçeve yok, ızgaranın üstünde tayf sisiyle duruyor.
+ *
+ * Maskotun parıltısı ARTIK TEK RENK DEĞİL: üç ayrı `drop-shadow`
+ * üst üste — siyan, mor, macenta — hafif kaydırılmış. Bu bir ekranın
+ * kromatik sapması gibi okunuyor (bakış açısına göre renk ayrışması);
+ * hologramın kaynağı o, tesadüf değil.
  *
  * Pusula bilerek maskotun ÜZERİNE binmiyor — önceki sürüm bunu negatif
  * kenar boşluğuyla mutlak konumlandırıyordu ve masaüstünde kartın sol
@@ -341,7 +360,10 @@ function HoloEkran() {
         alt="Avucunda hologram taşıyan, mor neonlu Bugs Affiliate maskotu"
         className="block w-full max-w-xs shrink-0 sm:max-w-sm lg:max-w-[240px] xl:max-w-[270px]"
         style={{
-          filter: 'drop-shadow(0 0 36px color-mix(in srgb, var(--vurgu) 28%, transparent))',
+          filter:
+            'drop-shadow(3px 0 14px color-mix(in srgb, var(--tayf-1) 45%, transparent))'
+            + ' drop-shadow(-3px 2px 14px color-mix(in srgb, var(--tayf-3) 45%, transparent))'
+            + ' drop-shadow(0 0 34px color-mix(in srgb, var(--tayf-2) 30%, transparent))',
           maskImage: altaEriyen,
           WebkitMaskImage: altaEriyen,
         }}
@@ -379,13 +401,16 @@ function Pusula() {
 
   return (
     <figure>
+      {/* Tayf CEVREYE tasiyor, pusulanin ICI tasimiyor: kenarlik gradyan,
+          govde duz. Belge her yerde ayni renkte kalsaydi "kaynasip"
+          sahnenin geri kalaniyla ayni kaotik dile girerdi — oysa bu
+          kartin butun anlami SABIT kalmasi. */}
       <div
-        className="relative rotate-[-1.2deg] border font-mono shadow-[0_28px_56px_-28px_rgba(0,0,10,0.6)]"
+        className="tayf-kenar relative rotate-[-1.2deg] font-mono shadow-[0_28px_56px_-28px_rgba(0,0,10,0.6)]"
         style={{
-          background: 'color-mix(in srgb, var(--yuzey) 82%, transparent)',
-          borderColor: 'color-mix(in srgb, var(--vurgu) 35%, var(--kenar))',
+          '--kenar-zemin': 'color-mix(in srgb, var(--yuzey) 82%, transparent)',
           backdropFilter: 'blur(10px)',
-        }}
+        } as React.CSSProperties}
       >
         <div
           className="flex items-baseline justify-between border-b px-5 py-3 text-[11px] uppercase tracking-[0.14em]"
@@ -452,7 +477,7 @@ function Bolum({
 }) {
   return (
     <section className="mt-16">
-      <p className="font-mono text-xs font-medium uppercase tracking-[0.2em]" style={{ color: 'var(--vurgu)' }}>
+      <p className="tayf-metin font-mono text-xs font-medium uppercase tracking-[0.2em]">
         <span aria-hidden>{'// '}</span>{etiket}
       </p>
       <h2 className="gosterim mt-2 text-2xl font-extrabold tracking-tight md:text-3xl">{baslik}</h2>
