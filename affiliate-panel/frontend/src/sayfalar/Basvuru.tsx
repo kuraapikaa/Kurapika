@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { api } from '../api';
-import { Alan, Buton, Hata } from '../ui';
+import { Card, CardContent, CardHeader } from '../components/ui/card';
+import { Checkbox } from '../components/ui/checkbox';
+import { Button } from '../components/ui/button';
+import { FormHata, FormSaha } from '../components/form-saha';
 
 /**
  * ORTAK BAŞVURU FORMU.
@@ -32,11 +35,15 @@ const YONTEMLER: Array<{ deger: string; etiket: string }> = [
   { deger: 'diger', etiket: 'Diğer' },
 ];
 
+// Radix `Select.Item` bos string deger kabul etmiyor; "farketmez" sentinel
+// olarak tutulup gonderimde '' e ceviriliyor.
+const MODEL_FARKETMEZ = 'farketmez';
+
 const BOS = {
   ad: '', eposta: '', parola: '', ortakAnahtari: '', trafikKaynagi: '',
   odemeYontemi: '', odemeDetayi: '',
   kanallar: '', ulkeler: '', aylikOyuncu: '', aylikTrafik: '',
-  mevcutProgramlar: '', tercihEdilenModel: '', aciklama: '',
+  mevcutProgramlar: '', tercihEdilenModel: MODEL_FARKETMEZ, aciklama: '',
 };
 
 export function BasvuruFormu({ tamamlandi }: { tamamlandi: () => void }) {
@@ -69,7 +76,7 @@ export function BasvuruFormu({ tamamlandi }: { tamamlandi: () => void }) {
           aylikOyuncu: form.aylikOyuncu,
           aylikTrafik: form.aylikTrafik,
           mevcutProgramlar: form.mevcutProgramlar,
-          tercihEdilenModel: form.tercihEdilenModel,
+          tercihEdilenModel: form.tercihEdilenModel === MODEL_FARKETMEZ ? '' : form.tercihEdilenModel,
           aciklama: form.aciklama,
         },
       });
@@ -85,11 +92,13 @@ export function BasvuruFormu({ tamamlandi }: { tamamlandi: () => void }) {
     <form className="space-y-3" onSubmit={gonder}>
       <FormBolumu no={1} baslik="Hesap bilgileri" aciklama="Giriş için gerekli dört alan.">
         <div className="grid gap-3 md:grid-cols-2">
-          <Alan etiket="Ad / Şirket *" deger={form.ad} degisti={yaz('ad')} />
-          <Alan etiket="E-posta *" deger={form.eposta} degisti={yaz('eposta')} tip="email" />
-          <Alan etiket="Parola *" deger={form.parola} degisti={yaz('parola')} tip="password" ipucu="En az 10 karakter." />
-          <Alan
-            etiket="İstediğiniz izleme anahtarı *"
+          <FormSaha id="bv-ad" etiket="Ad / Şirket" zorunlu deger={form.ad} degisti={yaz('ad')} />
+          <FormSaha id="bv-eposta" etiket="E-posta" zorunlu deger={form.eposta} degisti={yaz('eposta')} tip="email" />
+          <FormSaha id="bv-parola" etiket="Parola" zorunlu deger={form.parola} degisti={yaz('parola')} tip="password" ipucu="En az 10 karakter." />
+          <FormSaha
+            id="bv-anahtar"
+            etiket="İstediğiniz izleme anahtarı"
+            zorunlu
             deger={form.ortakAnahtari}
             degisti={yaz('ortakAnahtari')}
             ipucu="Harf, rakam, nokta, alt çizgi, tire. Trafiğiniz bu anahtarla eşleşir."
@@ -103,7 +112,8 @@ export function BasvuruFormu({ tamamlandi }: { tamamlandi: () => void }) {
         aciklama="Hiçbiri zorunlu değil ama değerlendirmeyi hızlandırır."
       >
         <div className="grid gap-3 md:grid-cols-2">
-          <Alan
+          <FormSaha
+            id="bv-kanallar"
             etiket="Kanallarınız"
             deger={form.kanallar}
             degisti={yaz('kanallar')}
@@ -111,24 +121,23 @@ export function BasvuruFormu({ tamamlandi }: { tamamlandi: () => void }) {
             ipucu="Site, kanal ya da grup adresleri. Her satıra bir tane."
           />
           <div className="space-y-3">
-            <Alan etiket="Trafiğin geldiği ülkeler" deger={form.ulkeler} degisti={yaz('ulkeler')} ipucu="örn. TR, AZ, DE" />
-            <Alan etiket="Aylık oyuncu (tahmini)" deger={form.aylikOyuncu} degisti={yaz('aylikOyuncu')} tip="number" />
-            <Alan etiket="Aylık ziyaretçi / tıklama (tahmini)" deger={form.aylikTrafik} degisti={yaz('aylikTrafik')} tip="number" />
+            <FormSaha id="bv-ulke" etiket="Trafiğin geldiği ülkeler" deger={form.ulkeler} degisti={yaz('ulkeler')} ipucu="örn. TR, AZ, DE" />
+            <FormSaha id="bv-oyuncu" etiket="Aylık oyuncu (tahmini)" deger={form.aylikOyuncu} degisti={yaz('aylikOyuncu')} tip="number" />
+            <FormSaha id="bv-trafik" etiket="Aylık ziyaretçi / tıklama (tahmini)" deger={form.aylikTrafik} degisti={yaz('aylikTrafik')} tip="number" />
           </div>
         </div>
 
         <div className="mt-3">
-          <span className="mb-2 block text-xs font-medium" style={{ color: 'var(--metin-2)' }}>
+          <span className="mb-2 block text-xs font-medium text-muted-foreground">
             Trafiği nasıl getiriyorsunuz?
           </span>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-4">
             {YONTEMLER.map((y) => (
-              <label key={y.deger} className="flex items-center gap-1 text-sm">
-                <input
-                  type="checkbox"
+              <label key={y.deger} className="flex items-center gap-2 text-sm">
+                <Checkbox
                   checked={yontemler.includes(y.deger)}
-                  onChange={(e) =>
-                    setYontemler(e.target.checked
+                  onCheckedChange={(kontrol) =>
+                    setYontemler(kontrol
                       ? [...yontemler, y.deger]
                       : yontemler.filter((x) => x !== y.deger))}
                 />
@@ -141,42 +150,46 @@ export function BasvuruFormu({ tamamlandi }: { tamamlandi: () => void }) {
 
       <FormBolumu no={3} baslik="İş bilgileri" aciklama="Ödeme ve tercihleriniz.">
         <div className="grid gap-3 md:grid-cols-2">
-          <Alan
+          <FormSaha
+            id="bv-mevcut"
             etiket="Şu an çalıştığınız programlar"
             deger={form.mevcutProgramlar}
             degisti={yaz('mevcutProgramlar')}
             ipucu="Referans niteliğinde; zorunlu değil."
           />
-          <Alan
+          <FormSaha
+            id="bv-model"
             etiket="Tercih ettiğiniz komisyon modeli"
             deger={form.tercihEdilenModel}
             degisti={yaz('tercihEdilenModel')}
             secenekler={[
-              { deger: '', etiket: 'Farketmez' },
+              { deger: MODEL_FARKETMEZ, etiket: 'Farketmez' },
               { deger: 'gelir-payi', etiket: 'Gelir payı (RevShare)' },
               { deger: 'cpa', etiket: 'CPA (oyuncu başı)' },
               { deger: 'hibrit', etiket: 'Hibrit' },
             ]}
           />
-          <Alan etiket="Ödeme yöntemi" deger={form.odemeYontemi} degisti={yaz('odemeYontemi')} ipucu="Havale, kripto…" />
-          <Alan etiket="Ödeme detayı" deger={form.odemeDetayi} degisti={yaz('odemeDetayi')} />
+          <FormSaha id="bv-odeme-yontemi" etiket="Ödeme yöntemi" deger={form.odemeYontemi} degisti={yaz('odemeYontemi')} ipucu="Havale, kripto…" />
+          <FormSaha id="bv-odeme-detay" etiket="Ödeme detayı" deger={form.odemeDetayi} degisti={yaz('odemeDetayi')} />
         </div>
         <div className="mt-3">
-          <Alan etiket="Eklemek istedikleriniz" deger={form.aciklama} degisti={yaz('aciklama')} cokSatir />
+          <FormSaha id="bv-aciklama" etiket="Eklemek istedikleriniz" deger={form.aciklama} degisti={yaz('aciklama')} cokSatir />
         </div>
       </FormBolumu>
 
-      {hata && <Hata mesaj={hata} />}
+      {hata && <FormHata mesaj={hata} />}
 
-      <div className="rounded-2xl border p-5" style={{ background: 'var(--yuzey)', borderColor: 'var(--kenar)' }}>
-        <Buton tip="submit" tur="birincil" tam devredisi={gonderiliyor}>
-          {gonderiliyor ? 'Gönderiliyor…' : 'Başvuruyu gönder'}
-        </Buton>
-        <p className="mt-3 text-center text-xs" style={{ color: 'var(--metin-2)' }}>
-          Beyan ettiğiniz rakamlar için kimse sizden kanıt istemiyor. Onay sonrası
-          e-postanızla giriş yaparsınız.
-        </p>
-      </div>
+      <Card>
+        <CardContent className="pt-6">
+          <Button type="submit" className="w-full" disabled={gonderiliyor}>
+            {gonderiliyor ? 'Gönderiliyor…' : 'Başvuruyu gönder'}
+          </Button>
+          <p className="mt-3 text-center text-xs text-muted-foreground">
+            Beyan ettiğiniz rakamlar için kimse sizden kanıt istemiyor. Onay sonrası
+            e-postanızla giriş yaparsınız.
+          </p>
+        </CardContent>
+      </Card>
     </form>
   );
 }
@@ -201,20 +214,17 @@ function FormBolumu({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border p-5" style={{ background: 'var(--yuzey)', borderColor: 'var(--kenar)' }}>
-      <div className="mb-4 flex items-start gap-3">
-        <span
-          className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-semibold"
-          style={{ background: 'color-mix(in srgb, var(--vurgu) 14%, transparent)', color: 'var(--vurgu)' }}
-        >
+    <Card>
+      <CardHeader className="flex-row items-start gap-3 space-y-0">
+        <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/15 text-sm font-semibold text-primary">
           {no}
         </span>
         <div>
           <h2 className="font-medium">{baslik}</h2>
-          <p className="text-sm" style={{ color: 'var(--metin-2)' }}>{aciklama}</p>
+          <p className="text-sm text-muted-foreground">{aciklama}</p>
         </div>
-      </div>
-      {children}
-    </section>
+      </CardHeader>
+      <CardContent>{children}</CardContent>
+    </Card>
   );
 }

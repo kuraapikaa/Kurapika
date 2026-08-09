@@ -55,6 +55,39 @@
   --olumsuz: #be123c;
   /* Isilti acik temada YOK: gunduz neonu solgun bir leke olurdu. */
   --isilti: 0 0 0 rgba(0, 0, 0, 0);
+
+  /*
+   * SHADCN TOKEN'LARI — yukaridaki hex paletin `H S% L%` (hsl() govdesi)
+   * karsiligi, ayni renk iki bicimde. Shadcn bilesenleri opaklik
+   * degistiricileri icin (`bg-primary/90` gibi) bu formati bekliyor;
+   * hex `var()` bunu saglayamiyor. Degerler yukaridaki hex'lerle
+   * BIREBIR ayni renk — burada yeni bir palet secilmedi, sadece format
+   * cevrildi. Iki sistem, Asama 5'te `ui.tsx` kalkana kadar yan yana
+   * yasayacak.
+   */
+  --background: 255 33% 95%;
+  --foreground: 256 44% 10%;
+  --card: 0 0% 100%;
+  --card-foreground: 256 44% 10%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 256 44% 10%;
+  --primary: 263 70% 50%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 256 38% 92%;
+  --secondary-foreground: 256 44% 10%;
+  --muted: 256 38% 92%;
+  --muted-foreground: 254 22% 39%;
+  --accent: 264 76% 94%;
+  --accent-foreground: 256 44% 10%;
+  /* Beyaz uzerinde ~4.9:1 (be123c) — dolgu dugmede AA gecer. */
+  --destructive: 345 83% 41%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 256 34% 85%;
+  --input: 256 34% 85%;
+  --ring: 263 70% 50%;
+  /* Vitrin diliyle uyumlu, aqua'nin yumusak koselerinden kucuk: bilesen
+     bir denetim gibi durur ama pahli/keskin sahneyi yumusatmaz. */
+  --radius: 0.3rem;
 }
 
 :root.koyu {
@@ -82,6 +115,29 @@
   --uyari: #fbbf24;
   --olumsuz: #fb7185;
   --isilti: 0 0 18px color-mix(in srgb, var(--vurgu) 40%, transparent);
+
+  --background: 253 43% 4%;
+  --foreground: 250 69% 95%;
+  --card: 255 40% 8%;
+  --card-foreground: 250 69% 95%;
+  --popover: 255 40% 8%;
+  --popover-foreground: 250 69% 95%;
+  --primary: 270 95% 75%;
+  --primary-foreground: 274 68% 7%;
+  --secondary: 255 36% 11%;
+  --secondary-foreground: 250 69% 95%;
+  --muted: 255 36% 11%;
+  --muted-foreground: 251 26% 66%;
+  --accent: 264 44% 15%;
+  --accent-foreground: 250 69% 95%;
+  /* fb7185 acik bir pembe (L=71%): beyaz metin degil, koyu zemin
+     metniyle kontrast tutuluyor. */
+  --destructive: 351 95% 71%;
+  --destructive-foreground: 274 68% 7%;
+  --border: 253 33% 19%;
+  --input: 253 33% 19%;
+  --ring: 270 95% 75%;
+  --radius: 0.3rem;
 }
 
 /*
@@ -113,6 +169,29 @@
   --uyari: #b45309;
   --olumsuz: #d70015;
   --isilti: 0 0 0 rgba(0, 0, 0, 0);
+
+  --background: 240 11% 96%;
+  --foreground: 240 3% 12%;
+  --card: 0 0% 100%;
+  --card-foreground: 240 3% 12%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 3% 12%;
+  --primary: 210 100% 45%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 240 8% 95%;
+  --secondary-foreground: 240 3% 12%;
+  --muted: 240 8% 95%;
+  --muted-foreground: 240 2% 44%;
+  --accent: 214 84% 95%;
+  --accent-foreground: 240 3% 12%;
+  --destructive: 354 100% 42%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 240 10% 90%;
+  --input: 240 10% 90%;
+  --ring: 210 100% 45%;
+  /* Aqua'nin yumusak Apple koseleri; mevcut .aqua .hud/button kurallarindaki
+     8-14px araligiyla ayni aile. */
+  --radius: 0.625rem;
 }
 
 .koyu .aqua {
@@ -133,6 +212,27 @@
   --uyari: #ff9f0a;
   --olumsuz: #ff453a;
   --isilti: 0 0 0 rgba(0, 0, 0, 0);
+
+  --background: 240 6% 7%;
+  --foreground: 240 11% 96%;
+  --card: 240 3% 11%;
+  --card-foreground: 240 11% 96%;
+  --popover: 240 3% 11%;
+  --popover-foreground: 240 11% 96%;
+  --primary: 210 100% 52%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 240 2% 18%;
+  --secondary-foreground: 240 11% 96%;
+  --muted: 240 2% 18%;
+  --muted-foreground: 240 2% 61%;
+  --accent: 209 57% 18%;
+  --accent-foreground: 240 11% 96%;
+  --destructive: 3 100% 61%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 240 2% 23%;
+  --input: 240 2% 23%;
+  --ring: 210 100% 52%;
+  --radius: 0.625rem;
 }
 
 /*
