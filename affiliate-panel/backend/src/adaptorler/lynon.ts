@@ -167,6 +167,8 @@ class LynonAdaptoru implements BackofficeAdaptoru {
       });
       kavanoz.yanittanAl(yanit.headers, url);
       const sunucuAni = Date.parse(yanit.headers.get('date') ?? '');
+      const u = new URL(url);
+      console.error('[lynon-tani] jsonGonder', { istek: `${u.hostname}${u.pathname}`, durum: yanit.status });
       return {
         durum: yanit.status,
         tamam: yanit.ok,
@@ -271,12 +273,30 @@ class LynonAdaptoru implements BackofficeAdaptoru {
     const kontrol = new AbortController();
     const zamanlayici = setTimeout(() => kontrol.abort(), ZAMAN_ASIMI_MS);
     try {
-      return await fetch(url, {
+      const yanit = await fetch(url, {
         method: 'GET',
         signal: kontrol.signal,
         redirect: 'manual',
         headers: { ...this.ortakBasliklar(url), Cookie: kavanoz.baslik(url) },
       });
+      // GECICI TANI: sorgu/parca ATILIYOR -- OIDC kodu/token orada olabilir,
+      // loga hic girmemeli. Yalnizca konak+yol+durum+yonlendirme hedefi.
+      const konum = yanit.headers.get('location');
+      let konumOzet = konum;
+      try {
+        if (konum) {
+          const k = new URL(konum, url);
+          konumOzet = `${k.hostname}${k.pathname}`;
+        }
+      } catch { /* konum goreli/bozuksa oldugu gibi birak */ }
+      const u = new URL(url);
+      console.error('[lynon-tani] hop', {
+        istek: `${u.hostname}${u.pathname}`,
+        durum: yanit.status,
+        contentType: yanit.headers.get('content-type'),
+        location: konumOzet,
+      });
+      return yanit;
     } finally {
       clearTimeout(zamanlayici);
     }
