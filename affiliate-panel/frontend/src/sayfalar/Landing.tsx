@@ -1,12 +1,15 @@
 import { useState, type ReactNode } from 'react';
 import { BasvuruFormu } from './Basvuru';
-import { Alan, Buton, Hata, useTema } from '../ui';
 import { api } from '../api';
 import { Logo, useMarka } from '../marka';
-// Kullanicinin sagladigi marka gorseli (Photoroom ile arka plani
-// silinmis surum). WebP bilerek: ayni cutout PNG olarak 1,9 MB,
-// WebP olarak 171 KB — alfa kanali korunuyor, kalite farki yok.
-import siberKiz from '../gorseller/siber-kiz.webp';
+import { useTema } from '../lib/tema';
+import { Button } from '../components/ui/button';
+import { Card, CardContent } from '../components/ui/card';
+import { Badge } from '../components/ui/badge';
+import { Tabs, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { FormHata, FormSaha } from '../components/form-saha';
+// Maskotun tam karakter illustrasyonu (arka plani silinmis, WebP surumu).
+import maskotKarakter from '../gorseller/maskot-karakter.webp';
 
 /**
  * ORTAKLIK PROGRAMI LANDING SAYFASI.
@@ -18,10 +21,9 @@ import siberKiz from '../gorseller/siber-kiz.webp';
  * ── Tasarım tezi: gece şehri terminali ──
  *
  * Güven sözü aynı: rakam bir kez yazılır, bir daha değişmez. Sahne
- * cyberpunk: kahraman bölümünde markanın siber kızı avucundaki
- * hologramı ziyaretçiye uzatıyor; o elin hizasına DONDURULMUŞ hakediş
- * pusulası biniyor. Davet eden şehir, değişmeyen rakam — ikna eden
- * karşıtlık bu.
+ * cyberpunk: kahraman bölümünde markanın maskotu avucundaki hologramı
+ * ziyaretçiye uzatıyor; o elin hizasına DONDURULMUŞ hakediş pusulası
+ * biniyor. Davet eden şehir, değişmeyen rakam — ikna eden karşıtlık bu.
  *
  * Kalan kararlar öncekiyle aynı: büyük rakamlar az metin, tek sütun
  * geniş nefes, sorulara açık cevap.
@@ -105,9 +107,9 @@ export function Landing({ girisYapildi }: { girisYapildi: () => void }) {
             <Logo marka={marka} />
           </button>
           <div className="ml-auto flex items-center gap-2">
-            <Buton onClick={temaDegistir}>{koyu ? 'Aydınlık' : 'Karanlık'}</Buton>
-            <Buton onClick={() => git('giris')}>Giriş</Buton>
-            <Buton tur="birincil" onClick={() => git('basvuru')}>Başvur</Buton>
+            <Button variant="outline" onClick={temaDegistir}>{koyu ? 'Aydınlık' : 'Karanlık'}</Button>
+            <Button variant="outline" onClick={() => git('giris')}>Giriş</Button>
+            <Button onClick={() => git('basvuru')}>Başvur</Button>
           </div>
         </div>
       </header>
@@ -185,8 +187,8 @@ function Tanitim({ git }: { git: (g: Gorunum) => void }) {
               dondurulan, bir daha değişmeyen hakediş.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Buton tur="birincil" onClick={() => git('basvuru')}>Başvuruyu başlat</Buton>
-              <Buton onClick={() => git('giris')}>Hesabım var</Buton>
+              <Button size="lg" onClick={() => git('basvuru')}>Başvuruyu başlat</Button>
+              <Button size="lg" variant="outline" onClick={() => git('giris')}>Hesabım var</Button>
             </div>
 
             <dl className="mt-12 grid max-w-2xl grid-cols-2 gap-x-8 gap-y-6 sm:grid-cols-4">
@@ -212,7 +214,7 @@ function Tanitim({ git }: { git: (g: Gorunum) => void }) {
         {/* Oran tabelasi: uc ayri kart degil tek cetvel. Kademeler ayni
             olcegin basamaklari; yan yana kartlar onlari uc ayri urun gibi
             gosteriyordu. */}
-        <div className="overflow-hidden border" style={{ background: 'var(--yuzey)', borderColor: 'var(--kenar)' }}>
+        <Card className="overflow-hidden rounded-none">
           {KADEMELER.map((k) => (
             <div
               key={k.esik}
@@ -223,9 +225,9 @@ function Tanitim({ git }: { git: (g: Gorunum) => void }) {
                 boxShadow: k.one ? 'inset 3px 0 0 var(--vurgu)' : undefined,
               }}
             >
-              <span className="font-mono text-[11px] font-medium uppercase tracking-[0.14em]" style={{ color: 'var(--metin-2)' }}>
+              <Badge variant={k.one ? 'default' : 'secondary'} className="w-fit font-mono text-[11px] font-medium uppercase tracking-[0.1em]">
                 {k.not}
-              </span>
+              </Badge>
               <span className="col-start-1 font-mono text-sm sm:col-start-2">{k.esik}</span>
               <span
                 className="gosterim col-start-2 row-span-2 row-start-1 self-center text-4xl font-extrabold tabular-nums sm:col-start-3 sm:row-span-1 md:text-5xl"
@@ -235,7 +237,7 @@ function Tanitim({ git }: { git: (g: Gorunum) => void }) {
               </span>
             </div>
           ))}
-        </div>
+        </Card>
         {/* Ornek oldugu ACIKCA yaziliyor: burada okunan bir rakami taahhut
             sanmak, ilk odemede guvensizlik uretirdi. */}
         <p className="mt-4 text-xs" style={{ color: 'var(--metin-2)' }}>
@@ -247,7 +249,7 @@ function Tanitim({ git }: { git: (g: Gorunum) => void }) {
       <Bolum etiket="Süreç" baslik="Nasıl çalışıyor">
         <ol className="grid gap-4 md:grid-cols-4">
           {ADIMLAR.map((a, i) => (
-            <li key={a.baslik} className="border p-5" style={{ background: 'var(--yuzey)', borderColor: 'var(--kenar)' }}>
+            <Card key={a.baslik} className="rounded-none p-5">
               <span
                 className="flex h-7 w-7 items-center justify-center font-mono text-sm font-semibold"
                 style={{ background: 'color-mix(in srgb, var(--vurgu) 14%, transparent)', color: 'var(--vurgu)' }}
@@ -256,7 +258,7 @@ function Tanitim({ git }: { git: (g: Gorunum) => void }) {
               </span>
               <h3 className="mt-3 font-medium">{a.baslik}</h3>
               <p className="mt-1.5 text-sm leading-relaxed" style={{ color: 'var(--metin-2)' }}>{a.metin}</p>
-            </li>
+            </Card>
           ))}
         </ol>
       </Bolum>
@@ -264,19 +266,20 @@ function Tanitim({ git }: { git: (g: Gorunum) => void }) {
       <Bolum etiket="Panel" baslik="Elinizde ne olacak">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {OZELLIKLER.map((o) => (
-            <div key={o.baslik} className="border p-5" style={{ background: 'var(--yuzey)', borderColor: 'var(--kenar)' }}>
+            <Card key={o.baslik} className="rounded-none p-5">
               <h3 className="font-medium">{o.baslik}</h3>
               <p className="mt-1.5 text-sm leading-relaxed" style={{ color: 'var(--metin-2)' }}>{o.metin}</p>
-            </div>
+            </Card>
           ))}
         </div>
       </Bolum>
 
       {/* Native <details>: JS gerekmiyor, klavye ve ekran okuyucu desteği
           kendiliğinden doğru. Elle yazılmış bir akordeonun
-          erişilebilirliğini bu kadar doğru yapmak fazladan iş. */}
+          erişilebilirliğini bu kadar doğru yapmak fazladan iş — Shadcn'in
+          Accordion'ı buraya zorla eklenmedi. */}
       <Bolum etiket="Sorular" baslik="Merak edilenler">
-        <div className="divide-y border" style={{ background: 'var(--yuzey)', borderColor: 'var(--kenar)' }}>
+        <Card className="divide-y rounded-none">
           {SORULAR.map((q) => (
             <details key={q.s} className="group px-5 py-4">
               <summary className="flex cursor-pointer list-none items-center gap-3 font-medium">
@@ -288,7 +291,7 @@ function Tanitim({ git }: { git: (g: Gorunum) => void }) {
               <p className="mt-2.5 text-sm leading-relaxed" style={{ color: 'var(--metin-2)' }}>{q.c}</p>
             </details>
           ))}
-        </div>
+        </Card>
       </Bolum>
 
       <section
@@ -300,7 +303,7 @@ function Tanitim({ git }: { git: (g: Gorunum) => void }) {
           Zorunlu alanlar dört tane. Gerisini sonra da doldurabilirsiniz.
         </p>
         <div className="mt-6 flex justify-center">
-          <Buton tur="birincil" onClick={() => git('basvuru')}>Başvuruyu başlat</Buton>
+          <Button size="lg" onClick={() => git('basvuru')}>Başvuruyu başlat</Button>
         </div>
       </section>
     </>
@@ -308,19 +311,19 @@ function Tanitim({ git }: { git: (g: Gorunum) => void }) {
 }
 
 /**
- * HOLO SAHNE — imza kompozisyon: marka kızı avucundaki hologramı
- * uzatıyor, dondurulmuş pusula o elin hizasına biniyor. Görsel şeffaf
- * cutout; çerçeve yok, ızgaranın üstünde neon sisiyle duruyor. Alt
- * kenar maskeyle eriyor ki kesik bir fotoğraf değil sahnenin parçası
- * gibi otursun.
+ * HOLO SAHNE — imza kompozisyon: maskot avucundaki hologramı uzatıyor,
+ * dondurulmuş pusula o elin hizasına biniyor. Görsel şeffaf cutout;
+ * çerçeve yok, ızgaranın üstünde neon sisiyle duruyor. Alt kenar
+ * maskeyle eriyor ki kesik bir fotoğraf değil sahnenin parçası gibi
+ * otursun.
  */
 function HoloEkran() {
   const altaEriyen = 'linear-gradient(to bottom, #000 88%, transparent)';
   return (
     <div className="relative lg:mb-16">
       <img
-        src={siberKiz}
-        alt="Avucunda hologram taşıyan, mor neonlu siber anime kız"
+        src={maskotKarakter}
+        alt="Avucunda hologram taşıyan, mor neonlu Bugs Affiliate maskotu"
         className="mx-auto block w-full max-w-md"
         style={{
           filter: 'drop-shadow(0 0 36px color-mix(in srgb, var(--vurgu) 28%, transparent))',
@@ -475,59 +478,43 @@ function GirisKutusu({ girisYapildi }: { girisYapildi: () => void }) {
     }
   };
 
-  const rolSec = (yeni: boolean) => {
-    setYonetici(yeni);
+  const rolSec = (yeni: string) => {
+    setYonetici(yeni === 'yonetici');
     setHata(null);
   };
 
   return (
     <section className="mx-auto max-w-sm py-16">
       <h1 className="mb-1 text-2xl font-semibold tracking-tight">Giriş</h1>
-      <p className="mb-6 text-sm" style={{ color: 'var(--metin-2)' }}>
+      <p className="mb-6 text-sm text-muted-foreground">
         {yonetici ? 'Panel yönetimi için.' : 'Kazancınızı ve linklerinizi görmek için.'}
       </p>
 
-      {/* iOS parcali denetim: gri yuvada beyaz secili hap. */}
-      <div
-        className="mb-4 grid grid-cols-2 gap-0.5 rounded-[10px] p-0.5 text-sm font-medium"
-        style={{ background: 'var(--yuzey-2)' }}
-        role="tablist"
-        aria-label="Giriş türü"
-      >
-        {([['Ortak', false], ['Yönetici', true]] as const).map(([ad, deger]) => (
-          <button
-            key={ad}
-            type="button"
-            role="tab"
-            aria-selected={yonetici === deger}
-            className="rounded-lg px-3 py-1.5"
-            style={yonetici === deger
-              ? { background: 'var(--yuzey)', color: 'var(--metin)', boxShadow: '0 1px 3px rgba(0,0,0,0.12)' }
-              : { color: 'var(--metin-2)' }}
-            onClick={() => rolSec(deger)}
-          >
-            {ad}
-          </button>
-        ))}
-      </div>
+      <Tabs value={yonetici ? 'yonetici' : 'ortak'} onValueChange={rolSec} className="mb-4">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="ortak">Ortak</TabsTrigger>
+          <TabsTrigger value="yonetici">Yönetici</TabsTrigger>
+        </TabsList>
+      </Tabs>
 
-      <form
-        className="hud space-y-4 border p-6"
-        style={{ background: 'var(--yuzey)', borderColor: 'var(--kenar)' }}
-        onSubmit={gonder}
-      >
-        <Alan
-          etiket={yonetici ? 'Kullanıcı adı' : 'E-posta'}
-          deger={kullanici}
-          degisti={setKullanici}
-          tip={yonetici ? 'text' : 'email'}
-        />
-        <Alan etiket="Parola" deger={parola} degisti={setParola} tip="password" />
-        {hata && <Hata mesaj={hata} />}
-        <Buton tip="submit" tur="birincil" tam devredisi={gonderiliyor}>
-          {gonderiliyor ? 'Giriş yapılıyor…' : 'Giriş yap'}
-        </Buton>
-      </form>
+      <Card>
+        <CardContent className="pt-6">
+          <form className="space-y-4" onSubmit={gonder}>
+            <FormSaha
+              id="giris-kullanici"
+              etiket={yonetici ? 'Kullanıcı adı' : 'E-posta'}
+              deger={kullanici}
+              degisti={setKullanici}
+              tip={yonetici ? 'text' : 'email'}
+            />
+            <FormSaha id="giris-parola" etiket="Parola" deger={parola} degisti={setParola} tip="password" />
+            {hata && <FormHata mesaj={hata} />}
+            <Button type="submit" className="w-full" disabled={gonderiliyor}>
+              {gonderiliyor ? 'Giriş yapılıyor…' : 'Giriş yap'}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
     </section>
   );
 }

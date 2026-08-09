@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { hexToHsl, tercihEdilenMetinRengi } from './lib/renk';
+import maskotLogo from './gorseller/maskot-logo.webp';
 
 /**
  * MARKA — logo ve panel adı.
@@ -39,7 +41,19 @@ export function useMarka(): MarkaBilgisi {
         setMarka({ ...VARSAYILAN, ...m });
         // Marka rengi kok degiskeni EZIYOR; boylece butun panel (butonlar,
         // grafikler, secili menu) tek bir degerle markaya uyuyor.
-        if (m.vurgu) document.documentElement.style.setProperty('--vurgu', m.vurgu);
+        if (m.vurgu) {
+          document.documentElement.style.setProperty('--vurgu', m.vurgu);
+          // Ayni rengi Shadcn tarafinin `--primary`'sine de yaziyoruz --
+          // iki katman (eski ui.tsx, yeni shadcn bilesenleri) Asama 5'e
+          // kadar yan yana yasiyor ve ikisi de ayni kiraci rengini
+          // gostermeli.
+          const hsl = hexToHsl(m.vurgu);
+          if (hsl) {
+            document.documentElement.style.setProperty('--primary', hsl.triple);
+            document.documentElement.style.setProperty('--ring', hsl.triple);
+            document.documentElement.style.setProperty('--primary-foreground', tercihEdilenMetinRengi(hsl.l));
+          }
+        }
       })
       .catch(() => undefined);
     return () => { iptal = true; };
@@ -59,6 +73,20 @@ export function Logo({ marka, boyut = 'orta' }: { marka: MarkaBilgisi; boyut?: '
         alt={marka.ad}
         style={{ height: yukseklik, width: 'auto', maxWidth: boyut === 'buyuk' ? 240 : 170 }}
         onError={() => setGorselBozuk(true)}
+      />
+    );
+  }
+
+  // Kiracinin kendi logoUrl'u yoksa VARSAYILAN marka (Bugs Affiliate) icin
+  // maskot gorseli gosteriliyor; baska bir kiracinin adiysa (logosuz ama
+  // ismi farkli beyaz etiket) hala metin logosuna dusuluyor -- maskot
+  // yalnizca kendi markamizin kimligi, baskasina zorla giydirilmiyor.
+  if (marka.ad === VARSAYILAN.ad) {
+    return (
+      <img
+        src={maskotLogo}
+        alt={marka.ad}
+        style={{ height: yukseklik, width: 'auto', maxWidth: boyut === 'buyuk' ? 240 : 170 }}
       />
     );
   }

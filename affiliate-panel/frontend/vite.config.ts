@@ -16,7 +16,12 @@ export default defineConfig({
     // icin sunucu kodu pakete girmiyor. Takma ad yine de tanimli, ki
     // yanlislikla deger import edilirse sessizce kirilmak yerine
     // build'de patlasin.
-    alias: { '@sunucu': fileURLToPath(new URL('../backend/src', import.meta.url)) },
+    alias: {
+      '@sunucu': fileURLToPath(new URL('../backend/src', import.meta.url)),
+      // Shadcn bilesenlerinin ve kendi kodumuzun `src/` icine kisa yoldan
+      // erismesi icin; CLI'nin urettigi importlar bu takma adi bekliyor.
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+    },
   },
   build: {
     outDir: '../backend/genel',
