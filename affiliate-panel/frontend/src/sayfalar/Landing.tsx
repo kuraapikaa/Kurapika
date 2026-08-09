@@ -104,7 +104,7 @@ export function Landing({ girisYapildi }: { girisYapildi: () => void }) {
       >
         <div className="mx-auto flex max-w-6xl items-center gap-3 px-5 py-3.5">
           <button type="button" className="flex items-center" onClick={() => git('tanitim')}>
-            <Logo marka={marka} />
+            <Logo marka={marka} boyut="buyuk" />
           </button>
           <div className="ml-auto flex items-center gap-2">
             <Button variant="outline" onClick={temaDegistir}>{koyu ? 'Aydınlık' : 'Karanlık'}</Button>
@@ -332,7 +332,7 @@ function HoloEkran() {
         }}
       />
 
-      <div className="relative z-10 mx-4 -mt-20 max-w-sm sm:mx-auto lg:absolute lg:-bottom-12 lg:-left-8 lg:mx-0 lg:mt-0 lg:w-80">
+      <div className="relative z-10 mx-4 -mt-20 max-w-sm sm:mx-auto lg:absolute lg:-bottom-8 lg:-left-32 lg:mx-0 lg:mt-0 lg:w-72">
         <Pusula />
       </div>
     </div>
