@@ -352,6 +352,47 @@ export async function altLinkOyuncuListesi(kiraci: string, altLinkId: string): P
   }));
 }
 
+/**
+ * Bir ortağa eşleşmiş TÜM oyuncuların listesi — alt linkten bağımsız.
+ *
+ * `altLinkOyuncuListesi`'nin `altLinkId` süzgeci, toplu affiliate
+ * geçişiyle (kullanıcı adıyla) taşınan oyuncuları hiç göstermiyordu:
+ * `oyuncuyuYenidenAta` bu oyuncularda `altLinkId`'yi kasıtlı olarak
+ * `null` bırakıyor (o oyuncunun tıklama geçmişi zaten yok). Ortak,
+ * kendisine geçirilen bir oyuncunun kullanıcı adını ve gerçek
+ * yatırım/çekim rakamını hiçbir yerde göremiyordu — bu, o boşluğu
+ * dolduruyor: `altLinkId` şartı YOK, yalnızca `ortakId`.
+ */
+export async function ortakOyuncuListesi(kiraci: string, ortakId: string): Promise<AltLinkOyuncusu[]> {
+  const vt = veritabani();
+  if (!vt) return [];
+
+  const satirlar = await vt
+    .select({
+      lynonOyuncuId: oyuncuEslesmeleri.lynonOyuncuId,
+      kullaniciAdi: oyuncuEslesmeleri.kullaniciAdi,
+      olusturuldu: oyuncuEslesmeleri.olusturuldu,
+      yatirim: sql<number>`coalesce(sum(${oyuncuGunluk.yatirim}), 0)`,
+      cekim: sql<number>`coalesce(sum(${oyuncuGunluk.cekim}), 0)`,
+    })
+    .from(oyuncuEslesmeleri)
+    .leftJoin(oyuncuGunluk, and(
+      eq(oyuncuGunluk.kiraci, oyuncuEslesmeleri.kiraci),
+      eq(oyuncuGunluk.oyuncuId, oyuncuEslesmeleri.lynonOyuncuId),
+    ))
+    .where(and(eq(oyuncuEslesmeleri.kiraci, kiraci), eq(oyuncuEslesmeleri.ortakId, ortakId)))
+    .groupBy(oyuncuEslesmeleri.lynonOyuncuId, oyuncuEslesmeleri.kullaniciAdi, oyuncuEslesmeleri.olusturuldu)
+    .orderBy(desc(oyuncuEslesmeleri.olusturuldu));
+
+  return satirlar.map((s) => ({
+    lynonOyuncuId: s.lynonOyuncuId,
+    kullaniciAdi: s.kullaniciAdi,
+    yatirim: Number(s.yatirim),
+    cekim: Number(s.cekim),
+    olusturuldu: s.olusturuldu.toISOString(),
+  }));
+}
+
 export interface OrtakGunlukGelirSonucu {
   yazildiMi: boolean;
   yatirim: number;
