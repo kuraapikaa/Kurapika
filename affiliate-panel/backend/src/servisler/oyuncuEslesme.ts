@@ -282,7 +282,7 @@ interface OyuncuFinans {
 }
 
 /** `oyuncuFinansHaritasi`'nin döndürdüğü haritanın anahtarı; bkz. orada. */
-const finansAnahtari = (baglantiId: string, lynonOyuncuId: string): string => `${baglantiId} ${lynonOyuncuId}`;
+const finansAnahtari = (baglantiId: string, lynonOyuncuId: string): string => `${baglantiId}::${lynonOyuncuId}`;
 
 /**
  * Oyuncu başına yatırım/çekim — İKİ kaynağı birleştirir, BAĞLANTI bazında.

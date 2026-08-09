@@ -90,6 +90,28 @@ async function gunuDoldur(
     ));
   const eslesmeMap = new Map(eslesmeler.map((e) => [e.lynonOyuncuId, e]));
 
+  // GECICI TANI: raporun oyuncuId formati ile eslesme kaydinin lynonOyuncuId
+  // formati farkli olursa (site'a gore degisen backoffice semasi) inArray
+  // eslesmesi sessizce 0 doner -- bu, ikisini yan yana gorup karsilastirmak
+  // icin. Ust sorgu yalnizca ORTUSEN ID'leri getirdigi icin, gercekten
+  // KAYITLI olanlarin ham halini de ayrica cekiyoruz (ortusme 0 olsa bile
+  // gorunsun diye). `railway logs` ile okunacak, sonra ayri bir PR'da
+  // kaldirilacak.
+  if (satirlar.length > 0) {
+    const kayitliOrnek = await vt
+      .select({ lynonOyuncuId: oyuncuEslesmeleri.lynonOyuncuId })
+      .from(oyuncuEslesmeleri)
+      .where(and(eq(oyuncuEslesmeleri.kiraci, kiraci), eq(oyuncuEslesmeleri.baglantiId, baglantiId)))
+      .limit(5);
+    console.error('[gecmis-ggr-tani] gun', {
+      kiraci, baglantiId, gun,
+      raporSatirSayisi: satirlar.length,
+      raporOrnekIdler: oyuncuIdler.slice(0, 5),
+      eslesmeSayisiOrtusen: eslesmeler.length,
+      kayitliOrnekIdler: kayitliOrnek.map((e) => e.lynonOyuncuId),
+    });
+  }
+
   const gruplar = new Map<string, {
     ortakAnahtari: string;
     oyuncular: Set<string>;
