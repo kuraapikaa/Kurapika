@@ -219,6 +219,10 @@ class LynonAdaptoru implements BackofficeAdaptoru {
       await this.yonlendirmeyiTamamla(donusUrl, kavanoz);
       this.kavanoz = kavanoz;
       this.girisAni = Date.now();
+      // GECICI TANI: 401 ile giris basariliyken sonraki cagrilarin neden
+      // reddedildigini anlamak icin. Yalnizca cerez ADLARI -- degerler
+      // oturum anahtari, loga yazilmiyor.
+      console.error('[lynon-tani] giris tamamlandi, cerezler:', kavanoz.adlar());
       return kavanoz;
     }
 
@@ -343,6 +347,17 @@ class LynonAdaptoru implements BackofficeAdaptoru {
       });
       kavanoz.yanittanAl(yanit.headers, url.toString());
       const veri = jsonCoz(await yanit.text());
+
+      if (!yanit.ok) {
+        // GECICI TANI: hangi cerezlerin GONDERILDIGINI (adlariyla) ve
+        // yanitin ne dedigini goruyoruz. Deger yok, yalnizca ad + durum.
+        console.error('[lynon-tani] basarisiz cagri', {
+          yol: url.pathname,
+          durum: yanit.status,
+          gonderilenCerezAdlari: kavanoz.adlar(),
+          govdeOzeti: JSON.stringify(veri).slice(0, 300),
+        });
+      }
 
       // Oturum dustuyse (401/403 ya da giris sayfasina yonlendirme) BIR KEZ
       // yeniden giris denenir. Sinirsiz denemek, gercekten yetkisiz bir
