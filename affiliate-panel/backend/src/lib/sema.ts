@@ -296,3 +296,36 @@ export const oyuncuGunluk = pgTable(
     index('aff_oyuncu_gunluk_kiraci_gun').on(t.kiraci, t.gun),
   ],
 );
+
+/**
+ * OYUNCU BAZLI GÜNLÜK TOPLAMLAR — RAPOR KAYNAKLI.
+ *
+ * `oyuncuGunluk`'tan BİLEREK ayrı: o webhook'un gün-içi AKIŞI (`+=` ile
+ * katlanıyor), bu ise Lynon'un backoffice RAPORUNUN (`oyuncuGunuCek`,
+ * bkz. `gecmisGGR.ts`) o gün için verdiği KESİN toplam — her yazma bir
+ * önceki değerin üzerine YAZAR (`SET`), üstüne eklemez. İkisini aynı
+ * tabloda tutup `+=` ile birleştirseydik, rapor yeniden çalıştırıldığında
+ * (idempotent olması gereken bir işlem) rakam katlanarak şişerdi.
+ *
+ * Aynı (gün, oyuncu) için iki kaynak da veri biriktirebilir (webhook
+ * kurulduğunda + rapor da çalıştırılırsa); okuma tarafı (bkz.
+ * `oyuncuEslesme.ts` · `oyuncuFinansHaritasi`) ikisini TOPLAMAZ, daha
+ * büyük olanı esas alır — aynı olayı iki kaynaktan da saymamak için.
+ */
+export const oyuncuGunlukRapor = pgTable(
+  'aff_oyuncu_gunluk_rapor',
+  {
+    kiraci: text('kiraci').notNull(),
+    gun: text('gun').notNull(),
+    oyuncuId: text('oyuncu_id').notNull(),
+    yatirim: doublePrecision('yatirim').notNull().default(0),
+    cekim: doublePrecision('cekim').notNull().default(0),
+    bahis: doublePrecision('bahis').notNull().default(0),
+    kazanc: doublePrecision('kazanc').notNull().default(0),
+    guncellendi: timestamp('guncellendi', { withTimezone: true }).notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.kiraci, t.gun, t.oyuncuId] }),
+    index('aff_oyuncu_gunluk_rapor_kiraci_gun').on(t.kiraci, t.gun),
+  ],
+);

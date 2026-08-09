@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { gecmisGGRDoldur } from './gecmisGGR.js';
 import type { BackofficeAdaptoru } from '../adaptorler/tur.js';
-import { olcumler as olcumTablosu, oyuncuEslesmeleri as eslesmeTablosu } from '../lib/sema.js';
+import { olcumler as olcumTablosu, oyuncuEslesmeleri as eslesmeTablosu, oyuncuGunlukRapor as raporTablosu } from '../lib/sema.js';
 import { veritabani, veritabaniniBaslat, veritabaniniKapat } from '../lib/veritabani.js';
 import { testVeritabaniAc } from '../../test/testVeritabani.js';
 
@@ -52,6 +52,7 @@ varsaCalistir('gecmisGGRDoldur', () => {
     const vt = veritabani()!;
     await vt.delete(olcumTablosu);
     await vt.delete(eslesmeTablosu);
+    await vt.delete(raporTablosu);
   });
 
   const eslestir = async (lynonOyuncuId: string, ortakId: string, ortakAnahtari: string) => {
@@ -83,6 +84,37 @@ varsaCalistir('gecmisGGRDoldur', () => {
     });
   });
 
+  /**
+   * ASIL AMAC: Lynon webhook'u hic kurulmamis bir tenant'ta oyuncu bazli
+   * yatirim/cekim listelerinin (bkz. `oyuncuEslesme.ts` ·
+   * `oyuncuFinansHaritasi`) hala calismasi -- bu, o listelerin okudugu
+   * tabloyu bu fonksiyonun da doldurdugunu dogruluyor.
+   */
+  it('esles mis oyuncunun rakamini oyuncu_gunluk_rapor a da yazar', async () => {
+    await eslestir('h1b', 'ortak-h2', 'ORTAK-H2');
+    const adaptor = sahteAdaptor({
+      '2026-08-05': [{ oyuncuId: 'h1b', yatirim: 100, cekim: 20, bahis: 500, kazanc: 300 }],
+    });
+
+    await gecmisGGRDoldur(KIRACI, adaptor, { bugun: '2026-08-05', geriGun: 1 });
+
+    const satirlar = await veritabani()!.select().from(raporTablosu).where(eq(raporTablosu.oyuncuId, 'h1b'));
+    expect(satirlar).toMatchObject([{ gun: '2026-08-05', yatirim: 100, cekim: 20, bahis: 500, kazanc: 300 }]);
+  });
+
+  it('ayni gun tekrar calistirilinca UZERINE yazar, ustune EKLEMEZ', async () => {
+    await eslestir('h1c', 'ortak-h3', 'ORTAK-H3');
+    const ilkTur = sahteAdaptor({ '2026-08-05': [{ oyuncuId: 'h1c', yatirim: 100 }] });
+    const ikinciTur = sahteAdaptor({ '2026-08-05': [{ oyuncuId: 'h1c', yatirim: 100 }] });
+
+    await gecmisGGRDoldur(KIRACI, ilkTur, { bugun: '2026-08-05', geriGun: 1 });
+    await gecmisGGRDoldur(KIRACI, ikinciTur, { bugun: '2026-08-05', geriGun: 1 });
+
+    const satirlar = await veritabani()!.select().from(raporTablosu).where(eq(raporTablosu.oyuncuId, 'h1c'));
+    // 200 DEGIL 100: rapor idempotent, tekrar calistirmak katlamamali.
+    expect(satirlar).toMatchObject([{ yatirim: 100 }]);
+  });
+
   it('panelin bilmedigi oyuncu icin uydurmaz, sessizce atlar', async () => {
     const adaptor = sahteAdaptor({
       '2026-08-06': [{ oyuncuId: 'yabanci', yatirim: 500 }],
@@ -92,6 +124,7 @@ varsaCalistir('gecmisGGRDoldur', () => {
 
     expect(sonuc).toMatchObject({ tarananGun: 1, eslesenOyuncuGunu: 0, yazilanOlcum: 0 });
     expect(await veritabani()!.select().from(olcumTablosu)).toHaveLength(0);
+    expect(await veritabani()!.select().from(raporTablosu)).toHaveLength(0);
   });
 
   it('ayni ortaga baglı birden cok oyuncuyu tek satirda toplar', async () => {
