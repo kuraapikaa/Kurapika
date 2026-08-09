@@ -1,6 +1,6 @@
-# Narco Panel
+# Bugs Panel
 
-NarcosBahis operasyonları için geliştirilen çok kiracılı backoffice ve oyuncu etkileşim paneli.
+Operasyonlar için geliştirilen çok kiracılı backoffice ve oyuncu etkileşim paneli.
 
 ## Teknoloji
 
