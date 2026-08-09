@@ -232,7 +232,14 @@ export async function gecmisGGRDoldur(
       sonuc.yazilanOlcum += yazilan;
       sonuc.tarananGun += 1;
     } catch (hata) {
-      sonuc.hatali.push({ gun, mesaj: hata instanceof Error ? hata.message : String(hata) });
+      const mesaj = hata instanceof Error ? hata.message : String(hata);
+      // GECICI TANI: [gecmis-ggr-tani2] hicbir gun icin Taco baglantisinda
+      // basmadi -- demek ki oyuncuGunuCek HER gun burada firlatiyor, ama
+      // gercek mesaj hic loglanmiyordu (yalnizca sonuc.hatali'ya yaziliyor,
+      // UI'da sadece SAYISI gosteriliyor). `railway logs` ile okunacak, kok
+      // neden bulununca kaldirilacak.
+      console.error('[gecmis-ggr-tani3] hata', { kiraci, baglantiId, gun, mesaj });
+      sonuc.hatali.push({ gun, mesaj });
     }
   }
   return sonuc;
