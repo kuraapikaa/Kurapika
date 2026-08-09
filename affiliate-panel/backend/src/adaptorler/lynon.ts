@@ -279,23 +279,81 @@ class LynonAdaptoru implements BackofficeAdaptoru {
         redirect: 'manual',
         headers: { ...this.ortakBasliklar(url), Cookie: kavanoz.baslik(url) },
       });
-      // GECICI TANI: sorgu/parca ATILIYOR -- OIDC kodu/token orada olabilir,
-      // loga hic girmemeli. Yalnizca konak+yol+durum+yonlendirme hedefi.
-      const konum = yanit.headers.get('location');
-      let konumOzet = konum;
-      try {
-        if (konum) {
-          const k = new URL(konum, url);
-          konumOzet = `${k.hostname}${k.pathname}`;
-        }
-      } catch { /* konum goreli/bozuksa oldugu gibi birak */ }
-      const u = new URL(url);
-      console.error('[lynon-tani] hop', {
-        istek: `${u.hostname}${u.pathname}`,
-        durum: yanit.status,
-        contentType: yanit.headers.get('content-type'),
-        location: konumOzet,
+      this.hopLogla(url, yanit);
+      return yanit;
+    } finally {
+      clearTimeout(zamanlayici);
+    }
+  }
+
+  /** GECICI TANI: sorgu/parca ATILIYOR -- OIDC kodu/token orada olabilir, loga hic girmemeli. */
+  private hopLogla(url: string, yanit: Response): void {
+    const konum = yanit.headers.get('location');
+    let konumOzet = konum;
+    try {
+      if (konum) {
+        const k = new URL(konum, url);
+        konumOzet = `${k.hostname}${k.pathname}`;
+      }
+    } catch { /* konum goreli/bozuksa oldugu gibi birak */ }
+    const u = new URL(url);
+    console.error('[lynon-tani] hop', {
+      istek: `${u.hostname}${u.pathname}`,
+      durum: yanit.status,
+      contentType: yanit.headers.get('content-type'),
+      location: konumOzet,
+    });
+  }
+
+  /**
+   * OIDC `response_mode=form_post` sayfasini ayikla.
+   *
+   * Kimlik sunucusu, giris tamamlaninca HTTP 3xx DEGIL, kendini otomatik
+   * POST eden bir HTML sayfasi donuyor (tarayicida JS calisip formu
+   * gonderiyor). Bizim yonlendirme takipcimiz yalnizca 3xx anliyordu;
+   * bu son adimi hic gormeden "bitti" saniyordu -- backoffice'in ASIL
+   * yetkilendirme cerezi (.AspNetCore.Cookies) tam bu adimda, formun
+   * gittigi ucun yanitinda geliyor. Form bulunamazsa `null` -- gercekten
+   * son sayfaya varilmis demektir.
+   */
+  private formuAyikla(html: string, temelUrl: string): { url: string; govde: URLSearchParams } | null {
+    const formEsleme = /<form\b[^>]*\baction=["']([^"']*)["'][^>]*>([\s\S]*?)<\/form>/i.exec(html);
+    if (!formEsleme) return null;
+
+    const govde = new URLSearchParams();
+    const girdiDeseni = /<input\b[^>]*>/gi;
+    let girdi: RegExpExecArray | null;
+    while ((girdi = girdiDeseni.exec(formEsleme[2])) !== null) {
+      const etiket = girdi[0];
+      const ad = /\bname=["']([^"']*)["']/i.exec(etiket)?.[1];
+      if (!ad) continue;
+      const deger = /\bvalue=["']([^"']*)["']/i.exec(etiket)?.[1] ?? '';
+      govde.set(ad, deger.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>'));
+    }
+
+    return { url: new URL(formEsleme[1], temelUrl).toString(), govde };
+  }
+
+  /** Form otomatik gonderimini TAMAMLAR; sonuc yanitini dondurur. */
+  private async formPostuGonder(hedefUrl: string, govde: URLSearchParams, kavanoz: CerezKavanozu): Promise<Response> {
+    const kontrol = new AbortController();
+    const zamanlayici = setTimeout(() => kontrol.abort(), ZAMAN_ASIMI_MS);
+    try {
+      const yanit = await fetch(hedefUrl, {
+        method: 'POST',
+        signal: kontrol.signal,
+        redirect: 'manual',
+        headers: {
+          ...this.ortakBasliklar(hedefUrl),
+          'Content-Type': 'application/x-www-form-urlencoded',
+          Cookie: kavanoz.baslik(hedefUrl),
+        },
+        body: govde.toString(),
       });
+      this.hopLogla(hedefUrl, yanit);
+      // GECICI TANI: alan ADLARI (degerleri degil) -- form_post beklentimiz
+      // dogru mu, yoksa Lynon farkli bir sey mi donuyor gormek icin.
+      console.error('[lynon-tani] form-post gonderildi', { alanAdlari: [...govde.keys()] });
       return yanit;
     } finally {
       clearTimeout(zamanlayici);
@@ -318,7 +376,18 @@ class LynonAdaptoru implements BackofficeAdaptoru {
     return this.ayar.backofficeUrl;
   }
 
-  /** Giriş sonrası yönlendirme zinciri; oturum çerezi bu zincirin sonunda düşüyor. */
+  /**
+   * Giriş sonrası yönlendirme zinciri; oturum çerezi bu zincirin sonunda
+   * düşüyor.
+   *
+   * ── HTTP yönlendirme YETMİYOR ──
+   *
+   * Kimlik sunucusu zincirin son adımını 3xx DEĞİL, kendini otomatik POST
+   * eden bir HTML sayfasıyla (`response_mode=form_post`) tamamlıyor.
+   * Tarayıcıda bunu JS yapıyor; biz elle taklit ediyoruz — aksi halde
+   * backoffice'in ASIL yetkilendirme çerezi (`.AspNetCore.Cookies`) hiç
+   * gelmiyor, oturum "açık" görünüyor ama her korumalı uç 401 dönüyor.
+   */
   private async yonlendirmeyiTamamla(donusUrl: string, kavanoz: CerezKavanozu): Promise<void> {
     if (!donusUrl) return;
     let mevcut = donusUrl.startsWith('http')
@@ -329,8 +398,26 @@ class LynonAdaptoru implements BackofficeAdaptoru {
       const yanit = await this.yonlendirmeGetIste(mevcut, kavanoz);
       kavanoz.yanittanAl(yanit.headers, mevcut);
       const konum = yanit.headers.get('location');
-      if (!konum || yanit.status < 300 || yanit.status >= 400) return;
-      mevcut = new URL(konum, mevcut).toString();
+
+      if (konum && yanit.status >= 300 && yanit.status < 400) {
+        mevcut = new URL(konum, mevcut).toString();
+        continue;
+      }
+
+      const turAlan = yanit.headers.get('content-type') ?? '';
+      if (yanit.status < 300 && turAlan.includes('html')) {
+        const form = this.formuAyikla(await yanit.text(), mevcut);
+        if (form) {
+          const formYaniti = await this.formPostuGonder(form.url, form.govde, kavanoz);
+          kavanoz.yanittanAl(formYaniti.headers, form.url);
+          const formKonum = formYaniti.headers.get('location');
+          if (formKonum && formYaniti.status >= 300 && formYaniti.status < 400) {
+            mevcut = new URL(formKonum, form.url).toString();
+            continue;
+          }
+        }
+      }
+      return;
     }
   }
 
