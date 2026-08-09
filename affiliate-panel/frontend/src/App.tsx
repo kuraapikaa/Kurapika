@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { api, useVeri } from './api';
 import { IKON, Kabuk, type MenuOgesi } from './kabuk';
@@ -17,7 +17,6 @@ import { Medya } from './sayfalar/yonetim/Medya';
 import { MusteriYolculugu } from './sayfalar/yonetim/MusteriYolculugu';
 import { Ortaklar } from './sayfalar/yonetim/Ortaklar';
 import { OtoBonus } from './sayfalar/yonetim/OtoBonus';
-import { Ozet } from './sayfalar/yonetim/Ozet';
 import { Planlar } from './sayfalar/yonetim/Planlar';
 import { Postback } from './sayfalar/yonetim/Postback';
 import { Tiklamalar } from './sayfalar/yonetim/Tiklamalar';
@@ -32,6 +31,10 @@ import { PortalTiklamalar } from './sayfalar/portal/PortalTiklamalar';
 import { PortalYolculuk } from './sayfalar/portal/PortalYolculuk';
 import type { OturumYaniti as Oturum } from '@sunucu/sozlesme.js';
 
+// AG Grid + Tremor birlikte ~1 MB'a yakin getiriyor; bunlari sadece
+// Ozet'i acan yonetici indirsin diye tembel yukleniyor. Digerleri
+// hala hafif oldugu icin normal import kaliyor.
+const Ozet = lazy(() => import('./sayfalar/yonetim/Ozet').then((m) => ({ default: m.Ozet })));
 
 /**
  * Menü, sektördeki affiliate platformlarının düzenini izliyor:
@@ -132,41 +135,43 @@ export function App() {
         </>
       }
     >
-      <Routes>
-        {yonetici ? (
-          <>
-            <Route path="/ozet" element={<Ozet />} />
-            <Route path="/basvurular" element={<Basvurular />} />
-            <Route path="/ortaklar" element={<Ortaklar />} />
-            <Route path="/planlar" element={<Planlar />} />
-            <Route path="/medya" element={<Medya />} />
-            <Route path="/kademeler" element={<Kademeler />} />
-            <Route path="/webhook" element={<Webhook />} />
-            <Route path="/postback" element={<Postback />} />
-            <Route path="/oto-bonus" element={<OtoBonus />} />
-            <Route path="/tiklamalar" element={<Tiklamalar />} />
-            <Route path="/yolculuk" element={<MusteriYolculugu />} />
-            <Route path="/trafik-kalitesi" element={<TrafikKalitesi />} />
-            <Route path="/btag" element={<BTag />} />
-            <Route path="/cuzdanlar" element={<Cuzdanlar />} />
-            <Route path="/eslesmeler" element={<Eslesmeler />} />
-            <Route path="/donemler" element={<Donemler />} />
-            <Route path="/baglanti" element={<Baglanti />} />
-            <Route path="*" element={<Navigate to="/ozet" replace />} />
-          </>
-        ) : (
-          <>
-            <Route path="/portal" element={<PortalOzet />} />
-            <Route path="/portal/alt-linkler" element={<PortalAltLinkler />} />
-            <Route path="/portal/medya" element={<PortalMedya />} />
-            <Route path="/portal/tiklamalar" element={<PortalTiklamalar />} />
-            <Route path="/portal/yolculuk" element={<PortalYolculuk />} />
-            <Route path="/portal/hakedis" element={<PortalHakedis />} />
-            <Route path="/portal/postback" element={<PortalPostback />} />
-            <Route path="*" element={<Navigate to="/portal" replace />} />
-          </>
-        )}
-      </Routes>
+      <Suspense fallback={<Yukleniyor />}>
+        <Routes>
+          {yonetici ? (
+            <>
+              <Route path="/ozet" element={<Ozet />} />
+              <Route path="/basvurular" element={<Basvurular />} />
+              <Route path="/ortaklar" element={<Ortaklar />} />
+              <Route path="/planlar" element={<Planlar />} />
+              <Route path="/medya" element={<Medya />} />
+              <Route path="/kademeler" element={<Kademeler />} />
+              <Route path="/webhook" element={<Webhook />} />
+              <Route path="/postback" element={<Postback />} />
+              <Route path="/oto-bonus" element={<OtoBonus />} />
+              <Route path="/tiklamalar" element={<Tiklamalar />} />
+              <Route path="/yolculuk" element={<MusteriYolculugu />} />
+              <Route path="/trafik-kalitesi" element={<TrafikKalitesi />} />
+              <Route path="/btag" element={<BTag />} />
+              <Route path="/cuzdanlar" element={<Cuzdanlar />} />
+              <Route path="/eslesmeler" element={<Eslesmeler />} />
+              <Route path="/donemler" element={<Donemler />} />
+              <Route path="/baglanti" element={<Baglanti />} />
+              <Route path="*" element={<Navigate to="/ozet" replace />} />
+            </>
+          ) : (
+            <>
+              <Route path="/portal" element={<PortalOzet />} />
+              <Route path="/portal/alt-linkler" element={<PortalAltLinkler />} />
+              <Route path="/portal/medya" element={<PortalMedya />} />
+              <Route path="/portal/tiklamalar" element={<PortalTiklamalar />} />
+              <Route path="/portal/yolculuk" element={<PortalYolculuk />} />
+              <Route path="/portal/hakedis" element={<PortalHakedis />} />
+              <Route path="/portal/postback" element={<PortalPostback />} />
+              <Route path="*" element={<Navigate to="/portal" replace />} />
+            </>
+          )}
+        </Routes>
+      </Suspense>
     </Kabuk>
   );
 }
