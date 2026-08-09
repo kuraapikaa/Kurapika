@@ -1,4 +1,4 @@
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray, sql } from 'drizzle-orm';
 import { type BackofficeAdaptoru } from '../adaptorler/tur.js';
 import { VARSAYILAN_BAGLANTI_ID } from '../depolar/eslesmeDeposu.js';
 import { gunAnahtari, gunEkle, gunGecerliMi } from '../lib/gunler.js';
@@ -100,6 +100,17 @@ async function gunuDoldur(
     kazanc: number;
   }>();
 
+  // Once bellekte topla, veritabanina TEK toplu yazim yap -- eskiden burada
+  // eslesen oyuncu basina AYRI bir await'li INSERT vardi (yuzlerce satirlik
+  // bir raporda yuzlerce sirali gidis-donus demek); bu, Narcos+Taco birlikte
+  // gercekten veri donmeye basladiginda /gecmis-ggr-doldur'u 50 saniyeye
+  // kadar yavaslatip yanit tarayiciya ulasmadan bir ara katmanin
+  // baglantiyi kesmesine yol acti (bkz. PR yorumu).
+  const raporSatirlari: Array<{
+    kiraci: string; baglantiId: string; gun: string; oyuncuId: string;
+    yatirim: number; cekim: number; bahis: number; kazanc: number; guncellendi: Date;
+  }> = [];
+
   let eslesen = 0;
   for (const satir of satirlar) {
     const eslesme = eslesmeMap.get(satir.oyuncuId);
@@ -110,21 +121,16 @@ async function gunuDoldur(
 
     // Oyuncu bazli ayrinti -- rapor bu gun icin KESIN toplami veriyor,
     // ONCEKI yazimin UZERINE geciyor (webhook'un += biriktirmesinden
-    // FARKLI, bkz. dosya basi ve sema.ts).
-    await vt
-      .insert(oyuncuGunlukRapor)
-      .values({
-        kiraci, baglantiId, gun, oyuncuId: satir.oyuncuId,
-        yatirim: satir.yatirim, cekim: satir.cekim, bahis: satir.bahis, kazanc: satir.kazanc,
-        guncellendi: simdi,
-      })
-      .onConflictDoUpdate({
-        target: [oyuncuGunlukRapor.kiraci, oyuncuGunlukRapor.baglantiId, oyuncuGunlukRapor.gun, oyuncuGunlukRapor.oyuncuId],
-        set: {
-          yatirim: satir.yatirim, cekim: satir.cekim, bahis: satir.bahis, kazanc: satir.kazanc,
-          guncellendi: simdi,
-        },
-      });
+    // FARKLI, bkz. dosya basi ve sema.ts). `oyuncuGunuCek` oyuncu basina
+    // TEK satir dondurur (adaptor kendi icinde zaten oyuncuId'ye gore
+    // grupluyor), o yuzden bu listede ayni (kiraci, baglantiId, gun,
+    // oyuncuId) ikiden fazla gecmiyor -- tek INSERT'te CATISMA HEDEFININ
+    // İKİ KEZ ETKİLENMESİ riski yok.
+    raporSatirlari.push({
+      kiraci, baglantiId, gun, oyuncuId: satir.oyuncuId,
+      yatirim: satir.yatirim, cekim: satir.cekim, bahis: satir.bahis, kazanc: satir.kazanc,
+      guncellendi: simdi,
+    });
 
     const grup = gruplar.get(eslesme.ortakId) ?? {
       ortakAnahtari: eslesme.ortakAnahtari,
@@ -142,6 +148,25 @@ async function gunuDoldur(
     grup.bahis += satir.bahis;
     grup.kazanc += satir.kazanc;
     gruplar.set(eslesme.ortakId, grup);
+  }
+
+  if (raporSatirlari.length > 0) {
+    // `excluded.*`: her satir CATISTIGINDA KENDI gelen degeriyle guncellensin
+    // diye -- sabit bir deger kullanmak, toplu eklemede TUM catisan
+    // satirlari son satirin degerine esitlerdi.
+    await vt
+      .insert(oyuncuGunlukRapor)
+      .values(raporSatirlari)
+      .onConflictDoUpdate({
+        target: [oyuncuGunlukRapor.kiraci, oyuncuGunlukRapor.baglantiId, oyuncuGunlukRapor.gun, oyuncuGunlukRapor.oyuncuId],
+        set: {
+          yatirim: sql`excluded.yatirim`,
+          cekim: sql`excluded.cekim`,
+          bahis: sql`excluded.bahis`,
+          kazanc: sql`excluded.kazanc`,
+          guncellendi: sql`excluded.guncellendi`,
+        },
+      });
   }
 
   if (gruplar.size === 0) return { eslesen, yazilan: 0 };
