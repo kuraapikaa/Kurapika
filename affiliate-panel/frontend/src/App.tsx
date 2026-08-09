@@ -15,7 +15,6 @@ import { Eslesmeler } from './sayfalar/yonetim/Eslesmeler';
 import { Kademeler } from './sayfalar/yonetim/Kademeler';
 import { Medya } from './sayfalar/yonetim/Medya';
 import { MusteriYolculugu } from './sayfalar/yonetim/MusteriYolculugu';
-import { Ortaklar } from './sayfalar/yonetim/Ortaklar';
 import { OtoBonus } from './sayfalar/yonetim/OtoBonus';
 import { Planlar } from './sayfalar/yonetim/Planlar';
 import { Postback } from './sayfalar/yonetim/Postback';
@@ -31,10 +30,11 @@ import { PortalTiklamalar } from './sayfalar/portal/PortalTiklamalar';
 import { PortalYolculuk } from './sayfalar/portal/PortalYolculuk';
 import type { OturumYaniti as Oturum } from '@sunucu/sozlesme.js';
 
-// AG Grid + Tremor birlikte ~1 MB'a yakin getiriyor; bunlari sadece
-// Ozet'i acan yonetici indirsin diye tembel yukleniyor. Digerleri
-// hala hafif oldugu icin normal import kaliyor.
+// AG Grid + Tremor birlikte ~1 MB'a yakin getiriyor; bunlari kullanan
+// her sayfa tembel yukleniyor ki digerleri (landing, giris, portal,
+// henuz tasinmamis yonetim sayfalari) bu maliyeti odemesin.
 const Ozet = lazy(() => import('./sayfalar/yonetim/Ozet').then((m) => ({ default: m.Ozet })));
+const Ortaklar = lazy(() => import('./sayfalar/yonetim/Ortaklar').then((m) => ({ default: m.Ortaklar })));
 
 /**
  * Menü, sektördeki affiliate platformlarının düzenini izliyor:
