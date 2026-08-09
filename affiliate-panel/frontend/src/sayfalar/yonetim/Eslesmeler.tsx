@@ -1,8 +1,20 @@
 import { useMemo, useState } from 'react';
+import { AgGridReact } from 'ag-grid-react';
+import type { ColDef, ICellRendererParams } from 'ag-grid-community';
+import { Card, Metric, Text } from '@tremor/react';
 import { api, gunBicimi, useVeri } from '../../api';
-import { OlcuKarti } from '../../grafik';
-import { KisaKimlik, VeriTablosu, type Sutun } from '../../tablo';
-import { Bos, Hata, Kart, Rozet, Yukleniyor } from '../../ui';
+import { Alert, AlertDescription } from '../../components/ui/alert';
+import { Badge } from '../../components/ui/badge';
+import { Button } from '../../components/ui/button';
+import { Card as ShadCard, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Input } from '../../components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
+import { Textarea } from '../../components/ui/textarea';
+import { BosDurum, HataMesaji, Yukleniyor } from '../../components/durum';
+import { KisaKimlik } from '../../tablo';
+import { agTemaAcik, agTemaKoyu } from '../../lib/agGrid';
+import { useTema } from '../../lib/tema';
 import type {
   CakismaGorunumu,
   EslesmeGorunumu,
@@ -23,18 +35,43 @@ import type {
  * anlamlıdır: aynı ortaktan yığınla reddedilen talep, o ortağın
  * başkasının trafiğini kendine yazmaya çalıştığının en net işareti.
  */
+
+const BADGE_OLUMLU = 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400';
+const BADGE_OLUMSUZ = 'bg-rose-500/15 text-rose-600 dark:text-rose-400';
+const BADGE_UYARI = 'bg-amber-500/15 text-amber-600 dark:text-amber-400';
+
+function TiklamaHucresi({ data }: ICellRendererParams<EslesmeGorunumu>) {
+  if (!data) return null;
+  return data.clickId
+    ? <Badge variant="outline" className={BADGE_OLUMLU}>Bağlı</Badge>
+    // Tiklama kimligi olmadan geldi: ortak dogru ama hangi banner ya
+    // da alt kanaldan geldigi bilinmiyor.
+    : <Badge variant="secondary">Yalnızca ref</Badge>;
+}
+
+function KanalHucresi({ data }: ICellRendererParams<EslesmeGorunumu>) {
+  if (!data) return null;
+  const altlar = Object.entries(data.alt).filter(([, d]) => d);
+  if (!data.medyaId && altlar.length === 0) return <span className="text-xs text-muted-foreground">—</span>;
+  return (
+    <span className="text-xs">
+      {data.medyaId ? <KisaKimlik deger={data.medyaId} /> : null}
+      {altlar.map(([k, d]) => ` ${k}=${d}`).join('')}
+    </span>
+  );
+}
+
 export function Eslesmeler() {
   const [yeniAnahtar, setYeniAnahtar] = useState<string | null>(null);
   const [isliyor, setIsliyor] = useState(false);
   const [islemHatasi, setIslemHatasi] = useState<string | null>(null);
+  const [koyu] = useTema();
+  const [arama, setArama] = useState('');
 
   const { veri, yukleniyor, hata, yenile } = useVeri<YonetimUclari['/oyuncu-eslesmeleri']>(
     '/api/yonetim/oyuncu-eslesmeleri',
   );
   const ortaklarVeri = useVeri<YonetimUclari['/ortaklar']>('/api/yonetim/ortaklar');
-
-  if (yukleniyor) return <Yukleniyor />;
-  if (hata) return <Hata mesaj={hata} />;
 
   const eslesmeler = veri?.eslesmeler ?? [];
   const cakismalar = veri?.cakismalar ?? [];
@@ -54,70 +91,32 @@ export function Eslesmeler() {
     }
   };
 
-  const eslesmeSutunlari: Array<Sutun<EslesmeGorunumu>> = [
+  const sutunlar = useMemo<ColDef<EslesmeGorunumu>[]>(() => [
     {
-      ad: 'oyuncu',
-      etiket: 'Lynon oyuncu',
-      deger: (e) => e.lynonOyuncuId,
-      hucre: (e) => <code className="text-xs">{e.lynonOyuncuId}</code>,
-    },
-    { ad: 'ortak', etiket: 'Ortak', deger: (e) => e.ortakAdi ?? e.ortakAnahtari },
-    {
-      ad: 'ref',
-      etiket: 'Ref kodu',
-      deger: (e) => e.ortakAnahtari,
-      hucre: (e) => <code className="text-xs">{e.ortakAnahtari}</code>,
+      field: 'lynonOyuncuId', headerName: 'Lynon oyuncu', width: 140,
+      cellRenderer: (p: ICellRendererParams<EslesmeGorunumu, string>) => <code className="text-xs">{p.value}</code>,
     },
     {
-      ad: 'kanal',
-      etiket: 'Kanal',
-      deger: (e) => e.medyaId ?? '',
-      hucre: (e) => {
-        const altlar = Object.entries(e.alt).filter(([, d]) => d);
-        if (!e.medyaId && altlar.length === 0) {
-          return <span className="text-xs" style={{ color: 'var(--metin-2)' }}>—</span>;
-        }
-        return (
-          <span className="text-xs">
-            {e.medyaId ? <KisaKimlik deger={e.medyaId} /> : null}
-            {altlar.map(([k, d]) => ` ${k}=${d}`).join('')}
-          </span>
-        );
-      },
+      headerName: 'Ortak', minWidth: 160,
+      valueGetter: (p) => p.data?.ortakAdi ?? p.data?.ortakAnahtari ?? '',
     },
     {
-      ad: 'tiklama',
-      etiket: 'Tıklama',
-      deger: (e) => (e.clickId ? 1 : 0),
-      hucre: (e) => (e.clickId
-        ? <Rozet metin="Bağlı" renk="olumlu" />
-        // Tiklama kimligi olmadan geldi: ortak dogru ama hangi banner ya
-        // da alt kanaldan geldigi bilinmiyor.
-        : <Rozet metin="Yalnızca ref" renk="notr" />),
+      field: 'ortakAnahtari', headerName: 'Ref kodu', width: 130,
+      cellRenderer: (p: ICellRendererParams<EslesmeGorunumu, string>) => <code className="text-xs">{p.value}</code>,
     },
+    { headerName: 'Kanal', minWidth: 160, sortable: false, cellRenderer: KanalHucresi },
+    { headerName: 'Tıklama', width: 130, sortable: false, cellRenderer: TiklamaHucresi },
     {
       // Toplu gecişte `olusturuldu` admin'in geçişi yaptığı andır, oyuncunun
       // Lynon'a kaydolduğu an DEĞİL; `kayitTarihi` varsa o gerçek anı taşır.
-      ad: 'zaman', etiket: 'Kayıt',
-      deger: (e) => e.kayitTarihi ?? e.olusturuldu,
-      hucre: (e) => gunBicimi(e.kayitTarihi ?? e.olusturuldu),
+      headerName: 'Kayıt', width: 140,
+      valueGetter: (p) => p.data?.kayitTarihi ?? p.data?.olusturuldu ?? '',
+      valueFormatter: (p) => (p.value ? gunBicimi(p.value) : ''),
     },
-  ];
-
-  const cakismaSutunlari: Array<Sutun<CakismaGorunumu>> = [
-    {
-      ad: 'oyuncu',
-      etiket: 'Lynon oyuncu',
-      deger: (c) => c.lynonOyuncuId,
-      hucre: (c) => <code className="text-xs">{c.lynonOyuncuId}</code>,
-    },
-    { ad: 'talep', etiket: 'Talep eden', deger: (c) => c.denenenOrtakAdi ?? c.denenenOrtakAnahtari },
-    { ad: 'sahip', etiket: 'Gerçek sahip', deger: (c) => c.mevcutOrtakAdi ?? c.mevcutOrtakId },
-    { ad: 'zaman', etiket: 'Zaman', deger: (c) => c.zaman, hucre: (c) => gunBicimi(c.zaman) },
-  ];
+  ], []);
 
   // Ayni ortaktan gelen tekrarli talepler asil sinyal; tek tek bakmak
-  // orunruyu gostermiyor.
+  // sorunu gostermiyor.
   const talepEdenSayilari = new Map<string, number>();
   for (const c of cakismalar) {
     const ad = c.denenenOrtakAdi ?? c.denenenOrtakAnahtari;
@@ -125,107 +124,139 @@ export function Eslesmeler() {
   }
   const enCokTalepEden = [...talepEdenSayilari.entries()].sort((a, b) => b[1] - a[1])[0];
 
+  if (yukleniyor) return <Yukleniyor satir={6} />;
+  if (hata) return <HataMesaji mesaj={hata} />;
+
   return (
     <>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <OlcuKarti etiket="Eşleşen oyuncu" deger={String(eslesmeler.length)} />
-        <OlcuKarti
-          etiket="Tıklamaya bağlı"
-          deger={String(eslesmeler.filter((e) => e.clickId).length)}
-          alt="kanal kırılımı var"
-        />
-        <OlcuKarti
-          etiket="Reddedilen talep"
-          deger={String(cakismalar.length)}
-          alt={enCokTalepEden ? `en çok: ${enCokTalepEden[0]}` : undefined}
-        />
-        <OlcuKarti
-          etiket="S2S bağlantısı"
-          deger={anahtar?.kuruluMu ? 'Kurulu' : 'Yok'}
-          alt={anahtar?.sonKullanim ? `son: ${gunBicimi(anahtar.sonKullanim)}` : 'hiç kullanılmadı'}
-        />
+        <Card>
+          <Text>Eşleşen oyuncu</Text>
+          <Metric>{eslesmeler.length}</Metric>
+        </Card>
+        <Card>
+          <Text>Tıklamaya bağlı</Text>
+          <Metric>{eslesmeler.filter((e) => e.clickId).length}</Metric>
+          <Text className="mt-1 text-xs">kanal kırılımı var</Text>
+        </Card>
+        <Card>
+          <Text>Reddedilen talep</Text>
+          <Metric>{cakismalar.length}</Metric>
+          {enCokTalepEden && <Text className="mt-1 text-xs">en çok: {enCokTalepEden[0]}</Text>}
+        </Card>
+        <Card>
+          <Text>S2S bağlantısı</Text>
+          <Metric>{anahtar?.kuruluMu ? 'Kurulu' : 'Yok'}</Metric>
+          <Text className="mt-1 text-xs">{anahtar?.sonKullanim ? `son: ${gunBicimi(anahtar.sonKullanim)}` : 'hiç kullanılmadı'}</Text>
+        </Card>
       </div>
 
       <TopluAtamaKarti ortaklar={ortaklarVeri.veri?.ortaklar ?? []} yenile={yenile} />
 
-      <Kart baslik="Kayıt bildirimi bağlantısı">
-        <p className="mb-3 text-sm" style={{ color: 'var(--metin-2)' }}>
-          Oyuncu Lynon’a kaydolduğunda siteniz aşağıdaki uca bildirim gönderir ve eşleşme kurulur.
-          İstek tarayıcıdan değil <strong>sunucudan</strong> gelmeli: bu uç “şu oyuncu şu ortağa
-          ait” diyebiliyor, yani doğrudan paraya dokunuyor.
-        </p>
+      <ShadCard>
+        <CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">Kayıt bildirimi bağlantısı</CardTitle></CardHeader>
+        <CardContent>
+          <p className="mb-3 text-sm text-muted-foreground">
+            Oyuncu Lynon’a kaydolduğunda siteniz aşağıdaki uca bildirim gönderir ve eşleşme kurulur.
+            İstek tarayıcıdan değil <strong>sunucudan</strong> gelmeli: bu uç “şu oyuncu şu ortağa
+            ait” diyebiliyor, yani doğrudan paraya dokunuyor.
+          </p>
 
-        <pre
-          className="overflow-x-auto rounded-lg p-3 text-xs"
-          style={{ background: 'var(--yuzey-2)', color: 'var(--metin-1)' }}
-        >{`POST /api/kayit/oyuncu
+          <pre className="overflow-x-auto rounded-lg bg-muted p-3 text-xs">{`POST /api/kayit/oyuncu
 Authorization: Bearer <s2s-anahtari>
 Content-Type: application/json
 
 { "lynonOyuncuId": "123456", "ref": "<clickid ya da ortak anahtari>" }`}</pre>
 
-        <p className="mt-3 text-xs" style={{ color: 'var(--metin-2)' }}>
-          <code>ref</code> olarak tıklama kimliği (<code>clickid</code>) göndermek daha iyi: hangi
-          medya ve alt kanaldan gelindiği yalnızca onda var. Ortak anahtarı da kabul edilir.
-          Aynı oyuncu için ikinci bir bildirim <strong>sahibi değiştirmez</strong>; yanıt
-          <code> durum</code> alanında ne olduğunu söyler.
-        </p>
+          <p className="mt-3 text-xs text-muted-foreground">
+            <code>ref</code> olarak tıklama kimliği (<code>clickid</code>) göndermek daha iyi: hangi
+            medya ve alt kanaldan gelindiği yalnızca onda var. Ortak anahtarı da kabul edilir.
+            Aynı oyuncu için ikinci bir bildirim <strong>sahibi değiştirmez</strong>; yanıt
+            <code> durum</code> alanında ne olduğunu söyler.
+          </p>
 
-        {islemHatasi && <p className="mt-3 text-sm" style={{ color: 'var(--olumsuz)' }}>{islemHatasi}</p>}
+          {islemHatasi && <p className="mt-3 text-sm text-destructive">{islemHatasi}</p>}
 
-        {yeniAnahtar && (
-          <div
-            className="mt-3 rounded-lg p-3"
-            style={{ background: 'var(--yuzey-2)', border: '1px solid var(--uyari)' }}
-          >
-            <p className="text-xs font-semibold" style={{ color: 'var(--uyari)' }}>
-              Bu anahtar bir daha gösterilmeyecek — şimdi kopyalayın.
-            </p>
-            <code className="mt-2 block break-all text-xs">{yeniAnahtar}</code>
-          </div>
-        )}
+          {yeniAnahtar && (
+            <Alert className={`mt-3 ${BADGE_UYARI} border-amber-500/50`}>
+              <AlertDescription>
+                <p className="font-semibold">Bu anahtar bir daha gösterilmeyecek — şimdi kopyalayın.</p>
+                <code className="mt-2 block break-all text-xs">{yeniAnahtar}</code>
+              </AlertDescription>
+            </Alert>
+          )}
 
-        <button
-          type="button"
-          onClick={anahtarUret}
-          disabled={isliyor}
-          className="mt-3 rounded-lg px-4 py-2 text-sm font-semibold transition-opacity disabled:opacity-50"
-          style={{ background: 'var(--vurgu)', color: 'var(--vurgu-uzeri)' }}
-        >
-          {anahtar?.kuruluMu ? 'Yeni anahtar üret (eskisi geçersiz olur)' : 'Anahtar üret'}
-        </button>
-      </Kart>
+          <Button className="mt-3" onClick={anahtarUret} disabled={isliyor}>
+            {anahtar?.kuruluMu ? 'Yeni anahtar üret (eskisi geçersiz olur)' : 'Anahtar üret'}
+          </Button>
+        </CardContent>
+      </ShadCard>
 
-      <Kart baslik="Reddedilen talepler">
-        <p className="mb-3 text-sm" style={{ color: 'var(--metin-2)' }}>
-          Bir ortak, başka bir ortağa ait oyuncuyu talep etti; ilk kayıt kuralı gereği reddedildi.
-          Tek tek bakıldığında çoğu masum — oyuncu ikinci kez, başka bir linkten gelmiştir.
-          Aynı ortaktan yığınla gelmesi ise başkasının trafiğini kendine yazma girişimidir.
-        </p>
-        {cakismalar.length === 0 ? (
-          <Bos mesaj="Reddedilen talep yok." />
-        ) : (
-          <VeriTablosu
-            satirlar={cakismalar}
-            anahtar={(c) => c.id}
-            sutunlar={cakismaSutunlari}
-            varsayilanSiralama={{ ad: 'zaman', yon: 'azalan' }}
+      <ShadCard>
+        <CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">Reddedilen talepler</CardTitle></CardHeader>
+        <CardContent>
+          <p className="mb-3 text-sm text-muted-foreground">
+            Bir ortak, başka bir ortağa ait oyuncuyu talep etti; ilk kayıt kuralı gereği reddedildi.
+            Tek tek bakıldığında çoğu masum — oyuncu ikinci kez, başka bir linkten gelmiştir.
+            Aynı ortaktan yığınla gelmesi ise başkasının trafiğini kendine yazma girişimidir.
+          </p>
+          {cakismalar.length === 0 ? (
+            <BosDurum mesaj="Reddedilen talep yok." />
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Lynon oyuncu</TableHead>
+                  <TableHead>Talep eden</TableHead>
+                  <TableHead>Gerçek sahip</TableHead>
+                  <TableHead>Zaman</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {[...cakismalar].sort((a, b) => b.zaman.localeCompare(a.zaman)).map((c: CakismaGorunumu) => (
+                  <TableRow key={c.id}>
+                    <TableCell><code className="text-xs">{c.lynonOyuncuId}</code></TableCell>
+                    <TableCell>{c.denenenOrtakAdi ?? c.denenenOrtakAnahtari}</TableCell>
+                    <TableCell>{c.mevcutOrtakAdi ?? c.mevcutOrtakId}</TableCell>
+                    <TableCell className="text-xs">{gunBicimi(c.zaman)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </ShadCard>
+
+      <ShadCard>
+        <CardHeader className="flex-row items-center justify-between space-y-0">
+          <CardTitle className="text-sm font-medium text-muted-foreground">Eşleşmeler</CardTitle>
+          <Input
+            placeholder="Ara: oyuncu, ortak, ref…"
+            value={arama}
+            onChange={(e) => setArama(e.target.value)}
+            className="h-8 w-64"
           />
-        )}
-      </Kart>
-
-      <Kart baslik="Eşleşmeler">
-        {eslesmeler.length === 0 ? (
-          <Bos mesaj="Henüz eşleşme yok. Kayıt bildirimi geldiğinde oyuncular burada listelenir." />
-        ) : (
-          <VeriTablosu
-            satirlar={eslesmeler}
-            anahtar={(e) => e.lynonOyuncuId}
-            sutunlar={eslesmeSutunlari}
-            varsayilanSiralama={{ ad: 'zaman', yon: 'azalan' }}
-          />
-        )}
-      </Kart>
+        </CardHeader>
+        <CardContent>
+          {eslesmeler.length === 0 ? (
+            <BosDurum mesaj="Henüz eşleşme yok. Kayıt bildirimi geldiğinde oyuncular burada listelenir." />
+          ) : (
+            <div style={{ height: 480 }}>
+              <AgGridReact
+                theme={koyu ? agTemaKoyu : agTemaAcik}
+                rowData={eslesmeler}
+                columnDefs={sutunlar}
+                defaultColDef={{ sortable: true, resizable: true, filter: 'agTextColumnFilter' }}
+                quickFilterText={arama}
+                pagination
+                paginationPageSize={15}
+                paginationPageSizeSelector={false}
+                overlayNoRowsTemplate="Filtreye uyan eşleşme yok."
+              />
+            </div>
+          )}
+        </CardContent>
+      </ShadCard>
     </>
   );
 }
@@ -236,10 +267,10 @@ function satirSayisiHesapla(ham: string): number {
   return ham.split(KULLANICI_ADI_AYIRICI).map((s) => s.trim()).filter(Boolean).length;
 }
 
-const EAD_SONUC_RENGI: Record<TopluAtamaSatiri['durum'], 'olumlu' | 'notr' | 'olumsuz'> = {
-  basarili: 'olumlu',
-  bulunamadi: 'notr',
-  hata: 'olumsuz',
+const EAD_SONUC_RENGI: Record<TopluAtamaSatiri['durum'], string> = {
+  basarili: BADGE_OLUMLU,
+  bulunamadi: '',
+  hata: BADGE_OLUMSUZ,
 };
 const EAD_SONUC_ETIKETI: Record<TopluAtamaSatiri['durum'], string> = {
   basarili: 'Atandı',
@@ -292,126 +323,109 @@ function TopluAtamaKarti({ ortaklar, yenile }: { ortaklar: OrtakGorunumu[]; yeni
     }
   };
 
-  const sonucSutunlari: Array<Sutun<TopluAtamaSatiri>> = [
-    { ad: 'kullanici', etiket: 'Kullanıcı adı', deger: (s) => s.kullaniciAdi },
-    {
-      ad: 'durum',
-      etiket: 'Durum',
-      deger: (s) => s.durum,
-      hucre: (s) => <Rozet metin={EAD_SONUC_ETIKETI[s.durum]} renk={EAD_SONUC_RENGI[s.durum]} />,
-    },
-    {
-      ad: 'detay',
-      etiket: 'Detay',
-      deger: (s) => s.eslesmeDurumu ?? s.hata ?? '',
-      hucre: (s) => {
-        if (s.durum === 'hata') return <span className="text-xs" style={{ color: 'var(--olumsuz)' }}>{s.hata}</span>;
-        if (s.durum === 'bulunamadi') {
-          return <span className="text-xs" style={{ color: 'var(--metin-2)' }}>Kullanıcı adı backoffice'te yok</span>;
-        }
-        if (s.eslesmeDurumu === 'tasindi') {
-          const onceki = s.oncekiOrtakId ? (ortakAdi.get(s.oncekiOrtakId) ?? s.oncekiOrtakId) : '—';
-          return <span className="text-xs">Taşındı — önceki: {onceki}</span>;
-        }
-        if (s.eslesmeDurumu === 'zaten-bu-ortakta') {
-          return <span className="text-xs" style={{ color: 'var(--metin-2)' }}>Zaten bu ortakta</span>;
-        }
-        return <span className="text-xs">Yeni eşleşme</span>;
-      },
-    },
-    {
-      ad: 'backoffice',
-      etiket: 'Backoffice',
-      deger: (s) => (s.backofficeBasarili === undefined ? '' : s.backofficeBasarili ? 1 : 0),
-      hucre: (s) => {
-        if (s.durum !== 'basarili') return <span className="text-xs" style={{ color: 'var(--metin-2)' }}>—</span>;
-        if (s.backofficeBasarili === undefined) return <span className="text-xs" style={{ color: 'var(--metin-2)' }}>—</span>;
-        return s.backofficeBasarili
-          ? <Rozet metin="Senkron" renk="olumlu" />
-          : <span title={s.backofficeMesaji}><Rozet metin="Senkron değil" renk="uyari" /></span>;
-      },
-    },
-  ];
+  const detay = (s: TopluAtamaSatiri) => {
+    if (s.durum === 'hata') return <span className="text-xs text-destructive">{s.hata}</span>;
+    if (s.durum === 'bulunamadi') return <span className="text-xs text-muted-foreground">Kullanıcı adı backoffice'te yok</span>;
+    if (s.eslesmeDurumu === 'tasindi') {
+      const onceki = s.oncekiOrtakId ? (ortakAdi.get(s.oncekiOrtakId) ?? s.oncekiOrtakId) : '—';
+      return <span className="text-xs">Taşındı — önceki: {onceki}</span>;
+    }
+    if (s.eslesmeDurumu === 'zaten-bu-ortakta') return <span className="text-xs text-muted-foreground">Zaten bu ortakta</span>;
+    return <span className="text-xs">Yeni eşleşme</span>;
+  };
+
+  const backoffice = (s: TopluAtamaSatiri) => {
+    if (s.durum !== 'basarili' || s.backofficeBasarili === undefined) {
+      return <span className="text-xs text-muted-foreground">—</span>;
+    }
+    return s.backofficeBasarili
+      ? <Badge variant="outline" className={BADGE_OLUMLU}>Senkron</Badge>
+      : <span title={s.backofficeMesaji}><Badge variant="outline" className={BADGE_UYARI}>Senkron değil</Badge></span>;
+  };
 
   return (
-    <Kart baslik="Kullanıcı adından toplu affiliate geçişi">
-      <p className="mb-3 text-sm" style={{ color: 'var(--metin-2)' }}>
-        Destek üzerinden ya da izleme linki olmadan kaydolmuş oyuncuları toplu hâlde bir ortağa
-        bağlar. <strong>Zaten başka bir ortakta olan bir oyuncu da taşınır</strong> — bu, S2S
-        bildirimindeki "ilk kayıt kazanır" korumasından bilerek farklı: burada ground truth'u
-        siz düzeltiyorsunuz.
-      </p>
+    <ShadCard>
+      <CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">Kullanıcı adından toplu affiliate geçişi</CardTitle></CardHeader>
+      <CardContent>
+        <p className="mb-3 text-sm text-muted-foreground">
+          Destek üzerinden ya da izleme linki olmadan kaydolmuş oyuncuları toplu hâlde bir ortağa
+          bağlar. <strong>Zaten başka bir ortakta olan bir oyuncu da taşınır</strong> — bu, S2S
+          bildirimindeki "ilk kayıt kazanır" korumasından bilerek farklı: burada ground truth'u
+          siz düzeltiyorsunuz.
+        </p>
 
-      <div className="grid gap-3 sm:grid-cols-[220px_1fr]">
-        <div>
-          <label className="mb-1 block text-xs font-semibold" style={{ color: 'var(--metin-2)' }}>
-            Hedef ortak
-          </label>
-          <select
-            value={hedefOrtak}
-            onChange={(e) => setHedefOrtak(e.target.value)}
-            className="h-10 w-full rounded-lg px-3 text-sm"
-            style={{ background: 'var(--yuzey-2)', border: '1px solid var(--kenar)', color: 'var(--metin-1)' }}
-          >
-            <option value="">Seçin…</option>
-            {onayliOrtaklar.map((o) => (
-              <option key={o.id} value={o.ortakAnahtari}>{o.ad} ({o.ortakAnahtari})</option>
-            ))}
-          </select>
-          {onayliOrtaklar.length === 0 && (
-            <p className="mt-1 text-xs" style={{ color: 'var(--uyari)' }}>Onaylı ortak yok.</p>
-          )}
+        <div className="grid gap-3 sm:grid-cols-[220px_1fr]">
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-muted-foreground">Hedef ortak</label>
+            <Select value={hedefOrtak} onValueChange={setHedefOrtak}>
+              <SelectTrigger className="h-10"><SelectValue placeholder="Seçin…" /></SelectTrigger>
+              <SelectContent>
+                {onayliOrtaklar.map((o) => (
+                  <SelectItem key={o.id} value={o.ortakAnahtari}>{o.ad} ({o.ortakAnahtari})</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {onayliOrtaklar.length === 0 && <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">Onaylı ortak yok.</p>}
 
-          <p className="mt-3 text-xs" style={{ color: 'var(--metin-2)' }}>
-            {satirSayisi} kullanıcı adı
-            {limit != null && ` / en fazla ${limit}`}
-          </p>
-          {sinirAsildi && (
-            <p className="mt-1 text-xs" style={{ color: 'var(--olumsuz)' }}>
-              Sınır aşıldı — listeyi bölüp ayrı ayrı gönderin.
+            <p className="mt-3 text-xs text-muted-foreground">
+              {satirSayisi} kullanıcı adı
+              {limit != null && ` / en fazla ${limit}`}
             </p>
-          )}
-        </div>
-
-        <textarea
-          value={kullaniciAdlari}
-          onChange={(e) => setKullaniciAdlari(e.target.value)}
-          placeholder={'kullanici1\nkullanici2\nkullanici3'}
-          rows={6}
-          className="w-full rounded-lg px-3 py-2 font-mono text-xs"
-          style={{ background: 'var(--yuzey-2)', border: '1px solid var(--kenar)', color: 'var(--metin-1)' }}
-        />
-      </div>
-
-      {hata && <p className="mt-3 text-sm" style={{ color: 'var(--olumsuz)' }}>{hata}</p>}
-
-      <button
-        type="button"
-        onClick={gonder}
-        disabled={!gonderilebilir}
-        className="mt-3 rounded-lg px-4 py-2 text-sm font-semibold transition-opacity disabled:opacity-50"
-        style={{ background: 'var(--vurgu)', color: 'var(--vurgu-uzeri)' }}
-      >
-        {isliyor ? 'İşleniyor…' : 'Toplu ata'}
-      </button>
-
-      {sonuc && (
-        <div className="mt-4">
-          <div className="mb-3 flex flex-wrap gap-2 text-xs">
-            <Rozet metin={`${sonuc.basarili} atandı`} renk="olumlu" />
-            {sonuc.bulunamadi > 0 && <Rozet metin={`${sonuc.bulunamadi} bulunamadı`} renk="notr" />}
-            {sonuc.hatali > 0 && <Rozet metin={`${sonuc.hatali} hata`} renk="olumsuz" />}
-            {sonuc.tekrarSayisi > 0 && (
-              <span style={{ color: 'var(--metin-2)' }}>({sonuc.tekrarSayisi} tekrar eden ad atlandı)</span>
-            )}
+            {sinirAsildi && <p className="mt-1 text-xs text-destructive">Sınır aşıldı — listeyi bölüp ayrı ayrı gönderin.</p>}
           </div>
-          <VeriTablosu
-            satirlar={sonuc.satirlar}
-            anahtar={(s) => s.kullaniciAdi}
-            sutunlar={sonucSutunlari}
+
+          <Textarea
+            value={kullaniciAdlari}
+            onChange={(e) => setKullaniciAdlari(e.target.value)}
+            placeholder={'kullanici1\nkullanici2\nkullanici3'}
+            rows={6}
+            className="font-mono text-xs"
           />
         </div>
-      )}
-    </Kart>
+
+        {hata && <p className="mt-3 text-sm text-destructive">{hata}</p>}
+
+        <Button className="mt-3" onClick={gonder} disabled={!gonderilebilir}>
+          {isliyor ? 'İşleniyor…' : 'Toplu ata'}
+        </Button>
+
+        {sonuc && (
+          <div className="mt-4">
+            <div className="mb-3 flex flex-wrap items-center gap-2 text-xs">
+              <Badge variant="outline" className={BADGE_OLUMLU}>{sonuc.basarili} atandı</Badge>
+              {sonuc.bulunamadi > 0 && <Badge variant="secondary">{sonuc.bulunamadi} bulunamadı</Badge>}
+              {sonuc.hatali > 0 && <Badge variant="outline" className={BADGE_OLUMSUZ}>{sonuc.hatali} hata</Badge>}
+              {sonuc.tekrarSayisi > 0 && (
+                <span className="text-muted-foreground">({sonuc.tekrarSayisi} tekrar eden ad atlandı)</span>
+              )}
+            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Kullanıcı adı</TableHead>
+                  <TableHead>Durum</TableHead>
+                  <TableHead>Detay</TableHead>
+                  <TableHead>Backoffice</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {sonuc.satirlar.map((s) => (
+                  <TableRow key={s.kullaniciAdi}>
+                    <TableCell>{s.kullaniciAdi}</TableCell>
+                    <TableCell>
+                      {s.durum === 'bulunamadi'
+                        ? <Badge variant="secondary">{EAD_SONUC_ETIKETI[s.durum]}</Badge>
+                        : <Badge variant="outline" className={EAD_SONUC_RENGI[s.durum]}>{EAD_SONUC_ETIKETI[s.durum]}</Badge>}
+                    </TableCell>
+                    <TableCell>{detay(s)}</TableCell>
+                    <TableCell>{backoffice(s)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </CardContent>
+    </ShadCard>
   );
 }
