@@ -1,6 +1,10 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Logo, useMarka } from './marka';
+import { Menu } from 'lucide-react';
+import { Logo, useMarka, type MarkaBilgisi } from './marka';
+import { buttonVariants } from './components/ui/button';
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from './components/ui/sheet';
+import { cn } from './lib/utils';
 
 /**
  * UYGULAMA KABUĞU — sol kenar çubuğu.
@@ -16,9 +20,10 @@ import { Logo, useMarka } from './marka';
  *
  * ── Mobilde ──
  *
- * Kenar çubuğu dar ekranda gizleniyor ve bir düğmeyle açılıyor. Sabit
- * bırakmak, 375 piksellik bir ekranda içeriğe 150 piksel yer kalması
- * demekti.
+ * Kenar çubuğu dar ekranda gizleniyor ve Shadcn'in `Sheet`ine
+ * (Radix Dialog) taşınıyor: odak tuzağı, ESC ile kapama, doğru ARIA
+ * öznitelikleri kendiliğinden geliyor — elle yazılmış bir kaplamanın
+ * bunu doğru yapması ayrı bir iş olurdu.
  */
 
 export interface MenuOgesi {
@@ -54,60 +59,29 @@ export function Kabuk({
     // `aqua`: backoffice Apple kimliginde — kok degiskenleri ve sus
     // siniflarini index.css'teki kapsam eziyor. Vitrin (Landing) bu
     // sarmalayicinin disinda, cyberpunk kimliginde kaliyor.
-    <div className="aqua flex min-h-screen">
-      {acik && (
-        <button
-          type="button"
-          aria-label="Menüyü kapat"
-          className="fixed inset-0 z-20 bg-black/50 lg:hidden"
-          onClick={() => setAcik(false)}
-        />
-      )}
-
+    <div className="aqua flex min-h-screen bg-background text-foreground">
       {/* `ray`: macOS kenar cubugu gibi temayla acilip kararan sakin
           yuzey. Renkleri index.css'te kapsamli degiskenlerle geliyor;
-          buradaki her `var()` kendiliginden ray paletine duser. */}
-      <aside
-        className={`ray fixed inset-y-0 left-0 z-30 flex w-60 flex-col border-r transition-transform lg:static lg:translate-x-0 ${
-          acik ? 'translate-x-0' : '-translate-x-full'
-        }`}
-        style={{ borderColor: 'var(--kenar)', color: 'var(--metin)' }}
-      >
-        <div className="border-b px-4 py-4" style={{ borderColor: 'var(--kenar)' }}>
-          <Logo marka={marka} />
-          <p className="mt-2 truncate text-xs" style={{ color: 'var(--metin-2)' }}>
-            {baslik}{altBaslik ? ` · ${altBaslik}` : ''}
-          </p>
-        </div>
-
-        <nav className="flex-1 space-y-0.5 overflow-y-auto p-2">
-          {menu.map((oge) => (
-            <div key={oge.yol}>
-              {oge.bolumOnce && <BolumAyraci />}
-              <MenuSatiri oge={oge} />
-            </div>
-          ))}
-        </nav>
+          Shadcn token'lari da (bg-background, border-border...) ayni
+          kapsamdan okuyor. */}
+      <aside className="ray fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r lg:static lg:flex">
+        <KenarCubuguIcerik menu={menu} marka={marka} baslik={baslik} altBaslik={altBaslik} />
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header
-          className="sticky top-0 z-10 flex items-center gap-3 border-b px-4 py-3"
-          style={{
-            background: 'color-mix(in srgb, var(--zemin) 90%, transparent)',
-            borderColor: 'var(--kenar)',
-            backdropFilter: 'blur(8px)',
-          }}
-        >
-          <button
-            type="button"
-            aria-label="Menü"
-            className="border px-2 py-1 text-sm lg:hidden"
-            style={{ borderColor: 'var(--kenar)' }}
-            onClick={() => setAcik(true)}
-          >
-            ☰
-          </button>
+        <header className="sticky top-0 z-10 flex items-center gap-3 border-b bg-background/90 px-4 py-3 backdrop-blur-sm">
+          <Sheet open={acik} onOpenChange={setAcik}>
+            <SheetTrigger
+              aria-label="Menü"
+              className={cn(buttonVariants({ variant: 'outline', size: 'icon' }), 'lg:hidden')}
+            >
+              <Menu className="h-4 w-4" />
+            </SheetTrigger>
+            <SheetContent side="left" className="ray flex w-60 flex-col gap-0 p-0">
+              <SheetTitle className="sr-only">Gezinme menüsü</SheetTitle>
+              <KenarCubuguIcerik menu={menu} marka={marka} baslik={baslik} altBaslik={altBaslik} />
+            </SheetContent>
+          </Sheet>
           <Kirintilar menu={menu} />
           <div className="ml-auto flex items-center gap-2">{sagUst}</div>
         </header>
@@ -115,6 +89,36 @@ export function Kabuk({
         <main className="min-w-0 flex-1 space-y-4 p-4">{children}</main>
       </div>
     </div>
+  );
+}
+
+/** Kenar çubuğunun içeriği — masaüstünde sabit `aside`, mobilde `Sheet` içinde aynen tekrar kullanılıyor. */
+function KenarCubuguIcerik({
+  menu, marka, baslik, altBaslik,
+}: {
+  menu: MenuOgesi[];
+  marka: MarkaBilgisi;
+  baslik: string;
+  altBaslik: string;
+}) {
+  return (
+    <>
+      <div className="border-b px-4 py-4">
+        <Logo marka={marka} />
+        <p className="mt-2 truncate text-xs text-muted-foreground">
+          {baslik}{altBaslik ? ` · ${altBaslik}` : ''}
+        </p>
+      </div>
+
+      <nav className="flex-1 space-y-0.5 overflow-y-auto p-2">
+        {menu.map((oge) => (
+          <div key={oge.yol}>
+            {oge.bolumOnce && <BolumAyraci />}
+            <MenuSatiri oge={oge} />
+          </div>
+        ))}
+      </nav>
+    </>
   );
 }
 
@@ -127,7 +131,7 @@ function Kirintilar({ menu }: { menu: MenuOgesi[] }) {
     if (alt) {
       return (
         <p className="truncate text-sm">
-          <span style={{ color: 'var(--metin-2)' }}>{oge.etiket} / </span>
+          <span className="text-muted-foreground">{oge.etiket} / </span>
           <span className="font-medium">{alt.etiket}</span>
         </p>
       );
@@ -142,11 +146,10 @@ function Kirintilar({ menu }: { menu: MenuOgesi[] }) {
  *
  * Yeni bir metin etiketi eklemiyor ("büyük harf yok" kuralı zaten
  * dekoratif HUD başlıklarını reddediyor); bunun yerine tek, ince bir
- * çizgiyle üstü diğerlerinden ayırıyor. `.ray` yüzeyinde bu çizgi
- * zaten kurulu dilin bir parçası ("ince çizgiler, mavi vurgu").
+ * çizgiyle üstü diğerlerinden ayırıyor.
  */
 function BolumAyraci() {
-  return <div className="my-2 border-t" style={{ borderColor: 'var(--kenar)' }} />;
+  return <div className="my-2 border-t" />;
 }
 
 function Sevron({ acik }: { acik: boolean }) {
@@ -154,12 +157,24 @@ function Sevron({ acik }: { acik: boolean }) {
     <svg
       width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
       strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-      className="ml-auto shrink-0 opacity-60 transition-transform duration-150"
-      style={{ transform: acik ? 'rotate(90deg)' : 'none' }}
+      className={cn('ml-auto shrink-0 opacity-60 transition-transform duration-150', acik && 'rotate-90')}
       aria-hidden
     >
       <path d="m9 6 6 6-6 6" />
     </svg>
+  );
+}
+
+/**
+ * Seçili öge macOS kenar çubuğu gibi: yumuşak vurgu dolgusu, vurgu
+ * renginde metin. Çizgi, ışıltı, büyük harf yok. Seçili OLMAYAN öge
+ * fareyle üzerine gelince hafifçe belirginleşir.
+ */
+function satirSinifi(secili: boolean, altSeviye = false) {
+  return cn(
+    'truncate rounded-lg text-sm transition-colors duration-100',
+    altSeviye ? 'block px-3 py-1.5' : 'flex items-center gap-2 px-3 py-2',
+    secili ? 'bg-accent text-primary font-medium' : 'text-muted-foreground hover:bg-secondary',
   );
 }
 
@@ -174,26 +189,9 @@ function MenuSatiri({ oge }: { oge: MenuOgesi }) {
     if (icerdeMi) setAcik(true);
   }, [icerdeMi]);
 
-  // Secili oge macOS kenar cubugu gibi: yumusak mavi dolgu, mavi
-  // metin. Cizgi, isilti, buyuk harf yok. Secili OLMAYAN oge fareyle
-  // uzerine gelince hafifce belirginlesir -- oncesinde hicbir geri
-  // bildirim yoktu, tikanabilir bir hedef mi degil mi belirsizdi.
-  const stilVer = ({ isActive }: { isActive: boolean }) => ({
-    background: isActive ? 'var(--vurgu-yumusak)' : 'transparent',
-    color: isActive ? 'var(--vurgu)' : 'var(--metin-2)',
-    fontWeight: isActive ? 500 : 400,
-  });
-
-  const hover = 'transition-colors duration-100 hover:[background:var(--yuzey-2)]';
-
   if (!oge.altlar?.length) {
     return (
-      <NavLink
-        to={oge.yol}
-        end={oge.tam}
-        className={({ isActive }) => `flex items-center gap-2 rounded-lg px-3 py-2 text-sm ${isActive ? '' : hover}`}
-        style={stilVer}
-      >
+      <NavLink to={oge.yol} end={oge.tam} className={({ isActive }) => satirSinifi(isActive)}>
         <span className="shrink-0 opacity-80">{oge.ikon}</span>
         <span className="truncate">{oge.etiket}</span>
       </NavLink>
@@ -204,8 +202,7 @@ function MenuSatiri({ oge }: { oge: MenuOgesi }) {
     <div>
       <button
         type="button"
-        className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm ${icerdeMi ? '' : hover}`}
-        style={{ color: icerdeMi ? 'var(--vurgu)' : 'var(--metin-2)', fontWeight: icerdeMi ? 500 : 400 }}
+        className={cn(satirSinifi(icerdeMi), 'w-full')}
         onClick={() => setAcik(!acik)}
         aria-expanded={acik}
       >
@@ -214,14 +211,9 @@ function MenuSatiri({ oge }: { oge: MenuOgesi }) {
         <Sevron acik={acik} />
       </button>
       {acik && (
-        <div className="ml-4 space-y-0.5 border-l pl-2" style={{ borderColor: 'var(--kenar)' }}>
+        <div className="ml-4 space-y-0.5 border-l pl-2">
           {oge.altlar.map((a) => (
-            <NavLink
-              key={a.yol}
-              to={a.yol}
-              className={({ isActive }) => `block truncate rounded-lg px-3 py-1.5 text-sm ${isActive ? '' : hover}`}
-              style={stilVer}
-            >
+            <NavLink key={a.yol} to={a.yol} className={({ isActive }) => satirSinifi(isActive, true)}>
               {a.etiket}
             </NavLink>
           ))}
@@ -232,8 +224,10 @@ function MenuSatiri({ oge }: { oge: MenuOgesi }) {
 }
 
 /* ── İkonlar ────────────────────────────────────────────────────────────
-   Kütüphane yerine satır içi SVG: lucide-react ~30 kB getiriyor ve
-   burada sekiz ikon kullanılıyor. */
+   Kütüphane yerine satır içi SVG: sekiz ikon için burada elle çizilmiş
+   set zaten var ve dönüştürmenin görsel bir kazancı yok — lucide-react
+   Shadcn bileşenlerinin kendi ihtiyacı için zaten pakette (bkz. `Menu`
+   üstte), ama bu set onunla değiştirilmedi. */
 
 const ikon = (d: ReactNode) => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">

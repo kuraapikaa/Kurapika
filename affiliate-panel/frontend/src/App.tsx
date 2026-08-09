@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { api, useVeri } from './api';
 import { IKON, Kabuk, type MenuOgesi } from './kabuk';
-import { Buton, Yukleniyor, useTema } from './ui';
+import { Yukleniyor } from './ui';
+import { useTema } from './lib/tema';
+import { Button } from './components/ui/button';
 import { Landing } from './sayfalar/Landing';
 import { Baglanti } from './sayfalar/yonetim/Baglanti';
 import { Basvurular } from './sayfalar/yonetim/Basvurular';
@@ -125,8 +127,8 @@ export function App() {
       altBaslik={veri.ortakAnahtari ?? veri.ad ?? ''}
       sagUst={
         <>
-          <Buton onClick={temaDegistir}>{koyu ? 'Aydınlık' : 'Karanlık'}</Buton>
-          <Buton onClick={cikis} devredisi={cikisYapiliyor}>Çıkış</Buton>
+          <Button variant="outline" onClick={temaDegistir}>{koyu ? 'Aydınlık' : 'Karanlık'}</Button>
+          <Button variant="outline" onClick={cikis} disabled={cikisYapiliyor}>Çıkış</Button>
         </>
       }
     >
