@@ -78,6 +78,13 @@ export async function initializeDatabase(): Promise<void> {
 
       CREATE INDEX IF NOT EXISTS audit_events_tenant_created_idx
         ON audit_events (tenant_key, created_at DESC);
+
+      CREATE TABLE IF NOT EXISTS grant_claims (
+        tenant_key TEXT NOT NULL,
+        claim_key TEXT NOT NULL,
+        claimed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        PRIMARY KEY (tenant_key, claim_key)
+      );
     `);
     initialized = true;
     lastError = null;
@@ -177,6 +184,43 @@ export async function readDatabaseAudit(limit = 500): Promise<Array<{
     detail: typeof row.metadata?.detail === 'string' ? row.metadata.detail : undefined,
   }));
 }
+/**
+ * Bir ödül talebini SÜREÇLER ARASI (ikinci bir Railway kopyası, ya da bir
+ * dağıtım sırasındaki eski/yeni süreç çakışması) atomik olarak talep eder.
+ *
+ * `PRIMARY KEY` çakışması Postgres'in kendisinde çözülüyor — iki süreç
+ * TAM AYNI anda aynı anahtarı denese bile yalnızca biri satırı ekleyebilir.
+ * Bu, `lib/odulKilidi.ts`'teki `kilitle()`'nin belgelediği sınırı (SÜREÇ
+ * İÇİ kilit, ikinci bir kopyayı görmüyor) kapatıyor. Veritabanı hazır
+ * değilse (yerel geliştirme) `true` döner — tek süreçli varsayım zaten
+ * geçerli, `kilitle()` o durumda yeterli.
+ */
+export async function claimGrant(tenantKey: string, claimKey: string): Promise<boolean> {
+  if (!isDatabaseReady()) return true;
+  const result = await requirePool().query(
+    `INSERT INTO grant_claims (tenant_key, claim_key) VALUES ($1, $2)
+     ON CONFLICT (tenant_key, claim_key) DO NOTHING
+     RETURNING claim_key`,
+    [tenantKey, claimKey],
+  );
+  return result.rowCount === 1;
+}
+
+/**
+ * Talebi serbest bırakır — yalnızca bu denemenin SÜRESİ için kilitliyoruz,
+ * kalıcı "zaten verildi" kararı çağıranın kendi kaydında (örn.
+ * `nextDayBonusJob.ts`'teki `state.records`) yaşıyor. Serbest bırakmazsak
+ * bir sonraki GERÇEK deneme (örn. geçici hatadan sonra) sonsuza kadar
+ * bloke olurdu.
+ */
+export async function releaseGrant(tenantKey: string, claimKey: string): Promise<void> {
+  if (!isDatabaseReady()) return;
+  await requirePool().query(
+    'DELETE FROM grant_claims WHERE tenant_key = $1 AND claim_key = $2',
+    [tenantKey, claimKey],
+  );
+}
+
 export function getDatabaseStatus() {
   return {
     configured: isDatabaseConfigured(),

@@ -54,3 +54,40 @@ export async function kilitle<T>(anahtar: string, islem: () => Promise<T>): Prom
 export function odulAnahtari(login: string, tur: string, kimlik: string | number): string {
   return `odul:${String(login).trim().toLocaleLowerCase('tr-TR')}:${tur}:${kimlik}`;
 }
+
+export type DagitikSonuc<T> = { calisti: true; sonuc: T } | { calisti: false };
+
+/**
+ * `kilitle()`'nin surec-ici sirasinin UZERINE, birden fazla SUREC
+ * (Railway'in ikinci bir kopyasi, ya da bir dagitim sirasinda eski+yeni
+ * surecin bir sure birlikte ayakta kalmasi) icin de gecerli bir talep
+ * ekliyor -- dosya basindaki "Birden fazla instance'a olceklenirse
+ * dagitik kilit gerekir" notunun karsiligi, Redis yerine zaten var olan
+ * Postgres'i kullaniyor (bkz. `database.ts` · `claimGrant`).
+ *
+ * Talep BASKA BIR SURECTE zaten alinmissa `islem` hic CALISMAZ
+ * (`{ calisti: false }`) -- cagiran bunu "baska bir surec zaten
+ * isliyor, atla" olarak yorumlamali ve KENDI KAYDINI YAZMAMALI: yazarsa,
+ * o anahtari gercekten isleyen surecin az sonra yazacagi sonucu ezebilir.
+ *
+ * Yalnizca bu DENEMENIN SURESI icin kilitliyoruz (talep `finally`'de
+ * hemen serbest birakiliyor) -- kalici "zaten verildi" karari cagiranin
+ * KENDI kaydinda (orn. `nextDayBonusJob.ts`'teki `state.records`)
+ * yasamaya devam ediyor.
+ */
+export async function dagitikKilitle<T>(
+  tenantKey: string,
+  anahtar: string,
+  islem: () => Promise<T>,
+): Promise<DagitikSonuc<T>> {
+  return kilitle(anahtar, async () => {
+    const { claimGrant, releaseGrant } = await import('./database.js');
+    const alindiMi = await claimGrant(tenantKey, anahtar);
+    if (!alindiMi) return { calisti: false } as const;
+    try {
+      return { calisti: true, sonuc: await islem() } as const;
+    } finally {
+      await releaseGrant(tenantKey, anahtar).catch(() => undefined);
+    }
+  });
+}

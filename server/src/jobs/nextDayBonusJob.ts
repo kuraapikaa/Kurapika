@@ -6,6 +6,7 @@ import { assignmentValuesForPromoSpec, freespinAtamasiVar, getRules, type PromoS
 import { atamaNotu } from '../services/bonusAtamaNotu.js';
 import { bonusDenetimAciklamasi } from '../services/bonusDenetimAciklamasi.js';
 import { audit } from '../lib/auditLog.js';
+import { dagitikKilitle, odulAnahtari } from '../lib/odulKilidi.js';
 import { currentTenantKey, safeTenantKey } from '../lib/tenantContext.js';
 import { bekleyenGun, gunEkle, VARSAYILAN_PENCERE, type GunDurumu, type PencereAyari } from './ertesiGunPenceresi.js';
 import {
@@ -377,107 +378,128 @@ export async function runNextDayBonusJob(
       const existing = state.records[key];
       if (existing && existing.status !== 'error') continue;
 
-      try {
-        const account = await lynonBuildBonusEligibilitySnapshot({ playerId });
-        const configuredType = String(rule.spec.type ?? 'partner').toLocaleLowerCase('tr-TR');
-        const isCash = configuredType === 'cash' || configuredType === 'nakit';
-        const campaignId = Number(rule.spec.partnerBonusId);
-        const campaign = isCash ? null : campaignById.get(campaignId);
-        if (!isCash && !campaign) throw new Error(`Aktif Lynon kampanyası bulunamadı: ${rule.spec.partnerBonusId ?? 'eksik'}`);
+      /**
+       * SUREÇLER ARASI TALEP — bkz. `lib/odulKilidi.ts` · `dagitikKilitle`.
+       *
+       * Yukarıdaki `state.records[key]` kontrolü SÜREÇ İÇİ bellekte;
+       * ikinci bir Railway kopyası (ya da bir dağıtım sırasında bir süre
+       * birlikte ayakta kalan eski+yeni süreç) aynı anahtar için kendi
+       * hafızasında da "henüz verilmemiş" görüp AYNI bonusu tekrar
+       * Lynon'a yazdırabilir — tam olarak sahada gözlemlenen "aynı
+       * oyuncuya aynı bonus 10 kez" hatası. `dagitikKilitle`, Postgres'te
+       * atomik bir talep satırıyla bunu ikinci bir süreç için de kapatır.
+       *
+       * Talep başka bir süreçte alınmışsa (`calisti: false`) KENDİ
+       * KAYDIMIZI YAZMIYORUZ — o anahtarı gerçekten işleyen süreç kendi
+       * sonucunu birazdan yazacak; burada yazarsak onun sonucunu ezeriz.
+       */
+      const talep = await dagitikKilitle(tenantKey, odulAnahtari(String(playerId), 'ertesi-gun', key), async () => {
+        try {
+          const account = await lynonBuildBonusEligibilitySnapshot({ playerId });
+          const configuredType = String(rule.spec.type ?? 'partner').toLocaleLowerCase('tr-TR');
+          const isCash = configuredType === 'cash' || configuredType === 'nakit';
+          const campaignId = Number(rule.spec.partnerBonusId);
+          const campaign = isCash ? null : campaignById.get(campaignId);
+          if (!isCash && !campaign) throw new Error(`Aktif Lynon kampanyası bulunamadı: ${rule.spec.partnerBonusId ?? 'eksik'}`);
 
-        const promoId = rule.group === 'id' && Number.isFinite(Number(rule.key)) ? Number(rule.key) : campaignId;
-        const promoTitle = rule.group === 'title' ? rule.key : String(campaign?.Name ?? rule.key);
-        const check = await evaluateForAccount(account as any, { id: promoId, title: promoTitle, kuralAnahtari: rule.key, ...rule.spec } as any, rules, tenantKey, 'bonus');
-        if (!check.overallOk) {
-          state.records[key] = {
-            status: 'ineligible',
-            at: new Date().toISOString(),
-            message: check.items.filter((item) => !item.ok).map((item) => item.reason || item.label).join(' | ').slice(0, 500),
-          };
-          await saveState(tenantKey, state);
-          continue;
-        }
-
-        if (!isCash) {
-          const alreadyAssigned = Array.isArray((account as any).bonuses) && (account as any).bonuses.some((bonus: any) =>
-            Number(bonus.Id) === campaignId && istanbulDateKey(String(bonus.CreatedLocal ?? '')) === dateKey
-          );
-          if (alreadyAssigned) {
-            state.records[key] = { status: 'already-granted', at: new Date().toISOString(), message: 'Lynon kampanyası bugün zaten atanmış.' };
+          const promoId = rule.group === 'id' && Number.isFinite(Number(rule.key)) ? Number(rule.key) : campaignId;
+          const promoTitle = rule.group === 'title' ? rule.key : String(campaign?.Name ?? rule.key);
+          const check = await evaluateForAccount(account as any, { id: promoId, title: promoTitle, kuralAnahtari: rule.key, ...rule.spec } as any, rules, tenantKey, 'bonus');
+          if (!check.overallOk) {
+            state.records[key] = {
+              status: 'ineligible',
+              at: new Date().toISOString(),
+              message: check.items.filter((item) => !item.ok).map((item) => item.reason || item.label).join(' | ').slice(0, 500),
+            };
             await saveState(tenantKey, state);
-            continue;
+            return;
           }
 
-          const calculatedAmount = Number(check.calculatedAmount ?? 0);
-          const configuredAssignmentValues = assignmentValuesForPromoSpec(rule.spec);
-          /**
-           * FREESPIN ATAMASINA PARA TUTARI EKLENMEZ.
-           *
-           * Hesaplanan tutar sifirdan buyukse `BonusMoneyAmount` kosulsuz
-           * ekleniyordu. Kayip yuzdesine bagli bir freespin kuralinda bu,
-           * BetLevel/RoundCount/Game ile birlikte bir de para tutari
-           * gonderilmesi demekti; Lynon boyle bir atamayi reddediyor ve
-           * oyuncu freespin'i hic alamiyordu.
-           */
-          const freespin = freespinAtamasiVar(configuredAssignmentValues);
-          const assignmentValues = {
-            ...configuredAssignmentValues,
-            ...(!freespin && calculatedAmount > 0 && configuredAssignmentValues.BonusMoneyAmount == null
-              ? { BonusMoneyAmount: calculatedAmount }
-              : {}),
-          };
-          await lynonAssignCampaignToPlayer({
-            campaignId,
-            playerId,
-            assignmentReason: atamaNotu({
-              onek: `Ertesi gün otomasyonu ${previousDateKey}`,
-              kaynak: 'otomasyon',
-              kuralAnahtari: rule.key,
+          if (!isCash) {
+            const alreadyAssigned = Array.isArray((account as any).bonuses) && (account as any).bonuses.some((bonus: any) =>
+              Number(bonus.Id) === campaignId && istanbulDateKey(String(bonus.CreatedLocal ?? '')) === dateKey
+            );
+            if (alreadyAssigned) {
+              state.records[key] = { status: 'already-granted', at: new Date().toISOString(), message: 'Lynon kampanyası bugün zaten atanmış.' };
+              await saveState(tenantKey, state);
+              return;
+            }
+
+            const calculatedAmount = Number(check.calculatedAmount ?? 0);
+            const configuredAssignmentValues = assignmentValuesForPromoSpec(rule.spec);
+            /**
+             * FREESPIN ATAMASINA PARA TUTARI EKLENMEZ.
+             *
+             * Hesaplanan tutar sifirdan buyukse `BonusMoneyAmount` kosulsuz
+             * ekleniyordu. Kayip yuzdesine bagli bir freespin kuralinda bu,
+             * BetLevel/RoundCount/Game ile birlikte bir de para tutari
+             * gonderilmesi demekti; Lynon boyle bir atamayi reddediyor ve
+             * oyuncu freespin'i hic alamiyordu.
+             */
+            const freespin = freespinAtamasiVar(configuredAssignmentValues);
+            const assignmentValues = {
+              ...configuredAssignmentValues,
+              ...(!freespin && calculatedAmount > 0 && configuredAssignmentValues.BonusMoneyAmount == null
+                ? { BonusMoneyAmount: calculatedAmount }
+                : {}),
+            };
+            await lynonAssignCampaignToPlayer({
+              campaignId,
+              playerId,
+              assignmentReason: atamaNotu({
+                onek: `Ertesi gün otomasyonu ${previousDateKey}`,
+                kaynak: 'otomasyon',
+                kuralAnahtari: rule.key,
+                baslik: rule.spec?.title,
+                tutar: calculatedAmount,
+              }),
+              assignmentValues,
+            });
+            audit('sistem', 'job', 'lynon_campaign_assignment', String(playerId), bonusDenetimAciklamasi({
+              tur: 'kampanya',
+              kaynak: `ertesi gün otomasyonu ${previousDateKey}`,
               baslik: rule.spec?.title,
+              kuralAnahtari: rule.key,
+              kampanyaId: campaignId,
               tutar: calculatedAmount,
-            }),
-            assignmentValues,
-          });
-          audit('sistem', 'job', 'lynon_campaign_assignment', String(playerId), bonusDenetimAciklamasi({
-            tur: 'kampanya',
-            kaynak: `ertesi gün otomasyonu ${previousDateKey}`,
-            baslik: rule.spec?.title,
-            kuralAnahtari: rule.key,
-            kampanyaId: campaignId,
-            tutar: calculatedAmount,
-            tutarKaynagi: 'kural',
-            sonuc: 'basarili',
-          }));
-        } else {
-          const amount = Number(check.calculatedAmount ?? rule.spec.fixedAmount ?? 0);
-          if (!Number.isFinite(amount) || amount <= 0) throw new Error('Otomatik nakit bonus tutarı pozitif değil.');
-          const note = cashNote(dateKey, rule);
-          if (await cashAlreadyCredited(playerId, dateKey, note)) {
-            state.records[key] = { status: 'already-granted', at: new Date().toISOString(), message: 'Crediting düzeltmesi bugün zaten işlendi.' };
-            await saveState(tenantKey, state);
-            continue;
+              tutarKaynagi: 'kural',
+              sonuc: 'basarili',
+            }));
+          } else {
+            const amount = Number(check.calculatedAmount ?? rule.spec.fixedAmount ?? 0);
+            if (!Number.isFinite(amount) || amount <= 0) throw new Error('Otomatik nakit bonus tutarı pozitif değil.');
+            const note = cashNote(dateKey, rule);
+            if (await cashAlreadyCredited(playerId, dateKey, note)) {
+              state.records[key] = { status: 'already-granted', at: new Date().toISOString(), message: 'Crediting düzeltmesi bugün zaten işlendi.' };
+              await saveState(tenantKey, state);
+              return;
+            }
+            await lynonAdjustPlayerMainAccount({ playerId, amount, correctionType: 'crediting', note });
+            audit('sistem', 'job', 'bonus_charge_as_cash', String(playerId), bonusDenetimAciklamasi({
+              tur: 'nakit',
+              kaynak: `ertesi gün otomasyonu ${previousDateKey}`,
+              baslik: rule.spec?.title,
+              kuralAnahtari: rule.key,
+              tutar: amount,
+              tutarKaynagi: 'kural',
+              sonuc: 'basarili',
+              mesaj: note,
+            }));
           }
-          await lynonAdjustPlayerMainAccount({ playerId, amount, correctionType: 'crediting', note });
-          audit('sistem', 'job', 'bonus_charge_as_cash', String(playerId), bonusDenetimAciklamasi({
-            tur: 'nakit',
-            kaynak: `ertesi gün otomasyonu ${previousDateKey}`,
-            baslik: rule.spec?.title,
-            kuralAnahtari: rule.key,
-            tutar: amount,
-            tutarKaynagi: 'kural',
-            sonuc: 'basarili',
-            mesaj: note,
-          }));
-        }
 
-        granted += 1;
-        state.records[key] = { status: 'granted', at: new Date().toISOString() };
-        await saveState(tenantKey, state);
-      } catch (error) {
-        errors += 1;
-        hasRetryableError = true;
-        state.records[key] = { status: 'error', at: new Date().toISOString(), message: (error instanceof Error ? error.message : String(error)).slice(0, 500) };
-        await saveState(tenantKey, state);
+          granted += 1;
+          state.records[key] = { status: 'granted', at: new Date().toISOString() };
+          await saveState(tenantKey, state);
+        } catch (error) {
+          errors += 1;
+          hasRetryableError = true;
+          state.records[key] = { status: 'error', at: new Date().toISOString(), message: (error instanceof Error ? error.message : String(error)).slice(0, 500) };
+          await saveState(tenantKey, state);
+        }
+      });
+
+      if (!talep.calisti) {
+        console.warn(`[next-day-bonus] ${tenantKey}: ${key} başka bir süreçte işleniyor, atlandı.`);
       }
       await sleep(BETWEEN_PLAYERS_MS);
     }
