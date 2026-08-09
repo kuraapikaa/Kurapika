@@ -12,6 +12,7 @@ import {
   olcumler as olcumTablosu,
   oyuncuEslesmeleri as eslesmeTablosu,
   oyuncuGunluk as gunlukTablosu,
+  oyuncuGunlukRapor as gunlukRaporTablosu,
   tiklamalar as tiklamaTablosu,
 } from '../lib/sema.js';
 import { veritabani, veritabaniniBaslat, veritabaniniKapat } from '../lib/veritabani.js';
@@ -88,6 +89,7 @@ varsaCalistir('depo denkligi', () => {
     await vt!.delete(eslesmeTablosu);
     await vt!.delete(cakismaTablosu);
     await vt!.delete(gunlukTablosu);
+    await vt!.delete(gunlukRaporTablosu);
     // Belge uygulamasi ayni kiraciyi kullaniyor; onun da sifirlanmasi sart.
     const { yaz } = await import('../lib/depo.js');
     await yaz(KIRACI, 'tiklamalar', { version: 1, tiklamalar: [] });
@@ -535,6 +537,41 @@ varsaCalistir('depo denkligi', () => {
       ]);
     });
 
+    it('rapor kaynagi webhook yoksa rakami saglar; ikisi de varsa TOPLANMAZ, buyuk olan esas alinir', async () => {
+      const vt = veritabani()!;
+      await vt.insert(eslesmeTablosu).values([
+        {
+          // Yalnizca rapor kaynagi var -- webhook hic kurulmamis tenant senaryosu.
+          kiraci: KIRACI, lynonOyuncuId: 'p7', ortakId: 'ortak-a', ortakAnahtari: 'ORTAK-A',
+          clickId: null, medyaId: null, altLinkId: 'link-rapor', alt: {}, kaynak: 'kayit',
+          olusturuldu: new Date('2026-08-01T00:00:00Z'),
+        },
+        {
+          // Ikisi de var: rapor DAHA BUYUK -- webhook'un henuz katlamadigi
+          // bir kismi rapor zaten yakalamis olabilir.
+          kiraci: KIRACI, lynonOyuncuId: 'p8', ortakId: 'ortak-a', ortakAnahtari: 'ORTAK-A',
+          clickId: null, medyaId: null, altLinkId: 'link-rapor', alt: {}, kaynak: 'kayit',
+          olusturuldu: new Date('2026-08-01T00:00:00Z'),
+        },
+      ]);
+      await vt.insert(gunlukTablosu).values([
+        { kiraci: KIRACI, gun: '2026-08-01', oyuncuId: 'p8', yatirim: 40, cekim: 5, bahis: 0, kazanc: 0, olaySayisi: 1, guncellendi: new Date() },
+      ]);
+      await vt.insert(gunlukRaporTablosu).values([
+        { kiraci: KIRACI, gun: '2026-08-01', oyuncuId: 'p7', yatirim: 300, cekim: 60, bahis: 0, kazanc: 0, guncellendi: new Date() },
+        { kiraci: KIRACI, gun: '2026-08-01', oyuncuId: 'p8', yatirim: 400, cekim: 90, bahis: 0, kazanc: 0, guncellendi: new Date() },
+      ]);
+
+      expect(await altLinkFinansOzeti(KIRACI)).toEqual([{
+        altLinkId: 'link-rapor',
+        oyuncuSayisi: 2,
+        // p7: rapor tek kaynak -> 300. p8: max(webhook 40, rapor 400) = 400.
+        // 40+5'in TOPLANMADIGI (340 degil 400/300 toplami 700) burada dogrulaniyor.
+        yatirim: 700,
+        cekim: 150,
+      }]);
+    });
+
     it('ortakId ile suzulebiliyor', async () => {
       const vt = veritabani()!;
       await vt.insert(eslesmeTablosu).values([
@@ -588,6 +625,22 @@ varsaCalistir('depo denkligi', () => {
       expect(liste).toEqual([
         { lynonOyuncuId: 'p11', kullaniciAdi: null, yatirim: 0, cekim: 0, olusturuldu: '2026-08-02T10:00:00.000Z', kayitTarihi: null },
         { lynonOyuncuId: 'p10', kullaniciAdi: 'ahmet01', yatirim: 300, cekim: 50, olusturuldu: '2026-08-01T10:00:00.000Z', kayitTarihi: null },
+      ]);
+    });
+
+    it('webhook hic veri vermemisse rapor kaynagindan gosterir', async () => {
+      const vt = veritabani()!;
+      await vt.insert(eslesmeTablosu).values({
+        kiraci: KIRACI, lynonOyuncuId: 'p13', ortakId: 'ortak-a', ortakAnahtari: 'ORTAK-A',
+        clickId: null, medyaId: null, altLinkId: 'link-rapor-liste', kullaniciAdi: 'raporlu01', alt: {},
+        kaynak: 'kayit', olusturuldu: new Date('2026-08-01T10:00:00Z'),
+      });
+      await vt.insert(gunlukRaporTablosu).values([
+        { kiraci: KIRACI, gun: '2026-08-01', oyuncuId: 'p13', yatirim: 250, cekim: 40, bahis: 0, kazanc: 0, guncellendi: new Date() },
+      ]);
+
+      expect(await altLinkOyuncuListesi(KIRACI, 'link-rapor-liste')).toEqual([
+        { lynonOyuncuId: 'p13', kullaniciAdi: 'raporlu01', yatirim: 250, cekim: 40, olusturuldu: '2026-08-01T10:00:00.000Z', kayitTarihi: null },
       ]);
     });
 
@@ -645,6 +698,31 @@ varsaCalistir('depo denkligi', () => {
           olusturuldu: '2026-08-01T10:00:00.000Z', kayitTarihi: null,
         },
       ]);
+    });
+
+    /**
+     * TAM KULLANICININ BILDIRDIGI SENARYO: toplu gecisle tasinan bir
+     * oyuncunun webhook'tan hicbir zaman verisi olmaz (Lynon webhook'u
+     * hic kurulmamis olabilir) -- ama admin "Geçmiş GGR'yi doldur"
+     * calistirdiginda (bkz. gecmisGGR.ts) rapor kaynagi doluyor ve bu
+     * liste artik 0 degil gercek rakami gostermeli.
+     */
+    it('webhook hic kurulmamis olsa da rapor kaynagindan gercek rakami gosterir', async () => {
+      const vt = veritabani()!;
+      await vt.insert(eslesmeTablosu).values({
+        kiraci: KIRACI, lynonOyuncuId: 'p23', ortakId: 'ortak-d', ortakAnahtari: 'ORTAK-D',
+        clickId: null, medyaId: null, altLinkId: null, kullaniciAdi: 'gecis-raporlu', alt: {},
+        kaynak: 'elle', olusturuldu: new Date('2026-08-03T10:00:00Z'),
+      });
+      await vt.insert(gunlukRaporTablosu).values([
+        { kiraci: KIRACI, gun: '2026-08-01', oyuncuId: 'p23', yatirim: 1000, cekim: 200, bahis: 0, kazanc: 0, guncellendi: new Date() },
+        { kiraci: KIRACI, gun: '2026-08-02', oyuncuId: 'p23', yatirim: 500, cekim: 0, bahis: 0, kazanc: 0, guncellendi: new Date() },
+      ]);
+
+      expect(await ortakOyuncuListesi(KIRACI, 'ortak-d')).toEqual([{
+        lynonOyuncuId: 'p23', kullaniciAdi: 'gecis-raporlu', yatirim: 1500, cekim: 200,
+        olusturuldu: '2026-08-03T10:00:00.000Z', kayitTarihi: null,
+      }]);
     });
 
     it('esleseni olmayan ortak icin bos liste doner', async () => {

@@ -1,7 +1,7 @@
 import { and, eq, inArray } from 'drizzle-orm';
 import { type BackofficeAdaptoru } from '../adaptorler/tur.js';
 import { gunAnahtari, gunEkle, gunGecerliMi } from '../lib/gunler.js';
-import { oyuncuEslesmeleri } from '../lib/sema.js';
+import { oyuncuEslesmeleri, oyuncuGunlukRapor } from '../lib/sema.js';
 import { veritabani } from '../lib/veritabani.js';
 import { olcumleriYaz } from './olcum.js';
 
@@ -21,14 +21,18 @@ import { olcumleriYaz } from './olcum.js';
  * "o gün o oyuncu ne kadar yatırdı/çekti/oynadı" sorusuna cevap veren
  * bir veri kaynağı.
  *
- * ── Neden `oyuncu_gunluk`'a değil, doğrudan `olcumler`'e ──
+ * ── Neden `oyuncu_gunluk`'a değil, `oyuncu_gunluk_rapor`'a ──
  *
- * `oyuncu_gunluk`, tanımı gereği webhook'un GÜN İÇİ akışı; geçmişin
- * FİNALİZE rakamını oraya yazmak o ayrımı bozar (bkz. `sema.ts`'teki
- * `oyuncuGunluk` yorumu). Gün bazlı toplam bu yüzden burada bellekte
+ * `oyuncu_gunluk`, tanımı gereği webhook'un GÜN İÇİ akışı (`+=`);
+ * geçmişin FİNALİZE rakamını oraya yazmak o ayrımı bozar (bkz.
+ * `sema.ts`'teki `oyuncuGunluk` yorumu) -- bu yüzden oyuncu bazlı
+ * ayrıntı AYRI bir tabloya (`oyuncu_gunluk_rapor`), her turda ÜZERİNE
+ * YAZILARAK (idempotent) düşüyor. Ortak bazlı toplam ayrıca bellekte
  * hesaplanıp `olcumler`e `kaynak: 'itme'` ile yazılıyor -- aynı webhook
  * köprüsü (`ortakGunlukGeliriGuncelle`) gibi, ama kaynağı Lynon'un
- * GEÇMİŞ raporu.
+ * GEÇMİŞ raporu. İkisi birlikte: ortak panelde günlük özet, oyuncu
+ * panelinde (bkz. `oyuncuEslesme.ts` · `oyuncuFinansHaritasi`) kişi
+ * bazlı döküm -- Lynon webhook'u hiç kurulmamış olsa bile.
  *
  * ── FTD neden yine `null` ──
  *
@@ -93,6 +97,24 @@ async function gunuDoldur(
     // uydurmak yerine sessizce atlaniyor.
     if (!eslesme) continue;
     eslesen += 1;
+
+    // Oyuncu bazli ayrinti -- rapor bu gun icin KESIN toplami veriyor,
+    // ONCEKI yazimin UZERINE geciyor (webhook'un += biriktirmesinden
+    // FARKLI, bkz. dosya basi ve sema.ts).
+    await vt
+      .insert(oyuncuGunlukRapor)
+      .values({
+        kiraci, gun, oyuncuId: satir.oyuncuId,
+        yatirim: satir.yatirim, cekim: satir.cekim, bahis: satir.bahis, kazanc: satir.kazanc,
+        guncellendi: simdi,
+      })
+      .onConflictDoUpdate({
+        target: [oyuncuGunlukRapor.kiraci, oyuncuGunlukRapor.gun, oyuncuGunlukRapor.oyuncuId],
+        set: {
+          yatirim: satir.yatirim, cekim: satir.cekim, bahis: satir.bahis, kazanc: satir.kazanc,
+          guncellendi: simdi,
+        },
+      });
 
     const grup = gruplar.get(eslesme.ortakId) ?? {
       ortakAnahtari: eslesme.ortakAnahtari,

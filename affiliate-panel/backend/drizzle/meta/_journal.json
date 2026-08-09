@@ -50,6 +50,13 @@
       "when": 1786270193919,
       "tag": "0006_fluffy_bedlam",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1786272621029,
+      "tag": "0007_sloppy_siren",
+      "breakpoints": true
     }
   ]
 }
