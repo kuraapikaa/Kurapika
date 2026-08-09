@@ -149,7 +149,7 @@ export function PortalOzet() {
                     <span className="ml-1 text-xs" style={{ color: 'var(--metin-2)' }}>(kullanıcı adı bilinmiyor)</span>
                   )}
                 </Hucre>
-                <Hucre><span className="text-xs">{gunBicimi(o.olusturuldu)}</span></Hucre>
+                <Hucre><span className="text-xs">{gunBicimi(o.kayitTarihi ?? o.olusturuldu)}</span></Hucre>
                 <Hucre sagda><span className="tabular-nums">{paraBicimi(o.yatirim)}</span></Hucre>
                 <Hucre sagda><span className="tabular-nums">{paraBicimi(o.cekim)}</span></Hucre>
               </Satir>

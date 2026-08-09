@@ -145,6 +145,14 @@ export const oyuncuEslesmeleri = pgTable(
     alt: jsonb('alt').$type<Partial<Record<AltParametre, string>>>().notNull().default({}),
     kaynak: text('kaynak').notNull(),
     olusturuldu: timestamp('olusturuldu', { withTimezone: true }).notNull(),
+    /**
+     * Oyuncunun Lynon'daki GERÇEK kayıt anı; VARSA (bkz. `oyuncuAra`).
+     * `olusturuldu` ile KARIŞTIRILMAMALI: o, bizim eşleşme kaydımızın
+     * oluşturulma anı — toplu geçişte bu, admin'in geçişi yaptığı an,
+     * oyuncunun siteye kaydolduğu an DEĞİL. Bilinmiyorsa `null`; o zaman
+     * ekran `olusturuldu`'ya düşer.
+     */
+    kayitTarihi: timestamp('kayit_tarihi', { withTimezone: true }),
   },
   (t) => [
     primaryKey({ columns: [t.kiraci, t.lynonOyuncuId] }),

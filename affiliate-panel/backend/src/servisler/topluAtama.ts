@@ -138,6 +138,9 @@ export async function topluAtamaYap(
           // Zaten elde: kullanici adindan arandigi icin backoffice ayni
           // yanitta kullanici adini da dondurdu.
           kullaniciAdi: bulunan.kullaniciAdi,
+          // Ayni yanitta kayit tarihi de varsa: gecis anini degil oyuncunun
+          // Lynon'a GERCEKTEN kaydoldugu ani gosterelim (bkz. oyuncuAra).
+          kayitTarihi: bulunan.kayitTarihi,
         },
         simdi,
       );

@@ -27,7 +27,7 @@ async function onayliOrtak(k: string, anahtar: string, ad = 'Ortak') {
  */
 function sahteAdaptor(
   oyuncular: Record<string, string>,
-  secenekler: { baglamaBasarisiz?: Set<string>; baglamaYok?: boolean } = {},
+  secenekler: { baglamaBasarisiz?: Set<string>; baglamaYok?: boolean; kayitTarihleri?: Record<string, string> } = {},
 ): BackofficeAdaptoru {
   return {
     tanimAdi: 'sahte',
@@ -39,7 +39,9 @@ function sahteAdaptor(
     },
     async oyuncuAra(kullaniciAdi: string) {
       const oyuncuId = oyuncular[kullaniciAdi.toLocaleLowerCase('tr-TR')];
-      return oyuncuId ? { oyuncuId, kullaniciAdi } : null;
+      if (!oyuncuId) return null;
+      const kayitTarihi = secenekler.kayitTarihleri?.[kullaniciAdi.toLocaleLowerCase('tr-TR')] ?? null;
+      return { oyuncuId, kullaniciAdi, kayitTarihi };
     },
     ...(secenekler.baglamaYok ? {} : {
       async oyuncuyuBagla(girdi: { oyuncuId: string; ortakAnahtari: string }) {
@@ -86,6 +88,21 @@ describe('topluAtamaYap', () => {
     // Adaptorun oyuncuAra'dan donen kullanici adi eslesmeye de gecmeli --
     // raporda opak lynonOyuncuId yerine okunur adi gostermenin dayanagi bu.
     expect(await eslesmeBul(k, '111')).toMatchObject({ kullaniciAdi: 'oyuncu1' });
+  });
+
+  it('adaptorun donduzu kayit tarihi eslesmeye gecer (transfer ani DEGIL)', async () => {
+    const k = kiraci();
+    await onayliOrtak(k, 'ORT1');
+    const adaptor = sahteAdaptor(
+      { oyuncu1: '111' },
+      { kayitTarihleri: { oyuncu1: '2020-01-15T00:00:00.000Z' } },
+    );
+
+    await topluAtamaYap(k, adaptor, 'oyuncu1', 'ORT1');
+
+    // Gecis "simdi" yapiliyor ama gosterilecek tarih Lynon'un bildirdigi
+    // GERCEK kayit ani -- transfer islemi bunu simdiki zamana EZMEMELI.
+    expect(await eslesmeBul(k, '111')).toMatchObject({ kayitTarihi: '2020-01-15T00:00:00.000Z' });
   });
 
   it('bulunamayan kullanici ayri sayilir, digerlerini engellemez', async () => {

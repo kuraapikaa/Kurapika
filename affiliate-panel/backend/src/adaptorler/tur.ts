@@ -133,8 +133,12 @@ export interface BackofficeAdaptoru {
    * bulanık, "test" sorgusu "test777" hesabını da getirebilir. Yanlış
    * oyuncuyu bir ortağa bağlamak, o oyuncunun tüm geçmiş ve gelecek
    * kazancını yanlış kişiye yazdırır.
+   *
+   * `kayitTarihi`, backoffice yanıtında bulunabilirse oyuncunun GERÇEK
+   * Lynon kayıt anı (ISO); yoksa `null` — çağıran taraf bu durumda kendi
+   * eşleşme kaydının oluşturulma anına düşer (bkz. `oyuncuEslesme.ts`).
    */
-  oyuncuAra?(kullaniciAdi: string): Promise<{ oyuncuId: string; kullaniciAdi: string } | null>;
+  oyuncuAra?(kullaniciAdi: string): Promise<{ oyuncuId: string; kullaniciAdi: string; kayitTarihi: string | null } | null>;
   /**
    * Sitenin gerçek ödeme yöntemleri.
    *

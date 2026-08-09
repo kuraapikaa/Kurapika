@@ -1,0 +1,1 @@
+ALTER TABLE "aff_oyuncu_eslesmeleri" ADD COLUMN "kayit_tarihi" timestamp with time zone;

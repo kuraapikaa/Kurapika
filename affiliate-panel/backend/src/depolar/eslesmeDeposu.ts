@@ -30,6 +30,8 @@ export interface OyuncuEslesmesi {
   alt: Partial<Record<AltParametre, string>>;
   kaynak: EslesmeKaynagi;
   olusturuldu: string;
+  /** Oyuncunun Lynon'daki gerçek kayıt anı; bilinmiyorsa `null` (bkz. `sema.ts`). */
+  kayitTarihi: string | null;
 }
 
 export interface EslesmeCakismasi {
@@ -105,6 +107,7 @@ const satirdanEslesme = (s: typeof oyuncuEslesmeleri.$inferSelect): OyuncuEslesm
   alt: s.alt ?? {},
   kaynak: s.kaynak as EslesmeKaynagi,
   olusturuldu: s.olusturuldu.toISOString(),
+  kayitTarihi: s.kayitTarihi ? s.kayitTarihi.toISOString() : null,
 });
 
 const satirdanCakisma = (s: typeof eslesmeCakismalari.$inferSelect): EslesmeCakismasi => ({
@@ -157,6 +160,7 @@ export function postgresEslesmeDeposu(): EslesmeDeposu {
           alt: eslesme.alt,
           kaynak: eslesme.kaynak,
           olusturuldu: new Date(eslesme.olusturuldu),
+          kayitTarihi: eslesme.kayitTarihi ? new Date(eslesme.kayitTarihi) : null,
         })
         .onConflictDoNothing()
         .returning();
@@ -187,6 +191,7 @@ export function postgresEslesmeDeposu(): EslesmeDeposu {
           alt: eslesme.alt,
           kaynak: eslesme.kaynak,
           olusturuldu: new Date(eslesme.olusturuldu),
+          kayitTarihi: eslesme.kayitTarihi ? new Date(eslesme.kayitTarihi) : null,
         })
         .onConflictDoUpdate({
           target: [oyuncuEslesmeleri.kiraci, oyuncuEslesmeleri.lynonOyuncuId],
@@ -200,6 +205,7 @@ export function postgresEslesmeDeposu(): EslesmeDeposu {
             alt: eslesme.alt,
             kaynak: eslesme.kaynak,
             olusturuldu: new Date(eslesme.olusturuldu),
+            kayitTarihi: eslesme.kayitTarihi ? new Date(eslesme.kayitTarihi) : null,
           },
         });
       return { oncekiKayit };

@@ -135,6 +135,10 @@ export async function oyuncuyuEslestir(
     alt: cozulmus.alt,
     kaynak: istek.kaynak === 'elle' ? 'elle' : 'kayit',
     olusturuldu: simdi.toISOString(),
+    // Bu yol S2S bildirimi: site kayit aninda cagiriyor, `olusturuldu`
+    // zaten Lynon kayit anina cok yakin -- ayrica bir Lynon aramasi
+    // gerekmiyor.
+    kayitTarihi: null,
   };
 
   const { eklendi, kayitli } = await depo.ekleYokSayarak(kiraci, aday);
@@ -185,7 +189,7 @@ export interface YenidenAtamaSonucu {
  */
 export async function oyuncuyuYenidenAta(
   kiraci: string,
-  girdi: { lynonOyuncuId: string; ortakAnahtari: string; kullaniciAdi?: string },
+  girdi: { lynonOyuncuId: string; ortakAnahtari: string; kullaniciAdi?: string; kayitTarihi?: string | null },
   simdi = new Date(),
 ): Promise<YenidenAtamaSonucu> {
   const lynonOyuncuId = metin(girdi.lynonOyuncuId);
@@ -202,8 +206,12 @@ export async function oyuncuyuYenidenAta(
   // duzeltme), mevcut kayittaki adi SILMIYORUZ -- zorlaAta diger baglam
   // alanlarini (medyaId, clickId...) bilerek sifirliyor ama kullanici adi
   // baska bir yoldan (S2S bildirimi, toplu gecis) zaten ogrenilmis olabilir.
+  // kayitTarihi de ayni mantikla korunuyor: caginan taraf bu turda Lynon'dan
+  // bulamadiysa (adaptor desteklemiyor, alan bos donduyor...) daha once
+  // ogrenilmis olan tarihi SILMIYORUZ.
   const mevcut = await eslesmeDeposu().bul(kiraci, lynonOyuncuId);
   const kullaniciAdi = metin(girdi.kullaniciAdi) || mevcut?.kullaniciAdi || null;
+  const kayitTarihi = girdi.kayitTarihi ?? mevcut?.kayitTarihi ?? null;
 
   const aday: OyuncuEslesmesi = {
     lynonOyuncuId,
@@ -216,6 +224,7 @@ export async function oyuncuyuYenidenAta(
     alt: {},
     kaynak: 'elle',
     olusturuldu: simdi.toISOString(),
+    kayitTarihi,
   };
 
   const { oncekiKayit } = await eslesmeDeposu().zorlaAta(kiraci, aday);
@@ -311,7 +320,10 @@ export interface AltLinkOyuncusu {
   kullaniciAdi: string | null;
   yatirim: number;
   cekim: number;
+  /** Eşleşme kaydımızın oluşturulma anı. Toplu geçişte bu, admin'in geçişi yaptığı andır. */
   olusturuldu: string;
+  /** Oyuncunun Lynon'daki GERÇEK kayıt anı; bilinmiyorsa `null` — çağıran taraf `olusturuldu`'ya düşer. */
+  kayitTarihi: string | null;
 }
 
 /**
@@ -331,6 +343,7 @@ export async function altLinkOyuncuListesi(kiraci: string, altLinkId: string): P
       lynonOyuncuId: oyuncuEslesmeleri.lynonOyuncuId,
       kullaniciAdi: oyuncuEslesmeleri.kullaniciAdi,
       olusturuldu: oyuncuEslesmeleri.olusturuldu,
+      kayitTarihi: oyuncuEslesmeleri.kayitTarihi,
       yatirim: sql<number>`coalesce(sum(${oyuncuGunluk.yatirim}), 0)`,
       cekim: sql<number>`coalesce(sum(${oyuncuGunluk.cekim}), 0)`,
     })
@@ -340,7 +353,10 @@ export async function altLinkOyuncuListesi(kiraci: string, altLinkId: string): P
       eq(oyuncuGunluk.oyuncuId, oyuncuEslesmeleri.lynonOyuncuId),
     ))
     .where(and(eq(oyuncuEslesmeleri.kiraci, kiraci), eq(oyuncuEslesmeleri.altLinkId, altLinkId)))
-    .groupBy(oyuncuEslesmeleri.lynonOyuncuId, oyuncuEslesmeleri.kullaniciAdi, oyuncuEslesmeleri.olusturuldu)
+    .groupBy(
+      oyuncuEslesmeleri.lynonOyuncuId, oyuncuEslesmeleri.kullaniciAdi,
+      oyuncuEslesmeleri.olusturuldu, oyuncuEslesmeleri.kayitTarihi,
+    )
     .orderBy(desc(oyuncuEslesmeleri.olusturuldu));
 
   return satirlar.map((s) => ({
@@ -349,6 +365,7 @@ export async function altLinkOyuncuListesi(kiraci: string, altLinkId: string): P
     yatirim: Number(s.yatirim),
     cekim: Number(s.cekim),
     olusturuldu: s.olusturuldu.toISOString(),
+    kayitTarihi: s.kayitTarihi ? s.kayitTarihi.toISOString() : null,
   }));
 }
 
@@ -372,6 +389,7 @@ export async function ortakOyuncuListesi(kiraci: string, ortakId: string): Promi
       lynonOyuncuId: oyuncuEslesmeleri.lynonOyuncuId,
       kullaniciAdi: oyuncuEslesmeleri.kullaniciAdi,
       olusturuldu: oyuncuEslesmeleri.olusturuldu,
+      kayitTarihi: oyuncuEslesmeleri.kayitTarihi,
       yatirim: sql<number>`coalesce(sum(${oyuncuGunluk.yatirim}), 0)`,
       cekim: sql<number>`coalesce(sum(${oyuncuGunluk.cekim}), 0)`,
     })
@@ -381,7 +399,10 @@ export async function ortakOyuncuListesi(kiraci: string, ortakId: string): Promi
       eq(oyuncuGunluk.oyuncuId, oyuncuEslesmeleri.lynonOyuncuId),
     ))
     .where(and(eq(oyuncuEslesmeleri.kiraci, kiraci), eq(oyuncuEslesmeleri.ortakId, ortakId)))
-    .groupBy(oyuncuEslesmeleri.lynonOyuncuId, oyuncuEslesmeleri.kullaniciAdi, oyuncuEslesmeleri.olusturuldu)
+    .groupBy(
+      oyuncuEslesmeleri.lynonOyuncuId, oyuncuEslesmeleri.kullaniciAdi,
+      oyuncuEslesmeleri.olusturuldu, oyuncuEslesmeleri.kayitTarihi,
+    )
     .orderBy(desc(oyuncuEslesmeleri.olusturuldu));
 
   return satirlar.map((s) => ({
@@ -390,6 +411,7 @@ export async function ortakOyuncuListesi(kiraci: string, ortakId: string): Promi
     yatirim: Number(s.yatirim),
     cekim: Number(s.cekim),
     olusturuldu: s.olusturuldu.toISOString(),
+    kayitTarihi: s.kayitTarihi ? s.kayitTarihi.toISOString() : null,
   }));
 }
 

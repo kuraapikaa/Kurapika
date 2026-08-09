@@ -43,6 +43,13 @@
       "when": 1786223911099,
       "tag": "0005_kullanici_adi",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1786270193919,
+      "tag": "0006_fluffy_bedlam",
+      "breakpoints": true
     }
   ]
 }
