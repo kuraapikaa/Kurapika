@@ -200,6 +200,7 @@ export interface PortalUclari {
     ftd: FtdDurumu;
   };
   '/medya': { medyalar: Medya[] };
+  '/oyuncularim': { oyuncular: AltLinkOyuncusu[] };
   '/alt-linkler': { linkler: AltLinkGorunumu[]; temelHazir: boolean };
   '/tiklamalar': { ozet: TiklamaOzeti | null; tiklamalar: Tiklama[] };
   '/hakedis': { donemler: Array<{ ay: string; durum: Donem['durum']; satir: OrtakHakedisi | null }> };

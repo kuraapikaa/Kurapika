@@ -14,7 +14,7 @@ import { altParametreleriTemizle } from '../servisler/izleme.js';
 import { medyaIzlemeLinki, medyalariListele } from '../servisler/medya.js';
 import { ortakOzetleri } from '../servisler/olcum.js';
 import { ftdDurumu } from '../servisler/ilkYatirim.js';
-import { altLinkFinansOzeti, altLinkOyuncuListesi } from '../servisler/oyuncuEslesme.js';
+import { altLinkFinansOzeti, altLinkOyuncuListesi, ortakOyuncuListesi } from '../servisler/oyuncuEslesme.js';
 import { ortakBul, onayZorunlu } from '../servisler/ortaklar.js';
 import { postbackAyarla, postbackAyarlari, postbackKayitlari } from '../servisler/postback.js';
 import { altLinkTiklamaOzeti, tiklamalariListele, tiklamaOzeti } from '../servisler/tiklama.js';
@@ -84,6 +84,25 @@ export async function portalRotalari(app: FastifyInstance): Promise<void> {
       // soyleyebilsin diye durum da donuyor.
       ftd: await ftdDurumu(istek.kiraci),
     };
+  });
+
+  /**
+   * OYUNCULARIM — ortağa eşleşmiş TÜM oyuncular, alt linkten bağımsız.
+   *
+   * `/alt-linkler/:id/oyuncular` yalnızca o linkten kayıt olanları
+   * gösteriyor; toplu affiliate geçişiyle (kullanıcı adıyla) taşınan
+   * bir oyuncunun `altLinkId`'si hiç yok, o yüzden orada hiç
+   * görünmüyordu. Bu uç `ortakId`ye göre süzüyor — geçişle gelen de,
+   * organik gelen de aynı listede.
+   */
+  app.get('/oyuncularim', async (istek, yanit) => {
+    const oturum = istek.oturum!;
+    const ortak = oturum.ortakId ? await ortakBul(istek.kiraci, oturum.ortakId) : null;
+    if (!ortak) {
+      yanit.status(401);
+      return { hata: 'Hesap bulunamadı.' };
+    }
+    return { oyuncular: await ortakOyuncuListesi(istek.kiraci, ortak.id) };
   });
 
   app.get('/medya', async (istek) => ({

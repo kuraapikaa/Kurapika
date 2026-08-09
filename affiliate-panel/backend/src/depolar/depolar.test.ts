@@ -19,6 +19,7 @@ import {
   altLinkFinansOzeti,
   altLinkOyuncuListesi,
   ortakGunlukGeliriGuncelle,
+  ortakOyuncuListesi,
   oyunculariIcinGelirleriGuncelle,
 } from '../servisler/oyuncuEslesme.js';
 import { testVeritabaniAc } from '../../test/testVeritabani.js';
@@ -591,6 +592,54 @@ varsaCalistir('depo denkligi', () => {
 
     it('esleseni olmayan link icin bos liste doner', async () => {
       expect(await altLinkOyuncuListesi(KIRACI, 'yok-boyle-link')).toEqual([]);
+    });
+  });
+
+  /**
+   * `ortakOyuncuListesi`, `altLinkOyuncuListesi`den farkli olarak
+   * `altLinkId`'ye BAKMIYOR -- toplu affiliate gecisiyle (kullanici
+   * adiyla) tasinan bir oyuncunun `altLinkId`'si hep `null`dur ve
+   * `altLinkOyuncuListesi` onu hicbir zaman gostermez. Bu test tam o
+   * senaryoyu kapsiyor: `altLinkId: null` olan bir satirin da listede
+   * cikmasi gerekiyor.
+   */
+  describe('ortakOyuncuListesi', () => {
+    it('altLinkId olsun olmasin ortaga esles mis TUM oyunculari listeler', async () => {
+      const vt = veritabani()!;
+      await vt.insert(eslesmeTablosu).values([
+        {
+          // Toplu gecisle tasinan oyuncu: altLinkId YOK, tiklama gecmisi yok.
+          kiraci: KIRACI, lynonOyuncuId: 'p20', ortakId: 'ortak-b', ortakAnahtari: 'ORTAK-B',
+          clickId: null, medyaId: null, altLinkId: null, kullaniciAdi: 'gecis-kullanicisi', alt: {},
+          kaynak: 'elle', olusturuldu: new Date('2026-08-03T10:00:00Z'),
+        },
+        {
+          // Organik gelen oyuncu: altLinkId VAR.
+          kiraci: KIRACI, lynonOyuncuId: 'p21', ortakId: 'ortak-b', ortakAnahtari: 'ORTAK-B',
+          clickId: null, medyaId: null, altLinkId: 'link-organik', kullaniciAdi: 'organik01', alt: {},
+          kaynak: 'kayit', olusturuldu: new Date('2026-08-01T10:00:00Z'),
+        },
+        {
+          // Baska ortak: listede gorunmemeli.
+          kiraci: KIRACI, lynonOyuncuId: 'p22', ortakId: 'ortak-c', ortakAnahtari: 'ORTAK-C',
+          clickId: null, medyaId: null, altLinkId: null, kullaniciAdi: 'baska-ortagin-oyuncusu', alt: {},
+          kaynak: 'elle', olusturuldu: new Date('2026-08-03T10:00:00Z'),
+        },
+      ]);
+      await vt.insert(gunlukTablosu).values([
+        { kiraci: KIRACI, gun: '2026-08-03', oyuncuId: 'p20', yatirim: 500, cekim: 120, bahis: 0, kazanc: 0, olaySayisi: 1, guncellendi: new Date() },
+      ]);
+
+      const liste = await ortakOyuncuListesi(KIRACI, 'ortak-b');
+      // En yeni once.
+      expect(liste).toEqual([
+        { lynonOyuncuId: 'p20', kullaniciAdi: 'gecis-kullanicisi', yatirim: 500, cekim: 120, olusturuldu: '2026-08-03T10:00:00.000Z' },
+        { lynonOyuncuId: 'p21', kullaniciAdi: 'organik01', yatirim: 0, cekim: 0, olusturuldu: '2026-08-01T10:00:00.000Z' },
+      ]);
+    });
+
+    it('esleseni olmayan ortak icin bos liste doner', async () => {
+      expect(await ortakOyuncuListesi(KIRACI, 'yok-boyle-ortak')).toEqual([]);
     });
   });
 

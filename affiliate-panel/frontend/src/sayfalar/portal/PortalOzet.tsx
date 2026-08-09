@@ -1,7 +1,9 @@
-import { paraBicimi, useVeri } from '../../api';
+import { gunBicimi, paraBicimi, useVeri } from '../../api';
 import { CubukListesi, OlcuKarti, ZamanSerisi } from '../../grafik';
-import { Hata, Kart, Rozet, Yukleniyor } from '../../ui';
-import type { AltLinkGorunumu as AltLink, OrtakOzeti as Ozet, PortalBen as Ben, TiklamaOzeti } from '@sunucu/sozlesme.js';
+import { Hata, Hucre, Kart, Rozet, Satir, Tablo, Yukleniyor } from '../../ui';
+import type {
+  AltLinkGorunumu as AltLink, AltLinkOyuncusu, OrtakOzeti as Ozet, PortalBen as Ben, TiklamaOzeti,
+} from '@sunucu/sozlesme.js';
 
 const DURUM_ETIKETI = {
   bekliyor: 'Başvurunuz inceleniyor', onaylandi: 'Onaylı', askida: 'Askıda', reddedildi: 'Reddedildi',
@@ -33,6 +35,7 @@ export function PortalOzet() {
   }>('/api/portal/ozet');
   const tiklama = useVeri<{ ozet: TiklamaOzeti | null }>('/api/portal/tiklamalar');
   const linkler = useVeri<{ linkler: AltLink[] }>('/api/portal/alt-linkler');
+  const oyuncularim = useVeri<{ oyuncular: AltLinkOyuncusu[] }>('/api/portal/oyuncularim');
 
   if (ben.yukleniyor || ozet.yukleniyor) return <Yukleniyor />;
   if (ben.hata) return <Hata mesaj={ben.hata} />;
@@ -129,6 +132,30 @@ export function PortalOzet() {
           />
         </Kart>
       </div>
+      )}
+
+      {/* Toplu affiliate gecisiyle (kullanici adiyla) size baglanan bir
+          oyuncunun tiklama gecmisi yoktur, bu yuzden hicbir alt link
+          altinda gorunmez. Bu tablo, hangi yoldan geldigine bakmadan
+          size esles mis TUM oyunculari gosteriyor. */}
+      {!oyuncularim.yukleniyor && (oyuncularim.veri?.oyuncular.length ?? 0) > 0 && (
+        <Kart baslik="Oyuncularınız">
+          <Tablo basliklar={['Kullanıcı', 'Kayıt', 'Yatırım', 'Çekim']}>
+            {oyuncularim.veri!.oyuncular.map((o) => (
+              <Satir key={o.lynonOyuncuId}>
+                <Hucre>
+                  <span className="font-medium">{o.kullaniciAdi ?? o.lynonOyuncuId}</span>
+                  {!o.kullaniciAdi && (
+                    <span className="ml-1 text-xs" style={{ color: 'var(--metin-2)' }}>(kullanıcı adı bilinmiyor)</span>
+                  )}
+                </Hucre>
+                <Hucre><span className="text-xs">{gunBicimi(o.olusturuldu)}</span></Hucre>
+                <Hucre sagda><span className="tabular-nums">{paraBicimi(o.yatirim)}</span></Hucre>
+                <Hucre sagda><span className="tabular-nums">{paraBicimi(o.cekim)}</span></Hucre>
+              </Satir>
+            ))}
+          </Tablo>
+        </Kart>
       )}
 
       {(ozet.veri?.altOrtaklar ?? []).length > 0 && (
