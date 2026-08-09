@@ -246,10 +246,6 @@ export async function yonetimRotalari(app: FastifyInstance): Promise<void> {
     };
     const uyarilar: string[] = [];
     for (const baglanti of baglantilar) {
-      // GECICI TANI: gecmisGGR.ts'teki loglar yalnizca baglantiId basiyor,
-      // hangi ID'nin hangi baglantiya (ada) ait oldugunu burada eslestiriyoruz.
-      // railway logs ile okunacak, kok neden bulununca kaldirilacak.
-      console.error('[gecmis-ggr-tani-baglanti]', { id: baglanti.id, ad: baglanti.ad });
       try {
         const adaptor = await adaptorZorunlu(istek.kiraci, baglanti.id);
         const parca = await gecmisGGRDoldur(istek.kiraci, adaptor, baglanti.id, { geriGun: Number(govde.geriGun) || 30 });
@@ -258,6 +254,13 @@ export async function yonetimRotalari(app: FastifyInstance): Promise<void> {
         sonuc.yazilanOlcum += parca.yazilanOlcum;
         sonuc.hatali.push(...parca.hatali);
         if (parca.uyari) uyarilar.push(`${baglanti.ad}: ${parca.uyari}`);
+        // Gunluk hatalar sonuc.hatali'ya yaziliyor ama UI'da yalnizca
+        // SAYISI gorunuyor -- bir baglanti HER gun ayni sebeple basarisiz
+        // olduysa (orn. yanlis rapor kimligi) admin bunu Railway loglarina
+        // bakmadan gorebilsin diye ornek mesaji da uyariya ekliyoruz.
+        if (parca.hatali.length > 0) {
+          uyarilar.push(`${baglanti.ad}: ${parca.hatali.length} gün alınamadı (${parca.hatali[0].mesaj})`);
+        }
       } catch (hata) {
         // Bir baglantinin hatasi digerlerinin taranmasini engellememeli.
         uyarilar.push(`${baglanti.ad}: ${hata instanceof Error ? hata.message : 'bilinmeyen hata'}`);

@@ -69,26 +69,6 @@ async function gunuDoldur(
   if (!vt) return { eslesen: 0, yazilan: 0 };
 
   const satirlar = await adaptor.oyuncuGunuCek!(gun);
-
-  // GECICI TANI: onceki turda bu satir SADECE satirlar.length > 0 ise
-  // calisiyordu -- ikinci baglanti hicbir gun icin log basmadi, bu da onun
-  // HER GUN 0 satir dondurdugu (rapor bos) mu yoksa hic cagrilmadigi mi
-  // belirsiz birakiyordu. Artik HER turda basiyor. `railway logs` ile
-  // okunacak, kok neden bulununca ayri bir PR'da kaldirilacak.
-  {
-    const kayitliOrnek = await vt
-      .select({ lynonOyuncuId: oyuncuEslesmeleri.lynonOyuncuId })
-      .from(oyuncuEslesmeleri)
-      .where(and(eq(oyuncuEslesmeleri.kiraci, kiraci), eq(oyuncuEslesmeleri.baglantiId, baglantiId)))
-      .limit(5);
-    console.error('[gecmis-ggr-tani2] gun', {
-      kiraci, baglantiId, gun,
-      raporSatirSayisi: satirlar.length,
-      raporOrnekIdler: satirlar.slice(0, 5).map((s) => s.oyuncuId),
-      kayitliOrnekIdler: kayitliOrnek.map((e) => e.lynonOyuncuId),
-    });
-  }
-
   if (satirlar.length === 0) return { eslesen: 0, yazilan: 0 };
 
   const oyuncuIdler = [...new Set(satirlar.map((s) => s.oyuncuId))];
@@ -232,14 +212,7 @@ export async function gecmisGGRDoldur(
       sonuc.yazilanOlcum += yazilan;
       sonuc.tarananGun += 1;
     } catch (hata) {
-      const mesaj = hata instanceof Error ? hata.message : String(hata);
-      // GECICI TANI: [gecmis-ggr-tani2] hicbir gun icin Taco baglantisinda
-      // basmadi -- demek ki oyuncuGunuCek HER gun burada firlatiyor, ama
-      // gercek mesaj hic loglanmiyordu (yalnizca sonuc.hatali'ya yaziliyor,
-      // UI'da sadece SAYISI gosteriliyor). `railway logs` ile okunacak, kok
-      // neden bulununca kaldirilacak.
-      console.error('[gecmis-ggr-tani3] hata', { kiraci, baglantiId, gun, mesaj });
-      sonuc.hatali.push({ gun, mesaj });
+      sonuc.hatali.push({ gun, mesaj: hata instanceof Error ? hata.message : String(hata) });
     }
   }
   return sonuc;
