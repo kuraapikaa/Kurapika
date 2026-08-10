@@ -50,6 +50,11 @@ export function kodIsaretle(metin: string): string {
   return `˚˚${metin}˚˚`;
 }
 
+/** Satir ici italik vurgusu — `<i>...</i>`. Tarih/saat damgasi, ikincil not gibi. */
+export function italikIsaretle(metin: string): string {
+  return `··${metin}··`;
+}
+
 const ON_IZGARA_ISARETI = '¦¦PRE¦¦';
 
 /**
@@ -74,9 +79,10 @@ export function onIzgaraBlogu(icSatirlar: string[]): string {
  * kaciliyor — unutma riski yok.
  *
  * Sarmalayici isaretler (`kalinSatir`, `kalinIsaretle`, `kodIsaretle`,
- * `onIzgaraBlogu`) hepsi rapor verisinde (login, tutar, tarih) pratikte
- * hic gecmeyecek nadir karakter dizileri kullaniyor — dinamik bir deger
- * yanlislikla bir isaretle CAKISMAZ. Kacış SONRA uygulaniyor; isaret
+ * `italikIsaretle`, `onIzgaraBlogu`) hepsi rapor verisinde (login, tutar,
+ * tarih) pratikte hic gecmeyecek nadir karakter dizileri kullaniyor —
+ * dinamik bir deger yanlislikla bir isaretle CAKISMAZ. Kacış SONRA
+ * uygulaniyor; isaret
  * karakterleri escapeHtml'den etkilenmiyor, sira onemsiz.
  */
 export function gorselMesaj(satirlar: Array<string | null | undefined>): string {
@@ -91,7 +97,8 @@ export function gorselMesaj(satirlar: Array<string | null | undefined>): string 
       if (tamSatirKalin) return `<b>${escapeHtml(tamSatirKalin[1])}</b>`;
       return escapeHtml(satir)
         .replace(/°°(.*?)°°/g, '<b>$1</b>')
-        .replace(/˚˚(.*?)˚˚/g, '<code>$1</code>');
+        .replace(/˚˚(.*?)˚˚/g, '<code>$1</code>')
+        .replace(/··(.*?)··/g, '<i>$1</i>');
     })
     .join('\n');
 }

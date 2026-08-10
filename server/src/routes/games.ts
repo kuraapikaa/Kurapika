@@ -1534,9 +1534,13 @@ async function chargeBonusToPlayer(login: string, bonusId: number | null, label:
                 campaignId: Number(bonusId),
                 playerId: player.Id,
                 // Onek KORUNUYOR: oyunHakkiGecmisi.oyunOduluMu bunu ariyor.
+                // `kuralAnahtari` Lynon kampanya kimligi -- Telegram bonus
+                // bildiriminde "Kural Kodu" olarak geri okunuyor (bkz.
+                // telegramRaporu.bonusMesaji).
                 assignmentReason: atamaNotu({
                   onek: `Narcosbahis oyun ödülü: ${label || 'Ödül'}`,
                   kaynak: KAYNAK_ADI[kaynak],
+                  kuralAnahtari: bonusId,
                   talepEden: login,
                   tutar: explicitAmount,
                 }),

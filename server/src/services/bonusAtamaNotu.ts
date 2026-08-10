@@ -128,3 +128,17 @@ export function nottanKural(not: unknown): string | null {
   const deger = eslesme ? eslesme[1].trim() : '';
   return deger === '' ? null : deger;
 }
+
+/** Nottan kaynak yolunu geri okur ("Kaynak: telegram" -> "telegram"). */
+export function nottanKaynak(not: unknown): string | null {
+  const eslesme = /Kaynak:\s*([^|]+)/.exec(String(not ?? ''));
+  const deger = eslesme ? eslesme[1].trim() : '';
+  return deger === '' ? null : deger;
+}
+
+/** Nottan talebi yapan panel kullanicisini/otomasyonu geri okur. */
+export function nottanTalep(not: unknown): string | null {
+  const eslesme = /Talep:\s*([^|]+)/.exec(String(not ?? ''));
+  const deger = eslesme ? eslesme[1].trim() : '';
+  return deger === '' ? null : deger;
+}

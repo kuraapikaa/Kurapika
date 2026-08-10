@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { atamaNotu, nottanKural, nottanYatirimKimligi } from './bonusAtamaNotu.js';
+import {
+  atamaNotu, nottanKaynak, nottanKural, nottanTalep, nottanYatirimKimligi,
+} from './bonusAtamaNotu.js';
 import { oyunOduluMu } from './oyunHakkiGecmisi.js';
 
 const t = new Date('2026-08-02T00:14:00Z'); // TR: 02.08.2026 03:14
@@ -68,6 +70,17 @@ describe('geri okuma', () => {
     expect(nottanYatirimKimligi('Musteri telafisi')).toBeNull();
     expect(nottanKural('Musteri telafisi')).toBeNull();
     expect(nottanYatirimKimligi(null)).toBeNull();
+  });
+
+  it('kaynak ve talep eden geri okunur', () => {
+    const not = atamaNotu({ kaynak: 'telegram', kuralAnahtari: 'x', talepEden: 'zlfkr79' }, t);
+    expect(nottanKaynak(not)).toBe('telegram');
+    expect(nottanTalep(not)).toBe('zlfkr79');
+  });
+
+  it('elle yazılmış nottan kaynak/talep uydurulmaz', () => {
+    expect(nottanKaynak('Musteri telafisi')).toBeNull();
+    expect(nottanTalep('Musteri telafisi')).toBeNull();
   });
 });
 

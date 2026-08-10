@@ -19,7 +19,7 @@
  * bir toplam gostermek, farkin kaynagini gizlerdi.
  */
 
-import { gorselMesaj, kalinSatir } from './telegramService.js';
+import { gorselMesaj, italikIsaretle, kalinIsaretle, kalinSatir, kodIsaretle } from './telegramService.js';
 
 type AnyRecord = Record<string, any>;
 
@@ -367,13 +367,23 @@ export function mutabakatMesaji(input: {
   return gorselMesaj(parcalar);
 }
 
+/** ₺ önekli, tam sayı biçim — bu rapora özgü (diğer mutabakat mesajları "TRY" sonekli TR biçimini kullanır). */
+const PARA_EN = new Intl.NumberFormat('en-US');
+
+function tl(v: number): string {
+  return `₺${PARA_EN.format(Math.round(v))}`;
+}
+
+function tlIsaretli(v: number): string {
+  return `${v >= 0 ? '+' : '-'}${tl(Math.abs(v))}`;
+}
+
 /**
- * Yontem bazinda TUM ZAMANLAR kasa mesaji.
+ * Yontem bazinda kasa mesaji.
  *
- * `mutabakatMesaji`dan farkli: bu ay ozeti degil, BASLANGIC gununden
- * bugune KUMULATIF saglayici kirilimi — periyodik olarak (kasa ozetiyle
- * ayni ritimde) atilir ve "yontem basina su ana kadar toplam ne kadar
- * girdi/cikti" sorusunu cevaplar.
+ * `mutabakatMesaji`dan farkli: bu ay ozeti degil, VERILEN ARALIGIN
+ * (cagiran gunluk de gecebilir, ay da) saglayici kirilimi — periyodik
+ * olarak (kasa ozetiyle ayni ritimde) atilir.
  *
  * `satirlar` `satirlariManuelIleZenginlestir` ciktisiysa MANUEL cikarma/
  * ekleme de yontemin toplamina KATILIR (rapor rakami yaninda gorunur
@@ -386,7 +396,7 @@ export function mutabakatMesaji(input: {
  * onceden burada hic yazilmiyordu ve panelden yontem secmeden eklenen
  * her kalem bu raporda SESSIZCE KAYBOLUYORDU ("yöntem kasası manuel
  * işlemleri görmüyor" sikayetinin sebebi buydu). Artik ayri bir
- * "GENEL" bolumunde listeleniyor.
+ * "ATANMAMIŞ / ÖZEL KALEMLER" bolumunde listeleniyor.
  */
 export function yontemKasaMesaji(
   aralik: { baslangic: string; bitis: string },
@@ -394,9 +404,10 @@ export function yontemKasaMesaji(
   saat?: string | null,
   genelManuelKalemler?: ManuelKalem[],
 ): string {
+  const tarih = aralik.baslangic === aralik.bitis ? aralik.baslangic : `${aralik.baslangic} → ${aralik.bitis}`;
   const parcalar: Array<string | null> = [
-    kalinSatir('🏦✨ YÖNTEM BAZINDA KASA · TÜM ZAMANLAR'),
-    `🗓️ ${aralik.baslangic} → ${aralik.bitis}${saat ? ` · ${saat}` : ''}`,
+    kalinSatir('🏦 GÜNLÜK ÖDEME YÖNTEMLERİ KASA RAPORU'),
+    `📅 ${italikIsaretle(saat ? `${tarih} · ${saat}` : tarih)}`,
     AYIRAC,
   ];
 
@@ -417,46 +428,49 @@ export function yontemKasaMesaji(
       toplamCekim += duzeltilmisCekim;
       toplamManuelYatirim += manuelYatirim;
       toplamManuelCekim += manuelCekim;
+      const netIsaret = duzeltilmisNet >= 0 ? ' 🟢' : ' 🔴';
+
       parcalar.push(
         '',
-        `  🔹 ${satir.anahtar}`,
-        `    ⬇️ Yatırım: ${para(duzeltilmisYatirim)} (${satir.yatirimAdedi})` +
-          (manuelYatirim ? ` [rapor ${para(satir.yatirim)} + manuel ${para(manuelYatirim)}]` : ''),
-        `    ⬆️ Çekim:   ${para(duzeltilmisCekim)} (${satir.cekimAdedi})` +
-          (manuelCekim ? ` [rapor ${para(satir.cekim)} + manuel ${para(manuelCekim)}]` : ''),
-        `    ⚖️ Net:     ${para(duzeltilmisNet)}`,
+        `🔹 ${kalinIsaretle(satir.anahtar)}`,
+        `▫️ ${kalinIsaretle('Yatırım:')} ${tl(duzeltilmisYatirim)} (${satir.yatirimAdedi} İşlem)`,
+        `▫️ ${kalinIsaretle('Çekim:')} ${tl(duzeltilmisCekim)} (${satir.cekimAdedi} İşlem)`,
+        manuelYatirim ? `└ ${italikIsaretle(`Yatırım — Otomatik: ${tl(satir.yatirim)} | Manuel: ${tl(manuelYatirim)}`)}` : null,
+        manuelCekim ? `└ ${italikIsaretle(`Çekim — Otomatik: ${tl(satir.cekim)} | Manuel: ${tl(manuelCekim)}`)}` : null,
+        `▫️ ${kalinIsaretle('Net:')} ${tlIsaretli(duzeltilmisNet)}${netIsaret}`,
       );
     }
 
+    const toplamNet = toplamYatirim - toplamCekim;
     parcalar.push(
       '',
       AYIRAC,
-      `  💰 TOPLAM Yatırım: ${para(toplamYatirim)}`,
-      `  💸 TOPLAM Çekim:   ${para(toplamCekim)}`,
-      `  ⚖️ TOPLAM Net:     ${para(toplamYatirim - toplamCekim)}`,
+      kalinSatir('💰 GENEL TOPLAM İŞLEMLER'),
+      `• ${kalinIsaretle('Toplam Yatırım:')} ${tl(toplamYatirim)}`,
+      `• ${kalinIsaretle('Toplam Çekim:')} ${tl(toplamCekim)}`,
+      `• ${kalinIsaretle('Net Kasa Akışı:')} ${tlIsaretli(toplamNet)}${toplamNet >= 0 ? ' 🟢' : ' 🔴'}`,
+      (toplamManuelYatirim || toplamManuelCekim)
+        ? `🛠 ${italikIsaretle(`Manuel Müdahale: Yatırım +${tl(toplamManuelYatirim)} | Çekim +${tl(toplamManuelCekim)}`)}`
+        : null,
+      AYIRAC,
     );
-    if (toplamManuelYatirim || toplamManuelCekim) {
-      parcalar.push(`  ✏️ (manuel dahil: +${para(toplamManuelYatirim)} yatırım · +${para(toplamManuelCekim)} çekim)`);
-    }
   }
 
   // Yontemsiz manuel kalemler — hicbir satira eslenmedigi icin ustte
   // GORUNMEZLER. Burada AYRICA gosterilmezse rapor onlari sessizce
   // yutmus olur; operator "eklendi ama nereye gitti" diye sorardı.
   if (genelManuelKalemler && genelManuelKalemler.length > 0) {
-    const genelYatirim = genelManuelKalemler.filter((k) => k.tur === 'yatirim').reduce((t, k) => t + sayi(k.tutar), 0);
-    const genelCekim = genelManuelKalemler.filter((k) => k.tur === 'cekim').reduce((t, k) => t + sayi(k.tutar), 0);
     parcalar.push(
       '',
-      AYIRAC,
-      `  🔓 GENEL (yönteme atanmamış, ${genelManuelKalemler.length} kalem)`,
-      `    ⬇️ Yatırım: ${para(genelYatirim)}`,
-      `    ⬆️ Çekim:   ${para(genelCekim)}`,
+      kalinSatir(`⚠️ ATANMAMIŞ / ÖZEL KALEMLER (${genelManuelKalemler.length} Adet)`),
     );
     for (const kalem of genelManuelKalemler.slice(0, 10)) {
-      parcalar.push(`    • ${kalem.gun} ${kalem.tur === 'yatirim' ? '+' : '−'}${para(kalem.tutar)} — ${kalem.aciklama || 'açıklama yok'}`);
+      parcalar.push(
+        `• ${kalinIsaretle('Tutar:')} ${kalem.tur === 'yatirim' ? '+' : '-'}${tl(sayi(kalem.tutar))} ${kalem.tur === 'yatirim' ? 'Yatırım' : 'Çekim'}`,
+        `• ${kalinIsaretle('Detay:')} ${kodIsaretle(`${kalem.gun} — ${kalem.aciklama || 'açıklama yok'}`)}`,
+      );
     }
-    if (genelManuelKalemler.length > 10) parcalar.push(`    • … ${genelManuelKalemler.length - 10} kalem daha`);
+    if (genelManuelKalemler.length > 10) parcalar.push(`• … ${genelManuelKalemler.length - 10} kalem daha`);
   }
 
   return gorselMesaj(parcalar);

@@ -25,7 +25,10 @@
  * gercek bir bos akis olabilir ve oradaki ilk kayit BILDIRILMELIDIR.
  */
 
-import { gorselMesaj, kalinSatir } from './telegramService.js';
+import {
+  gorselMesaj, italikIsaretle, kalinIsaretle, kalinSatir, kodIsaretle,
+} from './telegramService.js';
+import { nottanKaynak, nottanKural, nottanTalep } from './bonusAtamaNotu.js';
 
 export type AkisImleci = {
   /** Bu akis en az bir kez tarandi mi? */
@@ -116,6 +119,13 @@ export function paraYaz(deger: unknown, kur = 'TRY'): string {
   const sayi = Number(deger);
   if (!Number.isFinite(sayi)) return '—';
   return `${TL.format(sayi)} ${kur}`;
+}
+
+/** "YYYY-MM-DD" (+ isteğe bağlı "HH:MM") -> "GG.AA.YYYY" (" — HH:MM"). */
+function gunSaatGoster(gun: string, saat?: string | null): string {
+  const [yil, ay, g] = gun.split('-');
+  const tarih = yil && ay && g ? `${g}.${ay}.${yil}` : gun;
+  return saat ? `${tarih} — ${saat}` : tarih;
 }
 
 /** ISO → "03.08.2026 05:12" (Turkiye saati). */
@@ -371,17 +381,50 @@ export function manuelDuzeltmeMesaji(satir: AnyRecord, gununDuzeltmeleri?: AnyRe
   ]);
 }
 
+/** Durum metnine göre kısa bir onay/red işareti; tanınmayan durum işaretsiz kalır. */
+function durumIsareti(durum: string): string {
+  const d = durum.toLocaleLowerCase('tr-TR');
+  if (/onay|kabul|başarılı|claimed|active/.test(d)) return '✅';
+  if (/red|iptal|başarısız|cancel|reject/.test(d)) return '❌';
+  if (/bekl|pending/.test(d)) return '⏳';
+  return '';
+}
+
+/**
+ * Bonus atama bildirimi.
+ *
+ * "Marka", "Kural Kodu", "Kaynak/Talep" `atamaNotu()`'nun ürettiği
+ * `Description`/`assignmentReason` metninden geri okunuyor (bkz.
+ * `bonusAtamaNotu.ts`) — panel/otomasyon zaten bu bilgiyi Lynon'a o
+ * biçimde yazıyordu, burada YENİDEN üretilmiyor. "Segment" (oyuncunun
+ * davranış kategorisi) şu an notta taşınmıyor; bir kaynak eklenene
+ * kadar bu satır hiç yazılmaz — "bilinmiyor" yazmak yerine hiç
+ * göstermemek, olmayan bir veriyi ölçülmüş gibi sunmaktan iyidir.
+ */
 export function bonusMesaji(satir: AnyRecord): string {
+  const not = satir.Description ?? '';
+  const kural = nottanKural(not);
+  const kaynak = nottanKaynak(not);
+  const talep = nottanTalep(not);
+  const durum = String(satir.Durum ?? '').trim();
+  const segment = satir.Segment ? String(satir.Segment).trim() : '';
+
   return gorselMesaj([
-    kalinSatir('🎁 BONUS VERİLDİ 🎊'),
+    kalinSatir('🎁 BONUS TANIMLANDI'),
     AYIRAC,
-    `👤 ${oyuncuYaz(satir.ClientLogin, satir.ClientId)}`,
-    `🏆 ${String(satir.Name ?? 'Bonus')}`,
-    satir.TotalPaidAmount ? `💵 Ödenen: ${paraYaz(satir.TotalPaidAmount, satir.ClientCurrency ?? 'TRY')}` : null,
-    satir.Kategori ? `🏷️ ${satir.Kategori}` : null,
-    satir.Durum ? `📌 ${satir.Durum}` : null,
-    satir.Description ? `📝 ${satir.Description}` : null,
-    `🕒 ${saatYaz(satir.CreatedLocal)}`,
+    '',
+    `👤 ${kalinIsaretle('Oyuncu:')} ${kodIsaretle(String(satir.ClientLogin ?? '') || 'bilinmeyen')} (ID: ${kodIsaretle(String(satir.ClientId ?? '—'))})`,
+    segment ? `🏷️ ${kalinIsaretle('Segment:')} ${segment}` : null,
+    `🏆 ${kalinIsaretle('Bonus:')} ${String(satir.Name ?? 'Bonus')}`,
+    satir.TotalPaidAmount ? `💰 ${kalinIsaretle('Değer:')} ${paraYaz(satir.TotalPaidAmount, satir.ClientCurrency ?? 'TRY')}` : null,
+    '',
+    kalinSatir('⚙️ SİSTEM DETAYLARI'),
+    `• ${kalinIsaretle('Marka:')} Narcosbahis`,
+    kural ? `• ${kalinIsaretle('Kural Kodu:')} ${kodIsaretle(kural)}` : null,
+    (kaynak || talep) ? `• ${kalinIsaretle('Kaynak / Talep:')} ${kaynak || '—'} / ${talep || '—'}` : null,
+    durum ? `• ${kalinIsaretle('Durum:')} ${durumIsareti(durum)} ${durum}`.trim() : null,
+    '',
+    `🕒 ${italikIsaretle(saatYaz(satir.CreatedLocal).replace(' ', ' — '))}`,
   ]);
 }
 
@@ -417,17 +460,32 @@ export type KasaOzeti = {
   enCokOynananOyunlar?: Array<{ ad: string; ciro: number }> | null;
 };
 
+/** ₺ önekli, virgüllü-ondalık biçim — bu rapora özgü (diğer raporlar "TRY" sonekli TR biçimini kullanır). */
+const PARA_EN = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+/** Tam sayı alanlar (oyuncu/işlem sayısı) — aynı ₺ raporunun virgüllü biçimiyle tutarlı. */
+const TAM = new Intl.NumberFormat('en-US');
+
+function tlYaz(v: number | null): string {
+  return v === null ? '—' : `₺${PARA_EN.format(v)}`;
+}
+
+/** İşaretli tutar: pozitif "+₺...", negatif "-₺...". Net/kâr-zarar gibi yönü önemli alanlar için. */
+function tlIsaretli(v: number | null): string {
+  if (v === null) return '—';
+  return `${v >= 0 ? '+' : '-'}${tlYaz(Math.abs(v))}`;
+}
+
 /**
- * Onceki ozete gore trend oku.
- *
- * Ikisinden biri bilinmiyorsa BOS DONER — "degisim yok" ile "olculemedi"
- * ayni sey degil, karisik trend okumaktansa hic gostermemek daha dogru.
+ * Onceki ozete gore YUZDE trend oku. Ikisinden biri bilinmiyorsa ya da
+ * onceki tam sifirsa (yuzde tanimsiz) BOS DONER — "degisim yok" ile
+ * "olculemedi" ayni sey degil, karisik trend okumaktansa hic
+ * gostermemek daha dogru.
  */
-function trendYaz(simdi: number | null, onceki: number | null | undefined): string {
-  if (simdi === null || onceki === null || onceki === undefined) return '';
-  const fark = simdi - onceki;
-  if (fark === 0) return ' ▪️0';
-  return fark > 0 ? ` ▲${TL.format(fark)}` : ` ▼${TL.format(Math.abs(fark))}`;
+function yuzdeTrendYaz(simdi: number | null, onceki: number | null | undefined): string {
+  if (simdi === null || onceki === null || onceki === undefined || onceki === 0) return '';
+  const yuzde = ((simdi - onceki) / Math.abs(onceki)) * 100;
+  if (Math.abs(yuzde) < 0.05) return '';
+  return ` (${yuzde > 0 ? '▲' : '▼'}%${Math.abs(yuzde).toFixed(1)})`;
 }
 
 /**
@@ -448,21 +506,16 @@ function kasaKapanisNotu(kar: number | null): string | null {
  * Olculemeyen alan "—" yazilir, sifir DEGIL. Panoda bu ayrimi kurmak
  * icin ayri bir PR gerekti; ayni yalani Telegram'da tekrarlamiyoruz.
  *
- * `onceki` verilirse yatirim/cekim/net/GGR yaninda bir onceki ozete gore
- * ok isaretiyle degisim gosterilir (20 dakikalik periyotta "yon" bir
- * bakista gorulsun diye). Verilmezse trend satiri hic eklenmez —
- * elle gonderilen tek seferlik ozette (panel butonu) karsilastirilacak
+ * `onceki` verilirse NET KÂR/ZARAR yaninda bir onceki ozete gore YUZDE
+ * degisim gosterilir (20 dakikalik periyotta "yon" bir bakista
+ * gorulsun diye). Verilmezse trend satiri hic eklenmez — elle
+ * gonderilen tek seferlik ozette (panel butonu) karsilastirilacak
  * "onceki" olmadigi icin uydurulmaz.
  */
 export function kasaMesaji(ozet: KasaOzeti, onceki?: KasaOzeti | null): string {
   const y = ozet.yatirim;
   const c = ozet.cekim;
   const net = y === null && c === null ? null : (y ?? 0) - (c ?? 0);
-  const oncekiNet = onceki && (onceki.yatirim !== null || onceki.cekim !== null)
-    ? (onceki.yatirim ?? 0) - (onceki.cekim ?? 0)
-    : null;
-  const sayi = (v: number | null) => (v === null ? '—' : TL.format(v));
-  const p = (v: number | null) => (v === null ? '—' : paraYaz(v));
 
   // Bonus maliyeti: kasadan cikan bonus kalemleri. Bilinmeyen alan
   // toplama katilmaz; hepsi bilinmiyorsa "—".
@@ -470,52 +523,56 @@ export function kasaMesaji(ozet: KasaOzeti, onceki?: KasaOzeti | null): string {
   const bonusMaliyeti = bonusKalemleri.some((v) => v !== null)
     ? bonusKalemleri.reduce<number>((t, v) => t + (v ?? 0), 0)
     : null;
+  const cashbackOdeme = ozet.bonusOdeme === null && ozet.cashback === null
+    ? null
+    : (ozet.bonusOdeme ?? 0) + (ozet.cashback ?? 0);
 
   // Net yon isareti: kasaya para girdi mi cikti mi, bir bakista.
   const netIsaret = net === null ? '' : net >= 0 ? ' 🟢' : ' 🔴';
+  const karIsaret = ozet.kar === null ? '' : ozet.kar >= 0 ? ' 🟢' : ' 🔴';
 
   // Elde tutma orani (hold %) — kar / gercek bahis. Standart casino KPI'i;
-  // yalnizca ikisi de olculebildiyse hesaplanir.
+  // yalnizca ikisi de olculebildiyse hesaplanir. Negatifse (oyuncular
+  // kazandi) uyari isareti eklenir -- operator bunu bir bakista gormeli.
   const holdOrani = ozet.kar !== null && ozet.gercekBahis
     ? (ozet.kar / ozet.gercekBahis) * 100
     : null;
-  const ortalamaYatirim = y !== null && ozet.yatirimAdedi
-    ? y / ozet.yatirimAdedi
-    : null;
+  const holdUyari = holdOrani !== null && holdOrani < 0 ? ' ⚠️' : '';
 
   const satirlar = [
-    kalinSatir(`📊✨ KASA ÖZETİ · ${ozet.gun}${ozet.saat ? ` · ${ozet.saat}` : ''}`),
+    kalinSatir('📊 KASA ÖZET RAPORU'),
+    `📅 ${italikIsaretle(gunSaatGoster(ozet.gun, ozet.saat))}`,
     AYIRAC,
-    kalinSatir('💰 PARA'),
-    `  ⬇️ Yatırım:  ${p(y)}${trendYaz(y, onceki?.yatirim)}${ozet.yatirimOyuncu !== null ? ` · ${ozet.yatirimOyuncu} oyuncu` : ''}${ozet.yatirimAdedi !== null ? ` · ${ozet.yatirimAdedi} işlem` : ''}`,
-    `  ⬆️ Çekim:    ${p(c)}${trendYaz(c, onceki?.cekim)}${ozet.cekimOyuncu !== null ? ` · ${ozet.cekimOyuncu} oyuncu` : ''}`,
-    `  ⚖️ Net:      ${p(net)}${netIsaret}${trendYaz(net, oncekiNet)}`,
-    ortalamaYatirim !== null ? `  Ort. yatırım: ${p(ortalamaYatirim)}` : null,
     '',
-    kalinSatir('🎰 OYUN'),
-    `  GGR:      ${p(ozet.ggr)}${trendYaz(ozet.ggr, onceki?.ggr)}`,
-    `  Kâr:      ${p(ozet.kar)}${trendYaz(ozet.kar, onceki?.kar)}`,
-    `  Bahis:    ${p(ozet.gercekBahis)}${ozet.bahisAdedi !== null ? ` · ${sayi(ozet.bahisAdedi)} bahis` : ''}`,
-    `  Kazanç:   ${p(ozet.gercekKazanc)}`,
-    `  Elde tutma: ${holdOrani === null ? '—' : `%${holdOrani.toFixed(1)}`}`,
+    kalinSatir('💵 FİNANS & NAKİT AKIŞI'),
+    `▫️ ${kalinIsaretle('Yatırım:')} ${tlYaz(y)}${ozet.yatirimOyuncu !== null ? ` (${ozet.yatirimOyuncu} oyuncu)` : ''}`,
+    `▫️ ${kalinIsaretle('Çekim:')} ${tlYaz(c)}${ozet.cekimOyuncu !== null ? ` (${ozet.cekimOyuncu} oyuncu)` : ''}`,
+    `▫️ ${kalinIsaretle('Net Kasa Akışı:')} ${tlIsaretli(net)}${netIsaret}`,
+    '',
+    kalinSatir('🎰 OYUN PERFORMANSI'),
+    `▫️ ${kalinIsaretle('Ciro (Turnover):')} ${tlYaz(ozet.gercekBahis)}${ozet.bahisAdedi !== null ? ` (${TAM.format(ozet.bahisAdedi)} Bahis)` : ''}`,
+    `▫️ ${kalinIsaretle('Ödenen Kazanç:')} ${tlYaz(ozet.gercekKazanc)}`,
+    `▫️ ${kalinIsaretle('GGR (Brüt Gelir):')} ${tlYaz(ozet.ggr)}`,
+    `▫️ ${kalinIsaretle('Net Kâr / Zarar:')} ${tlIsaretli(ozet.kar)}${karIsaret}${yuzdeTrendYaz(ozet.kar, onceki?.kar)}`,
+    `▫️ ${kalinIsaretle('Elde Tutma (Hold):')} ${holdOrani === null ? '—' : `%${holdOrani.toFixed(1)}`}${holdUyari}`,
     ozet.enCokOynananOyunlar && ozet.enCokOynananOyunlar.length > 0
-      ? `  En çok oynanan: ${ozet.enCokOynananOyunlar.map((o) => `${o.ad} (${p(o.ciro)})`).join(', ')}`
+      ? [
+        '',
+        kalinIsaretle('🏆 En Çok Oynanan Oyunlar:'),
+        ...ozet.enCokOynananOyunlar.map((o) => `• ${o.ad} — ${tlYaz(o.ciro)}`),
+      ].join('\n')
       : null,
     '',
-    kalinSatir('🎁 BONUS'),
-    `  Maliyet:  ${p(bonusMaliyeti)}`,
-    `  Freespin: ${p(ozet.freespinKazanc)}`,
-    `  Ödeme:    ${p(ozet.bonusOdeme)}`,
-    `  Cashback: ${p(ozet.cashback)}`,
+    kalinSatir('🎁 BONUS MALİYETİ'),
+    `▫️ ${kalinIsaretle('Toplam Bonus:')} ${tlYaz(bonusMaliyeti)}`,
+    `└ ${italikIsaretle(`Freespin: ${tlYaz(ozet.freespinKazanc)} | Cashback / Ödeme: ${tlYaz(cashbackOdeme)}`)}`,
     '',
-    kalinSatir('👥 OYUNCU'),
-    `  Yeni kayıt:     ${sayi(ozet.yeniKayit)}`,
-    `  İlk yatırım:    ${sayi(ozet.ilkYatirim)}`,
-    `  Bahis yapan:    ${sayi(ozet.bahisOyuncu)}`,
-    `  Gerçek bakiye:  ${p(ozet.oyuncuBakiyesi)}`,
-    `  Bonus bakiye:   ${p(ozet.bonusBakiye)}`,
+    kalinSatir('👥 OYUNCU & BAKİYE'),
+    `▫️ ${kalinIsaretle('Yeni Kayıt:')} ${ozet.yeniKayit === null ? '—' : TAM.format(ozet.yeniKayit)} | ${kalinIsaretle('FTD (İlk Yatırım):')} ${ozet.ilkYatirim === null ? '—' : TAM.format(ozet.ilkYatirim)}`,
+    `▫️ ${kalinIsaretle('Aktif Bahisçi:')} ${ozet.bahisOyuncu === null ? '—' : TAM.format(ozet.bahisOyuncu)} Oyuncu`,
+    `▫️ ${kalinIsaretle('Kullanıcı Bakiyeleri:')} ${tlYaz(ozet.oyuncuBakiyesi)} (Gerçek) | ${tlYaz(ozet.bonusBakiye)} (Bonus)`,
     kasaKapanisNotu(ozet.kar) ? '' : null,
-    kasaKapanisNotu(ozet.kar),
+    kasaKapanisNotu(ozet.kar) ? `${italikIsaretle(kasaKapanisNotu(ozet.kar)!)}` : null,
   ];
 
   return gorselMesaj(satirlar);

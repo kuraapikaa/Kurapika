@@ -3100,29 +3100,26 @@ export async function lynonAylikKapanisMutabakati(body: AnyRecord = {}): Promise
 }
 
 /**
- * Yontem bazinda kasa raporunun basladigi gun.
+ * Yontem bazinda GUNLUK kasa durumu — mutabakat DEGIL, kumulatif de
+ * DEGIL, tek gunun saglayici kirilimi.
  *
- * Oncesi test islemleri — siteye gercek trafik bu tarihten itibaren
- * baslamis. Sabit tutuluyor ki rapor her turda AYNI baslangic noktasindan
- * kumulatif kalsin.
- */
-const YONTEM_KASA_BASLANGIC = '2026-07-28';
-
-/**
- * Yontem bazinda TUM ZAMANLAR kasa durumu — mutabakat DEGIL, gunluk de
- * DEGIL, KUMULATIF.
- *
- * Ayni rapor (1842) kullanilir ama araligi `YONTEM_KASA_BASLANGIC`'tan
- * bugune: "su ana kadar hangi yontemden toplam ne kadar para girdi/cikti"
- * sorusunu cevaplar. Manuel mutabakat kalemleri de (yonteme etiketliyse)
- * ilgili satira islenir — bu rapor bilerek "rapor ile manuel ayri
- * gosterilir" felsefesinden sapiyor, cunku istenen tam olarak "manuel
- * cikarmalar dahil GUNCEL durum". Kasa ozetiyle (dashboard toplami) ayni
- * ritimde periyodik olarak Telegram'a atilir.
+ * Ayni rapor (1842) kullanilir, varsayilan aralik BUGUN → BUGUN:
+ * "bugun hangi yontemden ne kadar para girdi/cikti" sorusunu cevaplar.
+ * Once (`YONTEM_KASA_BASLANGIC`'tan bugune) KUMULATIF calisiyordu ama
+ * hem rota yorumu ("GÜNLÜK kasa raporu") hem Telegram baslik metni
+ * hep "gunluk" diyordu -- uygulama ile niyet arasindaki bu fark
+ * duzeltildi. `body.baslangic`/`body.bitis` verilirse (ornegin panelden
+ * ozel bir aralik istenirse) hala saygi gorur. Manuel mutabakat
+ * kalemleri de (yonteme etiketliyse) ilgili satira islenir — bu rapor
+ * bilerek "rapor ile manuel ayri gosterilir" felsefesinden sapiyor,
+ * cunku istenen tam olarak "manuel cikarmalar dahil GUNCEL durum".
+ * Kasa ozetiyle (dashboard toplami) ayni ritimde periyodik olarak
+ * Telegram'a atilir.
  */
 export async function lynonYontemBazindaKasa(body: AnyRecord = {}): Promise<AnyRecord> {
-  const baslangic = String(body.baslangic ?? YONTEM_KASA_BASLANGIC);
-  const bitis = String(body.bitis ?? todayYmd());
+  const bugun = todayYmd();
+  const baslangic = String(body.baslangic ?? bugun);
+  const bitis = String(body.bitis ?? bugun);
   const tenantKey = String(body.tenantKey ?? 'default');
 
   const rapor = await raporGetir(NARCOS_REPORT_IDS.integrationPayment, 'Report By Integration Payment', {
@@ -3134,7 +3131,7 @@ export async function lynonYontemBazindaKasa(body: AnyRecord = {}): Promise<AnyR
   const raporSatirlari = mutabakatSatirlari(rowsFromReportData(data));
 
   const tumKalemler = await mutabakatManuelKalemleriOku(tenantKey);
-  // Baslangictan ONCEKI manuel kalemler test donemine ait; disaridadir.
+  // Baslangictan ONCEKI manuel kalemler bu araligin disinda.
   const manuel = tumKalemler.filter((kalem) => String(kalem.gun ?? '') >= baslangic);
   const satirlar = satirlariManuelIleZenginlestir(raporSatirlari, manuel);
   // Yontemsiz kalemler hicbir satira eslenmez; ayri gosterilmezse rapor

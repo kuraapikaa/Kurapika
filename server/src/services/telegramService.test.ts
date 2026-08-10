@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  escapeHtml, gorselMesaj, kalinIsaretle, kalinSatir, kodIsaretle, onIzgaraBlogu,
+  escapeHtml, gorselMesaj, italikIsaretle, kalinIsaretle, kalinSatir, kodIsaretle, onIzgaraBlogu,
 } from './telegramService.js';
 
 describe('escapeHtml', () => {
@@ -62,6 +62,15 @@ describe('gorselMesaj', () => {
 
   it('onIzgaraBlogu içeriğini de kaçar', () => {
     expect(gorselMesaj([onIzgaraBlogu(['<script>x</script>'])])).toBe('<pre>&lt;script&gt;x&lt;/script&gt;</pre>');
+  });
+
+  it('italikIsaretle ile satır içi <i> üretir, geri kalanı düz kalır', () => {
+    expect(gorselMesaj([`🕒 ${italikIsaretle('10.08.2026 — 09:22')}`]))
+      .toBe('🕒 <i>10.08.2026 — 09:22</i>');
+  });
+
+  it('italikIsaretle içeriğini de kaçar', () => {
+    expect(gorselMesaj([italikIsaretle('Tom & Jerry')])).toBe('<i>Tom &amp; Jerry</i>');
   });
 
   it('gerçek raporda geçebilecek düz metin işaretlerle karışmaz', () => {

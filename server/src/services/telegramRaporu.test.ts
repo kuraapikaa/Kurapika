@@ -140,13 +140,52 @@ describe('biçimleme', () => {
     expect(correctionMesaji({ ClientId: 1, Amount: 500, CorrectionType: 'crediting' })).toContain('GİRİŞ');
   });
 
-  it('bonus mesajı atama notunu taşır', () => {
+  it('bonus mesajı atama notundan kaynak/talebi geri okuyup yazar', () => {
     const mesaj = bonusMesaji({
       ClientId: 2501238, Name: '100 FS Telegram Katıl Bonusu',
-      Description: 'Kaynak: telegram | Talep: zlfkr79',
+      Description: 'Narcosbahis oyun ödülü: 100 FS | Kaynak: telegram | Talep: zlfkr79',
     });
     expect(mesaj).toContain('100 FS Telegram Katıl Bonusu');
-    expect(mesaj).toContain('Kaynak: telegram');
+    expect(mesaj).toContain('Kaynak / Talep:</b> telegram / zlfkr79');
+  });
+
+  it('bonus mesajı kural kodunu notundan geri okur', () => {
+    const mesaj = bonusMesaji({
+      ClientId: 2527735, ClientLogin: 'ronican', Name: '100 FS Telegram Katıl Bonusu',
+      TotalPaidAmount: 100, ClientCurrency: 'TRY', Durum: 'Onaylandı',
+      Description: 'Narcosbahis oyun ödülü: 100 FS | Kaynak: panel | Kural: 1885 | Talep: System',
+      CreatedLocal: '2026-08-10T06:22:00Z',
+    });
+    expect(mesaj).toContain('Oyuncu:</b> <code>ronican</code> (ID: <code>2527735</code>)');
+    expect(mesaj).toContain('Bonus:</b> 100 FS Telegram Katıl Bonusu');
+    expect(mesaj).toContain('Değer:</b> 100 TRY');
+    expect(mesaj).toContain('Marka:</b> Narcosbahis');
+    expect(mesaj).toContain('Kural Kodu:</b> <code>1885</code>');
+    expect(mesaj).toContain('Kaynak / Talep:</b> panel / System');
+    expect(mesaj).toContain('Durum:</b> ✅ Onaylandı');
+  });
+
+  it('kural kodu yoksa o satır hiç yazılmaz', () => {
+    expect(bonusMesaji({ ClientId: 1, Name: 'X', Description: 'Kaynak: panel' })).not.toContain('Kural Kodu');
+  });
+
+  it('segment verilmezse o satır hiç yazılmaz -- uydurulmaz', () => {
+    expect(bonusMesaji({ ClientId: 1, Name: 'X' })).not.toContain('Segment');
+  });
+
+  it('segment verilirse yazılır', () => {
+    expect(bonusMesaji({ ClientId: 1, Name: 'X', Segment: 'Yeni Oyuncu' })).toContain('Segment:</b> Yeni Oyuncu');
+  });
+
+  it('atama notu yoksa sistem detayları bölümü yalnızca markayı gösterir', () => {
+    const mesaj = bonusMesaji({ ClientId: 1, Name: 'X' });
+    expect(mesaj).toContain('Marka:</b> Narcosbahis');
+    expect(mesaj).not.toContain('Kaynak / Talep');
+    expect(mesaj).not.toContain('Durum');
+  });
+
+  it('red durumunu ❌ ile işaretler', () => {
+    expect(bonusMesaji({ ClientId: 1, Name: 'X', Durum: 'Reddedildi' })).toContain('❌ Reddedildi');
   });
 });
 
@@ -340,21 +379,25 @@ describe('kasa özeti', () => {
     freespinKazanc: null, bonusOdeme: null, cashback: null,
   };
 
-  it('bildirilen günü doğru yazar', () => {
+  it('bildirilen günü GG.AA.YYYY biçiminde yazar', () => {
+    expect(kasaMesaji(BOS_OZET)).toContain('03.08.2026');
+  });
+
+  it('temel para alanlarını ₺ biçiminde yazar', () => {
     const mesaj = kasaMesaji({
       ...BOS_OZET,
       yatirim: 11_000, cekim: 3_400, ggr: -24_737.14,
       kar: -58_973.17, yeniKayit: 19, yatirimOyuncu: 2, cekimOyuncu: 1,
       oyuncuBakiyesi: 66_573.17,
     });
-    expect(mesaj).toContain('11.000 TRY');
-    expect(mesaj).toContain('3.400 TRY');
-    expect(mesaj).toContain('7.600 TRY'); // net
+    expect(mesaj).toContain('₺11,000.00');
+    expect(mesaj).toContain('₺3,400.00');
+    expect(mesaj).toContain('+₺7,600.00'); // net, isaretli
   });
 
   it('ölçülemeyen alanı sıfır göstermez', () => {
     const mesaj = kasaMesaji(BOS_OZET);
-    expect(mesaj).not.toContain('0 TRY');
+    expect(mesaj).not.toContain('₺0.00');
     expect(mesaj).toContain('—');
   });
 
@@ -364,71 +407,73 @@ describe('kasa özeti', () => {
       gercekBahis: 95_173.9, gercekKazanc: 119_505.74, bahisAdedi: 3475,
       bahisOyuncu: 15, ilkYatirim: 3, freespinKazanc: 828.9,
     });
-    expect(mesaj).toContain('95.173,9 TRY');
-    expect(mesaj).toContain('3.475 bahis');
-    expect(mesaj).toContain('828,9 TRY');
+    expect(mesaj).toContain('₺95,173.90');
+    expect(mesaj).toContain('3,475 Bahis');
+    expect(mesaj).toContain('₺828.90');
   });
 
   it('bonus maliyetini kalemlerden toplar', () => {
     const mesaj = kasaMesaji({ ...BOS_OZET, freespinKazanc: 800, bonusOdeme: 200, cashback: 100 });
-    expect(mesaj).toContain('Maliyet:  1.100 TRY');
+    expect(mesaj).toContain('Toplam Bonus:</b> ₺1,100.00');
   });
 
   it('bonus kalemlerinin hiçbiri bilinmiyorsa maliyet uydurulmaz', () => {
     // Bilinmeyeni sifir sayip "0 TRY maliyet" yazmak, bonus giderini yok gosterir.
-    expect(kasaMesaji(BOS_OZET)).toContain('Maliyet:  —');
+    expect(kasaMesaji(BOS_OZET)).toContain('Toplam Bonus:</b> —');
   });
 
-  it('saat verildiyse başlığa yazar — 20 dakikalık mesajlar karışmasın', () => {
-    expect(kasaMesaji({ ...BOS_OZET, saat: '14:20' })).toContain('· 14:20');
+  it('cashback ve ödemeyi tek satırda toplar', () => {
+    const mesaj = kasaMesaji({ ...BOS_OZET, bonusOdeme: 200, cashback: 100 });
+    expect(mesaj).toContain('Cashback / Ödeme: ₺300.00');
+  });
+
+  it('saat verildiyse tarih satırına eklenir — 20 dakikalık mesajlar karışmasın', () => {
+    expect(kasaMesaji({ ...BOS_OZET, saat: '14:20' })).toContain('03.08.2026 — 14:20');
   });
 
   it('elde tutma oranını yazar', () => {
     const mesaj = kasaMesaji({ ...BOS_OZET, kar: 1000, gercekBahis: 4000 });
-    expect(mesaj).toContain('Elde tutma: %25.0');
+    expect(mesaj).toContain('%25.0');
+  });
+
+  it('elde tutma negatifse uyarı işareti ekler', () => {
+    const mesaj = kasaMesaji({ ...BOS_OZET, kar: -1000, gercekBahis: 4000 });
+    expect(mesaj).toContain('%-25.0 ⚠️');
   });
 
   it('elde tutma ölçülemiyorsa uydurulmaz', () => {
-    expect(kasaMesaji(BOS_OZET)).toContain('Elde tutma: —');
+    const mesaj = kasaMesaji(BOS_OZET);
+    expect(mesaj).toContain('Elde Tutma (Hold):</b> —');
+    expect(mesaj).not.toContain('⚠️');
   });
 
-  it('ortalama yatırımı yazar', () => {
-    const mesaj = kasaMesaji({ ...BOS_OZET, yatirim: 10_000, yatirimAdedi: 4 });
-    expect(mesaj).toContain('Ort. yatırım: 2.500 TRY');
+  it('önceki özete göre kâr/zarar için yüzde artış okunu yazar', () => {
+    const mesaj = kasaMesaji({ ...BOS_OZET, kar: 1_500 }, { ...BOS_OZET, kar: 1_000 });
+    expect(mesaj).toContain('▲%50.0');
   });
 
-  it('yatırım adedi bilinmiyorsa ortalama satırı eklenmez', () => {
-    expect(kasaMesaji({ ...BOS_OZET, yatirim: 10_000 })).not.toContain('Ort. yatırım');
-  });
-
-  it('önceki özete göre artış okunu yazar', () => {
-    const mesaj = kasaMesaji(
-      { ...BOS_OZET, yatirim: 15_000, cekim: 3_000 },
-      { ...BOS_OZET, yatirim: 10_000, cekim: 3_000 },
-    );
-    expect(mesaj).toContain('▲5.000');
-  });
-
-  it('önceki özete göre azalış okunu yazar', () => {
-    const mesaj = kasaMesaji(
-      { ...BOS_OZET, ggr: 1_000 },
-      { ...BOS_OZET, ggr: 4_000 },
-    );
-    expect(mesaj).toContain('▼3.000');
+  it('önceki özete göre kâr/zarar için yüzde azalış okunu yazar', () => {
+    const mesaj = kasaMesaji({ ...BOS_OZET, kar: -32_228.75 }, { ...BOS_OZET, kar: -20_360 });
+    expect(mesaj).toContain('▼%58.3');
   });
 
   it('önceki özet verilmezse trend oku eklenmez', () => {
-    const mesaj = kasaMesaji({ ...BOS_OZET, yatirim: 15_000 });
-    expect(mesaj).not.toContain('▲');
-    expect(mesaj).not.toContain('▼');
+    const mesaj = kasaMesaji({ ...BOS_OZET, kar: 1_500 });
+    expect(mesaj).not.toContain('▲%');
+    expect(mesaj).not.toContain('▼%');
   });
 
-  it('en çok oynanan oyunları yazar', () => {
+  it('en çok oynanan oyunları madde madde yazar', () => {
     const mesaj = kasaMesaji({
       ...BOS_OZET,
       enCokOynananOyunlar: [{ ad: 'Sweet Bonanza', ciro: 12_500 }, { ad: 'Gates of Olympus', ciro: 8_000 }],
     });
-    expect(mesaj).toContain('En çok oynanan: Sweet Bonanza (12.500 TRY), Gates of Olympus (8.000 TRY)');
+    expect(mesaj).toContain('• Sweet Bonanza — ₺12,500.00');
+    expect(mesaj).toContain('• Gates of Olympus — ₺8,000.00');
+  });
+
+  it('en çok oynanan oyun verilmezse bölüm hiç yazılmaz', () => {
+    expect(kasaMesaji(BOS_OZET)).not.toContain('En Çok Oynanan');
   });
 
   it('en çok oynanan oyun verilmezse o satırı yazmaz', () => {
