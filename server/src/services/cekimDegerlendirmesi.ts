@@ -239,6 +239,14 @@ export type CekimBaglami = {
   sonKullanilanBonus: { ad: string; tutar: number | null; tarih: string | null; durum: string | null } | null;
   /** Son yatirimdan sonra en cok oynanan casino oyunlari, bahis adedine gore. */
   enCokOynananOyunlar: Array<{ ad: string; adet: number; bahis: number }>;
+  /**
+   * En son manuel bakiye duzeltmeleri (crediting/debiting), en yeniden
+   * eskiye. Operator "bu oyuncuya elle para eklendi/cikarildi mi"
+   * sorusunu cekim kararindan once, ayri bir uca bakmadan gorsun diye.
+   */
+  sonManuelDuzeltmeler: Array<{ tur: 'crediting' | 'debiting'; tutar: number; tarih: string | null; not: string | null; yapan: string | null }>;
+  /** Manuel duzeltme gecmisi olculebildi mi? */
+  manuelDuzeltmeOlculdu: boolean;
 };
 
 function paraYaz(deger: number | null, kur = 'TRY'): string {
@@ -387,6 +395,24 @@ export function cekimBaglamMesaji(baslik: string, b: CekimBaglami, simdi = Date.
     if (b.notlar.length > 5) satirlar.push(`  • … ${b.notlar.length - 5} not daha`);
   } else {
     satirlar.push('  Profil notu yok.');
+  }
+
+  // ── Manuel bakiye duzeltmeleri. "Yok" ile "olculemedi" ayri seyler —
+  // bonus/cevrim bolumlerindeki desenle ayni.
+  satirlar.push('', kalinSatir('🧾 SON BAKİYE DÜZELTMELERİ'));
+  if (!b.manuelDuzeltmeOlculdu) {
+    satirlar.push('  Ölçülemedi.');
+  } else if (b.sonManuelDuzeltmeler.length === 0) {
+    satirlar.push('  Manuel düzeltme yok.');
+  } else {
+    for (const duzeltme of b.sonManuelDuzeltmeler.slice(0, 5)) {
+      const isaret = duzeltme.tur === 'crediting' ? '+' : '−';
+      satirlar.push(
+        `  • ${isaret}${paraYaz(duzeltme.tutar, b.paraBirimi)} · ${duzeltme.tarih ? yasYaz(duzeltme.tarih, simdi) : '—'}` +
+        `${duzeltme.yapan ? ` · ${duzeltme.yapan}` : ''}${duzeltme.not ? ` — ${duzeltme.not}` : ''}`,
+      );
+    }
+    if (b.sonManuelDuzeltmeler.length > 5) satirlar.push(`  • … ${b.sonManuelDuzeltmeler.length - 5} düzeltme daha`);
   }
 
   return gorselMesaj(satirlar);

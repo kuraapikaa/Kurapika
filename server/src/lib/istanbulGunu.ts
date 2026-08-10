@@ -71,6 +71,20 @@ export function istanbulSaatDakika(now: Date = new Date()): { saat: number; daki
   return { saat: al('hour'), dakika: al('minute') };
 }
 
+/**
+ * Verilen anin Turkiye gunu+saati → "YYYY-MM-DDTHH". Saat-basi tekilleme
+ * anahtari: her saat icin bir kez gonderilecek periyodik raporlarda
+ * "bu saat icin zaten gonderildi mi" sorusunu tek bir string
+ * karsilastirmasiyla cevaplar; sure-bazli (`Date.now() - sonGonderim >=
+ * araikMs`) desen surec yeniden baslamalarinda veya pencere disi
+ * calismalarda saatin kaymasina (13:15, 13:47 gibi) yol acar, bu
+ * anahtar TAM saatte (XX:00) sabitler.
+ */
+export function istanbulSaatEtiketi(now: Date = new Date()): string {
+  const { saat } = istanbulSaatDakika(now);
+  return `${istanbulDateKey(now)}T${String(saat).padStart(2, '0')}`;
+}
+
 /** Verilen an, `baslangic`–`bitis` (Turkiye gunleri, ikisi de dahil) araliginda mi? */
 export function gunAraligindaMi(
   value: Date | string | number | null | undefined,

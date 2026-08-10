@@ -17,7 +17,7 @@
 import { config } from '../config.js';
 import { audit } from '../lib/auditLog.js';
 import { readStoredDocument, writeStoredDocument } from '../lib/documentStore.js';
-import { istanbulSaatDakika } from '../lib/istanbulGunu.js';
+import { istanbulSaatDakika, istanbulSaatEtiketi } from '../lib/istanbulGunu.js';
 import { isTelegramConfigured, sendTelegramMessage } from '../services/telegramService.js';
 import {
   istanbulDateKey,
@@ -41,7 +41,6 @@ import {
   islemDurumu,
   kasaMesaji,
   manuelDuzeltmeMesaji,
-  ozetZamaniMi,
   tasanMesaji,
   yatirimMesaji,
   yeniOlaylar,
@@ -68,6 +67,19 @@ function kasaYontemZamaniMi(now: Date, sonGonderilenGun: string | null, gun: str
   if (sonGonderilenGun === gun) return false;
   const { saat, dakika } = istanbulSaatDakika(now);
   return saat === 0 && dakika < KASA_YONTEM_PENCERE_DAKIKA;
+}
+
+/**
+ * Kasa ozeti SAAT BASINDA (XX:00 - XX:PENCERE) gonderilir, saat basina
+ * bir kez. `kasaYontemZamaniMi` ile ayni desen, tek fark: yalnizca
+ * saat===0'da degil HER saatte tetiklenir.
+ */
+const KASA_OZETI_PENCERE_DAKIKA = Number(process.env.KASA_OZETI_PENCERE_DK) || 10;
+
+function kasaOzetiZamaniMi(now: Date, sonGonderilenSaat: string | null, saatEtiketi: string): boolean {
+  if (sonGonderilenSaat === saatEtiketi) return false;
+  const { dakika } = istanbulSaatDakika(now);
+  return dakika < KASA_OZETI_PENCERE_DAKIKA;
 }
 
 type AnyRecord = Record<string, any>;
@@ -452,28 +464,35 @@ export async function runTelegramRaporJob(tenantKey = 'default'): Promise<Telegr
   }
 
   /**
-   * Kasa periyodu — 20 dk/1 saat neyse.
+   * Kasa periyodu — SAAT BASINDA (XX:00), sure-bazli degil.
    *
-   * Onceki surumde bu bayrak yalnizca ANA kasa ozeti (`kasaSohbeti`)
-   * GONDERILDIGINDE ilerliyordu. `TELEGRAM_CHAT_KASA` bossa (ki bu site
-   * icin oyleydi) `imlec.sonOzet` HIC yazilmiyor, `ozetZamaniMi` de her
-   * turda `true` donuyor — sonuc: kasa botu her dakika (20 dakikada bir
-   * degil) mesaj atiyordu. Simdi periyot pencere acildiginda ilerletiliyor.
+   * Once `ozetZamaniMi` (sure-bazli: "son gonderimden beri N ms gecti mi")
+   * kullaniyordu — surec her yeniden basladiginda ya da pencere kacirilip
+   * bir sonraki taramada yakalandiginda sayac o ANDAN itibaren yeniden
+   * baslar, bu yuzden mesajlar 13:07, 13:41 gibi rastgele dakikalarda
+   * gidiyordu ("13:30 13:15 gibi degil tam saatte atsın" sikayeti buydu).
+   * Simdi `kasaYontemZamaniMi`yle ayni desen: duvar saatine gore XX:00 -
+   * XX:PENCERE penceresinde, saat basina BIR KEZ, `imlec.sonOzetSaati`
+   * ile tekillenir (bkz. `istanbulSaatEtiketi`).
    */
-  const ozetZamaniGeldi = ozetZamaniMi(imlec.sonOzet, config.telegram.raporOzetAralikMs);
-  if (ozetZamaniGeldi) {
-    imlec.sonOzet = new Date().toISOString();
-    degisti = true;
-
+  const saatEtiketi = istanbulSaatEtiketi(new Date());
+  if (kasaOzetiZamaniMi(new Date(), imlec.sonOzetSaati, saatEtiketi)) {
     const kasaSohbeti = sohbetSec('kasa');
     if (kasaSohbeti) {
       try {
         imlec.sonKasaOzeti = await ozetGonder(kasaSohbeti, imlec.sonKasaOzeti ?? null);
         sonuc.ozetGonderildi = true;
+        imlec.sonOzetSaati = saatEtiketi;
+        degisti = true;
       } catch (err) {
         sonuc.hata += 1;
         console.error('[telegram-rapor] kasa özeti:', err instanceof Error ? err.message : err);
       }
+    } else {
+      // Sohbet tanimli degilse yine de saat isaretlenir — aksi halde bos
+      // pencerede her dakika bu bloga tekrar tekrar girilir.
+      imlec.sonOzetSaati = saatEtiketi;
+      degisti = true;
     }
   }
 

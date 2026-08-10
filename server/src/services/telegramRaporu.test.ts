@@ -492,6 +492,22 @@ describe('kasa özeti', () => {
     expect(kasaMesaji(BOS_OZET)).not.toContain('kasa lehine');
     expect(kasaMesaji(BOS_OZET)).not.toContain('oyuncular önde');
   });
+
+  it('önceki özete göre net kasa akışı için yüzde trend okunu yazar', () => {
+    const mesaj = kasaMesaji(
+      { ...BOS_OZET, yatirim: 15_000, cekim: 5_000 },
+      { ...BOS_OZET, yatirim: 10_000, cekim: 5_000 },
+    );
+    // net: 10.000 -> 5.000'den 10.000'e ▲%100.0
+    expect(mesaj).toContain('▲%100.0');
+  });
+
+  it('önceki özetin yatırım/çekimi ölçülemiyorsa net trend uydurulmaz', () => {
+    const mesaj = kasaMesaji({ ...BOS_OZET, yatirim: 15_000, cekim: 5_000 }, BOS_OZET);
+    const netSatiri = mesaj.split('\n').find((s) => s.includes('Net Kasa Akışı'));
+    expect(netSatiri).not.toContain('▲%');
+    expect(netSatiri).not.toContain('▼%');
+  });
 });
 
 describe('ozetZamaniMi', () => {
@@ -520,6 +536,6 @@ describe('ozetZamaniMi', () => {
 
 describe('bosImlec', () => {
   it('temiz durumla başlar', () => {
-    expect(bosImlec()).toEqual({ akislar: {}, sonOzet: null, sonKasaOzeti: null, sonKasaYontemGun: null });
+    expect(bosImlec()).toEqual({ akislar: {}, sonOzetSaati: null, sonKasaOzeti: null, sonKasaYontemGun: null });
   });
 });

@@ -17,6 +17,7 @@
  */
 import { config } from '../config.js';
 import { audit } from '../lib/auditLog.js';
+import { LynonHttpError } from '../lib/lynonAuth.js';
 import { lynonNotEkle, lynonResolveWithdrawal } from './lynonBackofficeService.js';
 import { cekimSonucunuImleceIsaretle } from '../jobs/telegramRaporJob.js';
 import {
@@ -83,9 +84,25 @@ export async function telegramCekimCallback(callback: AnyRecord): Promise<Callba
     });
   } catch (err) {
     const mesaj = err instanceof Error ? err.message : String(err);
-    if (callbackId) await telegramCallbackYanitla(callbackId, `Hata: ${mesaj}`.slice(0, 190));
-    if (chatId && messageId) await telegramYanitla(chatId, messageId, `⚠️ İşlem başarısız: ${mesaj}`);
-    return { islendi: false, mesaj };
+    /**
+     * "Internal Exception" TEK BASINA hicbir sey soylemiyor — Lynon'un
+     * kendi API'sinin genel .NET hata metni, HTTP durum kodu ve ham
+     * govde olmadan hangi cagrinin nicin dustugu ANLASILAMIYOR. Bu
+     * yuzden `LynonHttpError` ise durum kodu + govde LOGLANIR ve
+     * operatore gosterilen mesaja da durum kodu eklenir — bir sonraki
+     * olusumda "calismiyor" yerine somut bir ipucu birakir.
+     */
+    const durumKodu = err instanceof LynonHttpError ? err.status : null;
+    const gosterilecekMesaj = durumKodu ? `${mesaj} (HTTP ${durumKodu})` : mesaj;
+    console.error('[telegram-cekim] resolve hatası:', {
+      islemId: veri.islemId,
+      eylem: veri.eylem,
+      durumKodu,
+      govde: err instanceof LynonHttpError ? JSON.stringify(err.data).slice(0, 500) : undefined,
+    });
+    if (callbackId) await telegramCallbackYanitla(callbackId, `Hata: ${gosterilecekMesaj}`.slice(0, 190));
+    if (chatId && messageId) await telegramYanitla(chatId, messageId, `⚠️ İşlem başarısız: ${gosterilecekMesaj}`);
+    return { islendi: false, mesaj: gosterilecekMesaj };
   }
 
   // Lynon tarafi zaten cozuldu (para hareketi gerceklesti) — buradan

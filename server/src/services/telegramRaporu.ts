@@ -39,8 +39,13 @@ export type AkisImleci = {
 
 export type RaporImleci = {
   akislar: Record<string, AkisImleci>;
-  /** Son kasa ozetinin gonderildigi an (ISO). */
-  sonOzet: string | null;
+  /**
+   * Kasa ozetinin en son gonderildigi Turkiye saat-etiketi
+   * ("YYYY-MM-DDTHH", bkz. `istanbulSaatEtiketi`). Saat basina bir kez
+   * gonderilir; sure-bazli eski desen (`sonOzet: ISO an` + `aralikMs`)
+   * surec yeniden baslamalarinda saatin kaymasina yol aciyordu.
+   */
+  sonOzetSaati: string | null;
   /** Bir onceki kasa ozeti — periyodik mesajda trend oku icin. */
   sonKasaOzeti: KasaOzeti | null;
   /**
@@ -52,7 +57,7 @@ export type RaporImleci = {
 };
 
 export function bosImlec(): RaporImleci {
-  return { akislar: {}, sonOzet: null, sonKasaOzeti: null, sonKasaYontemGun: null };
+  return { akislar: {}, sonOzetSaati: null, sonKasaOzeti: null, sonKasaYontemGun: null };
 }
 
 /** Imlecte tutulan azami kimlik sayisi. Uctan gelen sayfadan buyuk olmali. */
@@ -372,18 +377,22 @@ export function gunlukYapanOzeti(
  */
 export function manuelDuzeltmeMesaji(satir: AnyRecord, gununDuzeltmeleri?: AnyRecord[]): string {
   const yon = String(satir.Yon ?? 'bilinmiyor');
-  const isaret = yon === 'giris' ? '➕' : yon === 'cikis' ? '➖' : '❔';
+  const isaret = yon === 'giris' ? '🟢 ➕' : yon === 'cikis' ? '🔴 ➖' : '❔';
   const yapanOzeti = gununDuzeltmeleri ? gunlukYapanOzeti(gununDuzeltmeleri, satir) : null;
   return gorselMesaj([
     kalinSatir(DUZELTME_YON_BASLIGI[yon] ?? DUZELTME_YON_BASLIGI.bilinmiyor),
     AYIRAC,
-    `👤 ${oyuncuYaz(satir.ClientLogin, satir.ClientId)}`,
-    `${isaret} ${paraYaz(satir.Tutar, satir.ParaBirimi ?? 'TRY')}`,
-    satir.Hesap ? `🏛️ ${satir.Hesap}` : null,
-    satir.Kategori ? `🏷️ ${satir.Kategori}` : null,
-    `👮 ${satir.Yapan || 'bilinmiyor'}${yapanOzeti ? ` · bugün ${yapanOzeti.sira}. işlemi (net ${paraYaz(yapanOzeti.netToplam, satir.ParaBirimi ?? 'TRY')})` : ''}`,
-    satir.NotAnlamli ? `📝 ${satir.Not}` : '⚠️ Gerekçe notu yok',
-    `🕒 ${saatYaz(satir.CreatedLocal)}`,
+    '',
+    `👤 ${kalinIsaretle('Oyuncu:')} ${oyuncuYaz(satir.ClientLogin, satir.ClientId)}`,
+    `${isaret} ${kalinIsaretle('Tutar:')} ${paraYaz(satir.Tutar, satir.ParaBirimi ?? 'TRY')}`,
+    satir.Hesap ? `🏛️ ${kalinIsaretle('Hesap:')} ${satir.Hesap}` : null,
+    satir.Kategori ? `🏷️ ${kalinIsaretle('Kategori:')} ${satir.Kategori}` : null,
+    '',
+    kalinSatir('👮 YAPAN'),
+    `▫️ ${satir.Yapan || 'bilinmiyor'}${yapanOzeti ? ` — ${italikIsaretle(`bugün ${yapanOzeti.sira}. işlemi (net ${paraYaz(yapanOzeti.netToplam, satir.ParaBirimi ?? 'TRY')})`)}` : ''}`,
+    '',
+    satir.NotAnlamli ? `📝 ${kalinIsaretle('Not:')} ${satir.Not}` : '⚠️ Gerekçe notu yok',
+    `🕒 ${italikIsaretle(saatYaz(satir.CreatedLocal))}`,
   ]);
 }
 
@@ -522,6 +531,11 @@ export function kasaMesaji(ozet: KasaOzeti, onceki?: KasaOzeti | null): string {
   const y = ozet.yatirim;
   const c = ozet.cekim;
   const net = y === null && c === null ? null : (y ?? 0) - (c ?? 0);
+  // Onceki ozetin neti — kar/zarar trendiyle AYNI mantik: ikisi de
+  // olculebildiyse hesaplanir, aksi halde trend uydurulmaz (undefined).
+  const oncekiNet = onceki && onceki.yatirim !== null && onceki.cekim !== null
+    ? onceki.yatirim - onceki.cekim
+    : undefined;
 
   // Bonus maliyeti: kasadan cikan bonus kalemleri. Bilinmeyen alan
   // toplama katilmaz; hepsi bilinmiyorsa "—".
@@ -553,7 +567,7 @@ export function kasaMesaji(ozet: KasaOzeti, onceki?: KasaOzeti | null): string {
     kalinSatir('💵 FİNANS & NAKİT AKIŞI'),
     `▫️ ${kalinIsaretle('Yatırım:')} ${tlYaz(y)}${ozet.yatirimOyuncu !== null ? ` (${ozet.yatirimOyuncu} oyuncu)` : ''}`,
     `▫️ ${kalinIsaretle('Çekim:')} ${tlYaz(c)}${ozet.cekimOyuncu !== null ? ` (${ozet.cekimOyuncu} oyuncu)` : ''}`,
-    `▫️ ${kalinIsaretle('Net Kasa Akışı:')} ${tlIsaretli(net)}${netIsaret}`,
+    `▫️ ${kalinIsaretle('Net Kasa Akışı:')} ${tlIsaretli(net)}${netIsaret}${yuzdeTrendYaz(net, oncekiNet)}`,
     '',
     kalinSatir('🎰 OYUN PERFORMANSI'),
     `▫️ ${kalinIsaretle('Ciro (Turnover):')} ${tlYaz(ozet.gercekBahis)}${ozet.bahisAdedi !== null ? ` (${TAM.format(ozet.bahisAdedi)} Bahis)` : ''}`,
@@ -578,6 +592,7 @@ export function kasaMesaji(ozet: KasaOzeti, onceki?: KasaOzeti | null): string {
     `▫️ ${kalinIsaretle('Aktif Bahisçi:')} ${ozet.bahisOyuncu === null ? '—' : TAM.format(ozet.bahisOyuncu)} Oyuncu`,
     `▫️ ${kalinIsaretle('Kullanıcı Bakiyeleri:')} ${tlYaz(ozet.oyuncuBakiyesi)} (Gerçek) | ${tlYaz(ozet.bonusBakiye)} (Bonus)`,
     kasaKapanisNotu(ozet.kar) ? '' : null,
+    kasaKapanisNotu(ozet.kar) ? AYIRAC : null,
     kasaKapanisNotu(ozet.kar) ? `${italikIsaretle(kasaKapanisNotu(ozet.kar)!)}` : null,
   ];
 

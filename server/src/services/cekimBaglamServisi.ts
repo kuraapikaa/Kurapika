@@ -17,6 +17,7 @@ import {
   lynonClientBonuses,
   lynonCasinoOperations,
   lynonSportBets,
+  lynonCorrectionHistory,
 } from './lynonBackofficeService.js';
 import { istanbulDateKey } from '../lib/istanbulGunu.js';
 import {
@@ -62,10 +63,11 @@ export async function cekimBaglamiTopla(
   }
   const gunlukCekim = gunlukCekimSayisi(liste, playerId, gun);
 
-  const [kpiSonuc, notSonuc, bonusSonuc] = await Promise.allSettled([
+  const [kpiSonuc, notSonuc, bonusSonuc, duzeltmeSonuc] = await Promise.allSettled([
     lynonPlayerKpi(playerId),
     lynonOyuncuNotlari(playerId),
     lynonClientBonuses({ ClientId: playerId }),
+    lynonCorrectionHistory({ ClientId: playerId, MaxRows: 20 }),
   ]);
 
   /**
@@ -85,6 +87,24 @@ export async function cekimBaglamiTopla(
   const bonuslar: AnyRecord[] = bonusOlculdu
     ? ((bonusSonuc.value as AnyRecord)?.Data ?? [])
     : [];
+
+  // Manuel bakiye duzeltmeleri (crediting/debiting) — ALINAMADIYSA "yok"
+  // degil "olculemedi"; digerleriyle ayni desen.
+  const manuelDuzeltmeOlculdu = duzeltmeSonuc.status === 'fulfilled';
+  const duzeltmeSatirlari: AnyRecord[] = manuelDuzeltmeOlculdu
+    ? (((duzeltmeSonuc.value as AnyRecord)?.Data?.Objects ?? []) as AnyRecord[])
+    : [];
+  const sonManuelDuzeltmeler = duzeltmeSatirlari
+    .slice()
+    .sort((a, b) => Date.parse(String(b?.CreatedLocal ?? '')) - Date.parse(String(a?.CreatedLocal ?? '')))
+    .slice(0, 5)
+    .map((satir) => ({
+      tur: (satir?.CorrectionType === 'debiting' ? 'debiting' : 'crediting') as 'crediting' | 'debiting',
+      tutar: nullableSayi(satir?.Amount) ?? 0,
+      tarih: (satir?.CreatedLocal ?? null) as string | null,
+      not: satir?.Note ? String(satir.Note) : null,
+      yapan: satir?.UserName ? String(satir.UserName) : null,
+    }));
 
   /**
    * OYUNCU PANO UCU asil kaynak.
@@ -177,5 +197,7 @@ export async function cekimBaglamiTopla(
     sporCevrimSonYatirim,
     sonKullanilanBonus: bonusOlculdu ? sonKullanilanBonusSec(bonuslar) : null,
     enCokOynananOyunlar,
+    sonManuelDuzeltmeler,
+    manuelDuzeltmeOlculdu,
   };
 }

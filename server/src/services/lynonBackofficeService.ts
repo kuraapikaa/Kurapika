@@ -3606,8 +3606,16 @@ async function mergeVerificationDetail(listRow: AnyRecord): Promise<AnyRecord> {
 /**
  * Bonus talebi için Lynon'dan tek, doğrulanmış ve fail-closed hesap görünümü üretir.
  * Başarısız yatırım denemeleri uygunlukta yatırım sayılmaz; bekleyen çekimler ayrıca işaretlenir.
+ *
+ * `asOf` — "bugün"/"dün" hangi güne göre hesaplanacak (varsayılan: gerçek
+ * şu an). `nextDayBonusJob`'un TELAFİ çalışması, sunucu bir süre ayakta
+ * olmadıktan sonra GEÇMİŞ bir günü işlerken bunu o günün öğlenine
+ * sabitler — aksi halde `sameDayDateKey`/`previousDayDateKey` her zaman
+ * GERÇEK bugüne göre hesaplanır, telafi edilen (geçmiş) gün için oyuncu
+ * hep "önceki gün yatırımı yok" görünür ve bonus sessizce hiç
+ * verilmeden gün "done" işaretlenirdi.
  */
-export async function lynonBuildBonusEligibilitySnapshot(input: { login?: string; playerId?: number | string }): Promise<AnyRecord> {
+export async function lynonBuildBonusEligibilitySnapshot(input: { login?: string; playerId?: number | string; asOf?: Date }): Promise<AnyRecord> {
   let player: AnyRecord | null = null;
   if (input.login) player = await lynonFindPlayerByLogin(input.login);
   if (!player && input.playerId != null) {
@@ -3633,6 +3641,9 @@ export async function lynonBuildBonusEligibilitySnapshot(input: { login?: string
 
   const playerId = player.Id;
   const now = new Date();
+  // Veri cekme araligi HER ZAMAN gercek "simdi"ye kadar genis tutulur —
+  // yalnizca asagidaki gun-anahtari FILTRELERI `asOf`'a gore kayar.
+  const asOf = input.asOf ?? now;
   const from = new Date(Date.UTC(Math.max(2020, now.getUTCFullYear() - 6), 0, 1));
   const loginIP: string | null = player.LastLoginIp ?? null;
   const [kpiResponse, payments, correctionsResponse, bonusesResponse, casinoRows, sportRows, sameIPPlayers] = await Promise.all([
@@ -3670,13 +3681,13 @@ export async function lynonBuildBonusEligibilitySnapshot(input: { login?: string
   // Days" gunun kacinci yatirimi oldugunu sorar; ikisi de sirali listeye
   // ihtiyac duyar. playerPayments YENIDEN ESKIYE sirali oldugu icin ters
   // ceviriyoruz — sira yanlis olursa kademe de yanlis hesaplanir.
-  const bugunDateKey = istanbulDateKey(now);
+  const bugunDateKey = istanbulDateKey(asOf);
   const sameDayDepositRows = successfulDeposits
     .filter((row) => istanbulDateKey(String(row.createdAt ?? '')) === bugunDateKey)
     .slice()
     .reverse();
 
-  const previousDayDateKey = previousIstanbulDateKey(now);
+  const previousDayDateKey = previousIstanbulDateKey(asOf);
   const previousDayDeposits = successfulDeposits.filter((row) => istanbulDateKey(String(row.createdAt ?? '')) === previousDayDateKey);
   const previousDayDepositTotal = previousDayDeposits.reduce((sum, row) => sum + numberFrom(row.amount), 0);
   const previousDayLastDeposit = previousDayDeposits[0];

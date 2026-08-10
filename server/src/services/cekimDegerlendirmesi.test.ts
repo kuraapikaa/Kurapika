@@ -146,6 +146,8 @@ describe('cekimBaglamMesaji', () => {
     casinoCevrimSonYatirim: 500, sporCevrimSonYatirim: 0,
     sonKullanilanBonus: { ad: '100 FS Telegram Katıl Bonusu', tutar: 100, tarih: '2026-08-03T10:00:00Z', durum: 'Completed' },
     enCokOynananOyunlar: [{ ad: 'Sweet Bonanza', adet: 12, bahis: 240 }],
+    sonManuelDuzeltmeler: [],
+    manuelDuzeltmeOlculdu: true,
   };
 
   it('temel alanları yazar', () => {
@@ -288,6 +290,33 @@ describe('cekimBaglamMesaji', () => {
   it('en çok oynanan oyunları yazar', () => {
     const mesaj = cekimBaglamMesaji('x', taban, SIMDI);
     expect(mesaj).toContain('Son yatırımdan sonra en çok oynanan: Sweet Bonanza (12)');
+  });
+
+  it('manuel düzeltme yoksa açıkça söyler', () => {
+    const mesaj = cekimBaglamMesaji('x', taban, SIMDI);
+    expect(mesaj).toContain('Manuel düzeltme yok.');
+  });
+
+  it('manuel düzeltme geçmişi ölçülemediyse "yok" demez', () => {
+    const mesaj = cekimBaglamMesaji('x', { ...taban, manuelDuzeltmeOlculdu: false }, SIMDI);
+    expect(mesaj).toContain('SON BAKİYE DÜZELTMELERİ');
+    expect(mesaj).toContain('Ölçülemedi.');
+    expect(mesaj).not.toContain('Manuel düzeltme yok.');
+  });
+
+  it('son manuel düzeltmeleri crediting/debiting işaretiyle listeler', () => {
+    const mesaj = cekimBaglamMesaji('x', {
+      ...taban,
+      sonManuelDuzeltmeler: [
+        { tur: 'crediting', tutar: 500, tarih: '2026-08-02T10:00:00Z', not: 'elden yatırım', yapan: 'admin1' },
+        { tur: 'debiting', tutar: 200, tarih: '2026-08-01T10:00:00Z', not: null, yapan: 'admin2' },
+      ],
+    }, SIMDI);
+    expect(mesaj).toContain('+500 TRY');
+    expect(mesaj).toContain('admin1');
+    expect(mesaj).toContain('elden yatırım');
+    expect(mesaj).toContain('−200 TRY');
+    expect(mesaj).toContain('admin2');
   });
 
   it('en çok oynanan oyun yoksa o satırı yazmaz', () => {

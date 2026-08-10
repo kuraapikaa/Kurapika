@@ -273,7 +273,7 @@ export async function nextDayBonusKuruCalistir(
           : `PartnerBonusId ${rule.spec.partnerBonusId ?? 'eksik'} icin aktif kampanya YOK (silinmis/pasif olabilir)`,
     )) continue;
 
-    const account = await lynonBuildBonusEligibilitySnapshot({ playerId });
+    const account = await lynonBuildBonusEligibilitySnapshot({ playerId, asOf: new Date(`${dateKey}T12:00:00+03:00`) });
     const promoId = rule.group === 'id' && Number.isFinite(Number(rule.key)) ? Number(rule.key) : campaignId;
     const promoTitle = rule.group === 'title' ? rule.key : String(campaign?.Name ?? rule.key);
     const check = await evaluateForAccount(account as any, { id: promoId, title: promoTitle, kuralAnahtari: rule.key, ...rule.spec } as any, rules, tenantKey, 'bonus');
@@ -395,7 +395,7 @@ export async function runNextDayBonusJob(
        */
       const talep = await dagitikKilitle(tenantKey, odulAnahtari(String(playerId), 'ertesi-gun', key), async () => {
         try {
-          const account = await lynonBuildBonusEligibilitySnapshot({ playerId });
+          const account = await lynonBuildBonusEligibilitySnapshot({ playerId, asOf: new Date(`${dateKey}T12:00:00+03:00`) });
           const configuredType = String(rule.spec.type ?? 'partner').toLocaleLowerCase('tr-TR');
           const isCash = configuredType === 'cash' || configuredType === 'nakit';
           const campaignId = Number(rule.spec.partnerBonusId);
