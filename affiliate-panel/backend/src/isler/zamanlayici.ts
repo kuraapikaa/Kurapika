@@ -1,6 +1,7 @@
 import { gunAnahtari } from '../lib/gunler.js';
 import { kiracilariListele, veritabani } from '../lib/veritabani.js';
 import { geceHakedisiIsle, type GeceSonucu } from './geceIsi.js';
+import { gecmisGGRTazele } from './gecmisGGRIsi.js';
 
 /**
  * GECE YARISI ZAMANLAYICISI.
@@ -33,7 +34,11 @@ export interface ZamanlayiciKancasi {
 
 /** Tüm kiracılar için gece işini çalıştırır; hatalar tek tek yutuluyor. */
 export async function tumKiracilarIcinCalistir(
-  gunlukcu: { info: (o: unknown, m: string) => void; error: (o: unknown, m: string) => void },
+  gunlukcu: {
+    info: (o: unknown, m: string) => void;
+    warn: (o: unknown, m: string) => void;
+    error: (o: unknown, m: string) => void;
+  },
   simdi = new Date(),
 ): Promise<GeceSonucu[]> {
   if (!veritabani()) return [];
@@ -52,12 +57,20 @@ export async function tumKiracilarIcinCalistir(
       // odemesini almali.
       gunlukcu.error({ kiraci, hata: (hata as Error).message }, 'Gece hakedişi başarısız');
     }
+
+    // Hakedis hesabindan BAGIMSIZ: biri basarisiz olsa bile digeri
+    // calismaya devam etmeli, ikisinin de hata sinifi farkli.
+    await gecmisGGRTazele(kiraci, gunlukcu);
   }
   return sonuclar;
 }
 
 export function geceIsiniZamanla(
-  gunlukcu: { info: (o: unknown, m: string) => void; error: (o: unknown, m: string) => void },
+  gunlukcu: {
+    info: (o: unknown, m: string) => void;
+    warn: (o: unknown, m: string) => void;
+    error: (o: unknown, m: string) => void;
+  },
 ): ZamanlayiciKancasi {
   let sonGorulenGun = gunAnahtari();
   let calisiyor = false;
