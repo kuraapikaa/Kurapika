@@ -172,6 +172,34 @@ describe('bozuk girdi', () => {
   });
 });
 
+describe('haftalık dönem', () => {
+  // 2026-08-10 Pazartesi 12:00 UTC = 2026-08-10 15:00 Istanbul (ayni Turkiye haftasi).
+  const simdi = Date.parse('2026-08-10T12:00:00Z');
+
+  it('bu haftadan önceki yatırımı tabana katmaz', () => {
+    const sonuc = kayipTabani([
+      y(10_000, '2026-08-01T10:00:00Z'), // gecen hafta
+      y(3_000, '2026-08-11T10:00:00Z'), // bu hafta
+    ], { donemTipi: 'haftalik', simdi });
+    expect(sonuc.netLoss).toBe(3_000);
+  });
+
+  it('son ödenen çekim bu haftanın başlangıcından daha yakınsa onu esas alır', () => {
+    const sonuc = kayipTabani([
+      y(10_000, '2026-08-11T08:00:00Z'),
+      c(4_000, '2026-08-11T09:00:00Z'), // hafta ortasi cekim
+      y(2_000, '2026-08-11T10:00:00Z'),
+    ], { donemTipi: 'haftalik', simdi });
+    // Cekimden ONCEKI 10.000 tabana girmez; yalnizca sonraki 2.000.
+    expect(sonuc.netLoss).toBe(2_000);
+  });
+
+  it('sonOdenenCekim (varsayılan) haftayla sınırlı değildir', () => {
+    const sonuc = kayipTabani([y(10_000, '2026-08-01T10:00:00Z')], { simdi });
+    expect(sonuc.netLoss).toBe(10_000);
+  });
+});
+
 describe('denetlenebilirlik', () => {
   it('dönem yatırım ve çekim toplamları ayrı raporlanır', () => {
     const sonuc = kayipTabani([
@@ -227,5 +255,45 @@ describe('gerçek kuralla uçtan uca', () => {
 
   it('veri yoksa bonus hesaplanmaz', async () => {
     expect(await tutar(undefined)).toBe(0);
+  });
+});
+
+describe('lossBonusPeriod: weekly — uçtan uca', () => {
+  const kurallar = {
+    PROMO_SPECS: {
+      'haftalik-kayip-bonusu': {
+        enabled: true, type: 'cash', title: 'Haftalık Kayıp Bonusu',
+        lossBonus: true, lossBonusPeriod: 'weekly',
+        amountType: 'percentage', percentageAmount: 20,
+      },
+    },
+    PROMO_TITLE_SPECS: {},
+  } as any;
+
+  const hesap = (netLoss: number | undefined, netLossWeekly: number | undefined) => ({
+    id: 2492369, balance: 0, netLoss, netLossWeekly,
+    lastDeposit: { amount: 10_000, dateLocal: '2026-08-11T10:00:00Z' },
+    bonuses: [], profileTransactions: [], profileTransactionsByType: {},
+    dataCompleteness: { kpi: true, payments: true, financialMovements: true, bonuses: true, casino: true, sport: true },
+  }) as any;
+
+  it('weekly işaretli kural netLossWeekly\'i okur, ömür boyu netLoss\'u değil', async () => {
+    const sonuc = await evaluateForAccount(
+      hesap(50_000, 1_000), // omur boyu 50.000, bu hafta yalnizca 1.000
+      { id: 'haftalik-kayip-bonusu', title: 'Haftalık Kayıp Bonusu' } as any,
+      kurallar, 'default', 'bonus',
+    );
+    expect(sonuc.calculatedAmount).toBe(200); // %20 x 1.000, 50.000 degil
+  });
+
+  it('bu hafta net kaybı yoksa reddeder, ömür boyu kayıp olsa bile', async () => {
+    const sonuc = await evaluateForAccount(
+      hesap(50_000, 0),
+      { id: 'haftalik-kayip-bonusu', title: 'Haftalık Kayıp Bonusu' } as any,
+      kurallar, 'default', 'bonus',
+    );
+    const madde = sonuc.items.find((i) => i.id === 'loss-bonus-net-loss');
+    expect(madde?.ok).toBe(false);
+    expect(madde?.reason).toContain('bu hafta');
   });
 });

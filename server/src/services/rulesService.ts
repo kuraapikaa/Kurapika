@@ -117,6 +117,13 @@ export type PromoSpec = {
     maxBalanceToClaim?: number;
     maxKpiLimit?: number;
     lossBonus?: boolean;
+    /**
+     * `lossBonus` tabanının hangi dönemle sınırlanacağı. Belirtilmezse
+     * `sinceLastWithdrawal` (son ödenen çekimden itibaren, ömür boyu
+     * birikebilir). `weekly` takvim haftasıyla (Pazartesi 00:00
+     * Europe/Istanbul) DA sınırlar — bkz. kayipTabaniService.ts.
+     */
+    lossBonusPeriod?: 'sinceLastWithdrawal' | 'weekly';
     requestWithinHours?: number;
     balanceBelow?: number;
     noOpenBets?: boolean;

@@ -3855,18 +3855,24 @@ export async function lynonBuildBonusEligibilitySnapshot(input: { login?: string
      * Ayrinti ve donem penceresi gerekcesi: kayipTabaniService.
      */
     ...(() => {
-      const taban = kayipTabani(
-        playerPayments.map((row) => ({
-          tur: String(row.transactionType ?? ''),
-          durum: String(row.status ?? ''),
-          tutar: numberFrom(row.amount),
-          tarih: String(row.createdAt ?? ''),
-        })),
-      );
+      const hareketler = playerPayments.map((row) => ({
+        tur: String(row.transactionType ?? ''),
+        durum: String(row.status ?? ''),
+        tutar: numberFrom(row.amount),
+        tarih: String(row.createdAt ?? ''),
+      }));
+      const taban = kayipTabani(hareketler);
+      // Haftalik kayip bonusu icin AYRI bir taban — takvim haftasiyla da
+      // sinirli (bkz. kayipTabaniService.ts). `lossBonus` isaretli her
+      // kural ayni netLoss'u kullanmiyor; `spec.lossBonusPeriod` hangisini
+      // sececegini promoEvaluator'da belirliyor.
+      const tabanHaftalik = kayipTabani(hareketler, { donemTipi: 'haftalik' });
       return {
         netLoss: taban.netLoss,
+        netLossWeekly: tabanHaftalik.netLoss,
         // Denetim icin: tabanin nasil olustugu panelden gorulebilsin.
         kayipTabaniDetay: taban,
+        kayipTabaniDetayHaftalik: tabanHaftalik,
       };
     })(),
     rawKpi: kpi,

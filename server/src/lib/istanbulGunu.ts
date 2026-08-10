@@ -85,6 +85,31 @@ export function istanbulSaatEtiketi(now: Date = new Date()): string {
   return `${istanbulDateKey(now)}T${String(saat).padStart(2, '0')}`;
 }
 
+/** Turkiye gun adindan ISO hafta sirasi (Pazartesi=0 ... Pazar=6). */
+const HAFTA_GUN_SIRASI: Record<string, number> = {
+  Mon: 0, Tue: 1, Wed: 2, Thu: 3, Fri: 4, Sat: 5, Sun: 6,
+};
+
+/**
+ * Verilen anin icinde bulundugu Turkiye haftasinin BASLANGICI (Pazartesi
+ * 00:00 Europe/Istanbul) — epoch ms.
+ *
+ * Turkiye kalici UTC+3 oldugu icin (yaz saati yok) bir Istanbul gununun
+ * gece yarisi her zaman `${YYYY-MM-DD}T00:00:00+03:00` ile birebir
+ * cozulur; gunler arasi fark saf gun-sayisi çıkarma islemiyle guvenle
+ * hesaplanabilir (DST sicramasi riski yok).
+ */
+export function istanbulHaftaBaslangiciMs(simdi: number = Date.now()): number {
+  const now = new Date(simdi);
+  const bugunAnahtari = istanbulDateKey(now);
+  const gunAdi = new Intl.DateTimeFormat('en-US', {
+    timeZone: ISTANBUL_DILIMI, weekday: 'short',
+  }).format(now);
+  const gunFarki = HAFTA_GUN_SIRASI[gunAdi] ?? 0;
+  const bugunGeceYarisiMs = Date.parse(`${bugunAnahtari}T00:00:00${ISTANBUL_OFSETI}`);
+  return bugunGeceYarisiMs - gunFarki * 86_400_000;
+}
+
 /** Verilen an, `baslangic`–`bitis` (Turkiye gunleri, ikisi de dahil) araliginda mi? */
 export function gunAraligindaMi(
   value: Date | string | number | null | undefined,

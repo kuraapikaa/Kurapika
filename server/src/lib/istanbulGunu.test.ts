@@ -1,12 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import {
+  ISTANBUL_DILIMI,
   ISTANBUL_OFSETI,
   LYNON_SL_TIMEZONE,
   gunAraligindaMi,
   istanbulDateKey,
+  istanbulHaftaBaslangiciMs,
   istanbulSaatDakika,
   slTimezoneDegeri,
 } from './istanbulGunu.js';
+
+function gunAdi(ms: number): string {
+  return new Intl.DateTimeFormat('en-US', { timeZone: ISTANBUL_DILIMI, weekday: 'short' }).format(new Date(ms));
+}
 
 describe('istanbulDateKey', () => {
   it('UTC gecesi bitmeden Türkiye günü ilerler', () => {
@@ -44,6 +50,29 @@ describe('istanbulSaatDakika', () => {
   it('gece yarısı penceresini yakalar', () => {
     // 2026-08-02 21:05 UTC = 2026-08-03 00:05 Istanbul.
     expect(istanbulSaatDakika(new Date('2026-08-02T21:05:00Z'))).toEqual({ saat: 0, dakika: 5 });
+  });
+});
+
+describe('istanbulHaftaBaslangiciMs', () => {
+  it('her zaman bir Pazartesi 00:00 Europe/Istanbul döner', () => {
+    const baslangic = istanbulHaftaBaslangiciMs(Date.parse('2026-08-05T10:00:00Z'));
+    expect(gunAdi(baslangic)).toBe('Mon');
+    expect(istanbulSaatDakika(new Date(baslangic))).toEqual({ saat: 0, dakika: 0 });
+  });
+
+  it('aynı hafta içindeki her an aynı Pazartesiyi verir', () => {
+    const referans = istanbulHaftaBaslangiciMs(Date.parse('2026-08-05T10:00:00Z'));
+    for (const gunOffset of [0, 1, 2, 3, 4, 5, 6]) {
+      const an = referans + gunOffset * 86_400_000 + 12 * 60 * 60 * 1000; // her gunun ortasi
+      expect(istanbulHaftaBaslangiciMs(an)).toBe(referans);
+    }
+  });
+
+  it('Pazartesiden hemen önceki an bir önceki haftaya düşer', () => {
+    const buHafta = istanbulHaftaBaslangiciMs(Date.parse('2026-08-05T10:00:00Z'));
+    const oncekiHafta = istanbulHaftaBaslangiciMs(buHafta - 1);
+    expect(oncekiHafta).toBeLessThan(buHafta);
+    expect(buHafta - oncekiHafta).toBe(7 * 86_400_000);
   });
 });
 

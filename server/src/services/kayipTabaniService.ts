@@ -26,7 +26,17 @@
  *
  * Kampanya metni de bunu soyluyor: "son yatirimi kaybeden oyunculara",
  * talep 24 saat icinde ve bakiye 10 TL altinda olmali.
+ *
+ * ── Haftalik varyant ──────────────────────────────────────────────────
+ * Bazi kurallar (haftalik kayip bonusu) donemi TAKVIM HAFTASIYLA
+ * (Pazartesi 00:00 Europe/Istanbul) sinirlamak ister — "son cekimden
+ * beri" omur boyu birikebilirken, haftalik surum her Pazartesi sifirlanir.
+ * Iki sinir birlikte uygulanir: `max(son odenen cekim, bu haftanin
+ * baslangici)` — bir cekim hafta ortasinda gelirse taban YINE de o
+ * cekimden sonrasina daralir, ayni kaybi iki kez odememek icin.
  */
+
+import { istanbulHaftaBaslangiciMs } from '../lib/istanbulGunu.js';
 
 export type OdemeHareketi = {
   /** 'deposit' | 'withdrawal' */
@@ -50,6 +60,13 @@ function sayi(v: unknown): number {
 
 const BASARILI = 'success';
 
+export type KayipTabaniSecenekleri = {
+  /** 'sonOdenenCekim' (varsayilan, omur boyu) | 'haftalik' (takvim haftasiyla da sinirli). */
+  donemTipi?: 'sonOdenenCekim' | 'haftalik';
+  /** Test edilebilirlik icin "su an" — varsayilan gercek zaman. */
+  simdi?: number;
+};
+
 export type KayipTabaniSonucu = {
   /** Bonus hesabinda kullanilacak taban. Veri yoksa undefined. */
   netLoss: number | undefined;
@@ -69,7 +86,7 @@ export type KayipTabaniSonucu = {
  * ve bu dogru sonuc olurdu ama YANLIS gerekceyle; veri eksikligi
  * gorunmez kalirdi.
  */
-export function kayipTabani(hareketler: OdemeHareketi[]): KayipTabaniSonucu {
+export function kayipTabani(hareketler: OdemeHareketi[], secenekler: KayipTabaniSecenekleri = {}): KayipTabaniSonucu {
   const liste = (hareketler ?? []).filter((h) => h && String(h.durum ?? '').toLowerCase() === BASARILI);
 
   const yatirimlar = liste.filter((h) => String(h.tur ?? '').toLowerCase() === 'deposit');
@@ -81,20 +98,26 @@ export function kayipTabani(hareketler: OdemeHareketi[]): KayipTabaniSonucu {
 
   // Donem siniri: en son ODENEN cekim. Yoksa hesabin basindan itibaren.
   const sonCekimAni = cekimler.reduce((enBuyuk, c) => Math.max(enBuyuk, zaman(c.tarih)), 0);
+  // Haftalik varyantta ayrica bu haftanin baslangiciyla da sinirlanir —
+  // hangisi DAHA GEC ise o gecerli (cekim hafta ortasindaysa taban yine
+  // ondan sonrasina daralir).
+  const donemSiniri = secenekler.donemTipi === 'haftalik'
+    ? Math.max(sonCekimAni, istanbulHaftaBaslangiciMs(secenekler.simdi))
+    : sonCekimAni;
 
-  const donemYatirimlari = yatirimlar.filter((y) => zaman(y.tarih) > sonCekimAni);
+  const donemYatirimlari = yatirimlar.filter((y) => zaman(y.tarih) > donemSiniri);
   const donemYatirimi = donemYatirimlari.reduce((t, y) => t + sayi(y.tutar), 0);
 
   // Sinirdan SONRA odenen cekim tanim geregi olmamali; yine de tam olalim
   // (ayni milisaniyede kayit, saat kaymasi vb.).
   const donemCekimi = cekimler
-    .filter((c) => zaman(c.tarih) > sonCekimAni)
+    .filter((c) => zaman(c.tarih) > donemSiniri)
     .reduce((t, c) => t + sayi(c.tutar), 0);
 
   // Son cekimden beri hic yatirim yoksa donem bos: taban 0, veri eksikligi yok.
   return {
     netLoss: Math.max(0, donemYatirimi - donemCekimi),
-    donemBaslangici: sonCekimAni > 0 ? new Date(sonCekimAni).toISOString() : null,
+    donemBaslangici: donemSiniri > 0 ? new Date(donemSiniri).toISOString() : null,
     donemYatirimi,
     donemCekimi,
   };

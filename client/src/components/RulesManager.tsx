@@ -44,6 +44,8 @@ interface PromoSpec {
     tieredPercentageRanges?: { min: number; max: number; percent: number; maxBonus?: number }[];
     /** Bonus tabanini yatirimdan NET KAYBA cevirir (promoEvaluator.depositBasis). */
     lossBonus?: boolean;
+    /** lossBonus tabaninin donemi: omur boyu (son cekimden itibaren) ya da takvim haftasi. */
+    lossBonusPeriod?: 'sinceLastWithdrawal' | 'weekly';
 
     // Automation & Loss Bonus
     isAutoCharge?: boolean;
@@ -849,13 +851,29 @@ export function RulesManager() {
                                                         </div>
                                                     )}
 
-                                                    <div className="p-4 rounded-xl bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
+                                                    <div className="p-4 rounded-xl bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] space-y-3">
                                                         <ToggleField
                                                             label="Kayıp bonusu (taban: net kayıp)"
                                                             description="Açıkken bonus tutarı yatırıma değil oyuncunun NET KAYBINA göre hesaplanır. Kademeli yüzde kullanan kayıp bonuslarında bu şart; kapalı bırakılırsa baremler son yatırıma uygulanır ve tutar yanlış çıkar."
                                                             value={editValue?.lossBonus}
                                                             onChange={(v) => setEditValue({ ...editValue, lossBonus: v })}
                                                         />
+                                                        {editValue?.lossBonus && (
+                                                            <div className="pl-1">
+                                                                <label className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest block mb-1">Kayıp Dönemi</label>
+                                                                <select
+                                                                    value={editValue?.lossBonusPeriod ?? 'sinceLastWithdrawal'}
+                                                                    onChange={(e) => setEditValue({ ...editValue, lossBonusPeriod: e.target.value as any })}
+                                                                    className="w-full h-11 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all outline-none font-bold"
+                                                                >
+                                                                    <option value="sinceLastWithdrawal">Son ödenen çekimden itibaren (ömür boyu birikebilir)</option>
+                                                                    <option value="weekly">Haftalık (Pazartesi 00:00'da sıfırlanır)</option>
+                                                                </select>
+                                                                <p className="mt-1 text-[10px] text-[color:var(--panel-faint,#5c6470)]">
+                                                                    Haftalık seçilirse net kayıp o Türkiye haftasıyla (ve varsa hafta içindeki bir çekimle) sınırlanır; her Pazartesi sıfırdan başlar.
+                                                                </p>
+                                                            </div>
+                                                        )}
                                                     </div>
 
                                                     {editValue?.amountType === 'tieredPercentage' && (

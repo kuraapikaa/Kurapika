@@ -55,6 +55,18 @@ export function getSpecForBonus(specs: RulesConfig, bonusId: number, bonusName: 
 // ─── Minimum Yatırım Kontrolü ────────────────────────────────────────────────
 
 /**
+ * Kayip bonusu tabaninin okunacagi alan — donem secimine gore.
+ *
+ * `weekly` secilirse `netLossWeekly` (takvim haftasiyla sinirli) okunur;
+ * aksi halde (varsayilan `sinceLastWithdrawal`) `netLoss` (son odenen
+ * cekimden itibaren, omur boyu birikebilir). Ikisi de account
+ * snapshot'ta AYRI hesaplanip taniniyor — bkz. kayipTabaniService.ts.
+ */
+function lossBasisAlani(spec: PromoSpec | undefined): 'netLoss' | 'netLossWeekly' {
+  return spec?.lossBonusPeriod === 'weekly' ? 'netLossWeekly' : 'netLoss';
+}
+
+/**
  * Bonus tutarının hesaplandığı taban.
  *
  * Kayıp bonusunda taban yatırım DEĞİL kayıptır: "1.000 ₺ kayba 200 ₺" gibi
@@ -64,7 +76,7 @@ export function getSpecForBonus(specs: RulesConfig, bonusId: number, bonusName: 
  */
 function depositBasis(account: AccountSnapshot, spec: PromoSpec | undefined): number {
   if (spec?.basisSource === 'netLoss' || (spec?.lossBonus === true && spec?.basisSource == null)) {
-    return Number((account as any).netLoss ?? 0);
+    return Number((account as any)[lossBasisAlani(spec)] ?? 0);
   }
   return spec?.isNextDayBonus === true
     ? Number((account as any).previousDayDepositTotal ?? 0)
@@ -73,7 +85,7 @@ function depositBasis(account: AccountSnapshot, spec: PromoSpec | undefined): nu
 
 function depositBasisLabel(spec: PromoSpec | undefined): string {
   if (spec?.basisSource === 'netLoss' || (spec?.lossBonus === true && spec?.basisSource == null)) {
-    return 'Net kayıp';
+    return spec?.lossBonusPeriod === 'weekly' ? 'Haftalık net kayıp' : 'Net kayıp';
   }
   return spec?.isNextDayBonus === true ? 'Önceki gün toplam yatırımı' : 'Son yatırım';
 }
@@ -861,12 +873,17 @@ export async function evaluateForAccount(
 
     // 5.g Zaman Kısıtlamaları
     if (spec.lossBonus === true) {
-      const netLoss = Number((account as any).netLoss ?? 0);
+      const netLoss = Number((account as any)[lossBasisAlani(spec)] ?? 0);
+      const haftalik = spec.lossBonusPeriod === 'weekly';
       items.push({
         id: 'loss-bonus-net-loss',
-        label: 'Net Kayıp Kontrolü',
+        label: haftalik ? 'Haftalık Net Kayıp Kontrolü' : 'Net Kayıp Kontrolü',
         ok: netLoss > 0,
-        reason: netLoss > 0 ? `UYGUN: Net kayıp ${netLoss.toFixed(2)} TRY` : 'RED: Oyuncunun doğrulanmış net kaybı yok.',
+        reason: netLoss > 0
+          ? `UYGUN: ${haftalik ? 'Haftalık net kayıp' : 'Net kayıp'} ${netLoss.toFixed(2)} TRY`
+          : haftalik
+            ? 'RED: Oyuncunun bu hafta doğrulanmış net kaybı yok.'
+            : 'RED: Oyuncunun doğrulanmış net kaybı yok.',
       });
     }
     if (spec.requestWithinHours != null) {

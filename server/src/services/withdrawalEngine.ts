@@ -61,6 +61,10 @@ export interface AccountSnapshot {
   lastLoginDateLocal?: string;
   isNoDepositOverride?: boolean;
   isWeeklyDiscountBaseline?: boolean;
+  /** Kayıp bonusu tabanı — son ödenen çekimden itibaren (ömür boyu birikebilir). */
+  netLoss?: number;
+  /** Kayıp bonusu tabanı — TAKVİM HAFTASIYLA da sınırlı (Pazartesi 00:00 Europe/Istanbul). */
+  netLossWeekly?: number;
   [key: string]: unknown;
 }
 
