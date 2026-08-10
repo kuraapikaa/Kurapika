@@ -125,7 +125,7 @@ export function MusteriYolculugu() {
                       }]
                     : []),
                 ]}
-                color="blue"
+                color="amber"
               />
               {veri.toplam.ilkYatirim === null && (
                 <p className="mt-3 text-xs text-muted-foreground">
@@ -147,7 +147,7 @@ export function MusteriYolculugu() {
                     data={veri.gunluk.map((g) => ({ gun: g.gun.slice(5), Tıklama: g.tiklama }))}
                     index="gun"
                     categories={['Tıklama']}
-                    colors={['blue']}
+                    colors={['amber']}
                     showLegend={false}
                   />
                 )}
@@ -164,7 +164,7 @@ export function MusteriYolculugu() {
                     data={veri.gunluk.map((g) => ({ gun: g.gun.slice(5), Kayıt: g.kayit }))}
                     index="gun"
                     categories={['Kayıt']}
-                    colors={['blue']}
+                    colors={['amber']}
                     showLegend={false}
                   />
                 )}
@@ -181,7 +181,7 @@ export function MusteriYolculugu() {
                     data={veri.gunluk.map((g) => ({ gun: g.gun.slice(5), 'İlk yatırım': g.ilkYatirim ?? 0 }))}
                     index="gun"
                     categories={['İlk yatırım']}
-                    colors={['blue']}
+                    colors={['amber']}
                     showLegend={false}
                   />
                 )}
@@ -197,7 +197,7 @@ export function MusteriYolculugu() {
               ) : (
                 <BarList
                   data={veri.kaynaklar.map((k) => ({ name: k.kaynak, value: k.tiklama }))}
-                  color="blue"
+                  color="amber"
                   valueFormatter={(v: number) => v.toLocaleString('tr-TR')}
                 />
               )}

@@ -17,6 +17,7 @@ export function Webhook() {
   const { veri, yukleniyor, hata, yenile } = useVeri<YonetimUclari['/webhook-durumu']>('/api/yonetim/webhook-durumu');
   const [elleSir, setElleSir] = useState('');
   const [uretilenSir, setUretilenSir] = useState<string | null>(null);
+  const [kopyalandi, setKopyalandi] = useState(false);
   const [isliyor, setIsliyor] = useState(false);
   const [islemHatasi, setIslemHatasi] = useState<string | null>(null);
 
@@ -35,7 +36,12 @@ export function Webhook() {
 
   const uret = () => calistir(async () => {
     const yanit = await api.gonder<{ uretildi: boolean; sir?: string }>('/api/yonetim/webhook-sirri', {});
-    if (yanit.uretildi && yanit.sir) setUretilenSir(yanit.sir);
+    if (yanit.uretildi && yanit.sir) {
+      setUretilenSir(yanit.sir);
+      // Yeni sir uretildiginde kopyalama durumu sifirlaniyor: onceki
+      // "Kopyalandi" etiketi yeni sir icin YANLIS bir guvence olurdu.
+      setKopyalandi(false);
+    }
   });
 
   const elleKaydet = () => calistir(async () => {
@@ -79,9 +85,12 @@ export function Webhook() {
           + sırrı webhook ayarına girin:
         </p>
 
+        {/* `--metin-1` diye bir değişken YOK (palette `--metin` ve
+            `--metin-2` var). Geçersiz değer sessizce yok sayılıp renk miras
+            alınıyordu; kod bloğunun okunurluğu tesadüfe kalmıştı. */}
         <pre
           className="overflow-x-auto rounded-lg p-3 text-xs"
-          style={{ background: 'var(--yuzey-2)', color: 'var(--metin-1)' }}
+          style={{ background: 'var(--yuzey-2)', color: 'var(--metin)' }}
         >{`POST /api/webhooks/lynon
 x-lynon-zaman: <unix-saniye>
 x-lynon-imza: sha256=<hmac-sha256("{zaman}.{govde}", sir)>
@@ -104,7 +113,21 @@ Content-Type: application/json
             <p className="text-xs font-semibold" style={{ color: 'var(--uyari)' }}>
               Bu değer bir daha gösterilmeyecek — şimdi kopyalayıp Lynon tarafına girin.
             </p>
-            <code className="mt-2 block break-all text-xs">{uretilenSir}</code>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <code className="min-w-0 flex-1 break-all text-xs">{uretilenSir}</code>
+              {/* Elle seçip kopyalamak, bir daha gösterilmeyecek bir değerde
+                  en riskli adım: eksik seçilen bir sır Lynon tarafında
+                  "imza geçersiz" olarak döner ve sebebi görünmez. */}
+              <Buton
+                onClick={() => {
+                  navigator.clipboard.writeText(uretilenSir)
+                    .then(() => setKopyalandi(true))
+                    .catch(() => setKopyalandi(false));
+                }}
+              >
+                {kopyalandi ? 'Kopyalandı' : 'Kopyala'}
+              </Buton>
+            </div>
           </div>
         )}
 

@@ -185,14 +185,24 @@
 }
 
 /*
- * AQUA — panel kapsami. (Sinif adi tarihsel; artik Apple kimligi
- * degil "kisilmis metal" anlamina geliyor. Adi degistirmek kabuk,
- * tablo ve on alti ekran dosyasina dokunmak demekti; palet gecisi
- * icin gereksiz bir risk.)
+ * KURO — panel kapsami. Vitrinle AYNI iki metal, alcak sesle.
+ *
+ * IKI SECICI BIRLIKTE: `.kuro` ve `.aqua`.
+ *
+ * Panel kapsaminin adi kodun surumune gore degisiyor — repo `.aqua`,
+ * yereldeki gelistirme kopyasi `.kuro`. Yalnizca birini yazmak,
+ * digerine uygulandiginda panelin TUM renk degiskenlerini dusuruyor
+ * ve panel notr griye donuyor (bir kez oldu). Ikisini birlikte
+ * tanimlamak bu tuzagi tamamen kaldiriyor: dosya hangi surume
+ * uygulanirsa uygulansin panel kapsami dolu kaliyor.
+ *
+ * Kapsamlardan biri kodda hic kullanilmiyorsa olu kural olarak duruyor;
+ * maliyeti birkac yuz bayt, karsiligi sessiz bir kirilmanin yok olmasi.
  *
  * Vitrinle AYNI iki metal, alcak sesle: zemin daha notr, isilti
  * yarim, degrade yalnizca dugmede ve logoda.
  */
+.kuro,
 .aqua {
   background: var(--zemin);
   color: var(--metin);
@@ -242,7 +252,8 @@
   --radius: 0.5rem;
 }
 
-.koyu .aqua {
+.koyu .kuro,
+.aqua {
   --zemin: #0b0a08;
   --yuzey: #141210;
   --yuzey-2: #1d1a15;
@@ -349,6 +360,8 @@
  * "ayni dil, daha alcak ses" — sifirlamak paneli baska bir urun
  * gibi gosterirdi.
  */
+.kuro .hud::before,
+.kuro .hud::after,
 .aqua .hud::before,
 .aqua .hud::after {
   width: 7px;
@@ -356,22 +369,54 @@
   border-color: color-mix(in srgb, var(--vurgu) 34%, transparent);
 }
 
+.kuro .kesik,
 .aqua .kesik {
   clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
 }
 
+.kuro button,
 .aqua button {
   border-radius: 0.5rem;
 }
 
+.kuro input,
+.kuro select,
+.kuro textarea,
 .aqua input,
 .aqua select,
 .aqua textarea {
   border-radius: 0.5rem;
 }
 
+.kuro .hata,
 .aqua .hata {
   border-radius: 0.5rem;
+}
+
+/*
+ * TARAMA — kabuk kromunun dokusu: cok ince yatay tarama cizgileri.
+ * Yalnizca ust seritte ve kenar cubugunda; calisma alani izgarali,
+ * ikisi birbirinin uzerine binmiyor.
+ */
+.tarama {
+  background-image: repeating-linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--vurgu) 4%, transparent) 0 1px,
+    transparent 1px 3px
+  );
+}
+
+/*
+ * PANEL IZGARASI — calisma alaninin zemini. Vitrindeki .izgara
+ * sinifinin kisilmis hali: 22px hucre (vitrinde 44px) ve maske YOK.
+ * Kenarlara dogru eriyen bir desen, kaydirilan uzun bir panel
+ * sayfasinda dikis gibi gorunurdu.
+ */
+.panel-izgara {
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--vurgu) 5%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--vurgu) 5%, transparent) 1px, transparent 1px);
+  background-size: 22px 22px;
 }
 
 body {

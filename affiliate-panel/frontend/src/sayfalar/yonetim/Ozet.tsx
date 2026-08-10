@@ -8,6 +8,41 @@ import { Card as ShadCard, CardContent, CardHeader, CardTitle } from '../../comp
 import { BosDurum, HataMesaji, Yukleniyor } from '../../components/durum';
 import { agTemaAcik, agTemaKoyu } from '../../lib/agGrid';
 import { useTema } from '../../lib/tema';
+import { DIKEY_ETIKETI, type Dikey } from '../../dikey-gorunum';
+
+/**
+ * YÖNETİM ÖZETİ — program geneli.
+ *
+ * ── Bu sürümde iki değişiklik ──
+ *
+ * 1. GRAFİK RENKLERİ. Tremor serileri `violet` ile çiziliyordu; bu
+ *    menekşe kimlikten kalan bir artıktı ve altın/gümüş paletin yanında
+ *    ekranın en dikkat çeken öğesi yanlış renkteydi. Casino `amber`
+ *    (altın ailesinin Tremor karşılığı), spor `slate` (gümüş) —
+ *    paletin iş bölümüyle aynı: altın para, gümüş ikincil.
+ *
+ *    Tremor renk adlarını Tailwind paletinden alıyor; CSS değişkeni
+ *    kabul etmiyor. Bu yüzden `var(--tayf-3)` yerine ona en yakın
+ *    adlandırılmış renk kullanılıyor — grafikler tema değiştiğinde
+ *    kendi açık/koyu varyantlarına Tremor tarafından geçiriliyor.
+ *
+ * 2. CASINO / SPOR KOLONLARI. Tablo tek bir GGR taşıyordu; iki dikey
+ *    ayrı oranlarla ödendiği için yöneticinin en çok ihtiyaç duyduğu
+ *    kırılım buydu. Kolonlar `dikeyler` alanı geldiğinde görünüyor,
+ *    yoksa hiç eklenmiyor — boş bir kolon "veri yok" değil "sıfır" gibi
+ *    okunurdu.
+ */
+
+interface DikeyOzeti {
+  dikey: Dikey;
+  gunSayisi: number;
+  oyuncuSayisi: number;
+  aktifOyuncuSayisi: number;
+  yatirim: number;
+  cekim: number;
+  ggr: number;
+  ftdSayisi: number | null;
+}
 
 interface OrtakOzeti {
   ortakAnahtari: string;
@@ -19,6 +54,9 @@ interface OrtakOzeti {
   ggr: number;
   ftdSayisi: number | null;
   gunlukGgr: Array<{ gun: string; ggr: number }>;
+  /** Dikey kırılımı; backend göçünden sonra dolu. */
+  dikeyler?: DikeyOzeti[];
+  gunlukDikeyGgr?: Array<{ gun: string; dikey: Dikey; ggr: number }>;
 }
 
 interface SenkronSonucu {
@@ -36,6 +74,14 @@ interface GecmisGGRSonucu {
   uyari: string | null;
 }
 
+/** Bir ortağın belirli dikeydeki GGR'si; kolon değeri olarak kullanılıyor. */
+const dikeyGgr = (o: OrtakOzeti, d: Dikey): number | null => {
+  const satir = o.dikeyler?.find((x) => x.dikey === d);
+  // Kayit YOKSA null: 0 yazmak "o dikeyde trafik denendi ve kazandirmadi"
+  // gibi okunur, oysa dogrusu "o dikeyde hic olcum yok".
+  return satir ? satir.ggr : null;
+};
+
 /** Tablo hücresindeki eğilim sütunu — günlük GGR'nin küçük bir alan grafiği. */
 function EgilimHucresi({ value }: ICellRendererParams<OrtakOzeti, OrtakOzeti['gunlukGgr']>) {
   const noktalar = value ?? [];
@@ -45,7 +91,7 @@ function EgilimHucresi({ value }: ICellRendererParams<OrtakOzeti, OrtakOzeti['gu
       data={noktalar}
       index="gun"
       categories={['ggr']}
-      colors={['blue']}
+      colors={['amber']}
       className="mt-1.5 h-7 w-24"
     />
   );
@@ -61,16 +107,40 @@ export function Ozet() {
   const [gecmisHatasi, setGecmisHatasi] = useState<string | null>(null);
   const [gecmisCalisiyor, setGecmisCalisiyor] = useState(false);
 
-  const sutunlar = useMemo<ColDef<OrtakOzeti>[]>(() => [
-    { field: 'ortakAnahtari', headerName: 'Ortak', pinned: 'left', minWidth: 150, cellClass: 'font-medium' },
-    { field: 'gunSayisi', headerName: 'Gün', type: 'numericColumn', width: 90 },
-    { field: 'oyuncuSayisi', headerName: 'Oyuncu', type: 'numericColumn', width: 100 },
-    { field: 'aktifOyuncuSayisi', headerName: 'Aktif', type: 'numericColumn', width: 90 },
-    { field: 'yatirim', headerName: 'Yatırım', type: 'numericColumn', width: 130, valueFormatter: (p) => paraBicimi(p.value ?? 0) },
-    { field: 'cekim', headerName: 'Çekim', type: 'numericColumn', width: 130, valueFormatter: (p) => paraBicimi(p.value ?? 0) },
-    { field: 'ggr', headerName: 'GGR', type: 'numericColumn', width: 130, sort: 'desc', valueFormatter: (p) => paraBicimi(p.value ?? 0) },
-    { field: 'gunlukGgr', headerName: 'Eğilim', width: 150, sortable: false, filter: false, cellRenderer: EgilimHucresi },
-  ], []);
+  const ozetler = veri?.ozetler ?? [];
+  // Dikey kolonlari YALNIZCA veri varsa: bos kolon eklemek, olculmeyeni
+  // sifir gibi gostermek olur.
+  const dikeyVar = ozetler.some((o) => (o.dikeyler?.length ?? 0) > 0);
+
+  const sutunlar = useMemo<ColDef<OrtakOzeti>[]>(() => {
+    const temel: ColDef<OrtakOzeti>[] = [
+      { field: 'ortakAnahtari', headerName: 'Ortak', pinned: 'left', minWidth: 150, cellClass: 'font-medium' },
+      { field: 'gunSayisi', headerName: 'Gün', type: 'numericColumn', width: 90 },
+      { field: 'oyuncuSayisi', headerName: 'Oyuncu', type: 'numericColumn', width: 100 },
+      { field: 'aktifOyuncuSayisi', headerName: 'Aktif', type: 'numericColumn', width: 90 },
+      { field: 'yatirim', headerName: 'Yatırım', type: 'numericColumn', width: 130, valueFormatter: (p) => paraBicimi(p.value ?? 0) },
+      { field: 'cekim', headerName: 'Çekim', type: 'numericColumn', width: 130, valueFormatter: (p) => paraBicimi(p.value ?? 0) },
+    ];
+
+    const dikeySutunlari: ColDef<OrtakOzeti>[] = dikeyVar
+      ? (['casino', 'spor'] as const).map((d) => ({
+        colId: `ggr-${d}`,
+        headerName: `${DIKEY_ETIKETI[d]} GGR`,
+        type: 'numericColumn',
+        width: 140,
+        valueGetter: (p) => (p.data ? dikeyGgr(p.data, d) : null),
+        // `null` icin tire; 0 ile ayni gorunmesi olcum eksikligini gizler.
+        valueFormatter: (p) => (p.value === null || p.value === undefined ? '—' : paraBicimi(p.value)),
+      }))
+      : [];
+
+    return [
+      ...temel,
+      ...dikeySutunlari,
+      { field: 'ggr', headerName: 'Toplam GGR', type: 'numericColumn', width: 140, sort: 'desc', valueFormatter: (p) => paraBicimi(p.value ?? 0) },
+      { field: 'gunlukGgr', headerName: 'Eğilim', width: 150, sortable: false, filter: false, cellRenderer: EgilimHucresi },
+    ];
+  }, [dikeyVar]);
 
   const senkronla = async () => {
     setCalisiyor(true);
@@ -101,7 +171,6 @@ export function Ozet() {
   if (yukleniyor) return <Yukleniyor satir={5} />;
   if (hata) return <HataMesaji mesaj={hata} />;
 
-  const ozetler = veri?.ozetler ?? [];
   const topla = (secici: (o: OrtakOzeti) => number) => ozetler.reduce((t, o) => t + secici(o), 0);
   // FTD hicbir ortakta olculmediyse `null`; sifir yazmak "hic ilk yatirim
   // olmadi" demek olurdu, oysa dogrusu "bu baglantidan olculemiyor".
@@ -115,9 +184,28 @@ export function Ozet() {
   for (const o of ozetler) {
     for (const g of o.gunlukGgr) gunHaritasi.set(g.gun, (gunHaritasi.get(g.gun) ?? 0) + g.ggr);
   }
-  const gunlukToplam = [...gunHaritasi.entries()]
-    .sort((a, b) => a[0].localeCompare(b[0]))
-    .map(([gun, ggr]) => ({ gun: gun.slice(5), GGR: Math.round(ggr) }));
+
+  // Dikey serisi varsa grafik IKI kategoriye ayriliyor. Toplami da
+  // ciziyor olsaydik ucuncu bir cizgi iki serinin uzerine binerdi;
+  // toplam zaten ust seritteki kartta yaziyor.
+  const dikeyGunHaritasi = new Map<string, { casino: number; spor: number }>();
+  for (const o of ozetler) {
+    for (const g of o.gunlukDikeyGgr ?? []) {
+      const m = dikeyGunHaritasi.get(g.gun) ?? { casino: 0, spor: 0 };
+      if (g.dikey === 'casino') m.casino += g.ggr;
+      else if (g.dikey === 'spor') m.spor += g.ggr;
+      dikeyGunHaritasi.set(g.gun, m);
+    }
+  }
+  const dikeySeri = dikeyGunHaritasi.size > 0;
+
+  const gunlukToplam = dikeySeri
+    ? [...dikeyGunHaritasi.entries()]
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([gun, m]) => ({ gun: gun.slice(5), Casino: Math.round(m.casino), Spor: Math.round(m.spor) }))
+    : [...gunHaritasi.entries()]
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([gun, ggr]) => ({ gun: gun.slice(5), GGR: Math.round(ggr) }));
 
   const ortakSiralamasi = ozetler
     .slice()
@@ -140,6 +228,13 @@ export function Ozet() {
         <Card>
           <Text>GGR</Text>
           <Metric>{paraBicimi(topla((o) => o.ggr))}</Metric>
+          {dikeyVar && (
+            <Text className="mt-1 text-xs">
+              Casino {paraBicimi(topla((o) => dikeyGgr(o, 'casino') ?? 0))}
+              {' · '}
+              Spor {paraBicimi(topla((o) => dikeyGgr(o, 'spor') ?? 0))}
+            </Text>
+          )}
         </Card>
         <Card>
           <Text>İlk yatırım</Text>
@@ -150,7 +245,9 @@ export function Ozet() {
 
       <div className="grid gap-3 lg:grid-cols-2">
         <Card>
-          <Text className="font-medium text-foreground">Toplam günlük GGR</Text>
+          <Text className="font-medium text-foreground">
+            {dikeySeri ? 'Günlük GGR — casino / spor' : 'Toplam günlük GGR'}
+          </Text>
           {gunlukToplam.length === 0 ? (
             <div className="flex h-44 items-center justify-center">
               <Text>Ölçüm yok.</Text>
@@ -160,10 +257,11 @@ export function Ozet() {
               className="mt-4 h-44"
               data={gunlukToplam}
               index="gun"
-              categories={['GGR']}
-              colors={['blue']}
+              // Altin casino, gumus spor — paletin is bolumuyle ayni.
+              categories={dikeySeri ? ['Casino', 'Spor'] : ['GGR']}
+              colors={dikeySeri ? ['amber', 'slate'] : ['amber']}
               valueFormatter={(v) => paraBicimi(v)}
-              showLegend={false}
+              showLegend={dikeySeri}
             />
           )}
         </Card>
@@ -174,7 +272,7 @@ export function Ozet() {
               <Text>Ölçüm yok.</Text>
             </div>
           ) : (
-            <BarList data={ortakSiralamasi} color="blue" valueFormatter={paraBicimi} className="mt-4" />
+            <BarList data={ortakSiralamasi} color="amber" valueFormatter={paraBicimi} className="mt-4" />
           )}
         </Card>
       </div>
@@ -223,6 +321,13 @@ export function Ozet() {
                 paginationPageSizeSelector={false}
               />
             </div>
+          )}
+
+          {!dikeyVar && ozetler.length > 0 && (
+            <p className="mt-3 text-xs text-muted-foreground">
+              Casino/spor kırılımı yok: bağlantı ölçümlerde dikey bilgisi vermiyor. Ayrışma
+              başladığı dönemden itibaren burada iki ayrı kolon olarak görünür.
+            </p>
           )}
         </CardContent>
       </ShadCard>

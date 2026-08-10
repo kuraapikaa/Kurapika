@@ -124,7 +124,9 @@ export async function portalRotalari(app: FastifyInstance): Promise<void> {
         cekim: 0,
         ggr: 0,
         ftdSayisi: null,
+        dikeyler: [],
         gunlukGgr: [],
+        gunlukDikeyGgr: [],
       },
       altOrtaklar: await altOrtaklar(istek.kiraci, oturum.ortakAnahtari!),
       // FTD `null` iken sebebi ONEMLI: "hic olculemez" ile "kalibrasyon

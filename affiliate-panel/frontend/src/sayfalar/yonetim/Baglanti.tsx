@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api, gunBicimi, useVeri } from '../../api';
 import { Alan, Bos, Buton, Hata, Hucre, Kart, Onay, Rozet, Satir, Tablo, Yukleniyor } from '../../ui';
 import type { AdaptorTanimGorunumu as AdaptorTanimi, BaglantiGorunumu as Gorunum } from '@sunucu/sozlesme.js';
+import { AKIS_IKONU, NasilCalisir } from '../../sihirbaz';
 
 
 const YETENEK_ETIKETI: Record<string, string> = {
@@ -88,6 +89,34 @@ export function Baglanti() {
 
   return (
     <>
+      <Kart baslik="Backoffice bağlantısı nasıl çalışır">
+        <p className="mb-4 max-w-3xl text-sm leading-relaxed" style={{ color: 'var(--metin-2)' }}>
+          Panelin hiçbir servisi, hiçbir ekranı ve hiçbir komisyon hesabı sağlayıcının alan adlarını
+          bilmez. Dışarının şekli tek bir <strong style={{ color: 'var(--metin)' }}>adaptör</strong>{' '}
+          arayüzünde içerinin modeline çevrilir — yeni bir backoffice eklemek çekirdeğe, depoya,
+          komisyona ya da arayüze dokunmadan tek bir dosya yazmaktan ibaret.
+        </p>
+        <NasilCalisir
+          adimlar={[
+            {
+              ikon: AKIS_IKONU.sec,
+              baslik: '1. Adaptörü seçin',
+              metin: 'Kataloglu bir sağlayıcı ya da herhangi bir JSON API için genel REST.',
+            },
+            {
+              ikon: AKIS_IKONU.adres,
+              baslik: '2. Sırları girin',
+              metin: 'Şifreleme anahtarı yoksa bağlantı kaydedilmez — düz metne düşmez.',
+            },
+            {
+              ikon: AKIS_IKONU.test,
+              baslik: '3. Doğrulayın ve açın',
+              metin: 'Test çekimi yapılır, ölçümler karşılaştırılır, sonra canlıya alınır.',
+            },
+          ]}
+        />
+      </Kart>
+
       <Kart baslik="Bağlantılar">
         {liste.length === 0 ? (
           <Bos mesaj="Henüz backoffice bağlantısı kurulu değil. Panelin geri kalanı (ortaklar, medya, hakediş) çalışmaya devam eder; yalnızca ölçüm çekilemez." />

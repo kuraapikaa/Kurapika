@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { api, paraBicimi, gunBicimi, useVeri } from '../../api';
 import { OlcuKarti } from '../../grafik';
 import { VeriTablosu, type Sutun } from '../../tablo';
-import { Bos, Hata, Kart, Rozet, Yukleniyor } from '../../ui';
+import { Bos, Buton, Hata, Kart, Rozet, Yukleniyor } from '../../ui';
 import type { YonetimUclari } from '@sunucu/sozlesme.js';
 
 type Bakiye = YonetimUclari['/cuzdanlar']['bakiyeler'][number];
@@ -98,9 +98,18 @@ export function Cuzdanlar() {
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <OlcuKarti etiket="Cüzdanı olan ortak" deger={String(bakiyeler.length)} />
         <OlcuKarti etiket="Toplam borç" deger={paraBicimi(toplamBorc)} alt="ödenmemiş hakediş" />
+        {/* NEGATIF BAKIYE ayri bir kart: toplam borcun icinde gorunmuyor
+            (orada Math.max(0, ...) ile disarida birakiliyor) ve gozden
+            kaciyordu. Negatif bakiye "ortak bize borclu" demek degil,
+            devreden zarar demek — takip edilmesi gereken bir durum. */}
+        <OlcuKarti
+          etiket="Negatif bakiye"
+          deger={String(bakiyeler.filter((b) => b.bakiye < 0).length)}
+          alt={bakiyeler.some((b) => b.bakiye < 0) ? 'devreden zarar' : undefined}
+        />
         <OlcuKarti etiket="Son hareketler" deger={String(hareketler.length)} />
       </div>
 
@@ -113,15 +122,16 @@ export function Cuzdanlar() {
           bakiyede birikiyor.
         </p>
         {islemHatasi && <p className="mt-2 text-sm" style={{ color: 'var(--olumsuz)' }}>{islemHatasi}</p>}
-        <button
-          type="button"
-          onClick={tahakkukCalistir}
-          disabled={isliyor}
-          className="mt-3 rounded-lg px-4 py-2 text-sm font-semibold transition-opacity disabled:opacity-50"
-          style={{ background: 'var(--vurgu)', color: 'var(--vurgu-uzeri)' }}
-        >
-          {isliyor ? 'Hesaplanıyor…' : 'Şimdi tahakkuk çalıştır'}
-        </button>
+        {/* Elle yazılmış düğme `var(--vurgu-uzeri)` kullanıyordu — palette
+            böyle bir değişken YOK (doğrusu `--vurgu-metin`). Geçersiz değer
+            sessizce yok sayılıp yazı rengi miras alıyor, yani altın dolgu
+            üzerinde altın yazı riski vardı. Paylaşılan `Buton` zaten doğru
+            değişkenleri ve pahlı (kesik) birincil biçimi taşıyor. */}
+        <div className="mt-3">
+          <Buton tur="birincil" devredisi={isliyor} onClick={tahakkukCalistir}>
+            {isliyor ? 'Hesaplanıyor…' : 'Şimdi tahakkuk çalıştır'}
+          </Buton>
+        </div>
       </Kart>
 
       <Kart baslik="Bakiyeler">

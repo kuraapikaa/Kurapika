@@ -1,10 +1,27 @@
 import { gunBicimi, paraBicimi, useVeri } from '../../api';
 import { CubukListesi, OlcuKarti, ZamanSerisi } from '../../grafik';
+import { DikeyOlcuKarti, DikeyZamanSerisi, type Dikey, type DikeyDegeri } from '../../dikey-gorunum';
 import { Hata, Hucre, Kart, Rozet, Satir, Tablo, Yukleniyor } from '../../ui';
 import type {
   AltLinkGorunumu as AltLink, OrtakOzeti as Ozet, PortalBen as Ben, PortalOyuncusu,
   SonBonusVeyaDuzeltme, TiklamaOzeti,
 } from '@sunucu/sozlesme.js';
+
+/**
+ * ORTAK PANELİ — genel bakış.
+ *
+ * ── Bu sürümde değişen: CASINO / SPOR AYRIMI ──
+ *
+ * Ölçü kartları artık tek bir toplam değil, üstte toplam + altında
+ * dikey kırılımı gösteriyor. Gerekçe ödeme tarafında: iki dikey ayrı
+ * oranlarla ödeniyor (bkz. `servisler/dikey.ts`), dolayısıyla ortak
+ * "neden bu kadar" sorusunu ancak kırılımı görürse cevaplayabiliyor.
+ *
+ * KADEMELİ GEÇİŞ: `ozet.dikeyler` backend'de henüz yoksa kartlar
+ * eskisi gibi yalnızca toplamı gösteriyor — kırılım alanı boş bir
+ * çerçeve olarak DURMUYOR, hiç çizilmiyor. Böylece bu dosya backend
+ * göçünden ÖNCE de doğru çalışıyor.
+ */
 
 /**
  * Bir oyuncunun son bonus/düzeltme hücresi — kendi TEMBEL isteğini
@@ -52,6 +69,16 @@ function degisimYuzdesi(seri: number[]): number | null {
   return ((simdiki - onceki) / Math.abs(onceki)) * 100;
 }
 
+/** Dikey satırlarını kart kırılımına çevirir; biçimlendirme çağıranda. */
+function kirilim(
+  dikeyler: Ozet['dikeyler'] | undefined,
+  al: (d: NonNullable<Ozet['dikeyler']>[number]) => number,
+  bicim: (n: number) => string,
+): DikeyDegeri[] | undefined {
+  if (!dikeyler?.length) return undefined;
+  return dikeyler.map((d) => ({ dikey: d.dikey as Dikey, metin: bicim(al(d)) }));
+}
+
 export function PortalOzet() {
   const ben = useVeri<Ben>('/api/portal/ben');
   const ozet = useVeri<{
@@ -91,6 +118,24 @@ export function PortalOzet() {
 
   const linkAdi = new Map((linkler.veri?.linkler ?? []).map((l) => [l.kod, l.ad]));
 
+  const dikeyler = o?.dikeyler;
+  // Gunluk dikey serisi: (gun -> {casino, spor}). Backend henuz
+  // vermiyorsa tek serili eski grafige dusuyoruz.
+  const dikeySerisi = (() => {
+    const ham = o?.gunlukDikeyGgr;
+    if (!ham?.length) return [];
+    const gunler = new Map<string, { gun: string; casino: number; spor: number }>();
+    for (const n of ham) {
+      const mevcut = gunler.get(n.gun) ?? { gun: n.gun, casino: 0, spor: 0 };
+      if (n.dikey === 'casino') mevcut.casino += n.ggr;
+      else if (n.dikey === 'spor') mevcut.spor += n.ggr;
+      // `bilinmiyor` iki seriye de YAZILMIYOR: ayrisamamis geliri
+      // casino cizgisine eklemek, olculmeyeni olculmus gibi gostermek.
+      gunler.set(n.gun, mevcut);
+    }
+    return [...gunler.values()].sort((a, b) => a.gun.localeCompare(b.gun));
+  })();
+
   return (
     <>
       <Kart>
@@ -114,17 +159,29 @@ export function PortalOzet() {
       </Kart>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <OlcuKarti
+        <DikeyOlcuKarti
           etiket="GGR"
           deger={paraBicimi(o?.ggr ?? 0)}
           degisim={degisimYuzdesi(seri.map((s) => s.deger))}
           alt="son 30 gün"
+          dikeyler={kirilim(dikeyler, (d) => d.ggr, paraBicimi)}
         />
-        <OlcuKarti etiket="Yatırım" deger={paraBicimi(o?.yatirim ?? 0)} />
-        <OlcuKarti
+        <DikeyOlcuKarti
+          etiket="Yatırım"
+          deger={paraBicimi(o?.yatirim ?? 0)}
+          dikeyler={kirilim(dikeyler, (d) => d.yatirim, paraBicimi)}
+        />
+        <DikeyOlcuKarti
           etiket="Oyuncu"
           deger={String(oyuncuSayisi)}
           alt={`${o?.aktifOyuncuSayisi ?? 0} aktif`}
+          dikeyler={kirilim(dikeyler, (d) => d.aktifOyuncuSayisi, String)}
+          // Ayni oyuncu hem casino hem spor oynuyorsa IKI satirda da
+          // sayiliyor; toplamlarin ustteki rakama esit olmamasi dogru.
+          // Bunu yazmamak "rakamlar tutmuyor" izlenimi verirdi.
+          toplamaUyari={dikeyler?.length
+            ? 'Dikey kırılımı o dikeyde aktif oyuncuyu sayar; aynı oyuncu ikisinde de görünebilir.'
+            : undefined}
         />
         <OlcuKarti
           etiket="Tıklama"
@@ -136,9 +193,11 @@ export function PortalOzet() {
       {/* Veri yokken 200 piksellik bos bir kutu ekranin yarisini
           kapliyor ve hicbir sey soylemiyor. Grafik yalnizca cizilecek
           bir sey varken gosteriliyor. */}
-      {seri.length > 0 && (
+      {(dikeySerisi.length > 0 || seri.length > 0) && (
       <Kart baslik="Günlük GGR">
-        <ZamanSerisi noktalar={seri} bosMesaj="Bu dönemde ölçüm yok." />
+        {dikeySerisi.length > 0
+          ? <DikeyZamanSerisi noktalar={dikeySerisi} bosMesaj="Bu dönemde ölçüm yok." />
+          : <ZamanSerisi noktalar={seri} bosMesaj="Bu dönemde ölçüm yok." />}
         {o?.ftdSayisi === null && (
           <p className="mt-3 text-xs" style={{ color: 'var(--metin-2)' }}>
             {ozet.veri?.ftd.olculuyorMu
@@ -179,12 +238,12 @@ export function PortalOzet() {
       {/* Toplu affiliate gecisiyle (kullanici adiyla) size baglanan bir
           oyuncunun tiklama gecmisi yoktur, bu yuzden hicbir alt link
           altinda gorunmez. Bu tablo, hangi yoldan geldigine bakmadan
-          size esles mis TUM oyunculari gosteriyor. */}
+          size eslesmis TUM oyunculari gosteriyor. */}
       {!oyuncularim.yukleniyor && (oyuncularim.veri?.oyuncular.length ?? 0) > 0 && (() => {
         const oyuncular = oyuncularim.veri!.oyuncular;
         // Site adi yalnizca birden fazla marka icin trafik getiriyorsaniz
         // anlamli -- tek siteli ortakta her satir zaten ayni degeri
-        // taşırdı, sütun gereksiz gürültü olurdu.
+        // tasirdi, sutun gereksiz gurultu olurdu.
         const cokluSite = new Set(oyuncular.map((o) => o.baglantiAdi)).size > 1;
         return (
           <Kart baslik="Oyuncularınız">

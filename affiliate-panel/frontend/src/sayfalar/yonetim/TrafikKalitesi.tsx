@@ -39,6 +39,21 @@ export function TrafikKalitesi() {
     ? Math.round(skorlu.reduce((t, r) => t + (r.riskSkoru ?? 0), 0) / skorlu.length)
     : null;
 
+  // ONCELIKLI ve SAKIN ayrimi.
+  //
+  // Ekran ortak basina bir kart ciziyordu, GELIS SIRASINDA. Yirmi sekiz
+  // ortakta en riskli olan sayfanin ortasinda bir yerde kaliyor ve
+  // yoneticinin once bakmasi gereken kayit, once GORDUGU kayit olmuyordu.
+  // Skorun tek isi dikkati yonlendirmek — o zaman sirayi da o belirlemeli.
+  //
+  // Skorsuzlar da USTTE (Infinity): olculemeyen bir ortak, temiz oldugu
+  // BILINEN bir ortak degil. Dusuk riskliler en altta katlanmis —
+  // tamamen gizlemek olmaz, bir ortagin temiz oldugunu GORMEK de bilgi.
+  const siralama = (r: Rapor) => (r.riskSkoru === null ? Infinity : r.riskSkoru);
+  const sirali = [...raporlar].sort((a, b) => siralama(b) - siralama(a));
+  const oncelikli = sirali.filter((r) => r.bant !== 'dusuk');
+  const sakin = sirali.filter((r) => r.bant === 'dusuk');
+
   return (
     <>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -59,12 +74,17 @@ export function TrafikKalitesi() {
           <strong>Skor kimin suçlu olduğunu değil, önce kime bakmanız gerektiğini söylüyor</strong> —
           ve hiçbir hesap bu skora bakılarak kendiliğinden kapatılmıyor.
         </p>
+        <p className="mt-2 text-sm" style={{ color: 'var(--metin-2)' }}>
+          Liste risk skoruna göre sıralı: en üstte önce bakılması gerekenler. Skoru
+          hesaplanamayanlar da üstte — ölçülemeyen bir ortak, temiz olduğu bilinen bir ortak
+          değildir. Düşük riskliler en altta katlanmış duruyor.
+        </p>
       </Kart>
 
       {raporlar.length === 0 ? (
         <Kart><Bos mesaj="Henüz ortak yok." /></Kart>
       ) : (
-        raporlar.map((r) => (
+        oncelikli.map((r) => (
           <Kart
             key={r.ortakAnahtari}
             baslik={r.ortakAdi}
@@ -120,6 +140,36 @@ export function TrafikKalitesi() {
             )}
           </Kart>
         ))
+      )}
+
+      {/* SAKIN ORTAKLAR — katlanmis. Native <details>: JS gerekmiyor,
+          klavye ve ekran okuyucu destegi kendiliginden dogru. */}
+      {sakin.length > 0 && (
+        <details className="hud border" style={{ background: 'var(--yuzey)', borderColor: 'var(--kenar)' }}>
+          <summary className="flex cursor-pointer list-none items-center gap-3 p-4">
+            <span className="min-w-0">
+              <span className="block text-sm font-semibold">Düşük riskli {sakin.length} ortak</span>
+              <span className="mt-0.5 block text-xs" style={{ color: 'var(--metin-2)' }}>
+                Sinyalleri eşiğin altında. Görmek için tıklayın.
+              </span>
+            </span>
+            <span aria-hidden className="ml-auto shrink-0 text-xl font-light" style={{ color: 'var(--vurgu)' }}>+</span>
+          </summary>
+          <div className="space-y-2.5 border-t p-4" style={{ borderColor: 'var(--kenar)' }}>
+            {sakin.map((r) => (
+              <div key={r.ortakAnahtari} className="flex flex-wrap items-center gap-3">
+                <span className="min-w-0 flex-1 basis-48 truncate text-sm font-medium">{r.ortakAdi}</span>
+                <span className="text-xs" style={{ color: 'var(--metin-2)' }}>
+                  {r.tiklama} tıklama · {r.oyuncu} oyuncu
+                </span>
+                <Rozet
+                  metin={r.riskSkoru === null ? BANT_ETIKETI[r.bant] : `${BANT_ETIKETI[r.bant]} · ${r.riskSkoru}`}
+                  renk={BANT_RENGI[r.bant]}
+                />
+              </div>
+            ))}
+          </div>
+        </details>
       )}
     </>
   );

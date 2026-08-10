@@ -142,6 +142,8 @@ export function Ortaklar() {
   // Uretilen parola YALNIZCA burada, bir kez gorunur; hicbir listede yok.
   const [uretilen, setUretilen] = useState<{ ad: string; parola: string } | null>(null);
   const [arama, setArama] = useState('');
+  // null = tumu. Durum suzgeci aramadan BAGIMSIZ: ikisi birlikte daraltiyor.
+  const [durumSuzgeci, setDurumSuzgeci] = useState<Ortak['durum'] | null>(null);
 
   const calistir = useCallback(async (is: () => Promise<unknown>) => {
     setHata(null);
@@ -179,6 +181,16 @@ export function Ortaklar() {
   ], []);
 
   if (liste.yukleniyor) return <Yukleniyor satir={6} />;
+
+  const tumOrtaklar = liste.veri?.ortaklar ?? [];
+  const gorunen = durumSuzgeci ? tumOrtaklar.filter((x) => x.durum === durumSuzgeci) : tumOrtaklar;
+  // Sayilar SUZGECTEN ONCEKI listeden: bir duruma gecince digerlerinin
+  // sayaci sifirlanirsa cipler kullanilamaz hale gelir.
+  const durumSayilari = (['bekliyor', 'onaylandi', 'askida', 'reddedildi'] as const)
+    .map((d) => ({ durum: d, sayi: tumOrtaklar.filter((x) => x.durum === d).length }))
+    // Hic ortagi olmayan durum cip olarak GOSTERILMIYOR: bos bir suzgec
+    // tiklandiginda "sonuc yok" gosterir, bu bir secenek degil bir cikmaz.
+    .filter((d) => d.sayi > 0);
 
   return (
     <>
@@ -251,7 +263,12 @@ export function Ortaklar() {
 
       <Card>
         <CardHeader className="flex-row items-center justify-between space-y-0">
-          <CardTitle className="text-sm font-medium text-muted-foreground">Ortaklar</CardTitle>
+          <CardTitle className="text-sm font-medium text-muted-foreground">
+            Ortaklar
+            <span className="ml-2 font-normal tabular-nums">
+              {gorunen.length}{durumSuzgeci ? ` / ${tumOrtaklar.length}` : ''}
+            </span>
+          </CardTitle>
           <Input
             placeholder="Ara: ad, e-posta, anahtar, durum, plan…"
             value={arama}
@@ -260,10 +277,37 @@ export function Ortaklar() {
           />
         </CardHeader>
         <CardContent>
+          {/* DURUM ÇİPLERİ — ekranda yalnızca serbest metin araması vardı;
+              "bekleyenleri göster" gibi en sık ihtiyaç, kullanıcının doğru
+              kelimeyi yazmasına bağlıydı. Çipler AG Grid'in kendi süzgecini
+              kullanmıyor ve `quickFilterText` üzerine binmiyor: ayrı bir dizi
+              süzgeci, ikisi birlikte daraltıyor. */}
+          {durumSayilari.length > 1 && (
+            <div className="mb-3 flex flex-wrap gap-2">
+              <Button
+                size="sm"
+                variant={durumSuzgeci === null ? 'default' : 'outline'}
+                onClick={() => setDurumSuzgeci(null)}
+              >
+                Tümü <span className="ml-1.5 tabular-nums opacity-70">{tumOrtaklar.length}</span>
+              </Button>
+              {durumSayilari.map((d) => (
+                <Button
+                  key={d.durum}
+                  size="sm"
+                  variant={durumSuzgeci === d.durum ? 'default' : 'outline'}
+                  onClick={() => setDurumSuzgeci(durumSuzgeci === d.durum ? null : d.durum)}
+                >
+                  {DURUM_ETIKETI[d.durum]}
+                  <span className="ml-1.5 tabular-nums opacity-70">{d.sayi}</span>
+                </Button>
+              ))}
+            </div>
+          )}
           <div style={{ height: 520 }}>
             <AgGridReact
               theme={koyu ? agTemaKoyu : agTemaAcik}
-              rowData={liste.veri?.ortaklar ?? []}
+              rowData={gorunen}
               columnDefs={sutunlar}
               context={baglam}
               defaultColDef={{ sortable: true, resizable: true, filter: 'agTextColumnFilter' }}

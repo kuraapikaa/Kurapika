@@ -17,9 +17,16 @@ import { useTema } from '../../lib/tema';
  * DÖNEM HAKEDİŞİ — mali/hassas.
  *
  * Taslak dönem her açılışta yeniden hesaplanır — ölçümler gün içinde
- * güncellenir. Onaylandıktan sonra dondurulur: ortağa söylenen rakamla
+ * güncellenir. Onaylandıktan sonra KESİNLEŞİR: ortağa söylenen rakamla
  * defterdeki rakam ayrışmasın diye. Devir zinciri yalnızca onaylanmış
  * dönemlerden okunur.
+ *
+ * ── "Dondurulur" yerine "kesinleşir" ──
+ *
+ * Eski dil ortakla paylaşılan ekranlarda ters okunuyordu: "dondurmak"
+ * kazancın askıya alındığını ima ediyor, oysa anlam tam tersi — rakam
+ * artık değişmez. Yönetim ekranında da aynı kelime kullanılıyor ki iki
+ * taraf aynı şeyi aynı adıyla görsün.
  */
 
 interface Hakedis {
@@ -60,7 +67,7 @@ const BADGE_OLUMLU = 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400';
 const BADGE_UYARI = 'bg-amber-500/15 text-amber-600 dark:text-amber-400';
 
 const DURUM_SINIFI = { taslak: BADGE_UYARI, onaylandi: BADGE_OLUMLU, odendi: BADGE_OLUMLU } as const;
-const DURUM_ETIKETI = { taslak: 'Taslak', onaylandi: 'Onaylandı', odendi: 'Ödendi' } as const;
+const DURUM_ETIKETI = { taslak: 'Taslak', onaylandi: 'Kesinleşti', odendi: 'Ödendi' } as const;
 
 function DurumRozeti({ durum }: { durum: Donem['durum'] }) {
   return <Badge variant="outline" className={DURUM_SINIFI[durum]}>{DURUM_ETIKETI[durum]}</Badge>;
@@ -149,7 +156,7 @@ export function Donemler() {
         <CardContent>
           <p className="mb-3 text-sm text-muted-foreground">
             Taslak dönem her açılışta yeniden hesaplanır — ölçümler gün içinde güncellenir. Onaylandıktan
-            sonra <strong>dondurulur</strong>: ortağa söylenen rakamla defterdeki rakam ayrışmasın diye.
+            sonra <strong>kesinleşir</strong>: ortağa söylenen rakamla defterdeki rakam ayrışmasın diye.
             Devir zinciri yalnızca onaylanmış dönemlerden okunur.
           </p>
           <div className="flex flex-wrap items-end gap-3">
@@ -208,8 +215,21 @@ export function Donemler() {
               <div className="flex items-center gap-2">
                 <DurumRozeti durum={donem.durum} />
                 {donem.durum === 'taslak' && (
-                  <Button disabled={calisiyor} onClick={() => calistir(() => api.gonder<Donem>(`/api/yonetim/donemler/${donem.ay}/onayla`))}>
-                    Onayla
+                  <Button
+                    disabled={calisiyor}
+                    onClick={() => {
+                      // Onay GERI ALINAMAZ: rakam kesinlesir ve devir
+                      // zinciri bu donemden okunmaya baslar. Tek tikla
+                      // yapilacak bir is degil.
+                      if (window.confirm(
+                        `${donem.ay} dönemi onaylanıp kesinleşecek: ${paraBicimi(donem.toplamOdenecek)}. `
+                        + 'Onaydan sonra rakam değiştirilemez ve ortakların paneline yazılır. Devam edilsin mi?',
+                      )) {
+                        calistir(() => api.gonder<Donem>(`/api/yonetim/donemler/${donem.ay}/onayla`));
+                      }
+                    }}
+                  >
+                    Onayla ve kesinleştir
                   </Button>
                 )}
                 {donem.durum === 'onaylandi' && (

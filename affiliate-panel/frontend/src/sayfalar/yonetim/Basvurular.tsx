@@ -7,6 +7,7 @@ import type { KomisyonPlani as Plan, OrtakGorunumu as Ortak } from '@sunucu/sozl
 const YONTEM_ETIKETI: Record<string, string> = {
   seo: 'SEO', ppc: 'PPC', 'sosyal-medya': 'Sosyal medya', 'e-posta': 'E-posta',
   yayin: 'Yayın', influencer: 'Influencer', telegram: 'Telegram',
+  whatsapp: 'WhatsApp', sms: 'SMS', mailing: 'Mailing', 'data-affiliate': 'Data affiliate',
   forum: 'Forum', uygulama: 'Uygulama', diger: 'Diğer',
 };
 
@@ -46,6 +47,12 @@ export function Basvurular() {
 
   const basvurular = liste.veri?.basvurular ?? [];
   const beyanToplami = basvurular.reduce((t, o) => t + (o.basvuru.aylikOyuncu ?? 0), 0);
+  // Ucun siralamasina GUVENMIYORUZ: en kucuk tarihi kendimiz buluyoruz.
+  // "En eski bekleyen" yanlis gosterilirse yonetici sirayi yanlis kuruyor.
+  const enEski = basvurular.reduce<string | null>(
+    (e, o) => (e === null || o.createdAt < e ? o.createdAt : e),
+    null,
+  );
 
   return (
     <>
@@ -58,7 +65,8 @@ export function Basvurular() {
         />
         <Olcu
           etiket="En eski bekleyen"
-          deger={basvurular.length ? gunBicimi(basvurular[0].createdAt) : '—'}
+          deger={enEski ? gunBicimi(enEski) : '—'}
+          alt={enEski ? 'ilk bakılması gereken' : undefined}
         />
       </div>
 
