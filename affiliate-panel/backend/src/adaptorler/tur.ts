@@ -28,7 +28,9 @@ export type AdaptorYetenegi =
   /** Sitenin gerçek ödeme yöntemlerini listeleyebiliyor. */
   | 'odeme-yontemleri'
   /** Gün bazında OYUNCU düzeyinde veri okuyabiliyor (BTag'e bakmadan). */
-  | 'gecmis-doldurma';
+  | 'gecmis-doldurma'
+  /** Bir oyuncunun en son bonus verilişini ya da bakiye düzeltmesini okuyabiliyor. */
+  | 'son-bonus-duzeltme';
 
 export type AlanTuru = 'metin' | 'parola' | 'sayi' | 'secim' | 'cokSatir';
 
@@ -155,6 +157,27 @@ export interface BackofficeAdaptoru {
    * değil, panelin kendi eşleşme kaydı yapıyor (bkz. `HamOyuncuGunu`).
    */
   oyuncuGunuCek?(gun: string): Promise<HamOyuncuGunu[]>;
+  /**
+   * Bir oyuncuya en son verilen bonus YA DA en son bakiye düzeltmesi,
+   * hangisi daha yeniyse.
+   *
+   * Ortak, kendisine geçirilen ya da kayıt olan bir oyuncuya destek
+   * ekibinin ne zaman/ne verdiğini portalda hiç göremiyordu. İkisi
+   * ayrı Lynon uçları; ortak için tek "en son ne oldu" sorusuna
+   * indirgeniyor, hangisi olduğunu `tur` alanı taşıyor.
+   *
+   * Hiçbiri yoksa (ya da uç hata verirse) `null` — "hiç yok" ile
+   * "sorgulanamadı" arasındaki fark burada önemsiz, ikisi de ortak
+   * ekranında aynı boş satır.
+   */
+  sonBonusVeyaDuzeltme?(oyuncuId: string): Promise<SonBonusVeyaDuzeltme | null>;
+}
+
+export interface SonBonusVeyaDuzeltme {
+  tur: 'bonus' | 'duzeltme';
+  ad: string;
+  tutar: number;
+  tarih: string;
 }
 
 export interface AdaptorTanimi {

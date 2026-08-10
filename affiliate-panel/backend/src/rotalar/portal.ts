@@ -1,7 +1,7 @@
 import QRCode from 'qrcode';
 import type { FastifyInstance } from 'fastify';
 import { ortakZorunlu } from '../kimlik/koruma.js';
-import { baglantilarGorunumu } from '../adaptorler/kayit.js';
+import { adaptorAl, baglantilarGorunumu } from '../adaptorler/kayit.js';
 import {
   altLinkDurumDegistir,
   altLinkleriListele,
@@ -16,13 +16,14 @@ import { medyaIzlemeLinki, medyalariListele } from '../servisler/medya.js';
 import { ortakOzetleri } from '../servisler/olcum.js';
 import { ftdDurumu } from '../servisler/ilkYatirim.js';
 import {
-  altLinkFinansOzeti, altLinkOyuncuListesi, ortakOyuncuListesi, type AltLinkOyuncusu,
+  altLinkFinansOzeti, altLinkOyuncuListesi, ortakOyuncuListesi, oyuncuBaglantisi, type AltLinkOyuncusu,
 } from '../servisler/oyuncuEslesme.js';
 import { ortakBul, onayZorunlu } from '../servisler/ortaklar.js';
 import { postbackAyarla, postbackAyarlari, postbackKayitlari } from '../servisler/postback.js';
 import { altLinkTiklamaOzeti, tiklamalariListele, tiklamaOzeti } from '../servisler/tiklama.js';
 import { musteriYolculugu } from '../servisler/yolculuk.js';
-import type { PortalOyuncusu } from '../sozlesme.js';
+import { guvenliKiraciAnahtari } from '../lib/kiraci.js';
+import type { PortalOyuncusu, SonBonusVeyaDuzeltme } from '../sozlesme.js';
 
 /**
  * ORTAK PORTALI.
@@ -51,6 +52,35 @@ async function oyuncularaSiteEtiketiEkle(kiraci: string, oyuncular: AltLinkOyunc
     ...gerisi,
     baglantiAdi: adlar.get(baglantiId) ?? baglantiId,
   }));
+}
+
+/**
+ * Son bonus/düzeltme sorgusu Lynon'a CANLI istek atıyor — sayfa her
+ * yenilendiğinde aynı oyuncu için tekrar tekrar sormak hem yavaş hem
+ * Lynon tarafında gereksiz yük. Kısa bir bellek-içi önbellek, ortağın
+ * aynı tabloyu birkaç dakika içinde tekrar açmasını neredeyse anlık
+ * yapıyor; süre dolunca doğal olarak tazeleniyor.
+ */
+const SON_BONUS_TTL_MS = 3 * 60 * 1000;
+const sonBonusOnbellegi = new Map<string, { alinanAn: number; sonuc: SonBonusVeyaDuzeltme | null }>();
+
+async function sonBonusVeyaDuzeltmeGetir(
+  kiraci: string,
+  baglantiId: string,
+  lynonOyuncuId: string,
+): Promise<SonBonusVeyaDuzeltme | null> {
+  const anahtar = `${guvenliKiraciAnahtari(kiraci)}\t${baglantiId}\t${lynonOyuncuId}`;
+  const onbellek = sonBonusOnbellegi.get(anahtar);
+  if (onbellek && Date.now() - onbellek.alinanAn < SON_BONUS_TTL_MS) return onbellek.sonuc;
+
+  const adaptor = await adaptorAl(kiraci, baglantiId);
+  if (!adaptor?.sonBonusVeyaDuzeltme) return null;
+
+  // Lynon'a giden CANLI bir çağrı: erişilemezse (bağlantı koptu, oturum
+  // düştü, uç değişti) satırı "bilinmiyor" göster, tüm tabloyu bozma.
+  const sonuc = await adaptor.sonBonusVeyaDuzeltme(lynonOyuncuId).catch(() => null);
+  sonBonusOnbellegi.set(anahtar, { alinanAn: Date.now(), sonuc });
+  return sonuc;
 }
 
 export async function portalRotalari(app: FastifyInstance): Promise<void> {
@@ -121,6 +151,33 @@ export async function portalRotalari(app: FastifyInstance): Promise<void> {
       return { hata: 'Hesap bulunamadı.' };
     }
     return { oyuncular: await oyuncularaSiteEtiketiEkle(istek.kiraci, await ortakOyuncuListesi(istek.kiraci, ortak.id)) };
+  });
+
+  /**
+   * OYUNCUNUN SON BONUSU YA DA DÜZELTMESİ — tek oyuncu için, istendiğinde.
+   *
+   * `/oyuncularim` listesine gömülmüyor: o uç TEK sorguda TÜM oyuncuları
+   * döndürüyor, buna CANLI bir Lynon çağrısı eklemek onu da aynı N+1
+   * tuzağına düşürürdü (bkz. `gecmisGGR.ts`'teki toplu-yazım fix'i —
+   * aynı hata sınıfı, bu sefer yazımda değil OKUMADA). Bunun yerine
+   * her satır kendi hücresini ayrı, tembel bir istekle dolduruyor;
+   * tarayıcı zaten aynı origin'e istekleri doğal olarak kuyruklar.
+   */
+  app.get<{ Params: { lynonOyuncuId: string } }>('/oyuncularim/:lynonOyuncuId/son-bonus', async (istek, yanit) => {
+    const oturum = istek.oturum!;
+    const ortak = oturum.ortakId ? await ortakBul(istek.kiraci, oturum.ortakId) : null;
+    if (!ortak) {
+      yanit.status(401);
+      return { hata: 'Hesap bulunamadı.' };
+    }
+
+    // `oyuncuBaglantisi` bu oyuncunun GERÇEKTEN bu ortağa eşleşmiş
+    // olduğunu da doğruluyor — bulunamazsa başka bir ortağın oyuncusu
+    // sorulmuş demektir, sessizce `null` dönüyoruz.
+    const baglantiId = await oyuncuBaglantisi(istek.kiraci, ortak.id, istek.params.lynonOyuncuId);
+    if (!baglantiId) return { sonuc: null };
+
+    return { sonuc: await sonBonusVeyaDuzeltmeGetir(istek.kiraci, baglantiId, istek.params.lynonOyuncuId) };
   });
 
   app.get('/medya', async (istek) => ({

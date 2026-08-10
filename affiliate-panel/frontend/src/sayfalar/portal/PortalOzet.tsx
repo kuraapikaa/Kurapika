@@ -2,8 +2,35 @@ import { gunBicimi, paraBicimi, useVeri } from '../../api';
 import { CubukListesi, OlcuKarti, ZamanSerisi } from '../../grafik';
 import { Hata, Hucre, Kart, Rozet, Satir, Tablo, Yukleniyor } from '../../ui';
 import type {
-  AltLinkGorunumu as AltLink, OrtakOzeti as Ozet, PortalBen as Ben, PortalOyuncusu, TiklamaOzeti,
+  AltLinkGorunumu as AltLink, OrtakOzeti as Ozet, PortalBen as Ben, PortalOyuncusu,
+  SonBonusVeyaDuzeltme, TiklamaOzeti,
 } from '@sunucu/sozlesme.js';
+
+/**
+ * Bir oyuncunun son bonus/düzeltme hücresi — kendi TEMBEL isteğini
+ * atıyor. Tüm tabloyu TEK sorguya gömseydik (`/oyuncularim`), o uç her
+ * satır için CANLI bir Lynon çağrısına girer ve `gecmis-ggr-doldur`daki
+ * gibi tek bir yavaş istekte tıkanırdı. Satır başına ayrı istek,
+ * tarayıcının doğal istek kuyruğuna güveniyor: sayfa hemen çiziliyor,
+ * hücreler sırayla doluyor.
+ */
+function SonBonusHucresi({ lynonOyuncuId }: { lynonOyuncuId: string }) {
+  const { veri, yukleniyor } = useVeri<{ sonuc: SonBonusVeyaDuzeltme | null }>(
+    `/api/portal/oyuncularim/${encodeURIComponent(lynonOyuncuId)}/son-bonus`,
+  );
+  if (yukleniyor) return <span className="text-xs" style={{ color: 'var(--metin-2)' }}>…</span>;
+  const s = veri?.sonuc;
+  if (!s) return <span className="text-xs" style={{ color: 'var(--metin-2)' }}>—</span>;
+  return (
+    <span className="text-xs">
+      <Rozet metin={s.tur === 'bonus' ? 'Bonus' : 'Düzeltme'} renk={s.tur === 'bonus' ? 'olumlu' : 'uyari'} />
+      <span className="ml-1">{s.ad}</span>
+      <span className="ml-1" style={{ color: 'var(--metin-2)' }}>
+        {paraBicimi(s.tutar)} · {gunBicimi(s.tarih)}
+      </span>
+    </span>
+  );
+}
 
 const DURUM_ETIKETI = {
   bekliyor: 'Başvurunuz inceleniyor', onaylandi: 'Onaylı', askida: 'Askıda', reddedildi: 'Reddedildi',
@@ -161,7 +188,7 @@ export function PortalOzet() {
         const cokluSite = new Set(oyuncular.map((o) => o.baglantiAdi)).size > 1;
         return (
           <Kart baslik="Oyuncularınız">
-            <Tablo basliklar={['Kullanıcı', 'Kayıt', 'Yatırım', 'Çekim']}>
+            <Tablo basliklar={['Kullanıcı', 'Kayıt', 'Yatırım', 'Çekim', 'Son Bonus/Düzeltme']}>
               {oyuncular.map((o) => (
                 <Satir key={o.lynonOyuncuId}>
                   <Hucre>
@@ -176,6 +203,7 @@ export function PortalOzet() {
                   <Hucre><span className="text-xs">{gunBicimi(o.kayitTarihi ?? o.olusturuldu)}</span></Hucre>
                   <Hucre sagda><span className="tabular-nums">{paraBicimi(o.yatirim)}</span></Hucre>
                   <Hucre sagda><span className="tabular-nums">{paraBicimi(o.cekim)}</span></Hucre>
+                  <Hucre><SonBonusHucresi lynonOyuncuId={o.lynonOyuncuId} /></Hucre>
                 </Satir>
               ))}
             </Tablo>

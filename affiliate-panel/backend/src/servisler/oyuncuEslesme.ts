@@ -485,6 +485,31 @@ export async function altLinkOyuncuListesi(kiraci: string, altLinkId: string): P
 }
 
 /**
+ * Bir oyuncunun hangi bağlantıdan (Lynon sitesinden) geldiği — SADECE
+ * bu oyuncu gerçekten bu ORTAĞA eşleşmişse döner.
+ *
+ * Canlı bonus/düzeltme sorgusu için gereken tek şey bu: `ortakId`
+ * şartı olmadan bir ortak, başka bir ortağın oyuncusunun kimliğini
+ * URL'e yazarak onun bonus geçmişini görebilirdi.
+ */
+export async function oyuncuBaglantisi(kiraci: string, ortakId: string, lynonOyuncuId: string): Promise<string | null> {
+  const vt = veritabani();
+  if (!vt) return null;
+
+  const [satir] = await vt
+    .select({ baglantiId: oyuncuEslesmeleri.baglantiId })
+    .from(oyuncuEslesmeleri)
+    .where(and(
+      eq(oyuncuEslesmeleri.kiraci, kiraci),
+      eq(oyuncuEslesmeleri.ortakId, ortakId),
+      eq(oyuncuEslesmeleri.lynonOyuncuId, lynonOyuncuId),
+    ))
+    .limit(1);
+
+  return satir?.baglantiId ?? null;
+}
+
+/**
  * Bir ortağa eşleşmiş TÜM oyuncuların listesi — alt linkten bağımsız.
  *
  * `altLinkOyuncuListesi`'nin `altLinkId` süzgeci, toplu affiliate

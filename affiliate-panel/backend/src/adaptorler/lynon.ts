@@ -10,6 +10,7 @@ import {
   type HamOrtak,
   type HamOyuncuGunu,
   type OyuncuBagi,
+  type SonBonusVeyaDuzeltme,
 } from './tur.js';
 
 /**
@@ -121,6 +122,13 @@ function ilkDolu(...degerler: unknown[]): string {
     if (metin) return metin;
   }
   return '';
+}
+
+/** Lynon uçları bazen çıplak dizi, bazen `{Data:[...]}`/`{data:[...]}`/`{Objects:[...]}` sarmalı döner. */
+function diziGetir(yanit: unknown): Array<Record<string, unknown>> {
+  const veri = kayitOku(yanit);
+  const ham = Array.isArray(yanit) ? yanit : (veri.Data ?? veri.data ?? veri.Objects);
+  return Array.isArray(ham) ? (ham as Array<Record<string, unknown>>) : [];
 }
 
 class LynonAdaptoru implements BackofficeAdaptoru {
@@ -718,6 +726,77 @@ class LynonAdaptoru implements BackofficeAdaptoru {
 
     return { oyuncuId, kullaniciAdi: temiz, kayitTarihi };
   }
+
+  /**
+   * Bir oyuncunun bonus geçmişi ile bakiye düzeltmesi geçmişi Lynon'da
+   * İKİ AYRI uç: biri kampanya/atama motoru, diğeri finansal hareket
+   * defteri. İkisini paralel çekip TARİHE göre birleştiriyoruz — ortak
+   * için tek soru "en son ne oldu", hangi uçtan geldiği önemsiz.
+   *
+   * Uçlardan biri hata verirse diğerine düşülür (`allSettled`); ikisi
+   * de boşsa `null`.
+   */
+  async sonBonusVeyaDuzeltme(oyuncuId: string): Promise<SonBonusVeyaDuzeltme | null> {
+    const temiz = String(oyuncuId ?? '').trim();
+    if (!temiz) return null;
+
+    const [bonusYaniti, duzeltmeYaniti] = await Promise.allSettled([
+      this.istek<unknown>(`/api/bonusenginev2/api/v1/Report/bonusSessions/site/${this.ayar.siteId}`, {
+        sorgu: { page: 1, countPerPage: 50, playerId: temiz },
+      }),
+      this.istek<unknown>('/api/platform/api/v1.0/BackofficeTransaction/financial-movement', {
+        metod: 'POST',
+        govde: {
+          operationTypes: ['BalanceCorrection'],
+          playerId: Number(temiz),
+          startDate: null,
+          endDate: null,
+          page: 1,
+          countPerPage: 20,
+          accountFromTypes: [],
+          accountToTypes: [],
+          currencies: [],
+        },
+      }),
+    ]);
+
+    const adaylar: Array<SonBonusVeyaDuzeltme & { zaman: number }> = [];
+
+    if (bonusYaniti.status === 'fulfilled') {
+      for (const satir of diziGetir(bonusYaniti.value)) {
+        const hamTarih = ilkDolu(satir.assignedDate, satir.claimedDate, satir.createdAt);
+        const zaman = hamTarih ? Date.parse(hamTarih) : NaN;
+        if (!Number.isFinite(zaman)) continue;
+        adaylar.push({
+          tur: 'bonus',
+          ad: ilkDolu(satir.bonusName, satir.templateName, satir.campaignName) || 'Bonus',
+          tutar: tutarSec(satir, ['payout', 'amount']),
+          tarih: new Date(zaman).toISOString(),
+          zaman,
+        });
+      }
+    }
+
+    if (duzeltmeYaniti.status === 'fulfilled') {
+      for (const satir of diziGetir(duzeltmeYaniti.value)) {
+        const hamTarih = ilkDolu(satir.date);
+        const zaman = hamTarih ? Date.parse(hamTarih) : NaN;
+        if (!Number.isFinite(zaman)) continue;
+        adaylar.push({
+          tur: 'duzeltme',
+          ad: 'Bakiye düzeltmesi',
+          tutar: Math.abs(tutarSec(satir, ['amount'])),
+          tarih: new Date(zaman).toISOString(),
+          zaman,
+        });
+      }
+    }
+
+    if (!adaylar.length) return null;
+    adaylar.sort((a, b) => b.zaman - a.zaman);
+    const { zaman: _zaman, ...enSon } = adaylar[0];
+    return enSon;
+  }
 }
 
 export const LYNON_TANIMI: AdaptorTanimi = {
@@ -726,7 +805,7 @@ export const LYNON_TANIMI: AdaptorTanimi = {
   aciklama:
     'Panel kullanıcısıyla giriş yapıp Lynon raporlarını okur. Lynon third-party affiliate kaydı gerekmez. ' +
     'Veri toplam düzeyinde geldiği için ilk yatırım (FTD) sayısı bu yoldan ölçülemez.',
-  yetenekler: ['olcum-cekme', 'ortak-listesi', 'oyuncu-baglama', 'odeme-yontemleri', 'gecmis-doldurma'],
+  yetenekler: ['olcum-cekme', 'ortak-listesi', 'oyuncu-baglama', 'odeme-yontemleri', 'gecmis-doldurma', 'son-bonus-duzeltme'],
   alanlar: [
     { ad: 'backofficeUrl', etiket: 'Backoffice adresi', tur: 'metin', zorunlu: true, sir: false, ipucu: 'https://backoffice.ornek.com' },
     { ad: 'idUrl', etiket: 'Kimlik sunucusu', tur: 'metin', zorunlu: true, sir: false, ipucu: 'https://id.ornek.com' },

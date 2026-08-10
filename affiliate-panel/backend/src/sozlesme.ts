@@ -205,6 +205,19 @@ export interface PortalOyuncusu extends Omit<AltLinkOyuncusu, 'baglantiId'> {
   baglantiAdi: string;
 }
 
+/**
+ * Bir oyuncuya en son verilen bonus ya da en son bakiye düzeltmesi,
+ * hangisi daha yeniyse (bkz. `adaptorler/tur.ts` · `SonBonusVeyaDuzeltme`).
+ * Backend'in adaptör türünü burada TEKRARLIYORUZ — panel Lynon'un
+ * alan adlarını bilmemeli, adaptör katmanı zaten çevirdi.
+ */
+export interface SonBonusVeyaDuzeltme {
+  tur: 'bonus' | 'duzeltme';
+  ad: string;
+  tutar: number;
+  tarih: string;
+}
+
 export interface PortalUclari {
   '/ben': PortalBen;
   '/ozet': {
