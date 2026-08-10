@@ -113,6 +113,22 @@ export interface KomisyonPlani {
   varsayilan: boolean;
   createdAt: string;
   updatedAt: string;
+  /**
+   * Dikey başına oran ezmesi.
+   *
+   * Boşsa düz alanlar (`gelirPayiYuzde`, `cpaTutari`,
+   * `gelirKademeleri`) geçerli — mevcut planların hiçbiri
+   * düzenlenmeden çalışmaya devam ediyor. Dikey desteği bir geçiş
+   * adımı, kesme değil.
+   *
+   * Spor bahsin brüt marjı casinodan yapısal olarak düşük; aynı
+   * yüzdeyi ikisine uygulamak spor trafiğini taşınamaz hale getirir.
+   */
+  dikeyOranlari?: Partial<Record<'casino' | 'spor', {
+    yuzde?: number;
+    cpaTutari?: number;
+    gelirKademeleri?: GelirKademesi[];
+  }>>;
 }
 
 type Depo = { version: 1; planlar: KomisyonPlani[] };
@@ -131,6 +147,15 @@ const cozPlan = (ham: unknown): KomisyonPlani => {
     gelirKademeleri: diziOku<GelirKademesi>(p.gelirKademeleri),
     kademeModu: KADEME_MODLARI.includes(p.kademeModu as KademeModu) ? (p.kademeModu as KademeModu) : 'topluca',
     yonetimGideriSabit: Number(p.yonetimGideriSabit) || 0,
+    // Eski kayitlarda alan hic yok; `undefined` kalmasi yeterli
+    // (`planinDikeyOrani` optional chaining ile okuyor). Deger VARSA
+    // ic ice gelirKademeleri dizisini de ayni sekilde normalize et.
+    dikeyOranlari: p.dikeyOranlari
+      ? Object.fromEntries(Object.entries(p.dikeyOranlari).map(([d, o]) => [d, {
+          ...(o as object),
+          gelirKademeleri: diziOku<GelirKademesi>((o as { gelirKademeleri?: unknown })?.gelirKademeleri),
+        }]))
+      : undefined,
   };
 };
 
@@ -187,6 +212,7 @@ export interface PlanGirdisi {
   asgariOdeme?: unknown;
   negatifDevir?: boolean;
   varsayilan?: boolean;
+  dikeyOranlari?: unknown;
 }
 
 /**
@@ -254,6 +280,22 @@ function planGovdesi(girdi: PlanGirdisi): Omit<KomisyonPlani, 'id' | 'createdAt'
     throw new KomisyonHatasi('CPA planında cpaTutari sıfırdan büyük olmalı.');
   }
 
+  // Dikey basina oran ezmesi -- boluk, alanin kendisi hic girilmemisse
+  // `undefined` kalir (duz oranlar gecerli olmaya devam eder).
+  const dikeyOranlari = girdi.dikeyOranlari
+    ? Object.fromEntries(Object.entries(kayitOku(girdi.dikeyOranlari)).map(([d, ham]) => {
+        if (d !== 'casino' && d !== 'spor') {
+          throw new KomisyonHatasi(`dikeyOranlari yalnızca casino ve spor taşıyabilir: ${d}`);
+        }
+        const o = kayitOku(ham) as { yuzde?: unknown; cpaTutari?: unknown; gelirKademeleri?: unknown };
+        return [d, {
+          yuzde: o.yuzde === undefined ? undefined : yuzdeOku(o.yuzde, `dikeyOranlari.${d}.yuzde`),
+          cpaTutari: o.cpaTutari === undefined ? undefined : tutarOku(o.cpaTutari, `dikeyOranlari.${d}.cpaTutari`),
+          gelirKademeleri: kademeleriOku(o.gelirKademeleri),
+        }];
+      }))
+    : undefined;
+
   return {
     ad,
     tur,
@@ -265,6 +307,7 @@ function planGovdesi(girdi: PlanGirdisi): Omit<KomisyonPlani, 'id' | 'createdAt'
     yonetimGideriSabit: tutarOku(girdi.yonetimGideriSabit, 'yonetimGideriSabit'),
     asgariOdeme: tutarOku(girdi.asgariOdeme, 'asgariOdeme'),
     negatifDevir: girdi.negatifDevir !== false,
+    dikeyOranlari,
   };
 }
 

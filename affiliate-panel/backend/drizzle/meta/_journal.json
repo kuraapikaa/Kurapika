@@ -64,6 +64,13 @@
       "when": 1786285543591,
       "tag": "0008_numerous_sabra",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1786354286795,
+      "tag": "0009_curious_energizer",
+      "breakpoints": true
     }
   ]
 }

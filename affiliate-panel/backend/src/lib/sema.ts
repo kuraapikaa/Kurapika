@@ -84,13 +84,25 @@ export const olcumler = pgTable(
      * "gerçekten sıfır". Sütun bu yüzden nullable ve varsayılansız.
      */
     ftdSayisi: integer('ftd_sayisi'),
+    /**
+     * Ölçümün geldiği dikey: `casino` | `spor` | `bilinmiyor`.
+     *
+     * `bilinmiyor`, `casino` ile aynı şey DEĞİL — toplam düzeyinde
+     * rapor veren bir bağlantı iki dikeyi ayırmıyor ve o veriyi
+     * casino diye etiketlemek spor gelirini casino oranıyla ödemek
+     * olurdu. Varsayılan bu yüzden `bilinmiyor`.
+     */
+    dikey: text('dikey').notNull().default('bilinmiyor'),
     kaynak: text('kaynak').notNull(),
     yazildi: timestamp('yazildi', { withTimezone: true }).notNull(),
   },
   (t) => [
-    // Gun basina ortak basina TEK satir; idempotent yazmanin dayanagi bu.
-    primaryKey({ columns: [t.kiraci, t.gun, t.ortakAnahtari] }),
+    // Gun basina ortak basina DIKEY basina TEK satir; idempotent
+    // yazmanin dayanagi bu. Ayni gun hem casino hem spor satiri
+    // olabilir ve ikisi birbirini ezmemeli.
+    primaryKey({ columns: [t.kiraci, t.gun, t.ortakAnahtari, t.dikey] }),
     index('aff_olcumler_kiraci_gun').on(t.kiraci, t.gun),
+    index('aff_olcumler_kiraci_ortak_dikey').on(t.kiraci, t.ortakAnahtari, t.dikey),
   ],
 );
 

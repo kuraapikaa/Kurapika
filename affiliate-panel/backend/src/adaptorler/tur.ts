@@ -76,6 +76,19 @@ export interface HamOlcum {
    * Veremeyen adaptörlerde boş; o durumda FTD `null` kalır.
    */
   yatiranOyuncular?: string[];
+  /**
+   * Ölçümün geldiği dikey.
+   *
+   * OPSİYONEL: mevcut adaptörlerin hiçbiri doldurmuyor ve doldurmak
+   * zorunda değil. Boş bırakılırsa çekirdek `bilinmiyor` yazıyor ve
+   * plandaki düz orana düşüyor — bugünkü davranış birebir korunuyor.
+   *
+   * Bir adaptör dikey vermeye başladığı gün YENİ satırlar ayrışıyor,
+   * eski satırlar olduğu gibi kalıyor. Geriye dönük yeniden
+   * yorumlama yok: bir ayın ödemesi kesinleştikten sonra o ayın
+   * kırılımının değişmesi, kesinleşmiş bir rakamı oynatmak olurdu.
+   */
+  dikey?: 'casino' | 'spor' | 'bilinmiyor';
 }
 
 /**

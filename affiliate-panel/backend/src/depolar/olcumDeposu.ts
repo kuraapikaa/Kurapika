@@ -3,6 +3,7 @@ import { degistir, kayitOku, oku } from '../lib/depo.js';
 import { olcumler as tablo } from '../lib/sema.js';
 import { veritabani } from '../lib/veritabani.js';
 import type { HamOlcum } from '../adaptorler/tur.js';
+import type { Dikey } from '../servisler/dikey.js';
 
 /**
  * ÖLÇÜM DEPOSU — iki uygulama, tek arayüz.
@@ -43,10 +44,13 @@ export interface OlcumDeposu {
 }
 
 const ALAN = 'olcumler';
-const olcumAnahtari = (gun: string, ortakAnahtari: string) => `${gun}|${ortakAnahtari}`;
+// Dikeysiz gelen satirlar (adaptor doldurmadiysa) `bilinmiyor`a duser.
+// Anahtar UCUNCU parcayi ATLARSA iki dikey satiri ayni anahtarda
+// cakisir ve biri sessizce kaybolur (bkz. `sema.ts` birincil anahtari).
+const olcumAnahtari = (gun: string, ortakAnahtari: string, dikey: string) => `${gun}|${ortakAnahtari}|${dikey}`;
 
 /**
- * Aynı (gün, ortak) için gelen tekrarları teke indirir.
+ * Aynı (gün, ortak, dikey) için gelen tekrarları teke indirir.
  *
  * Postgres tek bir INSERT içinde aynı satırı iki kez güncelleyemiyor;
  * ayıklanmazsa deyimin tamamı düşerdi. Ayıklama İTME KURALINI de
@@ -56,7 +60,7 @@ const olcumAnahtari = (gun: string, ortakAnahtari: string) => `${gun}|${ortakAna
 function tekillestir(olcumler: YazilacakOlcum[]): YazilacakOlcum[] {
   const secilmis = new Map<string, YazilacakOlcum>();
   for (const olcum of olcumler) {
-    const anahtar = olcumAnahtari(olcum.gun, olcum.ortakAnahtari);
+    const anahtar = olcumAnahtari(olcum.gun, olcum.ortakAnahtari, olcum.dikey ?? 'bilinmiyor');
     const mevcut = secilmis.get(anahtar);
     if (mevcut?.kaynak === 'itme' && olcum.kaynak === 'cekme') continue;
     secilmis.set(anahtar, olcum);
@@ -90,6 +94,7 @@ const satirdanOlcum = (s: typeof tablo.$inferSelect): OrtakGunlukOlcum => ({
   cekim: s.cekim,
   ggr: s.ggr,
   ftdSayisi: s.ftdSayisi,
+  dikey: s.dikey as Dikey,
   kaynak: s.kaynak as OlcumKaynagi,
   yazildi: s.yazildi.toISOString(),
 });
@@ -119,11 +124,15 @@ export function postgresOlcumDeposu(): OlcumDeposu {
           cekim: o.cekim,
           ggr: o.ggr,
           ftdSayisi: o.ftdSayisi,
+          dikey: o.dikey ?? 'bilinmiyor',
           kaynak: o.kaynak,
           yazildi: new Date(yazildi),
         })))
         .onConflictDoUpdate({
-          target: [tablo.kiraci, tablo.gun, tablo.ortakAnahtari],
+          // `dikey` anahtarin PARCASI -- cakisma hedefinde olmasi
+          // yeterli, `set` icinde ayrica yazilmasi GEREKMEZ (degismeyen
+          // deger uzerinde catisiyoruz zaten).
+          target: [tablo.kiraci, tablo.gun, tablo.ortakAnahtari, tablo.dikey],
           set: {
             oyuncuSayisi: sql`excluded.oyuncu_sayisi`,
             aktifOyuncuSayisi: sql`excluded.aktif_oyuncu_sayisi`,
@@ -168,7 +177,7 @@ export function postgresOlcumDeposu(): OlcumDeposu {
 
 type BelgeDepo = {
   version: 1;
-  /** Anahtar: `${gun}|${ortakAnahtari}` — gün başına tek satır. */
+  /** Anahtar: `${gun}|${ortakAnahtari}|${dikey}` — gün+dikey başına tek satır. */
   olcumler: Record<string, OrtakGunlukOlcum>;
 };
 
@@ -185,7 +194,7 @@ export function belgeOlcumDeposu(): OlcumDeposu {
       return degistir<BelgeDepo, number>(kiraci, ALAN, cozDepo, (depo) => {
         let yazilan = 0;
         for (const olcum of yazilacak) {
-          const anahtar = olcumAnahtari(olcum.gun, olcum.ortakAnahtari);
+          const anahtar = olcumAnahtari(olcum.gun, olcum.ortakAnahtari, olcum.dikey ?? 'bilinmiyor');
           const mevcut = depo.olcumler[anahtar];
           if (mevcut?.kaynak === 'itme' && olcum.kaynak === 'cekme') continue;
           depo.olcumler[anahtar] = { ...olcum, yazildi: simdi.toISOString() };
