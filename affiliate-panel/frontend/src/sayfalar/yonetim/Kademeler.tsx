@@ -1,9 +1,23 @@
 import { useEffect, useState } from 'react';
-import { api, useVeri } from '../../api';
+import { api, paraBicimi, useVeri } from '../../api';
 import { Alan, Bos, Buton, Hata, Hucre, Kart, Satir, Tablo, Yukleniyor } from '../../ui';
-import type { YonetimUclari } from '@sunucu/sozlesme.js';
+import type { OrtakGorunumu, YonetimUclari } from '@sunucu/sozlesme.js';
 
 type Durum = YonetimUclari['/kademeler'];
+
+/** Bir ortağın kademe zincirindeki konumu — kaç kademe üste bağlı. */
+function kademeSeviyesi(ortakAnahtari: string, baglar: Durum['baglar']): number {
+  const ustHaritasi = new Map(baglar.map((b) => [b.ortakAnahtari, b.ustOrtakAnahtari]));
+  let seviye = 0;
+  let anahtar: string | undefined = ortakAnahtari;
+  const gorulen = new Set<string>();
+  while (anahtar && ustHaritasi.has(anahtar) && !gorulen.has(anahtar)) {
+    gorulen.add(anahtar);
+    anahtar = ustHaritasi.get(anahtar);
+    seviye += 1;
+  }
+  return seviye;
+}
 
 /**
  * ALT ORTAK KADEMELERİ.
@@ -23,6 +37,10 @@ type Durum = YonetimUclari['/kademeler'];
  */
 export function Kademeler() {
   const { veri, yukleniyor, hata, yenile } = useVeri<Durum>('/api/yonetim/kademeler');
+  // Bağlar yalnızca ham izleme anahtarı taşıyor; adları çözmek için
+  // ayrı bir uç açmak yerine zaten var olan /ortaklar'ı burada da çekip
+  // istemcide eşliyoruz (Ortaklar.tsx'teki Kademe kolonuyla aynı desen).
+  const ortaklar = useVeri<{ ortaklar: OrtakGorunumu[] }>('/api/yonetim/ortaklar');
   const [yuzdeler, setYuzdeler] = useState('');
   const [alt, setAlt] = useState('');
   const [ust, setUst] = useState('');
@@ -55,6 +73,8 @@ export function Kademeler() {
   // Ust ortak basina kac alt ortak: "kim getiriyor" sorusunun cevabi.
   const ustSayilari = new Map<string, number>();
   for (const b of baglar) ustSayilari.set(b.ustOrtakAnahtari, (ustSayilari.get(b.ustOrtakAnahtari) ?? 0) + 1);
+  const adHaritasi = new Map((ortaklar.veri?.ortaklar ?? []).map((o) => [o.ortakAnahtari, o.ad]));
+  const ustTahminleri = veri?.ustTahminleri ?? {};
 
   return (
     <>
@@ -182,14 +202,33 @@ export function Kademeler() {
         {baglar.length === 0 ? (
           <Bos mesaj="Kademe bağı yok; tüm ortaklar düz seviyede." />
         ) : (
-          <Tablo basliklar={['Alt ortak', 'Üst ortak', 'Üstün getirdiği', 'İşlem']}>
+          <Tablo basliklar={['Alt ortak', 'Üst ortak', 'Seviye', 'Üstün getirdiği', 'Üstün bu ayki tahmini payı', 'İşlem']}>
             {baglar.map((b) => (
               <Satir key={b.ortakAnahtari}>
-                <Hucre><code className="text-xs">{b.ortakAnahtari}</code></Hucre>
-                <Hucre><code className="text-xs">{b.ustOrtakAnahtari}</code></Hucre>
+                <Hucre>
+                  <div className="font-medium">{adHaritasi.get(b.ortakAnahtari) ?? b.ortakAnahtari}</div>
+                  <code className="text-xs" style={{ color: 'var(--metin-2)' }}>{b.ortakAnahtari}</code>
+                </Hucre>
+                <Hucre>
+                  <div className="font-medium">{adHaritasi.get(b.ustOrtakAnahtari) ?? b.ustOrtakAnahtari}</div>
+                  <code className="text-xs" style={{ color: 'var(--metin-2)' }}>{b.ustOrtakAnahtari}</code>
+                </Hucre>
+                <Hucre sagda>
+                  <span className="text-xs tabular-nums" style={{ color: 'var(--metin-2)' }}>
+                    {kademeSeviyesi(b.ortakAnahtari, baglar)}. seviye
+                  </span>
+                </Hucre>
                 <Hucre sagda>
                   <span className="text-xs tabular-nums" style={{ color: 'var(--metin-2)' }}>
                     {ustSayilari.get(b.ustOrtakAnahtari) ?? 1} ortak
+                  </span>
+                </Hucre>
+                <Hucre sagda>
+                  {/* TAHMİN — kesinleşmiş bir hakediş değil, salt-okunur
+                      canlı hesap. Gerçek ödeme yalnızca Dönemler'deki
+                      hesapla→onayla akışından geçer. */}
+                  <span className="text-xs tabular-nums" style={{ color: 'var(--metin-2)' }}>
+                    {paraBicimi(ustTahminleri[b.ustOrtakAnahtari] ?? 0)} (tahmini)
                   </span>
                 </Hucre>
                 <Hucre>

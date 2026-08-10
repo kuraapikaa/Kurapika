@@ -20,6 +20,7 @@ import {
   donemOdendi,
   donemOku,
   donemOnayla,
+  kademeTahminleri,
 } from '../servisler/hakedis.js';
 import {
   kademeBagiKaldir,
@@ -684,7 +685,15 @@ export async function yonetimRotalari(app: FastifyInstance): Promise<void> {
 
   // ── Kademeler ──────────────────────────────────────────────────────
 
-  app.get('/kademeler', async (istek): Promise<YonetimUclari['/kademeler']> => kademeDurumu(istek.kiraci));
+  app.get('/kademeler', async (istek): Promise<YonetimUclari['/kademeler']> => {
+    const [durum, tahminler] = await Promise.all([
+      kademeDurumu(istek.kiraci),
+      // Salt-okunur tahmin: donem defterine hicbir sey yazmiyor, yalnizca
+      // "bu bagdan simdi ne kadar dusuyor" sorusuna kaba bir cevap.
+      kademeTahminleri(istek.kiraci),
+    ]);
+    return { ...durum, ustTahminleri: Object.fromEntries(tahminler) };
+  });
 
   app.post('/kademeler/bag', async (istek) => {
     const govde = (istek.body ?? {}) as { ortakAnahtari?: string; ustOrtakAnahtari?: string };

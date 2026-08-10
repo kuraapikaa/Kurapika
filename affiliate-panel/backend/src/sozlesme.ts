@@ -129,7 +129,12 @@ export interface YonetimUclari {
   '/planlar': { planlar: KomisyonPlani[] };
   '/site-adresi': SiteAdresiDurumu;
   '/medya': { medyalar: Medya[] };
-  '/kademeler': { baglar: KademeBagi[]; kademeYuzdeleri: number[] };
+  '/kademeler': {
+    baglar: KademeBagi[];
+    kademeYuzdeleri: number[];
+    /** Üst ortak anahtarı → bu ayki tahmini kademe kazancı (salt okunur). */
+    ustTahminleri: Record<string, number>;
+  };
   '/postback': { ayarlar: PostbackAyari[]; kayitlar: PostbackKaydi[] };
   '/oto-bonus': OtoBonusDurumuYaniti;
   '/yolculuk': MusteriYolculuguSonucu;

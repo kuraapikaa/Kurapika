@@ -1,5 +1,5 @@
 import { degistir, kayitOku, oku } from '../lib/depo.js';
-import { ayAnahtari, gunGecerliMi } from '../lib/gunler.js';
+import { ayAnahtari, gunAnahtari, gunGecerliMi } from '../lib/gunler.js';
 import { kademeDurumu, kademePaylariHesapla } from './kademeler.js';
 import { hakedisHesapla, planBul, type Hakedis } from './komisyon.js';
 import { olcumleriOku } from './olcum.js';
@@ -248,6 +248,57 @@ export async function donemOdendi(kiraci: string, ay: string, simdi = new Date()
 export async function ortakDonemi(kiraci: string, ortakAnahtari: string, ay: string): Promise<OrtakHakedisi | null> {
   const donem = await donemOku(kiraci, ay);
   return donem?.satirlar.find((s) => s.ortakAnahtari === ortakAnahtari) ?? null;
+}
+
+/**
+ * KADEME EKRANI İÇİN TAHMİNİ KAZANÇ — Kademeler.tsx'teki "Bağlar"
+ * tablosuna, bu bağdan üst ortağa şu an ne kadar düşeceğinin kaba bir
+ * tahminini vermek için.
+ *
+ * `donemHesapla`'DAN BİLEREK AYRI: burası HİÇBİR ŞEY YAZMIYOR (salt
+ * okunur), devir zincirini TAŞIMIYOR (bu ayın devredeni geçen ayın
+ * KAPANMIŞ dönemine bakmayı gerektirir — ekranın amacı "kabaca ne
+ * kadar" sorusuna cevap vermek, kuruşu kuruşuna dönem defteri değil).
+ * Gerçek ödeme hâlâ yalnızca `donemHesapla` → onayla akışından geçer.
+ */
+export async function kademeTahminleri(kiraci: string, simdi = new Date()): Promise<Map<string, number>> {
+  const ay = ayAnahtari(gunAnahtari(simdi));
+  const kademe = await kademeDurumu(kiraci);
+  // Yalnizca bir bagin ALT tarafinda gecen ortaklarin kazancini
+  // hesapla: bagsiz ortaklarin tahmini hicbir ust ortaga akmiyor.
+  const altAnahtarlari = new Set(kademe.baglar.map((b) => b.ortakAnahtari));
+  if (altAnahtarlari.size === 0) return new Map();
+
+  const [ortaklar, olcumler] = await Promise.all([
+    ortaklariListele(kiraci),
+    olcumleriOku(kiraci, { start: `${ay}-01`, end: `${ay}-31` }),
+  ]);
+
+  const olcumToplami = new Map<string, { ggr: number; ftd: number | null }>();
+  for (const olcum of olcumler) {
+    const mevcutToplam = olcumToplami.get(olcum.ortakAnahtari) ?? { ggr: 0, ftd: null };
+    mevcutToplam.ggr += olcum.ggr;
+    if (olcum.ftdSayisi !== null) mevcutToplam.ftd = (mevcutToplam.ftd ?? 0) + olcum.ftdSayisi;
+    olcumToplami.set(olcum.ortakAnahtari, mevcutToplam);
+  }
+
+  const kazanclar = new Map<string, number>();
+  for (const ortak of ortaklar) {
+    if (ortak.durum !== 'onaylandi' || !altAnahtarlari.has(ortak.ortakAnahtari)) continue;
+    const plan = await planBul(kiraci, ortak.planId);
+    if (!plan) continue;
+    const toplam = olcumToplami.get(ortak.ortakAnahtari) ?? { ggr: 0, ftd: null };
+    const hakedis = hakedisHesapla(plan, { ggr: toplam.ggr, ftdSayisi: toplam.ftd, devredenZarar: 0, devredenOdeme: 0 });
+    kazanclar.set(ortak.ortakAnahtari, hakedis.toplam);
+  }
+
+  const tahminler = new Map<string, number>();
+  for (const [ortakAnahtari, kazanc] of kazanclar) {
+    for (const pay of kademePaylariHesapla(kademe.baglar, kademe.kademeYuzdeleri, ortakAnahtari, kazanc)) {
+      tahminler.set(pay.ustOrtakAnahtari, kurusa((tahminler.get(pay.ustOrtakAnahtari) ?? 0) + pay.tutar));
+    }
+  }
+  return tahminler;
 }
 
 /** Gün anahtarından dönem anahtarı; rotalarda tek yerden çevrilsin diye. */
