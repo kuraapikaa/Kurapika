@@ -51,7 +51,9 @@ import {
   ortakSil,
 } from '../servisler/ortaklar.js';
 import { otoBonusAyarla, otoBonusDurumu } from '../servisler/otoBonus.js';
-import { cakismalariListele, eslesmeleriListele, varsayilanEslesmeleriDagit } from '../servisler/oyuncuEslesme.js';
+import {
+  cakismalariListele, eslesmeleriListele, oyuncuSayilariOrtakAnahtariyla, varsayilanEslesmeleriDagit,
+} from '../servisler/oyuncuEslesme.js';
 import { topluAtamaYap, TOPLU_ATAMA_LIMITI } from '../servisler/topluAtama.js';
 import {
   postbackAyarla,
@@ -274,13 +276,22 @@ export async function yonetimRotalari(app: FastifyInstance): Promise<void> {
 
   app.get('/ozet', async (istek): Promise<YonetimUclari['/ozet']> => {
     const sorgu = (istek.query ?? {}) as Record<string, unknown>;
+    const ozetler = await ortakOzetleri(istek.kiraci, {
+      start: sorguMetni(sorgu.start),
+      end: sorguMetni(sorgu.end),
+      ortakAnahtari: sorguMetni(sorgu.ortakAnahtari),
+    });
+    // `ozetle()`'in `oyuncuSayisi`'si (tek günün STOK zirvesi) burada
+    // gösterilecek dogru rakam degil -- ortak paneliyle (bkz. PortalOzet
+    // fix'i) aynı kümülatif kaynakla değiştiriyoruz ki iki panel farklı
+    // sayı söylemesin.
+    const gercekSayilar = await oyuncuSayilariOrtakAnahtariyla(istek.kiraci);
     return {
       bugun: gunAnahtari(),
-      ozetler: await ortakOzetleri(istek.kiraci, {
-        start: sorguMetni(sorgu.start),
-        end: sorguMetni(sorgu.end),
-        ortakAnahtari: sorguMetni(sorgu.ortakAnahtari),
-      }),
+      ozetler: ozetler.map((o) => ({
+        ...o,
+        oyuncuSayisi: gercekSayilar.get(o.ortakAnahtari) ?? o.oyuncuSayisi,
+      })),
     };
   });
 

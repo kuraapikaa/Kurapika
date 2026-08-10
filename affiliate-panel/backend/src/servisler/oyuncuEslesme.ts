@@ -552,6 +552,32 @@ export async function ortakOyuncuListesi(kiraci: string, ortakId: string): Promi
   });
 }
 
+/**
+ * Ortak anahtarı başına KÜMÜLATİF eşleşmiş oyuncu sayısı -- `olcum.ts`'in
+ * `ozetle()`'ındaki `oyuncuSayisi` (en yüksek TEK GÜNÜN oyuncu STOĞU,
+ * bkz. o fonksiyonun kendi yorumu) DEĞİL. Aynı yanılgı ortak panelinde
+ * de vardı (bkz. `rotalar/portal.ts` · `PortalOzet.tsx` fix'i): yönetim
+ * panelindeki "Ortak performansı" ızgarası hâlâ o STOK metriğini
+ * gösteriyordu, ortak "ortak panelim 120 diyor, yönetimde 87" diye
+ * şikayet etti.
+ *
+ * `ortakAnahtari` ile grupluyoruz (`ortakId` ile DEĞİL) çünkü `/ozet`
+ * yanıtının TAMAMI zaten bu anahtarla satır satır dönüyor -- tutarlı
+ * kalması için aynı anahtarı kullanıyoruz.
+ */
+export async function oyuncuSayilariOrtakAnahtariyla(kiraci: string): Promise<Map<string, number>> {
+  const vt = veritabani();
+  if (!vt) return new Map();
+
+  const satirlar = await vt
+    .select({ ortakAnahtari: oyuncuEslesmeleri.ortakAnahtari, sayi: sql<number>`count(*)::int` })
+    .from(oyuncuEslesmeleri)
+    .where(eq(oyuncuEslesmeleri.kiraci, kiraci))
+    .groupBy(oyuncuEslesmeleri.ortakAnahtari);
+
+  return new Map(satirlar.map((s) => [s.ortakAnahtari, Number(s.sayi)]));
+}
+
 export interface OrtakGunlukGelirSonucu {
   yazildiMi: boolean;
   yatirim: number;
