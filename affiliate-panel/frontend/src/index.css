@@ -49,6 +49,9 @@
   --kenar: #d3cce6;
   --metin: #140e24;
   --metin-2: #574d78;
+  /* Kahraman sehir fotografinin opakligi: acik zeminde foto daha az
+     gorunur olmali (aksi halde beyaz zeminle kirli/gri carpisiyor). */
+  --hero-foto-opaklik: 0.16;
   /* Beyaz uzerinde ~7.0:1 (violet-700 olcumu) — AA esigini rahat geciyor. */
   --vurgu: #6d28d9;
   --vurgu-metin: #ffffff;
@@ -132,6 +135,7 @@
   --yuzey: #100c1c;
   --yuzey-2: #171226;
   --kenar: #272040;
+  --hero-foto-opaklik: 0.34;
   --metin: #ece9fb;
   --metin-2: #9b93bf;
   --vurgu: #c084fc;

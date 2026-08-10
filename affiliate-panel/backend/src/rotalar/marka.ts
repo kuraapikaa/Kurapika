@@ -50,7 +50,7 @@ function guvenliRenk(ham: string): string | null {
 
 export function markaOku(): Marka {
   return {
-    ad: String(process.env.AFF_PANEL_ADI || 'Bugs Affiliate').trim() || 'Bugs Affiliate',
+    ad: String(process.env.AFF_PANEL_ADI || 'KuroAffiliate').trim() || 'KuroAffiliate',
     logoUrl: guvenliLogoAdresi(String(process.env.AFF_LOGO_URL || '')),
     vurgu: guvenliRenk(String(process.env.AFF_VURGU_RENGI || '')),
   };

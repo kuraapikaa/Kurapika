@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { hexToHsl, tercihEdilenMetinRengi } from './lib/renk';
-import maskotLogo from './gorseller/maskot-logo.webp';
 
 /**
  * MARKA — logo ve panel adı.
@@ -27,7 +26,7 @@ export interface MarkaBilgisi {
   vurgu: string | null;
 }
 
-const VARSAYILAN: MarkaBilgisi = { ad: 'Bugs Affiliate', logoUrl: null, vurgu: null };
+const VARSAYILAN: MarkaBilgisi = { ad: 'KuroAffiliate', logoUrl: null, vurgu: null };
 
 export function useMarka(): MarkaBilgisi {
   const [marka, setMarka] = useState<MarkaBilgisi>(VARSAYILAN);
@@ -73,20 +72,6 @@ export function Logo({ marka, boyut = 'orta' }: { marka: MarkaBilgisi; boyut?: '
         alt={marka.ad}
         style={{ height: yukseklik, width: 'auto', maxWidth: boyut === 'buyuk' ? 240 : 170 }}
         onError={() => setGorselBozuk(true)}
-      />
-    );
-  }
-
-  // Kiracinin kendi logoUrl'u yoksa VARSAYILAN marka (Bugs Affiliate) icin
-  // maskot gorseli gosteriliyor; baska bir kiracinin adiysa (logosuz ama
-  // ismi farkli beyaz etiket) hala metin logosuna dusuluyor -- maskot
-  // yalnizca kendi markamizin kimligi, baskasina zorla giydirilmiyor.
-  if (marka.ad === VARSAYILAN.ad) {
-    return (
-      <img
-        src={maskotLogo}
-        alt={marka.ad}
-        style={{ height: yukseklik, width: 'auto', maxWidth: boyut === 'buyuk' ? 240 : 170 }}
       />
     );
   }

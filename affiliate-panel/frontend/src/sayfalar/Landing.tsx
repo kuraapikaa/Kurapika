@@ -8,8 +8,10 @@ import { Card, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { FormHata, FormSaha } from '../components/form-saha';
-// Maskotun tam karakter illustrasyonu (arka plani silinmis, WebP surumu).
-import maskotKarakter from '../gorseller/maskot-karakter.webp';
+// Maskotun tam karakter illustrasyonu (arka plani silinmis).
+import maskotKarakter from '../gorseller/maskot-karakter.png';
+// Kahraman bolumunun atmosferik sehir fotografi (yagmurlu Neo-Tokyo panoramasi).
+import heroSehir from '../gorseller/hero-sehir-manzarasi.png';
 
 /**
  * ORTAKLIK PROGRAMI LANDING SAYFASI.
@@ -179,6 +181,24 @@ function Tanitim({ git }: { git: (g: Gorunum) => void }) {
           kaydirilabilir yapiyordu. Kesme yalnizca bu bolume kapsanmis;
           sayfanin geri kalanindaki `sticky` basligi ETKILEMIYOR. */}
       <section className="relative mt-10 overflow-hidden lg:mt-16">
+        {/* Sehir fotografi EN ALTTA, dusuk opaklikta: tayf aurorasinin
+            "kaynagi" olan soyut bir arka plan yerine somut bir sehir var
+            artik. Ust ve alt kenarlarda zemine eriyor ki hem acik hem
+            koyu temada metin okunabilirligini tayf-aurora/izgara katmanlari
+            gibi korusun -- foto asla dogrudan metnin altinda tam opaklikta
+            degil. */}
+        <div aria-hidden className="absolute -inset-x-10 -top-10 bottom-0 -z-20 overflow-hidden">
+          <img
+            src={heroSehir}
+            alt=""
+            className="h-full w-full object-cover object-[68%_35%]"
+            style={{ opacity: 'var(--hero-foto-opaklik)' }}
+          />
+          <div
+            className="absolute inset-0"
+            style={{ background: 'linear-gradient(180deg, var(--zemin) 0%, color-mix(in srgb, var(--zemin) 35%, transparent) 22%, color-mix(in srgb, var(--zemin) 35%, transparent) 72%, var(--zemin) 100%)' }}
+          />
+        </div>
         <div aria-hidden className="izgara absolute -inset-x-10 -top-10 bottom-0 -z-10" />
         <div aria-hidden className="tayf-aurora absolute -inset-x-10 -top-10 bottom-0 -z-10" />
 
@@ -357,7 +377,7 @@ function HoloEkran() {
     <div className="flex flex-col items-center gap-8 lg:flex-row lg:items-center lg:justify-center lg:gap-6">
       <img
         src={maskotKarakter}
-        alt="Avucunda hologram taşıyan, mor neonlu Bugs Affiliate maskotu"
+        alt="Avucunda hologram veri panelleri taşıyan, siber-artırılmış KuroAffiliate figürü"
         className="block w-full max-w-xs shrink-0 sm:max-w-sm lg:max-w-[240px] xl:max-w-[270px]"
         style={{
           filter:

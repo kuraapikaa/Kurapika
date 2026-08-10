@@ -1,6 +1,6 @@
 # Lynon entegrasyonu
 
-Bugs Affiliate'in Lynon backoffice ile konuştuğu **dört** yer var. Hepsi
+KuroAffiliate'in Lynon backoffice ile konuştuğu **dört** yer var. Hepsi
 birbirinden bağımsız çalışır; hangisini kurarsan o kadarı çalışır.
 
 | # | Yön | Ne | Zorunlu mu |

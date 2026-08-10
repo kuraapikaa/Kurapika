@@ -92,8 +92,23 @@ export function BasvuruFormu({ tamamlandi }: { tamamlandi: () => void }) {
     <form className="space-y-3" onSubmit={gonder}>
       <FormBolumu no={1} baslik="Hesap bilgileri" aciklama="Giriş için gerekli dört alan.">
         <div className="grid gap-3 md:grid-cols-2">
-          <FormSaha id="bv-ad" etiket="Ad / Şirket" zorunlu deger={form.ad} degisti={yaz('ad')} />
-          <FormSaha id="bv-eposta" etiket="E-posta" zorunlu deger={form.eposta} degisti={yaz('eposta')} tip="email" />
+          <FormSaha
+            id="bv-ad"
+            etiket="Ad / Şirket"
+            zorunlu
+            deger={form.ad}
+            degisti={yaz('ad')}
+            ipucu="Şirketiniz yoksa kendi adınızı yazmanız yeterli."
+          />
+          <FormSaha
+            id="bv-eposta"
+            etiket="E-posta"
+            zorunlu
+            deger={form.eposta}
+            degisti={yaz('eposta')}
+            tip="email"
+            ipucu="Onay ve giriş bilgileri bu adrese gönderilir."
+          />
           <FormSaha id="bv-parola" etiket="Parola" zorunlu deger={form.parola} degisti={yaz('parola')} tip="password" ipucu="En az 10 karakter." />
           <FormSaha
             id="bv-anahtar"
@@ -122,8 +137,22 @@ export function BasvuruFormu({ tamamlandi }: { tamamlandi: () => void }) {
           />
           <div className="space-y-3">
             <FormSaha id="bv-ulke" etiket="Trafiğin geldiği ülkeler" deger={form.ulkeler} degisti={yaz('ulkeler')} ipucu="örn. TR, AZ, DE" />
-            <FormSaha id="bv-oyuncu" etiket="Aylık oyuncu (tahmini)" deger={form.aylikOyuncu} degisti={yaz('aylikOyuncu')} tip="number" />
-            <FormSaha id="bv-trafik" etiket="Aylık ziyaretçi / tıklama (tahmini)" deger={form.aylikTrafik} degisti={yaz('aylikTrafik')} tip="number" />
+            <FormSaha
+              id="bv-oyuncu"
+              etiket="Aylık oyuncu (tahmini)"
+              deger={form.aylikOyuncu}
+              degisti={yaz('aylikOyuncu')}
+              tip="number"
+              ipucu="Kesin rakam gerekmez, kabaca yeterli. örn. 20"
+            />
+            <FormSaha
+              id="bv-trafik"
+              etiket="Aylık ziyaretçi / tıklama (tahmini)"
+              deger={form.aylikTrafik}
+              degisti={yaz('aylikTrafik')}
+              tip="number"
+              ipucu="Toplam ziyaretçi ya da link tıklaması, kabaca. örn. 5000"
+            />
           </div>
         </div>
 
@@ -131,6 +160,7 @@ export function BasvuruFormu({ tamamlandi }: { tamamlandi: () => void }) {
           <span className="mb-2 block text-xs font-medium text-muted-foreground">
             Trafiği nasıl getiriyorsunuz?
           </span>
+          <p className="mb-2 text-xs text-muted-foreground">Birden fazla seçebilirsiniz.</p>
           <div className="flex flex-wrap gap-4">
             {YONTEMLER.map((y) => (
               <label key={y.deger} className="flex items-center gap-2 text-sm">
@@ -168,12 +198,32 @@ export function BasvuruFormu({ tamamlandi }: { tamamlandi: () => void }) {
               { deger: 'cpa', etiket: 'CPA (oyuncu başı)' },
               { deger: 'hibrit', etiket: 'Hibrit' },
             ]}
+            ipucu="Emin değilseniz “Farketmez” seçin; size uygun model onay sırasında birlikte belirlenir."
           />
-          <FormSaha id="bv-odeme-yontemi" etiket="Ödeme yöntemi" deger={form.odemeYontemi} degisti={yaz('odemeYontemi')} ipucu="Havale, kripto…" />
-          <FormSaha id="bv-odeme-detay" etiket="Ödeme detayı" deger={form.odemeDetayi} degisti={yaz('odemeDetayi')} />
+          <FormSaha
+            id="bv-odeme-yontemi"
+            etiket="Ödeme yöntemi"
+            deger={form.odemeYontemi}
+            degisti={yaz('odemeYontemi')}
+            ipucu="Havale, kripto…"
+          />
+          <FormSaha
+            id="bv-odeme-detay"
+            etiket="Ödeme detayı"
+            deger={form.odemeDetayi}
+            degisti={yaz('odemeDetayi')}
+            ipucu="Seçtiğiniz yönteme göre IBAN, cüzdan adresi ya da kullanıcı adı."
+          />
         </div>
         <div className="mt-3">
-          <FormSaha id="bv-aciklama" etiket="Eklemek istedikleriniz" deger={form.aciklama} degisti={yaz('aciklama')} cokSatir />
+          <FormSaha
+            id="bv-aciklama"
+            etiket="Eklemek istedikleriniz"
+            deger={form.aciklama}
+            degisti={yaz('aciklama')}
+            cokSatir
+            ipucu="Opsiyonel. Trafiğiniz veya beklentileriniz hakkında eklemek istediğiniz her şey."
+          />
         </div>
       </FormBolumu>
 
