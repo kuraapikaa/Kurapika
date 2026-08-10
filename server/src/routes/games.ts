@@ -913,7 +913,7 @@ async function writePredictionSettlements(rows: any[], tenantKey = 'default') {
   );
 }
 
-async function readEngagementClaims(tenantKey = 'default') {
+export async function readEngagementClaims(tenantKey = 'default') {
   const key = safeTenantKey(tenantKey);
   const data = await readStoredDocument<any>({
     tenantKey: key,
@@ -930,13 +930,19 @@ async function readEngagementClaims(tenantKey = 'default') {
   };
 }
 
-async function writeEngagementClaims(claims: any, tenantKey = 'default') {
+export async function writeEngagementClaims(claims: any, tenantKey = 'default') {
   const key = safeTenantKey(tenantKey);
   await writeStoredDocument(
     { tenantKey: key, namespace: 'engagement-claims', filePath: engagementClaimsPath(key) },
     {
       daily: Array.isArray(claims?.daily) ? claims.daily : [],
       battlePass: Array.isArray(claims?.battlePass) ? claims.battlePass : [],
+      // `scratch` `readEngagementClaims`'e eklendiginde buraya eklenmemisti
+      // (bkz. a48aef5) -- her yazim onu sessizce ATIYORDU, bir sonraki
+      // okuma hep bos donuyordu, yatirimHakki hicbir zaman "kullanilmis"
+      // gormuyordu. Kazi kazan boylece TEK yatirimla sinirsiz oynanabiliyordu
+      // -- "hak" mantigi kagit uzerinde dogruydu, kalici kaydi hic yoktu.
+      scratch: Array.isArray(claims?.scratch) ? claims.scratch : [],
     },
   );
 }
