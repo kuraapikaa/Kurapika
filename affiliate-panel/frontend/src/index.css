@@ -18,30 +18,44 @@
 }
 
 /**
- * ALTIN VE GÜMÜŞ — KuroAffiliate.
+ * ALTIN VE GÜMÜŞ — İKİ KİMLİK, TEK UYGULAMA.
  *
- * Önceki kimlik menekşe neondu ("gece şehri"); yerini iki metale
- * bıraktı. Değişen tek şey PALET: yapı, sınıf adları ve kapsam
- * mekanizması aynen duruyor, bu yüzden hiçbir ekran dosyası bu geçiş
- * için düzenlenmedi.
+ * Önceki palet menekşe neondu (vitrin) + Apple mavisi (panel). Yerini
+ * iki metale bıraktı. Değişen tek şey PALET: yapı, sınıf adları, kapsam
+ * mekanizması ve Shadcn token düzeni aynen duruyor — bu yüzden hiçbir
+ * ekran dosyası bu geçiş için düzenlenmek zorunda değil.
  *
- * İŞ BÖLÜMÜ — altın PARA konuşur, gümüş METİN konuşur:
- *   • Altın: birincil düğme, seçili menü, marka logosu, hakediş
- *     rakamı, kademe vurgusu. Bir ekranda kaç altın leke varsa o kadar
- *     "burada para var" demektir; bu yüzden sayısı az.
+ * ── İŞ BÖLÜMÜ: altın PARA konuşur, gümüş METİN konuşur ──
+ *
+ *   • Altın: birincil düğme, seçili menü, marka logosu, hakediş rakamı,
+ *     kademe vurgusu. Bir ekranda kaç altın leke varsa o kadar "burada
+ *     para var" demektir; bu yüzden sayısı az.
  *   • Gümüş: başlık kromu, kenar çizgisi, ikincil metin, grafiklerin
  *     ikinci serisi. Hiçbir zaman bir eylemi işaretlemez.
  *
- * VİTRİN (kök kapsam) — landing, başvuru ve giriş. Metal tam güçte:
- * altın degrade başlıklar, ışıltı, hale, maskot.
+ * VİTRİN (kök kapsam) — landing, başvuru, giriş. Metal tam güçte:
+ * altın degrade başlıklar, ışıltı, hale, maskot, aurora.
  *
- * ARAÇ (`.aqua` kapsamı) — yönetim ve ortak paneli. AYNI iki metal,
+ * ARAÇ (panel kapsamı) — yönetim ve ortak paneli. AYNI iki metal,
  * kısılmış: ışıltı yarıya inik, degrade yalnızca düğmede ve logoda,
- * zemin daha nötr. Günde sekiz saat bakılan ekran altın olabilir;
- * parlayan olamaz.
+ * zemin daha nötr, köşeler Apple dilinde yumuşak. Günde sekiz saat
+ * bakılan ekran altın olabilir; parlayan olamaz.
  *
- * Tema her iki kapsamda da iki tam palet: tek koyu varyant yazmak,
- * aydınlık temayı unutmaya davet — o doktrin duruyor.
+ * ── PANEL KAPSAMI İKİ ADLA TANIMLI: `.aqua` VE `.kuro` ──
+ *
+ * Kapsamın adı kodun sürümüne göre değişiyor: yayında olan `kabuk.tsx`
+ * `className="aqua"`, yereldeki yeni kopya `className="kuro"` yazıyor.
+ * Yalnızca birini tanımlamak, diğerine uygulandığında panelin BÜTÜN
+ * renk değişkenlerini düşürüyor ve panel nötr griye dönüyor — bu bir
+ * kez oldu ve teşhisi pahalıya geldi.
+ *
+ * İkisini birlikte tanımlamak tuzağı tamamen kaldırıyor: dosya hangi
+ * sürüme uygulanırsa uygulansın panel kapsamı dolu kalıyor.
+ * Kullanılmayan ad ölü kural olarak duruyor; maliyeti birkaç yüz bayt,
+ * karşılığı sessiz bir kırılmanın yok olması.
+ *
+ * Tema her kimlikte iki tam palet: tek koyu varyant yazmak, aydınlık
+ * temayı unutmaya davet — o doktrin duruyor.
  */
 :root {
   color-scheme: light;
@@ -51,7 +65,7 @@
    * Soguk gri bir zemin altini kirli gosterirdi; zemin de sicak.
    */
   --zemin: #f7f4ec;
-  --yuzey: #fffdf8;
+  --yuzey: #ffffff;
   --yuzey-2: #efe9db;
   --kenar: #ddd3bd;
   --metin: #1a1509;
@@ -59,9 +73,14 @@
   /* Kahraman gorselinin opakligi: acik zeminde daha az gorunur olmali
      (aksi halde fildisi zeminle kirli/gri carpisiyor). */
   --hero-foto-opaklik: 0.16;
-  /* Beyaz uzerinde ~5.2:1 (eski altin) — AA esigini geciyor. Parlak
-     altin (#d4af37) beyazda 1.9:1'dir ve metin olarak KULLANILAMAZ;
-     acik temada vurgu bilincli olarak koyu uca kayiyor. */
+  /*
+   * Beyaz uzerinde ~5.2:1 (eski altin) — AA esigini geciyor.
+   *
+   * Parlak altin (#d4af37) beyazda 1.9:1'dir ve metin olarak
+   * KULLANILAMAZ; acik temada vurgu bilincli olarak koyu uca kayiyor.
+   * Bu, paletin en kolay yanlis yapilan yeri: "altin" deyip parlak
+   * degeri gunduze de tasimak, butun ikincil metni okunamaz kilar.
+   */
   --vurgu: #8a6a1f;
   --vurgu-metin: #ffffff;
   --vurgu-yumusak: #f5eeda;
@@ -86,9 +105,11 @@
   /*
    * TAYF — artik gokkusagi degil, DOVME METAL. Dort durak tek bir
    * madenin uc yuzu: gumus, ham altin, parlak altin, eski altin.
-   * Sinif adi (`--tayf-*`, `.tayf-metin`, `.tayf-kenar`) kasten
-   * korundu; onlarca dosyada gecen bir adi degistirmek bu gecisi
-   * palet degisikligi olmaktan cikarip refactor'a cevirirdi.
+   *
+   * Sinif ve degisken adlari (`--tayf-*`, `.tayf-metin`, `.tayf-kenar`,
+   * `.tayf-aurora`) kasten KORUNDU: onlarca dosyada gecen bir adi
+   * degistirmek bu gecisi palet degisikligi olmaktan cikarip refactor'a
+   * cevirirdi. Ad artik "tayf" degil "alasim" anlamina geliyor.
    */
   --tayf-1: #6b7280; /* gumus — soguk uc */
   --tayf-2: #a67c22; /* ham altin */
@@ -100,13 +121,15 @@
    * SHADCN TOKEN'LARI — yukaridaki hex paletin `H S% L%` (hsl() govdesi)
    * karsiligi, ayni renk iki bicimde. Shadcn bilesenleri opaklik
    * degistiricileri icin (`bg-primary/90` gibi) bu formati bekliyor;
-   * hex `var()` bunu saglayamiyor.
+   * hex `var()` bunu saglayamiyor. Degerler yukaridaki hex'lerle
+   * BIREBIR ayni renk — burada yeni bir palet secilmedi, sadece format
+   * cevrildi.
    */
   --background: 43 43% 95%;
   --foreground: 42 48% 7%;
-  --card: 45 100% 99%;
+  --card: 0 0% 100%;
   --card-foreground: 42 48% 7%;
-  --popover: 45 100% 99%;
+  --popover: 0 0% 100%;
   --popover-foreground: 42 48% 7%;
   --primary: 42 63% 33%;
   --primary-foreground: 0 0% 100%;
@@ -122,15 +145,18 @@
   --border: 41 33% 80%;
   --input: 41 33% 80%;
   --ring: 42 63% 33%;
+  /* Vitrin diliyle uyumlu, panelin yumusak koselerinden kucuk: bilesen
+     bir denetim gibi durur ama pahli/keskin sahneyi yumusatmaz. */
   --radius: 0.3rem;
 }
 
 :root.koyu {
   color-scheme: dark;
   /*
-   * KASA SIYAHI — saf siyah degil, altinin uzerine dusecegi sicak bir
+   * KASA SIYAHI — saf siyah degil, altinin uzerine dusecegi SICAK bir
    * karanlik. Zeminin sicakligi olcumlu: soguk mavi-siyah bir zeminde
-   * altin yesile kayik gorunuyor.
+   * altin yesile kayik gorunuyor. Onceki menekse zemin (#08060f) tam
+   * bu sorunu uretiyordu.
    */
   --zemin: #08080a;
   --yuzey: #100e0a;
@@ -185,25 +211,25 @@
 }
 
 /*
- * KURO — panel kapsami. Vitrinle AYNI iki metal, alcak sesle.
+ * PANEL KAPSAMI — `.aqua` (yayindaki ad) ve `.kuro` (yeni ad) birlikte.
  *
- * IKI SECICI BIRLIKTE: `.kuro` ve `.aqua`.
- *
- * Panel kapsaminin adi kodun surumune gore degisiyor — repo `.aqua`,
- * yereldeki gelistirme kopyasi `.kuro`. Yalnizca birini yazmak,
- * digerine uygulandiginda panelin TUM renk degiskenlerini dusuruyor
- * ve panel notr griye donuyor (bir kez oldu). Ikisini birlikte
- * tanimlamak bu tuzagi tamamen kaldiriyor: dosya hangi surume
- * uygulanirsa uygulansin panel kapsami dolu kaliyor.
- *
- * Kapsamlardan biri kodda hic kullanilmiyorsa olu kural olarak duruyor;
- * maliyeti birkac yuz bayt, karsiligi sessiz bir kirilmanin yok olmasi.
- *
- * Vitrinle AYNI iki metal, alcak sesle: zemin daha notr, isilti
- * yarim, degrade yalnizca dugmede ve logoda.
+ * Ad artik Apple kimligi degil "kisilmis metal" anlamina geliyor:
+ * yapisi Apple'in sukunetini koruyor (yumusak koseler, sifira yakin
+ * isilti, ince cizgiler) ama rengi vitrinle AYNI iki metal. Panelin
+ * kendi vurgu rengi YOK — mavi kalkti.
  */
-.kuro,
-.aqua {
+.aqua,
+.kuro {
+  /*
+   * Yazi tipi: vitrinle ayni aile.
+   *
+   * Onceki surum panelde sistem yazisi (SF Pro) kullaniyordu; vitrin
+   * ise Archivo istiyor ama hicbir yerden YUKLEMIYORDU ve sessizce
+   * sistem yazisina dusuyordu — yani iki kimlik kazara ayni yaziyla
+   * cikiyordu. Instrument Sans ikisinde de bilincli secim; sistem
+   * yigini yedek olarak duruyor, font gelmezse panel okunur kaliyor.
+   */
+  font-family: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif;
   background: var(--zemin);
   color: var(--metin);
   /* Panel icin bir tik notr: uzun oturumda doygun sicak zemin goz
@@ -214,7 +240,7 @@
   --kenar: #dcd9cf;
   --metin: #191712;
   --metin-2: #64604f;
-  /* Beyaz uzerinde ~5.2:1 — vitrinle AYNI altin; panelin kendi vurgusu yok. */
+  /* Beyaz uzerinde ~5.2:1 — vitrinle AYNI altin. */
   --vurgu: #8a6a1f;
   --vurgu-metin: #ffffff;
   --vurgu-yumusak: #f3ecd9;
@@ -247,13 +273,13 @@
   --border: 43 15% 84%;
   --input: 43 15% 84%;
   --ring: 42 63% 33%;
-  /* Vitrinin 0.3rem'inden bir tik yumusak: panelde yuzlerce kucuk
-     denetim var ve hepsi jilet keskinse arayuz saldirgan okunuyor. */
-  --radius: 0.5rem;
+  /* Panelde yuzlerce kucuk denetim var ve hepsi jilet keskinse arayuz
+     saldirgan okunuyor; yumusak kose bilincli. */
+  --radius: 0.625rem;
 }
 
-.koyu .kuro,
-.aqua {
+.koyu .aqua,
+.koyu .kuro {
   --zemin: #0b0a08;
   --yuzey: #141210;
   --yuzey-2: #1d1a15;
@@ -292,7 +318,7 @@
   --border: 33 17% 15%;
   --input: 33 17% 15%;
   --ring: 46 62% 52%;
-  --radius: 0.5rem;
+  --radius: 0.625rem;
 }
 
 /*
@@ -316,7 +342,7 @@
 
   /* Shadcn token'lari -- `--background` kasten eziLMİYOR (ray ayri bir
      zemin degil, icerikten bir tik ayrisan bir yuzey; sayfa zemini
-     hala `.aqua`'nin `--background`'i). */
+     hala panel kapsaminin `--background`'i). */
   --card: 44 24% 90%;
   --card-foreground: 41 21% 9%;
   --popover: 44 24% 90%;
@@ -355,48 +381,60 @@
 }
 
 /*
- * Panel icinde vitrinin sus siniflari YASIYOR ama kisiliyor: kose
- * tirnaklari daha kucuk ve soluk, pah 6px (vitrinde 8px). Amac
- * "ayni dil, daha alcak ses" — sifirlamak paneli baska bir urun
- * gibi gosterirdi.
+ * Panel icinde vitrinin sus siniflari YASIYOR ama kisiliyor.
+ *
+ * Onceki surum bunlari tamamen kapatiyordu (`content: none`,
+ * `clip-path: none`) cunku Apple kimligi sus kabul etmiyordu. Iki metal
+ * tek dil oldugunda bu ayrim gereksiz: kose tirnaklari daha kucuk ve
+ * soluk, pah 6px (vitrinde 8px). Amac "ayni dil, daha alcak ses" —
+ * sifirlamak paneli baska bir urun gibi gosteriyordu.
+ *
+ * Apple'dan KALAN: yumusak kose yaricapi ve cok hafif golge. Onlar
+ * sukunet uretiyordu ve sukunet hala isteniyor.
  */
-.kuro .hud::before,
-.kuro .hud::after,
+.aqua .hud,
+.kuro .hud {
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
 .aqua .hud::before,
-.aqua .hud::after {
+.aqua .hud::after,
+.kuro .hud::before,
+.kuro .hud::after {
   width: 7px;
   height: 7px;
   border-color: color-mix(in srgb, var(--vurgu) 34%, transparent);
 }
 
-.kuro .kesik,
-.aqua .kesik {
+.aqua .kesik,
+.kuro .kesik {
   clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
 }
 
-.kuro button,
-.aqua button {
-  border-radius: 0.5rem;
+.aqua button,
+.kuro button {
+  border-radius: 8px;
 }
 
-.kuro input,
-.kuro select,
-.kuro textarea,
 .aqua input,
 .aqua select,
-.aqua textarea {
-  border-radius: 0.5rem;
+.aqua textarea,
+.kuro input,
+.kuro select,
+.kuro textarea {
+  border-radius: 8px;
 }
 
-.kuro .hata,
-.aqua .hata {
-  border-radius: 0.5rem;
+.aqua .hata,
+.kuro .hata {
+  border-radius: 10px;
 }
 
 /*
  * TARAMA — kabuk kromunun dokusu: cok ince yatay tarama cizgileri.
- * Yalnizca ust seritte ve kenar cubugunda; calisma alani izgarali,
- * ikisi birbirinin uzerine binmiyor.
+ * `kabuk.tsx` ust seritte ve kenar cubugunda cagiriyor. Calisma alani
+ * izgarali, kabuk taramali — iki doku birbirinin uzerine binmiyor.
  */
 .tarama {
   background-image: repeating-linear-gradient(
@@ -407,10 +445,10 @@
 }
 
 /*
- * PANEL IZGARASI — calisma alaninin zemini. Vitrindeki .izgara
- * sinifinin kisilmis hali: 22px hucre (vitrinde 44px) ve maske YOK.
- * Kenarlara dogru eriyen bir desen, kaydirilan uzun bir panel
- * sayfasinda dikis gibi gorunurdu.
+ * PANEL IZGARASI — calisma alaninin zemini. Vitrindeki `.izgara`nin
+ * kisilmis hali: 22px hucre (vitrinde 44px) ve maske YOK. Kenarlara
+ * dogru eriyen bir desen, kaydirilan uzun bir panel sayfasinda dikis
+ * gibi gorunurdu.
  */
 .panel-izgara {
   background-image:
@@ -423,11 +461,22 @@ body {
   margin: 0;
   background: var(--zemin);
   color: var(--metin);
+  /*
+   * Instrument Sans — sessiz, notr, rakam odakli.
+   *
+   * Onceki surum 'Archivo Variable' yaziyordu ama hicbir yerden
+   * yuklemiyordu: yazi tipi sessizce sistem yazisina dusuyordu ve
+   * `font-stretch: 116%` hicbir ise yaramiyordu. `index.html`'e
+   * Instrument Sans + IBM Plex Mono baglantilari eklendi; Archivo
+   * yedek zincirde kaliyor.
+   */
   font-family: 'Instrument Sans', 'Archivo Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
-/* GOSTERIM SESI — baslik ve oran panosu. */
+/* GOSTERIM SESI — baslik ve oran panosu. `font-stretch` kaldirildi:
+   Instrument Sans genislik eksenini tasimiyor, degeri sessizce yok
+   sayiliyordu. */
 .gosterim {
   font-family: 'Instrument Sans', 'Archivo Variable', ui-sans-serif, system-ui, sans-serif;
   letter-spacing: -0.03em;
@@ -459,7 +508,10 @@ body {
  *
  * Iki katmanli arka plan: icteki (`padding-box`) duz yuzey rengini,
  * distaki (`border-box`) metali tasiyor — yalnizca aradaki 1-2px'lik
- * kenarlikta degrade gorunuyor.
+ * kenarlikta degrade gorunuyor. Sozde-eleman ya da `mask-composite`
+ * gerekmiyor; tum modern tarayicilarda calisan standart teknik.
+ * `--kenar-zemin` kullanan yer icerigi neyle dolduracagini (opak ya da
+ * yari saydam "cam") kendi belirliyor.
  */
 .tayf-kenar {
   border: 1px solid transparent;
@@ -493,6 +545,9 @@ body {
  * nefes alan bir hale ve donen bir altin cember var. Figurun ALTI
  * gradyanla eriyor (maskeleme): kesilmis bir cutout gibi degil,
  * sahneden cikiyor gibi durur.
+ *
+ * Animasyon tanimlari BURADA, bilesende degil: `prefers-reduced-motion`
+ * kuralinin tek yerden kapatilabilmesi icin.
  */
 @keyframes maskot-suzul {
   0%, 100% { transform: translateY(0); }
@@ -524,6 +579,21 @@ body {
   border: 1px solid color-mix(in srgb, var(--tayf-3) 20%, transparent);
   border-top-color: color-mix(in srgb, var(--tayf-2) 65%, transparent);
   animation: cember-don 26s linear infinite;
+}
+
+/*
+ * YONCA — maskotun ARKASINDAN dusen dort kopya. Yukarida gorunmez
+ * baslar, ortada tam opak, altta erir. Yatay kayma cok az (12px):
+ * cizgisel bir dusus dekor degil hata gibi gorunurdu.
+ *
+ * Sure ve gecikmeler bilerek birbirinin kati DEGIL; dordu ayni anda
+ * hizalanmiyor. Degerler bilesende (her kopya kendi suresini tasiyor).
+ */
+@keyframes yonca-dus {
+  0%   { opacity: 0; transform: translate(0, -70px) rotate(-14deg) scale(0.9); }
+  18%  { opacity: 1; }
+  70%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(12px, 300px) rotate(22deg) scale(1.02); }
 }
 
 /*
@@ -584,8 +654,12 @@ textarea::placeholder {
 
 /*
  * SECIM MENULERI — tarayicinin kendi oku ve beyaz option listesi bu
- * paletin yaninda ucuz duruyordu. Ok kendimiz ciziyoruz (altin),
- * option listesi koyu, secili option altin.
+ * paletin yaninda ucuz duruyordu: koyu temada beyaz bir liste aciliyor
+ * ve butun sahneyi bozuyordu. Ok kendimiz ciziyoruz (altin), option
+ * listesi koyu, secili option altin.
+ *
+ * `appearance: none` yalnizca oku kaldiriyor; erisilebilirlik degismiyor
+ * (native <select> davranisi, klavye ve ekran okuyucu aynen duruyor).
  */
 select {
   -webkit-appearance: none;
@@ -630,6 +704,7 @@ table {
 /*
  * HUD KOSE TIRNAKLARI — kartlarin sol-ust ve sag-alt kosesine vurgu
  * renginde iki "L". Cerceve cizmeden "bu bir panel katmani" diyor.
+ * Icerige karismasin diye yari saydam.
  */
 .hud {
   position: relative;
@@ -703,8 +778,12 @@ table {
 }
 
 /*
- * Damga vurulduktan sonra seyrek, kisa bir parlama: %96'lik dilimde
- * hic kipirdamiyor — surekli titreyen yazi okunmaz.
+ * Damga vurulduktan sonra seyrek, kisa bir PARLAMA.
+ *
+ * Onceki surum neon segirmesiydi: kirmizi/mavi kenar kaymasi (chromatic
+ * aberration) ile bozuk bir tabela taklidi. Altin metalde o etki
+ * "baski hatasi" gibi okunuyor — metal parlar, segirmez. %96'lik
+ * dilimde hic kipirdamiyor; surekli titreyen yazi okunmaz.
  */
 @keyframes altin-parla {
   0%, 96%, 100% { opacity: 1; text-shadow: var(--isilti); }
