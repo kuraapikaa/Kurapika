@@ -43,10 +43,16 @@ export type RaporImleci = {
   sonOzet: string | null;
   /** Bir onceki kasa ozeti — periyodik mesajda trend oku icin. */
   sonKasaOzeti: KasaOzeti | null;
+  /**
+   * Yontem bazinda GUNLUK kasa raporunun en son gonderildigi Turkiye
+   * gunu ("YYYY-MM-DD"). Bu rapor kasa ozetinden AYRI, yalnizca 00:00
+   * penceresinde bir kez giden kendi takvimini tutar.
+   */
+  sonKasaYontemGun: string | null;
 };
 
 export function bosImlec(): RaporImleci {
-  return { akislar: {}, sonOzet: null, sonKasaOzeti: null };
+  return { akislar: {}, sonOzet: null, sonKasaOzeti: null, sonKasaYontemGun: null };
 }
 
 /** Imlecte tutulan azami kimlik sayisi. Uctan gelen sayfadan buyuk olmali. */

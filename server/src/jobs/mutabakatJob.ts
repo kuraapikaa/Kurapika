@@ -1,14 +1,18 @@
 /**
- * Aylik mutabakat isi.
+ * Gunluk mutabakat isi.
  *
- * Her gun Turkiye saatiyle 00:00'da, ayin basindan o ana kadarki
- * mutabakati TEK bir Telegram sohbetine gonderir. Hesaplama
+ * Her gun Turkiye saatiyle 00:00'da, BIR ONCEKI (az once kapanan) gunun
+ * odeme yontemi kirilimini TEK bir Telegram sohbetine gonderir. Hesaplama
  * `services/mutabakat` icinde ve testli.
  *
+ * Once "ay basindan bugune" birikimli gonderiyordu; "bugun ne oldu"
+ * sorusu ancak dunku toplamdan cikararak cevaplanabiliyordu. Simdi
+ * `lynonGunlukMutabakat` ile TEK gunun rakami gidiyor.
+ *
  * AYIN ILK GUNU, ayni 00:00 penceresinde, bir ONCEKI ayin KAPANIS
- * raporu da AYRICA gonderilir — "ay icinde ne kadar biriktik" (gunluk)
- * ile "gecen ay kapanista tam olarak ne oldu" (aylik, kesin) farkli
- * sorulara cevap verir; biri digerinin yerine gecmez.
+ * raporu da AYRICA gonderilir — "dun ne oldu" (gunluk) ile "gecen ay
+ * kapanista tam olarak ne oldu" (aylik, kesin) farkli sorulara cevap
+ * verir; biri digerinin yerine gecmez.
  *
  * ── Gunde bir kez ─────────────────────────────────────────────────────
  *
@@ -23,9 +27,9 @@
  */
 import { config } from '../config.js';
 import { readStoredDocument, writeStoredDocument } from '../lib/documentStore.js';
-import { istanbulDateKey } from '../lib/istanbulGunu.js';
+import { istanbulDateKey, istanbulSaatDakika } from '../lib/istanbulGunu.js';
 import { sendTelegramMessage } from '../services/telegramService.js';
-import { lynonAylikKapanisMutabakati, lynonMutabakat } from '../services/lynonBackofficeService.js';
+import { lynonAylikKapanisMutabakati, lynonGunlukMutabakat, previousIstanbulDateKey } from '../services/lynonBackofficeService.js';
 import { oncekiAyAnahtari } from '../services/mutabakat.js';
 
 const NAMESPACE = 'mutabakat-durumu';
@@ -45,18 +49,9 @@ export type MutabakatSonucu = {
   gun: string;
 };
 
-/** Turkiye saatine gore saat ve dakika. */
-function istanbulSaati(now: Date): { saat: number; dakika: number } {
-  const parcalar = new Intl.DateTimeFormat('en-GB', {
-    timeZone: 'Europe/Istanbul', hour: '2-digit', minute: '2-digit', hour12: false,
-  }).formatToParts(now);
-  const al = (tur: string) => Number(parcalar.find((p) => p.type === tur)?.value ?? NaN);
-  return { saat: al('hour'), dakika: al('minute') };
-}
-
 /** Gonderim penceresinde miyiz? (00:00 – 00:PENCERE) */
 export function mutabakatZamaniMi(now: Date = new Date()): boolean {
-  const { saat, dakika } = istanbulSaati(now);
+  const { saat, dakika } = istanbulSaatDakika(now);
   return saat === 0 && dakika < PENCERE_DAKIKA;
 }
 
@@ -77,7 +72,11 @@ export async function runMutabakatJob(tenantKey = 'default', now = new Date()): 
   let degisti = false;
 
   if (durum.sonGonderilenGun !== gun) {
-    const yanit = await lynonMutabakat({ bugun: gun, tenantKey });
+    // Pencere 00:00'da aciliyor — raporlanacak TAM gun az once kapanan
+    // ONCEKI gun, `gun` (bugun) degil. `gun` yalnizca dedup/kayit
+    // anahtari olarak kullanilir.
+    const raporGunu = previousIstanbulDateKey(now);
+    const yanit = await lynonGunlukMutabakat({ gun: raporGunu, tenantKey });
     await sendTelegramMessage(chatId, String(yanit?.Data?.Mesaj ?? ''), { html: true });
     // Kayit GONDERIM BASARILI OLDUKTAN sonra; Telegram dusukse bir
     // sonraki turda tekrar denenir.
@@ -108,13 +107,14 @@ export async function runMutabakatJob(tenantKey = 'default', now = new Date()): 
  * Panelden "şimdi gönder". Pencere ve gün kaydı kontrolü yapmaz.
  *
  * `ay` verilirse O AYIN KAPANIŞ raporu gönderilir (kesin, tam ay);
- * verilmezse her zamanki gibi ayın başından bugüne özet gider.
+ * verilmezse bugünün (elle tetiklendiği ana kadarki) günlük mutabakatı
+ * gider.
  */
 export async function mutabakatiSimdiGonder(tenantKey = 'default', ay?: string): Promise<void> {
   const chatId = config.telegram.mutabakatChatId;
   if (!chatId) throw new Error('TELEGRAM_CHAT_MUTABAKAT tanımlı değil.');
   const yanit = ay
     ? await lynonAylikKapanisMutabakati({ ay, tenantKey })
-    : await lynonMutabakat({ bugun: istanbulDateKey(new Date()), tenantKey });
+    : await lynonGunlukMutabakat({ gun: istanbulDateKey(new Date()), tenantKey });
   await sendTelegramMessage(chatId, String(yanit?.Data?.Mesaj ?? ''));
 }

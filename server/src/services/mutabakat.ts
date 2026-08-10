@@ -20,8 +20,15 @@
  */
 
 import { gorselMesaj, italikIsaretle, kalinIsaretle, kalinSatir, kodIsaretle } from './telegramService.js';
+import type { KomisyonHesabi } from './yontemKomisyonu.js';
 
 type AnyRecord = Record<string, any>;
+
+export type MutabakatKomisyonu = {
+  hesaplar: KomisyonHesabi[];
+  toplamKomisyon: number;
+  oransizSatir: string[];
+};
 
 export type MutabakatSatiri = {
   /** "HemenOde · Havale" */
@@ -286,6 +293,11 @@ function para(deger: number): string {
  * `satirlar` `satirlariManuelIleZenginlestir` ciktisiysa (manuelYatirim/
  * manuelCekim dolu), o yonteme etiketli duzeltme satirin altina ayrica
  * yazilir — rapor rakami degismez, yaninda gorunur.
+ *
+ * `komisyon` verilirse (`yontemKomisyonu.komisyonlariUygula` ciktisi)
+ * "🧾 YÖNTEM KOMİSYONU" bolumu eklenir — sağlayıcının kestiği pay panelde
+ * tanimliysa artik burada da gorunur, "kasaya GERÇEKTE ne girdi" sorusu
+ * rapor rakamiyla degil bu rakamla cevaplanabilir.
  */
 export function mutabakatMesaji(input: {
   ay: string;
@@ -295,11 +307,13 @@ export function mutabakatMesaji(input: {
   fark: { yatirimFarki: number; cekimFarki: number; tutarli: boolean };
   manuel: ManuelKalem[];
   kapanis?: boolean;
+  komisyon?: MutabakatKomisyonu | null;
 }): string {
-  const { ay, aralik, satirlar, toplam, fark, manuel, kapanis } = input;
+  const { ay, aralik, satirlar, toplam, fark, manuel, kapanis, komisyon } = input;
+  const netIsaretiAy = toplam.raporNet >= 0 ? ' 🟢' : ' 🔴';
   const parcalar: Array<string | null> = [
     kalinSatir(kapanis ? `📕 AY KAPANIŞI · ${ay}` : `📒✨ AYLIK MUTABAKAT · ${ay}`),
-    `🗓️ ${aralik.startDate} → ${aralik.endDate}`,
+    `🗓️ ${italikIsaretle(`${aralik.startDate} → ${aralik.endDate}`)}`,
     AYIRAC,
     '',
     kalinSatir('🏦 ÖDEME YÖNTEMİ KIRILIMI'),
@@ -310,7 +324,7 @@ export function mutabakatMesaji(input: {
   } else {
     for (const satir of satirlar) {
       parcalar.push(
-        `  🔹 ${satir.anahtar}`,
+        `  🔹 ${kalinIsaretle(satir.anahtar)}`,
         `    ⬇️ Yatırım: ${para(satir.yatirim)} (${satir.yatirimAdedi})`,
         `    ⬆️ Çekim:   ${para(satir.cekim)} (${satir.cekimAdedi})`,
       );
@@ -329,8 +343,27 @@ export function mutabakatMesaji(input: {
     kalinSatir('📊 RAPOR TOPLAMI'),
     `  Yatırım: ${para(toplam.raporYatirim)}`,
     `  Çekim:   ${para(toplam.raporCekim)}`,
-    `  Net:     ${para(toplam.raporNet)}`,
+    `  Net:     ${para(toplam.raporNet)}${netIsaretiAy}`,
   );
+
+  if (komisyon && komisyon.hesaplar.length > 0) {
+    parcalar.push('', kalinSatir('🧾 YÖNTEM KOMİSYONU'));
+    for (const hesap of komisyon.hesaplar) {
+      if (!hesap.oranTanimli) {
+        parcalar.push(`  🔸 ${hesap.anahtar} — ${italikIsaretle('oran tanımsız, komisyon 0 sayıldı')}`);
+        continue;
+      }
+      parcalar.push(
+        `  🔸 ${hesap.anahtar}: ${para(hesap.toplamKomisyon)}` +
+        ` ${italikIsaretle(`(yatırım ${para(hesap.yatirimKomisyonu)} · çekim ${para(hesap.cekimKomisyonu)})`)}`,
+      );
+    }
+    const netKasa = toplam.toplamNet - komisyon.toplamKomisyon;
+    parcalar.push(
+      `  ${kalinIsaretle('Toplam Komisyon:')} ${para(komisyon.toplamKomisyon)}`,
+      `  ${kalinIsaretle('Komisyon Sonrası Net:')} ${para(netKasa)}${netKasa >= 0 ? ' 🟢' : ' 🔴'}`,
+    );
+  }
 
   if (toplam.manuelKalemAdedi > 0) {
     parcalar.push(
@@ -351,7 +384,7 @@ export function mutabakatMesaji(input: {
     kalinSatir('💰 GENEL TOPLAM'),
     `  Yatırım: ${para(toplam.toplamYatirim)}`,
     `  Çekim:   ${para(toplam.toplamCekim)}`,
-    `  Net:     ${para(toplam.toplamNet)}`,
+    `  Net:     ${para(toplam.toplamNet)}${toplam.toplamNet >= 0 ? ' 🟢' : ' 🔴'}`,
   );
 
   // Satir toplami ile ucun ozeti tutmuyorsa bunu SOYLE.

@@ -17,6 +17,7 @@
 import { config } from '../config.js';
 import { audit } from '../lib/auditLog.js';
 import { readStoredDocument, writeStoredDocument } from '../lib/documentStore.js';
+import { istanbulSaatDakika } from '../lib/istanbulGunu.js';
 import { isTelegramConfigured, sendTelegramMessage } from '../services/telegramService.js';
 import {
   istanbulDateKey,
@@ -28,6 +29,7 @@ import {
   lynonTopCasinoGames,
   lynonWithdrawalRequests,
   lynonYontemBazindaKasa,
+  previousIstanbulDateKey,
 } from '../services/lynonBackofficeService.js';
 import {
   AZAMI_GORULEN,
@@ -51,6 +53,22 @@ import { cekimBaglamiTopla } from '../services/cekimBaglamServisi.js';
 import { cekimButonlari, klavye, yetkiliKullanicilar } from '../services/telegramButonlari.js';
 
 const NAMESPACE = 'telegram-rapor-imleci';
+
+/**
+ * Yontem bazinda GUNLUK kasa raporu 00:00 - 00:PENCERE araliginda,
+ * gunde BIR KEZ gider. `mutabakatJob`'daki gece yarisi penceresi
+ * deseniyle ayni: is `raporAralikMs` (varsayilan 60sn) kadar sik
+ * uyaniyor, pencereye her girildiginde tekrar denemesin diye
+ * `imlec.sonKasaYontemGun` ile o gun icin dedup yapiliyor.
+ */
+const KASA_YONTEM_PENCERE_DAKIKA = Number(process.env.KASA_YONTEM_PENCERE_DK) || 10;
+
+/** 00:00 - 00:PENCERE araligindayiz ve bu Turkiye gunune ait rapor henuz gitmedi mi? */
+function kasaYontemZamaniMi(now: Date, sonGonderilenGun: string | null, gun: string): boolean {
+  if (sonGonderilenGun === gun) return false;
+  const { saat, dakika } = istanbulSaatDakika(now);
+  return saat === 0 && dakika < KASA_YONTEM_PENCERE_DAKIKA;
+}
 
 type AnyRecord = Record<string, any>;
 
@@ -439,10 +457,8 @@ export async function runTelegramRaporJob(tenantKey = 'default'): Promise<Telegr
    * Onceki surumde bu bayrak yalnizca ANA kasa ozeti (`kasaSohbeti`)
    * GONDERILDIGINDE ilerliyordu. `TELEGRAM_CHAT_KASA` bossa (ki bu site
    * icin oyleydi) `imlec.sonOzet` HIC yazilmiyor, `ozetZamaniMi` de her
-   * turda `true` donuyor — sonuc: asagidaki yontem bazinda kasa botu her
-   * dakika (20 dakikada bir degil) mesaj atiyordu. Simdi periyot ANA
-   * ozet gonderilsin gonderilmesin, pencere acildiginda ilerletiliyor;
-   * o pencerede kimin gonderdigi ayrica belirleniyor.
+   * turda `true` donuyor — sonuc: kasa botu her dakika (20 dakikada bir
+   * degil) mesaj atiyordu. Simdi periyot pencere acildiginda ilerletiliyor.
    */
   const ozetZamaniGeldi = ozetZamaniMi(imlec.sonOzet, config.telegram.raporOzetAralikMs);
   if (ozetZamaniGeldi) {
@@ -459,21 +475,40 @@ export async function runTelegramRaporJob(tenantKey = 'default'): Promise<Telegr
         console.error('[telegram-rapor] kasa özeti:', err instanceof Error ? err.message : err);
       }
     }
+  }
 
-    // Yontem bazinda GUNLUK kasa — ayni pencerede, ayri hata
-    // izolasyonuyla: biri dusse digeri gitmeye devam etsin. `sohbetSec`
-    // kendi icinde raporChatId'ye dusuyor; burada onun yerine ozellikle
-    // KASA sohbetine dusmek isteniyor, bu yuzden ham config degeri okunuyor.
-    const kasaYontemSohbeti = config.telegram.raporChatIdleri.kasaYontem || kasaSohbeti;
+  /**
+   * Yontem bazinda GUNLUK kasa — ARTIK kasa ozetinden BAGIMSIZ, kendi
+   * gece yarisi penceresinde (00:00 - 00:PENCERE) GUNDE BIR KEZ gider.
+   *
+   * Once kasa ozetiyle AYNI pencerede (`ozetZamaniGeldi`, varsayilan
+   * 20dk) gidiyordu — kullanici "bu grup sadece 00:00'da atsın" dedi.
+   * Ayrica aralik BUGUN→BUGUN yerine DUN→DUN: pencere 00:00'da acildigi
+   * icin bugun henuz bos, raporlanacak TAM gun az once kapanan gun.
+   * `sohbetSec` kendi icinde raporChatId'ye dusuyor; burada onun yerine
+   * ozellikle KASA sohbetine dusmek isteniyor, bu yuzden ham config
+   * degeri okunuyor.
+   */
+  const gunAnahtari = bugun();
+  if (kasaYontemZamaniMi(new Date(), imlec.sonKasaYontemGun, gunAnahtari)) {
+    const kasaYontemSohbeti = config.telegram.raporChatIdleri.kasaYontem || sohbetSec('kasa');
     if (kasaYontemSohbeti) {
       try {
-        const yanit = await lynonYontemBazindaKasa({});
+        const dun = previousIstanbulDateKey(new Date());
+        const yanit = await lynonYontemBazindaKasa({ baslangic: dun, bitis: dun });
         await sendTelegramMessage(kasaYontemSohbeti, String(yanit?.Data?.Mesaj ?? ''), { html: true });
         sonuc.gonderilen += 1;
+        imlec.sonKasaYontemGun = gunAnahtari;
+        degisti = true;
       } catch (err) {
         sonuc.hata += 1;
         console.error('[telegram-rapor] yöntem bazında kasa:', err instanceof Error ? err.message : err);
       }
+    } else {
+      // Sohbet tanimli degilse yine de gun isaretlenir — aksi halde bos
+      // pencerede her dakika bu bloga tekrar tekrar girilir.
+      imlec.sonKasaYontemGun = gunAnahtari;
+      degisti = true;
     }
   }
 

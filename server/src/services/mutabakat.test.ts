@@ -289,6 +289,49 @@ describe('mutabakatMesaji', () => {
     });
     expect(mesaj).toContain('sağlayıcı hareketi yok');
   });
+
+  it('komisyon verilmezse bölümü hiç yazmaz', () => {
+    const mesaj = mutabakatMesaji({
+      ay: '2026-08',
+      aralik: { startDate: '2026-08-01', endDate: '2026-08-03' },
+      satirlar,
+      toplam: mutabakatToplami(satirlar, GERCEK_OZET, []),
+      fark: ozetFarki(satirlar, GERCEK_OZET),
+      manuel: [],
+    });
+    expect(mesaj).not.toContain('YÖNTEM KOMİSYONU');
+  });
+
+  it('komisyon verilirse bölümü ve komisyon sonrası neti yazar', () => {
+    const mesaj = mutabakatMesaji({
+      ay: '2026-08',
+      aralik: { startDate: '2026-08-01', endDate: '2026-08-03' },
+      satirlar,
+      toplam: mutabakatToplami(satirlar, GERCEK_OZET, []),
+      fark: ozetFarki(satirlar, GERCEK_OZET),
+      manuel: [],
+      komisyon: {
+        hesaplar: [
+          {
+            anahtar: 'NeoPays · Havale', oranTanimli: true,
+            yatirimKomisyonu: 300, cekimKomisyonu: 0, toplamKomisyon: 300, netYatirim: 11700,
+          },
+          {
+            anahtar: 'HemenOde · Havale', oranTanimli: false,
+            yatirimKomisyonu: 0, cekimKomisyonu: 0, toplamKomisyon: 0, netYatirim: 5310,
+          },
+        ],
+        toplamKomisyon: 300,
+        oransizSatir: ['HemenOde · Havale'],
+      },
+    });
+    expect(mesaj).toContain('YÖNTEM KOMİSYONU');
+    expect(mesaj).toContain('NeoPays · Havale: 300 TRY');
+    expect(mesaj).toContain('oran tanımsız, komisyon 0 sayıldı');
+    expect(mesaj).toContain('Toplam Komisyon:</b> 300 TRY');
+    // raporNet (18.310 - 13.166 = 5.144) - 300 komisyon = 4.844.
+    expect(mesaj).toContain('Komisyon Sonrası Net:</b> 4.844 TRY');
+  });
 });
 
 describe('yontemKasaMesaji', () => {

@@ -4,6 +4,7 @@ import {
   LYNON_SL_TIMEZONE,
   gunAraligindaMi,
   istanbulDateKey,
+  istanbulSaatDakika,
   slTimezoneDegeri,
 } from './istanbulGunu.js';
 
@@ -31,6 +32,18 @@ describe('gunAraligindaMi', () => {
   it('değer yoksa aralıkta sayılmaz', () => {
     expect(gunAraligindaMi(null, '2026-08-03', '2026-08-03')).toBe(false);
     expect(gunAraligindaMi('bozuk', '2026-08-03', '2026-08-03')).toBe(false);
+  });
+});
+
+describe('istanbulSaatDakika', () => {
+  it('UTC gece yarısı Türkiye\'de 03:00 olur', () => {
+    // 2026-08-03 00:00 UTC = 2026-08-03 03:00 Istanbul.
+    expect(istanbulSaatDakika(new Date('2026-08-03T00:00:00Z'))).toEqual({ saat: 3, dakika: 0 });
+  });
+
+  it('gece yarısı penceresini yakalar', () => {
+    // 2026-08-02 21:05 UTC = 2026-08-03 00:05 Istanbul.
+    expect(istanbulSaatDakika(new Date('2026-08-02T21:05:00Z'))).toEqual({ saat: 0, dakika: 5 });
   });
 });
 

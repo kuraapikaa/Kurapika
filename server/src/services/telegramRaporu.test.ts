@@ -520,6 +520,6 @@ describe('ozetZamaniMi', () => {
 
 describe('bosImlec', () => {
   it('temiz durumla başlar', () => {
-    expect(bosImlec()).toEqual({ akislar: {}, sonOzet: null, sonKasaOzeti: null });
+    expect(bosImlec()).toEqual({ akislar: {}, sonOzet: null, sonKasaOzeti: null, sonKasaYontemGun: null });
   });
 });

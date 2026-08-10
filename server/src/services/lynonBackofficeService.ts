@@ -20,6 +20,7 @@ import {
   yontemKasaMesaji,
   type ManuelKalem,
 } from './mutabakat.js';
+import { komisyonOranlari, komisyonlariUygula } from './yontemKomisyonu.js';
 import {
   bonusOturumSatiri,
   bonusOzeti,
@@ -929,13 +930,23 @@ export async function lynonAffiliateSummary(startDate: string, endDate: string):
   });
 }
 
+/**
+ * En cok oynanan oyunlar — rapor 1840 (`NARCOS_REPORT_IDS.game`), Lynon
+ * backoffice arayuzunun kendisinin kullandigi tz-id (16) ile.
+ *
+ * Once katalogdan "id 1900" ya da "Report By Game" adiyla bir rapor
+ * ARANIYORDU (viewer'in kendi rapor kimligini bulma cabasi) ve tz-id hic
+ * gonderilmiyordu (`lynonReportById`'in varsayilani 13). Kullanicinin
+ * "yanlış gösteriyor" sikayetiyle birlikte paylastigi gercek panel
+ * istegi (`/137/1840?...&tz-id=16`) hem site hem rapor kimligini acikca
+ * 1840 olarak gosteriyor — 1900 aramasi yanlis raporu ceker, tz-id
+ * farki da ayni gun icin farkli bir pencere donduruyordu.
+ */
 export async function lynonTopCasinoGames(startDate: string, endDate: string, topRecordsCount = 5): Promise<AnyRecord> {
   return cachedLynon(`top-casino:${lynonCfg().siteId}:${startDate}:${endDate}:${topRecordsCount}:${lynonCfg().currency}`, araligaGoreTtl(endDate, todayYmd()), async () => {
-    const catalog = await lynonReportCatalog();
-    const reportMeta = catalog.find((item) => Number(item.id) === 1900)
-      ?? catalog.find((item) => String(item.name ?? '').trim().toLowerCase() === 'report by game');
-    const resolvedReportId = Number(reportMeta?.id ?? NARCOS_REPORT_IDS.game);
-    const report = await lynonReportById(resolvedReportId, { startDate, endDate, currency: lynonCfg().currency });
+    const report = await raporGetir(NARCOS_REPORT_IDS.game, 'Report By Game', {
+      startDate, endDate, currency: lynonCfg().currency, tzId: '16',
+    });
     const rows = rowsFromReportData(recordOf(report.Data))
       .filter((row) => !row['Game Type'] || textIncludes(row['Game Type'], 'casino'))
       .map((row, index) => ({
@@ -949,7 +960,7 @@ export async function lynonTopCasinoGames(startDate: string, endDate: string, to
       .sort((a, b) => numberFrom(b.Turnover) - numberFrom(a.Turnover))
       .slice(0, Math.max(1, topRecordsCount));
 
-    return { HasError: false, Data: rows, Source: { viewerReportId: 1900, resolvedReportId, reportName: reportMeta?.name ?? 'Report By Game', siteId: lynonCfg().siteId } };
+    return { HasError: false, Data: rows, Source: { reportId: NARCOS_REPORT_IDS.game, reportName: 'Report By Game', siteId: lynonCfg().siteId } };
   });
 }
 
@@ -2144,7 +2155,7 @@ export async function lynonReportCatalog(force = false): Promise<AnyRecord[]> {
 async function raporGetir(
   reportId: number,
   reportName: string,
-  range: { startDate?: string; endDate?: string; currency?: string } = {},
+  range: { startDate?: string; endDate?: string; currency?: string; tzId?: string } = {},
 ): Promise<AnyRecord> {
   try {
     return await lynonReportById(reportId, range);
@@ -2193,13 +2204,13 @@ let operationalKpiCache = new Map<string, { expiresAt: number; value: Promise<An
 
 export async function lynonReportById(
   reportId: number,
-  range: { startDate?: string; endDate?: string; currency?: string } = {},
+  range: { startDate?: string; endDate?: string; currency?: string; tzId?: string } = {},
 ): Promise<AnyRecord> {
   const data = recordOf(await lynonRequest(`/api/report/api/v1.0/reportData/summarized/${reportId}`, {
     query: {
       startDate: gunBasi(range.startDate ?? yearAgoYmd()),
       endDate: gunSonu(range.endDate ?? todayYmd()),
-      'tz-id': '13',
+      'tz-id': range.tzId ?? '13',
       currency: range.currency ?? lynonCfg().currency,
     },
   }));
@@ -3013,10 +3024,15 @@ export async function mutabakatManuelKalemiSil(id: string, tenantKey = 'default'
 /**
  * Mutabakat hesabinin ortak govdesi.
  *
- * `lynonMutabakat` (ay basindan bugune, gunluk 00:00 raporunun kaynagi)
- * ve `lynonAylikKapanisMutabakati` (kapanmis onceki ayin kesin toplami)
- * AYNI hesabi FARKLI tarih araliklariyla calistirir; kod tekrarini
- * onlemek icin tek yerde toplandi.
+ * `lynonGunlukMutabakat` (gunluk 00:00 raporunun kaynagi), `lynonMutabakat`
+ * (ay basindan bugune, panel gorunumu) ve `lynonAylikKapanisMutabakati`
+ * (kapanmis onceki ayin kesin toplami) AYNI hesabi FARKLI tarih
+ * araliklariyla calistirir; kod tekrarini onlemek icin tek yerde toplandi.
+ *
+ * Komisyon oranlari (`yontemKomisyonu`) BURADA, tek yerde uygulanir —
+ * panel rotasi ve Telegram isi ayni hesabi IKI KEZ FARKLI SEKILDE
+ * yapip birbirinden sapmasin diye. Oran tanimsizsa `komisyonlariUygula`
+ * o satiri komisyonsuz sayar; hicbir oran yoksa `toplamKomisyon` 0'dir.
  */
 async function mutabakatHesapla(
   aralik: { startDate: string; endDate: string },
@@ -3041,6 +3057,17 @@ async function mutabakatHesapla(
   // rakami degismez, yaninda "duzeltilmis" olarak gorunur.
   const satirlar = satirlariManuelIleZenginlestir(raporSatirlari, manuel);
 
+  const oranlar = await komisyonOranlari(tenantKey);
+  const komisyon = komisyonlariUygula(oranlar, satirlar.map((satir) => ({
+    anahtar: satir.anahtar,
+    yatirim: satir.duzeltilmisYatirim ?? satir.yatirim,
+    cekim: satir.duzeltilmisCekim ?? satir.cekim,
+    // `komisyonHesapla` sabit ucreti TEK adet uzerinden yatirim VE cekim
+    // tarafina birden uyguluyor; satirin toplam islem hacmi (yatirim +
+    // cekim adedi) bu tek adet icin en makul yaklastirma.
+    islemSayisi: satir.yatirimAdedi + satir.cekimAdedi,
+  })));
+
   return {
     HasError: false,
     Data: {
@@ -3051,7 +3078,8 @@ async function mutabakatHesapla(
       Toplam: toplam,
       Fark: fark,
       ManuelKalemler: manuel,
-      Mesaj: mutabakatMesaji({ ay, aralik, satirlar, toplam, fark, manuel, kapanis }),
+      Komisyon: komisyon,
+      Mesaj: mutabakatMesaji({ ay, aralik, satirlar, toplam, fark, manuel, kapanis, komisyon }),
       Kaynak: `reportData/summarized/${NARCOS_REPORT_IDS.integrationPayment}`,
     },
   };
@@ -3063,6 +3091,10 @@ async function mutabakatHesapla(
  * Kaynak rapor 1842 — odeme yontemi kirilimi. Rapor YALNIZCA odeme
  * saglayicilarindan gecen parayi goruyor; elden yapilan yatirimlar ve
  * dengeleme kalemleri elle eklenir ve toplamda AYRI gosterilir.
+ *
+ * Telegram'daki gunde-bir-kez 00:00 raporunun kaynagi ARTIK bu degil,
+ * `lynonGunlukMutabakat` — bkz. asagisi. Bu fonksiyon panelin "ay
+ * basindan bugune" gorunumu icin duruyor.
  */
 export async function lynonMutabakat(body: AnyRecord = {}): Promise<AnyRecord> {
   const bugun = String(body.bugun ?? todayYmd());
@@ -3072,18 +3104,13 @@ export async function lynonMutabakat(body: AnyRecord = {}): Promise<AnyRecord> {
 }
 
 /**
- * Ay kapanis mutabakati — belirtilen (varsayilan: bir onceki) ayin
- * TAM ve KESIN toplami. Gunluk 00:00 raporu "ay icinde ne kadar
- * biriktik" sorusunu cevaplar; bu, "gecen ay kapanista tam olarak
- * ne oldu" sorusunu cevaplar — muhasebe icin ayrı, kesin bir kayit.
- */
-/**
  * GUNLUK mutabakat — tek gunun odeme yontemi kirilimi.
  *
  * Aylik surum ("ay basindan bugune") birikimli calisiyordu; "bugun ne
  * oldu" sorusu ancak dunku toplamdan cikararak cevaplanabiliyordu.
  * Gunluk mutabakat o cikarmayi gereksiz kiliyor ve gunu kapatirken
- * saglayici ekstresiyle karsilastirilabilir tek bir rakam veriyor.
+ * saglayici ekstresiyle karsilastirilabilir tek bir rakam veriyor. Bu,
+ * Telegram'daki gunde-bir-kez 00:00 raporunun kaynagi.
  */
 export async function lynonGunlukMutabakat(body: AnyRecord = {}): Promise<AnyRecord> {
   const gun = String(body.gun ?? body.bugun ?? todayYmd());
@@ -3092,6 +3119,12 @@ export async function lynonGunlukMutabakat(body: AnyRecord = {}): Promise<AnyRec
   return mutabakatHesapla(aralik, aralik.ay, tenantKey, false);
 }
 
+/**
+ * Ay kapanis mutabakati — belirtilen (varsayilan: bir onceki) ayin
+ * TAM ve KESIN toplami. Gunluk 00:00 raporu "dun ne oldu" sorusunu
+ * cevaplar; bu, "gecen ay kapanista tam olarak ne oldu" sorusunu
+ * cevaplar — muhasebe icin ayrı, kesin bir kayit.
+ */
 export async function lynonAylikKapanisMutabakati(body: AnyRecord = {}): Promise<AnyRecord> {
   const tenantKey = String(body.tenantKey ?? 'default');
   const ay = String(body.ay ?? oncekiAyAnahtari(todayYmd()));

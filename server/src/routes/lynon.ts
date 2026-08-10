@@ -3,7 +3,7 @@ import { clearLynonSession, ensureLynonSession, getLynonAuthStatus, lynonRequest
 import { audit } from '../lib/auditLog.js';
 import { resolveTenantKeyForRequest } from '../lib/tenant.js';
 import {
-  komisyonOranlari, komisyonOraniKaydet, komisyonOraniSil, komisyonlariUygula, YontemKomisyonuHatasi,
+  komisyonOranlari, komisyonOraniKaydet, komisyonOraniSil, YontemKomisyonuHatasi,
 } from '../services/yontemKomisyonu.js';
 import { config } from '../config.js';
 import { ensureTelegramWebhook, sendTelegramMessage } from '../services/telegramService.js';
@@ -351,18 +351,13 @@ export async function lynonRoutes(app: FastifyInstance) {
     try {
       const tenantKey = await resolveTenantKeyForRequest(request as any);
       const mutabakat = await lynonGunlukMutabakat({ ...(request.body ?? {}), tenantKey });
-      // Komisyon oranlari mutabakatla BIRLIKTE donuyor: panelin ikinci
-      // bir istek atip iki cevabi elde birlestirmesi gereksiz ve iki
-      // istek arasinda oran degisirse tutarsiz gorunurdu.
+      // Komisyon `mutabakatHesapla` icinde ZATEN hesaplanip Data.Komisyon
+      // olarak donuyor — burada ikinci kez hesaplamak (ve satirlari
+      // `mutabakat.satirlar` gibi YANLIS bir yoldan okumak, dogrusu
+      // `mutabakat.Data.Satirlar`) hem gereksiz hem de sapan bir
+      // kopyaydi. Oranlari panel ayrica gosterebilsin diye burada.
       const oranlar = await komisyonOranlari(tenantKey);
-      const satirlar = Array.isArray((mutabakat as any).satirlar) ? (mutabakat as any).satirlar : [];
-      const komisyon = komisyonlariUygula(oranlar, satirlar.map((sat: any) => ({
-        anahtar: String(sat.anahtar ?? ''),
-        yatirim: Number(sat.yatirim ?? 0),
-        cekim: Number(sat.cekim ?? 0),
-        islemSayisi: sat.islemSayisi ?? null,
-      })));
-      return reply.send({ ...mutabakat, komisyon, oranlar });
+      return reply.send({ ...mutabakat, komisyon: (mutabakat as any)?.Data?.Komisyon ?? null, oranlar });
     } catch (err) {
       return sendError(reply, err);
     }

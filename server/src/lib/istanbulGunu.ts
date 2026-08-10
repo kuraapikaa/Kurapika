@@ -62,6 +62,15 @@ export function istanbulDateKey(value: Date | string | number = new Date()): str
   return `${pick('year')}-${pick('month')}-${pick('day')}`;
 }
 
+/** Verilen anin Turkiye saati ve dakikasi — gece yarisi penceresi kontrolleri icin. */
+export function istanbulSaatDakika(now: Date = new Date()): { saat: number; dakika: number } {
+  const parcalar = new Intl.DateTimeFormat('en-GB', {
+    timeZone: ISTANBUL_DILIMI, hour: '2-digit', minute: '2-digit', hour12: false,
+  }).formatToParts(now);
+  const al = (tur: string) => Number(parcalar.find((p) => p.type === tur)?.value ?? NaN);
+  return { saat: al('hour'), dakika: al('minute') };
+}
+
 /** Verilen an, `baslangic`–`bitis` (Turkiye gunleri, ikisi de dahil) araliginda mi? */
 export function gunAraligindaMi(
   value: Date | string | number | null | undefined,
