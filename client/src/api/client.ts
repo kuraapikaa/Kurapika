@@ -558,6 +558,15 @@ export const dashboardApi = {
   /** `ay` verilirse o ayın KAPANIŞ raporu Telegram'a gider; yoksa ayın başından bugüne özet. */
   mutabakatGonder: (ay?: string) => post<any>('/lynon/mutabakat/gonder', ay ? { ay } : {}),
 
+  /** Ödeme yöntemi başına ayarlar: komisyon oranı, teslimat kuralı, takviye eşiği. */
+  mutabakatYontemAyarlari: () => get<{ ok: boolean; oranlar: YontemAyari[] }>('/lynon/mutabakat/komisyon-oranlari'),
+
+  mutabakatYontemAyariKaydet: (girdi: Partial<YontemAyari> & { anahtar: string }) =>
+    put<{ ok: boolean; oran: YontemAyari }>('/lynon/mutabakat/komisyon-oranlari', girdi),
+
+  mutabakatYontemAyariSil: (anahtar: string) =>
+    del<{ ok: boolean }>(`/lynon/mutabakat/komisyon-oranlari/${encodeURIComponent(anahtar)}`),
+
   /** Davranış kategorilerini oluştur (High Risk, Bonus Avcısı, VIP Üye, Aktif Üye). */
   davranisKategorileriniOlustur: () =>
     post<any>('/lynon/oyuncu-kategorileme/kategorileri-olustur', {}),
@@ -1079,6 +1088,21 @@ export interface AffiliateToplam {
   netGelir: number;
   netPozisyon: number;
   ortalamaDonusum: number;
+}
+
+/** Ödeme yöntemi başına mutabakat ayarı: komisyon + teslimat + takviye. */
+export interface YontemAyari {
+  /** `Mutabakat.Satirlar[].anahtar` ile aynı biçim: "HemenOde · Havale". */
+  anahtar: string;
+  yatirimYuzde: number;
+  yatirimSabit: number;
+  cekimYuzde: number;
+  cekimSabit: number;
+  teslimatKurali: string | null;
+  takviyeEsigi: number | null;
+  takviyeNotu: string | null;
+  not: string | null;
+  updatedAt: string;
 }
 
 export type AffiliateOdemeDurumu = 'bekliyor' | 'odendi' | 'iptal';

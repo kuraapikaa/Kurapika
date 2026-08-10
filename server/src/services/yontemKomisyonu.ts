@@ -4,7 +4,7 @@ import { safeTenantKey } from '../lib/tenant.js';
 import { readStoredDocument, writeStoredDocument } from '../lib/documentStore.js';
 
 /**
- * ÖDEME YÖNTEMİ KOMİSYON ORANLARI.
+ * ÖDEME YÖNTEMİ AYARLARI (komisyon + teslimat + takviye).
  *
  * Mutabakat bugüne kadar yalnızca "sağlayıcıdan ne kadar geçti"
  * gösteriyordu. Ama sağlayıcı o paranın tamamını bize vermiyor:
@@ -23,6 +23,18 @@ import { readStoredDocument, writeStoredDocument } from '../lib/documentStore.js
  * Aynı yöntemin yatırım ve çekim komisyonu neredeyse hiç aynı değil.
  * Tek oran tutmak, iki yönden birini sistematik olarak yanlış
  * hesaplamak olurdu.
+ *
+ * ── Teslimat / takviye NEDEN serbest metin ──
+ *
+ * Her sağlayıcının kasa mutabakatıyla ilgisi olan operasyonel kuralı
+ * farklı ("her Pazartesi elden teslim", "T+2 banka mutabakatı",
+ * "50.000 TL altına düşünce X'i ara"). Bunu sabit bir şemaya
+ * sıkıştırmak (örn. yalnızca haftalık/aylık seçenek) gerçek kuralı
+ * ya eksik ya da yanlış temsil ederdi; serbest metin + isteğe bağlı
+ * bir takviye eşiği (sayı), panelin dışına taşmadan operasyonu
+ * olduğu gibi kaydetmeye yetiyor. Bu alanlar komisyon hesabına
+ * KATILMIYOR — yalnızca bilgi amaçlı, mutabakat rakamlarını
+ * değiştirmiyorlar.
  */
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -37,6 +49,12 @@ export interface YontemKomisyonu {
   yatirimSabit: number;
   cekimYuzde: number;
   cekimSabit: number;
+  /** Bu yöntemin parası ne zaman/nasıl teslim ediliyor -- serbest metin ("T+2", "Her Pazartesi elden"...). */
+  teslimatKurali: string | null;
+  /** Kasa bu tutarın altına düşünce takviye (para ekleme) gerekir. Tanımsızsa eşik izlenmiyor demektir. */
+  takviyeEsigi: number | null;
+  /** Takviyenin nasıl/kimden yapılacağına dair not. */
+  takviyeNotu: string | null;
   not: string | null;
   updatedAt: string;
 }
@@ -62,7 +80,16 @@ async function depoOku(tenantKey: string): Promise<Depo> {
     filePath: depoYolu(tenantKey),
     fallback: bosDepo,
   });
-  return { version: 1, oranlar: Array.isArray(kayit.oranlar) ? kayit.oranlar : [] };
+  // Teslimat/takviye alanlari SONRADAN eklendi -- bu alanlar olmadan
+  // kaydedilmis eski kayitlar `undefined` donerdi, `string | null`
+  // sozlesmesini bozardi.
+  const oranlar = (Array.isArray(kayit.oranlar) ? kayit.oranlar : []).map((o) => ({
+    ...o,
+    teslimatKurali: o.teslimatKurali ?? null,
+    takviyeEsigi: o.takviyeEsigi ?? null,
+    takviyeNotu: o.takviyeNotu ?? null,
+  }));
+  return { version: 1, oranlar };
 }
 
 async function depoYaz(tenantKey: string, depo: Depo): Promise<void> {
@@ -86,6 +113,18 @@ function sabit(deger: unknown, alan: string): number {
   return n;
 }
 
+/** `sabit()`den farkı: değer BOŞSA (izlenmiyor) `null`, doluysa doğrulanmış sayı döner. */
+function sabitYaNull(deger: unknown, alan: string): number | null {
+  if (deger === undefined || deger === null || deger === '') return null;
+  const n = Number(deger);
+  if (!Number.isFinite(n) || n < 0) throw new YontemKomisyonuHatasi(`${alan} negatif olamaz.`);
+  return n;
+}
+
+function metinYaNull(deger: unknown): string | null {
+  return String(deger ?? '').trim() || null;
+}
+
 export async function komisyonOranlari(tenantKey: string): Promise<YontemKomisyonu[]> {
   return (await depoOku(tenantKey)).oranlar;
 }
@@ -104,7 +143,10 @@ export async function komisyonOraniKaydet(
     yatirimSabit: sabit(girdi.yatirimSabit, 'yatirimSabit'),
     cekimYuzde: yuzde(girdi.cekimYuzde, 'cekimYuzde'),
     cekimSabit: sabit(girdi.cekimSabit, 'cekimSabit'),
-    not: String(girdi.not ?? '').trim() || null,
+    teslimatKurali: metinYaNull(girdi.teslimatKurali),
+    takviyeEsigi: sabitYaNull(girdi.takviyeEsigi, 'takviyeEsigi'),
+    takviyeNotu: metinYaNull(girdi.takviyeNotu),
+    not: metinYaNull(girdi.not),
     updatedAt: simdi.toISOString(),
   };
 

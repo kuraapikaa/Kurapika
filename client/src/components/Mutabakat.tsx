@@ -9,8 +9,10 @@
  */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { AlertTriangle, ArrowDownRight, ArrowUpRight, BookOpen, Plus, Send, Trash2 } from 'lucide-react';
-import { dashboardApi } from '../api/client';
+import {
+  AlertTriangle, ArrowDownRight, ArrowUpRight, BookOpen, Pencil, Plus, Send, Settings2, Trash2,
+} from 'lucide-react';
+import { dashboardApi, type YontemAyari } from '../api/client';
 import {
   PanoBaslik,
   PanoBos,
@@ -88,6 +90,71 @@ export function Mutabakat() {
   });
   const gonder = useMutation({ mutationFn: () => dashboardApi.mutabakatGonder() });
   const kapanisGonder = useMutation({ mutationFn: () => dashboardApi.mutabakatGonder(oncekiAy()) });
+
+  // ── Yöntem ayarları (komisyon + teslimat + takviye) ──────────────────
+  const [duzenlenenAnahtar, setDuzenlenenAnahtar] = useState<string | null>(null);
+  const [ayarAnahtar, setAyarAnahtar] = useState('');
+  const [ayarYatirimYuzde, setAyarYatirimYuzde] = useState('');
+  const [ayarYatirimSabit, setAyarYatirimSabit] = useState('');
+  const [ayarCekimYuzde, setAyarCekimYuzde] = useState('');
+  const [ayarCekimSabit, setAyarCekimSabit] = useState('');
+  const [ayarTeslimat, setAyarTeslimat] = useState('');
+  const [ayarTakviyeEsigi, setAyarTakviyeEsigi] = useState('');
+  const [ayarTakviyeNotu, setAyarTakviyeNotu] = useState('');
+  const [ayarNot, setAyarNot] = useState('');
+
+  const { data: ayarYaniti, isLoading: ayarYukleniyor } = useQuery({
+    queryKey: ['mutabakat-yontem-ayarlari'],
+    queryFn: () => dashboardApi.mutabakatYontemAyarlari(),
+    staleTime: 2 * 60 * 1000,
+  });
+  const ayarlar: YontemAyari[] = ayarYaniti?.oranlar ?? [];
+
+  const ayarTazele = () => queryClient.invalidateQueries({ queryKey: ['mutabakat-yontem-ayarlari'] });
+
+  const formuSifirla = () => {
+    setDuzenlenenAnahtar(null);
+    setAyarAnahtar(''); setAyarYatirimYuzde(''); setAyarYatirimSabit('');
+    setAyarCekimYuzde(''); setAyarCekimSabit(''); setAyarTeslimat('');
+    setAyarTakviyeEsigi(''); setAyarTakviyeNotu(''); setAyarNot('');
+  };
+
+  const formuDoldur = (ayar: YontemAyari) => {
+    setDuzenlenenAnahtar(ayar.anahtar);
+    setAyarAnahtar(ayar.anahtar);
+    setAyarYatirimYuzde(String(ayar.yatirimYuzde));
+    setAyarYatirimSabit(String(ayar.yatirimSabit));
+    setAyarCekimYuzde(String(ayar.cekimYuzde));
+    setAyarCekimSabit(String(ayar.cekimSabit));
+    setAyarTeslimat(ayar.teslimatKurali ?? '');
+    setAyarTakviyeEsigi(ayar.takviyeEsigi === null ? '' : String(ayar.takviyeEsigi));
+    setAyarTakviyeNotu(ayar.takviyeNotu ?? '');
+    setAyarNot(ayar.not ?? '');
+  };
+
+  const ayarKaydet = useMutation({
+    mutationFn: () => dashboardApi.mutabakatYontemAyariKaydet({
+      anahtar: ayarAnahtar.trim(),
+      yatirimYuzde: Number(ayarYatirimYuzde) || 0,
+      yatirimSabit: Number(ayarYatirimSabit) || 0,
+      cekimYuzde: Number(ayarCekimYuzde) || 0,
+      cekimSabit: Number(ayarCekimSabit) || 0,
+      teslimatKurali: ayarTeslimat.trim() || undefined,
+      takviyeEsigi: ayarTakviyeEsigi.trim() === '' ? undefined : Number(ayarTakviyeEsigi),
+      takviyeNotu: ayarTakviyeNotu.trim() || undefined,
+      not: ayarNot.trim() || undefined,
+    }),
+    onSuccess: () => { formuSifirla(); ayarTazele(); },
+  });
+  const ayarSil = useMutation({
+    mutationFn: (anahtar: string) => dashboardApi.mutabakatYontemAyariSil(anahtar),
+    onSuccess: (_veri, silinenAnahtar) => {
+      if (duzenlenenAnahtar === silinenAnahtar) formuSifirla();
+      ayarTazele();
+    },
+  });
+
+  const ayarAnahtarGecerli = ayarAnahtar.trim().length > 0;
 
   const hataMesaji = (error as Error)?.message || (yanit?.HasError ? yanit?.AlertMessage : '');
   if (hataMesaji) {
@@ -240,6 +307,168 @@ export function Mutabakat() {
                 </PanoSatir>
               );
             })}
+          </PanoTablo>
+        )}
+      </PanoKart>
+
+      <PanoKart>
+        <PanoBaslik
+          baslik="Yöntem ayarları"
+          ipucu="Ödeme yöntemi başına komisyon oranı, teslimat kuralı ve takviye eşiği. Yalnızca bilgi/hesap amaçlı — rapordaki ham rakamları değiştirmez."
+          simge={<Settings2 size={15} />}
+          vurgu="hacim"
+        />
+
+        <div className="grid grid-cols-2 gap-2 px-4 pb-3 sm:grid-cols-3 lg:grid-cols-5">
+          <label className="flex flex-col gap-1 sm:col-span-2">
+            <span className="text-[10px] uppercase tracking-[0.1em] text-[color:var(--panel-muted,#8a919c)]">Yöntem</span>
+            <input
+              type="text"
+              list="mutabakat-yontem-secenekleri"
+              value={ayarAnahtar}
+              onChange={(e) => setAyarAnahtar(e.target.value)}
+              placeholder="HemenOde · Havale"
+              disabled={duzenlenenAnahtar !== null}
+              className="h-9 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[#0c1119] px-2 text-xs text-white placeholder:text-[color:var(--panel-muted,#8a919c)] focus:outline-none disabled:opacity-60"
+            />
+            <datalist id="mutabakat-yontem-secenekleri">
+              {satirlar.map((satir) => <option key={satir.anahtar} value={satir.anahtar} />)}
+            </datalist>
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-[10px] uppercase tracking-[0.1em] text-[color:var(--panel-muted,#8a919c)]">Yatırım % / sabit</span>
+            <div className="flex gap-1">
+              <input
+                type="number" min="0" max="100" step="0.01" value={ayarYatirimYuzde}
+                onChange={(e) => setAyarYatirimYuzde(e.target.value)} placeholder="%"
+                className="h-9 w-16 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[#0c1119] px-2 text-xs text-white focus:outline-none"
+              />
+              <input
+                type="number" min="0" step="0.01" value={ayarYatirimSabit}
+                onChange={(e) => setAyarYatirimSabit(e.target.value)} placeholder="TRY"
+                className="h-9 w-16 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[#0c1119] px-2 text-xs text-white focus:outline-none"
+              />
+            </div>
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-[10px] uppercase tracking-[0.1em] text-[color:var(--panel-muted,#8a919c)]">Çekim % / sabit</span>
+            <div className="flex gap-1">
+              <input
+                type="number" min="0" max="100" step="0.01" value={ayarCekimYuzde}
+                onChange={(e) => setAyarCekimYuzde(e.target.value)} placeholder="%"
+                className="h-9 w-16 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[#0c1119] px-2 text-xs text-white focus:outline-none"
+              />
+              <input
+                type="number" min="0" step="0.01" value={ayarCekimSabit}
+                onChange={(e) => setAyarCekimSabit(e.target.value)} placeholder="TRY"
+                className="h-9 w-16 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[#0c1119] px-2 text-xs text-white focus:outline-none"
+              />
+            </div>
+          </label>
+          <label className="flex flex-col gap-1 sm:col-span-2">
+            <span className="text-[10px] uppercase tracking-[0.1em] text-[color:var(--panel-muted,#8a919c)]">Teslimat kuralı</span>
+            <input
+              type="text" value={ayarTeslimat} onChange={(e) => setAyarTeslimat(e.target.value)}
+              placeholder="Örn. Her Pazartesi elden teslim, T+2…"
+              className="h-9 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[#0c1119] px-2 text-xs text-white placeholder:text-[color:var(--panel-muted,#8a919c)] focus:outline-none"
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-[10px] uppercase tracking-[0.1em] text-[color:var(--panel-muted,#8a919c)]">Takviye eşiği</span>
+            <input
+              type="number" min="0" step="1" value={ayarTakviyeEsigi}
+              onChange={(e) => setAyarTakviyeEsigi(e.target.value)} placeholder="TRY altına düşünce"
+              className="h-9 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[#0c1119] px-2 text-xs text-white placeholder:text-[color:var(--panel-muted,#8a919c)] focus:outline-none"
+            />
+          </label>
+          <label className="flex flex-col gap-1 sm:col-span-2">
+            <span className="text-[10px] uppercase tracking-[0.1em] text-[color:var(--panel-muted,#8a919c)]">Takviye notu</span>
+            <input
+              type="text" value={ayarTakviyeNotu} onChange={(e) => setAyarTakviyeNotu(e.target.value)}
+              placeholder="Kimden/nasıl takviye edilir"
+              className="h-9 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[#0c1119] px-2 text-xs text-white placeholder:text-[color:var(--panel-muted,#8a919c)] focus:outline-none"
+            />
+          </label>
+          <label className="flex flex-col gap-1 sm:col-span-2">
+            <span className="text-[10px] uppercase tracking-[0.1em] text-[color:var(--panel-muted,#8a919c)]">Not</span>
+            <input
+              type="text" value={ayarNot} onChange={(e) => setAyarNot(e.target.value)}
+              placeholder="Serbest not"
+              className="h-9 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[#0c1119] px-2 text-xs text-white placeholder:text-[color:var(--panel-muted,#8a919c)] focus:outline-none"
+            />
+          </label>
+          <div className="flex items-end gap-2">
+            <button
+              type="button"
+              onClick={() => ayarKaydet.mutate()}
+              disabled={!ayarAnahtarGecerli || ayarKaydet.isPending}
+              className="h-9 rounded-lg bg-[color:var(--panel-accent,#0a84ff)] px-3 text-xs font-semibold text-white hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {ayarKaydet.isPending ? 'Kaydediliyor…' : duzenlenenAnahtar ? 'Güncelle' : 'Ekle'}
+            </button>
+            {duzenlenenAnahtar && (
+              <button
+                type="button"
+                onClick={formuSifirla}
+                className="h-9 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] px-3 text-xs font-semibold text-[color:var(--panel-text-dim,#c8cdd5)] hover:bg-white/[0.05]"
+              >
+                Vazgeç
+              </button>
+            )}
+          </div>
+        </div>
+        {ayarKaydet.isError && <p className="px-4 pb-3 text-[11px] text-rose-300">{(ayarKaydet.error as Error).message}</p>}
+
+        {ayarYukleniyor && <PanoYukleniyor satir={2} />}
+        {!ayarYukleniyor && ayarlar.length === 0 && <PanoBos>Henüz hiçbir yöntem için ayar tanımlanmadı.</PanoBos>}
+        {!ayarYukleniyor && ayarlar.length > 0 && (
+          <PanoTablo
+            minGenislik={760}
+            basliklar={[
+              { ad: 'Yöntem' }, { ad: 'Komisyon (Y/Ç)', sag: true }, { ad: 'Teslimat' },
+              { ad: 'Takviye' }, { ad: '', sag: true },
+            ]}
+          >
+            {ayarlar.map((ayar) => (
+              <PanoSatir key={ayar.anahtar}>
+                <PanoHucreYazi><span className="font-semibold text-white">{ayar.anahtar}</span></PanoHucreYazi>
+                <PanoHucreYazi sag>
+                  <span className="tabular-nums text-[11px]">
+                    %{ayar.yatirimYuzde}{ayar.yatirimSabit ? ` +${sayiYaz(ayar.yatirimSabit, 'para')}` : ''}
+                    {' / '}
+                    %{ayar.cekimYuzde}{ayar.cekimSabit ? ` +${sayiYaz(ayar.cekimSabit, 'para')}` : ''}
+                  </span>
+                </PanoHucreYazi>
+                <PanoHucreYazi><span className="text-[11px]">{ayar.teslimatKurali || '—'}</span></PanoHucreYazi>
+                <PanoHucreYazi>
+                  <span className="text-[11px]">
+                    {ayar.takviyeEsigi === null ? '—' : `< ${sayiYaz(ayar.takviyeEsigi, 'para')}`}
+                    {ayar.takviyeNotu ? ` · ${ayar.takviyeNotu}` : ''}
+                  </span>
+                </PanoHucreYazi>
+                <PanoHucreYazi sag>
+                  <div className="flex justify-end gap-1">
+                    <button
+                      type="button"
+                      onClick={() => formuDoldur(ayar)}
+                      className="rounded-md p-1.5 text-[color:var(--panel-muted,#8a919c)] hover:bg-white/[0.08] hover:text-white"
+                      title="Düzenle"
+                    >
+                      <Pencil size={13} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => ayarSil.mutate(ayar.anahtar)}
+                      disabled={ayarSil.isPending}
+                      className="rounded-md p-1.5 text-[color:var(--panel-muted,#8a919c)] hover:bg-rose-500/10 hover:text-rose-300 disabled:opacity-40"
+                      title="Sil"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                </PanoHucreYazi>
+              </PanoSatir>
+            ))}
           </PanoTablo>
         )}
       </PanoKart>
