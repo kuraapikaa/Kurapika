@@ -12,7 +12,44 @@ import { HataMesaji, Yukleniyor } from '../../components/durum';
 import { KisaKimlik } from '../../tablo';
 import { agTemaAcik, agTemaKoyu } from '../../lib/agGrid';
 import { useTema } from '../../lib/tema';
+import { DIKEY_ETIKETI, type Dikey } from '../../dikey-gorunum';
 import type { KomisyonPlani as Plan, OdemeYontemleriYaniti as OdemeYontemleri, OrtakGorunumu as Ortak } from '@sunucu/sozlesme.js';
+
+interface DikeyOzeti {
+  dikey: Dikey;
+  ggr: number;
+}
+
+interface OrtakOzeti {
+  ortakAnahtari: string;
+  ggr: number;
+  dikeyler?: DikeyOzeti[];
+}
+
+interface KademeBagi {
+  ortakAnahtari: string;
+  ustOrtakAnahtari: string;
+}
+
+/**
+ * Bu ortağın kademe zincirindeki konumu — Kademeler.tsx'teki `ustZincir`
+ * (backend) ile aynı fikir, burada istemcide: bu ekran zaten `/kademeler`i
+ * çekiyor olsa da yalnızca "seviye" göstermek için ayrı bir uç açmaya
+ * gerek yok, tüm bağlar listesi (genelde küçük) zaten elde.
+ */
+function kademeSeviyesi(ortakAnahtari: string, baglar: KademeBagi[]): number | null {
+  const ustHaritasi = new Map(baglar.map((b) => [b.ortakAnahtari, b.ustOrtakAnahtari]));
+  if (!ustHaritasi.has(ortakAnahtari)) return null;
+  let seviye = 0;
+  let anahtar: string | undefined = ortakAnahtari;
+  const gorulen = new Set<string>();
+  while (anahtar && ustHaritasi.has(anahtar) && !gorulen.has(anahtar)) {
+    gorulen.add(anahtar);
+    anahtar = ustHaritasi.get(anahtar);
+    seviye += 1;
+  }
+  return seviye;
+}
 
 const DURUM_ETIKETI = {
   bekliyor: 'Bekliyor', onaylandi: 'Onaylı', askida: 'Askıda', reddedildi: 'Reddedildi',
@@ -32,6 +69,9 @@ interface SutunBaglami {
   odemeYontemleri: string[];
   calistir: (is: () => Promise<unknown>) => void;
   parolaSifirla: (o: Ortak) => void;
+  dikeyHaritasi: Map<string, OrtakOzeti>;
+  dikeyVar: boolean;
+  baglar: KademeBagi[];
 }
 
 function OrtakHucresi({ data }: ICellRendererParams<Ortak>) {
@@ -136,6 +176,11 @@ export function Ortaklar() {
   // "PAPARA TR" gibi uc ayri deger uretiyor ve odeme gunu hangisinin
   // hangisi oldugu elle cozuluyordu.
   const odeme = useVeri<OdemeYontemleri>('/api/yonetim/odeme-yontemleri');
+  // Casino/Spor GGR icin: bu ekran ortak KAYDINI listeliyor, GGR olcum
+  // verisi Ozet'in cektigi ucta. Ayri bir "ortak + GGR" ucu acmak yerine
+  // Ozet'te zaten kurulan /ozet'i burada da cekip anahtarla birlestiriyoruz.
+  const ozet = useVeri<{ ozetler: OrtakOzeti[] }>('/api/yonetim/ozet');
+  const kademe = useVeri<{ baglar: KademeBagi[] }>('/api/yonetim/kademeler');
   const [koyu] = useTema();
   const [hata, setHata] = useState<string | null>(null);
   const [yeni, setYeni] = useState({ ad: '', eposta: '', ortakAnahtari: '', parola: '' });
@@ -163,22 +208,69 @@ export function Ortaklar() {
     });
   }, [calistir]);
 
+  const dikeyHaritasi = useMemo(
+    () => new Map((ozet.veri?.ozetler ?? []).map((o) => [o.ortakAnahtari, o])),
+    [ozet.veri],
+  );
+  const dikeyVar = useMemo(
+    () => (ozet.veri?.ozetler ?? []).some((o) => (o.dikeyler?.length ?? 0) > 0),
+    [ozet.veri],
+  );
+
   const baglam: SutunBaglami = useMemo(() => ({
     planlar: planlar.veri?.planlar ?? [],
     odemeYontemleri: odeme.veri?.yontemler ?? [],
     calistir,
     parolaSifirla,
-  }), [planlar.veri, odeme.veri, calistir, parolaSifirla]);
+    dikeyHaritasi,
+    dikeyVar,
+    baglar: kademe.veri?.baglar ?? [],
+  }), [planlar.veri, odeme.veri, calistir, parolaSifirla, dikeyHaritasi, dikeyVar, kademe.veri]);
 
-  const sutunlar = useMemo<ColDef<Ortak>[]>(() => [
-    { field: 'ad', headerName: 'Ortak', minWidth: 220, cellRenderer: OrtakHucresi, filterValueGetter: (p) => `${p.data?.ad ?? ''} ${p.data?.eposta ?? ''}` },
-    { field: 'ortakAnahtari', headerName: 'Anahtar', width: 130, cellRenderer: AnahtarHucresi },
-    { field: 'durum', headerName: 'Durum', width: 120, cellRenderer: DurumHucresi, valueFormatter: (p) => DURUM_ETIKETI[p.value as Ortak['durum']] },
-    { field: 'planId', headerName: 'Plan', width: 160, sortable: false, cellRenderer: PlanHucresi },
-    { field: 'odemeYontemi', headerName: 'Ödeme yöntemi', width: 170, sortable: false, cellRenderer: OdemeHucresi },
-    { field: 'createdAt', headerName: 'Kayıt', width: 110, cellRenderer: KayitHucresi },
-    { headerName: 'İşlem', minWidth: 260, sortable: false, filter: false, cellRenderer: IslemHucresi },
-  ], []);
+  const sutunlar = useMemo<ColDef<Ortak>[]>(() => {
+    const temel: ColDef<Ortak>[] = [
+      { field: 'ad', headerName: 'Ortak', minWidth: 220, cellRenderer: OrtakHucresi, filterValueGetter: (p) => `${p.data?.ad ?? ''} ${p.data?.eposta ?? ''}` },
+      { field: 'ortakAnahtari', headerName: 'Anahtar', width: 130, cellRenderer: AnahtarHucresi },
+      { field: 'durum', headerName: 'Durum', width: 120, cellRenderer: DurumHucresi, valueFormatter: (p) => DURUM_ETIKETI[p.value as Ortak['durum']] },
+      { field: 'planId', headerName: 'Plan', width: 160, sortable: false, cellRenderer: PlanHucresi },
+      {
+        field: 'trafikKaynagi',
+        headerName: 'Kaynak',
+        width: 140,
+        valueFormatter: (p) => (p.value ? String(p.value) : '—'),
+      },
+    ];
+
+    const dikeySutunlari: ColDef<Ortak>[] = dikeyVar
+      ? (['casino', 'spor'] as const).map((d) => ({
+        colId: `ggr-${d}`,
+        headerName: `${DIKEY_ETIKETI[d]} GGR`,
+        type: 'numericColumn',
+        width: 130,
+        valueGetter: (p) => {
+          if (!p.data) return null;
+          const satir = dikeyHaritasi.get(p.data.ortakAnahtari)?.dikeyler?.find((x) => x.dikey === d);
+          return satir ? satir.ggr : null;
+        },
+        valueFormatter: (p) => (p.value === null || p.value === undefined ? '—' : new Intl.NumberFormat('tr-TR').format(p.value)),
+      }))
+      : [];
+
+    return [
+      ...temel,
+      ...dikeySutunlari,
+      {
+        colId: 'kademe',
+        headerName: 'Kademe',
+        width: 100,
+        valueGetter: (p) => (p.data ? kademeSeviyesi(p.data.ortakAnahtari, kademe.veri?.baglar ?? []) : null),
+        valueFormatter: (p) => (p.value === null || p.value === undefined ? '—' : `${p.value}. seviye`),
+      },
+      { field: 'odemeYontemi', headerName: 'Ödeme yöntemi', width: 170, sortable: false, cellRenderer: OdemeHucresi },
+      { field: 'createdAt', headerName: 'Kayıt', width: 110, cellRenderer: KayitHucresi },
+      { headerName: 'İşlem', minWidth: 260, sortable: false, filter: false, cellRenderer: IslemHucresi },
+    ];
+  }, [dikeyVar, dikeyHaritasi, kademe.veri]);
 
   if (liste.yukleniyor) return <Yukleniyor satir={6} />;
 
