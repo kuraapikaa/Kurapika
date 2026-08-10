@@ -74,6 +74,20 @@ interface GecmisGGRSonucu {
   uyari: string | null;
 }
 
+interface OrtakPlanBilgisi {
+  ortakAnahtari: string;
+  planId: string | null;
+}
+
+interface Plan {
+  id: string;
+  ad: string;
+}
+
+interface Bakiye {
+  bakiye: number;
+}
+
 /** Bir ortağın belirli dikeydeki GGR'si; kolon değeri olarak kullanılıyor. */
 const dikeyGgr = (o: OrtakOzeti, d: Dikey): number | null => {
   const satir = o.dikeyler?.find((x) => x.dikey === d);
@@ -99,6 +113,15 @@ function EgilimHucresi({ value }: ICellRendererParams<OrtakOzeti, OrtakOzeti['gu
 
 export function Ozet() {
   const { veri, yukleniyor, hata, yenile } = useVeri<{ bugun: string; ozetler: OrtakOzeti[] }>('/api/yonetim/ozet');
+  // Plan adini kolonda gostermek icin: ozet ucu plan tasimiyor (olcum
+  // verisi), ortak kaydi tasiyor. Ayri bir ucta cakmak yerine burada
+  // birlestiriyoruz -- ikisi de zaten baska ekranlarda cekilen ucular.
+  const { veri: ortakVeri } = useVeri<{ ortaklar: OrtakPlanBilgisi[] }>('/api/yonetim/ortaklar');
+  const { veri: planVeri } = useVeri<{ planlar: Plan[] }>('/api/yonetim/planlar');
+  // Komisyon KPI'si icin: cuzdan zaten butun ortaklarin bakiyesini
+  // topluyor, ayri bir toplama ucu gerekmiyor. Veritabani yoksa (yerel
+  // gelistirme) `bakiyeler` bos donuyor, KPI sessizce "—" gosteriyor.
+  const { veri: cuzdanVeri } = useVeri<{ bakiyeler: Bakiye[]; veritabaniVarMi: boolean }>('/api/yonetim/cuzdanlar');
   const [koyu] = useTema();
   const [senkron, setSenkron] = useState<SenkronSonucu | null>(null);
   const [senkronHatasi, setSenkronHatasi] = useState<string | null>(null);
@@ -112,12 +135,32 @@ export function Ozet() {
   // sifir gibi gostermek olur.
   const dikeyVar = ozetler.some((o) => (o.dikeyler?.length ?? 0) > 0);
 
+  const planAdiHaritasi = useMemo(() => {
+    const planlar = new Map((planVeri?.planlar ?? []).map((p) => [p.id, p.ad]));
+    const harita = new Map<string, string>();
+    for (const o of ortakVeri?.ortaklar ?? []) {
+      harita.set(o.ortakAnahtari, o.planId ? (planlar.get(o.planId) ?? '—') : 'Varsayılan');
+    }
+    return harita;
+  }, [ortakVeri, planVeri]);
+
   const sutunlar = useMemo<ColDef<OrtakOzeti>[]>(() => {
     const temel: ColDef<OrtakOzeti>[] = [
       { field: 'ortakAnahtari', headerName: 'Ortak', pinned: 'left', minWidth: 150, cellClass: 'font-medium' },
       { field: 'gunSayisi', headerName: 'Gün', type: 'numericColumn', width: 90 },
       { field: 'oyuncuSayisi', headerName: 'Oyuncu', type: 'numericColumn', width: 100 },
       { field: 'aktifOyuncuSayisi', headerName: 'Aktif', type: 'numericColumn', width: 90 },
+      {
+        colId: 'ftd',
+        headerName: 'FTD',
+        type: 'numericColumn',
+        width: 90,
+        valueGetter: (p) => p.data?.ftdSayisi ?? null,
+        // `null` icin tire; 0 ile ayni gorunmesi "hic ilk yatirim yok"
+        // ile "olculemiyor"u ayni gostermek olur (bkz. ustteki KPI kartinin
+        // ayni ayrimi).
+        valueFormatter: (p) => (p.value === null || p.value === undefined ? '—' : String(p.value)),
+      },
       { field: 'yatirim', headerName: 'Yatırım', type: 'numericColumn', width: 130, valueFormatter: (p) => paraBicimi(p.value ?? 0) },
       { field: 'cekim', headerName: 'Çekim', type: 'numericColumn', width: 130, valueFormatter: (p) => paraBicimi(p.value ?? 0) },
     ];
@@ -138,9 +181,15 @@ export function Ozet() {
       ...temel,
       ...dikeySutunlari,
       { field: 'ggr', headerName: 'Toplam GGR', type: 'numericColumn', width: 140, sort: 'desc', valueFormatter: (p) => paraBicimi(p.value ?? 0) },
+      {
+        colId: 'plan',
+        headerName: 'Plan',
+        width: 140,
+        valueGetter: (p) => (p.data ? planAdiHaritasi.get(p.data.ortakAnahtari) ?? '—' : '—'),
+      },
       { field: 'gunlukGgr', headerName: 'Eğilim', width: 150, sortable: false, filter: false, cellRenderer: EgilimHucresi },
     ];
-  }, [dikeyVar]);
+  }, [dikeyVar, planAdiHaritasi]);
 
   const senkronla = async () => {
     setCalisiyor(true);
@@ -215,7 +264,7 @@ export function Ozet() {
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
         <Card>
           <Text>Ortak</Text>
           <Metric>{ozetler.length}</Metric>
@@ -240,6 +289,17 @@ export function Ozet() {
           <Text>İlk yatırım</Text>
           <Metric>{ftdToplami === null ? '—' : ftdToplami}</Metric>
           {ftdToplami === null && <Text className="mt-1 text-xs">bu bağlantıdan ölçülemiyor</Text>}
+        </Card>
+        <Card>
+          <Text>Komisyon</Text>
+          <Metric>
+            {cuzdanVeri?.veritabaniVarMi
+              ? paraBicimi(cuzdanVeri.bakiyeler.reduce((t, b) => t + Math.max(0, b.bakiye), 0))
+              : '—'}
+          </Metric>
+          <Text className="mt-1 text-xs">
+            {cuzdanVeri?.veritabaniVarMi ? 'ödenmemiş cüzdan bakiyesi' : 'veritabanı yok'}
+          </Text>
         </Card>
       </div>
 
