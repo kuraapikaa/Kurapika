@@ -46,6 +46,16 @@ export function Postback() {
             kapısı olurdu. Makrolar: <code>{'{clickid}'}</code> <code>{'{payout}'}</code>{' '}
             <code>{'{event}'}</code> <code>{'{btag}'}</code> <code>{'{sub1}'}</code>…
           </p>
+          {/* POLİTİKA ÖZETİ — deneme/zaman aşımı gerçek kod sabitlerinden
+              (servisler/postback.ts), uydurulmadı. İmza YOK diye ayrıca
+              belirtiliyor: gelen webhook (Lynon→biz) HMAC-SHA256 imzalı ama
+              giden postback (biz→ortak) imzasız — ikisini karıştırmak
+              ortağı yanlış bir güvenlik varsayımına sokardı. */}
+          <div className="mb-3 grid gap-2 rounded-lg border bg-muted/40 p-3 text-xs text-muted-foreground sm:grid-cols-3">
+            <div><strong className="text-foreground">Zaman aşımı</strong><br />8 saniye (varsayılan)</div>
+            <div><strong className="text-foreground">Deneme</strong><br />En fazla 3 kez, artan bekleme ile</div>
+            <div><strong className="text-foreground">İmza</strong><br />Yok — istek düz HTTPS POST'tur</div>
+          </div>
 
           <div className="grid gap-3 md:grid-cols-2">
             <FormSaha id="pb-ortak" etiket="Ortak anahtarı" deger={ortakAnahtari} degisti={setOrtakAnahtari} />
