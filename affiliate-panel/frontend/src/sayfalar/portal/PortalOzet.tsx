@@ -44,8 +44,23 @@ export function PortalOzet() {
   const seri = (o?.gunlukGgr ?? []).map((g) => ({ etiket: g.gun.slice(5), deger: g.ggr }));
   const t = tiklama.veri?.ozet;
 
+  /**
+   * TOPLAM OYUNCU SAYISI: `o.oyuncuSayisi` DEĞİL, `oyuncularim.length`.
+   *
+   * `o.oyuncuSayisi` `olcumler` tablosundan geliyor ve dönem içindeki EN
+   * YÜKSEK TEK GÜNÜN oyuncu STOĞU (bkz. `olcum.ts` · `ozetle` — "Oyuncu
+   * sayıları TOPLANMAZ, en yüksek gün alınır") — "Yolculuğunuz"daki kümülatif
+   * kayıt sayısından yapısal olarak HER ZAMAN küçük ya da eşit olacak bir
+   * rakam, aynı gün hepsi aktif olmadıkça. Ortak bunu "eksik oyuncu" olarak
+   * okuyordu (bildirilen vaka: praff'ta Yolculuğunuz 120, burada 87).
+   * `oyuncularim` ise ZATEN bu sayfada çekilen, eşleşme tablosundaki TÜM
+   * kayıtlı oyuncuyu sayıyor — Yolculuğunuz'un "kayıt" basamağıyla aynı
+   * kaynak, finans geriye-dolum durumundan bağımsız.
+   */
+  const oyuncuSayisi = oyuncularim.veri?.oyuncular.length ?? 0;
+
   // Tiklama -> oyuncu donusumu. Tiklama yoksa oran ANLAMSIZ, "%0" degil.
-  const donusum = t && t.toplam > 0 && o ? (o.oyuncuSayisi / t.toplam) * 100 : null;
+  const donusum = t && t.toplam > 0 && oyuncularim.veri ? (oyuncuSayisi / t.toplam) * 100 : null;
 
   const linkAdi = new Map((linkler.veri?.linkler ?? []).map((l) => [l.kod, l.ad]));
 
@@ -81,7 +96,7 @@ export function PortalOzet() {
         <OlcuKarti etiket="Yatırım" deger={paraBicimi(o?.yatirim ?? 0)} />
         <OlcuKarti
           etiket="Oyuncu"
-          deger={String(o?.oyuncuSayisi ?? 0)}
+          deger={String(oyuncuSayisi)}
           alt={`${o?.aktifOyuncuSayisi ?? 0} aktif`}
         />
         <OlcuKarti
