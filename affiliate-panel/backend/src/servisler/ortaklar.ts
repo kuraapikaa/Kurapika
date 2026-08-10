@@ -49,6 +49,19 @@ export interface Ortak {
   basvuru: Basvuru;
   createdAt: string;
   updatedAt: string;
+  /**
+   * Durum EN SON `onaylandi`/`reddedildi`'ye geçtiği an — genel
+   * `updatedAt` ile AYNI ŞEY DEĞİL: o alan her düzenlemede (plan
+   * değişikliği, ödeme bilgisi güncellemesi vb.) ilerliyor, karar anını
+   * kaybettiriyor. Yalnızca GERÇEK bir durum geçişinde güncellenir —
+   * aynı durumu tekrar yazmak (govdede durum da gelen başka bir
+   * düzenleme) tarihi ileri kaydırmaz. Askıya alıp yeniden onaylamak
+   * gibi bir geçiş ise tazelenir: huni metriği "bu ay kaç karar
+   * verildi" sorusuna cevap veriyor, tek seferlik bir ilk-karar arşivi
+   * değil. Geriye dönük: eski kayıtlarda `null`.
+   */
+  onaylanmaTarihi: string | null;
+  reddedilmeTarihi: string | null;
 }
 
 /** Trafiğin nasıl geldiği; ödeme riskini belirleyen asıl bilgi. */
@@ -242,15 +255,20 @@ export async function ortakOlustur(kiraci: string, girdi: OrtakGirdisi, simdi = 
       throw new OrtakHatasi('Bu e-posta zaten kayıtlı.', 409);
     }
 
+    const durum: OrtakDurumu = (ORTAK_DURUMLARI as string[]).includes(String(girdi.durum))
+      ? (girdi.durum as OrtakDurumu)
+      : 'bekliyor';
     const ortak: Ortak = {
       id: randomUUID(),
       ortakAnahtari,
       ad,
       eposta,
       parolaOzeti: parola ? parolaOzeti(parola) : null,
-      durum: (ORTAK_DURUMLARI as string[]).includes(String(girdi.durum))
-        ? (girdi.durum as OrtakDurumu)
-        : 'bekliyor',
+      durum,
+      // Nadiren durum dogrudan onayli/reddedilmis olarak olusturuluyor
+      // (ornegin toplu geciste) -- o durumda da karar ani kaydedilsin.
+      onaylanmaTarihi: durum === 'onaylandi' ? simdi.toISOString() : null,
+      reddedilmeTarihi: durum === 'reddedildi' ? simdi.toISOString() : null,
       planId: metin(girdi.planId) || null,
       trafikKaynagi: metin(girdi.trafikKaynagi) || null,
       odemeYontemi: metin(girdi.odemeYontemi) || null,
@@ -304,7 +322,15 @@ export async function ortakGuncelle(
       if (!(ORTAK_DURUMLARI as string[]).includes(String(girdi.durum))) {
         throw new OrtakHatasi(`durum şunlardan biri olmalı: ${ORTAK_DURUMLARI.join(', ')}`);
       }
-      ortak.durum = girdi.durum as OrtakDurumu;
+      const yeniDurum = girdi.durum as OrtakDurumu;
+      // Yalnizca GERCEK bir gecise damga vuruluyor: ayni durumu tekrar
+      // yazmak (baska bir alani duzenlerken durum da govdede gelirse)
+      // karar anini sessizce ileri kaydirmasin.
+      if (yeniDurum !== ortak.durum) {
+        if (yeniDurum === 'onaylandi') ortak.onaylanmaTarihi = simdi.toISOString();
+        if (yeniDurum === 'reddedildi') ortak.reddedilmeTarihi = simdi.toISOString();
+      }
+      ortak.durum = yeniDurum;
     }
     if (girdi.planId !== undefined) ortak.planId = metin(girdi.planId) || null;
     if (girdi.trafikKaynagi !== undefined) ortak.trafikKaynagi = metin(girdi.trafikKaynagi) || null;

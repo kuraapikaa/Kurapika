@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { api, gunBicimi, useVeri } from '../../api';
 import { Alan, Bos, Buton, Hata, Kart, Olcu, Rozet, Yukleniyor } from '../../ui';
-import type { KomisyonPlani as Plan, OrtakGorunumu as Ortak } from '@sunucu/sozlesme.js';
+import type { KomisyonPlani as Plan, OrtakGorunumu as Ortak, YonetimUclari } from '@sunucu/sozlesme.js';
+
+type Huni = YonetimUclari['/basvurular']['huni'];
 
 
 const YONTEM_ETIKETI: Record<string, string> = {
@@ -19,7 +21,7 @@ const sayi = (n: number | null) =>
   n === null ? '—' : new Intl.NumberFormat('tr-TR').format(n);
 
 export function Basvurular() {
-  const liste = useVeri<{ basvurular: Ortak[] }>('/api/yonetim/basvurular');
+  const liste = useVeri<{ basvurular: Ortak[]; huni: Huni }>('/api/yonetim/basvurular');
   const planlar = useVeri<{ planlar: Plan[] }>('/api/yonetim/planlar');
   const [hata, setHata] = useState<string | null>(null);
   const [planSecimi, setPlanSecimi] = useState<Record<string, string>>({});
@@ -46,6 +48,7 @@ export function Basvurular() {
   if (liste.hata) return <Hata mesaj={liste.hata} />;
 
   const basvurular = liste.veri?.basvurular ?? [];
+  const huni = liste.veri?.huni;
   const beyanToplami = basvurular.reduce((t, o) => t + (o.basvuru.aylikOyuncu ?? 0), 0);
   // Ucun siralamasina GUVENMIYORUZ: en kucuk tarihi kendimiz buluyoruz.
   // "En eski bekleyen" yanlis gosterilirse yonetici sirayi yanlis kuruyor.
@@ -69,6 +72,22 @@ export function Basvurular() {
           alt={enEski ? 'ilk bakılması gereken' : undefined}
         />
       </div>
+
+      {/* HUNİ — bu ayki karar hacmi. `onaylanmaTarihi`/`reddedilmeTarihi`
+          yalnızca GERÇEK bir durum geçişinde yazılıyor (bkz. ortakGuncelle);
+          bu yüzden sayaçlar "bu ay kaç karar verildi"yi doğru sayıyor,
+          başvuru tarihini değil. */}
+      {huni && (
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+          <Olcu etiket="Bu ay onaylanan" deger={String(huni.buAyOnaylanan)} />
+          <Olcu etiket="Bu ay reddedilen" deger={String(huni.buAyReddedilen)} />
+          <Olcu
+            etiket="Ortalama inceleme süresi"
+            deger={huni.ortalamaIncelemeSuresiSaat === null ? '—' : `${huni.ortalamaIncelemeSuresiSaat} saat`}
+            alt={huni.ortalamaIncelemeSuresiSaat === null ? 'bu ay onay yok' : 'bu ayki onaylar için'}
+          />
+        </div>
+      )}
 
       {hata && <Hata mesaj={hata} />}
 

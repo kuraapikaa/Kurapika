@@ -597,10 +597,30 @@ export async function yonetimRotalari(app: FastifyInstance): Promise<void> {
    */
   app.get('/basvurular', async (istek): Promise<YonetimUclari['/basvurular']> => {
     const ortaklar = await ortaklariListele(istek.kiraci);
+    const buAy = gunAnahtari().slice(0, 7);
+    // Huni: onaylanmaTarihi/reddedilmeTarihi yalnizca GERCEK bir durum
+    // gecisinde yazilir (bkz. ortakGuncelle) -- "bu ay" burada o an
+    // taniyor, basvuru tarihini degil.
+    const buAyOnaylananlar = ortaklar.filter((o) => o.onaylanmaTarihi?.startsWith(buAy));
+    const buAyReddedilenSayisi = ortaklar.filter((o) => o.reddedilmeTarihi?.startsWith(buAy)).length;
+    const incelemeSureleriSaat = buAyOnaylananlar.map(
+      (o) => (new Date(o.onaylanmaTarihi!).getTime() - new Date(o.createdAt).getTime()) / 3_600_000,
+    );
+    const ortalamaIncelemeSuresiSaat = incelemeSureleriSaat.length > 0
+      ? Math.round((incelemeSureleriSaat.reduce((t, s) => t + s, 0) / incelemeSureleriSaat.length) * 10) / 10
+      : null;
+
     return {
       basvurular: ortaklar
         .filter((o) => o.durum === 'bekliyor')
         .sort((a, b) => a.createdAt.localeCompare(b.createdAt)),
+      huni: {
+        buAyOnaylanan: buAyOnaylananlar.length,
+        buAyReddedilen: buAyReddedilenSayisi,
+        // `null` = bu ay hic onay yok; 0 yazmak "inceleme aninda"
+        // gibi okunurdu.
+        ortalamaIncelemeSuresiSaat,
+      },
     };
   });
 

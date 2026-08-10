@@ -125,7 +125,15 @@ export interface YonetimUclari {
   '/ozet': { bugun: string; ozetler: OrtakOzeti[] };
   '/olcumler': { olcumler: OrtakGunlukOlcum[] };
   '/ortaklar': { ortaklar: OrtakGorunumu[] };
-  '/basvurular': { basvurular: OrtakGorunumu[] };
+  '/basvurular': {
+    basvurular: OrtakGorunumu[];
+    huni: {
+      buAyOnaylanan: number;
+      buAyReddedilen: number;
+      /** `null` = bu ay hiç onay yok. */
+      ortalamaIncelemeSuresiSaat: number | null;
+    };
+  };
   '/planlar': { planlar: KomisyonPlani[] };
   '/site-adresi': SiteAdresiDurumu;
   '/medya': { medyalar: Medya[] };
