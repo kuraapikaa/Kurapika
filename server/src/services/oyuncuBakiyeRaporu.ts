@@ -9,7 +9,9 @@
  * oyuncu satirlari hic tasinmaz.
  */
 
-import { gorselMesaj, kalinSatir } from './telegramService.js';
+import {
+  gorselMesaj, kalinIsaretle, kalinSatir, kodIsaretle, onIzgaraBlogu,
+} from './telegramService.js';
 
 type AnyRecord = Record<string, any>;
 
@@ -112,13 +114,40 @@ export function topBakiyeliOyuncular(
     .slice(0, azami);
 }
 
-const TL = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 2 });
+/** Para alanları: her zaman 2 ondalık — "0,80" değil "0,8" gösterilsin diye. */
+const TL = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+/** Oyuncu sayısı gibi tam sayı alanlar. */
+const TAM = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 });
+/** Trend farkı: kuruş gürültüsü olmadan, yuvarlanmış tam sayı (işaret ayrıca yazılıyor). */
+const TAM_FARK = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 });
 
 /** Mesaj basliklarini ayiran ince cizgi; sohbette blok blok okunsun. */
-const AYIRAC = '━━━━━━━━━━━━━━━━━━';
+const AYIRAC = '━━━━━━━━━━━━━━━━━━━━━';
 
 function para(deger: number | null): string {
   return deger === null ? '—' : `${TL.format(deger)} TRY`;
+}
+
+/** "YYYY-MM-DD" -> "GG.AA.YYYY". */
+function gunGoster(gun: string): string {
+  const [yil, ay, g] = gun.split('-');
+  return yil && ay && g ? `${g}.${ay}.${yil}` : gun;
+}
+
+/**
+ * Büyük yatırım/çekim tutarlarını kısaltır: 1000 -> "1K", 1500 -> "1.5K".
+ * Tablo hizasını bozmadan çok haneli tutarları okunur tutmak için;
+ * ondalık noktası kasıtlı olarak İNGİLİZCE ("." ) -- bu kısaltma biçimi
+ * her yerde böyle tanınıyor, Türkçe virgüllü tutarlarla karıştırılmasın.
+ */
+function kisaSayi(deger: number | null): string {
+  if (deger === null) return '—';
+  const yuvarlak = Math.round(deger);
+  if (Math.abs(yuvarlak) < 1000) return String(yuvarlak);
+  const bin = yuvarlak / 1000;
+  const birOndalik = Math.round(bin * 10) / 10;
+  const govde = Number.isInteger(birOndalik) ? String(birOndalik) : birOndalik.toFixed(1);
+  return `${govde}K`;
 }
 
 /**
@@ -128,9 +157,37 @@ function para(deger: number | null): string {
  */
 function trendYaz(simdi: number | null, onceki: number | null | undefined): string {
   if (simdi === null || onceki === null || onceki === undefined) return '';
-  const fark = simdi - onceki;
-  if (fark === 0) return ' ▪️0';
-  return fark > 0 ? ` ▲${TL.format(fark)}` : ` ▼${TL.format(Math.abs(fark))}`;
+  const fark = Math.round(simdi - onceki);
+  if (fark === 0) return ' ▪️ 0';
+  return fark > 0 ? ` 📈 +${TAM_FARK.format(fark)}` : ` 📉 -${TAM_FARK.format(Math.abs(fark))}`;
+}
+
+/**
+ * Kullanıcı adı test/demo hesap desenine uyuyor mu.
+ *
+ * Backoffice'te ayrı bir "test hesabı" alanı yok; gözlemlenen tek
+ * ortak işaret kullanıcı adında "test" geçmesi (jackietest, tttesttt,
+ * narcostest, test...). Yanlış pozitif riski var ("testere42" gibi
+ * gerçek bir kullanıcı da işaretlenir) ama bedeli düşük: yalnızca ❓
+ * ekliyor, veriyi filtrelemiyor/gizlemiyor -- operatör kararını hâlâ
+ * kendisi veriyor.
+ */
+function testHesabiMi(kullaniciAdi: string): boolean {
+  return /test/i.test(kullaniciAdi);
+}
+
+/**
+ * Sütun genişliklerini veriye göre hesaplayıp hizalı bir `<pre>` tablosu
+ * satırları üretir. `hizalama[i] === 'sag'` olan sütun sağa, diğerleri
+ * sola yaslanır.
+ */
+function tabloSatirlari(basliklar: string[], satirlar: string[][], sagaYasla: boolean[]): string[] {
+  const genislikler = basliklar.map((b, i) => Math.max(b.length, ...satirlar.map((s) => s[i]?.length ?? 0)));
+  const satirYaz = (hucreler: string[]) => hucreler
+    .map((h, i) => (sagaYasla[i] ? h.padStart(genislikler[i]) : h.padEnd(genislikler[i])))
+    .join('  ')
+    .trimEnd();
+  return [satirYaz(basliklar), ...satirlar.map(satirYaz)];
 }
 
 /**
@@ -140,31 +197,69 @@ function trendYaz(simdi: number | null, onceki: number | null | undefined): stri
  * dakikada bir gelen bir mesajda "yon" bir bakista gorulsun diye.
  *
  * `topOyuncular` verilirse en yuksek bakiyeli oyuncular ayri bir
- * bolumde, toplam yatirim/cekimleriyle birlikte listelenir.
+ * bolumde, sabit genislikli bir tabloda listelenir; test/demo hesaplar
+ * ❓ ile isaretlenir.
  */
 export function oyuncuBakiyeMesaji(
   ozet: OyuncuBakiyeOzeti,
   onceki?: OyuncuBakiyeOzeti | null,
   topOyuncular?: TopBakiyeliOyuncu[],
 ): string {
+  const ETIKETLER = {
+    oyuncu: 'Aktif Oyuncu', gercek: 'Gerçek Bakiye', bonus: 'Bonus Bakiye', toplam: 'Toplam Bakiye',
+  };
+  const etiketGenislik = Math.max(...Object.values(ETIKETLER).map((e) => e.length));
+  const etiket = (e: string) => e.padEnd(etiketGenislik, ' ');
+
+  const paraDegerleri = [ozet.gercekBakiye, ozet.bonusBakiye, ozet.toplamBakiye]
+    .map((d) => (d === null ? '—' : TL.format(d)));
+  const paraGenislik = Math.max(...paraDegerleri.map((s) => s.length));
+  const paraHizali = (deger: number | null, index: number) => {
+    const metin = paraDegerleri[index].padStart(paraGenislik);
+    return deger === null ? metin : `${metin} TRY`;
+  };
+
   const satirlar: Array<string | null> = [
-    kalinSatir(`👛✨ ANLIK OYUNCU BAKİYESİ · ${ozet.gun}${ozet.saat ? ` · ${ozet.saat}` : ''}`),
-    AYIRAC,
-    `👥 Oyuncu: ${ozet.oyuncuSayisi === null ? '—' : ozet.oyuncuSayisi}`,
+    kalinSatir('👛✨ ANLIK OYUNCU BAKİYESİ'),
+    `📅 ${kodIsaretle(`${gunGoster(ozet.gun)}${ozet.saat ? ` · ${ozet.saat}` : ''}`)}`,
     '',
-    `💰 Gerçek bakiye: ${para(ozet.gercekBakiye)}${trendYaz(ozet.gercekBakiye, onceki?.gercekBakiye)}`,
-    `🎁 Bonus bakiye:  ${para(ozet.bonusBakiye)}${trendYaz(ozet.bonusBakiye, onceki?.bonusBakiye)}`,
-    `⚖️ Toplam bakiye: ${para(ozet.toplamBakiye)}${trendYaz(ozet.toplamBakiye, onceki?.toplamBakiye)}`,
+    kalinSatir('📊 GENEL BAKİYE ÖZETİ'),
+    onIzgaraBlogu([
+      `👥 ${etiket(ETIKETLER.oyuncu)}: ${ozet.oyuncuSayisi === null ? '—' : TAM.format(ozet.oyuncuSayisi)}`,
+      `💰 ${etiket(ETIKETLER.gercek)}: ${paraHizali(ozet.gercekBakiye, 0)}${trendYaz(ozet.gercekBakiye, onceki?.gercekBakiye)}`,
+      `🎁 ${etiket(ETIKETLER.bonus)}: ${paraHizali(ozet.bonusBakiye, 1)}${trendYaz(ozet.bonusBakiye, onceki?.bonusBakiye)}`,
+      `✅ ${etiket(ETIKETLER.toplam)}: ${paraHizali(ozet.toplamBakiye, 2)}${trendYaz(ozet.toplamBakiye, onceki?.toplamBakiye)}`,
+    ]),
   ];
 
   if (topOyuncular && topOyuncular.length > 0) {
-    satirlar.push('', AYIRAC, kalinSatir(`🏆 EN YÜKSEK BAKİYELİ ${topOyuncular.length} ÜYE`));
-    topOyuncular.forEach((oyuncu, index) => {
-      satirlar.push(
-        `  ${index + 1}. ${oyuncu.ad} (${oyuncu.id}) — ${para(oyuncu.toplamBakiye)}`,
-        `     Yatırım: ${para(oyuncu.toplamYatirim)} · Çekim: ${para(oyuncu.toplamCekim)}`,
-      );
+    const testliVar = topOyuncular.some((o) => testHesabiMi(o.ad));
+    // Test isareti (❓) AYRI bir sutun -- BAKIYE'nin icine gomulseydi
+    // isaretli/isaretsiz satirlar farkli genislikte olur, ardindaki
+    // YAT/CEK sutunu satirdan satira kayardi.
+    const satirVerisi = topOyuncular.map((oyuncu, index) => {
+      const sira = index + 1 < 10 ? `${index + 1}.` : String(index + 1);
+      const bakiye = TL.format(oyuncu.toplamBakiye);
+      const isaret = testHesabiMi(oyuncu.ad) ? '❓' : '';
+      const yatCek = `${kisaSayi(oyuncu.toplamYatirim)} / ${kisaSayi(oyuncu.toplamCekim)}`;
+      return [sira, oyuncu.ad, bakiye, isaret, yatCek];
     });
+
+    satirlar.push(
+      '',
+      AYIRAC,
+      kalinSatir(`🏆 EN YÜKSEK BAKİYELİ TOP ${topOyuncular.length} ÜYE`),
+      '',
+      onIzgaraBlogu(tabloSatirlari(
+        ['#', 'KULLANICI', 'BAKİYE (TRY)', '', 'YAT / ÇEK'],
+        satirVerisi,
+        [false, false, true, false, true],
+      )),
+    );
+
+    if (testliVar) {
+      satirlar.push('', `${kalinIsaretle('❓ Not:')} Test/Demo hesapları listede işaretlenmiştir.`);
+    }
   }
 
   return gorselMesaj(satirlar);

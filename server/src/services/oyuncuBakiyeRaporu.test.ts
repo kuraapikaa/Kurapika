@@ -62,10 +62,11 @@ describe('oyuncuBakiyeOzetiCikar', () => {
 describe('oyuncuBakiyeMesaji', () => {
   const ozet = oyuncuBakiyeOzetiCikar(GERCEK_YANIT, '2026-08-04', '04:04');
 
-  it('temel alanları yazar', () => {
+  it('temel alanları yazar, tarihi GG.AA.YYYY çevirir', () => {
     const mesaj = oyuncuBakiyeMesaji(ozet);
-    expect(mesaj).toContain('ANLIK OYUNCU BAKİYESİ · 2026-08-04 · 04:04');
-    expect(mesaj).toContain('Oyuncu: 2');
+    expect(mesaj).toContain('ANLIK OYUNCU BAKİYESİ');
+    expect(mesaj).toContain('04.08.2026 · 04:04');
+    expect(mesaj).toContain('Aktif Oyuncu : 2');
     expect(mesaj).toContain('52.354,58 TRY');
   });
 
@@ -79,25 +80,57 @@ describe('oyuncuBakiyeMesaji', () => {
   it('önceki özete göre artış okunu yazar', () => {
     const onceki = { ...ozet, gercekBakiye: 50000 };
     const mesaj = oyuncuBakiyeMesaji(ozet, onceki);
-    expect(mesaj).toContain('▲2.354,58');
+    expect(mesaj).toContain('📈 +2.355');
+  });
+
+  it('önceki özete göre azalış okunu yazar', () => {
+    const onceki = { ...ozet, gercekBakiye: 60000 };
+    const mesaj = oyuncuBakiyeMesaji(ozet, onceki);
+    expect(mesaj).toContain('📉 -7.645');
+  });
+
+  it('değişim yoksa nötr işaret yazar', () => {
+    const onceki = { ...ozet };
+    const mesaj = oyuncuBakiyeMesaji(ozet, onceki);
+    expect(mesaj).toContain('▪️ 0');
   });
 
   it('önceki özet verilmezse trend oku eklenmez', () => {
     const mesaj = oyuncuBakiyeMesaji(ozet);
-    expect(mesaj).not.toContain('▲');
-    expect(mesaj).not.toContain('▼');
+    expect(mesaj).not.toContain('📈');
+    expect(mesaj).not.toContain('📉');
+    expect(mesaj).not.toContain('▪️');
   });
 
-  it('top oyuncular verilirse listeler', () => {
+  it('top oyuncular verilirse sabit genişlikli tabloda listeler', () => {
     const top = topBakiyeliOyuncular(GERCEK_YANIT, 10).map((o) => ({ ...o, toplamYatirim: 6000, toplamCekim: 1500 }));
     const mesaj = oyuncuBakiyeMesaji(ozet, undefined, top);
-    expect(mesaj).toContain('EN YÜKSEK BAKİYELİ 2 ÜYE');
-    expect(mesaj).toContain('1. larac (2503142) — 4.500 TRY');
-    expect(mesaj).toContain('Yatırım: 6.000 TRY · Çekim: 1.500 TRY');
+    expect(mesaj).toContain('EN YÜKSEK BAKİYELİ TOP 2 ÜYE');
+    expect(mesaj).toContain('KULLANICI');
+    expect(mesaj).toContain('BAKİYE (TRY)');
+    expect(mesaj).toContain('YAT / ÇEK');
+    expect(mesaj).toContain('larac');
+    expect(mesaj).toContain('4.500,00');
+    // 6000/1500 -> kısaltılmış "6K / 1.5K" gösterilir.
+    expect(mesaj).toContain('6K / 1.5K');
   });
 
   it('top oyuncular verilmezse bölüm hiç yazılmaz', () => {
     expect(oyuncuBakiyeMesaji(ozet)).not.toContain('EN YÜKSEK BAKİYELİ');
+  });
+
+  it('kullanıcı adında "test" geçen hesapları ❓ ile işaretler', () => {
+    const top = topBakiyeliOyuncular(GERCEK_YANIT, 10);
+    const testli = top.map((o) => (o.ad === 'larac' ? { ...o, ad: 'larac_test' } : o));
+    const mesaj = oyuncuBakiyeMesaji(ozet, undefined, testli);
+    expect(mesaj).toContain('❓');
+    expect(mesaj).toContain('Test/Demo hesapları listede işaretlenmiştir.');
+  });
+
+  it('test hesabı yoksa ❓ notu hiç yazılmaz', () => {
+    const top = topBakiyeliOyuncular(GERCEK_YANIT, 10);
+    const mesaj = oyuncuBakiyeMesaji(ozet, undefined, top);
+    expect(mesaj).not.toContain('Test/Demo hesapları');
   });
 });
 

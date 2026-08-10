@@ -33,6 +33,36 @@ export function kalinSatir(metin: string): string {
 }
 
 /**
+ * Bir satirin SADECE BIR KISMINI kalin isaretler — `kalinSatir()`in
+ * aksine cumlenin gerisi duz kalir (orn. "❓ Not: ..." satirinda
+ * yalnizca "❓ Not:" kalin, aciklama degil).
+ */
+export function kalinIsaretle(metin: string): string {
+  return `°°${metin}°°`;
+}
+
+/**
+ * Satir ici sabit-genislik vurgusu — `<code>...</code>`. Kisa bir
+ * degeri (tarih/saat gibi) bir emoji/etiketin yanina, tek basina bir
+ * satir acmadan koymak icin.
+ */
+export function kodIsaretle(metin: string): string {
+  return `˚˚${metin}˚˚`;
+}
+
+const ON_IZGARA_ISARETI = '¦¦PRE¦¦';
+
+/**
+ * Birden cok satiri TEK bir `<pre>` (sabit genislikli tablo) blogu
+ * olarak sarar — Telegram, `<pre>` DISINDAKI ic ice bosluklari
+ * gormezden geliyor, bu yuzden hizalanmis bir tablo yalnizca boyle
+ * tek bir blok olarak gonderilirse hizali gorunuyor.
+ */
+export function onIzgaraBlogu(icSatirlar: string[]): string {
+  return `${ON_IZGARA_ISARETI}${icSatirlar.join('\n')}${ON_IZGARA_ISARETI}`;
+}
+
+/**
  * Rapor mesajlarinin TEK giris noktasi: satir dizisini HTML-guvenli
  * metne cevirir.
  *
@@ -43,16 +73,25 @@ export function kalinSatir(metin: string): string {
  * gitmiyor. Tek tek her interpolasyonu kacmak yerine butun satir
  * kaciliyor — unutma riski yok.
  *
- * `kalinSatir()` ile sarmalanmis (tum satiri `**...**` olan) satirlar
- * kacıldiktan SONRA `<b>` etiketine donusturuluyor — sarmalayici
- * karakterler (`*`) escapeHtml'den etkilenmiyor, sira onemsiz.
+ * Sarmalayici isaretler (`kalinSatir`, `kalinIsaretle`, `kodIsaretle`,
+ * `onIzgaraBlogu`) hepsi rapor verisinde (login, tutar, tarih) pratikte
+ * hic gecmeyecek nadir karakter dizileri kullaniyor — dinamik bir deger
+ * yanlislikla bir isaretle CAKISMAZ. Kacış SONRA uygulaniyor; isaret
+ * karakterleri escapeHtml'den etkilenmiyor, sira onemsiz.
  */
 export function gorselMesaj(satirlar: Array<string | null | undefined>): string {
   return satirlar
     .filter((s): s is string => s !== null && s !== undefined)
     .map((satir) => {
-      const eslesme = satir.match(/^\*\*(.*)\*\*$/);
-      return eslesme ? `<b>${escapeHtml(eslesme[1])}</b>` : escapeHtml(satir);
+      if (satir.startsWith(ON_IZGARA_ISARETI) && satir.endsWith(ON_IZGARA_ISARETI) && satir.length > ON_IZGARA_ISARETI.length * 2) {
+        const ic = satir.slice(ON_IZGARA_ISARETI.length, -ON_IZGARA_ISARETI.length);
+        return `<pre>${escapeHtml(ic)}</pre>`;
+      }
+      const tamSatirKalin = satir.match(/^\*\*(.*)\*\*$/);
+      if (tamSatirKalin) return `<b>${escapeHtml(tamSatirKalin[1])}</b>`;
+      return escapeHtml(satir)
+        .replace(/°°(.*?)°°/g, '<b>$1</b>')
+        .replace(/˚˚(.*?)˚˚/g, '<code>$1</code>');
     })
     .join('\n');
 }
