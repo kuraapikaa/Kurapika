@@ -21,6 +21,7 @@ import { Link } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { LobbyMobileNav } from './LobbyMobileNav';
 import { lobbyExtraText, useLobbyPageContent } from '../../lib/lobbyContent';
+import { StreakBadge } from '../ui/streak-badge';
 
 export function LoyaltyHub() {
     const { content: pageContent } = useLobbyPageContent('loyalty');
@@ -154,6 +155,13 @@ export function LoyaltyHub() {
                             </motion.div>
                         </div>
                     </div>
+
+                    {/* Streak */}
+                    {(status?.currentStreak ?? 0) > 0 && (
+                        <div className="mt-3 flex justify-center sm:mt-6 md:justify-start">
+                            <StreakBadge size="sm" length={status.currentStreak} frequency="daily" />
+                        </div>
+                    )}
                 </div>
             </div>
 

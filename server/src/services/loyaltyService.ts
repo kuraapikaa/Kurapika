@@ -3,6 +3,7 @@ import { join } from 'path';
 import { config } from '../config.js';
 import { safeTenantKey } from '../lib/tenant.js';
 import { readStoredDocument, writeStoredDocument } from '../lib/documentStore.js';
+import { istanbulDateKey } from '../lib/istanbulGunu.js';
 
 interface MarketItem {
     id: string;
@@ -29,6 +30,50 @@ interface PlayerLoyalty {
     smsReminderSentAt?: string | null;
     /** Ard arda giriş yapılmayan 3. günde puanların silindiği zaman; yeni girişte sıfırlanır. */
     pointsResetAt?: string | null;
+    /** Ard arda (Türkiye takvim günü bazında) giriş yapılan gün sayısı. Bir gün atlanırsa 1'e döner. */
+    currentStreak?: number;
+    /** currentStreak'in bugüne kadar ulaştığı en yüksek değer. */
+    longestStreak?: number;
+}
+
+/**
+ * `onceki` (son giriş) ile `simdi` arasındaki Türkiye takvim günü farkı.
+ *
+ * Ham milisaniye farkı (`Date.now() - then`) kullanmadık: gün sınırı UTC
+ * gece yarısında değil Türkiye gece yarısında oluyor (istanbulGunu.ts'in
+ * amacı tam olarak bu — bkz. dosya başındaki not). Aynı takvim günü
+ * içindeki tekrar ziyaretler (durum sorgusu 60 saniyede bir tazeleniyor)
+ * farkı 0 olarak görmeli, seriyi bozmamalı.
+ */
+function istanbulGunFarki(onceki: string, simdi: Date): number {
+    const oncekiAnahtar = istanbulDateKey(onceki);
+    const simdiAnahtar = istanbulDateKey(simdi);
+    if (!oncekiAnahtar || !simdiAnahtar) return 0;
+    const oncekiMs = Date.parse(`${oncekiAnahtar}T00:00:00Z`);
+    const simdiMs = Date.parse(`${simdiAnahtar}T00:00:00Z`);
+    return Math.round((simdiMs - oncekiMs) / 86_400_000);
+}
+
+/**
+ * Bir giriş anında yeni ardışık-gün serisini hesaplar. Saf fonksiyon —
+ * dosya/DB'ye dokunmadan test edilebilir.
+ *
+ * - Aynı takvim günü içindeki tekrar ziyaret (durum sorgusu 60sn'de bir
+ *   tazeleniyor): seri değişmez.
+ * - Tam bir gün sonra: seri +1.
+ * - Bir günden fazla atlama: seri 1'e döner.
+ */
+export function sonrakiGirisSerisi(
+    oncekiLastLoginDate: string | undefined,
+    oncekiStreak: number | undefined,
+    simdi: Date = new Date(),
+): number {
+    const guvenliOnceki = oncekiStreak && oncekiStreak > 0 ? oncekiStreak : 1;
+    if (!oncekiLastLoginDate) return guvenliOnceki;
+    const gunFarki = istanbulGunFarki(oncekiLastLoginDate, simdi);
+    if (gunFarki === 1) return guvenliOnceki + 1;
+    if (gunFarki > 1) return 1;
+    return guvenliOnceki;
 }
 
 const LEGACY_LOYALTY_JSON_PATH = join(process.cwd(), 'src', 'data', 'player-loyalty.json');
@@ -103,6 +148,8 @@ export class LoyaltyService {
                 lastLoginDate: new Date().toISOString(),
                 smsReminderSentAt: null,
                 pointsResetAt: null,
+                currentStreak: 1,
+                longestStreak: 1,
             };
             await this.save();
         }
@@ -112,7 +159,11 @@ export class LoyaltyService {
     /** Oyuncu sadakat sayfasını her ziyaret ettiğinde çağrılır; ard arda giriş takibini sıfırlar. */
     public async recordLogin(username: string): Promise<PlayerLoyalty> {
         const player = await this.getPlayerStatus(username);
-        player.lastLoginDate = new Date().toISOString();
+        const simdi = new Date();
+        player.currentStreak = sonrakiGirisSerisi(player.lastLoginDate, player.currentStreak, simdi);
+        player.longestStreak = Math.max(player.longestStreak ?? 1, player.currentStreak);
+
+        player.lastLoginDate = simdi.toISOString();
         player.smsReminderSentAt = null;
         player.pointsResetAt = null;
         await this.save();
