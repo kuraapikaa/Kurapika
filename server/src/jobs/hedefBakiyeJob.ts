@@ -114,12 +114,31 @@ export async function runHedefBakiyeJob(tenantKey = 'default'): Promise<HedefBak
   if (adaylar.length === 0) return sonuc;
 
   const kayit = await kayitOku(tenantKey);
+  let degisti = false;
+
+  // HEDEF_BAKIYE_YENIDEN_DEGERLENDIR ile elle işaretlenmiş oyuncular
+  // kayıttan silinir — bir sonraki adımda normal aday listesindeyse
+  // GÜNCEL kurallara göre (sadece-Telegram filtresi, muafiyetler dahil)
+  // yeniden değerlendirilirler.
+  if (ayar.yenidenDegerlendir.length > 0) {
+    const temizlenenler: string[] = [];
+    for (const id of ayar.yenidenDegerlendir) {
+      if (kayit.kapatilanlar[id]) {
+        delete kayit.kapatilanlar[id];
+        temizlenenler.push(id);
+      }
+    }
+    if (temizlenenler.length > 0) {
+      degisti = true;
+      audit('sistem', 'job', 'manual_adjustment', 'hedef-bakiye-kilidi',
+        `Yeniden değerlendirme: kayıttan temizlendi — ${temizlenenler.join(', ')}`);
+    }
+  }
+
   // Daha önce kapatılmış oyuncu tekrar sorgulanmaz; uca boşuna yük olmaz.
   const sira = adaylar
     .filter((playerId) => !kayit.kapatilanlar[String(playerId)])
     .slice(0, Math.max(1, ayar.turBasinaOyuncu));
-
-  let degisti = false;
 
   for (const playerId of sira) {
     sonuc.kontrol += 1;

@@ -182,6 +182,17 @@ export const config = {
     aralikMs: Number(process.env.HEDEF_BAKIYE_ARALIK_MS) || 60_000,
     /** Tek turda kaç oyuncunun bakiyesi okunur; uca yüklenmemek için. */
     turBasinaOyuncu: Number(process.env.HEDEF_BAKIYE_TUR_LIMITI) || 40,
+    /**
+     * Virgülle ayrılmış playerId listesi — bir sonraki turda "kapatılanlar"
+     * kaydından temizlenir, yeniden değerlendirilir. Kural değiştiğinde
+     * (yeni kısıt türü, bakiye sabitleme eklendiğinde vb.) eski mantıkla
+     * zaten işlenmiş oyuncuları elle yeniden kuyruğa almak için — canlı
+     * DB'ye doğrudan yazma yerine işin kendi normal yazma yolundan geçer.
+     */
+    yenidenDegerlendir: (process.env.HEDEF_BAKIYE_YENIDEN_DEGERLENDIR || '')
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean),
   },
   /** Bonus listesi: POST rgs-webadminapi.betconstruct.com/api/Bonus/GetBonusDefinitions */
   bonusApi: {
