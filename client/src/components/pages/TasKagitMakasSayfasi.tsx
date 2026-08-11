@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Hand, Scissors, Square, Gamepad2, Trophy, Frown, Equal } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Confetti, type ConfettiRef } from '../ui/confetti';
 
 type Choice = 'TAS' | 'KAGIT' | 'MAKAS';
 
@@ -9,6 +10,7 @@ export function TasKagitMakasSayfasi() {
   const [userChoice, setUserChoice] = useState<Choice | null>(null);
   const [compChoice, setCompChoice] = useState<Choice | null>(null);
   const [gameState, setGameState] = useState<'idle' | 'playing' | 'won' | 'lost' | 'draw'>('idle');
+  const confettiRef = useRef<ConfettiRef>(null);
 
   const choices: { id: Choice, icon: any, color: string }[] = [
     { id: 'TAS', icon: Square, color: 'from-[rgba(243,236,221,0.28)] to-[rgba(243,236,221,0.14)]' },
@@ -31,6 +33,7 @@ export function TasKagitMakasSayfasi() {
         else if (choice === 'KAGIT') randomComp = 'TAS';
         else randomComp = 'KAGIT';
         setGameState('won');
+        void confettiRef.current?.fire({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
       } else {
         // Force loss (to maintain exactly 25% win rate)
         if (choice === 'TAS') randomComp = 'KAGIT';
@@ -44,7 +47,13 @@ export function TasKagitMakasSayfasi() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0e0c09] text-[color:var(--lobby-text,#f3ecdd)] p-4 md:p-8 flex flex-col items-center">
+    <>
+      <Confetti
+        ref={confettiRef}
+        manualstart
+        className="pointer-events-none fixed inset-0 z-[60] h-full w-full"
+      />
+      <div className="min-h-screen bg-[#0e0c09] text-[color:var(--lobby-text,#f3ecdd)] p-4 md:p-8 flex flex-col items-center">
       <div className="w-full max-w-4xl flex items-center justify-between mb-12">
         <Link to="/lobi" className="flex items-center gap-2 text-[color:var(--lobby-muted,#8f8674)] hover:text-[color:var(--lobby-text,#f3ecdd)] transition-colors font-bold">
           <ArrowLeft size={20} /> Lobiye Dön
@@ -121,7 +130,8 @@ export function TasKagitMakasSayfasi() {
            ))}
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }
 

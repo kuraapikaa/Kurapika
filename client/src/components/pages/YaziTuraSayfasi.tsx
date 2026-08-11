@@ -1,13 +1,15 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, CircleDollarSign, RotateCcw, Trophy, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Confetti, type ConfettiRef } from '../ui/confetti';
 
 export function YaziTuraSayfasi() {
   const [flipping, setFlipping] = useState(false);
   const [result, setResult] = useState<'YAZI' | 'TURA' | null>(null);
   const [choice, setChoice] = useState<'YAZI' | 'TURA' | null>(null);
   const [gameState, setGameState] = useState<'idle' | 'won' | 'lost'>('idle');
+  const confettiRef = useRef<ConfettiRef>(null);
 
   const flipCoin = () => {
     if (!choice || flipping) return;
@@ -25,6 +27,7 @@ export function YaziTuraSayfasi() {
       
       if (userWins) {
         setGameState('won');
+        void confettiRef.current?.fire({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
       } else {
         setGameState('lost');
       }
@@ -32,7 +35,13 @@ export function YaziTuraSayfasi() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0e0c09] text-[color:var(--lobby-text,#f3ecdd)] p-4 md:p-8 flex flex-col items-center">
+    <>
+      <Confetti
+        ref={confettiRef}
+        manualstart
+        className="pointer-events-none fixed inset-0 z-[60] h-full w-full"
+      />
+      <div className="min-h-screen bg-[#0e0c09] text-[color:var(--lobby-text,#f3ecdd)] p-4 md:p-8 flex flex-col items-center">
       <div className="w-full max-w-4xl flex items-center justify-between mb-8">
         <Link to="/lobi" className="flex items-center gap-2 text-[color:var(--lobby-muted,#8f8674)] hover:text-[color:var(--lobby-text,#f3ecdd)] transition-colors font-bold">
           <ArrowLeft size={20} /> Lobiye Dön
@@ -115,6 +124,7 @@ export function YaziTuraSayfasi() {
           </AnimatePresence>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }
