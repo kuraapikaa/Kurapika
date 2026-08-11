@@ -1291,6 +1291,13 @@ export async function lynonPlayerRestrictions(userId: string | number): Promise<
  * 4xx alirsa ikincisi deneniyor. Ikisi de basarisiz olursa hata
  * yukselir — sessizce "yapildi" denmez.
  *
+ * Yontem PUT degil POST: uretimde PUT ile bu uc AYNI iki oyuncu icin
+ * her turda "Lynon API 405" veriyordu (hedef-bakiye-kilidi isi hic
+ * kisit yazamiyordu, bkz. hedefBakiyeJob.ts) — 11.08.2026'da gozlendi,
+ * dosyadaki diger yazma uclarinin buyuk cogunlugu zaten POST kullaniyor.
+ * Bu da dogrulanmamis bir tahmin; yine basarisiz olursa farkli bir
+ * hata/durum kodu loglardan gorulecek.
+ *
  * Cekim ve yatirim bu yoldan KAPATILAMAZ; beyaz liste `IZINLI_KISITLAR`.
  */
 export async function lynonSetPlayerRestriction(input: {
@@ -1310,7 +1317,7 @@ export async function lynonSetPlayerRestriction(input: {
 
   for (const govde of adaylar) {
     try {
-      const yanit = await lynonRequest(yol, { method: 'PUT', body: govde });
+      const yanit = await lynonRequest(yol, { method: 'POST', body: govde });
       return { govde, yanit };
     } catch (err) {
       sonHata = err;

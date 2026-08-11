@@ -220,7 +220,7 @@ export async function registerHedefBakiyeJob(): Promise<void> {
   const { runHedefBakiyeJob } = await import('./hedefBakiyeJob.js');
   scheduler.register('hedef-bakiye-kilidi', config.hedefBakiye.aralikMs, async () => {
     await herTenantIcin('hedef-bakiye', async (tenantKey) => {
-      const sonuc = await runHedefBakiyeJob();
+      const sonuc = await runHedefBakiyeJob(tenantKey);
       if (sonuc.kapatilan > 0 || sonuc.hata > 0) {
         console.log(`[hedef-bakiye] ${tenantKey}: ${sonuc.kontrol} kontrol, ${sonuc.kapatilan} kapatıldı, ${sonuc.hata} hata`);
       }
