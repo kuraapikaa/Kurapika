@@ -8,6 +8,7 @@ import {
   kilitAdaylari,
   kisitGovdeleri,
   kisitliMi,
+  sadeceHedefBonusuVarMi,
   type BonusOturumu,
   type Kisit,
 } from './hedefBakiyeKilidi.js';
@@ -130,6 +131,62 @@ describe('hedefBakiyeDuzeltmeNotu', () => {
 
   it('hedefi ve önceki bakiyeyi içerir', () => {
     expect(hedefBakiyeDuzeltmeNotu(1000, 4409.7)).toBe("Bakiye 1000 TRY'ye sabitlendi (4410)");
+  });
+});
+
+describe('sadeceHedefBonusuVarMi', () => {
+  const hedef = { campaignId: 1885, bonusId: 1687 };
+
+  it('yalnızca hedef bonusu olan oyuncuda true döner', () => {
+    const oturumlar: BonusOturumu[] = [
+      { playerId: 1, campaignId: 1885, bonusId: 1687 },
+    ];
+    expect(sadeceHedefBonusuVarMi(oturumlar, 1, hedef)).toBe(true);
+  });
+
+  it('hedef bonusu birden fazla kez almış ama başka hiçbir şeyi olmayan oyuncuda true döner', () => {
+    const oturumlar: BonusOturumu[] = [
+      { playerId: 1, campaignId: 1885, bonusId: 1687 },
+      { playerId: 1, campaignId: 1885, bonusId: 1687 },
+    ];
+    expect(sadeceHedefBonusuVarMi(oturumlar, 1, hedef)).toBe(true);
+  });
+
+  it('başka bir kampanyası da olan oyuncuda false döner — gerçek katılımcı, muaf', () => {
+    const oturumlar: BonusOturumu[] = [
+      { playerId: 1, campaignId: 1885, bonusId: 1687 },
+      { playerId: 1, campaignId: 9999, bonusId: 4321 },
+    ];
+    expect(sadeceHedefBonusuVarMi(oturumlar, 1, hedef)).toBe(false);
+  });
+
+  it('hedef bonusu hiç yoksa false döner', () => {
+    const oturumlar: BonusOturumu[] = [
+      { playerId: 1, campaignId: 9999, bonusId: 4321 },
+    ];
+    expect(sadeceHedefBonusuVarMi(oturumlar, 1, hedef)).toBe(false);
+  });
+
+  it('boş geçmişte false döner', () => {
+    expect(sadeceHedefBonusuVarMi([], 1, hedef)).toBe(false);
+    expect(sadeceHedefBonusuVarMi(null, 1, hedef)).toBe(false);
+  });
+
+  it('gün penceresi sınırı yok — eski verilişler de sayılır', () => {
+    // kilitAdaylari'nin aksine burada tarih hiç kontrol edilmiyor; bu
+    // ömür boyu bir bonus-çeşitliliği kontrolü.
+    const oturumlar: BonusOturumu[] = [
+      { playerId: 1, campaignId: 1885, bonusId: 1687, claimedDate: '2020-01-01T00:00:00Z' },
+    ];
+    expect(sadeceHedefBonusuVarMi(oturumlar, 1, hedef)).toBe(true);
+  });
+
+  it('başka oyuncuların bonusları karışmaz', () => {
+    const oturumlar: BonusOturumu[] = [
+      { playerId: 1, campaignId: 1885, bonusId: 1687 },
+      { playerId: 2, campaignId: 9999, bonusId: 4321 },
+    ];
+    expect(sadeceHedefBonusuVarMi(oturumlar, 1, hedef)).toBe(true);
   });
 });
 

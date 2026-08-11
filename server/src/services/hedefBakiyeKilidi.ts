@@ -160,6 +160,47 @@ export function kilitAdaylari(
 }
 
 /**
+ * Oyuncunun TUM bonus gecmisinde (gun penceresi sinirlamasi OLMADAN)
+ * yalnizca hedef kampanya/bonus mu goruluyor?
+ *
+ * "Sadece Telegram Katil Bonusu" saflik filtresi: bu bonus disinda HIC
+ * bonus almamis oyuncu bir bonus-avcisi hesabi olma ihtimali yuksek;
+ * baska kampanyalari da olan (gercek katilim gecmisi olan) bir oyuncuya
+ * bakiye sabitleme/kisit UYGULANMAMALI — tek bir bedava bonus icin
+ * gelmis birinden farkli.
+ *
+ * `kilitAdaylari`'nin aksine gun penceresi kullanmaz: bu bir ORTALIK
+ * ozelligi (omur boyu bonus cesitliligi), "yakin zamanda ne aldi"
+ * degil.
+ */
+export function sadeceHedefBonusuVarMi(
+  oturumlar: BonusOturumu[] | null | undefined,
+  playerId: number,
+  secenek: { campaignId?: number | null; bonusId?: number | null },
+): boolean {
+  const { campaignId, bonusId } = secenek;
+  let hedefBulundu = false;
+
+  for (const oturum of oturumlar ?? []) {
+    if (!oturum) continue;
+    if (Number(oturum.playerId) !== playerId) continue;
+
+    const kampanya = Number(oturum.campaignId);
+    const bonus = Number(oturum.bonusId);
+    const kampanyaEslesir = campaignId != null && Number.isFinite(kampanya) && kampanya === campaignId;
+    const bonusEslesir = bonusId != null && Number.isFinite(bonus) && bonus === bonusId;
+
+    if (kampanyaEslesir || bonusEslesir) {
+      hedefBulundu = true;
+    } else {
+      // Baska bir kampanya/bonus goruldu — "sadece" kosulu bozuldu.
+      return false;
+    }
+  }
+  return hedefBulundu;
+}
+
+/**
  * PUT govdesi.
  *
  * Lynon'un yazma sozlesmesi belgelenmemis; GET yanitinin sekli tek

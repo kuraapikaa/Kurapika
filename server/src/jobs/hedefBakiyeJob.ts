@@ -21,7 +21,10 @@
  * Dort kisitla cerceveledim:
  *
  *   1. KAPSAM — yalnizca hedef kampanyanin bonusunu son birkac gunde
- *      almis oyuncular. Sitenin tamamina uygulanan bir kural degil.
+ *      almis VE omur boyu bonus gecmisinde BASKA HICBIR bonus/kampanya
+ *      olmayan oyuncular (11.08.2026: "sadece Telegram Katıl Bonusu"
+ *      sarti eklendi — baska kampanyalari da olan gercek katilimcilar
+ *      bu akistan MUAF). Sitenin tamamina uygulanan bir kural degil.
  *   2. BEYAZ LISTE — `withdraw` ve `deposit` bu yoldan kapatilamaz.
  *      Hedefe ulasan oyuncunun parasini cekebilmesi gerekir. Sabitleme
  *      hedefi (varsayilan 1000₺) esikten (2500₺) DUSUK olmali — aksi
@@ -55,6 +58,7 @@ import {
   hedefNotu,
   kilitAdaylari,
   kisitliMi,
+  sadeceHedefBonusuVarMi,
 } from '../services/hedefBakiyeKilidi.js';
 
 const NAMESPACE = 'hedef-bakiye-kilidi';
@@ -91,7 +95,14 @@ export async function runHedefBakiyeJob(tenantKey = 'default'): Promise<HedefBak
     campaignId: ayar.kampanyaId,
     bonusId: ayar.bonusId,
     gunPenceresi: ayar.gunPenceresi,
-  });
+  }).filter((playerId) =>
+    // SAFLIK FILTRESI: oyuncunun omur boyu bonus gecmisinde bu hedef
+    // bonus/kampanya DISINDA baska hicbir sey yoksa devam et. Baska
+    // kampanyalari da olan (gercek katilim gecmisi olan) bir oyuncu
+    // bu akistan MUAF — yalnizca "sadece bedava bonus icin gelmis"
+    // hesaplar hedefleniyor.
+    sadeceHedefBonusuVarMi(oturumlar, playerId, { campaignId: ayar.kampanyaId, bonusId: ayar.bonusId }),
+  );
   sonuc.aday = adaylar.length;
   if (adaylar.length === 0) return sonuc;
 
