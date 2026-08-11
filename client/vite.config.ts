@@ -10,6 +10,14 @@ const apiTarget = `http://127.0.0.1:${apiPort}`;
 
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    // shadcn/magicui/aceternity CLI'larinin urettigi bilesenler "@/..."
+    // import'u bekliyor; mevcut kod hala goreceli import kullaniyor, ikisi
+    // birlikte calisir.
+    alias: {
+      '@': resolve(__dirname, 'src'),
+    },
+  },
   build: {
     sourcemap: false,
     reportCompressedSize: false,
