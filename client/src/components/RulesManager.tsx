@@ -131,6 +131,15 @@ type RulePreset = {
  *
  * Üçüncüsü YENİ bir kural: default.json'da tam speci hazır duruyordu ama
  * canlı Kural Merkezi'ne hiç eklenmemişti.
+ *
+ * Dördüncü ve beşincisi 11.08.2026'da canlıda bulunan gerçek bir çift kural
+ * çakışması: "1874 Narcos Kayıp Bonusu" (kademeli %20/25/30) ve "2046" (aynı
+ * Lynon kampanyasına — partnerBonusId 2046 — bağlı, sabit 20/25/30₺
+ * versiyonu) ikisi de isAutoCharge:true. 1874'te maxDepositAmount 1₺'de
+ * kaldığı için hiçbir gerçek kayıp bu eşiği geçemiyor, kural hiç
+ * ateşlenmiyordu; onun yerine yalnızca 2046 (sabit, çok daha küçük) tutar
+ * veriyordu. 1874 düzeltilince ikisi birden ateşlenip aynı kayba çifte
+ * ödeme yapmaması için 2046 kapatılıyor.
  */
 const RULE_PRESETS: RulePreset[] = [
     {
@@ -167,6 +176,20 @@ const RULE_PRESETS: RulePreset[] = [
             minDepositAmount: 250, balanceBelow: 10, noOpenBets: true,
             casinoWagering: 15, maxPayoutMult: 10, excludeFromLossCalculations: true,
         },
+    },
+    {
+        key: '1874',
+        targetMap: 'PROMO_SPECS',
+        label: 'Narcos Kayıp Bonusu — tavan düzeltmesi',
+        description: 'maxDepositAmount 1₺\'de kalmıştı; hiçbir gerçek kayıp bu eşiği geçemediği için %20/25/30 kademeli kural hiç ateşlenmiyordu. Alan tamamen kaldırılır — kademeler (50-4.999₺ →%20, 5.000-19.999₺ →%25, 20.000-200.000₺ →%30) tek başına eşiği belirler.',
+        patch: { maxDepositAmount: undefined },
+    },
+    {
+        key: '2046',
+        targetMap: 'PROMO_SPECS',
+        label: 'Kural 2046 — devre dışı bırak',
+        description: '1874 ile aynı Lynon kampanyasına (partnerBonusId 2046) bağlı, eski sabit-tutar (20/25/30₺) versiyon. 1874 düzeltilince ikisi birden ateşlenip aynı kayba çifte bonus verirdi; bu yüzden kapatılır.',
+        patch: { enabled: false },
     },
 ];
 
