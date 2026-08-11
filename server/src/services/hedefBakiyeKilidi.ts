@@ -89,6 +89,23 @@ export function hedefNotu(esik: number, bakiye: number): string {
   return `Hedef ${esik} TRY asildi (${Math.round(bakiye)})`.slice(0, 50);
 }
 
+/**
+ * Esigi asan bakiyeyi SABIT bir degere indirmek icin gereken tutar.
+ *
+ * Negatif donmez: bakiye zaten hedefin altindaysa (bir onceki turda
+ * indirilmis olabilir) 0 doner — `lynonAdjustPlayerMainAccount` pozitif
+ * olmayan tutari reddeder, bu yuzden cagiran taraf 0 iken istek atmamali.
+ */
+export function hedefBakiyeDuzeltmeTutari(bakiye: number, hedefBakiye: number): number {
+  if (!Number.isFinite(bakiye) || !Number.isFinite(hedefBakiye)) return 0;
+  return Math.max(0, Math.round((bakiye - hedefBakiye) * 100) / 100);
+}
+
+/** Bakiye duzeltmesi icin Lynon not alani; 50 karakter uzerini kirp. */
+export function hedefBakiyeDuzeltmeNotu(hedefBakiye: number, oncekiBakiye: number): string {
+  return `Bakiye ${hedefBakiye} TRY'ye sabitlendi (${Math.round(oncekiBakiye)})`.slice(0, 50);
+}
+
 export type BonusOturumu = {
   playerId?: unknown;
   campaignId?: unknown;

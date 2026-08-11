@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  hedefBakiyeDuzeltmeNotu,
+  hedefBakiyeDuzeltmeTutari,
   hedefKarari,
   hedefNotu,
   izinliKisitMi,
@@ -94,6 +96,40 @@ describe('hedefNotu', () => {
 
   it('eşiği ve bakiyeyi içerir', () => {
     expect(hedefNotu(2500, 3120.5)).toBe('Hedef 2500 TRY asildi (3121)');
+  });
+});
+
+describe('hedefBakiyeDuzeltmeTutari', () => {
+  it('bakiyeyi hedefe indirmek için gereken tutarı verir', () => {
+    expect(hedefBakiyeDuzeltmeTutari(4409.7, 1000)).toBe(3409.7);
+    expect(hedefBakiyeDuzeltmeTutari(2631, 1000)).toBe(1631);
+  });
+
+  it('bakiye hedefin altındaysa/eşitse 0 döner — negatif tutar istenmez', () => {
+    // Bir önceki turda zaten indirilmiş olabilir; tekrar "düzeltme" tutarı
+    // negatif çıkıp lynonAdjustPlayerMainAccount'u (crediting'e döner gibi)
+    // yanlış yönde beslemeye çalışmamalı.
+    expect(hedefBakiyeDuzeltmeTutari(1000, 1000)).toBe(0);
+    expect(hedefBakiyeDuzeltmeTutari(500, 1000)).toBe(0);
+  });
+
+  it('geçersiz girdide 0 döner', () => {
+    expect(hedefBakiyeDuzeltmeTutari(NaN, 1000)).toBe(0);
+    expect(hedefBakiyeDuzeltmeTutari(4000, NaN)).toBe(0);
+  });
+
+  it('kuruş farklarını yuvarlar', () => {
+    expect(hedefBakiyeDuzeltmeTutari(2500.006, 1000)).toBe(1500.01);
+  });
+});
+
+describe('hedefBakiyeDuzeltmeNotu', () => {
+  it('Lynon not sınırını aşmaz', () => {
+    expect(hedefBakiyeDuzeltmeNotu(1000, 4409.7).length).toBeLessThanOrEqual(50);
+  });
+
+  it('hedefi ve önceki bakiyeyi içerir', () => {
+    expect(hedefBakiyeDuzeltmeNotu(1000, 4409.7)).toBe("Bakiye 1000 TRY'ye sabitlendi (4410)");
   });
 });
 

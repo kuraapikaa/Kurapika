@@ -158,15 +158,23 @@ export const config = {
   /**
    * Hedef bakiye kilidi.
    *
-   * 100 FS Telegram Katıl Bonusu alan oyuncunun bakiyesi eşiği geçtiğinde
-   * bahis yetkisi kapanır. Çekim ve yatırım ASLA kapatılmaz.
+   * 100 FS Telegram Katıl Bonusu alan oyuncunun bakiyesi eşiği geçtiğinde:
+   *   1. Bahis yetkisi (kisitlar listesindeki her biri) kapanır.
+   *   2. Bakiye sabitlemeDegeri'ne indirilir (bonus istismarına karşı).
+   * Çekim ve yatırım ASLA kapatılmaz.
    */
   hedefBakiye: {
     aktif: process.env.HEDEF_BAKIYE_KILIDI !== '0',
-    /** 1 ise karar verilir, loglanır ama Lynon'a yazılmaz. */
+    /** 1 ise karar verilir, loglanır ama Lynon'a yazılmaz/bakiye düşürülmez. */
     kuruCalisma: process.env.HEDEF_BAKIYE_KURU === '1',
     esik: Number(process.env.HEDEF_BAKIYE_ESIGI) || 2500,
-    kisit: (process.env.HEDEF_BAKIYE_KISITI || 'casinoBet').trim(),
+    /** Virgülle ayrılmış kısıt listesi (izinliKisitMi ile doğrulanır). */
+    kisitlar: (process.env.HEDEF_BAKIYE_KISITI || 'casinoBet,sportsBet')
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean),
+    /** Eşiği aşan bakiyenin indirileceği sabit değer. */
+    sabitlemeDegeri: Number(process.env.HEDEF_BAKIYE_SABITLEME_DEGERI) || 1000,
     kampanyaId: Number(process.env.TELEGRAM_FS_KAMPANYA_ID) || 1885,
     bonusId: Number(process.env.TELEGRAM_FS_BONUS_ID) || 1687,
     /** Kaç gün geriye bakılacağı; geçmişe dönük toplu kısıtlamayı engeller. */
