@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  davetBonusuDuzeltmesiVarMi,
   hedefBakiyeDuzeltmeNotu,
   hedefBakiyeDuzeltmeTutari,
   hedefKarari,
@@ -9,6 +10,7 @@ import {
   kisitGovdeleri,
   kisitliMi,
   sadeceHedefBonusuVarMi,
+  yatirimYapmisMi,
   type BonusOturumu,
   type Kisit,
 } from './hedefBakiyeKilidi.js';
@@ -187,6 +189,38 @@ describe('sadeceHedefBonusuVarMi', () => {
       { playerId: 2, campaignId: 9999, bonusId: 4321 },
     ];
     expect(sadeceHedefBonusuVarMi(oturumlar, 1, hedef)).toBe(true);
+  });
+});
+
+describe('yatirimYapmisMi', () => {
+  it('yatırım kaydı varsa true döner', () => {
+    expect(yatirimYapmisMi([{ id: 1 }])).toBe(true);
+  });
+
+  it('yatırım kaydı yoksa false döner', () => {
+    expect(yatirimYapmisMi([])).toBe(false);
+    expect(yatirimYapmisMi(null)).toBe(false);
+    expect(yatirimYapmisMi(undefined)).toBe(false);
+  });
+});
+
+describe('davetBonusuDuzeltmesiVarMi', () => {
+  it('notunda "davet" geçen bir düzeltme varsa true döner', () => {
+    expect(davetBonusuDuzeltmesiVarMi([{ Note: 'Davet bonusu' }])).toBe(true);
+  });
+
+  it('büyük/küçük harf farkını yutar', () => {
+    expect(davetBonusuDuzeltmesiVarMi([{ Note: 'DAVET BONUSU' }])).toBe(true);
+  });
+
+  it('ilgisiz notlarda false döner', () => {
+    expect(davetBonusuDuzeltmesiVarMi([{ Note: 'Manuel bakiye düzeltmesi' }])).toBe(false);
+  });
+
+  it('boş/eksik girdide false döner', () => {
+    expect(davetBonusuDuzeltmesiVarMi([])).toBe(false);
+    expect(davetBonusuDuzeltmesiVarMi(null)).toBe(false);
+    expect(davetBonusuDuzeltmesiVarMi([{}])).toBe(false);
   });
 });
 

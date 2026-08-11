@@ -24,7 +24,10 @@
  *      almis VE omur boyu bonus gecmisinde BASKA HICBIR bonus/kampanya
  *      olmayan oyuncular (11.08.2026: "sadece Telegram Katıl Bonusu"
  *      sarti eklendi — baska kampanyalari da olan gercek katilimcilar
- *      bu akistan MUAF). Sitenin tamamina uygulanan bir kural degil.
+ *      bu akistan MUAF). Ayrica HIC yatirim yapmis (11.08.2026: ayni
+ *      gun eklendi) ya da manuel "davet bonusu" duzeltmesi olan
+ *      oyuncular da MUAF — bakiyeleri salt bedava dondurme kazancindan
+ *      ibaret degil. Sitenin tamamina uygulanan bir kural degil.
  *   2. BEYAZ LISTE — `withdraw` ve `deposit` bu yoldan kapatilamaz.
  *      Hedefe ulasan oyuncunun parasini cekebilmesi gerekir. Sabitleme
  *      hedefi (varsayilan 1000₺) esikten (2500₺) DUSUK olmali — aksi
@@ -47,11 +50,14 @@ import { readStoredDocument, writeStoredDocument } from '../lib/documentStore.js
 import {
   bonusOturumlariniTopla,
   lynonAdjustPlayerMainAccount,
+  lynonCorrectionHistory,
+  lynonPaymentTransactions,
   lynonPlayerMainBalance,
   lynonPlayerRestrictions,
   lynonSetPlayerRestriction,
 } from '../services/lynonBackofficeService.js';
 import {
+  davetBonusuDuzeltmesiVarMi,
   hedefBakiyeDuzeltmeNotu,
   hedefBakiyeDuzeltmeTutari,
   hedefKarari,
@@ -59,6 +65,7 @@ import {
   kilitAdaylari,
   kisitliMi,
   sadeceHedefBonusuVarMi,
+  yatirimYapmisMi,
 } from '../services/hedefBakiyeKilidi.js';
 
 const NAMESPACE = 'hedef-bakiye-kilidi';
@@ -130,6 +137,34 @@ export async function runHedefBakiyeJob(tenantKey = 'default'): Promise<HedefBak
        */
       const bakiye = await lynonPlayerMainBalance(playerId);
       if (!hedefKarari({ bakiye, esik: ayar.esik, zatenKisitli: false }).kapat) continue;
+
+      /**
+       * MUAFIYETLER — bakiyeye DOKUNMADAN once.
+       *
+       * "Yalnız yatırımı olan ya da manuel correction davet bonusu olan
+       * üyelerin bakiyesini elleme" (11.08.2026). İkisi de gerçek para
+       * yatırmış / referans ödülü almış oyuncular — bakiyeleri salt
+       * bedava dönüş kazancından ibaret değil. Muaf tutulan oyuncu da
+       * kayda geçiriliyor: aksi halde aynı oyuncu her turda yeniden
+       * (2 fazladan Lynon çağrısıyla) kontrol edilirdi.
+       */
+      const depositRows = await lynonPaymentTransactions({ ClientId: playerId }, { transactionTypes: 'deposit' });
+      if (yatirimYapmisMi(depositRows)) {
+        kayit.kapatilanlar[String(playerId)] = new Date().toISOString();
+        degisti = true;
+        audit('sistem', 'job', 'manual_adjustment', `player:${playerId}`,
+          `MUAF — yatırım geçmişi var, bakiyeye dokunulmadı.`);
+        continue;
+      }
+
+      const duzeltmeGecmisi = await lynonCorrectionHistory({ ClientId: playerId });
+      if (davetBonusuDuzeltmesiVarMi(duzeltmeGecmisi?.Data?.Objects)) {
+        kayit.kapatilanlar[String(playerId)] = new Date().toISOString();
+        degisti = true;
+        audit('sistem', 'job', 'manual_adjustment', `player:${playerId}`,
+          `MUAF — manuel davet bonusu düzeltmesi var, bakiyeye dokunulmadı.`);
+        continue;
+      }
 
       const mevcutKisitlar = await lynonPlayerRestrictions(playerId);
       const eksikKisitlar = ayar.kisitlar.filter((k) => !kisitliMi(mevcutKisitlar, k));

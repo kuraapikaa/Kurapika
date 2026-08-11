@@ -201,6 +201,35 @@ export function sadeceHedefBonusuVarMi(
 }
 
 /**
+ * Oyuncu HERHANGI bir zamanda gercek para yatirdi mi?
+ *
+ * MUAFIYET: gercek para yatirmis bir oyuncunun bakiyesi salt bedava
+ * dondurme kazancindan ibaret degildir — kendi parasi da karisik
+ * olabilir. Bu akis yalnizca "hic yatirim yapmamis, sadece bedava
+ * bonusla oynayan" hesaplari hedefliyor; `depositRows` bos donerse
+ * (Lynon'daki `transactionType: 'deposit'` filtresiyle) oyuncu MUAF.
+ */
+export function yatirimYapmisMi(depositRows: unknown[] | null | undefined): boolean {
+  return Array.isArray(depositRows) && depositRows.length > 0;
+}
+
+/**
+ * Manuel bakiye duzeltmelerinden biri "davet bonusu" notu tasiyor mu?
+ *
+ * MUAFIYET: bazi oyunculara referans/davet odulu manuel bir bakiye
+ * duzeltmesi (BalanceCorrection) olarak, kampanya sistemi disinda
+ * veriliyor. Bu para da bedava dondurme kazanci degil — sabitleme/kisit
+ * bu oyunculara UYGULANMAMALI.
+ */
+export function davetBonusuDuzeltmesiVarMi(
+  correctionRows: Array<{ Note?: unknown }> | null | undefined,
+): boolean {
+  return (correctionRows ?? []).some((row) =>
+    String(row?.Note ?? '').toLocaleLowerCase('tr-TR').includes('davet'),
+  );
+}
+
+/**
  * PUT govdesi.
  *
  * Lynon'un yazma sozlesmesi belgelenmemis; GET yanitinin sekli tek
