@@ -106,6 +106,70 @@ interface RulesConfig {
     PROMO_TITLE_SPECS: Record<string, PromoSpec>;
 }
 
+type RulePreset = {
+    key: string;
+    targetMap: 'PROMO_SPECS' | 'PROMO_TITLE_SPECS';
+    label: string;
+    description: string;
+    /** Var olan kuralın ÜZERİNE merge edilecek alanlar (yalnızca bunlar değişir); yeni kuralda TÜM spec budur. */
+    patch: PromoSpec;
+};
+
+/**
+ * Hazır bonus şablonları.
+ *
+ * İlk ikisi CANLIDA zaten var olan kurallardaki gerçek, doğrulanmış
+ * yapılandırma hatalarını düzeltir (bkz. handleApplyPreset — var olan
+ * kuralın üstüne MERGE edilir, diğer alanlar korunur, ezilmez):
+ *
+ *   - 1845 "%100 Risksiz İlk Yatırım": tieredPercentageRanges 1.000-10.000₺
+ *     arası %100 diyordu ama maxDepositAmount 2.000₺'de kalmıştı — 2.000₺
+ *     üzeri net kayıp sessizce reddediliyordu.
+ *   - 1872 "İlk Yatırımına 2X İle Başla": kademeler min===max (tam eşleşme)
+ *     olarak girilmişti — yalnızca tam 500/750/1000/2000/5000₺ yatıran
+ *     kazanıyordu, aradaki (çoğu gerçek) tutar hiçbir kademeye girmiyordu.
+ *
+ * Üçüncüsü YENİ bir kural: default.json'da tam speci hazır duruyordu ama
+ * canlı Kural Merkezi'ne hiç eklenmemişti.
+ */
+const RULE_PRESETS: RulePreset[] = [
+    {
+        key: '1845',
+        targetMap: 'PROMO_SPECS',
+        label: '%100 Risksiz İlk Yatırım — tavan düzeltmesi',
+        description: 'maxDepositAmount 2.000₺\'den 10.000₺\'ye çıkar. Kademeli tablo zaten 1.000-10.000₺ arasını %100 diye tanımlıyor; 2.000₺ tavanı bunu sessizce eziyordu, yalnızca bu alan değişir.',
+        patch: { maxDepositAmount: 10000 },
+    },
+    {
+        key: '1872',
+        targetMap: 'PROMO_SPECS',
+        label: 'İlk Yatırımına 2X İle Başla — kademe düzeltmesi',
+        description: 'Kademeleri tam-eşleşme yerine gerçek aralığa çevirir (500-749, 750-999, 1000-1999, 2000-4999₺ hepsi %100; 5000₺ ve üzeri öncekiyle aynı şekilde %0 kalır).',
+        patch: {
+            tieredPercentageRanges: [
+                { min: 500, max: 749, percent: 100 },
+                { min: 750, max: 999, percent: 100 },
+                { min: 1000, max: 1999, percent: 100 },
+                { min: 2000, max: 4999, percent: 100 },
+                { min: 5000, max: 999999999, percent: 0 },
+            ],
+        },
+    },
+    {
+        key: 'carsamba-happy-days',
+        targetMap: 'PROMO_SPECS',
+        label: '%400 Çarşamba Happy Days — yeni kural',
+        description: 'Şu an Kural Merkezi\'nde hiç yok. Yalnızca Çarşamba günü, günün 1-5. yatırımına sırasıyla %20/40/60/80/100, minimum yatırım 250₺.',
+        patch: {
+            enabled: true, type: 'cash', title: '%400 Çarşamba Happy Days',
+            activeDays: ['wednesday'], amountType: 'dailySequencePercentage',
+            dailySequencePercents: [20, 40, 60, 80, 100],
+            minDepositAmount: 250, balanceBelow: 10, noOpenBets: true,
+            casinoWagering: 15, maxPayoutMult: 10, excludeFromLossCalculations: true,
+        },
+    },
+];
+
 export function RulesManager() {
     const queryClient = useQueryClient();
     const activeTab = 'id';
@@ -318,6 +382,27 @@ export function RulesManager() {
     };
 
     /**
+     * Hazır şablonu uygular.
+     *
+     * Kural ZATEN varsa `patch` alanları ÜZERİNE MERGE edilir — geri kalan
+     * tüm alanlar (activeDays, checkSameDayUsage, isAutoCharge, ...)
+     * dokunulmadan korunur; tam obje ile EZMEK, o an production'da olup da
+     * bu preset'te taşınmayan alanları sessizce silerdi.
+     */
+    const handleApplyPreset = (preset: RulePreset) => {
+        if (!config) return;
+        const existing = config[preset.targetMap]?.[preset.key];
+        const soru = existing
+            ? `"${preset.label}" uygulanacak. "${preset.key}" kuralı zaten var; yalnızca bu şablonun değiştirdiği alanlar üzerine yazılır, diğerleri korunur. Devam edilsin mi?`
+            : `"${preset.label}" yeni bir kural olarak oluşturulacak. Devam edilsin mi?`;
+        if (!window.confirm(soru)) return;
+        const merged: PromoSpec = { ...(existing ?? {}), ...preset.patch };
+        const newConfig = { ...config };
+        newConfig[preset.targetMap] = { ...newConfig[preset.targetMap], [preset.key]: merged };
+        mutation.mutate(newConfig);
+    };
+
+    /**
      * Tutar hesabinin tabani: kayip bonusunda NET KAYIP, digerlerinde yatirim.
      * Etiketler buna gore degisiyor; sabit "Yatirim" yazmak kayip bonusunda
      * yanlis alani ayarladigi izlenimi veriyordu.
@@ -393,6 +478,47 @@ export function RulesManager() {
                     </Button>
                 </div>
             </header>
+
+            <div className="rounded-xl border border-[color:var(--panel-accent,#0a84ff)]/20 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-5 md:p-6 space-y-4">
+                <div className="flex items-center gap-2.5">
+                    <Sparkles size={16} className="text-[color:var(--panel-accent,#0a84ff)]" />
+                    <div>
+                        <h2 className="text-sm font-semibold text-white">Hazır Şablonlar</h2>
+                        <p className="text-[10px] font-medium text-[color:var(--panel-muted,#8a919c)]">Tek tıkla kur; var olan bir kuralı düzeltiyorsa yalnızca ilgili alan değişir, diğerleri korunur.</p>
+                    </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    {RULE_PRESETS.map((preset) => {
+                        const existing = config?.[preset.targetMap]?.[preset.key];
+                        return (
+                            <div key={preset.key} className="flex flex-col gap-3 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20 p-4">
+                                <div>
+                                    <div className="flex items-center gap-2">
+                                        <span className={cn(
+                                            "rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider",
+                                            existing ? "bg-amber-500/15 text-amber-400" : "bg-emerald-500/15 text-emerald-400"
+                                        )}>
+                                            {existing ? 'Düzeltme' : 'Yeni Kural'}
+                                        </span>
+                                        <span className="text-[10px] font-mono text-[color:var(--panel-faint,#5c6470)]">{preset.key}</span>
+                                    </div>
+                                    <p className="mt-1.5 text-xs font-semibold text-white">{preset.label}</p>
+                                    <p className="mt-1 text-[10px] leading-relaxed text-[color:var(--panel-muted,#8a919c)]">{preset.description}</p>
+                                </div>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleApplyPreset(preset)}
+                                    disabled={mutation.isPending}
+                                    className="h-9 text-[10px] font-semibold border border-[color:var(--panel-accent,#0a84ff)]/30 text-[color:var(--panel-accent,#0a84ff)] hover:bg-[color:var(--panel-accent,#0a84ff)]/10"
+                                >
+                                    {existing ? 'Düzeltmeyi Uygula' : 'Kuralı Oluştur'} <ArrowRight size={12} className="ml-1.5" />
+                                </Button>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
 
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
                 <div className="lg:col-span-9 space-y-6">
