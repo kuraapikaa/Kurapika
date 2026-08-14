@@ -227,7 +227,7 @@ export function MasterPanel() {
                 </div>
               </div>
               <Field label="Logo URL" value={form.logoUrl} onChange={(value) => updateForm('logoUrl', value)} placeholder="Logo bağlantısı" />
-              <Field label="Panel başlığı" value={form.adminTitle} onChange={(value) => updateForm('adminTitle', value)} placeholder="Örn: Bugs Software Portal" />
+              <Field label="Panel başlığı" value={form.adminTitle} onChange={(value) => updateForm('adminTitle', value)} placeholder="Örn: Arwen Software Solutions" />
             </div>
 
             <div className="relative mt-4 flex flex-col-reverse justify-end gap-3 sm:flex-row">

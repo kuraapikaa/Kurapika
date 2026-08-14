@@ -203,7 +203,7 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
           ok: true,
           themeColor: tenant.themeColor || '#8b5cf6',
           logoUrl: tenant.logoUrl || '',
-          adminTitle: tenant.adminTitle || tenant.siteName || 'Bugs Software Portal',
+          adminTitle: tenant.adminTitle || tenant.siteName || 'Arwen Software Solutions',
         });
       }
       return reply.send({ ok: false, message: 'Tenant not found' });

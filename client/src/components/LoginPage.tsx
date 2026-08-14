@@ -16,7 +16,12 @@ export function LoginPage({ onLoginSuccess, tenantConfig }: LoginPageProps) {
   const [loginSuccess, setLoginSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const accent = tenantConfig?.themeColor || '#22d3ee';
+  /**
+   * Varsayilan aksan arka plan gorselinden turetildi: kilicin ve yuzdeki
+   * kenar isigin altin tonu. Onceki degeri camgobegiydi (#22d3ee) ve
+   * sicak/olive bir kareyle yan yana durunca ikisi de kirliyordu.
+   */
+  const accent = tenantConfig?.themeColor || '#d4a24c';
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -59,8 +64,8 @@ export function LoginPage({ onLoginSuccess, tenantConfig }: LoginPageProps) {
         initial={{ opacity: 0, scale: 1.04 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
-        src="/assets/images/grand-casino-login.jpg"
-        alt="Grand Casino girişi"
+        src="/assets/images/arwen-login.jpg"
+        alt="Arwen Software Solutions"
         className="login-backdrop"
       />
       <div className="login-overlay" />
@@ -90,10 +95,10 @@ export function LoginPage({ onLoginSuccess, tenantConfig }: LoginPageProps) {
                     )}
                   </div>
                   <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-purple-300/80">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-300/80">
                       Control system
                     </p>
-                    <p className="text-sm font-semibold text-white">{tenantConfig?.adminTitle || 'Bugs Software Portal'}</p>
+                    <p className="text-sm font-semibold text-white">{tenantConfig?.adminTitle || 'Arwen Software Solutions'}</p>
                   </div>
                 </div>
                 <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/15 bg-emerald-400/[0.07] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-300">
@@ -105,7 +110,7 @@ export function LoginPage({ onLoginSuccess, tenantConfig }: LoginPageProps) {
               <div className="login-provider-card mb-5 rounded-xl p-3.5">
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-purple-300">Partner altyapı</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-300">Partner altyapı</p>
                     <p className="mt-1 text-xs font-medium text-slate-400">Seçili bağlantı, oturum boyunca veri kaynağını belirler.</p>
                   </div>
 
@@ -126,7 +131,7 @@ export function LoginPage({ onLoginSuccess, tenantConfig }: LoginPageProps) {
                       className={cn(
                         'login-provider-option min-h-[44px] rounded-full border px-4 text-[10px] font-semibold uppercase tracking-[0.2em] transition-colors backdrop-blur-xl',
                         provider === option
-                          ? option === 'lynon' ? 'border-purple-400/50 bg-purple-500 text-white shadow-[0_0_20px_rgba(168,85,247,0.35)]' : 'border-sky-400/50 bg-sky-500 text-white shadow-[0_0_20px_rgba(56,189,248,0.3)]'
+                          ? option === 'lynon' ? 'border-amber-300/50 bg-amber-500 text-[#1a1206] shadow-[0_0_20px_rgba(212,162,76,0.38)]' : 'border-lime-300/40 bg-[#6b7a52] text-white shadow-[0_0_20px_rgba(122,140,104,0.32)]'
                           : 'border-white/5 bg-white/[0.04] text-slate-400 hover:bg-white/[0.08] hover:text-white'
                       )}
                     >

@@ -352,8 +352,19 @@
     @apply bg-gradient-to-b from-white to-slate-400 bg-clip-text text-transparent;
   }
 
+  /*
+   * GIRIS EKRANI — palet arka plan gorselinden turetilir.
+   *
+   * Gorsel sicak: kilic ve yuzdeki kenar isigi altin, arka plan olive
+   * yesil ve gri tas. Onceki palet neon mor + camgobegiydi; soguk aksan
+   * sicak bir karenin uzerinde oturmuyor, ikisi de kirli gorunuyordu.
+   * Aksan artik gorselin kendi altini (#d4a24c), ikincil ton olive.
+   *
+   * Zemin siyahi da notrden SICAK siyaha cevrildi (#080604): notr siyah
+   * sicak bir gorselin kenarinda mavimsi duruyor.
+   */
   .login-shell {
-    @apply fixed inset-0 z-[100] overflow-hidden bg-[#03070d] text-slate-100;
+    @apply fixed inset-0 z-[100] overflow-hidden bg-[#080604] text-slate-100;
     height: 100dvh;
     min-height: 100svh;
   }
@@ -361,28 +372,37 @@
   .login-backdrop {
     @apply absolute inset-0 h-full w-full object-cover;
     object-position: center center;
-    filter: saturate(0.86) contrast(1.03);
+    filter: saturate(0.92) contrast(1.04);
   }
 
+  /*
+   * KARARTMA YONU PANELIN TARAFINI TAKIP EDER.
+   *
+   * Panel SOLDA (bkz. `.login-stage`), cunku bu gorselde konu sagda:
+   * yuz yatayda ~%62-70 arasinda. Panel sagda kalsaydi tam yuzun ustune
+   * otururdu. Dolayisiyla karartma da soldan saga acilir — 270deg, yani
+   * %0 sag kenar (acik), %100 sol kenar (koyu).
+   */
   .login-overlay {
     @apply absolute inset-0;
     background:
-      radial-gradient(circle at 72% 16%, rgba(168, 85, 247, 0.14), transparent 27%),
-      linear-gradient(90deg, rgba(5, 5, 5, 0.10) 0%, rgba(5, 5, 5, 0.24) 38%, rgba(5, 5, 5, 0.88) 72%, #050505 100%),
-      linear-gradient(180deg, rgba(5, 5, 5, 0.06), rgba(5, 5, 5, 0.56));
+      radial-gradient(circle at 24% 18%, rgba(212, 162, 76, 0.14), transparent 30%),
+      linear-gradient(270deg, rgba(8, 6, 4, 0.08) 0%, rgba(8, 6, 4, 0.26) 34%, rgba(8, 6, 4, 0.88) 70%, #080604 100%),
+      linear-gradient(180deg, rgba(8, 6, 4, 0.06), rgba(8, 6, 4, 0.54));
   }
 
   .login-grid {
     @apply absolute inset-0 opacity-25;
     background-image:
-      linear-gradient(rgba(168, 85, 247, 0.06) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(168, 85, 247, 0.06) 1px, transparent 1px);
+      linear-gradient(rgba(212, 162, 76, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(212, 162, 76, 0.06) 1px, transparent 1px);
     background-size: 64px 64px;
-    mask-image: linear-gradient(90deg, transparent 30%, black);
+    /* Maske de panelle ayni tarafta: izgara solda gorunur, sagda kaybolur. */
+    mask-image: linear-gradient(270deg, transparent 30%, black);
   }
 
   .login-stage {
-    @apply relative z-10 flex w-full items-center justify-end;
+    @apply relative z-10 flex w-full items-center justify-start;
     height: 100dvh;
     min-height: 0;
     padding: clamp(16px, 3vh, 28px) clamp(20px, 7vw, 112px);
@@ -394,16 +414,16 @@
     scrollbar-width: none;
     border-color: rgba(255, 255, 255, 0.05);
     background:
-      radial-gradient(circle at 12% -8%, rgba(168, 85, 247, 0.20), transparent 34%),
-      linear-gradient(145deg, rgba(255, 255, 255, 0.115), rgba(255, 255, 255, 0.025) 32%, rgba(4, 13, 23, 0.7) 74%),
-      rgba(4, 12, 22, 0.58);
+      radial-gradient(circle at 12% -8%, rgba(212, 162, 76, 0.20), transparent 34%),
+      linear-gradient(145deg, rgba(255, 255, 255, 0.115), rgba(255, 255, 255, 0.025) 32%, rgba(18, 13, 7, 0.72) 74%),
+      rgba(16, 12, 7, 0.58);
     backdrop-filter: blur(32px) saturate(175%);
     -webkit-backdrop-filter: blur(32px) saturate(175%);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.22),
-      inset 0 -1px 0 rgba(103, 232, 249, 0.07),
+      inset 0 -1px 0 rgba(212, 162, 76, 0.09),
       0 30px 90px rgba(0, 0, 0, 0.52),
-      0 0 0 1px rgba(103, 232, 249, 0.025);
+      0 0 0 1px rgba(212, 162, 76, 0.03);
   }
 
   .login-panel::-webkit-scrollbar {
@@ -413,7 +433,7 @@
   .login-panel::before {
     content: '';
     @apply pointer-events-none absolute inset-x-5 top-0 h-px;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), rgba(168, 85, 247, 0.42), transparent);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), rgba(212, 162, 76, 0.48), transparent);
   }
 
   .login-brand-row {
@@ -430,8 +450,8 @@
     text-align: center;
     border: 1px solid rgba(255, 255, 255, 0.05);
     background:
-      radial-gradient(circle at 92% 4%, rgba(56, 189, 248, 0.1), transparent 38%),
-      linear-gradient(135deg, rgba(255, 255, 255, 0.07), rgba(1, 7, 14, 0.38));
+      radial-gradient(circle at 92% 4%, rgba(122, 140, 104, 0.14), transparent 38%),
+      linear-gradient(135deg, rgba(255, 255, 255, 0.07), rgba(10, 8, 4, 0.4));
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 16px 34px rgba(0, 0, 0, 0.16);
     backdrop-filter: blur(18px) saturate(150%);
     -webkit-backdrop-filter: blur(18px) saturate(150%);
@@ -501,9 +521,9 @@
   }
 
   .login-field:focus-within {
-    @apply border-purple-400/45 text-purple-300;
-    background: rgba(168, 85, 247, 0.06);
-    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    @apply border-amber-300/45 text-amber-200;
+    background: rgba(212, 162, 76, 0.07);
+    box-shadow: 0 0 0 3px rgba(212, 162, 76, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.08);
   }
 
   .login-field > svg {
@@ -522,11 +542,16 @@
     @apply border-0 bg-transparent shadow-none;
   }
 
-  /* Ana eylem: hap, neon mor, dışa vuran ışık. */
+  /*
+   * Ana eylem: hap, dövme altın, dışa vuran sıcak ışık.
+   *
+   * Metin BEYAZ DEĞİL. Altın zeminde beyaz ~2,5:1 kontrast veriyor —
+   * okunmuyor. Koyu kahve (#1a1206) aynı zeminde ~9:1.
+   */
   .login-submit {
-    @apply mt-3 flex h-12 w-full items-center justify-center gap-3 rounded-full px-6 text-sm font-bold text-white transition;
-    background: linear-gradient(135deg, #c084fc 0%, #a855f7 45%, #7e22ce 100%);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 0 28px rgba(168, 85, 247, 0.42);
+    @apply mt-3 flex h-12 w-full items-center justify-center gap-3 rounded-full px-6 text-sm font-bold text-[#1a1206] transition;
+    background: linear-gradient(135deg, #e8c67e 0%, #d4a24c 45%, #a9762a 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.32), 0 0 28px rgba(212, 162, 76, 0.42);
   }
 
   .login-submit:hover {
@@ -880,18 +905,18 @@
   @media (max-width: 767px) {
     .login-backdrop {
       /*
-       * Dar ekranda görselin yalnızca ~%26'lık dikey bir şeridi görünür.
-       * %42 kadrajı kapı ve tabelaya düşürüyordu — görselin konusu olan
-       * iki figür (yatayda ~%20-%45 arası) tamamen dışarıda kalıyordu.
-       * %28 şeridi ~%21-%47 aralığına oturtur; ikisi de kadraja girer.
+       * Dar ekranda görselin yalnızca ~%27'lik dikey bir şeridi görünür.
+       * Konu (yüz) yatayda ~%62-70 arasında; %80 kadrajı şeridi
+       * ~%58-85 aralığına oturtur ve yüz tam ortada kalır. Merkez
+       * kadraj burada omuz ve arka plana düşerdi.
        */
-      object-position: 28% center;
+      object-position: 80% center;
     }
 
     .login-overlay {
       background:
-        radial-gradient(circle at 50% 0%, rgba(103, 232, 249, 0.1), transparent 34%),
-        rgba(3, 7, 13, 0.82);
+        radial-gradient(circle at 50% 0%, rgba(212, 162, 76, 0.12), transparent 34%),
+        rgba(8, 6, 4, 0.82);
     }
 
     .login-stage {
@@ -903,9 +928,9 @@
       max-height: calc(100dvh - 24px);
       padding: 24px;
       background:
-        radial-gradient(circle at 12% -8%, rgba(103, 232, 249, 0.16), transparent 34%),
-        linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(4, 13, 23, 0.82) 72%),
-        rgba(4, 12, 22, 0.82);
+        radial-gradient(circle at 12% -8%, rgba(212, 162, 76, 0.18), transparent 34%),
+        linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(18, 13, 7, 0.84) 72%),
+        rgba(16, 12, 7, 0.82);
     }
 
     .login-partner-logo-frame {

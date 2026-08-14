@@ -176,7 +176,7 @@ export function AdminLayout() {
               <i className="rounded-[2px] bg-purple-300" /><i className="rounded-[2px] bg-purple-300" />
             </span>
             <span className={cn("min-w-0 leading-tight", navCollapsed && "md:hidden")}>
-              <strong className="block truncate text-[13px] font-bold tracking-[-0.02em] text-white">Bugs Software</strong>
+              <strong className="block truncate text-[13px] font-bold tracking-[-0.02em] text-white">Arwen Software Solutions</strong>
               <small className="mt-0.5 block truncate text-[8px] font-semibold uppercase tracking-[0.18em] text-slate-600">Control Suite</small>
             </span>
           </div>
@@ -334,9 +334,9 @@ export function AdminLayout() {
               </button>
               <NotificationCenter />
               <div className="hidden h-9 items-center gap-2 rounded-lg border border-white/[0.07] bg-white/[0.025] px-2 lg:flex">
-                <div className="flex h-6 w-6 items-center justify-center rounded-md bg-blue-400 text-[9px] font-black text-white">BS</div>
+                <div className="flex h-6 w-6 items-center justify-center rounded-md bg-blue-400 text-[9px] font-black text-white">AS</div>
                 <div className="leading-tight">
-                  <p className="text-[11px] font-bold tracking-[-0.01em] text-white">Bugs Software</p>
+                  <p className="text-[11px] font-bold tracking-[-0.01em] text-white">Arwen Software Solutions</p>
                   <p className="text-[8px] font-medium uppercase tracking-[0.12em] text-slate-600">TR · Partner</p>
                 </div>
               </div>

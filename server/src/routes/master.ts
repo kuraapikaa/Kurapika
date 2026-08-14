@@ -125,7 +125,7 @@ export async function masterRoutes(app: FastifyInstance) {
        expireDate: expireDate || null,
        themeColor: themeColor || '#8b5cf6',
        logoUrl: logoUrl || '',
-       adminTitle: adminTitle || 'Bugs Software Portal',
+       adminTitle: adminTitle || 'Arwen Software Solutions',
        createdAt: new Date().toISOString()
     };
     

@@ -102,7 +102,7 @@ export function AIPlayerInsight({ data, ipData, bonuslar }: AIPlayerInsightProps
 
                 <div className="flex-1 space-y-3">
                     <div className="flex items-center gap-3 flex-wrap">
-                        <h3 className="text-lg font-semibold text-purple-300 tracking-wide uppercase">Bugs Software AI Analiz Karnesi</h3>
+                        <h3 className="text-lg font-semibold text-purple-300 tracking-wide uppercase">Arwen Software AI Analiz Karnesi</h3>
                         <span className={`px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] rounded-full border ${RISK_SINIFI[risk]}`}>
                             Risk Seviyesi: {risk}
                         </span>
