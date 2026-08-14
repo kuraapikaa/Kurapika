@@ -131,8 +131,8 @@ export function UserSystem() {
 
   return (
     <div className="space-y-6">
-      <section className="grid gap-4 xl:grid-cols-[1.05fr_.95fr]">
-        <div className="rounded-2xl border border-white/5 bg-[#101722]/90 p-5 shadow-2xl shadow-black/20">
+      <section className="grid gap-8 xl:grid-cols-[1.05fr_.95fr]">
+        <div className="rounded-3xl border border-white/[0.05] bg-[#101722]/90 p-8 shadow-2xl shadow-black/20 backdrop-blur-xl">
           <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-cyan-300/80">Kullanıcı sistemi</p>
@@ -141,13 +141,13 @@ export function UserSystem() {
                 Müşteri admini ekip üyeleri için ayrı giriş oluşturur; hangi panel bölümlerini göreceklerini buradan seçer.
               </p>
             </div>
-            <div className="grid grid-cols-2 gap-2 text-right">
+            <div className="grid grid-cols-2 gap-8 text-right">
               <MiniStat label="Aktif" value={activeCount} />
               <MiniStat label="Toplam" value={staffUsers.length} />
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-8 md:grid-cols-2">
             <Field label="Çalışan adı" value={form.name} onChange={(value) => updateForm('name', value)} placeholder="Örn: Operasyon Ekibi" />
             <Field label="Kullanıcı adı" value={form.username} onChange={(value) => updateForm('username', value)} placeholder="ornek.operator" />
             <Field
@@ -158,15 +158,15 @@ export function UserSystem() {
               type="password"
             />
             <div>
-              <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Rol şablonu</label>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Rol şablonu</label>
+              <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
                 {ROLE_OPTIONS.map((role) => (
                   <button
                     key={role.id}
                     type="button"
                     onClick={() => selectPreset(role.id)}
                     className={cn(
-                      'rounded-2xl border px-3 py-2 text-xs font-semibold transition',
+                      'rounded-3xl border px-3 py-2 text-xs font-semibold transition backdrop-blur-xl',
                       form.role === role.id
                         ? 'border-cyan-300/40 bg-[color:var(--panel-info,#64d2ff)] text-[#050609]'
                         : 'border-white/5 bg-black/20 text-slate-400 hover:text-white'
@@ -179,7 +179,7 @@ export function UserSystem() {
             </div>
           </div>
 
-          <div className="mt-5 rounded-2xl border border-white/5 bg-black/20 p-4">
+          <div className="mt-5 rounded-3xl border border-white/[0.05] bg-black/20 p-8 backdrop-blur-xl">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <ShieldCheck size={18} className="text-cyan-300" />
@@ -189,7 +189,7 @@ export function UserSystem() {
                 {form.permissions.length}/{PERMISSIONS.length} açık
               </span>
             </div>
-            <div className="grid gap-2 sm:grid-cols-2">
+            <div className="grid gap-8 sm:grid-cols-2">
               {PERMISSIONS.map((permission) => {
                 const selected = form.permissions.includes(permission.id);
                 return (
@@ -198,11 +198,11 @@ export function UserSystem() {
                     type="button"
                     onClick={() => togglePermission(permission.id)}
                     className={cn(
-                      'flex items-start gap-3 rounded-2xl border p-3 text-left transition',
+                      'flex items-start gap-3 rounded-3xl border p-8 text-left transition backdrop-blur-xl',
                       selected ? 'border-cyan-300/30 bg-[color:var(--panel-info,#64d2ff)]/[0.10]' : 'border-white/5 bg-[#0b111a] hover:border-white/5'
                     )}
                   >
-                    <span className={cn('mt-0.5 grid h-5 w-5 place-items-center rounded-2xl border', selected ? 'border-cyan-300 bg-[color:var(--panel-info,#64d2ff)] text-[#050609]' : 'border-white/5 text-transparent')}>
+                    <span className={cn('mt-0.5 grid h-5 w-5 place-items-center rounded-3xl border backdrop-blur-xl', selected ? 'border-cyan-300 bg-[color:var(--panel-info,#64d2ff)] text-[#050609]' : 'border-white/5 text-transparent')}>
                       <Check size={13} />
                     </span>
                     <span>
@@ -220,7 +220,7 @@ export function UserSystem() {
               type="button"
               onClick={() => updateForm('isActive', !form.isActive)}
               className={cn(
-                'inline-flex h-11 items-center justify-center gap-2 rounded-2xl border px-4 text-sm font-semibold transition',
+                'inline-flex h-11 items-center justify-center gap-2 rounded-3xl border px-4 text-sm font-semibold transition backdrop-blur-xl',
                 form.isActive ? 'border-emerald-400/25 bg-emerald-400/10 text-emerald-200' : 'border-rose-400/25 bg-rose-400/10 text-rose-200'
               )}
             >
@@ -228,7 +228,7 @@ export function UserSystem() {
             </button>
             <div className="flex gap-2">
               {editingId && (
-                <button type="button" onClick={resetForm} className="h-11 rounded-2xl border border-white/5 px-5 text-sm font-bold text-slate-400 transition hover:text-white">
+                <button type="button" onClick={resetForm} className="h-11 rounded-3xl border border-white/[0.05] px-5 text-sm font-bold text-slate-400 transition hover:text-white backdrop-blur-xl">
                   Vazgeç
                 </button>
               )}
@@ -245,7 +245,7 @@ export function UserSystem() {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-white/5 bg-[#101722]/90 p-5">
+        <div className="rounded-3xl border border-white/[0.05] bg-[#101722]/90 p-8 backdrop-blur-xl">
           <div className="mb-4 flex items-center justify-between gap-3">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-400">Ekip listesi</p>
@@ -257,7 +257,7 @@ export function UserSystem() {
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Çalışan ara"
-            className="mb-4 h-11 w-full rounded-2xl border border-white/5 bg-black/25 px-4 text-sm font-semibold text-white outline-none transition focus:border-cyan-300/40"
+            className="mb-4 h-11 w-full rounded-3xl border border-white/[0.05] bg-black/25 px-4 text-sm font-semibold text-white outline-none transition focus:border-cyan-300/40 backdrop-blur-xl"
           />
 
           {isLoading ? (
@@ -267,7 +267,7 @@ export function UserSystem() {
           ) : (
             <div className="space-y-3">
               {filteredUsers.map((user: any) => (
-                <article key={user.id} className="rounded-2xl border border-white/5 bg-black/20 p-4">
+                <article key={user.id} className="rounded-3xl border border-white/[0.05] bg-black/20 p-8 backdrop-blur-xl">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
@@ -276,7 +276,7 @@ export function UserSystem() {
                       </div>
                       <p className="mt-1 text-xs font-semibold text-slate-400">{user.username}</p>
                     </div>
-                    <span className="rounded-full border border-cyan-300/15 bg-[color:var(--panel-info,#64d2ff)]/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-cyan-200">
+                    <span className="rounded-full border border-cyan-300/15 bg-[color:var(--panel-info,#64d2ff)]/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-cyan-200">
                       {ROLE_OPTIONS.find((role) => role.id === user.role)?.label || user.role}
                     </span>
                   </div>
@@ -289,13 +289,13 @@ export function UserSystem() {
                     {(user.permissions || []).length > 5 && <span className="rounded-full bg-white/[0.05] px-2 py-1 text-[10px] font-bold text-slate-400">+{user.permissions.length - 5}</span>}
                   </div>
                   <div className="mt-4 flex gap-2">
-                    <button onClick={() => editUser(user)} className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl border border-white/5 bg-white/[0.03] px-3 py-2 text-xs font-semibold text-slate-200 transition hover:text-white">
+                    <button onClick={() => editUser(user)} className="inline-flex flex-1 items-center justify-center gap-2 rounded-3xl border border-white/[0.05] bg-white/[0.03] px-3 py-2 text-xs font-semibold text-slate-200 transition hover:text-white backdrop-blur-xl">
                       <UserCog size={15} /> Düzenle
                     </button>
                     <button
                       onClick={() => deleteMutation.mutate(user.id)}
                       disabled={deleteMutation.isPending}
-                      className="inline-flex items-center justify-center rounded-2xl border border-rose-400/20 bg-rose-400/10 px-3 py-2 text-rose-200 transition hover:bg-rose-400/15 disabled:opacity-50"
+                      className="inline-flex items-center justify-center rounded-3xl border border-rose-400/20 bg-rose-400/10 px-3 py-2 text-rose-200 transition hover:bg-rose-400/15 disabled:opacity-50 backdrop-blur-xl"
                       aria-label="Çalışanı sil"
                     >
                       <Trash2 size={15} />
@@ -304,7 +304,7 @@ export function UserSystem() {
                 </article>
               ))}
               {filteredUsers.length === 0 && (
-                <div className="rounded-2xl border border-dashed border-white/5 py-12 text-center">
+                <div className="rounded-3xl border border-dashed border-white/[0.05] py-12 text-center backdrop-blur-xl">
                   <KeyRound className="mx-auto mb-3 text-slate-500" />
                   <p className="text-sm font-bold text-slate-400">Henüz çalışan hesabı yok.</p>
                 </div>
@@ -320,13 +320,13 @@ export function UserSystem() {
 function Field({ label, value, onChange, placeholder, type = 'text' }: { label: string; value: string; onChange: (value: string) => void; placeholder?: string; type?: string }) {
   return (
     <div>
-      <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">{label}</label>
+      <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">{label}</label>
       <input
         type={type}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
-        className="h-12 w-full rounded-2xl border border-white/5 bg-black/25 px-4 text-sm font-semibold text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-300/40"
+        className="h-12 w-full rounded-3xl border border-white/[0.05] bg-black/25 px-4 text-sm font-semibold text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-300/40 backdrop-blur-xl"
       />
     </div>
   );
@@ -334,8 +334,8 @@ function Field({ label, value, onChange, placeholder, type = 'text' }: { label: 
 
 function MiniStat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-2xl border border-white/5 bg-black/20 px-4 py-3">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">{label}</p>
+    <div className="rounded-3xl border border-white/[0.05] bg-black/20 px-4 py-3 backdrop-blur-xl">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">{label}</p>
       <p className="mt-1 text-xl font-semibold text-white">{value}</p>
     </div>
   );

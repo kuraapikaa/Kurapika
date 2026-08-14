@@ -45,8 +45,8 @@ function StatusBadge({ value }: { value: unknown }) {
 function SummaryCard({ label, count, amount, tone }: { label: string; count: number; amount: number; tone: StatusTone }) {
   const accent = tone === 'paid' ? 'text-emerald-300' : tone === 'rejected' ? 'text-rose-300' : tone === 'pending' ? 'text-amber-200' : 'text-blue-300';
   return (
-    <Card className="rounded-xl border-white/5 bg-white/[0.02] p-4 shadow-none">
-      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">{label}</p>
+    <Card className="rounded-3xl border-white/[0.05] bg-white/[0.02] p-8 shadow-none backdrop-blur-xl">
+      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">{label}</p>
       <div className="mt-2 flex items-end justify-between gap-3">
         <p className={`text-xl font-bold tabular-nums ${accent}`}>{formatNumber(amount)} <span className="text-xs">TRY</span></p>
         <span className="rounded-md bg-white/[0.04] px-2 py-1 text-xs font-semibold text-slate-300">{count}</span>
@@ -83,7 +83,7 @@ export function WithdrawalRequestsList({ data, isLoading, error, onRetry }: With
   if (error) return <ErrorState message={error.message} onRetry={onRetry} className="rounded-xl" />;
   if (data?.HasError) {
     return (
-      <Card className="rounded-xl border-amber-400/20 bg-amber-400/[0.06] p-6 text-amber-200 shadow-none">
+      <Card className="rounded-3xl border-amber-400/20 bg-amber-400/[0.06] p-8 text-amber-200 shadow-none backdrop-blur-xl">
         <AlertCircle size={28} className="mb-3" />
         <h3 className="font-semibold">Çekim talepleri alınamadı</h3>
         <p className="mt-1 text-sm text-amber-100/70">{data.AlertMessage || 'Lynon isteği şu anda işlenemiyor.'}</p>
@@ -103,9 +103,9 @@ export function WithdrawalRequestsList({ data, isLoading, error, onRetry }: With
 
   return (
     <section className="flex h-full min-h-0 flex-col gap-4">
-      <header className="flex flex-col gap-4 rounded-xl border border-white/5 bg-white/[0.02] p-5 shadow-none sm:flex-row sm:items-center sm:justify-between">
+      <header className="flex flex-col gap-4 rounded-3xl border border-white/[0.05] bg-white/[0.02] p-8 shadow-none sm:flex-row sm:items-center sm:justify-between backdrop-blur-xl">
         <div className="flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-2xl border border-purple-400/25 bg-purple-400/10 text-purple-300">
+          <span className="flex h-10 w-10 items-center justify-center rounded-full border border-purple-400/25 bg-purple-400/10 text-purple-300">
             <Banknote size={19} />
           </span>
           <div>
@@ -114,18 +114,18 @@ export function WithdrawalRequestsList({ data, isLoading, error, onRetry }: With
           </div>
         </div>
         <div className="text-left sm:text-right">
-          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">Genel toplam</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Genel toplam</p>
           <p className="mt-1 text-lg font-bold tabular-nums text-white">{formatNumber(totalAmount)} TRY <span className="ml-2 text-xs text-slate-400">· {requests.length} talep</span></p>
         </div>
       </header>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
         <SummaryCard label="Ödenen" count={paid.length} amount={amountOf(paid)} tone="paid" />
         <SummaryCard label="Bekleyen" count={pending.length} amount={amountOf(pending)} tone="pending" />
         <SummaryCard label="Reddedilen" count={rejected.length} amount={amountOf(rejected)} tone="rejected" />
       </div>
 
-      <Card className="min-h-0 flex-1 overflow-hidden rounded-xl border-white/5 bg-white/[0.02] p-0 shadow-none">
+      <Card className="min-h-0 flex-1 overflow-hidden rounded-3xl border-white/[0.05] bg-white/[0.02] p-0 shadow-none backdrop-blur-xl">
         {isLoading ? (
           <div className="flex min-h-[320px] items-center justify-center">
             <div className="flex items-center gap-3 text-sm text-slate-400">
@@ -142,7 +142,7 @@ export function WithdrawalRequestsList({ data, isLoading, error, onRetry }: With
         ) : (
           <div className="h-full overflow-auto">
             <table className="w-full min-w-[980px] text-left text-xs">
-              <thead className="sticky top-0 z-10 bg-white/5 text-[10px] uppercase tracking-[0.12em] text-slate-400">
+              <thead className="sticky top-0 z-10 bg-white/5 text-[10px] uppercase tracking-[0.2em] text-slate-400">
                 <tr>
                   <th className="px-4 py-3">Kullanıcı</th>
                   <th className="px-4 py-3">Tutar</th>

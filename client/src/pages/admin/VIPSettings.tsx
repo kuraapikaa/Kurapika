@@ -140,15 +140,15 @@ export function VIPSettings() {
   return (
     <div className="mx-auto w-full max-w-[1200px] space-y-5 p-4 pb-28 md:p-6">
       {/* Toolbar */}
-      <div className="flex flex-col gap-3 rounded-2xl border border-white/5 bg-white/[0.02] p-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex gap-1 rounded-2xl border border-white/5 bg-black/30 p-1">
+      <div className="flex flex-col gap-3 rounded-3xl border border-white/[0.05] bg-white/[0.02] p-8 sm:flex-row sm:items-center sm:justify-between backdrop-blur-xl">
+        <div className="flex gap-1 rounded-3xl border border-white/[0.05] bg-black/30 p-1 backdrop-blur-xl">
           {([['settings', Crown, 'Ayarlar'], ['applications', Users, 'Başvurular']] as const).map(([id, Icon, label]) => (
             <button
               key={id}
               type="button"
               onClick={() => setActiveTab(id)}
               className={cn(
-                'flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold uppercase tracking-wider transition',
+                'flex items-center gap-2 rounded-xl px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] transition',
                 activeTab === id ? 'bg-cyan-400 text-[#050609]' : 'text-slate-400 hover:text-white'
               )}
             >
@@ -177,13 +177,13 @@ export function VIPSettings() {
         <div className="space-y-5">
           {/* Genel */}
           <Section title="Genel Ayarlar">
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
               <Toggle label="VIP sekmesini göster" value={config.isActive} onChange={(v) => setConfig({ ...config, isActive: v })} />
               <Toggle label="İstatistikleri göster" value={config.showStats} onChange={(v) => setConfig({ ...config, showStats: v })} />
               <Toggle label="SSS bölümünü göster" value={config.showFaq} onChange={(v) => setConfig({ ...config, showFaq: v })} />
               <Toggle label="Başvuru formunu göster" value={config.formActive} onChange={(v) => setConfig({ ...config, formActive: v })} />
             </div>
-            <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
+            <div className="mt-3 grid grid-cols-1 gap-8 md:grid-cols-2">
               <Field label="Üst başlık (eyebrow)" value={config.eyebrow} onChange={(v) => setConfig({ ...config, eyebrow: v })} />
               <Field label="Başlık" value={config.title} onChange={(v) => setConfig({ ...config, title: v })} />
               <Field label="Açıklama" value={config.description} onChange={(v) => setConfig({ ...config, description: v })} className="md:col-span-2" />
@@ -192,9 +192,9 @@ export function VIPSettings() {
 
           {/* İstatistikler */}
           <Section title="İstatistikler">
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+            <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
               {config.stats.map((stat) => (
-                <div key={stat.id} className="space-y-2 rounded-2xl border border-white/5 bg-black/20 p-3">
+                <div key={stat.id} className="space-y-2 rounded-3xl border border-white/[0.05] bg-black/20 p-8 backdrop-blur-xl">
                   <Field label="Değer" value={stat.value} onChange={(v) => setConfig({ ...config, stats: config.stats.map((s) => s.id === stat.id ? { ...s, value: v } : s) })} />
                   <Field label="Etiket" value={stat.label} onChange={(v) => setConfig({ ...config, stats: config.stats.map((s) => s.id === stat.id ? { ...s, label: v } : s) })} />
                 </div>
@@ -206,7 +206,7 @@ export function VIPSettings() {
           <Section title="VIP Seviyeleri">
             <div className="space-y-2">
               {config.tiers.map((tier) => (
-                <div key={tier.id} className="overflow-hidden rounded-2xl border border-white/5 bg-black/20">
+                <div key={tier.id} className="overflow-hidden rounded-3xl border border-white/[0.05] bg-black/20 backdrop-blur-xl">
                   <button
                     type="button"
                     onClick={() => setExpandedTier(expandedTier === tier.id ? null : tier.id)}
@@ -216,8 +216,8 @@ export function VIPSettings() {
                       <span className="text-xl">{tier.badge}</span>
                       <div className="text-left">
                         <p className="text-sm font-semibold text-white">{tier.label}</p>
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tier.sublabel}</p>
-                        <p className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-cyan-300/80">Min. yatırım: {tier.minDeposit || 'Belirtilmedi'}</p>
+                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500">{tier.sublabel}</p>
+                        <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-cyan-300/80">Min. yatırım: {tier.minDeposit || 'Belirtilmedi'}</p>
                       </div>
                       {tier.popular && <span className="rounded-full bg-[color:var(--panel-warning,#ff9f0a)]/20 px-2 py-0.5 text-[9px] font-semibold text-amber-300">Popüler</span>}
                     </div>
@@ -225,7 +225,7 @@ export function VIPSettings() {
                   </button>
                   {expandedTier === tier.id && (
                     <div className="border-t border-white/5 p-4 space-y-3">
-                      <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+                      <div className="grid grid-cols-2 gap-8 md:grid-cols-5">
                         <Field label="Emoji/Badge" value={tier.badge} onChange={(v) => updateTier(tier.id, 'badge', v)} />
                         <Field label="İsim" value={tier.label} onChange={(v) => updateTier(tier.id, 'label', v)} />
                         <Field label="Alt başlık" value={tier.sublabel} onChange={(v) => updateTier(tier.id, 'sublabel', v)} />
@@ -235,7 +235,7 @@ export function VIPSettings() {
                         </div>
                       </div>
                       <div>
-                        <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500">Avantajlar</p>
+                        <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500">Avantajlar</p>
                         <div className="space-y-2">
                           {tier.perks.map((perk, pi) => (
                             <div key={pi} className="flex gap-2">
@@ -246,12 +246,12 @@ export function VIPSettings() {
                                   perks[pi] = e.target.value;
                                   updateTier(tier.id, 'perks', perks);
                                 }}
-                                className="flex-1 h-9 rounded-2xl border border-white/5 bg-black/30 px-3 text-xs font-bold text-white outline-none placeholder:text-slate-500 focus:border-cyan-400/40"
+                                className="flex-1 h-9 rounded-3xl border border-white/[0.05] bg-black/30 px-3 text-xs font-bold text-white outline-none placeholder:text-slate-500 focus:border-cyan-400/40 backdrop-blur-xl"
                               />
                               <button
                                 type="button"
                                 onClick={() => updateTier(tier.id, 'perks', tier.perks.filter((_, i) => i !== pi))}
-                                className="flex h-9 w-9 items-center justify-center rounded-2xl border border-rose-300/15 bg-rose-400/10 text-rose-300"
+                                className="flex h-9 w-9 items-center justify-center rounded-full border border-rose-300/15 bg-rose-400/10 text-rose-300"
                               >
                                 <Trash2 size={13} />
                               </button>
@@ -260,7 +260,7 @@ export function VIPSettings() {
                           <button
                             type="button"
                             onClick={() => updateTier(tier.id, 'perks', [...tier.perks, ''])}
-                            className="flex h-9 items-center gap-2 rounded-2xl border border-white/5 bg-white/[0.03] px-3 text-xs font-semibold text-slate-400 hover:text-white"
+                            className="flex h-9 items-center gap-2 rounded-3xl border border-white/[0.05] bg-white/[0.03] px-3 text-xs font-semibold text-slate-400 hover:text-white backdrop-blur-xl"
                           >
                             <Plus size={13} /> Avantaj ekle
                           </button>
@@ -277,7 +277,7 @@ export function VIPSettings() {
           <Section title="SSS (Sık Sorulan Sorular)">
             <div className="space-y-2">
               {config.faq.map((item) => (
-                <div key={item.id} className="overflow-hidden rounded-2xl border border-white/5 bg-black/20">
+                <div key={item.id} className="overflow-hidden rounded-3xl border border-white/[0.05] bg-black/20 backdrop-blur-xl">
                   <div className="flex w-full items-center justify-between gap-3 px-4 py-3">
                     <button
                       type="button"
@@ -290,14 +290,14 @@ export function VIPSettings() {
                       <button
                         type="button"
                         onClick={() => setConfig({ ...config, faq: config.faq.filter((f) => f.id !== item.id) })}
-                        className="flex h-7 w-7 items-center justify-center rounded-2xl border border-rose-300/15 bg-rose-400/10 text-rose-300"
+                        className="flex h-7 w-7 items-center justify-center rounded-full border border-rose-300/15 bg-rose-400/10 text-rose-300"
                       >
                         <Trash2 size={12} />
                       </button>
                       <button
                         type="button"
                         onClick={() => setExpandedFaq(expandedFaq === item.id ? null : item.id)}
-                        className="flex h-7 w-7 items-center justify-center rounded-xl text-slate-400 hover:bg-white/[0.04] hover:text-white"
+                        className="flex h-7 w-7 items-center justify-center rounded-full text-slate-400 hover:bg-white/[0.04] hover:text-white"
                       >
                         {expandedFaq === item.id ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
                       </button>
@@ -314,7 +314,7 @@ export function VIPSettings() {
               <button
                 type="button"
                 onClick={() => setConfig({ ...config, faq: [...config.faq, { id: `f${Date.now()}`, q: '', a: '' }] })}
-                className="flex h-9 items-center gap-2 rounded-2xl border border-white/5 bg-white/[0.03] px-4 text-xs font-semibold text-slate-400 hover:text-white"
+                className="flex h-9 items-center gap-2 rounded-3xl border border-white/[0.05] bg-white/[0.03] px-4 text-xs font-semibold text-slate-400 hover:text-white backdrop-blur-xl"
               >
                 <Plus size={13} /> Soru ekle
               </button>
@@ -323,7 +323,7 @@ export function VIPSettings() {
 
           {/* Form */}
           <Section title="Başvuru Formu Metinleri">
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
               <Field label="Form başlığı" value={config.formTitle} onChange={(v) => setConfig({ ...config, formTitle: v })} />
               <Field label="Buton metni" value={config.formButtonText} onChange={(v) => setConfig({ ...config, formButtonText: v })} />
               <Field label="Başarı mesajı" value={config.formSuccessMessage} onChange={(v) => setConfig({ ...config, formSuccessMessage: v })} className="md:col-span-2" />
@@ -337,12 +337,12 @@ export function VIPSettings() {
           {formsQuery.isLoading ? (
             <div className="flex h-40 items-center justify-center"><Loader2 className="animate-spin text-white/40" size={24} /></div>
           ) : vipApps.length === 0 ? (
-            <div className="flex h-40 flex-col items-center justify-center gap-2 rounded-2xl border border-white/5 bg-white/[0.02]">
+            <div className="flex h-40 flex-col items-center justify-center gap-2 rounded-3xl border border-white/[0.05] bg-white/[0.02] backdrop-blur-xl">
               <Crown className="text-slate-500" size={28} />
               <p className="text-sm font-bold text-slate-500">Henüz VIP başvurusu yok</p>
             </div>
           ) : (
-            <div className="overflow-hidden rounded-2xl border border-white/5">
+            <div className="overflow-hidden rounded-3xl border border-white/[0.05] backdrop-blur-xl">
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-white/5 bg-black/30">
@@ -363,7 +363,7 @@ export function VIPSettings() {
                         <select
                           value={app.status}
                           onChange={(e) => updateStatus.mutate({ id: app.id, status: e.target.value })}
-                          className="rounded-2xl border border-white/5 bg-black/30 px-2 py-1 text-xs font-bold text-white outline-none"
+                          className="rounded-3xl border border-white/[0.05] bg-black/30 px-2 py-1 text-xs font-bold text-white outline-none backdrop-blur-xl"
                         >
                           <option value="pending">Bekliyor</option>
                           <option value="approved">Onaylandı</option>
@@ -374,7 +374,7 @@ export function VIPSettings() {
                         <button
                           type="button"
                           onClick={() => deleteApp.mutate(app.id)}
-                          className="flex h-7 w-7 items-center justify-center rounded-2xl border border-rose-300/15 bg-rose-400/10 text-rose-300 hover:bg-rose-400/20"
+                          className="flex h-7 w-7 items-center justify-center rounded-full border border-rose-300/15 bg-rose-400/10 text-rose-300 hover:bg-rose-400/20"
                         >
                           <Trash2 size={12} />
                         </button>
@@ -397,7 +397,7 @@ export function VIPSettings() {
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-4 md:p-5">
+    <div className="rounded-3xl border border-white/[0.05] bg-white/[0.02] p-8 md:p-8 backdrop-blur-xl">
       <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">{title}</p>
       {children}
     </div>
@@ -406,7 +406,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function Toggle({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
   return (
-    <label className="flex cursor-pointer items-center justify-between gap-3 rounded-2xl border border-white/5 bg-black/20 px-3 py-2.5">
+    <label className="flex cursor-pointer items-center justify-between gap-3 rounded-3xl border border-white/[0.05] bg-black/20 px-3 py-2.5 backdrop-blur-xl">
       <span className="text-xs font-bold text-slate-200">{label}</span>
       <button
         type="button"
@@ -420,10 +420,10 @@ function Toggle({ label, value, onChange }: { label: string; value: boolean; onC
 }
 
 function Field({ label, value, onChange, className, multiline }: { label: string; value: string; onChange: (v: string) => void; className?: string; multiline?: boolean }) {
-  const base = 'w-full rounded-2xl border border-white/5 bg-black/30 px-3 text-xs font-bold text-white outline-none placeholder:text-slate-500 focus:border-cyan-400/40';
+  const base = 'w-full rounded-3xl border border-white/[0.05] bg-black/30 px-3 text-xs font-bold text-white outline-none placeholder:text-slate-500 focus:border-cyan-400/40 backdrop-blur-xl';
   return (
     <div className={cn('space-y-1', className)}>
-      <p className="text-[9px] font-semibold uppercase tracking-wider text-slate-500">{label}</p>
+      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500">{label}</p>
       {multiline ? (
         <textarea value={value} onChange={(e) => onChange(e.target.value)} rows={3} className={cn(base, 'py-2 resize-none')} />
       ) : (

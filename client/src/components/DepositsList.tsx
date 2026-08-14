@@ -21,7 +21,7 @@ export function DepositsList({ data, isLoading, error }: DepositsListProps) {
 
     if (error) {
         return (
-            <Card className={cn('rounded-2xl border-rose-400/25 bg-rose-400/[0.08] p-8 text-center text-rose-300')}>
+            <Card className={cn('rounded-3xl border-rose-400/25 bg-rose-400/[0.08] p-8 text-center text-rose-300 backdrop-blur-xl')}>
                 <AlertCircle size={48} className="mx-auto mb-4 opacity-30" />
                 <h3 className="text-lg font-bold">Yatırım Listesi Alınamadı</h3>
                 <p className="mt-2 text-sm opacity-80">{error.message}</p>
@@ -31,7 +31,7 @@ export function DepositsList({ data, isLoading, error }: DepositsListProps) {
 
     if (data?.HasError) {
         return (
-            <Card className={cn('rounded-2xl border-amber-400/25 bg-amber-400/[0.08] p-8 text-center text-amber-300')}>
+            <Card className={cn('rounded-3xl border-amber-400/25 bg-amber-400/[0.08] p-8 text-center text-amber-300 backdrop-blur-xl')}>
                 <AlertCircle size={48} className="mx-auto mb-4 opacity-30" />
                 <h3 className="text-lg font-bold">Sistem Uyarısı</h3>
                 <p className="mt-2 text-sm opacity-80">{data.AlertMessage || 'İstek şu an işlenemiyor.'}</p>
@@ -102,7 +102,7 @@ export function DepositsList({ data, isLoading, error }: DepositsListProps) {
             const durum = islemDurumu(row);
             return (
                 <span className={cn(
-                    'inline-block rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider ring-1 whitespace-nowrap',
+                    'inline-block rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] ring-1 whitespace-nowrap',
                     DURUM_SINIFI[durum],
                 )} title={durumAyrintisi(row)}>
                     {durumAyrintisi(row)}
@@ -162,7 +162,7 @@ export function DepositsList({ data, isLoading, error }: DepositsListProps) {
                 <div className="flex items-center gap-4">
                     <div className="relative group">
                         <div className="absolute -inset-1 rounded-xl bg-emerald-500/20 blur opacity-75 animate-pulse" />
-                        <div className="relative rounded-xl bg-black border border-emerald-500/20 p-3.5 text-emerald-400 shadow-2xl">
+                        <div className="relative rounded-3xl bg-black border border-emerald-500/20 p-8.5 text-emerald-400 shadow-2xl backdrop-blur-xl">
                             <Wallet size={24} />
                         </div>
                     </div>
@@ -212,7 +212,7 @@ export function DepositsList({ data, isLoading, error }: DepositsListProps) {
                                 onClick={() => setSuzgec(id)}
                                 aria-pressed={suzgec === id}
                                 className={cn(
-                                    'rounded-full px-4 py-2 text-[10px] font-bold uppercase tracking-wider transition-colors',
+                                    'rounded-full px-4 py-2 text-[10px] font-bold uppercase tracking-[0.2em] transition-colors',
                                     suzgec === id
                                         ? 'bg-white/10 text-white'
                                         : 'text-slate-400 hover:bg-white/5',
@@ -229,19 +229,19 @@ export function DepositsList({ data, isLoading, error }: DepositsListProps) {
             </header>
 
             {isLoading ? (
-                <div className="flex flex-1 flex-col items-center justify-center gap-6 rounded-2xl border border-white/5 bg-white/[0.02] min-h-[400px]">
+                <div className="flex flex-1 flex-col items-center justify-center gap-6 rounded-3xl border border-white/[0.05] bg-white/[0.02] min-h-[400px] backdrop-blur-xl">
                     <div className="h-12 w-12 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent" />
                     <p className="text-sm font-bold text-slate-400 uppercase tracking-wider">Yatırım verileri senkronize ediliyor...</p>
                 </div>
             ) : (
-                <Card className="premium-card flex flex-1 flex-col overflow-hidden rounded-2xl p-0 backdrop-blur-md bg-white/[0.02] border-white/5">
+                <Card className="premium-card flex flex-1 flex-col overflow-hidden rounded-3xl p-0 backdrop-blur-xl bg-white/[0.02] border-white/[0.05]">
                     <div className="overflow-auto scrollbar-hide relative h-full">
                         <table className="w-full text-sm border-separate border-spacing-0">
                             <thead className="sticky top-0 z-20 bg-[#0b0a10]/80 backdrop-blur-xl border-b border-white/5">
                                 <tr>
                                     {allKeys.map((key, idx) => (
                                         <th key={key} className={cn(
-                                            "px-3 py-2.5 font-semibold text-[10px] uppercase tracking-[0.15em] text-slate-400 text-left whitespace-nowrap border-b border-white/5",
+                                            "px-3 py-2.5 font-semibold text-[10px] uppercase tracking-[0.2em] text-slate-400 text-left whitespace-nowrap border-b border-white/5",
                                             idx === 0 && "pl-8"
                                         )}>
                                             {columnLabels[key] ?? key}

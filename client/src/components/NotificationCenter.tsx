@@ -36,7 +36,7 @@ export function NotificationCenter() {
                 type="button"
                 onClick={handleToggle}
                 className={cn(
-                    "relative flex h-9 w-9 items-center justify-center rounded-lg border border-transparent transition-colors duration-150 group",
+                    "relative flex h-9 w-9 items-center justify-center rounded-full border border-transparent transition-colors duration-150 group",
                     isOpen ? "bg-white/10 text-white" : "hover:bg-white/[0.04] text-slate-400 hover:text-slate-300"
                 )}
             >
@@ -56,7 +56,7 @@ export function NotificationCenter() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.95, y: 10 }}
                         transition={{ duration: 0.2 }}
-                        className="absolute right-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-xl border border-white/5 bg-white/5 p-0 shadow-2xl"
+                        className="absolute right-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-3xl border border-white/[0.05] bg-white/5 p-0 shadow-2xl backdrop-blur-xl"
                     >
                         <div className="flex items-center justify-between border-b border-white/5 bg-[#0a0e15] p-3">
                             <h3 className="font-semibold text-white flex items-center gap-2">
@@ -115,7 +115,7 @@ export function NotificationCenter() {
                                             )}
 
                                             <div className={cn(
-                                                "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
+                                                "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
                                                 notif.type === 'deposit' ? "bg-emerald-500/10 text-emerald-400" : "bg-amber-500/10 text-amber-400"
                                             )}>
                                                 {notif.type === 'deposit' ? <ArrowUpFromLine size={18} /> : <ArrowDownToLine size={18} />}

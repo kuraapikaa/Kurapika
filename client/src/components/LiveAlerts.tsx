@@ -37,7 +37,7 @@ export function LiveAlerts() {
                 <div className="flex items-center gap-3">
                     <div className="relative">
                         <div className="absolute inset-0 bg-rose-500 rounded-lg blur-lg opacity-40 animate-pulse" />
-                        <div className="relative rounded-xl bg-rose-500/10 p-2 text-rose-500 border border-rose-500/20">
+                        <div className="relative rounded-3xl bg-rose-500/10 p-2 text-rose-500 border border-rose-500/20 backdrop-blur-xl">
                             <Bell size={18} className="animate-bounce" />
                         </div>
                     </div>
@@ -96,7 +96,7 @@ export function LiveAlerts() {
                                     {alert.clientId && (
                                         <Link
                                             to={`/oyuncu/${alert.clientId}/${alert.clientLogin}`}
-                                            className="h-8 w-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all border border-white/5"
+                                            className="h-8 w-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all border border-white/5"
                                         >
                                             <ExternalLink size={14} />
                                         </Link>

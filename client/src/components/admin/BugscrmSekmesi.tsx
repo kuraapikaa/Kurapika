@@ -55,9 +55,9 @@ function KapasiteKarti({
   durum?: { ok: boolean; etiket: string };
 }) {
   return (
-    <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-4">
+    <div className="rounded-3xl border border-white/[0.05] bg-white/[0.02] p-8 backdrop-blur-xl">
       <div className="flex items-start justify-between gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-500/10 text-cyan-300">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-cyan-500/10 text-cyan-300">
           <Ikon size={18} />
         </span>
         {durum && (
@@ -123,7 +123,7 @@ export function BugscrmSekmesi() {
 
   return (
     <div className="space-y-5 animate-in fade-in duration-300">
-      <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5">
+      <div className="rounded-3xl border border-white/[0.05] bg-white/[0.02] p-8 backdrop-blur-xl">
         <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-cyan-300/70">BugsCRM Entegrasyonu</p>
         <h3 className="mt-1 text-lg font-semibold text-white">Tıklama ve dönüşüm izleme</h3>
         <p className="mt-1 text-xs font-medium leading-relaxed text-slate-400">
@@ -133,7 +133,7 @@ export function BugscrmSekmesi() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
         <KapasiteKarti
           ikon={ShieldCheck}
           baslik="Bağlantı Durumu"
@@ -165,17 +165,17 @@ export function BugscrmSekmesi() {
         />
       </div>
 
-      <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-4">
+      <div className="rounded-3xl border border-white/[0.05] bg-white/[0.02] p-8 backdrop-blur-xl">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Postback URL</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Postback URL</p>
             <code className="mt-1 block truncate text-xs font-semibold text-white">{postbackUrl}</code>
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <button
               type="button"
               onClick={postbackUrlKopyala}
-              className="inline-flex h-9 items-center gap-1.5 rounded-2xl border border-white/5 px-3 text-[11px] font-bold text-slate-400 transition hover:text-white"
+              className="inline-flex h-9 items-center gap-1.5 rounded-3xl border border-white/[0.05] px-3 text-[11px] font-bold text-slate-400 transition hover:text-white backdrop-blur-xl"
             >
               <Copy size={13} /> {kopyalandi ? 'Kopyalandı' : 'Kopyala'}
             </button>
@@ -197,7 +197,7 @@ export function BugscrmSekmesi() {
         )}
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-white/5">
+      <div className="overflow-hidden rounded-3xl border border-white/[0.05] backdrop-blur-xl">
         <div className="border-b border-white/5 bg-black/20 px-4 py-3">
           <h4 className="text-sm font-semibold text-white">Son Tıklama / Dönüşüm Kayıtları</h4>
           <p className="mt-0.5 text-[11px] font-medium text-slate-400">En yeni 50 postback.</p>
@@ -215,7 +215,7 @@ export function BugscrmSekmesi() {
               const Ikon = etiket.ikon;
               return (
                 <div key={`${kayit.clickId}-${kayit.olayTuru}`} className="flex items-center gap-3 px-4 py-3">
-                  <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${etiket.renk}`}>
+                  <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${etiket.renk}`}>
                     <Ikon size={14} />
                   </span>
                   <div className="min-w-0 flex-1">

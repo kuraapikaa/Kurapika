@@ -79,7 +79,7 @@ export function BetReportList({
 
   if (error) {
     return (
-      <div className="rounded-xl border border-rose-500/20 bg-rose-500/5 p-8 text-center text-rose-400 backdrop-blur-xl">
+      <div className="rounded-3xl border border-rose-500/20 bg-rose-500/5 p-8 text-center text-rose-400 backdrop-blur-xl">
         <ShieldAlert size={48} className="mx-auto mb-4 opacity-20" />
         <h3 className="text-lg font-bold">Veri İletişim Hatası</h3>
         <p className="mt-2 text-sm opacity-70">{error.message}</p>
@@ -242,7 +242,7 @@ export function BetReportList({
                             type="button"
                             onClick={() => setSelectionsModalBetId(isExpanded ? null : Number(r.Id))}
                             className={cn(
-                              "flex h-8 w-8 items-center justify-center rounded-lg border transition-all",
+                              "flex h-8 w-8 items-center justify-center rounded-full border transition-all",
                               isExpanded ? "bg-cyan-500 border-cyan-400 text-white" : "bg-white/[0.02] border-white/5 text-slate-400 hover:border-cyan-500/30 hover:text-cyan-400"
                             )}
                           >
@@ -263,7 +263,7 @@ export function BetReportList({
                               animate={{ opacity: 1, height: 'auto' }}
                               className="bg-black/40 backdrop-blur-3xl p-8"
                             >
-                              <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/[0.02] overflow-hidden">
+                              <div className="rounded-3xl border border-cyan-500/20 bg-cyan-500/[0.02] overflow-hidden backdrop-blur-xl">
                                 <div className="flex items-center justify-between px-8 py-5 border-b border-cyan-500/10 bg-black/20">
                                   <div className="flex items-center gap-3">
                                     <div className="p-2 rounded-lg bg-cyan-500/10 text-cyan-400">
@@ -278,13 +278,13 @@ export function BetReportList({
                                       <div className="h-8 w-8 animate-spin rounded-full border-2 border-cyan-500 border-t-transparent" />
                                     </div>
                                   ) : (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                       {selectionsQuery.data?.Data?.map((sel, sIdx) => {
                                         const s = sel as any;
                                         const isWon = /WON|KAZAN/i.test(s.StateName);
                                         const isLost = /LOST|KAYIP/i.test(s.StateName);
                                         return (
-                                          <div key={sIdx} className="rounded-xl bg-white/[0.02] border border-white/5 p-5">
+                                          <div key={sIdx} className="rounded-3xl bg-white/[0.02] border border-white/[0.05] p-8 backdrop-blur-xl">
                                             <div className="flex items-start justify-between gap-4">
                                               <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2 mb-1">
@@ -292,7 +292,7 @@ export function BetReportList({
                                                   <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider truncate">{s.SportName} · {s.CompetitionName}</span>
                                                 </div>
                                                 <p className="text-sm font-semibold text-white uppercase tracking-tight truncate mb-3">{s.MatchName}</p>
-                                                <div className="grid grid-cols-2 gap-4">
+                                                <div className="grid grid-cols-2 gap-8">
                                                   <div className="flex flex-col">
                                                     <span className="text-[8px] font-semibold text-slate-500 uppercase">Piyasa</span>
                                                     <span className="text-[11px] font-bold text-slate-300 truncate">{s.MarketName}</span>
@@ -309,7 +309,7 @@ export function BetReportList({
                                                   <p className="text-lg font-semibold text-white tabular-nums">{formatNumber(s.Price)}</p>
                                                 </div>
                                                 <span className={cn(
-                                                  "px-2 py-0.5 rounded text-[9px] font-semibold uppercase tracking-wider border",
+                                                  "px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-[0.2em] border",
                                                   isWon ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" :
                                                     isLost ? "bg-rose-500/10 text-rose-500 border-rose-500/20" :
                                                       "bg-[rgba(242,244,248,0.08)] text-slate-400 border-white/5"

@@ -75,10 +75,10 @@ export function SummaryCards({ data, isLoading, error, onRetry }: SummaryCardsPr
   if (isLoading || !data?.Data) {
     return (
       <div className="space-y-6">
-        <div className="h-[132px] animate-pulse rounded-2xl border border-white/5 bg-white/[0.02]" />
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="h-[132px] animate-pulse rounded-3xl border border-white/[0.05] bg-white/[0.02] backdrop-blur-xl" />
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 xl:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-[140px] animate-pulse rounded-2xl border border-white/5 bg-white/[0.02]" />
+            <div key={i} className="h-[140px] animate-pulse rounded-3xl border border-white/[0.05] bg-white/[0.02] backdrop-blur-xl" />
           ))}
         </div>
       </div>
@@ -145,7 +145,7 @@ export function SummaryCards({ data, isLoading, error, onRetry }: SummaryCardsPr
         <AkisSeridi yatirim={d.Deposits} cekim={d.Withdrawals} />
       </motion.div>
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 xl:grid-cols-4">
         {anaOlculer.map((olcu, i) => (
           <motion.div
             key={olcu.etiket}
@@ -158,7 +158,7 @@ export function SummaryCards({ data, isLoading, error, onRetry }: SummaryCardsPr
         ))}
       </div>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
         {[
           { etiket: 'Net Gelir', deger: net == null ? '—' : isaretliYaz(net), alt: marj != null ? `Marj %${marj.toFixed(1)}` : 'Marj hesaplanamıyor', simge: <Wallet size={15} />, vurgu: ((net ?? 0) >= 0 ? 'giris' : 'cikis') as PanoVurgu, veriYok: net == null },
           { etiket: 'Bahis Yapan Oyuncu', deger: sayiYaz(d.PlayersLoggedIn), alt: `${sayiYaz(bul('bahisAdedi'))} bahis`, simge: <Users size={15} />, vurgu: 'hacim' as PanoVurgu, veriYok: d.PlayersLoggedIn == null },
@@ -180,9 +180,9 @@ export function SummaryCards({ data, isLoading, error, onRetry }: SummaryCardsPr
         * gösteriliyordu; kalanı hiç görünmüyordu.
         */}
       {gruplar.map((grup) => (
-        <PanoKart key={grup} className="p-6">
+        <PanoKart key={grup} className="p-8">
           <PanoBolum baslik={GRUP_ADI[grup]} vurgu={GRUP_VURGU[grup]} />
-          <div className="grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-3 xl:grid-cols-5">
+          <div className="grid grid-cols-2 gap-x-8 gap-y-8 sm:grid-cols-3 xl:grid-cols-5">
             {metrikler
               .filter((m) => m.grup === grup)
               .map((m) => (
@@ -210,7 +210,7 @@ export function SummaryCards({ data, isLoading, error, onRetry }: SummaryCardsPr
       ))}
 
       {(d.PlayersBalance != null || d.Aralik || (d.taninmayanAlanlar?.length ?? 0) > 0) && (
-        <PanoKart className="flex flex-wrap items-center justify-between gap-6 px-6 py-5">
+        <PanoKart className="flex flex-wrap items-center justify-between gap-8 px-8 py-6">
           <p className="text-sm text-slate-400">
             Oyuncu gerçek bakiyesi{' '}
             <span className="font-semibold tabular-nums text-white">{sayiYaz(d.PlayersBalance, 'para')}</span>

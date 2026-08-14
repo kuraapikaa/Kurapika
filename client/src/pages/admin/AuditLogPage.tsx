@@ -42,7 +42,7 @@ export function AuditLogPage() {
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="flex items-center gap-2.5 text-xl font-semibold text-white">
-            <span className="grid h-9 w-9 place-items-center rounded-2xl border border-purple-400/20 bg-purple-400/10">
+            <span className="grid h-9 w-9 place-items-center rounded-full border border-purple-400/20 bg-purple-400/10">
               <FileText size={18} className="text-purple-300" />
             </span>
             Audit kaydı
@@ -54,7 +54,7 @@ export function AuditLogPage() {
         </Button>
       </header>
 
-      <Card className="overflow-hidden rounded-2xl border-white/5 bg-white/[0.02] p-0 backdrop-blur-xl">
+      <Card className="overflow-hidden rounded-3xl border-white/[0.05] bg-white/[0.02] p-0 backdrop-blur-xl">
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
             <LoadingState label="Yükleniyor..." />
@@ -66,7 +66,7 @@ export function AuditLogPage() {
             <table className="w-full bg-transparent text-left text-sm">
               {/* Yapisik zemin yerine cam: sticky baslik alttaki satirlari
                   bulaniklastirarak ustte kaliyor. */}
-              <thead className="sticky top-0 border-b border-white/5 bg-[#0b0a10]/80 text-xs uppercase tracking-wider text-slate-500 backdrop-blur-xl">
+              <thead className="sticky top-0 border-b border-white/5 bg-[#0b0a10]/80 text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500 backdrop-blur-xl">
                 <tr>
                   <th className="px-5 py-3 font-semibold">Tarih</th>
                   <th className="px-5 py-3 font-semibold">Kullanıcı</th>

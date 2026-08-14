@@ -43,7 +43,7 @@ export function LiveRadar() {
 
                 <div className="flex items-center gap-4 rounded-full border border-white/5 bg-white/[0.02] p-2 backdrop-blur-xl">
                     <div className="flex items-center gap-2 border-r border-white/5 px-3">
-                        <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Min. Tutar</span>
+                        <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Min. Tutar</span>
                         <select className="rounded-full border border-white/5 bg-black/30 px-3 py-1 text-sm text-slate-200 outline-none transition focus:border-purple-400/40"
                             value={minStake} onChange={(e) => setMinStake(Number(e.target.value))}>
                             <option value={10}>10 TRY</option>
@@ -55,7 +55,7 @@ export function LiveRadar() {
                         </select>
                     </div>
                     <div className="flex items-center gap-2 pr-2">
-                        <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Oto. Yenileme</span>
+                        <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Oto. Yenileme</span>
                         <div className={`w-10 h-5 rounded-full relative cursor-pointer transition-colors ${autoRefresh ? 'bg-rose-500' : 'bg-white/10'}`} onClick={() => setAutoRefresh(!autoRefresh)}>
                             <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${autoRefresh ? 'translate-x-5' : 'translate-x-0'}`} />
                         </div>
@@ -64,7 +64,7 @@ export function LiveRadar() {
             </div>
 
             {isError ? (
-                <div className="rounded-2xl border border-rose-500/20 bg-rose-500/10 p-8 flex items-center gap-4 justify-center">
+                <div className="rounded-3xl border border-rose-500/20 bg-rose-500/10 p-8 flex items-center gap-4 justify-center backdrop-blur-xl">
                     <AlertCircle className="text-rose-400 shrink-0" size={32} />
                     <div>
                         <h3 className="text-rose-400 font-bold mb-1">Radar Bağlantısı Koptu</h3>
@@ -72,7 +72,7 @@ export function LiveRadar() {
                     </div>
                 </div>
             ) : radarBets.length === 0 ? (
-                <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-24 flex flex-col items-center justify-center gap-4">
+                <div className="rounded-3xl border border-white/[0.05] bg-white/[0.02] p-24 flex flex-col items-center justify-center gap-4 backdrop-blur-xl">
                     {siteBetsQuery.isLoading ? (
                         <>
                             <Loader2 className="animate-spin text-rose-500" size={48} />
@@ -87,7 +87,7 @@ export function LiveRadar() {
                     )}
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                     <AnimatePresence>
                         {radarBets.map(bet => {
                             const isHighStake = bet.Amount >= 5000;
@@ -104,14 +104,14 @@ export function LiveRadar() {
                                 >
                                     {isHighStake && (
                                         <div className="absolute top-0 right-0 p-2">
-                                            <div className="bg-amber-500/20 text-amber-400 text-[9px] font-semibold uppercase tracking-widest px-2 py-1 rounded-bl-lg flex items-center gap-1">
+                                            <div className="bg-amber-500/20 text-amber-400 text-[10px] font-semibold uppercase tracking-[0.2em] px-2 py-1 rounded-bl-lg flex items-center gap-1">
                                                 <Flame size={10} /> Balina Seçimi
                                             </div>
                                         </div>
                                     )}
                                     <div className="flex justify-between items-start mb-4">
                                         <div>
-                                            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-0.5">Oyuncu</p>
+                                            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400 mb-0.5">Oyuncu</p>
                                             <p className="text-sm font-bold text-white flex items-center gap-2">
                                                 {bet.ClientFirstName ?? '-'} {bet.ClientLastName?.slice(0, 1) ?? ''}.
                                                 <a href={`/#/oyuncu/${bet.ClientId}/${bet.ClientLogin || bet.ClientFirstName || 'Oyuncu'}`} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-purple-300 transition-colors font-mono text-xs">
@@ -124,15 +124,15 @@ export function LiveRadar() {
                                         )}
                                     </div>
 
-                                    <div className="mb-4 flex items-end justify-between rounded-2xl border border-white/5 bg-black/25 p-3">
+                                    <div className="mb-4 flex items-end justify-between rounded-3xl border border-white/[0.05] bg-black/25 p-8 backdrop-blur-xl">
                                         <div>
-                                            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-1">Tutar</p>
+                                            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400 mb-1">Tutar</p>
                                             <p className={`font-mono text-2xl font-bold ${isHighStake ? 'text-amber-300' : 'text-white'}`}>
                                                 {formatNumber(bet.Amount)} <span className="text-sm">TRY</span>
                                             </p>
                                         </div>
                                         <div className="text-right">
-                                            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-1">Total Oran</p>
+                                            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400 mb-1">Total Oran</p>
                                             <p className="font-bold text-purple-300">@{Number(bet.Price ?? 0).toFixed(2)}</p>
                                         </div>
                                     </div>

@@ -36,7 +36,7 @@ export function BetReportsSection({
         <div className="flex items-center gap-4">
           <div className="relative group">
             <div className="absolute -inset-1 rounded-xl bg-cyan-500/20 blur opacity-75 animate-pulse" />
-            <div className="relative rounded-xl bg-black border border-cyan-500/20 p-3.5 text-cyan-400 shadow-2xl">
+            <div className="relative rounded-3xl bg-black border border-cyan-500/20 p-8.5 text-cyan-400 shadow-2xl backdrop-blur-xl">
               <BarChart3 size={24} />
             </div>
           </div>
@@ -49,7 +49,7 @@ export function BetReportsSection({
           </div>
         </div>
 
-        <div className="inline-flex p-1.5 rounded-xl bg-black/40 backdrop-blur-3xl border border-white/5 relative gap-1">
+        <div className="inline-flex p-1.5 rounded-3xl bg-black/40 backdrop-blur-xl border border-white/[0.05] relative gap-1">
           {[
             { id: 'summary' as const, label: 'ÖZET ANALİZ', icon: LayoutGrid },
             { id: 'list' as const, label: 'DETAYLI LİSTE', icon: List },
@@ -65,7 +65,7 @@ export function BetReportsSection({
               {subTab === id && (
                 <motion.div
                   layoutId="betReportsSubTab"
-                  className="absolute inset-0 bg-cyan-500/10 border border-cyan-500/20 rounded-xl neon-glow-cyan"
+                  className="absolute inset-0 bg-cyan-500/10 border border-cyan-500/20 rounded-3xl neon-glow-cyan backdrop-blur-xl"
                 />
               )}
               <Icon size={14} className={cn("relative z-10 transition-transform group-hover:scale-110", subTab === id ? "text-cyan-400" : "text-slate-500")} />

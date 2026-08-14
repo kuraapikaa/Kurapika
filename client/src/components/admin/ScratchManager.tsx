@@ -97,10 +97,10 @@ export function ScratchManager({ config, bonusOptions, onUpdate }: ScratchManage
         }
       />
 
-      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-5">
           <Bolum baslik="Oyun kuralları" aciklama="Her oyunda bu oranla ödül çekilişi yapılır.">
-            <div className="grid grid-cols-1 gap-4 px-5 py-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-8 px-5 py-4 sm:grid-cols-2">
               <Alan etiket="Kazanma oranı" ipucu="Kalan oyunlar boş çıkar; havuza boş ödül eklemeye gerek yok.">
                 <AlanIcinde ek="%">
                   <Girdi
@@ -219,7 +219,7 @@ export function ScratchManager({ config, bonusOptions, onUpdate }: ScratchManage
 
           {bonuslu.length > 0 && (
             <Bolum baslik="Lynon parametreleri" aciklama="Bonusa bağlı ödüller için atama değerleri.">
-              <div className="grid grid-cols-1 gap-3 px-5 py-4 lg:grid-cols-2">
+              <div className="grid grid-cols-1 gap-8 px-5 py-4 lg:grid-cols-2">
                 {bonuslu.map((odul) => (
                   <LynonAssignmentValuesField
                     key={`assignment-${odul.id}`}

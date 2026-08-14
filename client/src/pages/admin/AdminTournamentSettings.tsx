@@ -206,7 +206,7 @@ export function AdminTournamentSettings() {
 
       {mesaj && <Uyari tur={mesaj.tur === 'basari' ? 'bilgi' : 'hata'}>{mesaj.metin}</Uyari>}
 
-      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
+      <div className="grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="space-y-5">
           {DONEMLER.map((donem) => {
             const cfg = { ...VARSAYILAN[donem.id], ...(settings[donem.id] || {}) };
@@ -221,7 +221,7 @@ export function AdminTournamentSettings() {
                     etiket="Yayında"
                     aciklama="Kapalıyken lobide bu etap sekmesi pasif görünür."
                   />
-                  <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-4">
+                  <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 xl:grid-cols-4">
                     <Alan etiket="Ödül havuzu" ipucu="Lobide yazdığınız gibi görünür.">
                       <Girdi
                         modul={MODUL}
@@ -266,7 +266,7 @@ export function AdminTournamentSettings() {
                       avcilarini elemek icin. */}
                   <div className="space-y-4 border-t border-white/5 pt-4">
                     <div>
-                      <h4 className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-200">
+                      <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-200">
                         Skorlama
                       </h4>
                       <p className="mt-1 text-[11px] font-medium text-slate-400">
@@ -274,7 +274,7 @@ export function AdminTournamentSettings() {
                       </p>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                    <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
                       <Alan etiket="Calculation Formula" ipucu="Skorun neye göre hesaplanacağı.">
                         <Secim
                           modul={MODUL}
@@ -303,7 +303,7 @@ export function AdminTournamentSettings() {
                       </Alan>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                    <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 xl:grid-cols-4">
                       <Alan etiket="Single Min Bet Amount" ipucu="Ortalama bahsi bunun altında kalan oyuncu elenir. 0 = sınırsız.">
                         <Girdi
                           modul={MODUL}

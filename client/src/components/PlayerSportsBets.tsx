@@ -69,7 +69,7 @@ export function PlayerSportsBets({ clientId }: PlayerSportsBetsProps) {
 
     if (isError) {
         return (
-            <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-6 flex items-start gap-4">
+            <div className="rounded-3xl border border-rose-500/20 bg-rose-500/10 p-8 flex items-start gap-4 backdrop-blur-xl">
                 <AlertCircle className="text-rose-400 mt-1 shrink-0" />
                 <div>
                     <h3 className="text-rose-400 font-bold mb-1">Geçmiş Alınamadı</h3>
@@ -94,20 +94,20 @@ export function PlayerSportsBets({ clientId }: PlayerSportsBetsProps) {
             </div>
 
             {bets.length === 0 ? (
-                <div className="rounded-xl border border-white/5 bg-white/[0.02] p-8 text-center text-slate-400">
+                <div className="rounded-3xl border border-white/[0.05] bg-white/[0.02] p-8 text-center text-slate-400 backdrop-blur-xl">
                     Oynanmış spor bahsi bulunmuyor.
                 </div>
             ) : (
-                <div className="rounded-xl border border-white/5 bg-white/[0.02] overflow-x-auto">
+                <div className="rounded-3xl border border-white/[0.05] bg-white/[0.02] overflow-x-auto backdrop-blur-xl">
                     <table className="w-full text-left text-sm">
                         <thead className="bg-white/[0.02] border-b border-white/5">
                             <tr>
-                                <th className="p-4 text-[10px] font-semibold uppercase tracking-wider text-slate-400">Kupon Id</th>
-                                <th className="p-4 text-[10px] font-semibold uppercase tracking-wider text-slate-400">Tarih</th>
-                                <th className="p-4 text-[10px] font-semibold uppercase tracking-wider text-slate-400 text-right">Tutar</th>
-                                <th className="p-4 text-[10px] font-semibold uppercase tracking-wider text-slate-400">Oran</th>
-                                <th className="p-4 text-[10px] font-semibold uppercase tracking-wider text-slate-400">Durum</th>
-                                <th className="p-4 text-[10px] font-semibold uppercase tracking-wider text-slate-400 text-right">Kazanç</th>
+                                <th className="p-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Kupon Id</th>
+                                <th className="p-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Tarih</th>
+                                <th className="p-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400 text-right">Tutar</th>
+                                <th className="p-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Oran</th>
+                                <th className="p-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Durum</th>
+                                <th className="p-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400 text-right">Kazanç</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">

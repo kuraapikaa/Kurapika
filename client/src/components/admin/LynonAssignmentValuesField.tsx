@@ -32,15 +32,15 @@ export function LynonAssignmentValuesField({
   };
 
   return (
-    <label className="block space-y-2 rounded-2xl border border-amber-300/10 bg-[color:var(--panel-warning,#ff9f0a)]/[0.025] p-3">
-      <span className="block text-[9px] font-semibold uppercase tracking-[0.14em] text-amber-200/70">{label}</span>
+    <label className="block space-y-2 rounded-3xl border border-amber-300/10 bg-[color:var(--panel-warning,#ff9f0a)]/[0.025] p-8 backdrop-blur-xl">
+      <span className="block text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-200/70">{label}</span>
       <textarea
         value={text}
         onFocus={() => setFocused(true)}
         onChange={(event) => setText(event.target.value)}
         onBlur={commit}
         spellCheck={false}
-        className="min-h-[92px] w-full resize-y rounded-2xl border border-white/5 bg-black/40 p-3 font-mono text-[10px] leading-relaxed text-amber-100 outline-none focus:border-amber-300/40"
+        className="min-h-[92px] w-full resize-y rounded-3xl border border-white/[0.05] bg-black/40 p-8 font-mono text-[10px] leading-relaxed text-amber-100 outline-none focus:border-amber-300/40 backdrop-blur-xl"
         placeholder={'{\n  "BonusMoneyAmount": 200\n}'}
       />
       {error && <span className="block text-[10px] font-bold text-rose-300">{error}</span>}

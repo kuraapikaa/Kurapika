@@ -21,9 +21,9 @@ export function AIInsights() {
 
     if (isLoading) {
         return (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-pulse mt-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-pulse mt-8">
                 {[1, 2].map(i => (
-                    <div key={i} className="h-48 rounded-xl bg-white/[0.02] border border-white/5" />
+                    <div key={i} className="h-48 rounded-3xl bg-white/[0.02] border border-white/[0.05] backdrop-blur-xl" />
                 ))}
             </div>
         );
@@ -38,7 +38,7 @@ export function AIInsights() {
         <div className="space-y-8 mt-8">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-400/10 text-purple-300">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-400/10 text-purple-300">
                         <Sparkles size={20} />
                     </div>
                     <div>
@@ -74,7 +74,7 @@ export function AIInsights() {
                             )}>
                                 <div className="flex items-start gap-4">
                                     <div className={cn(
-                                        "h-12 w-12 rounded-xl flex items-center justify-center shrink-0 shadow-inner",
+                                        "h-12 w-12 rounded-full flex items-center justify-center shrink-0 shadow-inner",
                                         insight.type === 'critical' ? "bg-rose-500/10 text-rose-400 border border-rose-500/20" :
                                             insight.type === 'warning' ? "bg-amber-500/10 text-amber-400 border border-amber-500/20" : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
                                     )}>
@@ -91,7 +91,7 @@ export function AIInsights() {
                                         <div className="pt-4 mt-4 border-t border-white/5 relative bg-white/[0.02] -mx-6 px-3 py-2.5">
                                             <div className="flex items-center gap-2 text-purple-300 mb-1.5">
                                                 <Target size={14} />
-                                                <span className="text-[9px] font-semibold uppercase tracking-wider text-purple-300">Stratejik Tavsiye</span>
+                                                <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-purple-300">Stratejik Tavsiye</span>
                                             </div>
                                             <p className="text-[12px] font-bold text-slate-300 leading-normal">{insight.recommendation}</p>
                                         </div>
@@ -137,7 +137,7 @@ export function AIInsights() {
                             <Card className="p-6 bg-gradient-to-br from-blue-500/5 to-teal-500/5 border-white/5 group hover:border-purple-400/25 transition-all duration-300 shadow-xl backdrop-blur-sm">
                                 <div className="flex items-center justify-between mb-4">
                                     <div className="flex items-center gap-3">
-                                        <div className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center text-teal-400 border border-white/5">
+                                        <div className="h-10 w-10 rounded-full bg-white/5 flex items-center justify-center text-teal-400 border border-white/5">
                                             <Zap size={20} />
                                         </div>
                                         <div>
@@ -150,7 +150,7 @@ export function AIInsights() {
                                         <p className="text-lg font-semibold text-white">+{bonus.estimatedCvr}%</p>
                                     </div>
                                 </div>
-                                <div className="p-4 rounded-xl bg-black/40 border border-white/5 space-y-3">
+                                <div className="p-8 rounded-3xl bg-black/40 border border-white/[0.05] space-y-3 backdrop-blur-xl">
                                     <div className="flex items-center justify-between">
                                         <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Önerilen Oran</span>
                                         <span className="text-xs font-semibold text-purple-300">{bonus.suggestedAmount}</span>
@@ -159,7 +159,7 @@ export function AIInsights() {
                                         "{bonus.reasoning}"
                                     </p>
                                 </div>
-                                <button className="w-full mt-4 flex items-center justify-center gap-2 py-3 rounded-xl bg-[color:var(--panel-accent,#0a84ff)] text-white text-[10px] font-semibold uppercase tracking-wider hover:bg-[color:var(--panel-accent-deep,#0060df)] transition-all group/btn shadow-lg">
+                                <button className="w-full mt-4 flex items-center justify-center gap-2 py-3 rounded-xl bg-[color:var(--panel-accent,#0a84ff)] text-white text-[10px] font-semibold uppercase tracking-[0.2em] hover:bg-[color:var(--panel-accent-deep,#0060df)] transition-all group/btn shadow-lg">
                                     Kampanya Oluştur <ArrowRight size={14} className="group-hover/btn:translate-x-1 transition-transform" />
                                 </button>
                             </Card>

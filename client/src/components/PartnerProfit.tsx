@@ -57,7 +57,7 @@ export function PartnerProfit({ data, isLoading, error }: PartnerProfitProps) {
       />
 
       <div className="p-4">
-        <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3 xl:grid-cols-5">
+        <div className="grid grid-cols-2 gap-x-8 gap-y-8 sm:grid-cols-3 xl:grid-cols-5">
           {olculer.map(({ etiket, deger }) => (
             <PanoHucre key={etiket} etiket={etiket} deger={sayiYaz(deger, 'para')} veriYok={deger == null} />
           ))}

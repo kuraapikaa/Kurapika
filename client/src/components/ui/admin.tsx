@@ -134,7 +134,7 @@ export function Th({ children, align = 'left', className }: { children: ReactNod
   return (
     <th
       className={cn(
-        'px-5 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500',
+        'px-5 py-2.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500',
         align === 'right' && 'text-right',
         className
       )}

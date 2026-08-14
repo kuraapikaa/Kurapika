@@ -141,7 +141,7 @@ export function BonusList({ data, isLoading, error }: BonusListProps) {
         <div className="flex items-center gap-4">
           <div className="relative group">
             <div className="absolute -inset-1 rounded-xl bg-blue-500/20 blur opacity-75 animate-pulse" />
-            <div className="relative rounded-xl bg-black border border-blue-500/20 p-3.5 text-blue-400 shadow-2xl">
+            <div className="relative rounded-3xl bg-black border border-blue-500/20 p-8.5 text-blue-400 shadow-2xl backdrop-blur-xl">
               <Gift size={24} />
             </div>
           </div>

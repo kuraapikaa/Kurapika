@@ -80,7 +80,7 @@ export function LoginPage({ onLoginSuccess, tenantConfig }: LoginPageProps) {
               <div className="login-brand-row mb-5 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div
-                    className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl border border-white/5 bg-white/[0.06]"
+                    className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-white/5 bg-white/[0.06]"
                     style={{ boxShadow: `0 0 36px ${accent}20` }}
                   >
                     {tenantConfig?.logoUrl ? (
@@ -96,7 +96,7 @@ export function LoginPage({ onLoginSuccess, tenantConfig }: LoginPageProps) {
                     <p className="text-sm font-semibold text-white">{tenantConfig?.adminTitle || 'Bugs Software Portal'}</p>
                   </div>
                 </div>
-                <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/15 bg-emerald-400/[0.07] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-300">
+                <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/15 bg-emerald-400/[0.07] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-300">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-300 shadow-[0_0_10px_#6ee7b7]" />
                   Online
                 </span>
@@ -117,14 +117,14 @@ export function LoginPage({ onLoginSuccess, tenantConfig }: LoginPageProps) {
                     />
                   </div>
                 </div>
-                <div className="mt-4 grid grid-cols-2 gap-2" role="group" aria-label="Veri sağlayıcısı">
+                <div className="mt-4 grid grid-cols-2 gap-8" role="group" aria-label="Veri sağlayıcısı">
                   {(['lynon', 'betconstruct'] as const).map((option) => (
                     <button
                       key={option}
                       type="button"
                       onClick={() => setProvider(option)}
                       className={cn(
-                        'login-provider-option min-h-[44px] rounded-xl border px-3 text-xs font-semibold uppercase tracking-wider transition-colors',
+                        'login-provider-option min-h-[44px] rounded-3xl border px-3 text-[10px] font-semibold uppercase tracking-[0.2em] transition-colors backdrop-blur-xl',
                         provider === option
                           ? option === 'lynon' ? 'border-orange-400/50 bg-[color:var(--panel-warning,#ff9f0a)] text-[#050609]' : 'border-sky-400/50 bg-[color:var(--panel-accent,#0a84ff)] text-[#050609]'
                           : 'border-white/5 bg-white/[0.04] text-slate-400 hover:bg-white/[0.08] hover:text-white'
@@ -145,7 +145,7 @@ export function LoginPage({ onLoginSuccess, tenantConfig }: LoginPageProps) {
 
               <form onSubmit={handleSubmit} className="login-form space-y-3">
                 <label className="block">
-                  <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+                  <span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
                     Kullanıcı adı
                   </span>
                   <span className="login-field">
@@ -162,7 +162,7 @@ export function LoginPage({ onLoginSuccess, tenantConfig }: LoginPageProps) {
                 </label>
 
                 <label className="block">
-                  <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+                  <span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
                     Parola
                   </span>
                   <span className="login-field">
@@ -183,7 +183,7 @@ export function LoginPage({ onLoginSuccess, tenantConfig }: LoginPageProps) {
                       initial={{ opacity: 0, y: -4 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0 }}
-                      className="rounded-xl border border-rose-400/20 bg-rose-400/[0.08] px-4 py-3 text-xs font-medium text-rose-300"
+                      className="rounded-3xl border border-rose-400/20 bg-rose-400/[0.08] px-4 py-3 text-xs font-medium text-rose-300 backdrop-blur-xl"
                     >
                       {error}
                     </motion.p>
@@ -213,7 +213,7 @@ export function LoginPage({ onLoginSuccess, tenantConfig }: LoginPageProps) {
               animate={{ opacity: 1, scale: 1 }}
               className="login-panel flex w-full max-w-[460px] flex-col items-center py-12 text-center"
             >
-              <div className="flex h-16 w-16 items-center justify-center rounded-xl border border-cyan-300/20 bg-[color:var(--panel-info,#64d2ff)]/10 text-cyan-300">
+              <div className="flex h-16 w-16 items-center justify-center rounded-3xl border border-cyan-300/20 bg-[color:var(--panel-info,#64d2ff)]/10 text-cyan-300 backdrop-blur-xl">
                 <CheckCircle2 size={30} />
               </div>
               <h2 className="mt-6 text-2xl font-semibold text-white">Erişim onaylandı</h2>

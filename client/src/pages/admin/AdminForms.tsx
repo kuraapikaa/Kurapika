@@ -25,7 +25,7 @@ function exportCSV(data: any[], filename: string, columns: { key: string; label:
 
 function StatCard({ label, value, sub, color }: { label: string; value: number; sub?: string; color: string }) {
   return (
-    <div className={cn('rounded-2xl border p-4 space-y-1', color)}>
+    <div className={cn('rounded-3xl border p-8 space-y-1 backdrop-blur-xl', color)}>
       <p className="text-xs font-bold uppercase tracking-widest opacity-60">{label}</p>
       <p className="text-3xl font-semibold text-white">{value}</p>
       {sub && <p className="text-xs opacity-50">{sub}</p>}
@@ -42,7 +42,7 @@ function NoteModal({
   const [note, setNote] = useState(currentNote);
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-      <div className="w-full max-w-md bg-[#0e1421] border border-white/5 rounded-xl overflow-hidden shadow-2xl">
+      <div className="w-full max-w-md bg-white/[0.02] border border-white/[0.05] rounded-3xl overflow-hidden shadow-2xl backdrop-blur-xl">
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
           <h3 className="text-sm font-semibold text-white flex items-center gap-2">
             <StickyNote size={16} className="text-amber-400" /> Admin Notu
@@ -57,7 +57,7 @@ function NoteModal({
             onChange={e => setNote(e.target.value)}
             rows={4}
             placeholder="Bu talep için not ekleyin..."
-            className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-500/40 resize-none"
+            className="w-full bg-black/40 border border-white/[0.05] rounded-3xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-500/40 resize-none backdrop-blur-xl"
           />
           <div className="flex gap-2 justify-end">
             <button onClick={onClose} className="px-4 py-2 rounded-xl bg-white/5 text-slate-400 hover:text-white text-sm font-bold transition-colors">
@@ -229,7 +229,7 @@ export function AdminForms() {
   return (
     <div className="mx-auto max-w-7xl space-y-6 p-4 md:p-6 pb-24">
       {/* Stats overview */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
         <StatCard label="Beni Ara · Bekliyor" value={callStats.pending} color="border-sky-500/20 bg-sky-500/5" />
         <StatCard label="Beni Ara · Toplam" value={callStats.total} sub={`Bugün: ${callStats.today}`} color="border-white/5 bg-white/[0.02]" />
         <StatCard label="Ortaklık · Bekliyor" value={partnershipStats.pending} color="border-purple-400/25 bg-blue-500/5" />
@@ -281,10 +281,10 @@ export function AdminForms() {
                   value={searchTerm}
                   onChange={e => setSearchTerm(e.target.value)}
                   placeholder="Ara..."
-                  className="bg-white/5 border border-white/5 rounded-xl pl-8 pr-4 py-2 text-sm text-white focus:outline-none focus:border-white/5 w-48"
+                  className="bg-white/5 border border-white/[0.05] rounded-3xl pl-8 pr-4 py-2 text-sm text-white focus:outline-none focus:border-white/[0.05] w-48 backdrop-blur-xl"
                 />
               </div>
-              <div className="flex gap-1 bg-white/5 border border-white/5 rounded-xl p-1">
+              <div className="flex gap-1 bg-white/5 border border-white/[0.05] rounded-3xl p-1 backdrop-blur-xl">
                 {(['all', 'pending', 'completed'] as const).map(s => (
                   <button
                     key={s}
@@ -320,13 +320,13 @@ export function AdminForms() {
                   ]);
                 }
               }}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/5 text-slate-400 hover:text-white text-xs font-bold transition-colors"
+              className="flex items-center gap-2 px-3 py-2 rounded-3xl bg-white/5 border border-white/[0.05] text-slate-400 hover:text-white text-xs font-bold transition-colors backdrop-blur-xl"
             >
               <Download size={14} /> CSV İndir
             </button>
           </div>
 
-          <div className="bg-white/[0.02] border border-white/5 rounded-xl overflow-hidden">
+          <div className="bg-white/[0.02] border border-white/[0.05] rounded-3xl overflow-hidden backdrop-blur-xl">
             {activeTab === 'call' && (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm text-slate-400">
@@ -496,7 +496,7 @@ export function AdminForms() {
 
       {/* Settings tab */}
       {activeTab === 'settings' && (
-        <div className="bg-white/[0.02] border border-white/5 rounded-xl p-6 space-y-8">
+        <div className="bg-white/[0.02] border border-white/[0.05] rounded-3xl p-8 space-y-8 backdrop-blur-xl">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Beni Ara settings */}
             <div className="space-y-5">
@@ -531,7 +531,7 @@ export function AdminForms() {
                     type="text"
                     value={callTitle}
                     onChange={e => setCallTitle(e.target.value)}
-                    className="w-full bg-black/50 border border-white/5 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500/40"
+                    className="w-full bg-black/50 border border-white/[0.05] rounded-3xl px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500/40 backdrop-blur-xl"
                   />
                 </div>
                 <div>
@@ -540,17 +540,17 @@ export function AdminForms() {
                     value={callDescription}
                     onChange={e => setCallDescription(e.target.value)}
                     rows={2}
-                    className="w-full bg-black/50 border border-white/5 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500/40 resize-none"
+                    className="w-full bg-black/50 border border-white/[0.05] rounded-3xl px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500/40 resize-none backdrop-blur-xl"
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-8">
                   <div>
                     <label className="text-xs text-slate-400 mb-1 block">Buton Yazısı</label>
                     <input
                       type="text"
                       value={callButtonText}
                       onChange={e => setCallButtonText(e.target.value)}
-                      className="w-full bg-black/50 border border-white/5 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500/40"
+                      className="w-full bg-black/50 border border-white/[0.05] rounded-3xl px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500/40 backdrop-blur-xl"
                     />
                   </div>
                   <div>
@@ -559,7 +559,7 @@ export function AdminForms() {
                       type="text"
                       value={callSuccessMessage}
                       onChange={e => setCallSuccessMessage(e.target.value)}
-                      className="w-full bg-black/50 border border-white/5 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500/40"
+                      className="w-full bg-black/50 border border-white/[0.05] rounded-3xl px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500/40 backdrop-blur-xl"
                     />
                   </div>
                 </div>
@@ -579,7 +579,7 @@ export function AdminForms() {
                         a[idx] = e.target.value;
                         setCallReasons(a);
                       }}
-                      className="flex-1 bg-black/50 border border-white/5 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500/40"
+                      className="flex-1 bg-black/50 border border-white/[0.05] rounded-3xl px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500/40 backdrop-blur-xl"
                     />
                     <button
                       onClick={() => setCallReasons(callReasons.filter((_, i) => i !== idx))}
@@ -591,7 +591,7 @@ export function AdminForms() {
                 ))}
                 <button
                   onClick={() => setCallReasons([...callReasons, ''])}
-                  className="w-full py-2 border border-dashed border-white/5 text-slate-400 hover:text-white hover:border-white/5 rounded-xl flex items-center justify-center gap-2 text-sm font-bold transition-all"
+                  className="w-full py-2 border border-dashed border-white/[0.05] text-slate-400 hover:text-white hover:border-white/[0.05] rounded-3xl flex items-center justify-center gap-2 text-sm font-bold transition-all backdrop-blur-xl"
                 >
                   <Plus size={15} /> Seçenek Ekle
                 </button>
@@ -631,7 +631,7 @@ export function AdminForms() {
                     type="text"
                     value={partnershipTitle}
                     onChange={e => setPartnershipTitle(e.target.value)}
-                    className="w-full bg-black/50 border border-white/5 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500/40"
+                    className="w-full bg-black/50 border border-white/[0.05] rounded-3xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500/40 backdrop-blur-xl"
                   />
                 </div>
                 <div>
@@ -640,17 +640,17 @@ export function AdminForms() {
                     value={partnershipDescription}
                     onChange={e => setPartnershipDescription(e.target.value)}
                     rows={2}
-                    className="w-full bg-black/50 border border-white/5 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500/40 resize-none"
+                    className="w-full bg-black/50 border border-white/[0.05] rounded-3xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500/40 resize-none backdrop-blur-xl"
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-8">
                   <div>
                     <label className="text-xs text-slate-400 mb-1 block">Buton Yazısı</label>
                     <input
                       type="text"
                       value={partnershipButtonText}
                       onChange={e => setPartnershipButtonText(e.target.value)}
-                      className="w-full bg-black/50 border border-white/5 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500/40"
+                      className="w-full bg-black/50 border border-white/[0.05] rounded-3xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500/40 backdrop-blur-xl"
                     />
                   </div>
                   <div>
@@ -659,7 +659,7 @@ export function AdminForms() {
                       type="text"
                       value={partnershipSuccessMessage}
                       onChange={e => setPartnershipSuccessMessage(e.target.value)}
-                      className="w-full bg-black/50 border border-white/5 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500/40"
+                      className="w-full bg-black/50 border border-white/[0.05] rounded-3xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500/40 backdrop-blur-xl"
                     />
                   </div>
                 </div>
@@ -679,7 +679,7 @@ export function AdminForms() {
                         a[idx] = e.target.value;
                         setPartnershipTypes(a);
                       }}
-                      className="flex-1 bg-black/50 border border-white/5 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500/40"
+                      className="flex-1 bg-black/50 border border-white/[0.05] rounded-3xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500/40 backdrop-blur-xl"
                     />
                     <button
                       onClick={() => setPartnershipTypes(partnershipTypes.filter((_, i) => i !== idx))}
@@ -691,7 +691,7 @@ export function AdminForms() {
                 ))}
                 <button
                   onClick={() => setPartnershipTypes([...partnershipTypes, ''])}
-                  className="w-full py-2 border border-dashed border-white/5 text-slate-400 hover:text-white hover:border-white/5 rounded-xl flex items-center justify-center gap-2 text-sm font-bold transition-all"
+                  className="w-full py-2 border border-dashed border-white/[0.05] text-slate-400 hover:text-white hover:border-white/[0.05] rounded-3xl flex items-center justify-center gap-2 text-sm font-bold transition-all backdrop-blur-xl"
                 >
                   <Plus size={15} /> Tür Ekle
                 </button>
@@ -725,7 +725,7 @@ export function AdminForms() {
       {/* Delete confirm */}
       {confirmDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="w-full max-w-sm bg-[#0e1421] border border-white/5 rounded-xl overflow-hidden shadow-2xl">
+          <div className="w-full max-w-sm bg-white/[0.02] border border-white/[0.05] rounded-3xl overflow-hidden shadow-2xl backdrop-blur-xl">
             <div className="p-6 space-y-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-rose-500/10 flex items-center justify-center">

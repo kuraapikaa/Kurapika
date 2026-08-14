@@ -170,7 +170,7 @@ export function Mutabakat() {
 
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 xl:grid-cols-4">
         <PanoOlcu
           etiket="Yatırım (rapor)"
           deger={sayiYaz(isLoading ? null : toplam.raporYatirim ?? null, 'para')}
@@ -234,7 +234,7 @@ export function Mutabakat() {
               type="button"
               onClick={() => gonder.mutate()}
               disabled={gonder.isPending}
-              className="flex h-9 items-center gap-1.5 rounded-2xl border border-white/5 px-3 text-xs font-semibold text-slate-200 hover:bg-white/[0.05] disabled:opacity-40"
+              className="flex h-9 items-center gap-1.5 rounded-3xl border border-white/[0.05] px-3 text-xs font-semibold text-slate-200 hover:bg-white/[0.05] disabled:opacity-40 backdrop-blur-xl"
             >
               <Send size={13} /> {gonder.isPending ? 'Gönderiliyor…' : "Telegram'a gönder"}
             </button>
@@ -243,7 +243,7 @@ export function Mutabakat() {
               onClick={() => kapanisGonder.mutate()}
               disabled={kapanisGonder.isPending}
               title={`${oncekiAy()} kapanış raporunu gönder`}
-              className="flex h-9 items-center gap-1.5 rounded-2xl border border-white/5 px-3 text-xs font-semibold text-slate-200 hover:bg-white/[0.05] disabled:opacity-40"
+              className="flex h-9 items-center gap-1.5 rounded-3xl border border-white/[0.05] px-3 text-xs font-semibold text-slate-200 hover:bg-white/[0.05] disabled:opacity-40 backdrop-blur-xl"
             >
               <BookOpen size={13} /> {kapanisGonder.isPending ? 'Gönderiliyor…' : `${oncekiAy()} kapanışı gönder`}
             </button>
@@ -319,7 +319,7 @@ export function Mutabakat() {
           vurgu="hacim"
         />
 
-        <div className="grid grid-cols-2 gap-2 px-4 pb-3 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-8 px-4 pb-3 sm:grid-cols-3 lg:grid-cols-5">
           <label className="flex flex-col gap-1 sm:col-span-2">
             <span className="text-[10px] uppercase tracking-[0.1em] text-slate-400">Yöntem</span>
             <input
@@ -329,7 +329,7 @@ export function Mutabakat() {
               onChange={(e) => setAyarAnahtar(e.target.value)}
               placeholder="HemenOde · Havale"
               disabled={duzenlenenAnahtar !== null}
-              className="h-9 rounded-2xl border border-white/5 bg-[#0c1119] px-2 text-xs text-white placeholder:text-slate-400 focus:outline-none disabled:opacity-60"
+              className="h-9 rounded-3xl border border-white/[0.05] bg-white/[0.02] px-2 text-xs text-white placeholder:text-slate-400 focus:outline-none disabled:opacity-60 backdrop-blur-xl"
             />
             <datalist id="mutabakat-yontem-secenekleri">
               {satirlar.map((satir) => <option key={satir.anahtar} value={satir.anahtar} />)}
@@ -341,12 +341,12 @@ export function Mutabakat() {
               <input
                 type="number" min="0" max="100" step="0.01" value={ayarYatirimYuzde}
                 onChange={(e) => setAyarYatirimYuzde(e.target.value)} placeholder="%"
-                className="h-9 w-16 rounded-2xl border border-white/5 bg-[#0c1119] px-2 text-xs text-white focus:outline-none"
+                className="h-9 w-16 rounded-3xl border border-white/[0.05] bg-white/[0.02] px-2 text-xs text-white focus:outline-none backdrop-blur-xl"
               />
               <input
                 type="number" min="0" step="0.01" value={ayarYatirimSabit}
                 onChange={(e) => setAyarYatirimSabit(e.target.value)} placeholder="TRY"
-                className="h-9 w-16 rounded-2xl border border-white/5 bg-[#0c1119] px-2 text-xs text-white focus:outline-none"
+                className="h-9 w-16 rounded-3xl border border-white/[0.05] bg-white/[0.02] px-2 text-xs text-white focus:outline-none backdrop-blur-xl"
               />
             </div>
           </label>
@@ -356,12 +356,12 @@ export function Mutabakat() {
               <input
                 type="number" min="0" max="100" step="0.01" value={ayarCekimYuzde}
                 onChange={(e) => setAyarCekimYuzde(e.target.value)} placeholder="%"
-                className="h-9 w-16 rounded-2xl border border-white/5 bg-[#0c1119] px-2 text-xs text-white focus:outline-none"
+                className="h-9 w-16 rounded-3xl border border-white/[0.05] bg-white/[0.02] px-2 text-xs text-white focus:outline-none backdrop-blur-xl"
               />
               <input
                 type="number" min="0" step="0.01" value={ayarCekimSabit}
                 onChange={(e) => setAyarCekimSabit(e.target.value)} placeholder="TRY"
-                className="h-9 w-16 rounded-2xl border border-white/5 bg-[#0c1119] px-2 text-xs text-white focus:outline-none"
+                className="h-9 w-16 rounded-3xl border border-white/[0.05] bg-white/[0.02] px-2 text-xs text-white focus:outline-none backdrop-blur-xl"
               />
             </div>
           </label>
@@ -370,7 +370,7 @@ export function Mutabakat() {
             <input
               type="text" value={ayarTeslimat} onChange={(e) => setAyarTeslimat(e.target.value)}
               placeholder="Örn. Her Pazartesi elden teslim, T+2…"
-              className="h-9 rounded-2xl border border-white/5 bg-[#0c1119] px-2 text-xs text-white placeholder:text-slate-400 focus:outline-none"
+              className="h-9 rounded-3xl border border-white/[0.05] bg-white/[0.02] px-2 text-xs text-white placeholder:text-slate-400 focus:outline-none backdrop-blur-xl"
             />
           </label>
           <label className="flex flex-col gap-1">
@@ -378,7 +378,7 @@ export function Mutabakat() {
             <input
               type="number" min="0" step="1" value={ayarTakviyeEsigi}
               onChange={(e) => setAyarTakviyeEsigi(e.target.value)} placeholder="TRY altına düşünce"
-              className="h-9 rounded-2xl border border-white/5 bg-[#0c1119] px-2 text-xs text-white placeholder:text-slate-400 focus:outline-none"
+              className="h-9 rounded-3xl border border-white/[0.05] bg-white/[0.02] px-2 text-xs text-white placeholder:text-slate-400 focus:outline-none backdrop-blur-xl"
             />
           </label>
           <label className="flex flex-col gap-1 sm:col-span-2">
@@ -386,7 +386,7 @@ export function Mutabakat() {
             <input
               type="text" value={ayarTakviyeNotu} onChange={(e) => setAyarTakviyeNotu(e.target.value)}
               placeholder="Kimden/nasıl takviye edilir"
-              className="h-9 rounded-2xl border border-white/5 bg-[#0c1119] px-2 text-xs text-white placeholder:text-slate-400 focus:outline-none"
+              className="h-9 rounded-3xl border border-white/[0.05] bg-white/[0.02] px-2 text-xs text-white placeholder:text-slate-400 focus:outline-none backdrop-blur-xl"
             />
           </label>
           <label className="flex flex-col gap-1 sm:col-span-2">
@@ -394,7 +394,7 @@ export function Mutabakat() {
             <input
               type="text" value={ayarNot} onChange={(e) => setAyarNot(e.target.value)}
               placeholder="Serbest not"
-              className="h-9 rounded-2xl border border-white/5 bg-[#0c1119] px-2 text-xs text-white placeholder:text-slate-400 focus:outline-none"
+              className="h-9 rounded-3xl border border-white/[0.05] bg-white/[0.02] px-2 text-xs text-white placeholder:text-slate-400 focus:outline-none backdrop-blur-xl"
             />
           </label>
           <div className="flex items-end gap-2">
@@ -410,7 +410,7 @@ export function Mutabakat() {
               <button
                 type="button"
                 onClick={formuSifirla}
-                className="h-9 rounded-2xl border border-white/5 px-3 text-xs font-semibold text-slate-200 hover:bg-white/[0.05]"
+                className="h-9 rounded-3xl border border-white/[0.05] px-3 text-xs font-semibold text-slate-200 hover:bg-white/[0.05] backdrop-blur-xl"
               >
                 Vazgeç
               </button>
@@ -488,7 +488,7 @@ export function Mutabakat() {
               type="date"
               value={gun}
               onChange={(e) => setGun(e.target.value)}
-              className="h-9 rounded-2xl border border-white/5 bg-[#0c1119] px-2 text-xs text-white focus:outline-none"
+              className="h-9 rounded-3xl border border-white/[0.05] bg-white/[0.02] px-2 text-xs text-white focus:outline-none backdrop-blur-xl"
             />
           </label>
           <label className="flex flex-col gap-1">
@@ -496,7 +496,7 @@ export function Mutabakat() {
             <select
               value={tur}
               onChange={(e) => setTur(e.target.value as 'yatirim' | 'cekim')}
-              className="h-9 rounded-2xl border border-white/5 bg-[#0c1119] px-2 text-xs text-white focus:outline-none"
+              className="h-9 rounded-3xl border border-white/[0.05] bg-white/[0.02] px-2 text-xs text-white focus:outline-none backdrop-blur-xl"
             >
               <option value="yatirim">Yatırım</option>
               <option value="cekim">Çekim</option>
@@ -508,7 +508,7 @@ export function Mutabakat() {
               value={yontem}
               onChange={(e) => setYontem(e.target.value)}
               title="Belirli bir sağlayıcıya bağla; boş bırakılırsa genel kalem sayılır"
-              className="h-9 min-w-[160px] rounded-2xl border border-white/5 bg-[#0c1119] px-2 text-xs text-white focus:outline-none"
+              className="h-9 min-w-[160px] rounded-3xl border border-white/[0.05] bg-white/[0.02] px-2 text-xs text-white focus:outline-none backdrop-blur-xl"
             >
               <option value="">Genel (yönteme özel değil)</option>
               {satirlar.map((satir) => (
@@ -525,7 +525,7 @@ export function Mutabakat() {
               value={tutar}
               onChange={(e) => setTutar(e.target.value)}
               placeholder="0"
-              className="h-9 w-28 rounded-2xl border border-white/5 bg-[#0c1119] px-2 text-xs text-white focus:outline-none"
+              className="h-9 w-28 rounded-3xl border border-white/[0.05] bg-white/[0.02] px-2 text-xs text-white focus:outline-none backdrop-blur-xl"
             />
           </label>
           <label className="flex min-w-[180px] flex-1 flex-col gap-1">
@@ -535,7 +535,7 @@ export function Mutabakat() {
               value={aciklama}
               onChange={(e) => setAciklama(e.target.value)}
               placeholder="Elden havale, iade…"
-              className="h-9 rounded-2xl border border-white/5 bg-[#0c1119] px-2 text-xs text-white placeholder:text-slate-400 focus:outline-none"
+              className="h-9 rounded-3xl border border-white/[0.05] bg-white/[0.02] px-2 text-xs text-white placeholder:text-slate-400 focus:outline-none backdrop-blur-xl"
             />
           </label>
           <button

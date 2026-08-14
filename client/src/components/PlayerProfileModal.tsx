@@ -33,7 +33,7 @@ export function PlayerProfileModal({ clientId, username, onClose }: PlayerProfil
     const kpi = data?.Data;
 
     const StatBox = ({ title, value, icon: Icon, colorClass, subValue }: any) => (
-        <div className="glass-card rounded-xl border border-white/5 bg-white/[0.02] p-4 transition-all hover:border-white/5 hover:bg-white/[0.02]">
+        <div className="glass-card rounded-3xl border border-white/[0.05] bg-white/[0.02] p-8 transition-all hover:border-white/[0.05] hover:bg-white/[0.02] backdrop-blur-xl">
             <div className="flex items-start justify-between">
                 <div className={`rounded-xl p-2.5 ${colorClass}`}>
                     <Icon size={20} />
@@ -43,7 +43,7 @@ export function PlayerProfileModal({ clientId, username, onClose }: PlayerProfil
                 )}
             </div>
             <div className="mt-4">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">{title}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">{title}</p>
                 <p className="mt-1 text-xl font-semibold text-white">{value}</p>
             </div>
         </div>
@@ -53,7 +53,7 @@ export function PlayerProfileModal({ clientId, username, onClose }: PlayerProfil
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-8 backdrop-blur-sm overflow-hidden">
             <div className="absolute inset-0 bg-white/[0.02]" onClick={onClose} />
 
-            <div className="relative w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden rounded-xl border border-white/5 bg-white/[0.02] shadow-2xl animate-in scale-in-95 duration-300">
+            <div className="relative w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden rounded-3xl border border-white/[0.05] bg-white/[0.02] shadow-2xl animate-in scale-in-95 duration-300 backdrop-blur-xl">
                 {/* Header - Fixed */}
                 <div className="flex shrink-0 items-center justify-between p-6 pb-4 sm:p-8 sm:pb-6 border-b border-white/5">
                     <div className="flex items-center gap-4">
@@ -92,7 +92,7 @@ export function PlayerProfileModal({ clientId, username, onClose }: PlayerProfil
                             {/* Financial Summary */}
                             <div>
                                 <h3 className="mb-4 text-xs font-semibold uppercase italic tracking-wider text-purple-300">Mali Özet</h3>
-                                <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                                <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
                                     <StatBox
                                         title="Net Kar/Zarar"
                                         value={`${formatNumber(kpi.ProfitAndLose)} TRY`}
@@ -127,21 +127,21 @@ export function PlayerProfileModal({ clientId, username, onClose }: PlayerProfil
                                 <div>
                                     <h3 className="mb-4 text-xs font-semibold uppercase italic tracking-wider text-purple-300">Sportbook Performansı</h3>
                                     <div className="space-y-4">
-                                        <div className="glass-card flex items-center justify-between rounded-xl bg-white/[0.02] p-4 border border-white/5">
+                                        <div className="glass-card flex items-center justify-between rounded-3xl bg-white/[0.02] p-8 border border-white/[0.05] backdrop-blur-xl">
                                             <div className="flex items-center gap-3">
                                                 <div className="rounded-xl bg-purple-400/10 p-2 text-purple-300"><TrendingUp size={18} /></div>
                                                 <span className="text-xs font-bold text-slate-300">Toplam Bahis</span>
                                             </div>
                                             <span className="text-sm font-semibold text-white">{formatNumber(kpi.TotalSportStakes)} <span className="text-[10px] text-slate-400">TRY</span></span>
                                         </div>
-                                        <div className="glass-card flex items-center justify-between rounded-xl bg-white/[0.02] p-4 border border-white/5">
+                                        <div className="glass-card flex items-center justify-between rounded-3xl bg-white/[0.02] p-8 border border-white/[0.05] backdrop-blur-xl">
                                             <div className="flex items-center gap-3">
                                                 <div className="rounded-xl bg-emerald-500/10 p-2 text-emerald-400"><Trophy size={18} /></div>
                                                 <span className="text-xs font-bold text-slate-300">Toplam Kazanç</span>
                                             </div>
                                             <span className="text-sm font-semibold text-emerald-400">{formatNumber(kpi.TotalSportWinnings)} <span className="text-[10px] text-slate-400">TRY</span></span>
                                         </div>
-                                        <div className="glass-card flex items-center justify-between rounded-xl bg-white/[0.02] p-4 border border-white/5">
+                                        <div className="glass-card flex items-center justify-between rounded-3xl bg-white/[0.02] p-8 border border-white/[0.05] backdrop-blur-xl">
                                             <div className="flex items-center gap-3">
                                                 <div className="rounded-xl bg-yellow-500/10 p-2 text-yellow-400"><Activity size={18} /></div>
                                                 <span className="text-xs font-bold text-slate-300">Sport Verimlilik</span>
@@ -156,21 +156,21 @@ export function PlayerProfileModal({ clientId, username, onClose }: PlayerProfil
                                 <div>
                                     <h3 className="mb-4 text-xs font-semibold uppercase italic tracking-wider text-purple-300">Casino Performansı</h3>
                                     <div className="space-y-4">
-                                        <div className="glass-card flex items-center justify-between rounded-xl bg-white/[0.02] p-4 border border-white/5">
+                                        <div className="glass-card flex items-center justify-between rounded-3xl bg-white/[0.02] p-8 border border-white/[0.05] backdrop-blur-xl">
                                             <div className="flex items-center gap-3">
                                                 <div className="rounded-xl bg-purple-400/10 p-2 text-purple-300"><Dices size={18} /></div>
                                                 <span className="text-xs font-bold text-slate-300">Casino Ciro</span>
                                             </div>
                                             <span className="text-sm font-semibold text-white">{formatNumber(kpi.TotalCasinoStakes)} <span className="text-[10px] text-slate-400">TRY</span></span>
                                         </div>
-                                        <div className="glass-card flex items-center justify-between rounded-xl bg-white/[0.02] p-4 border border-white/5">
+                                        <div className="glass-card flex items-center justify-between rounded-3xl bg-white/[0.02] p-8 border border-white/[0.05] backdrop-blur-xl">
                                             <div className="flex items-center gap-3">
                                                 <div className="rounded-xl bg-emerald-500/10 p-2 text-emerald-400"><ArrowUpRight size={18} /></div>
                                                 <span className="text-xs font-bold text-slate-300">Casino Kazanç</span>
                                             </div>
                                             <span className="text-sm font-semibold text-emerald-400">{formatNumber(kpi.TotalCasinoWinnings)} <span className="text-[10px] text-slate-400">TRY</span></span>
                                         </div>
-                                        <div className="glass-card flex items-center justify-between rounded-xl bg-white/[0.02] p-4 border border-white/5">
+                                        <div className="glass-card flex items-center justify-between rounded-3xl bg-white/[0.02] p-8 border border-white/[0.05] backdrop-blur-xl">
                                             <div className="flex items-center gap-3">
                                                 <div className="rounded-xl bg-rose-500/10 p-2 text-rose-400"><TrendingDown size={18} /></div>
                                                 <span className="text-xs font-bold text-slate-300">Casino Verimlilik</span>
@@ -184,9 +184,9 @@ export function PlayerProfileModal({ clientId, username, onClose }: PlayerProfil
                             </div>
 
                             {/* Account Details */}
-                            <div className="rounded-xl border border-white/5 bg-white/[0.02] p-6">
+                            <div className="rounded-3xl border border-white/[0.05] bg-white/[0.02] p-8 backdrop-blur-xl">
                                 <h4 className="mb-6 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Hesap ve Güvenlik Detayları</h4>
-                                <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+                                <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
                                     <div className="flex items-center gap-4">
                                         <div className="rounded-xl bg-white/5 p-3 text-slate-400"><ShieldCheck size={24} /></div>
                                         <div>

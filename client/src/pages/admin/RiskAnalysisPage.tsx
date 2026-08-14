@@ -61,7 +61,7 @@ function RiskScoreBadge({ score, breakdown }: { score: number; breakdown?: Retur
   return (
     <div className="flex items-center gap-3">
       <span
-        className={cn('inline-flex items-center gap-2 rounded-2xl border px-3 py-2', tone)}
+        className={cn('inline-flex items-center gap-2 rounded-3xl border px-3 py-2 backdrop-blur-xl', tone)}
         title="0 = düşük risk, 100 = yüksek risk. Severity ağırlıklı (yüksek 3, orta 2, düşük 1)."
       >
         <Shield size={18} />
@@ -70,7 +70,7 @@ function RiskScoreBadge({ score, breakdown }: { score: number; breakdown?: Retur
 
       {breakdown && breakdown.checked > 0 && (
         <div className="min-w-0">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
             {breakdown.total}/{breakdown.checked} kontrol başarısız
           </p>
           <div className="mt-1 flex flex-wrap items-center gap-1">
@@ -230,7 +230,7 @@ export function RiskAnalysisPage() {
 
   return (
     <div className="animate-in space-y-6">
-      <div className="rounded-2xl border border-white/5 bg-gradient-to-br from-slate-900/90 to-slate-900/70 p-6">
+      <div className="rounded-3xl border border-white/[0.05] bg-gradient-to-br from-slate-900/90 to-slate-900/70 p-8 backdrop-blur-xl">
         <h2 className="flex items-center gap-3 text-xl font-semibold text-white">
           <Shield size={28} className="text-purple-300" />
           Risk Analizi
@@ -247,7 +247,7 @@ export function RiskAnalysisPage() {
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               placeholder="Kullanıcı adı (Login)"
-              className="w-full rounded-2xl border border-white/5 bg-white/10 py-3 pl-10 pr-4 text-white placeholder-slate-500 focus:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-purple-400/20"
+              className="w-full rounded-3xl border border-white/[0.05] bg-white/10 py-3 pl-10 pr-4 text-white placeholder-slate-500 focus:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-purple-400/20 backdrop-blur-xl"
             />
           </div>
           <button
@@ -261,7 +261,7 @@ export function RiskAnalysisPage() {
           </button>
         </div>
         {error && (
-          <div className="mt-4 flex items-center gap-2 rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-rose-300">
+          <div className="mt-4 flex items-center gap-2 rounded-3xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-rose-300 backdrop-blur-xl">
             <AlertTriangle size={20} />
             {error}
           </div>
@@ -269,7 +269,7 @@ export function RiskAnalysisPage() {
       </div>
 
       {loading && (
-        <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-white/5 bg-white/[0.02] py-16">
+        <div className="flex flex-col items-center justify-center gap-4 rounded-3xl border border-white/[0.05] bg-white/[0.02] py-16 backdrop-blur-xl">
           <Loader2 size={48} className="animate-spin text-purple-300" />
           <p className="text-slate-400">Analiz yapılıyor...</p>
         </div>
@@ -277,7 +277,7 @@ export function RiskAnalysisPage() {
 
       {report && !loading && execReport && (
         <div className="space-y-6">
-          <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6 flex items-center justify-between gap-4 flex-wrap">
+          <div className="rounded-3xl border border-white/[0.05] bg-white/[0.02] p-8 flex items-center justify-between gap-4 flex-wrap backdrop-blur-xl">
             <div>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Analiz Edilen Oyuncu</p>
               <p className="text-xl font-bold text-white mt-1">{report.login} <span className="text-slate-400 font-mono text-base ml-2">#{report.clientId}</span></p>
@@ -296,7 +296,7 @@ export function RiskAnalysisPage() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-1 bg-gradient-to-br from-blue-500/10 to-transparent">
+          <div className="rounded-3xl border border-white/[0.05] bg-white/[0.02] p-1 bg-gradient-to-br from-blue-500/10 to-transparent backdrop-blur-xl">
             {/* 1. RİSK SKORU & SINIFLANDIRMA */}
             <div className="p-6">
               <h3 className="text-xs font-semibold uppercase tracking-widest text-purple-300 mb-4 flex items-center gap-2 border-b border-white/5 pb-2">
@@ -321,8 +321,8 @@ export function RiskAnalysisPage() {
               <h3 className="text-xs font-semibold uppercase tracking-widest text-purple-300 mb-4 flex items-center gap-2 border-b border-white/5 pb-2">
                 2. Kritik İnceleme (Deep Dive)
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                <div className="rounded-xl bg-white/10 p-4 border border-white/5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-4">
+                <div className="rounded-3xl bg-white/10 p-8 border border-white/[0.05] backdrop-blur-xl">
                   <p className="text-[10px] font-bold text-slate-400 uppercase mb-3">Matematiksel Kanıtlar:</p>
                   <ul className="space-y-2 text-sm">
                     {execReport.mathEvidences.map((item, idx) => (
@@ -332,7 +332,7 @@ export function RiskAnalysisPage() {
                     ))}
                   </ul>
                 </div>
-                <div className="rounded-xl bg-white/10 p-4 border border-white/5">
+                <div className="rounded-3xl bg-white/10 p-8 border border-white/[0.05] backdrop-blur-xl">
                   <p className="text-[10px] font-bold text-slate-400 uppercase mb-3">Davranışsal Anomaliler:</p>
                   <ul className="space-y-2 text-sm">
                     {execReport.behavioralAnomalies.map((item, idx) => (
@@ -350,7 +350,7 @@ export function RiskAnalysisPage() {
               <h3 className="text-xs font-semibold uppercase tracking-widest text-purple-300 mb-4 flex items-center gap-2 border-b border-white/5 pb-2">
                 3. Karar Ve Aksiyon (Executive Summary)
               </h3>
-              <div className="space-y-4 mt-4 text-sm bg-white/10 p-5 rounded-2xl border border-white/5">
+              <div className="space-y-4 mt-4 text-sm bg-white/10 p-8 rounded-3xl border border-white/[0.05] backdrop-blur-xl">
                 <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
                   <span className="font-bold text-slate-400 uppercase text-[10px] w-32 shrink-0 pt-0.5">Hesap Durumu:</span>
                   <span className="text-white font-medium">{execReport.accountStatus}</span>
@@ -371,7 +371,7 @@ export function RiskAnalysisPage() {
               <h3 className="text-xs font-semibold uppercase tracking-widest text-purple-300 mb-4 flex items-center gap-2 border-b border-white/5 pb-2">
                 4. Analist Notu
               </h3>
-              <div className="mt-4 p-5 rounded-2xl border border-purple-400/25 bg-blue-900/10 relative">
+              <div className="mt-4 p-8 rounded-3xl border border-purple-400/25 bg-blue-900/10 relative backdrop-blur-xl">
                 <div className="absolute top-0 left-0 w-1 h-full bg-blue-500 rounded-l-xl opacity-80" />
                 <p className="text-slate-200 text-sm italic leading-relaxed pl-2">
                   {execReport.analystNote}

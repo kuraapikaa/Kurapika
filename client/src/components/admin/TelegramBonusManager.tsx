@@ -22,9 +22,9 @@ export function TelegramBonusManager({ config, bonusOptions, onUpdate }: Telegra
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-col gap-3 rounded-2xl border border-white/5 bg-white/[0.02] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 rounded-3xl border border-white/[0.05] bg-white/[0.02] px-5 py-4 sm:flex-row sm:items-center sm:justify-between backdrop-blur-xl">
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-sky-500/10 text-sky-400">
+          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-sky-500/10 text-sky-400">
             <Send size={20} />
           </div>
           <div>
@@ -35,7 +35,7 @@ export function TelegramBonusManager({ config, bonusOptions, onUpdate }: Telegra
           </div>
         </div>
         <label className="inline-flex items-center gap-3">
-          <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Aktif</span>
+          <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Aktif</span>
           <button
             type="button"
             role="switch"
@@ -56,9 +56,9 @@ export function TelegramBonusManager({ config, bonusOptions, onUpdate }: Telegra
         </label>
       </div>
 
-      <div className="grid grid-cols-1 gap-5 rounded-2xl border border-white/5 bg-white/[0.02] p-5 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-8 rounded-3xl border border-white/[0.05] bg-white/[0.02] p-8 md:grid-cols-2 backdrop-blur-xl">
         <div className="space-y-2">
-          <label className="block text-[10px] font-semibold uppercase tracking-widest text-slate-400">Kanal/Grup Kullanıcı Adı</label>
+          <label className="block text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Kanal/Grup Kullanıcı Adı</label>
           <input
             type="text"
             value={config.channelUsername}
@@ -70,7 +70,7 @@ export function TelegramBonusManager({ config, bonusOptions, onUpdate }: Telegra
         </div>
 
         <div className="space-y-2">
-          <label className="block text-[10px] font-semibold uppercase tracking-widest text-slate-400">Chat ID</label>
+          <label className="block text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Chat ID</label>
           <input
             type="text"
             value={config.chatId}
@@ -82,7 +82,7 @@ export function TelegramBonusManager({ config, bonusOptions, onUpdate }: Telegra
         </div>
 
         <div className="space-y-2">
-          <label className="block text-[10px] font-semibold uppercase tracking-widest text-slate-400">Bonus</label>
+          <label className="block text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Bonus</label>
           <select
             value={config.bonusId ?? ''}
             onChange={(e) => {
@@ -100,7 +100,7 @@ export function TelegramBonusManager({ config, bonusOptions, onUpdate }: Telegra
         </div>
 
         <div className="space-y-2">
-          <label className="block text-[10px] font-semibold uppercase tracking-widest text-slate-400">Tutar (TL)</label>
+          <label className="block text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Tutar (TL)</label>
           <input
             type="number"
             min={0}
@@ -111,7 +111,7 @@ export function TelegramBonusManager({ config, bonusOptions, onUpdate }: Telegra
         </div>
       </div>
 
-      <div className="flex items-start gap-3 rounded-2xl border border-sky-500/15 bg-sky-500/[0.04] p-4 text-xs font-medium text-sky-200/80">
+      <div className="flex items-start gap-3 rounded-3xl border border-sky-500/15 bg-sky-500/[0.04] p-8 text-xs font-medium text-sky-200/80 backdrop-blur-xl">
         <ShieldCheck size={16} className="mt-0.5 shrink-0 text-sky-400" />
         <p>
           Bu özelliğin çalışması için sunucuda <code className="rounded bg-black/30 px-1 py-0.5">TELEGRAM_BOT_TOKEN</code> ve{' '}

@@ -95,9 +95,9 @@ export function LoyaltySettings() {
             </div>
 
             {/* Ratio Config */}
-            <div className="p-8 bg-white/[0.02] border border-white/5 rounded-xl">
+            <div className="p-8 bg-white/[0.02] border border-white/[0.05] rounded-3xl backdrop-blur-xl">
                 <div className="flex items-center gap-4 mb-6">
-                    <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500">
+                    <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500">
                         <RefreshCcw size={24} />
                     </div>
                     <div>
@@ -112,13 +112,13 @@ export function LoyaltySettings() {
                             type="number" 
                             value={wagerRatio} 
                             onChange={e => setWagerRatio(Number(e.target.value))}
-                            className="w-full bg-black/30 border border-white/5 rounded-xl px-3 py-2.5 text-xl font-semibold text-white outline-none focus:border-amber-500/30 transition-all"
+                            className="w-full bg-black/30 border border-white/[0.05] rounded-3xl px-3 py-2.5 text-xl font-semibold text-white outline-none focus:border-amber-500/30 transition-all backdrop-blur-xl"
                         />
                    </div>
                    <div className="pt-8 text-slate-500 font-semibold">/</div>
                    <div className="flex-1 space-y-2">
                         <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest px-1">KAZANILAN PUAN</label>
-                        <div className="w-full bg-white/[0.02] border border-white/5 rounded-xl px-3 py-2.5 text-xl font-semibold text-amber-500 flex items-center gap-3">
+                        <div className="w-full bg-white/[0.02] border border-white/[0.05] rounded-3xl px-3 py-2.5 text-xl font-semibold text-amber-500 flex items-center gap-3 backdrop-blur-xl">
                             <Coins size={24} /> 1
                         </div>
                    </div>
@@ -136,18 +136,18 @@ export function LoyaltySettings() {
                     </h2>
                     <button 
                         onClick={addMarketItem}
-                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-semibold text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-blue-900/20"
+                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-semibold text-[10px] uppercase tracking-[0.2em] transition-all shadow-lg shadow-blue-900/20"
                     >
                         <Plus size={14} /> ÜRÜN EKLE
                     </button>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {market.map((item, idx) => (
-                        <div key={item.id} className="p-6 bg-white/[0.02] border border-white/5 rounded-xl space-y-4 group hover:border-amber-500/20 transition-all">
+                        <div key={item.id} className="p-8 bg-white/[0.02] border border-white/[0.05] rounded-3xl space-y-4 group hover:border-amber-500/20 transition-all backdrop-blur-xl">
                              <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
-                                   <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500">
+                                   <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500">
                                       {item.rewardType === 'freespin' ? <Star size={20} /> : <Gift size={20} />}
                                    </div>
                                    <input 
@@ -164,17 +164,17 @@ export function LoyaltySettings() {
                              <textarea 
                                 value={item.description}
                                 onChange={e => { const newM = [...market]; newM[idx].description = e.target.value; setMarket(newM); }}
-                                className="w-full bg-black/30 border border-white/5 rounded-xl p-3 text-xs font-bold text-slate-400 outline-none focus:border-amber-500/20 min-h-[60px]"
+                                className="w-full bg-black/30 border border-white/[0.05] rounded-3xl p-8 text-xs font-bold text-slate-400 outline-none focus:border-amber-500/20 min-h-[60px] backdrop-blur-xl"
                             />
 
-                            <div className="grid grid-cols-3 gap-4">
+                            <div className="grid grid-cols-3 gap-8">
                                 <div className="space-y-1">
                                     <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">MALİYET (PUAN)</label>
-                                    <input type="number" value={item.cost} onChange={e => { const newM = [...market]; newM[idx].cost = Number(e.target.value); setMarket(newM); }} className="w-full bg-black/30 border border-white/5 rounded-xl px-3 py-2 text-xs font-semibold text-white outline-none focus:border-amber-500/40" />
+                                    <input type="number" value={item.cost} onChange={e => { const newM = [...market]; newM[idx].cost = Number(e.target.value); setMarket(newM); }} className="w-full bg-black/30 border border-white/[0.05] rounded-3xl px-3 py-2 text-xs font-semibold text-white outline-none focus:border-amber-500/40 backdrop-blur-xl" />
                                 </div>
                                 <div className="space-y-1">
                                     <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">ÖDÜL MİKTARI</label>
-                                    <input type="number" value={item.rewardValue} onChange={e => { const newM = [...market]; newM[idx].rewardValue = Number(e.target.value); setMarket(newM); }} className="w-full bg-black/30 border border-white/5 rounded-xl px-3 py-2 text-xs font-semibold text-amber-500 outline-none focus:border-amber-500/40" />
+                                    <input type="number" value={item.rewardValue} onChange={e => { const newM = [...market]; newM[idx].rewardValue = Number(e.target.value); setMarket(newM); }} className="w-full bg-black/30 border border-white/[0.05] rounded-3xl px-3 py-2 text-xs font-semibold text-amber-500 outline-none focus:border-amber-500/40 backdrop-blur-xl" />
                                 </div>
                                 <div className="space-y-1">
                                     <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">BONUS (PLATFORM ID)</label>
@@ -210,7 +210,7 @@ export function LoyaltySettings() {
             </div>
 
             {marketError && (
-                <div className="p-8 bg-rose-500/5 border border-rose-500/10 rounded-xl text-center">
+                <div className="p-8 bg-rose-500/5 border border-rose-500/10 rounded-3xl text-center backdrop-blur-xl">
                     <p className="text-rose-500 font-bold">Veriler yüklenemedi. Yetkiniz olduğundan emin olun.</p>
                 </div>
             )}

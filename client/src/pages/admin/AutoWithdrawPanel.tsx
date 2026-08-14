@@ -75,11 +75,11 @@ function StatCard({ label, amount, count, tone, icon }: {
 }) {
   return (
     <AdminCard className="flex items-center gap-3 p-3.5">
-      <span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border', STAT_TONE[tone])}>
+      <span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-full border', STAT_TONE[tone])}>
         {icon}
       </span>
       <div className="min-w-0">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">{label}</p>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">{label}</p>
         <p className="mt-1 truncate text-[17px] font-semibold leading-none tabular-nums text-white">
           {formatNumber(amount)} <span className="text-[11px] font-medium text-slate-400">TRY</span>
         </p>
@@ -217,7 +217,7 @@ export function AutoWithdrawPanel() {
       <AdminCard className="p-4 md:p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex min-w-0 flex-1 items-start gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/5 bg-white/[0.04] text-slate-200">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/5 bg-white/[0.04] text-slate-200">
               <Zap size={18} />
             </span>
             <div className="min-w-0">
@@ -237,7 +237,7 @@ export function AutoWithdrawPanel() {
             type="button"
             onClick={handleRefresh}
             disabled={withdrawalRequestsQuery.isLoading}
-            className="inline-flex h-9 shrink-0 items-center gap-2 rounded-2xl border border-white/5 bg-white/[0.04] px-3.5 text-[12px] font-semibold text-slate-200 transition-colors hover:bg-white/[0.08] disabled:opacity-50"
+            className="inline-flex h-9 shrink-0 items-center gap-2 rounded-3xl border border-white/[0.05] bg-white/[0.04] px-3.5 text-[12px] font-semibold text-slate-200 transition-colors hover:bg-white/[0.08] disabled:opacity-50 backdrop-blur-xl"
           >
             <RefreshCw size={15} className={withdrawalRequestsQuery.isFetching ? 'animate-spin' : ''} />
             Yenile
@@ -246,7 +246,7 @@ export function AutoWithdrawPanel() {
       </AdminCard>
 
       {/* Özet — ödenen / bekleyen / reddedilen / toplam */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Ödenen" amount={paidAmount} count={paidCount} tone="success" icon={<ArrowUpFromLine size={16} />} />
         <StatCard label="Bekleyen" amount={pendingAmount} count={pendingCount} tone="warning" icon={<Clock size={16} />} />
         <StatCard label="Reddedilen" amount={rejectedAmount} count={rejectedCount} tone="danger" icon={<ArrowDownToLine size={16} />} />
@@ -267,7 +267,7 @@ export function AutoWithdrawPanel() {
 
       {/* Table card - hidden when analysis is open */}
       {!modalData && (
-        <div className="overflow-hidden rounded-2xl border border-white/5 bg-white/[0.02] shadow-xl transition-shadow hover:shadow-2xl hover:shadow-blue-500/5">
+        <div className="overflow-hidden rounded-3xl border border-white/[0.05] bg-white/[0.02] shadow-xl transition-shadow hover:shadow-2xl hover:shadow-blue-500/5 backdrop-blur-xl">
           <div className="flex flex-col border-b border-white/5 bg-white/5 sm:flex-row sm:items-center sm:justify-between px-3 py-2.5 gap-4">
             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-400">
               <Wallet size={16} className="text-purple-300" />
@@ -285,7 +285,7 @@ export function AutoWithdrawPanel() {
                     setSearchTerm(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="h-9 w-48 rounded-2xl border border-white/5 bg-white/[0.02] pl-9 pr-3 text-xs text-white placeholder:text-slate-500 focus:border-blue-500/50 focus:outline-none focus:ring-1 focus:ring-blue-500/50"
+                  className="h-9 w-48 rounded-3xl border border-white/[0.05] bg-white/[0.02] pl-9 pr-3 text-xs text-white placeholder:text-slate-500 focus:border-blue-500/50 focus:outline-none focus:ring-1 focus:ring-blue-500/50 backdrop-blur-xl"
                 />
               </div>
 
@@ -297,7 +297,7 @@ export function AutoWithdrawPanel() {
                     setStatusFilter(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="h-9 rounded-2xl border border-white/5 bg-white/[0.02] pl-3 pr-8 text-xs font-bold text-slate-200 focus:border-blue-500/50 focus:outline-none focus:ring-1 focus:ring-blue-500/50 appearance-none"
+                  className="h-9 rounded-3xl border border-white/[0.05] bg-white/[0.02] pl-3 pr-8 text-xs font-bold text-slate-200 focus:border-blue-500/50 focus:outline-none focus:ring-1 focus:ring-blue-500/50 appearance-none backdrop-blur-xl"
                 >
                   <option value="all">Tüm Durumlar</option>
                   <option value="pending">Bekleyenler</option>
@@ -328,7 +328,7 @@ export function AutoWithdrawPanel() {
               </div>
             </div>
           ) : withdrawalRequestsQuery.error ? (
-            <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-rose-500/20 bg-rose-500/5 p-12">
+            <div className="flex flex-col items-center justify-center gap-4 rounded-3xl border border-rose-500/20 bg-rose-500/5 p-12 backdrop-blur-xl">
               <AlertCircle size={48} className="text-rose-400/80" />
               <h3 className="font-bold text-rose-300">Liste yüklenemedi</h3>
               <p className="text-center text-sm text-rose-300/80">{(withdrawalRequestsQuery.error as Error).message}</p>
@@ -397,7 +397,7 @@ export function AutoWithdrawPanel() {
                             type="button"
                             onClick={() => handleCheck(row.ClientId, row.RequestTimeLocal ?? row.RequestTime ?? undefined)}
                             disabled={loadingClientId !== null}
-                            className="group/btn relative overflow-hidden rounded-2xl border border-emerald-500/40 bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-white shadow-lg shadow-emerald-500/20 transition-all duration-300 hover:from-emerald-500 hover:to-teal-500 hover:scale-105 hover:shadow-emerald-500/35 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
+                            className="group/btn relative overflow-hidden rounded-3xl border border-emerald-500/40 bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-2.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-white shadow-lg shadow-emerald-500/20 transition-all duration-300 hover:from-emerald-500 hover:to-teal-500 hover:scale-105 hover:shadow-emerald-500/35 active:scale-95 disabled:opacity-50 disabled:hover:scale-100 backdrop-blur-xl"
                           >
                             <span className="relative z-10">KONTROL ET</span>
                           </button>
@@ -418,14 +418,14 @@ export function AutoWithdrawPanel() {
                     <button
                       onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                       disabled={currentPage === 1}
-                      className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/5 text-slate-400 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-50 disabled:hover:bg-white/5"
+                      className="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 text-slate-400 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-50 disabled:hover:bg-white/5"
                     >
                       <ChevronLeft size={16} />
                     </button>
                     <button
                       onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                       disabled={currentPage === totalPages}
-                      className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/5 text-slate-400 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-50 disabled:hover:bg-white/5"
+                      className="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 text-slate-400 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-50 disabled:hover:bg-white/5"
                     >
                       <ChevronRight size={16} />
                     </button>
@@ -443,7 +443,7 @@ export function AutoWithdrawPanel() {
             <button
               type="button"
               onClick={() => setModalData(null)}
-              className="flex items-center gap-2 rounded-2xl border border-white/5 px-4 py-2 text-xs font-bold text-slate-400 transition-colors hover:bg-white/5 hover:text-white"
+              className="flex items-center gap-2 rounded-3xl border border-white/[0.05] px-4 py-2 text-xs font-bold text-slate-400 transition-colors hover:bg-white/5 hover:text-white backdrop-blur-xl"
             >
               ← Listeye dön
             </button>

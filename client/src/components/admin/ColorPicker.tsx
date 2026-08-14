@@ -23,7 +23,7 @@ export function ColorPicker({ color, onChange, label }: ColorPickerProps) {
       {label && <label className="text-[10px] uppercase text-slate-400 font-bold mb-1 block">{label}</label>}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="group relative flex h-9 w-full items-center gap-2 rounded-2xl border border-white/5 bg-white/10 px-2 transition-all hover:border-white/5"
+        className="group relative flex h-9 w-full items-center gap-2 rounded-3xl border border-white/[0.05] bg-white/10 px-2 transition-all hover:border-white/[0.05] backdrop-blur-xl"
       >
         <div 
           className="h-5 w-5 rounded-md border border-white/5 shadow-sm" 
@@ -44,7 +44,7 @@ export function ColorPicker({ color, onChange, label }: ColorPickerProps) {
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="absolute left-0 top-full z-[70] mt-2 w-48 rounded-2xl border border-white/5 bg-white/[0.02] p-3 shadow-2xl backdrop-blur-xl"
+              className="absolute left-0 top-full z-[70] mt-2 w-48 rounded-3xl border border-white/[0.05] bg-white/[0.02] p-8 shadow-2xl backdrop-blur-xl"
             >
               <div className="mb-2 flex items-center justify-between">
                 <span className="text-[10px] font-semibold text-slate-400 uppercase">Renk Seçin</span>
@@ -70,7 +70,7 @@ export function ColorPicker({ color, onChange, label }: ColorPickerProps) {
                 ))}
               </div>
 
-              <div className="flex items-center gap-2 rounded-xl bg-black/40 p-1.5 border border-white/5">
+              <div className="flex items-center gap-2 rounded-3xl bg-black/40 p-1.5 border border-white/[0.05] backdrop-blur-xl">
                 <input
                   type="color"
                   value={color}

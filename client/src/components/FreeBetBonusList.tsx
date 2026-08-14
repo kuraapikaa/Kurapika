@@ -33,7 +33,7 @@ export function FreeBetBonusList({ data, isLoading, error }: FreeBetBonusListPro
           <div className="overflow-x-auto">
           <table className="w-full text-sm min-w-[800px]">
             <thead>
-              <tr className="border-b border-white/5 bg-white/5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              <tr className="border-b border-white/5 bg-white/5 text-left text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
                 <th className="p-3">ID</th>
                 <th className="p-3">BonusId</th>
                 <th className="p-3">Ad</th>

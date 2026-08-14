@@ -91,23 +91,23 @@ export function AIPlayerInsight({ data, ipData, bonuslar }: AIPlayerInsightProps
         <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="rounded-xl border border-blue-500/30 bg-blue-950/20 p-6 md:p-8 backdrop-blur-md mb-8 relative overflow-hidden group"
+            className="rounded-3xl border border-blue-500/30 bg-blue-950/20 p-8 md:p-8 backdrop-blur-xl mb-8 relative overflow-hidden group"
         >
             <div className="absolute top-0 right-0 w-64 h-64 bg-purple-400/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-purple-400/20 transition-colors" />
 
             <div className="flex flex-col md:flex-row gap-6 items-start relative z-10">
-                <div className="flex-shrink-0 bg-purple-400/20 p-4 rounded-xl border border-blue-500/30">
+                <div className="flex-shrink-0 bg-purple-400/20 p-8 rounded-3xl border border-blue-500/30 backdrop-blur-xl">
                     <BrainCircuit size={32} className="text-purple-300" />
                 </div>
 
                 <div className="flex-1 space-y-3">
                     <div className="flex items-center gap-3 flex-wrap">
                         <h3 className="text-lg font-semibold text-purple-300 tracking-wide uppercase">Bugs Software AI Analiz Karnesi</h3>
-                        <span className={`px-3 py-1 text-[10px] font-semibold uppercase tracking-wider rounded-full border ${RISK_SINIFI[risk]}`}>
+                        <span className={`px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] rounded-full border ${RISK_SINIFI[risk]}`}>
                             Risk Seviyesi: {risk}
                         </span>
                         <div
-                            className="flex items-center gap-1.5 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider rounded-full border border-white/5 bg-black/20 text-slate-300"
+                            className="flex items-center gap-1.5 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] rounded-full border border-white/5 bg-black/20 text-slate-300"
                             title={persona.aciklama}
                         >
                             {personaSimgesi} {persona.ad}

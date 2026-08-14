@@ -165,7 +165,7 @@ export function EngagementManager({
         }
       />
 
-      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-5">
           <Bolum baslik="Modül ayarları">
             <div className="space-y-4 px-5 py-4">
@@ -176,7 +176,7 @@ export function EngagementManager({
                 etiket="Görevler yayında"
                 aciklama="Kapalıyken lobide görev sekmesi görünmez."
               />
-              <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_1.4fr_160px]">
+              <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_1.4fr_160px]">
                 <Alan etiket="Başlık">
                   <Girdi modul={MODUL} value={daily.title} onChange={(e) => gorevGuncelle({ title: e.target.value })} />
                 </Alan>
@@ -239,7 +239,7 @@ export function EngagementManager({
                           </span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <label className="flex cursor-pointer items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
+                          <label className="flex cursor-pointer items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
                             <input
                               type="checkbox"
                               checked={!pasif}
@@ -254,7 +254,7 @@ export function EngagementManager({
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 gap-3 xl:grid-cols-4">
+                      <div className="grid grid-cols-1 gap-8 xl:grid-cols-4">
                         <Alan etiket="Görev adı">
                           <Girdi modul={MODUL} value={gorev.title || ''} onChange={(e) => tekGorev(gorev.id, { title: e.target.value })} />
                         </Alan>
@@ -437,7 +437,7 @@ function BattlePassBolumu({
             onDegis={(isActive) => onGuncelle({ isActive })}
             etiket="Sezon yayında"
           />
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 xl:grid-cols-4">
             <Alan etiket="Sezon ID">
               <Girdi modul={MODUL} value={pass.seasonId} onChange={(e) => onGuncelle({ seasonId: e.target.value })} />
             </Alan>
@@ -498,9 +498,9 @@ function BattlePassBolumu({
         ) : (
           <div className="space-y-3 p-4">
             {pass.xpRules.map((kural: any) => (
-              <div key={kural.id} className="rounded-2xl border border-white/5 bg-black/20 p-4">
+              <div key={kural.id} className="rounded-3xl border border-white/[0.05] bg-black/20 p-8 backdrop-blur-xl">
                 <div className="mb-4 flex items-center justify-between gap-3">
-                  <label className="flex cursor-pointer items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
+                  <label className="flex cursor-pointer items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
                     <input type="checkbox" checked={kural.active !== false} onChange={(e) => kuralGuncelle(kural.id, { active: e.target.checked })} />
                     Aktif
                   </label>
@@ -509,7 +509,7 @@ function BattlePassBolumu({
                     etiket="Kuralı sil"
                   />
                 </div>
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
+                <div className="grid grid-cols-1 gap-8 md:grid-cols-5">
                   <Alan etiket="Ad">
                     <Girdi modul={MODUL} value={kural.label || ''} onChange={(e) => kuralGuncelle(kural.id, { label: e.target.value })} />
                   </Alan>
@@ -568,10 +568,10 @@ function BattlePassBolumu({
         ) : (
           <div className="space-y-3 p-4">
             {pass.levels.map((seviye: any) => (
-              <div key={seviye.level} className="rounded-2xl border border-white/5 bg-black/20 p-4">
+              <div key={seviye.level} className="rounded-3xl border border-white/[0.05] bg-black/20 p-8 backdrop-blur-xl">
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <span className={`${RAKAM} flex h-9 w-9 items-center justify-center rounded-xl bg-[color:var(--panel-success,#30d158)]/15 text-[13px] font-bold text-[color:var(--panel-success,#30d158)]`}>
+                    <span className={`${RAKAM} flex h-9 w-9 items-center justify-center rounded-full bg-[color:var(--panel-success,#30d158)]/15 text-[13px] font-bold text-[color:var(--panel-success,#30d158)]`}>
                       {seviye.level}
                     </span>
                     <span className={`${RAKAM} text-[11px] font-bold text-slate-400`}>
@@ -583,7 +583,7 @@ function BattlePassBolumu({
                     etiket={`Seviye ${seviye.level} sil`}
                   />
                 </div>
-                <div className="grid grid-cols-1 gap-3 xl:grid-cols-4">
+                <div className="grid grid-cols-1 gap-8 xl:grid-cols-4">
                   <Alan etiket="Seviye">
                     <Girdi modul={MODUL} sayisal type="number" value={seviye.level ?? 1} onChange={(e) => seviyeGuncelle(Number(seviye.level), { level: Number(e.target.value) })} />
                   </Alan>

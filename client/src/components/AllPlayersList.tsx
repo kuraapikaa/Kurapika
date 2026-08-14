@@ -21,13 +21,13 @@ function PlayersTable({
   kpiLoadingMap: Record<number, boolean>;
 }) {
   return (
-    <Card className="premium-card overflow-hidden rounded-2xl border-white/5 bg-white/[0.02] p-0 backdrop-blur-md">
+    <Card className="premium-card overflow-hidden rounded-3xl border-white/[0.05] bg-white/[0.02] p-0 backdrop-blur-xl">
       {/* Kart basligi: seffaf cam. Onceden opak siyah bir serit vardi ve
           kartin cam yuzeyini tepeden kesiyordu. */}
       <div className="flex items-center justify-between border-b border-white/5 px-6 py-5">
         <div className="flex items-center gap-3">
           <div className="h-2 w-2 animate-pulse rounded-full bg-purple-400" />
-          <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 antialiased">Oyuncu Portföyü &amp; Analiz</span>
+          <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500 antialiased">Oyuncu Portföyü &amp; Analiz</span>
         </div>
         <div className="flex items-center gap-6">
           <div className="flex flex-col items-end">
@@ -46,7 +46,7 @@ function PlayersTable({
             divide-y: ince, saydam ve tek yerde tanimli ayiraclar. */}
         <table className="w-full bg-transparent text-sm">
           <thead>
-            <tr className="border-b border-white/5 text-left text-xs uppercase tracking-wider text-slate-500">
+            <tr className="border-b border-white/5 text-left text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500">
               <th className="px-6 py-4 font-semibold">Oyuncu / ID</th>
               <th className="px-6 py-4 font-semibold">Kategori</th>
               <th className="px-6 py-4 font-semibold">İletişim</th>
@@ -121,7 +121,7 @@ function PlayersTable({
                         <div className="flex items-center gap-4">
                           <div className="relative">
                             <div className="absolute inset-0 bg-purple-400 rounded-xl blur-lg opacity-0 group-hover:opacity-20 transition-opacity" />
-                            <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/[0.02] border border-white/5 font-semibold text-[11px] text-slate-400 group-hover:border-purple-400/40 group-hover:text-purple-300 transition-all shadow-inner">
+                            <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/[0.02] border border-white/5 font-semibold text-[11px] text-slate-400 group-hover:border-purple-400/40 group-hover:text-purple-300 transition-all shadow-inner">
                               {row.FirstName?.[0]}{row.LastName?.[0] || row.FirstName?.[1] || '?'}
                             </div>
                           </div>
@@ -141,7 +141,7 @@ function PlayersTable({
                       </td>
                       <td className="px-6 py-4">
                         <span
-                          className="inline-flex rounded-full border border-white/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider"
+                          className="inline-flex rounded-full border border-white/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em]"
                           style={{ backgroundColor: `${category.colorBg}22`, color: category.colorText, borderColor: `${category.colorText}33` }}
                           title={category.label}
                         >
@@ -162,7 +162,7 @@ function PlayersTable({
                       </td>
                       <td className="px-6 py-4">
                         {row.BTag ? (
-                          <span className="neon-glow-indigo inline-flex rounded-full border border-purple-400/25 bg-purple-400/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-purple-300">
+                          <span className="neon-glow-indigo inline-flex rounded-full border border-purple-400/25 bg-purple-400/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-purple-300">
                             {row.BTag}
                           </span>
                         ) : (
@@ -224,11 +224,11 @@ function PlayersTable({
                       <td className="px-6 py-4 text-center pr-4">
                         <div className="flex flex-col items-center gap-2">
                           {row.IsLocked ? (
-                            <div className="inline-flex items-center gap-1.5 rounded-full border border-rose-400/25 bg-rose-400/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-rose-300">
+                            <div className="inline-flex items-center gap-1.5 rounded-full border border-rose-400/25 bg-rose-400/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-rose-300">
                               <ShieldAlert size={10} strokeWidth={3} /> KİLİTLİ
                             </div>
                           ) : (
-                            <div className="neon-glow-emerald inline-flex items-center gap-1.5 rounded-full border border-emerald-400/25 bg-emerald-400/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-emerald-300">
+                            <div className="neon-glow-emerald inline-flex items-center gap-1.5 rounded-full border border-emerald-400/25 bg-emerald-400/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-300">
                               <ShieldCheck size={10} strokeWidth={3} /> AKTİF
                             </div>
                           )}
@@ -285,7 +285,7 @@ export function AllPlayersList({
 
   if (error) {
     return (
-      <div className="animate-in rounded-2xl border border-rose-400/25 bg-rose-400/[0.08] p-8 text-center text-rose-400 backdrop-blur-xl">
+      <div className="animate-in rounded-3xl border border-rose-400/25 bg-rose-400/[0.08] p-8 text-center text-rose-400 backdrop-blur-xl">
         <ShieldAlert size={48} className="mx-auto mb-4 opacity-20" />
         <h3 className="text-lg font-bold">Veri İletişim Hatası</h3>
         <p className="mt-2 text-sm opacity-70">{error.message}</p>
@@ -295,7 +295,7 @@ export function AllPlayersList({
 
   if (data?.HasError) {
     return (
-      <div className="animate-in rounded-2xl border border-amber-400/25 bg-amber-400/[0.08] p-8 text-center text-amber-400 backdrop-blur-xl">
+      <div className="animate-in rounded-3xl border border-amber-400/25 bg-amber-400/[0.08] p-8 text-center text-amber-400 backdrop-blur-xl">
         <ShieldAlert size={48} className="mx-auto mb-4 opacity-20" />
         <h3 className="text-lg font-bold">API Uyarısı</h3>
         <p className="mt-2 text-sm opacity-70">{data.AlertMessage || 'Bilinmeyen sistem hatası'}</p>
@@ -335,7 +335,7 @@ export function AllPlayersList({
       <header className="flex flex-col gap-8">
         <div className="flex flex-wrap items-center justify-between gap-6 px-1">
           <div className="flex items-center gap-4">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-purple-400/25 bg-purple-400/10 text-purple-300">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-purple-400/25 bg-purple-400/10 text-purple-300">
               <Users size={18} />
             </div>
             <div>
@@ -347,13 +347,13 @@ export function AllPlayersList({
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <button className="flex items-center gap-2 neon-glow-indigo rounded-full bg-purple-500 px-6 py-3 text-[10px] font-semibold uppercase tracking-wider text-white transition-all hover:bg-purple-400">
+            <button className="flex items-center gap-2 neon-glow-indigo rounded-full bg-purple-500 px-6 py-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-white transition-all hover:bg-purple-400">
               <ExternalLink size={14} strokeWidth={3} /> DIŞA AKTAR
             </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-6 relative group">
                         <div className="relative flex h-10 items-center gap-2.5 rounded-full border border-white/5 bg-black/30 px-4">
               <Search className="text-slate-400" size={20} />
@@ -379,7 +379,7 @@ export function AllPlayersList({
             </div>
           </div>
           <div className="lg:col-span-3">
-            <button className="flex h-10 w-full items-center justify-center gap-2 rounded-full border border-white/5 bg-white/[0.03] text-[10px] font-semibold uppercase tracking-wider text-slate-400 transition-all hover:bg-white/5 hover:text-white">
+            <button className="flex h-10 w-full items-center justify-center gap-2 rounded-full border border-white/5 bg-white/[0.03] text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400 transition-all hover:bg-white/5 hover:text-white">
               <Filter size={16} /> GELİŞMİŞ FİLTRELEME
             </button>
           </div>
@@ -387,7 +387,7 @@ export function AllPlayersList({
       </header>
 
       {isLoading ? (
-        <div className="flex h-96 flex-col items-center justify-center gap-6 rounded-2xl border border-white/5 bg-white/[0.02] backdrop-blur-md">
+        <div className="flex h-96 flex-col items-center justify-center gap-6 rounded-3xl border border-white/[0.05] bg-white/[0.02] backdrop-blur-xl">
           <div className="h-12 w-12 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" />
           <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Veritabanı taranıyor...</p>
         </div>

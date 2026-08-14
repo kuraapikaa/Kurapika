@@ -56,13 +56,20 @@ const NOKTA: Record<PanoVurgu, string> = {
   notr: 'bg-white/40',
 };
 
+/**
+ * Olcu rakaminin rengi VE isigi.
+ *
+ * Parilti dekorasyon degil: buyuk rakami zeminden koparip once ona
+ * bakilmasini sagliyor. Anlam yine renkte — yesil kasaya giren, gul
+ * cikan. Kalin ayirici cubuklar yerine isik kullaniliyor.
+ */
 const YAZI: Record<PanoVurgu, string> = {
-  giris: 'text-emerald-300',
-  cikis: 'text-rose-300',
-  maliyet: 'text-amber-300',
-  hacim: 'text-sky-300',
-  oyuncu: 'text-purple-300',
-  notr: 'text-white',
+  giris: 'text-emerald-400 drop-shadow-[0_0_12px_rgba(52,211,153,0.5)]',
+  cikis: 'text-rose-400 drop-shadow-[0_0_12px_rgba(251,113,133,0.45)]',
+  maliyet: 'text-amber-300 drop-shadow-[0_0_12px_rgba(251,191,36,0.45)]',
+  hacim: 'text-sky-300 drop-shadow-[0_0_12px_rgba(56,189,248,0.45)]',
+  oyuncu: 'text-purple-300 drop-shadow-[0_0_12px_rgba(168,85,247,0.45)]',
+  notr: 'text-white drop-shadow-[0_0_14px_rgba(255,255,255,0.18)]',
 };
 
 // ─── Kart ────────────────────────────────────────────────────────────────
@@ -82,8 +89,8 @@ export function PanoKart({
     <section
       className={cn(
         // Yuzen cam kart: genis yaricap, neredeyse gorunmez kenarlik.
-        'relative overflow-hidden rounded-2xl border border-white/5',
-        'bg-white/[0.02] backdrop-blur-md',
+        'relative overflow-hidden rounded-3xl border border-white/[0.05] backdrop-blur-xl',
+        'bg-white/[0.02] backdrop-blur-xl',
         className,
       )}
     >
@@ -111,7 +118,7 @@ export function PanoBaslik({
     <div className="flex items-start justify-between gap-3 border-b border-white/5 px-6 py-5">
       <div className="flex min-w-0 items-center gap-3">
         {simge && (
-          <span className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border', CIP[vurgu])}>
+          <span className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-full border', CIP[vurgu])}>
             {simge}
           </span>
         )}
@@ -130,7 +137,7 @@ export function PanoBolum({ baslik, vurgu = 'notr' }: { baslik: string; vurgu?: 
   return (
     <div className="mb-5 flex items-center gap-2.5">
       <span className={cn('h-1.5 w-1.5 rounded-full', NOKTA[vurgu])} />
-      <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{baslik}</p>
+      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500">{baslik}</p>
       <span className="h-px flex-1 bg-white/5" />
     </div>
   );
@@ -178,11 +185,11 @@ export function PanoOlcu({
   veriYok?: boolean;
 }) {
   return (
-    <PanoKart vurgu={vurgu} className="flex min-h-[140px] flex-col justify-between p-6 transition-colors hover:border-white/10">
+    <PanoKart vurgu={vurgu} className="flex min-h-[168px] flex-col justify-between p-8 transition-colors hover:border-white/10">
       <div className="flex items-start justify-between gap-3">
-        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{etiket}</p>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500">{etiket}</p>
         {simge && (
-          <span className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border', CIP[vurgu])}>
+          <span className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-full border', CIP[vurgu])}>
             {simge}
           </span>
         )}
@@ -191,7 +198,7 @@ export function PanoOlcu({
         {/* Olcu rakami ekranin en buyuk yazisi: bakis once buraya dussun. */}
         <p
           className={cn(
-            'text-[32px] font-bold leading-none tracking-[-0.04em] tabular-nums',
+            'text-3xl font-bold leading-none tracking-[-0.04em] tabular-nums',
             veriYok ? 'text-slate-500' : YAZI[vurgu],
           )}
         >
@@ -218,7 +225,7 @@ export function PanoHucre({
   return (
     <div
       title={aciklama}
-      className="rounded-xl border border-transparent px-3 py-2.5 transition-colors hover:border-white/5 hover:bg-white/5"
+      className="rounded-3xl border border-transparent px-3 py-2.5 transition-colors hover:border-white/[0.05] hover:bg-white/5 backdrop-blur-xl"
     >
       <p className="text-xs font-medium leading-tight text-slate-500">
         {etiket}
@@ -262,14 +269,16 @@ export function AkisSeridi({
 
   return (
     // Panonun imza kartı: mesh gradyan ve glow ile premium alan olarak ayrılır.
-    <PanoKart className="mesh-zumrut p-6">
+    <PanoKart className="mesh-zumrut p-8">
       <div className="flex flex-wrap items-end justify-between gap-6">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Günün akışı</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500">Günün akışı</p>
           <p
             className={cn(
-              'mt-2 text-[38px] font-bold leading-none tracking-[-0.04em] tabular-nums',
-              net >= 0 ? 'text-emerald-300' : 'text-rose-300',
+              'mt-3 text-4xl font-bold leading-none tracking-[-0.04em] tabular-nums',
+              net >= 0
+                ? 'text-emerald-400 drop-shadow-[0_0_16px_rgba(52,211,153,0.55)]'
+                : 'text-rose-400 drop-shadow-[0_0_16px_rgba(251,113,133,0.5)]',
             )}
           >
             {isaretliYaz(net)}
@@ -313,7 +322,7 @@ export function PanoTablo({ basliklar, children, minGenislik = 520 }: {
               <th
                 key={ad}
                 className={cn(
-                  'px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500',
+                  'px-6 py-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500',
                   sag && 'text-right',
                 )}
               >
@@ -365,8 +374,8 @@ export function PanoYukleniyor({ satir = 3 }: { satir?: number }) {
 /** Tek hata bloğu. Ne olduğunu söyler, suçlamaz. */
 export function PanoHata({ mesaj }: { mesaj: string }) {
   return (
-    <div className="m-6 rounded-2xl border border-rose-400/25 bg-rose-400/[0.08] p-5">
-      <p className="text-xs font-semibold uppercase tracking-wider text-rose-300">Veri alınamadı</p>
+    <div className="m-6 rounded-3xl border border-rose-400/25 bg-rose-400/[0.08] p-8 backdrop-blur-xl">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-rose-300">Veri alınamadı</p>
       <p className="mt-1.5 text-sm text-slate-300">{mesaj}</p>
     </div>
   );

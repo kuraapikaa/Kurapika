@@ -23,7 +23,7 @@ interface SportbookOverviewProps {
 
 /** Canlı / maç öncesi ayrımı; rozet biçimi panonun geri kalanıyla aynı. */
 function turRozeti(isLive: boolean | null) {
-  const ortak = 'inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em]';
+  const ortak = 'inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.2em]';
   if (isLive === true) {
     return <span className={cn(ortak, 'border-emerald-400/20 bg-emerald-400/[0.08] text-emerald-300')}><Radio size={10} /> Canlı</span>;
   }
@@ -90,7 +90,7 @@ export function SportbookOverview({ data, isLoading, error }: SportbookOverviewP
       {!error && !isLoading && counts && Object.keys(counts).length > 0 && (
         <div className="border-t border-white/5 p-4">
           <PanoBolum baslik="Kupon türleri" vurgu="hacim" />
-          <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-x-8 gap-y-8 sm:grid-cols-4">
             {(['Single', 'Multiple', 'System', 'Chain'] as const).map((key) => (
               <PanoHucre
                 key={key}

@@ -148,16 +148,16 @@ export function MasterPanel() {
       </div>
 
       <main className="relative mx-auto w-full max-w-[1900px] space-y-4 p-4">
-        <header className="flex flex-col gap-3 rounded-2xl border border-white/5 bg-white/10 p-4 md:flex-row md:items-center md:justify-between">
+        <header className="flex flex-col gap-3 rounded-3xl border border-white/[0.05] bg-white/10 p-8 md:flex-row md:items-center md:justify-between backdrop-blur-xl">
           <div className="flex items-center gap-3">
-            <div className="grid h-10 w-10 grid-cols-2 place-items-center gap-1 rounded-2xl border border-purple-400/25 bg-blue-400/[0.1] p-2.5 text-purple-300">
+            <div className="grid h-10 w-10 grid-cols-2 place-items-center gap-1 rounded-full border border-purple-400/25 bg-blue-400/[0.1] p-2.5 text-purple-300">
               <span className="h-2.5 w-2.5 rounded bg-current" />
               <span className="h-2.5 w-2.5 rounded bg-current" />
               <span className="h-2.5 w-2.5 rounded bg-current" />
               <span className="h-2.5 w-2.5 rounded bg-current" />
             </div>
             <div>
-              <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-purple-300/75">Master control</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-purple-300/75">Master control</p>
               <h1 className="mt-0.5 text-xl font-bold tracking-[-0.03em] text-white md:text-2xl">Müşteri panelleri</h1>
               <p className="mt-1 max-w-2xl text-xs font-medium text-slate-400">Tenant erişimlerini, domainleri ve marka ayarlarını tek merkezden yönetin.</p>
             </div>
@@ -169,7 +169,7 @@ export function MasterPanel() {
               <input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                className="h-9 w-full rounded-2xl border border-white/5 bg-white/[0.02] pl-9 pr-3 text-xs font-semibold text-white outline-none transition focus:border-blue-400/40 sm:w-64"
+                className="h-9 w-full rounded-3xl border border-white/[0.05] bg-white/[0.02] pl-9 pr-3 text-xs font-semibold text-white outline-none transition focus:border-blue-400/40 sm:w-64 backdrop-blur-xl"
                 placeholder="Panel, domain veya e-posta ara"
               />
             </div>
@@ -188,7 +188,7 @@ export function MasterPanel() {
           </div>
         </header>
 
-        <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+        <section className="grid grid-cols-2 gap-8 xl:grid-cols-4">
           <MetricCard label="Toplam panel" value={stats.total} icon={Server} tone="cyan" />
           <MetricCard label="Aktif" value={stats.active} icon={CheckCircle2} tone="emerald" />
           <MetricCard label="Pasif" value={stats.passive} icon={Pause} tone="rose" />
@@ -199,7 +199,7 @@ export function MasterPanel() {
           <motion.section
             initial={{ opacity: 0, y: -12 }}
             animate={{ opacity: 1, y: 0 }}
-            className="relative overflow-hidden rounded-2xl border border-white/5 bg-white/10 p-4"
+            className="relative overflow-hidden rounded-3xl border border-white/[0.05] bg-white/10 p-8 backdrop-blur-xl"
           >
             <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-[color:var(--panel-info,#64d2ff)]/10 blur-3xl" />
             <div className="relative mb-4 flex items-start justify-between gap-4">
@@ -207,12 +207,12 @@ export function MasterPanel() {
                 <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-cyan-300/70">{editingId ? 'Düzenleme modu' : 'Yeni kurulum'}</p>
                 <h2 className="mt-1 text-lg font-bold tracking-[-0.025em] text-white">{editingId ? 'Panel ayarlarını düzenle' : 'Yeni müşteri paneli oluştur'}</h2>
               </div>
-              <button onClick={handleReset} className="rounded-2xl border border-white/5 bg-white/[0.03] p-2 text-slate-400 transition hover:text-white">
+              <button onClick={handleReset} className="rounded-3xl border border-white/[0.05] bg-white/[0.03] p-2 text-slate-400 transition hover:text-white backdrop-blur-xl">
                 <X size={18} />
               </button>
             </div>
 
-            <div className="relative grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+            <div className="relative grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
               <Field label="Site adı" value={form.siteName} onChange={(value) => updateForm('siteName', value)} placeholder="Örn: Bugs Casino" />
               <Field label="Domain" value={form.domain} onChange={(value) => updateForm('domain', value)} placeholder="ornek-domain.com" />
               <Field label="Admin e-posta" value={form.adminEmail} onChange={(value) => updateForm('adminEmail', value)} placeholder="admin@domain.com" />
@@ -220,9 +220,9 @@ export function MasterPanel() {
               <Field label="Partner ID" value={form.partnerId} onChange={(value) => updateForm('partnerId', value)} placeholder="Opsiyonel" />
               <Field label="Bitiş tarihi" value={form.expireDate} onChange={(value) => updateForm('expireDate', value)} type="date" />
               <div>
-                <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Tema rengi</label>
-                <div className="flex items-center gap-2 rounded-2xl border border-white/5 bg-white/[0.02] p-1">
-                  <input type="color" value={form.themeColor} onChange={(event) => updateForm('themeColor', event.target.value)} className="h-10 w-12 cursor-pointer rounded-2xl border-0 bg-transparent" />
+                <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Tema rengi</label>
+                <div className="flex items-center gap-2 rounded-3xl border border-white/[0.05] bg-white/[0.02] p-1 backdrop-blur-xl">
+                  <input type="color" value={form.themeColor} onChange={(event) => updateForm('themeColor', event.target.value)} className="h-10 w-12 cursor-pointer rounded-full border-0 bg-transparent" />
                   <input value={form.themeColor} onChange={(event) => updateForm('themeColor', event.target.value)} className="min-w-0 flex-1 bg-transparent px-2 py-2 text-sm font-bold text-white outline-none" />
                 </div>
               </div>
@@ -231,7 +231,7 @@ export function MasterPanel() {
             </div>
 
             <div className="relative mt-4 flex flex-col-reverse justify-end gap-3 sm:flex-row">
-              <button onClick={handleReset} className="h-9 rounded-2xl border border-white/5 bg-white/[0.03] px-4 text-xs font-bold text-slate-400 transition hover:text-white">
+              <button onClick={handleReset} className="h-9 rounded-3xl border border-white/[0.05] bg-white/[0.03] px-4 text-xs font-bold text-slate-400 transition hover:text-white backdrop-blur-xl">
                 İptal
               </button>
               <button
@@ -246,7 +246,7 @@ export function MasterPanel() {
           </motion.section>
         )}
 
-        <section className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <section className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
           {filteredTenants.map((tenant: any) => (
             <TenantCard
               key={tenant.id}
@@ -259,7 +259,7 @@ export function MasterPanel() {
           ))}
 
           {filteredTenants.length === 0 && (
-            <div className="col-span-full rounded-2xl border border-dashed border-white/5 bg-white/10 py-12 text-center">
+            <div className="col-span-full rounded-3xl border border-dashed border-white/[0.05] bg-white/10 py-12 text-center backdrop-blur-xl">
               <Sparkles className="mx-auto mb-4 text-slate-500" size={32} />
               <p className="text-sm font-bold text-slate-400">Gösterilecek müşteri paneli bulunamadı.</p>
               <p className="mt-1 text-xs text-slate-500">Aramayı temizleyin veya yeni panel oluşturun.</p>
@@ -284,10 +284,10 @@ function MetricCard({ label, value, icon: Icon, tone }: { label: string; value: 
   }[tone];
 
   return (
-    <div className="rounded-2xl border border-white/5 bg-white/10 p-3.5">
+    <div className="rounded-3xl border border-white/[0.05] bg-white/10 p-8.5 backdrop-blur-xl">
       <div className="flex items-center justify-between">
         <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">{label}</p>
-        <div className={cn('flex h-8 w-8 items-center justify-center rounded-2xl border', toneClass)}>
+        <div className={cn('flex h-8 w-8 items-center justify-center rounded-full border', toneClass)}>
           <Icon size={18} />
         </div>
       </div>
@@ -299,12 +299,12 @@ function MetricCard({ label, value, icon: Icon, tone }: { label: string; value: 
 function Field({ label, value, onChange, placeholder, type = 'text' }: { label: string; value: string; onChange: (value: string) => void; placeholder?: string; type?: string }) {
   return (
     <div>
-      <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">{label}</label>
+      <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">{label}</label>
       <input
         type={type}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="h-9 w-full rounded-2xl border border-white/5 bg-white/[0.02] px-3 text-xs font-semibold text-white outline-none transition placeholder:text-slate-500 focus:border-blue-400/40 [color-scheme:dark]"
+        className="h-9 w-full rounded-3xl border border-white/[0.05] bg-white/[0.02] px-3 text-xs font-semibold text-white outline-none transition placeholder:text-slate-500 focus:border-blue-400/40 [color-scheme:dark] backdrop-blur-xl"
         placeholder={placeholder}
       />
     </div>
@@ -313,15 +313,15 @@ function Field({ label, value, onChange, placeholder, type = 'text' }: { label: 
 
 function TenantCard({ tenant, onEdit, onConnection, onToggle, isUpdating }: { tenant: any; onEdit: () => void; onConnection: () => void; onToggle: () => void; isUpdating: boolean }) {
   return (
-    <article className="group relative overflow-hidden rounded-2xl border border-white/5 bg-white/10 p-4 transition hover:border-purple-400/25">
+    <article className="group relative overflow-hidden rounded-3xl border border-white/[0.05] bg-white/10 p-8 transition hover:border-purple-400/25 backdrop-blur-xl">
       <div className={cn('hidden absolute right-0 top-0 h-36 w-36 rounded-full blur-3xl', tenant.isActive ? 'bg-emerald-400/10' : 'bg-rose-400/10')} />
 
       <div className="relative flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-white/5 bg-white/[0.035]">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/5 bg-white/[0.035]">
               {tenant.logoUrl ? (
-                <img src={tenant.logoUrl} alt="" className="h-7 w-7 rounded-xl object-contain" />
+                <img src={tenant.logoUrl} alt="" className="h-7 w-7 rounded-full object-contain" />
               ) : (
                 <Globe className="text-cyan-300" size={20} />
               )}
@@ -346,7 +346,7 @@ function TenantCard({ tenant, onEdit, onConnection, onToggle, isUpdating }: { te
         </button>
       </div>
 
-      <div className="relative mt-4 grid gap-2">
+      <div className="relative mt-4 grid gap-8">
         <InfoRow icon={Shield} label="E-posta" value={tenant.adminEmail || 'Tanımsız'} />
         <InfoRow icon={Lock} label="Şifre" value={tenant.adminPassword ? '••••••••' : 'Tanımsız'} />
         <InfoRow icon={KeyRound} label="Partner" value={tenant.partnerId || 'Yok'} />
@@ -355,10 +355,10 @@ function TenantCard({ tenant, onEdit, onConnection, onToggle, isUpdating }: { te
       </div>
 
       <div className="relative mt-4 flex gap-2">
-        <button onClick={onEdit} className="flex h-8 flex-1 items-center justify-center rounded-2xl border border-white/5 bg-white/[0.035] text-[10px] font-bold text-slate-200 transition hover:bg-white/[0.08]">
+        <button onClick={onEdit} className="flex h-8 flex-1 items-center justify-center rounded-3xl border border-white/[0.05] bg-white/[0.035] text-[10px] font-bold text-slate-200 transition hover:bg-white/[0.08] backdrop-blur-xl">
           <span className="inline-flex items-center gap-2"><Settings size={14} /> Ayarlar</span>
         </button>
-        <button onClick={onConnection} className="flex h-8 flex-1 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-300/[0.08] text-[10px] font-bold text-cyan-200 transition hover:bg-cyan-300/[0.14]">
+        <button onClick={onConnection} className="flex h-8 flex-1 items-center justify-center rounded-3xl border border-cyan-300/20 bg-cyan-300/[0.08] text-[10px] font-bold text-cyan-200 transition hover:bg-cyan-300/[0.14] backdrop-blur-xl">
           <span className="inline-flex items-center gap-2"><PlugZap size={14} /> Bağlantı</span>
         </button>
         <button
@@ -427,7 +427,7 @@ function ConnectionModal({ tenant, onClose }: { tenant: any; onClose: () => void
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative my-8 w-full max-w-3xl rounded-2xl border border-white/5 bg-[#0b1017] p-5"
+        className="relative my-8 w-full max-w-3xl rounded-3xl border border-white/[0.05] bg-white/[0.02] p-8 backdrop-blur-xl"
       >
         <div className="mb-4 flex items-start justify-between gap-4">
           <div>
@@ -437,13 +437,13 @@ function ConnectionModal({ tenant, onClose }: { tenant: any; onClose: () => void
               Boş bırakılan alanlar sunucunun ortam değişkenindeki değeri kullanır.
             </p>
           </div>
-          <button onClick={onClose} className="rounded-2xl border border-white/5 bg-white/[0.03] p-2 text-slate-400 transition hover:text-white">
+          <button onClick={onClose} className="rounded-3xl border border-white/[0.05] bg-white/[0.03] p-2 text-slate-400 transition hover:text-white backdrop-blur-xl">
             <X size={18} />
           </button>
         </div>
 
         {!sifrelemeHazir && (
-          <div className="mb-4 rounded-2xl border border-amber-300/25 bg-amber-300/[0.08] p-3 text-xs font-semibold text-amber-200">
+          <div className="mb-4 rounded-3xl border border-amber-300/25 bg-amber-300/[0.08] p-8 text-xs font-semibold text-amber-200 backdrop-blur-xl">
             <span className="inline-flex items-center gap-2"><ShieldAlert size={15} /> TENANT_SECRET_KEY tanımlı değil.</span>
             <p className="mt-1 font-medium text-amber-200/80">
               Şifre, OTP sırrı ve token alanları şifrelenemediği için kaydedilemez. Adres ve site kimliği gibi sır olmayan alanlar kaydedilebilir.
@@ -455,8 +455,8 @@ function ConnectionModal({ tenant, onClose }: { tenant: any; onClose: () => void
           <div className="flex justify-center py-12"><Loader2 size={28} className="animate-spin text-cyan-300" /></div>
         ) : (
           <>
-            <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">Lynon backoffice</p>
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+            <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500">Lynon backoffice</p>
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
               <Field label="Backoffice adresi" value={lynon.backofficeBaseUrl ?? ''} onChange={(v) => alan('backofficeBaseUrl', v)} placeholder={mevcut?.lynon?.backofficeBaseUrl || 'ENV değeri'} />
               <Field label="Kimlik (ID) adresi" value={lynon.idBaseUrl ?? ''} onChange={(v) => alan('idBaseUrl', v)} placeholder={mevcut?.lynon?.idBaseUrl || 'ENV değeri'} />
               <Field label="Site ID" value={lynon.siteId ?? ''} onChange={(v) => alan('siteId', v)} placeholder={mevcut?.lynon?.siteId ? String(mevcut.lynon.siteId) : 'ENV değeri'} />
@@ -468,8 +468,8 @@ function ConnectionModal({ tenant, onClose }: { tenant: any; onClose: () => void
               <Field label="Saat dilimi ofseti" value={lynon.timezoneOffset ?? ''} onChange={(v) => alan('timezoneOffset', v)} placeholder={mevcut?.lynon?.timezoneOffset != null ? String(mevcut.lynon.timezoneOffset) : 'ENV değeri'} />
             </div>
 
-            <p className="mb-2 mt-5 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">Backoffice token</p>
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <p className="mb-2 mt-5 text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500">Backoffice token</p>
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
               <Field
                 label="Backoffice token"
                 value={backoffice.authToken ?? ''}
@@ -488,7 +488,7 @@ function ConnectionModal({ tenant, onClose }: { tenant: any; onClose: () => void
 
             {testSonucu && (
               <div className={cn(
-                'mt-4 rounded-2xl border p-3 text-xs font-semibold',
+                'mt-4 rounded-3xl border p-8 text-xs font-semibold backdrop-blur-xl',
                 testSonucu.ok ? 'border-emerald-300/25 bg-emerald-300/[0.08] text-emerald-200' : 'border-rose-300/25 bg-rose-300/[0.08] text-rose-200'
               )}>
                 {testSonucu.ok ? 'Bağlantı kuruldu.' : testSonucu.message || 'Bağlantı kurulamadı.'}
@@ -499,13 +499,13 @@ function ConnectionModal({ tenant, onClose }: { tenant: any; onClose: () => void
               <button
                 onClick={() => test.mutate()}
                 disabled={test.isPending}
-                className="inline-flex h-9 items-center justify-center gap-2 rounded-2xl border border-white/5 bg-white/[0.03] px-4 text-xs font-bold text-slate-200 transition hover:bg-white/[0.08] disabled:cursor-wait disabled:opacity-70"
+                className="inline-flex h-9 items-center justify-center gap-2 rounded-3xl border border-white/[0.05] bg-white/[0.03] px-4 text-xs font-bold text-slate-200 transition hover:bg-white/[0.08] disabled:cursor-wait disabled:opacity-70 backdrop-blur-xl"
               >
                 {test.isPending ? <Loader2 size={16} className="animate-spin" /> : <PlugZap size={16} />}
                 {test.isPending ? 'Deneniyor...' : 'Bağlantıyı dene'}
               </button>
               <div className="flex gap-3">
-                <button onClick={onClose} className="h-9 rounded-2xl border border-white/5 bg-white/[0.03] px-4 text-xs font-bold text-slate-400 transition hover:text-white">
+                <button onClick={onClose} className="h-9 rounded-3xl border border-white/[0.05] bg-white/[0.03] px-4 text-xs font-bold text-slate-400 transition hover:text-white backdrop-blur-xl">
                   Kapat
                 </button>
                 <button
@@ -527,9 +527,9 @@ function ConnectionModal({ tenant, onClose }: { tenant: any; onClose: () => void
 
 function InfoRow({ icon: Icon, label, value, title }: { icon: any; label: string; value: string; title?: string }) {
   return (
-    <div className="flex min-h-8 items-center gap-2 rounded-2xl border border-white/5 bg-black/15 px-2.5 py-1.5 text-[11px]" title={title}>
+    <div className="flex min-h-8 items-center gap-2 rounded-3xl border border-white/[0.05] bg-black/15 px-2.5 py-1.5 text-[11px] backdrop-blur-xl" title={title}>
       <Icon className="h-4 w-4 shrink-0 text-slate-400" />
-      <span className="w-16 shrink-0 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">{label}</span>
+      <span className="w-16 shrink-0 text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500">{label}</span>
       <span className="min-w-0 truncate font-semibold text-slate-200">{value}</span>
     </div>
   );

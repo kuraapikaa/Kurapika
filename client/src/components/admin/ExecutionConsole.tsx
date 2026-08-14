@@ -2,7 +2,7 @@ import { Terminal, Activity, Cpu } from 'lucide-react';
 
 export function ExecutionConsole() {
   return (
-    <div className="group relative flex flex-col rounded-2xl border border-white/5 bg-white/[0.02] shadow-2xl backdrop-blur-3xl overflow-hidden h-[300px] transition-all duration-500 hover:border-cyan-500/20">
+    <div className="group relative flex flex-col rounded-3xl border border-white/[0.05] bg-white/[0.02] shadow-2xl backdrop-blur-xl overflow-hidden h-[300px] transition-all duration-500 hover:border-cyan-500/20">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-white/5 bg-white/[0.02] px-3 py-2.5">
         <div className="flex items-center gap-3">
@@ -26,7 +26,7 @@ export function ExecutionConsole() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-cyan-500/5 rounded-full blur-[80px] pointer-events-none" />
 
         <div className="relative z-10 space-y-4">
-          <div className="inline-flex p-4 rounded-xl bg-white/[0.02] border border-white/5 shadow-inner">
+          <div className="inline-flex p-8 rounded-3xl bg-white/[0.02] border border-white/[0.05] shadow-inner backdrop-blur-xl">
             <Activity size={32} className="text-cyan-500/50 animate-pulse" />
           </div>
           <div>

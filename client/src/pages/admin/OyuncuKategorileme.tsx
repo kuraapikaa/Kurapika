@@ -148,7 +148,7 @@ export function OyuncuKategorileme() {
 
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 xl:grid-cols-4">
         <PanoOlcu
           etiket="Öneri"
           deger={sayiYaz(isLoading ? null : oneriler.length)}
@@ -307,13 +307,13 @@ export function OyuncuKategorileme() {
               placeholder="Oyuncu veya kategori…"
               value={arama}
               onChange={(e) => setArama(e.target.value)}
-              className="h-9 w-full rounded-2xl border border-white/5 bg-[#0c1119] px-3 text-xs text-white placeholder:text-slate-400 focus:border-[color:var(--panel-accent,#0a84ff)] focus:outline-none sm:w-56"
+              className="h-9 w-full rounded-3xl border border-white/[0.05] bg-white/[0.02] px-3 text-xs text-white placeholder:text-slate-400 focus:border-[color:var(--panel-accent,#0a84ff)] focus:outline-none sm:w-56 backdrop-blur-xl"
             />
             <button
               type="button"
               onClick={() => refetch()}
               disabled={isFetching}
-              className="h-9 rounded-2xl border border-white/5 px-3 text-xs font-semibold text-slate-200 hover:bg-white/[0.05] disabled:opacity-50"
+              className="h-9 rounded-3xl border border-white/[0.05] px-3 text-xs font-semibold text-slate-200 hover:bg-white/[0.05] disabled:opacity-50 backdrop-blur-xl"
             >
               Yenile
             </button>

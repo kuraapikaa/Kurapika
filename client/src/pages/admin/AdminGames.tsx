@@ -144,12 +144,12 @@ export function AdminGames({ initialTab }: AdminGamesProps = {}) {
 
   return (
     <div className="mx-auto w-full max-w-[1500px] space-y-5 p-4 pb-28 md:p-6">
-      <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-3 shadow-[0_18px_60px_rgba(0,0,0,0.24)]">
+      <div className="rounded-3xl border border-white/[0.05] bg-white/[0.02] p-8 shadow-[0_18px_60px_rgba(0,0,0,0.24)] backdrop-blur-xl">
         <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
           {singleTabMode && (
             <Link
               to="/admin/oyun-ayarlari"
-              className="inline-flex items-center gap-2 rounded-2xl border border-white/5 bg-white/[0.025] px-3 py-2 text-[11px] font-bold text-slate-400 transition hover:border-white/5 hover:text-slate-200"
+              className="inline-flex items-center gap-2 rounded-3xl border border-white/[0.05] bg-white/[0.025] px-3 py-2 text-[11px] font-bold text-slate-400 transition hover:border-white/[0.05] hover:text-slate-200 backdrop-blur-xl"
               title="Bu ayarlar, diğer tüm oyun modülleriyle birlikte 'Oyun Ayarları' altında tek bir yapılandırmada saklanır."
             >
               <LayoutGrid size={14} />
@@ -157,7 +157,7 @@ export function AdminGames({ initialTab }: AdminGamesProps = {}) {
             </Link>
           )}
           {!singleTabMode && (
-            <div className="grid flex-1 grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-7">
+            <div className="grid flex-1 grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-7">
               {MODULE_TABS.map(tab => {
                 const Icon = tab.icon;
                 const active = mainTab === tab.id;
@@ -170,14 +170,14 @@ export function AdminGames({ initialTab }: AdminGamesProps = {}) {
                       setMainTab(tab.id);
                     }}
                     className={cn(
-                      'flex min-h-[74px] items-center gap-3 rounded-2xl border px-4 text-left transition',
+                      'flex min-h-[74px] items-center gap-3 rounded-3xl border px-4 text-left transition backdrop-blur-xl',
                       active
                         ? 'border-[color:var(--panel-info,#64d2ff)]/35 bg-[color:var(--panel-info,#64d2ff)]/[0.08] text-white'
                         : 'border-white/5 bg-white/[0.025] text-slate-400 hover:border-white/5 hover:bg-white/[0.045] hover:text-slate-200'
                     )}
                   >
                     <span className={cn(
-                      'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl',
+                      'flex h-10 w-10 shrink-0 items-center justify-center rounded-full',
                       active ? 'bg-[color:var(--panel-info,#64d2ff)] text-[#050609]' : 'bg-black/35 text-slate-400'
                     )}>
                       <Icon size={18} />

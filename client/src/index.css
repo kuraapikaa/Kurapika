@@ -7,11 +7,11 @@
    * PREMIUM DARK GLASSMORPHISM.
    *
    * Zemin gece mavisine yakin bir mor-siyah (#0B0A10); yuzeyler o zeminin
-   * uzerinde SAYDAM cam. Kenarlik neredeyse gorunmez (white/6) — cam etkisi
+   * uzerinde SAYDAM cam. Kenarlik neredeyse gorunmez (white/6) â€” cam etkisi
    * kenarliktan degil bulaniklik + ic isiktan geliyor, kalin kenarlik onu
    * plastige cevirir.
    *
-   * Aksanlar: neon mor (birincil), zumrut (artı/basari), gul (eksi/risk).
+   * Aksanlar: neon mor (birincil), zumrut (artÄ±/basari), gul (eksi/risk).
    * Durum renklerinin ANLAMI sabit; dekorasyon icin kullanilmazlar.
    */
   :root {
@@ -98,9 +98,8 @@
     background-color: rgba(148, 163, 184, 0.035);
   }
 
-  [class*="rounded-[2.5rem]"] {
-    border-radius: 20px !important;
-  }
+  /* `rounded-[2.5rem]` -> 20px kirpmasi kaldirildi; genis yaricap artik
+     tasarim sisteminin bir parcasi. */
 
   ::-webkit-scrollbar {
     width: 7px;
@@ -127,26 +126,19 @@
 
 @layer components {
   .app-shell {
-    @apply relative flex min-h-screen min-h-[100dvh] overflow-x-hidden bg-[#050609] font-sans text-[#f2f4f8];
+    @apply relative flex min-h-screen min-h-[100dvh] overflow-x-hidden bg-black font-sans text-[#f2f4f8];
   }
 
   .app-backdrop {
     @apply pointer-events-none fixed inset-0 z-0 overflow-hidden select-none;
-    background:
-      radial-gradient(ellipse 1000px 600px at 17% -60px, rgba(10, 132, 255, 0.14), transparent 70%),
-      radial-gradient(ellipse 840px 560px at 88% 200px, rgba(191, 90, 242, 0.09), transparent 70%),
-      #050609;
   }
 
+  /*
+   * Sert sag kenarlik ve dikey cizgi KALDIRILDI. Menuyu govdeden ayiran
+   * sey artik kenarlik degil, camin kendisi: daha koyu yuzey + bulaniklik.
+   */
   .premium-sidebar {
-    @apply relative overflow-hidden border-r border-slate-700/30 bg-[#090e16]/95 backdrop-blur-2xl;
-    box-shadow: 18px 0 70px rgba(0, 0, 0, 0.22);
-  }
-
-  .premium-sidebar::after {
-    content: '';
-    @apply absolute right-0 top-0 h-full w-px;
-    background: linear-gradient(to bottom, transparent, rgba(103, 232, 249, 0.16), transparent);
+    @apply relative overflow-hidden bg-black/60 backdrop-blur-2xl;
   }
 
   .sidebar-nav-group {
@@ -158,7 +150,7 @@
   }
 
   .sidebar-link-icon {
-    @apply flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-transparent bg-white/[0.03] text-slate-400 transition duration-200;
+    @apply flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-transparent bg-white/[0.03] text-slate-400 transition duration-200;
   }
 
   .sidebar-nav-group a:hover .sidebar-link-icon {
@@ -174,12 +166,12 @@
   }
 
   .app-header {
-    @apply border-b border-slate-700/30 bg-[#070b11]/85 backdrop-blur-2xl;
+    @apply bg-black/60 backdrop-blur-2xl;
     box-shadow: none;
   }
 
   .app-content {
-    @apply mx-auto flex w-full max-w-[1720px] flex-1 flex-col overflow-x-hidden px-4 py-6 md:px-9 md:py-8;
+    @apply mx-auto flex w-full max-w-[1720px] flex-1 flex-col overflow-x-hidden;
   }
 
   .tab-intro {
@@ -215,10 +207,7 @@
     animation: workspace-enter 320ms cubic-bezier(0.22, 1, 0.36, 1);
   }
 
-  .tab-workspace section > header {
-    @apply mb-5 rounded-2xl border border-slate-700/40 bg-[#0d131d]/80 px-5 py-4 backdrop-blur-xl;
-    box-shadow: none;
-  }
+  /* Bolum basligina kart dayatmasi kaldirildi. */
 
   .tab-workspace section > header h2,
   .tab-workspace section > header h1 {
@@ -229,20 +218,10 @@
     @apply font-medium normal-case tracking-normal text-slate-500;
   }
 
-  .tab-workspace h2[class*='uppercase'],
-  .tab-workspace h3[class*='uppercase'] {
-    font-weight: 650 !important;
-    letter-spacing: -0.018em !important;
-    text-transform: none !important;
-  }
-
-  .tab-workspace section > header [class*='absolute -inset-1'] {
-    display: none;
-  }
-
-  .tab-workspace section > header [class*='relative rounded-2xl bg-black'] {
-    @apply rounded-xl border-cyan-300/10 bg-cyan-300/[0.065] text-cyan-200 shadow-none;
-  }
+  /*
+   * `text-transform: none !important` buradaydi ve tasarim sistemindeki
+   * BUYUK HARF etiket hiyerarsisini geri aliyordu. Kaldirildi.
+   */
 
   /*
    * Calisma alanindaki kartlar.
@@ -252,59 +231,26 @@
    * alaninda tamamen kayboluyordu. Artik kartlar zemini gosteriyor,
    * kenarlik neredeyse gorunmez ve yaricap genis.
    */
-  .tab-workspace .premium-card,
-  .tab-workspace .glass-card,
-  .tab-workspace [class*='bg-slate-900/40'],
-  .tab-workspace [class*='bg-zinc-950/20'],
-  .tab-workspace [class*='bg-zinc-950/40'] {
-    border-color: var(--app-border);
-    background-color: var(--app-surface);
-    border-radius: 1rem;
-    backdrop-filter: var(--app-blur);
-    -webkit-backdrop-filter: var(--app-blur);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), var(--app-shadow);
-  }
+  /*
+   * Kart gorunumu artik TAMAMEN bilesenin.
+   *
+   * Burasi kartlara sabit `border-radius: 1rem`, zemin ve kenarlik
+   * dayatiyordu; `rounded-3xl` yazmak sonucu degistirmiyordu.
+   */
 
+  /*
+   * TABLO DAYATMASI KALDIRILDI.
+   *
+   * Burada `th` icin `font-size: 9px !important` ve `color: #64748b
+   * !important`, `td` icin sabit dolgu vardi. BileÅŸende ne yazilirsa
+   * yazilsin bu kazaniyordu â€” tasarim sisteminin tablo tipografisi
+   * (text-xs, uppercase, tracking-wider) hicbir ekranda uygulanmiyordu.
+   * Sikisik gorunumun ana kaynagi buydu.
+   *
+   * Geriye yalnizca yapisal olan kaliyor; olcu ve renk artik bilesenin.
+   */
   .tab-workspace table {
-    @apply w-full text-xs;
-  }
-
-  .tab-workspace table thead {
-    background: rgba(5, 10, 17, 0.72);
-  }
-
-  .tab-workspace table th {
-    padding-top: 0.9rem !important;
-    padding-bottom: 0.9rem !important;
-    border-bottom-color: rgba(148, 163, 184, 0.08) !important;
-    color: #64748b !important;
-    font-size: 9px !important;
-    font-weight: 650 !important;
-    letter-spacing: 0.12em !important;
-  }
-
-  .tab-workspace table td {
-    padding-top: 0.9rem !important;
-    padding-bottom: 0.9rem !important;
-    border-bottom-color: rgba(148, 163, 184, 0.055) !important;
-  }
-
-  .tab-workspace table tbody tr:hover {
-    background: rgba(34, 211, 238, 0.025) !important;
-  }
-
-  .tab-workspace table [class*='font-black'] {
-    font-weight: 650 !important;
-  }
-
-  .tab-workspace input,
-  .tab-workspace select,
-  .tab-workspace textarea {
-    border-radius: 10px;
-  }
-
-  .tab-workspace button:not([class*='bg-rose']):not([class*='bg-emerald']):not([class*='bg-amber']) {
-    box-shadow: none;
+    @apply w-full;
   }
 
   @keyframes workspace-enter {
@@ -1021,16 +967,16 @@
   }
 }
 
-/* Narcosbahis public lobby: mavi/teal aksanlar korunur — özel renk override'ı yok, bileşenler zaten cyan/blue/teal kullanıyor. */
+/* Narcosbahis public lobby: mavi/teal aksanlar korunur â€” Ã¶zel renk override'Ä± yok, bileÅŸenler zaten cyan/blue/teal kullanÄ±yor. */
 
 .app-shell button,
 .app-shell a {
   transition-duration: 150ms !important;
 }
 
-/* ─── Kompakt panel: mavi + teal, macOS vibrancy camı ─────────────────────── */
+/* â”€â”€â”€ Kompakt panel: mavi + teal, macOS vibrancy camÄ± â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 :root {
-  /* Yonetim paneli paleti — tasarim dosyasindan (Admin Panel.html).
+  /* Yonetim paneli paleti â€” tasarim dosyasindan (Admin Panel.html).
      Lobiden bilerek ayri: lobi oyuncuya bakan marka yuzeyi (sicak siyah +
      altin), burasi bir calisma araci (soguk, sistem yerlisi, yuksek
      okunabilirlik). Ikisini tek palete zorlamak ikisini de zayiflatirdi. */
@@ -1077,424 +1023,188 @@
   color-scheme: dark;
 }
 
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+ * PREMIUM DARK GLASSMORPHISM â€” KABUK KATMANI
+ *
+ * Burada 470 satirlik bir "Kompakt panel" katmani vardi: 80 kural, 176
+ * `!important`. Dolgu, arkaplan, kose yaricapi, hatta yazi boyutu zorla
+ * ezildigi icin bilesene yazilan hicbir Tailwind sinifi tutmuyordu.
+ * Tasarim sistemi uygulanmis gibi gorunuyor ama ekranda eski sikisik
+ * panel duruyordu.
+ *
+ * Bu katmanin kurali: YALNIZCA kabuÄŸun kendisini boyar. Kartlara,
+ * tablolara, butonlara ait olcu ve renk kararlari bilesenlerindir; buradan
+ * `!important` ile dayatilmaz.
+ * â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+
 .app-shell {
   min-height: 100dvh;
-  background: var(--panel-bg) !important;
+  /* Zift siyah: cam kartlarin uzerinde durdugu zemin ne kadar koyuysa
+     saydamlik o kadar okunur. */
+  background: #050505;
   color: var(--panel-text);
-  font-size: 13px;
+  font-size: 14px;
 }
 
-/* Zemin mesh gradyani: sol ustte mor, sagda soguk mavi bulut. */
+/* Zemindeki renk bulutlari. Kartin arkasindan sizip cama renk verir. */
 .app-shell .app-backdrop {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
   background:
-    radial-gradient(ellipse 1000px 600px at 17% -60px, rgba(168, 85, 247, 0.16), transparent 70%),
-    radial-gradient(ellipse 840px 560px at 88% 200px, rgba(56, 189, 248, 0.08), transparent 70%),
-    var(--panel-bg) !important;
+    radial-gradient(ellipse 1200px 700px at 12% -10%, rgba(168, 85, 247, 0.18), transparent 65%),
+    radial-gradient(ellipse 900px 600px at 88% 8%, rgba(56, 189, 248, 0.10), transparent 62%),
+    radial-gradient(ellipse 800px 500px at 50% 108%, rgba(52, 211, 153, 0.07), transparent 60%),
+    #050505;
 }
 
+/* â”€â”€â”€ Sol menu â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+ * Sert sag kenarlik YOK. Ayrimi kenarlik degil, camin kendisi yapiyor:
+ * govdeden daha koyu bir yuzey + guclu bulaniklik.
+ */
 .app-shell .premium-sidebar {
-  border-right: 1px solid var(--panel-border) !important;
-  background: var(--panel-sidebar) !important;
-  backdrop-filter: var(--panel-blur) !important;
-  -webkit-backdrop-filter: var(--panel-blur) !important;
-  box-shadow: inset -1px 0 0 var(--panel-raise) !important;
+  border-right: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(28px) saturate(150%);
+  -webkit-backdrop-filter: blur(28px) saturate(150%);
+  box-shadow: none;
 }
 
 .app-shell .sidebar-brand {
   background: transparent;
+  border-bottom: 0;
 }
 
-/*
- * Menu 200px'ten 260px'e cikti; sikistirilmis olculer artik gereksiz.
- * Grup basligi 8px'te okunmuyordu.
- */
 .app-shell .sidebar-section-label {
-  margin-bottom: 6px !important;
-  padding: 0 10px !important;
-  color: var(--panel-faint, #5c6470) !important;
-  font-size: 9.5px !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.18em !important;
+  padding: 0 14px 10px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: #6b7280;
 }
 
-.app-shell .sidebar-link-icon {
-  width: 26px !important;
-  height: 26px !important;
-  border-radius: 8px !important;
-  background: var(--panel-raise) !important;
+.app-shell .sidebar-nav-group {
+  margin-bottom: 22px;
 }
 
-.app-shell .sidebar-nav-group a[aria-current='page'] .sidebar-link-icon {
-  background: rgba(59, 130, 246, 0.18) !important;
-  border-color: rgba(59, 130, 246, 0.28) !important;
-}
-
+/* Menu ogesi: hap. Aktif olan neon mor bir yuzey ve disa vuran isikla
+   digerlerinden ayrilir â€” kalin kenarlikla degil. */
 .app-shell .sidebar-nav-group a {
-  min-height: 34px !important;
-  gap: 9px !important;
-  padding-left: 8px !important;
-  padding-right: 8px !important;
-  border-radius: 9px !important;
-  border: 1px solid transparent !important;
-  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease !important;
+  border-radius: 9999px;
+  padding: 10px 14px;
+  min-height: 40px;
+  color: #8b8798;
+}
+
+.app-shell .sidebar-nav-group a:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: #e5e7eb;
 }
 
 .app-shell .sidebar-nav-group a[aria-current='page'] {
-  border-color: rgba(59, 130, 246, 0.28) !important;
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.16), rgba(45, 212, 191, 0.08)) !important;
-  color: var(--panel-active-text) !important;
-  box-shadow: inset 0 1px 0 var(--panel-raise-strong) !important;
+  background: linear-gradient(90deg, rgba(168, 85, 247, 0.28), rgba(168, 85, 247, 0.08));
+  color: #ffffff;
+  box-shadow: 0 0 24px rgba(168, 85, 247, 0.22);
 }
 
 .app-shell .sidebar-nav-group a[aria-current='page'] .sidebar-link-icon {
-  background: rgba(59, 130, 246, 0.14) !important;
-  color: #7dd3fc !important;
+  color: #d8b4fe;
 }
 
 .app-shell .sidebar-system-card {
-  min-height: 36px;
-  margin-bottom: 4px !important;
-  padding: 7px 9px !important;
-  border-color: rgba(45, 212, 191, 0.18) !important;
-  border-radius: 9px !important;
-  background: rgba(45, 212, 191, 0.07) !important;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.02);
 }
 
+/* â”€â”€â”€ Ust bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+ * Sert alt kenarlik yerine sonen bir isik cizgisi.
+ */
 .app-shell .app-header {
-  position: sticky !important;
-  top: 0;
-  z-index: 45;
-  min-height: 58px !important;
-  border-bottom: 1px solid var(--panel-border) !important;
-  /* Kendi token'i var: baslik cubugu zeminden bir tik AYRI durmali, ama
-     acik temada koyu kalmamali. Sabit rgba(8,12,20,.72) idi; acik temada
-     koyu zemin uzerine koyu metin cikiyor, baslik hic okunmuyordu. */
-  background: var(--panel-header) !important;
-  backdrop-filter: var(--panel-blur) !important;
-  -webkit-backdrop-filter: var(--panel-blur) !important;
-  box-shadow: 0 1px 0 var(--panel-raise) !important;
+  border-bottom: 0;
+  background: rgba(5, 5, 5, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  position: relative;
 }
 
+.app-shell .app-header::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.07) 30%, rgba(255, 255, 255, 0.03) 70%, transparent);
+}
+
+/* â”€â”€â”€ Calisma alani â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+ * Nefes alani. Onceki katman burayi 10px'e sikistiriyordu.
+ */
 .app-shell .app-content {
-  max-width: 1900px !important;
-  padding: 12px 16px 24px !important;
+  padding: 40px 40px 72px;
 }
 
 .app-shell .workspace-context-bar {
-  min-height: 38px;
-  margin: 0 0 12px !important;
-  padding: 0 2px !important;
-  border: 0 !important;
-}
-
-.app-shell .workspace-context-bar [class*='tracking-[0.2em]'] {
-  display: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 32px;
+  padding: 0;
+  border: 0;
+  background: transparent;
 }
 
 .app-shell .tab-intro-status,
 .app-shell .tab-intro-chip {
-  height: 28px;
-  padding: 0 10px !important;
-  border-color: rgba(45, 212, 191, 0.2) !important;
-  border-radius: 8px !important;
-  background: rgba(45, 212, 191, 0.08) !important;
-  color: #5eead4 !important;
-  font-size: 9px !important;
-  font-weight: 650 !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.02);
+  font-size: 11px;
+  color: #8b8798;
 }
 
 .app-shell .tab-filter-dock {
-  margin-bottom: 12px !important;
-  padding: 5px !important;
-  border: 1px solid var(--panel-border) !important;
-  border-radius: 12px !important;
-  background: var(--panel-surface) !important;
-  backdrop-filter: var(--panel-blur) !important;
-  -webkit-backdrop-filter: var(--panel-blur) !important;
+  padding: 0;
+  border: 0;
+  background: transparent;
 }
 
 .app-shell .tab-workspace {
-  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
-.app-shell .tab-workspace > div,
-.app-shell .tab-workspace > section {
-  animation-duration: 200ms !important;
-}
+/* NOT: burada kartlara `border-radius`/`padding`/`background` dayatan
+   bir blok vardi. Kaldirildi â€” kart gorunumu artik bilesenin sinifindan
+   geliyor, boylece rounded-3xl / p-8 gibi kararlar gercekten uygulaniyor. */
 
-.app-shell .glass-card,
-.app-shell .premium-card,
-.app-shell .premium-glass,
-.app-shell .tab-workspace section > header,
-.app-shell .tab-workspace [class*='bg-slate-900/40'],
-.app-shell .tab-workspace [class*='bg-zinc-950/20'],
-.app-shell .tab-workspace [class*='bg-zinc-950/40'] {
-  border: 1px solid var(--panel-border) !important;
-  /* Tasarim sistemi genis yuvarlaklik istiyor (rounded-2xl). */
-  border-radius: 1rem !important;
-  background-color: var(--panel-surface) !important;
-  background-image: none !important;
-  backdrop-filter: var(--panel-blur) !important;
-  -webkit-backdrop-filter: var(--panel-blur) !important;
-  box-shadow: inset 0 1px 0 var(--panel-inset-line), 0 14px 40px var(--panel-shadow) !important;
-}
-
-.app-shell .premium-card:hover,
-.app-shell .glass-card:hover,
-.app-shell .premium-glass:hover {
-  transform: none !important;
-  border-color: var(--panel-border-strong) !important;
-  background-color: var(--panel-surface-2) !important;
-  box-shadow: inset 0 1px 0 var(--panel-inset-line), 0 18px 50px var(--panel-shadow-strong) !important;
-}
-
-.app-shell .tab-workspace section > header {
-  min-height: 54px;
-  margin-bottom: 12px !important;
-  padding: 12px 14px !important;
-}
-
-.app-shell .tab-workspace section > header h1,
-.app-shell .tab-workspace section > header h2 {
-  font-size: 15px !important;
-  line-height: 20px !important;
-  font-weight: 700 !important;
-}
-
-.app-shell .tab-workspace section > header p {
-  margin-top: 2px !important;
-  font-size: 10px !important;
-  line-height: 15px !important;
-}
-
-.app-shell .tab-workspace [class~='p-8'],
-.app-shell .tab-workspace [class~='sm:p-8'] {
-  padding: 16px !important;
-}
-
-.app-shell .tab-workspace [class~='p-10'],
-.app-shell .tab-workspace [class~='sm:p-10'] {
-  padding: 18px !important;
-}
-
-.app-shell .tab-workspace [class~='p-6'],
-.app-shell .tab-workspace [class~='sm:p-6'] {
-  padding: 14px !important;
-}
-
-.app-shell .tab-workspace [class~='gap-8'] { gap: 14px !important; }
-.app-shell .tab-workspace [class~='gap-10'] { gap: 16px !important; }
-.app-shell .tab-workspace [class~='space-y-12'] > :not([hidden]) ~ :not([hidden]) { margin-top: 16px !important; }
-.app-shell .tab-workspace [class~='space-y-8'] > :not([hidden]) ~ :not([hidden]) { margin-top: 14px !important; }
-.app-shell .tab-workspace [class~='mb-8'] { margin-bottom: 14px !important; }
-.app-shell .tab-workspace [class~='mt-8'] { margin-top: 14px !important; }
-
-.app-shell .tab-workspace [class*='rounded-[2.5rem]'],
-.app-shell .tab-workspace [class*='rounded-[3rem]'],
-.app-shell .tab-workspace [class*='rounded-[2rem]'] {
-  border-radius: 14px !important;
-}
-
-.app-shell .tab-workspace table {
-  width: 100%;
-  font-size: 11px !important;
-}
-
-.app-shell .tab-workspace table thead {
-  background: rgba(9, 14, 24, 0.6) !important;
-}
-
-.app-shell .tab-workspace table th {
-  height: 34px;
-  padding: 7px 10px !important;
-  border-bottom: 1px solid var(--panel-border) !important;
-  color: #6b7893 !important;
-  font-size: 8px !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.1em !important;
-  white-space: nowrap;
-}
-
-.app-shell .tab-workspace table td {
-  height: 40px;
-  padding: 7px 10px !important;
-  border-bottom: 1px solid rgba(148, 180, 255, 0.055) !important;
-}
-
-.app-shell .tab-workspace table tbody tr:hover {
-  background: rgba(59, 130, 246, 0.05) !important;
-}
-
-.app-shell input:not([type='checkbox']):not([type='radio']),
-.app-shell select,
-.app-shell textarea {
-  min-height: 34px;
-  border: 1px solid rgba(148, 180, 255, 0.12) !important;
-  border-radius: 9px !important;
-  background: rgba(9, 14, 23, 0.65) !important;
-  color: #dfe6f5 !important;
-  box-shadow: none !important;
-}
-
-.app-shell input:focus,
-.app-shell select:focus,
-.app-shell textarea:focus {
-  border-color: rgba(56, 189, 248, 0.55) !important;
-  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.12) !important;
-}
-
-/*
- * BUTON YARICAPI ARTIK BURADAN DAYATILMIYOR.
- *
- * Bu kural her butona ve baglantiya 9px veriyordu ve secici ozgullugu
- * (0,2,1) Tailwind'in `.rounded-full` sinifini (0,1,0) EZIYORDU. Yani
- * tasarim sisteminin "butonlar ve rozetler tamamen hap" kurali panelin
- * hicbir yerinde tutmuyordu; sinifi yazmak sonucu degistirmiyordu.
- *
- * Yaricap artik bilesenin kendi sinifindan gelir. Yalnizca hicbir yaricap
- * sinifi TASIMAYAN ogeler icin makul bir varsayilan birakiliyor.
- */
-.app-shell button:not([class*='rounded']),
-.app-shell a:not([class*='rounded']) {
-  border-radius: 9999px;
-}
-
-.app-shell button,
-.app-shell a {
-  transition: color 120ms ease, background-color 120ms ease, border-color 120ms ease !important;
-}
-
-.app-shell [role='tablist'] {
-  padding: 3px !important;
-  gap: 2px !important;
-  border: 1px solid var(--panel-border) !important;
-  border-radius: 10px !important;
-  background: rgba(9, 14, 23, 0.6) !important;
-}
-
-.app-shell [role='tab'] {
-  min-height: 32px !important;
-  padding: 6px 10px !important;
-  border-radius: 8px !important;
-  font-size: 9px !important;
-  letter-spacing: 0.06em !important;
-  box-shadow: none !important;
-}
-
-.app-shell [role='tab'][data-state='active'] {
-  background: linear-gradient(135deg, var(--panel-accent), var(--panel-accent-teal)) !important;
-  color: white !important;
-  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.28) !important;
-}
-
+/* â”€â”€â”€ Duyarli â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 @media (max-width: 1279px) {
   .app-shell .app-content {
-    padding: 10px 12px 20px !important;
+    padding: 28px 24px 56px;
   }
 
   .app-shell .workspace-context-bar {
-    margin-bottom: 10px !important;
+    margin-bottom: 24px;
   }
 }
 
 @media (max-width: 767px) {
-  .app-shell .app-header,
-  .app-shell .app-header > div {
-    min-height: 52px !important;
-    height: 52px !important;
-  }
-
   .app-shell .app-content {
-    padding: 8px 8px 18px !important;
+    padding: 20px 16px 48px;
   }
 
   .app-shell .workspace-context-bar {
-    min-height: 34px;
-    margin-bottom: 8px !important;
-  }
-
-  .app-shell .workspace-context-bar p {
-    font-size: 10px !important;
-  }
-
-  .app-shell .tab-filter-dock {
-    gap: 5px !important;
-    padding: 4px !important;
-  }
-
-  .app-shell .tab-filter-dock > * {
-    max-width: 100%;
-  }
-
-  .app-shell .tab-workspace section > header {
-    min-height: 48px;
-    padding: 10px 11px !important;
-  }
-
-  .app-shell .tab-workspace [class~='p-8'],
-  .app-shell .tab-workspace [class~='p-10'],
-  .app-shell .tab-workspace [class~='p-6'] {
-    padding: 12px !important;
-  }
-
-  .app-shell .tab-workspace table th,
-  .app-shell .tab-workspace table td {
-    padding-left: 8px !important;
-    padding-right: 8px !important;
+    margin-bottom: 20px;
   }
 }
-/* ─── Tema anahtarı ve açık tema düzeltmeleri ─────────────────────────────
- *
- * Sidebar'daki sınıflar Tailwind ile doğrudan renk gömüyordu
- * (`text-white`, `border-white/[0.06]`, `bg-black/25`, `text-slate-600`).
- * Açık temada bunların hepsi beyaz üstüne beyaz ya da siyah kutu olarak
- * çıkıyordu. Panelin geri kalanı gibi burası da `--panel-*` token'larına
- * bağlandı; koyu temadaki görünüm birebir korunuyor çünkü token'ların
- * koyu değerleri eski sabitlerle aynı.
- */
-
-.app-shell .sidebar-foot {
-  border-top-color: var(--panel-border) !important;
-}
-
-.app-shell .sidebar-theme-toggle {
-  color: var(--panel-muted);
-}
-
-.app-shell .sidebar-theme-toggle:hover {
-  background: var(--panel-raise-strong);
-  color: var(--panel-text);
-}
-
-.app-shell .sidebar-brand {
-  border-bottom-color: var(--panel-border) !important;
-}
-
-.app-shell .sidebar-brand strong {
-  color: var(--panel-text) !important;
-}
-
-.app-shell .sidebar-brand small {
-  color: var(--panel-faint) !important;
-}
-
-/* Menüdeki arama kutusu: koyu temada siyah, açık temada beyaz zemin. */
-.app-shell .premium-sidebar input[type='text'] {
-  border-color: var(--panel-border) !important;
-  background: var(--panel-raise) !important;
-  color: var(--panel-text) !important;
-}
-
-.app-shell .sidebar-nav-group a {
-  color: var(--panel-text-dim) !important;
-}
-
-.app-shell .sidebar-nav-group a:hover {
-  background: var(--panel-raise) !important;
-  color: var(--panel-text) !important;
-}
-
-.app-shell .sidebar-nav-group a[aria-current='page'] {
-  color: var(--panel-active-text) !important;
-}
-

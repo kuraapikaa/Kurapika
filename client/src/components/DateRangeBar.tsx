@@ -77,7 +77,7 @@ export function DateRangeBar({ range, onRangeChange, onRefresh, isLoading }: Dat
     <div className="flex h-9 shrink-0 flex-nowrap items-center gap-1 rounded-lg border border-white/5 bg-[#0c1119] p-0.5">
       <div className="hidden shrink-0 items-center gap-1.5 px-1.5 text-slate-400 2xl:flex" title="Lynon tarih aralığı">
         <Calendar size={14} className="text-purple-300" />
-        <span className="whitespace-nowrap text-[9px] font-bold uppercase tracking-wider">Tarih aralığı</span>
+        <span className="whitespace-nowrap text-[10px] font-bold uppercase tracking-[0.2em]">Tarih aralığı</span>
       </div>
 
       <div className="flex h-8 shrink-0 items-center gap-0.5 rounded-md border border-white/5 bg-black/20 p-0">

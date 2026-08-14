@@ -473,9 +473,9 @@ export function RulesManager() {
 
     return (
         <div className="max-w-[1400px] mx-auto space-y-10 py-6 animate-in fade-in duration-700">
-            <header className="flex flex-col gap-4 rounded-2xl border border-white/5 bg-white/[0.02] p-5 md:flex-row md:items-center md:justify-between md:p-6">
+            <header className="flex flex-col gap-4 rounded-3xl border border-white/[0.05] bg-white/[0.02] p-8 md:flex-row md:items-center md:justify-between md:p-8 backdrop-blur-xl">
                 <div className="flex items-center gap-3">
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[color:var(--panel-accent,#0a84ff)]/10 text-purple-300">
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[color:var(--panel-accent,#0a84ff)]/10 text-purple-300">
                         <Settings size={20} />
                     </span>
                     <div className="min-w-0">
@@ -487,7 +487,7 @@ export function RulesManager() {
                 <div className="flex flex-wrap items-center gap-3">
                     <button
                         onClick={() => queryClient.invalidateQueries({ queryKey: ['admin-rules'] })}
-                        className="group flex h-10 w-10 items-center justify-center rounded-2xl border border-white/5 bg-white/5 transition-all hover:bg-white/10 active:scale-95"
+                        className="group flex h-10 w-10 items-center justify-center rounded-full border border-white/5 bg-white/5 transition-all hover:bg-white/10 active:scale-95"
                         aria-label="Yenile"
                     >
                         <RefreshCw size={17} className={cn("text-slate-400 group-hover:text-white transition-colors", mutation.isPending && "animate-spin")} />
@@ -502,7 +502,7 @@ export function RulesManager() {
                 </div>
             </header>
 
-            <div className="rounded-2xl border border-[color:var(--panel-accent,#0a84ff)]/20 bg-white/[0.02] p-5 md:p-6 space-y-4">
+            <div className="rounded-3xl border border-[color:var(--panel-accent,#0a84ff)]/20 bg-white/[0.02] p-8 md:p-8 space-y-4 backdrop-blur-xl">
                 <div className="flex items-center gap-2.5">
                     <Sparkles size={16} className="text-purple-300" />
                     <div>
@@ -510,15 +510,15 @@ export function RulesManager() {
                         <p className="text-[10px] font-medium text-slate-400">Tek tıkla kur; var olan bir kuralı düzeltiyorsa yalnızca ilgili alan değişir, diğerleri korunur.</p>
                     </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     {RULE_PRESETS.map((preset) => {
                         const existing = config?.[preset.targetMap]?.[preset.key];
                         return (
-                            <div key={preset.key} className="flex flex-col gap-3 rounded-2xl border border-white/5 bg-black/20 p-4">
+                            <div key={preset.key} className="flex flex-col gap-3 rounded-3xl border border-white/[0.05] bg-black/20 p-8 backdrop-blur-xl">
                                 <div>
                                     <div className="flex items-center gap-2">
                                         <span className={cn(
-                                            "rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider",
+                                            "rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.2em]",
                                             existing ? "bg-amber-500/15 text-amber-400" : "bg-emerald-500/15 text-emerald-400"
                                         )}>
                                             {existing ? 'Düzeltme' : 'Yeni Kural'}
@@ -553,7 +553,7 @@ export function RulesManager() {
                                 placeholder="Kural veya ID ara..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full h-14 bg-white/[0.02] backdrop-blur-xl border border-white/5 rounded-xl pl-12 pr-4 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[color:var(--panel-accent,#0a84ff)]/20 focus:border-[color:var(--panel-accent,#0a84ff)]/20 transition-all font-bold"
+                                className="w-full h-14 bg-white/[0.02] backdrop-blur-xl border border-white/[0.05] rounded-3xl pl-12 pr-4 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[color:var(--panel-accent,#0a84ff)]/20 focus:border-[color:var(--panel-accent,#0a84ff)]/20 transition-all font-bold"
                             />
                         </div>
                     </div>
@@ -566,13 +566,13 @@ export function RulesManager() {
                                 exit={{ opacity: 0, y: -20, scale: 0.95 }}
                                 className="relative group"
                             >
-                                <div className="relative p-8 rounded-xl bg-white/[0.02] border border-[color:var(--panel-accent,#0a84ff)]/20 overflow-hidden">
+                                <div className="relative p-8 rounded-3xl bg-white/[0.02] border border-[color:var(--panel-accent,#0a84ff)]/20 overflow-hidden backdrop-blur-xl">
                                     <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                                         <Plus size={80} className="text-purple-300" />
                                     </div>
                                     <div className="relative z-10 flex flex-col gap-8">
                                         <div className="flex items-center gap-3">
-                                            <div className="h-10 w-10 rounded-xl bg-[color:var(--panel-accent,#0a84ff)]/10 flex items-center justify-center text-purple-300">
+                                            <div className="h-10 w-10 rounded-full bg-[color:var(--panel-accent,#0a84ff)]/10 flex items-center justify-center text-purple-300">
                                                 <Plus size={20} />
                                             </div>
                                             <div>
@@ -585,11 +585,11 @@ export function RulesManager() {
                                             {/* Tür Seçimi */}
                                             <div className="space-y-3">
                                                 <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest ml-1">Bonus Tipi (Hangi yöntemle eklenecek?)</label>
-                                                <div className="grid grid-cols-2 gap-3">
+                                                <div className="grid grid-cols-2 gap-8">
                                                     <button
                                                         onClick={() => setNewType('partner')}
                                                         className={cn(
-                                                            "flex items-center justify-center gap-2 h-14 rounded-2xl border font-semibold text-[11px] transition-all uppercase tracking-widest",
+                                                            "flex items-center justify-center gap-2 h-14 rounded-3xl border font-semibold text-[11px] transition-all uppercase tracking-widest backdrop-blur-xl",
                                                             newType === 'partner'
                                                                 ? "bg-[color:var(--panel-accent,#0a84ff)]/20 border-[color:var(--panel-accent,#0a84ff)]/50 text-purple-300"
                                                                 : "bg-black/20 border-white/5 text-slate-400 hover:border-white/5"
@@ -600,7 +600,7 @@ export function RulesManager() {
                                                     <button
                                                         onClick={() => setNewType('cash')}
                                                         className={cn(
-                                                            "flex items-center justify-center gap-2 h-14 rounded-2xl border font-semibold text-[11px] transition-all uppercase tracking-widest",
+                                                            "flex items-center justify-center gap-2 h-14 rounded-3xl border font-semibold text-[11px] transition-all uppercase tracking-widest backdrop-blur-xl",
                                                             newType === 'cash'
                                                                 ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-400"
                                                                 : "bg-black/20 border-white/5 text-slate-400 hover:border-white/5"
@@ -619,7 +619,7 @@ export function RulesManager() {
                                                     <select
                                                         value={newKey}
                                                         onChange={(e) => setNewKey(e.target.value)}
-                                                        className="w-full h-16 bg-black/40 border border-[color:var(--panel-accent,#0a84ff)]/25 rounded-xl px-5 text-sm text-white focus:outline-none focus:border-[color:var(--panel-accent,#0a84ff)]/70 transition-all font-semibold"
+                                                        className="w-full h-16 bg-black/40 border border-[color:var(--panel-accent,#0a84ff)]/25 rounded-3xl px-5 text-sm text-white focus:outline-none focus:border-[color:var(--panel-accent,#0a84ff)]/70 transition-all font-semibold backdrop-blur-xl"
                                                     >
                                                         <option value="">Lynon kampanyası seçin ({promos.length})</option>
                                                         {addOptions.map((option) => (
@@ -633,7 +633,7 @@ export function RulesManager() {
                                                         onChange={(e) => setNewKey(e.target.value)}
                                                         onKeyDown={(e) => e.key === 'Enter' && handleAddRule()}
                                                         placeholder="Bir isim veya ID girin"
-                                                        className="w-full h-16 bg-black/40 border border-white/5 rounded-xl px-6 text-lg text-white placeholder:text-slate-500 focus:outline-none focus:border-[color:var(--panel-accent,#0a84ff)]/50 transition-all font-semibold"
+                                                        className="w-full h-16 bg-black/40 border border-white/[0.05] rounded-3xl px-6 text-lg text-white placeholder:text-slate-500 focus:outline-none focus:border-[color:var(--panel-accent,#0a84ff)]/50 transition-all font-semibold backdrop-blur-xl"
                                                     />
                                                 )}
                                                 <p className="text-[10px] text-slate-500 font-bold ml-1 uppercase tracking-wider">
@@ -645,7 +645,7 @@ export function RulesManager() {
                                         </div>
 
                                         {selectedBonusLabel && (
-                                            <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20 flex items-center gap-3">
+                                            <div className="p-8 rounded-3xl bg-emerald-500/5 border border-emerald-500/20 flex items-center gap-3 backdrop-blur-xl">
                                                 <CheckCircle2 size={16} className="text-emerald-500" />
                                                 <p className="text-sm font-semibold text-emerald-400">Hedef Bonus: {selectedBonusLabel}</p>
                                             </div>
@@ -653,7 +653,7 @@ export function RulesManager() {
 
                                         <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/5">
                                             <button onClick={() => setIsAdding(false)} className="px-8 py-3 text-[11px] font-semibold text-slate-400 hover:text-white transition-colors">İPTAL</button>
-                                            <Button variant="primary" onClick={handleAddRule} className="h-12 px-12 rounded-xl bg-[color:var(--panel-accent,#0a84ff)] text-white font-semibold text-[11px] shadow-2xl border-none hover:bg-[color:var(--panel-accent-deep,#0060df)]">KURALI OLUŞTUR</Button>
+                                            <Button variant="primary" onClick={handleAddRule} className="h-12 px-12 rounded-3xl bg-[color:var(--panel-accent,#0a84ff)] text-white font-semibold text-[11px] shadow-2xl border-none hover:bg-[color:var(--panel-accent-deep,#0060df)] backdrop-blur-xl">KURALI OLUŞTUR</Button>
                                         </div>
                                     </div>
                                 </div>
@@ -661,12 +661,12 @@ export function RulesManager() {
                         )}
                     </AnimatePresence>
 
-                    <div className="grid grid-cols-1 gap-4">
+                    <div className="grid grid-cols-1 gap-8">
                         {filteredRules.map(([key, spec]) => (
                             <div
                                 key={key}
                                 className={cn(
-                                    "relative rounded-2xl border transition-all duration-300",
+                                    "relative rounded-3xl border transition-all duration-300 backdrop-blur-xl",
                                     editKey === key
                                         ? "bg-[color:var(--panel-accent,#0a84ff)]/5 border-[color:var(--panel-accent,#0a84ff)]/50 p-8"
                                         : "bg-white/[0.02] border-white/5 hover:border-white/5 p-6 md:px-8 group"
@@ -703,7 +703,7 @@ export function RulesManager() {
                                                     <Button
                                                         variant="primary"
                                                         onClick={() => handleUpdateRule(key, editValue!)}
-                                                        className="h-12 px-10 rounded-xl bg-gradient-to-r from-[color:var(--panel-accent,#0a84ff)] to-[color:var(--panel-accent,#0a84ff)] font-semibold text-[11px] border-none shadow-xl shadow-[color:var(--panel-accent,#0a84ff)]/10 uppercase tracking-widest"
+                                                        className="h-12 px-10 rounded-3xl bg-gradient-to-r from-[color:var(--panel-accent,#0a84ff)] to-[color:var(--panel-accent,#0a84ff)] font-semibold text-[11px] border-none shadow-xl shadow-[color:var(--panel-accent,#0a84ff)]/10 uppercase tracking-widest backdrop-blur-xl"
                                                         disabled={mutation.isPending}
                                                     >
                                                         {mutation.isPending ? 'KAYDEDİLİYOR...' : 'KURALI GÜNCELLE'}
@@ -746,17 +746,17 @@ export function RulesManager() {
                                                             value={editValue?.title ?? ''}
                                                             onChange={(e) => setEditValue({ ...editValue, title: e.target.value })}
                                                             placeholder={getPromoTitleForRuleKey(key) ?? key}
-                                                            className="w-full h-12 bg-white/[0.02] border border-white/5 rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all outline-none font-bold"
+                                                            className="w-full h-12 bg-white/[0.02] border border-white/[0.05] rounded-3xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all outline-none font-bold backdrop-blur-xl"
                                                         />
                                                     </div>
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                                                         <div className="space-y-2">
                                                             <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block pl-1">Bonus Tipi</label>
                                                             <p className="text-[10px] text-slate-500 font-medium pl-1 mb-1">Bonusun hangi mekanizma ile ekleneceğini belirler.</p>
                                                             <select
                                                                 value={editValue?.type ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, type: e.target.value as any })}
-                                                                className="w-full h-12 bg-white/[0.02] border border-white/5 rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all outline-none font-bold"
+                                                                className="w-full h-12 bg-white/[0.02] border border-white/[0.05] rounded-3xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all outline-none font-bold backdrop-blur-xl"
                                                             >
                                                                 <option value="">Seçiniz...</option>
                                                                 <option value="partner">Partner Bonus</option>
@@ -771,7 +771,7 @@ export function RulesManager() {
                                                                     type="text"
                                                                     value={editValue?.partnerBonusId ?? ''}
                                                                     onChange={(e) => setEditValue({ ...editValue, partnerBonusId: e.target.value })}
-                                                                    className="w-full h-12 bg-white/[0.02] border border-white/5 rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all outline-none font-bold"
+                                                                    className="w-full h-12 bg-white/[0.02] border border-white/[0.05] rounded-3xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all outline-none font-bold backdrop-blur-xl"
                                                                     placeholder="Örn: 656569"
                                                                 />
                                                             </div>
@@ -789,7 +789,7 @@ export function RulesManager() {
                                                             <select
                                                                 value={editValue?.amountType ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, amountType: e.target.value as any })}
-                                                                className="w-full h-12 bg-white/[0.02] border border-white/5 rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all outline-none font-bold"
+                                                                className="w-full h-12 bg-white/[0.02] border border-white/[0.05] rounded-3xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all outline-none font-bold backdrop-blur-xl"
                                                             >
                                                                 <option value="">Seçiniz...</option>
                                                                 <option value="fixed">Sabit Tutar</option>
@@ -804,7 +804,7 @@ export function RulesManager() {
                                                         </div>
                                                     </div>
 
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                                                         {editValue?.amountType === 'fixed' && (
                                                             <div className="space-y-2">
                                                                 <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block pl-1">Sabit Tutar (₺)</label>
@@ -812,7 +812,7 @@ export function RulesManager() {
                                                                     type="number"
                                                                     value={editValue?.fixedAmount ?? ''}
                                                                     onChange={(e) => setEditValue({ ...editValue, fixedAmount: Number(e.target.value) })}
-                                                                    className="w-full h-12 bg-white/[0.02] border border-white/5 rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all outline-none font-bold"
+                                                                    className="w-full h-12 bg-white/[0.02] border border-white/[0.05] rounded-3xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all outline-none font-bold backdrop-blur-xl"
                                                                 />
                                                             </div>
                                                         )}
@@ -823,7 +823,7 @@ export function RulesManager() {
                                                                     type="number"
                                                                     value={editValue?.percentageAmount ?? ''}
                                                                     onChange={(e) => setEditValue({ ...editValue, percentageAmount: Number(e.target.value) })}
-                                                                    className="w-full h-12 bg-white/[0.02] border border-white/5 rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all outline-none font-bold"
+                                                                    className="w-full h-12 bg-white/[0.02] border border-white/[0.05] rounded-3xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all outline-none font-bold backdrop-blur-xl"
                                                                 />
                                                             </div>
                                                         )}
@@ -834,28 +834,28 @@ export function RulesManager() {
                                                                         <input type="number" placeholder="Örn: 3"
                                                                             value={editValue?.averageDepositCount ?? ''}
                                                                             onChange={(e) => setEditValue({ ...editValue, averageDepositCount: Number(e.target.value) })}
-                                                                            className="w-full h-12 bg-white/[0.02] border border-white/5 rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all outline-none font-bold" />
+                                                                            className="w-full h-12 bg-white/[0.02] border border-white/[0.05] rounded-3xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all outline-none font-bold backdrop-blur-xl" />
                                                                     </div>
                                                                     <div className="space-y-2">
                                                                         <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block pl-1">Alt Sınır (₺)</label>
                                                                         <input type="number" placeholder="Örn: 100"
                                                                             value={editValue?.minimumBonus ?? ''}
                                                                             onChange={(e) => setEditValue({ ...editValue, minimumBonus: Number(e.target.value) })}
-                                                                            className="w-full h-12 bg-white/[0.02] border border-white/5 rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all outline-none font-bold" />
+                                                                            className="w-full h-12 bg-white/[0.02] border border-white/[0.05] rounded-3xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all outline-none font-bold backdrop-blur-xl" />
                                                                     </div>
                                                                     <div className="space-y-2">
                                                                         <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block pl-1">Üst Sınır (₺)</label>
                                                                         <input type="number" placeholder="Örn: 2000"
                                                                             value={editValue?.maximumBonus ?? ''}
                                                                             onChange={(e) => setEditValue({ ...editValue, maximumBonus: Number(e.target.value) })}
-                                                                            className="w-full h-12 bg-white/[0.02] border border-white/5 rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all outline-none font-bold" />
+                                                                            className="w-full h-12 bg-white/[0.02] border border-white/[0.05] rounded-3xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all outline-none font-bold backdrop-blur-xl" />
                                                                     </div>
                                                                 </>
                                                             )}
                                                         </div>
 
                                                         {editValue?.amountType === 'dailySequencePercentage' && (
-                                                            <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-3">
+                                                            <div className="p-8 rounded-3xl bg-white/[0.02] border border-white/[0.05] space-y-3 backdrop-blur-xl">
                                                                 <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block pl-1">Günlük Yatırım Sırası Kademeleri</label>
                                                                 <p className="text-[10px] text-slate-500 font-medium pl-1">
                                                                     Virgülle ayrılmış yüzdeler. Soldan sağa günün 1., 2., 3. ... yatırımına uygulanır;
@@ -870,7 +870,7 @@ export function RulesManager() {
                                                                             .map((parca) => Number(parca.trim()))
                                                                             .filter((sayi) => Number.isFinite(sayi) && sayi > 0),
                                                                     })}
-                                                                    className="w-full h-12 bg-white/[0.02] border border-white/5 rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all outline-none font-bold" />
+                                                                    className="w-full h-12 bg-white/[0.02] border border-white/[0.05] rounded-3xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all outline-none font-bold backdrop-blur-xl" />
                                                                 {(editValue?.dailySequencePercents ?? []).length > 0 && (
                                                                     <p className="text-[10px] text-slate-400 font-medium pl-1">
                                                                         {(editValue?.dailySequencePercents ?? []).length} kademe · toplam %
@@ -881,7 +881,7 @@ export function RulesManager() {
                                                         )}
 
                                                         {editValue?.amountType === 'tiered' && (
-                                                        <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-4">
+                                                        <div className="p-8 rounded-3xl bg-white/[0.02] border border-white/[0.05] space-y-4 backdrop-blur-xl">
                                                             <div className="flex items-center justify-between">
                                                                 <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block pl-1">Barem Ayarları</label>
                                                                 <Button
@@ -905,7 +905,7 @@ export function RulesManager() {
                                                                                 newTiers[idx].min = Number(e.target.value);
                                                                                 setEditValue({ ...editValue, tieredAmounts: newTiers });
                                                                             }}
-                                                                            className="flex-1 h-10 bg-black/40 border border-white/5 rounded-xl px-3 text-xs text-white"
+                                                                            className="flex-1 h-10 bg-black/40 border border-white/[0.05] rounded-3xl px-3 text-xs text-white backdrop-blur-xl"
                                                                         />
                                                                         <ArrowRight size={14} className="text-slate-500" />
                                                                         <input
@@ -917,7 +917,7 @@ export function RulesManager() {
                                                                                 newTiers[idx].bonus = Number(e.target.value);
                                                                                 setEditValue({ ...editValue, tieredAmounts: newTiers });
                                                                             }}
-                                                                            className="flex-1 h-10 bg-black/40 border border-white/5 rounded-xl px-3 text-xs text-white"
+                                                                            className="flex-1 h-10 bg-black/40 border border-white/[0.05] rounded-3xl px-3 text-xs text-white backdrop-blur-xl"
                                                                         />
                                                                         <button
                                                                             onClick={() => {
@@ -935,7 +935,7 @@ export function RulesManager() {
                                                     )}
 
                                                     {editValue?.amountType === 'tieredRange' && (
-                                                        <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-4">
+                                                        <div className="p-8 rounded-3xl bg-white/[0.02] border border-white/[0.05] space-y-4 backdrop-blur-xl">
                                                             <div className="flex items-center justify-between">
                                                                 <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block pl-1">Yatırım Aralığı Ayarları</label>
                                                                 <Button
@@ -959,7 +959,7 @@ export function RulesManager() {
                                                                                 newRanges[idx] = { ...newRanges[idx], min: Number(e.target.value) };
                                                                                 setEditValue({ ...editValue, tieredRanges: newRanges });
                                                                             }}
-                                                                            className="flex-1 h-10 bg-black/40 border border-white/5 rounded-xl px-3 text-xs text-white"
+                                                                            className="flex-1 h-10 bg-black/40 border border-white/[0.05] rounded-3xl px-3 text-xs text-white backdrop-blur-xl"
                                                                         />
                                                                         <ArrowRight size={14} className="text-slate-500" />
                                                                         <input
@@ -971,7 +971,7 @@ export function RulesManager() {
                                                                                 newRanges[idx] = { ...newRanges[idx], max: Number(e.target.value) };
                                                                                 setEditValue({ ...editValue, tieredRanges: newRanges });
                                                                             }}
-                                                                            className="flex-1 h-10 bg-black/40 border border-white/5 rounded-xl px-3 text-xs text-white"
+                                                                            className="flex-1 h-10 bg-black/40 border border-white/[0.05] rounded-3xl px-3 text-xs text-white backdrop-blur-xl"
                                                                         />
                                                                         <ArrowRight size={14} className="text-slate-500" />
                                                                         <input
@@ -983,7 +983,7 @@ export function RulesManager() {
                                                                                 newRanges[idx] = { ...newRanges[idx], bonus: Number(e.target.value) };
                                                                                 setEditValue({ ...editValue, tieredRanges: newRanges });
                                                                             }}
-                                                                            className="flex-1 h-10 bg-black/40 border border-white/5 rounded-xl px-3 text-xs text-white"
+                                                                            className="flex-1 h-10 bg-black/40 border border-white/[0.05] rounded-3xl px-3 text-xs text-white backdrop-blur-xl"
                                                                         />
                                                                         <button
                                                                             onClick={() => {
@@ -1000,7 +1000,7 @@ export function RulesManager() {
                                                         </div>
                                                     )}
 
-                                                    <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-3">
+                                                    <div className="p-8 rounded-3xl bg-white/[0.02] border border-white/[0.05] space-y-3 backdrop-blur-xl">
                                                         <ToggleField
                                                             label="Kayıp bonusu (taban: net kayıp)"
                                                             description="Açıkken bonus tutarı yatırıma değil oyuncunun NET KAYBINA göre hesaplanır. Kademeli yüzde kullanan kayıp bonuslarında bu şart; kapalı bırakılırsa baremler son yatırıma uygulanır ve tutar yanlış çıkar."
@@ -1013,7 +1013,7 @@ export function RulesManager() {
                                                                 <select
                                                                     value={editValue?.lossBonusPeriod ?? 'sinceLastWithdrawal'}
                                                                     onChange={(e) => setEditValue({ ...editValue, lossBonusPeriod: e.target.value as any })}
-                                                                    className="w-full h-11 bg-white/[0.02] border border-white/5 rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all outline-none font-bold"
+                                                                    className="w-full h-11 bg-white/[0.02] border border-white/[0.05] rounded-3xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all outline-none font-bold backdrop-blur-xl"
                                                                 >
                                                                     <option value="sinceLastWithdrawal">Son ödenen çekimden itibaren (ömür boyu birikebilir)</option>
                                                                     <option value="weekly">Haftalık (Pazartesi 00:00'da sıfırlanır)</option>
@@ -1026,7 +1026,7 @@ export function RulesManager() {
                                                     </div>
 
                                                     {editValue?.amountType === 'tieredPercentage' && (
-                                                        <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-4">
+                                                        <div className="p-8 rounded-3xl bg-white/[0.02] border border-white/[0.05] space-y-4 backdrop-blur-xl">
                                                             <div className="flex items-center justify-between">
                                                                 <div>
                                                                     <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block pl-1">{`Yüzdeli ${tabanAdi} Baremi Aralığı`}</label>
@@ -1055,7 +1055,7 @@ export function RulesManager() {
                                                                                 placeholder={`Min ${tabanAdi}`}
                                                                                 value={range.min}
                                                                                 onChange={(e) => update({ min: Number(e.target.value) })}
-                                                                                className="flex-1 h-10 bg-black/40 border border-white/5 rounded-xl px-3 text-xs text-white"
+                                                                                className="flex-1 h-10 bg-black/40 border border-white/[0.05] rounded-3xl px-3 text-xs text-white backdrop-blur-xl"
                                                                             />
                                                                             <ArrowRight size={14} className="text-slate-500 shrink-0" />
                                                                             <input
@@ -1063,7 +1063,7 @@ export function RulesManager() {
                                                                                 placeholder={`Max ${tabanAdi}`}
                                                                                 value={range.max}
                                                                                 onChange={(e) => update({ max: Number(e.target.value) })}
-                                                                                className="flex-1 h-10 bg-black/40 border border-white/5 rounded-xl px-3 text-xs text-white"
+                                                                                className="flex-1 h-10 bg-black/40 border border-white/[0.05] rounded-3xl px-3 text-xs text-white backdrop-blur-xl"
                                                                             />
                                                                             <ArrowRight size={14} className="text-slate-500 shrink-0" />
                                                                             <div className="relative flex-1">
@@ -1072,7 +1072,7 @@ export function RulesManager() {
                                                                                     placeholder="Yüzde"
                                                                                     value={range.percent}
                                                                                     onChange={(e) => update({ percent: Number(e.target.value) })}
-                                                                                    className="w-full h-10 bg-black/40 border border-white/5 rounded-xl pl-6 pr-3 text-xs text-white"
+                                                                                    className="w-full h-10 bg-black/40 border border-white/[0.05] rounded-3xl pl-6 pr-3 text-xs text-white backdrop-blur-xl"
                                                                                 />
                                                                                 <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-purple-300">%</span>
                                                                             </div>
@@ -1081,7 +1081,7 @@ export function RulesManager() {
                                                                                 placeholder="Tavan (ops.)"
                                                                                 value={range.maxBonus ?? ''}
                                                                                 onChange={(e) => update({ maxBonus: e.target.value === '' ? undefined : Number(e.target.value) })}
-                                                                                className="flex-1 h-10 bg-black/40 border border-white/5 rounded-xl px-3 text-xs text-white"
+                                                                                className="flex-1 h-10 bg-black/40 border border-white/[0.05] rounded-3xl px-3 text-xs text-white backdrop-blur-xl"
                                                                             />
                                                                             <button
                                                                                 onClick={() => setEditValue({ ...editValue, tieredPercentageRanges: (editValue.tieredPercentageRanges || []).filter((_, i) => i !== idx) })}
@@ -1129,9 +1129,9 @@ export function RulesManager() {
                                                             </p>
                                                         )}
                                                     </div>
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8">
                                                         <label className="space-y-2">
-                                                            <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Bet Level*</span>
+                                                            <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Bet Level*</span>
                                                             <input
                                                                 type="number"
                                                                 min={1}
@@ -1139,11 +1139,11 @@ export function RulesManager() {
                                                                 value={editValue?.freespinBetLevel ?? ''}
                                                                 onChange={(event) => setEditValue({ ...editValue, freespinBetLevel: event.target.value === '' ? undefined : Number(event.target.value) })}
                                                                 placeholder="Örn. 1"
-                                                                className="h-10 w-full rounded-2xl border border-white/5 bg-black/40 px-3 text-xs text-white outline-none focus:border-amber-400/40"
+                                                                className="h-10 w-full rounded-3xl border border-white/[0.05] bg-black/40 px-3 text-xs text-white outline-none focus:border-amber-400/40 backdrop-blur-xl"
                                                             />
                                                         </label>
                                                         <label className="space-y-2">
-                                                            <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Count*</span>
+                                                            <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Count*</span>
                                                             <input
                                                                 type="number"
                                                                 min={1}
@@ -1151,11 +1151,11 @@ export function RulesManager() {
                                                                 value={editValue?.freespinCount ?? ''}
                                                                 onChange={(event) => setEditValue({ ...editValue, freespinCount: event.target.value === '' ? undefined : Number(event.target.value) })}
                                                                 placeholder="Örn. 100"
-                                                                className="h-10 w-full rounded-2xl border border-white/5 bg-black/40 px-3 text-xs text-white outline-none focus:border-amber-400/40"
+                                                                className="h-10 w-full rounded-3xl border border-white/[0.05] bg-black/40 px-3 text-xs text-white outline-none focus:border-amber-400/40 backdrop-blur-xl"
                                                             />
                                                         </label>
                                                         <label className="space-y-2">
-                                                            <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Game ID*</span>
+                                                            <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Game ID*</span>
                                                             <input
                                                                 type="number"
                                                                 min={1}
@@ -1163,11 +1163,11 @@ export function RulesManager() {
                                                                 value={editValue?.freespinGameId ?? (editValue?.freespinGame as any)?.id ?? (editValue?.freespinGame as any)?.Id ?? ''}
                                                                 onChange={(event) => setEditValue({ ...editValue, freespinGameId: event.target.value === '' ? undefined : Number(event.target.value) })}
                                                                 placeholder="Örn. 195202"
-                                                                className="h-10 w-full rounded-2xl border border-white/5 bg-black/40 px-3 text-xs text-white outline-none focus:border-amber-400/40"
+                                                                className="h-10 w-full rounded-3xl border border-white/[0.05] bg-black/40 px-3 text-xs text-white outline-none focus:border-amber-400/40 backdrop-blur-xl"
                                                             />
                                                         </label>
                                                         <label className="space-y-2">
-                                                            <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Provider ID*</span>
+                                                            <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Provider ID*</span>
                                                             <input
                                                                 type="number"
                                                                 min={1}
@@ -1175,7 +1175,7 @@ export function RulesManager() {
                                                                 value={editValue?.freespinGameProviderId ?? (editValue?.freespinGame as any)?.providerId ?? (editValue?.freespinGame as any)?.ProviderId ?? ''}
                                                                 onChange={(event) => setEditValue({ ...editValue, freespinGameProviderId: event.target.value === '' ? undefined : Number(event.target.value) })}
                                                                 placeholder="Örn. 1"
-                                                                className="h-10 w-full rounded-2xl border border-white/5 bg-black/40 px-3 text-xs text-white outline-none focus:border-amber-400/40"
+                                                                className="h-10 w-full rounded-3xl border border-white/[0.05] bg-black/40 px-3 text-xs text-white outline-none focus:border-amber-400/40 backdrop-blur-xl"
                                                             />
                                                         </label>
                                                     </div>
@@ -1186,7 +1186,7 @@ export function RulesManager() {
                                                         <div className="h-1.5 w-1.5 rounded-full bg-rose-500" />
                                                         Otomasyon Ayarları
                                                     </h4>
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                                                         <ToggleField
                                                             label="Otomatik Ekleme"
                                                             description="Onay gerektirmeden direkt platforma eklenir."
@@ -1219,7 +1219,7 @@ export function RulesManager() {
                                                         <div className="h-1.5 w-1.5 rounded-full bg-sky-500" />
                                                         Bağımsız Kural Kontrolleri
                                                     </h4>
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                                                         <ToggleField
                                                             label="Açıkta Çekim Kontrolü"
                                                             description="Bekleyen çekim talebi olan kullanıcıları reddeder."
@@ -1283,7 +1283,7 @@ export function RulesManager() {
                                                         <div className="h-1.5 w-1.5 rounded-full bg-amber-500" />
                                                         Gelişmiş Limitler
                                                     </h4>
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                                                         <div className="space-y-2">
                                                             <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block pl-1">Min Bakiye Limiti</label>
                                                             <p className="text-[10px] text-slate-500 font-medium pl-1 mb-1">Bonus talebi anındaki minimum bakiye sınırı.</p>
@@ -1291,7 +1291,7 @@ export function RulesManager() {
                                                                 type="number"
                                                                 value={editValue?.minBalanceToClaim ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, minBalanceToClaim: Number(e.target.value) })}
-                                                                className="w-full h-12 bg-white/[0.02] border border-white/5 rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold"
+                                                                className="w-full h-12 bg-white/[0.02] border border-white/[0.05] rounded-3xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold backdrop-blur-xl"
                                                                 placeholder="N/A"
                                                             />
                                                         </div>
@@ -1302,7 +1302,7 @@ export function RulesManager() {
                                                                 type="number"
                                                                 value={editValue?.maxBalanceToClaim ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, maxBalanceToClaim: Number(e.target.value) })}
-                                                                className="w-full h-12 bg-white/[0.02] border border-white/5 rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold"
+                                                                className="w-full h-12 bg-white/[0.02] border border-white/[0.05] rounded-3xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold backdrop-blur-xl"
                                                                 placeholder="N/A"
                                                             />
                                                         </div>
@@ -1315,7 +1315,7 @@ export function RulesManager() {
                                                         <div className="h-1.5 w-1.5 rounded-full bg-amber-500" />
                                                         Çevrim & Ödeme Kuralları
                                                     </h4>
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                                                         <div className="space-y-2">
                                                             <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block pl-1">Ana Para Çevrimi</label>
                                                             <p className="text-[10px] text-slate-500 font-medium pl-1 mb-1">Anaparanın kaç katı çevrilmeli?</p>
@@ -1323,7 +1323,7 @@ export function RulesManager() {
                                                                 type="number"
                                                                 value={editValue?.principalWagerMult ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, principalWagerMult: Number(e.target.value) })}
-                                                                className="w-full h-12 bg-white/[0.02] border border-white/5 rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold"
+                                                                className="w-full h-12 bg-white/[0.02] border border-white/[0.05] rounded-3xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold backdrop-blur-xl"
                                                                 placeholder="0 (çevrim şartı yok)"
                                                             />
                                                         </div>
@@ -1334,7 +1334,7 @@ export function RulesManager() {
                                                                 type="number"
                                                                 value={editValue?.bonusWagerMult ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, bonusWagerMult: Number(e.target.value) })}
-                                                                className="w-full h-12 bg-white/[0.02] border border-white/5 rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold"
+                                                                className="w-full h-12 bg-white/[0.02] border border-white/[0.05] rounded-3xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold backdrop-blur-xl"
                                                                 placeholder="0 (Çevrimsiz)"
                                                             />
                                                         </div>
@@ -1345,7 +1345,7 @@ export function RulesManager() {
                                                                 type="number"
                                                                 value={editValue?.casinoWagering ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, casinoWagering: Number(e.target.value) })}
-                                                                className="w-full h-12 bg-white/[0.02] border border-white/5 rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold"
+                                                                className="w-full h-12 bg-white/[0.02] border border-white/[0.05] rounded-3xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold backdrop-blur-xl"
                                                                 placeholder="Kullanılmıyor"
                                                             />
                                                         </div>
@@ -1356,7 +1356,7 @@ export function RulesManager() {
                                                                 type="number"
                                                                 value={editValue?.sportWagering ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, sportWagering: Number(e.target.value) })}
-                                                                className="w-full h-12 bg-white/[0.02] border border-white/5 rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold"
+                                                                className="w-full h-12 bg-white/[0.02] border border-white/[0.05] rounded-3xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold backdrop-blur-xl"
                                                                 placeholder="Kullanılmıyor"
                                                             />
                                                         </div>
@@ -1368,7 +1368,7 @@ export function RulesManager() {
                                                                 step="0.01"
                                                                 value={editValue?.minSportOdds ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, minSportOdds: Number(e.target.value) })}
-                                                                className="w-full h-12 bg-white/[0.02] border border-white/5 rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold"
+                                                                className="w-full h-12 bg-white/[0.02] border border-white/[0.05] rounded-3xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold backdrop-blur-xl"
                                                                 placeholder="Kullanılmıyor"
                                                             />
                                                         </div>
@@ -1379,7 +1379,7 @@ export function RulesManager() {
                                                                 type="number"
                                                                 value={editValue?.maxPayoutMult ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, maxPayoutMult: Number(e.target.value) })}
-                                                                className="w-full h-12 bg-white/[0.02] border border-white/5 rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold"
+                                                                className="w-full h-12 bg-white/[0.02] border border-white/[0.05] rounded-3xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold backdrop-blur-xl"
                                                                 placeholder="10 (Örn)"
                                                             />
                                                         </div>
@@ -1390,7 +1390,7 @@ export function RulesManager() {
                                                                 type="number"
                                                                 value={editValue?.maxPayoutFixed ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, maxPayoutFixed: Number(e.target.value) })}
-                                                                className="w-full h-12 bg-white/[0.02] border border-white/5 rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold"
+                                                                className="w-full h-12 bg-white/[0.02] border border-white/[0.05] rounded-3xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold backdrop-blur-xl"
                                                                 placeholder="Sınırsız"
                                                             />
                                                         </div>
@@ -1403,7 +1403,7 @@ export function RulesManager() {
                                                         <div className="h-1.5 w-1.5 rounded-full bg-[color:var(--panel-accent,#0a84ff)]" />
                                                         Gelişmiş Yatırım Limitleri
                                                     </h4>
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                                                         <div className="space-y-2">
                                                             <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block pl-1">Min Yatırım (Aralık)</label>
                                                             <p className="text-[10px] text-slate-500 font-medium pl-1 mb-1">Yatırım tutarı en az kaç olmalı?</p>
@@ -1411,7 +1411,7 @@ export function RulesManager() {
                                                                 type="number"
                                                                 value={editValue?.minDepositAmount ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, minDepositAmount: Number(e.target.value) })}
-                                                                className="w-full h-12 bg-white/[0.02] border border-white/5 rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold"
+                                                                className="w-full h-12 bg-white/[0.02] border border-white/[0.05] rounded-3xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold backdrop-blur-xl"
                                                                 placeholder="Alt sınır"
                                                             />
                                                         </div>
@@ -1422,7 +1422,7 @@ export function RulesManager() {
                                                                 type="number"
                                                                 value={editValue?.maxDepositAmount ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, maxDepositAmount: Number(e.target.value) })}
-                                                                className="w-full h-12 bg-white/[0.02] border border-white/5 rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold"
+                                                                className="w-full h-12 bg-white/[0.02] border border-white/[0.05] rounded-3xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold backdrop-blur-xl"
                                                                 placeholder="Üst sınır"
                                                             />
                                                         </div>
@@ -1433,7 +1433,7 @@ export function RulesManager() {
                                                                 type="number"
                                                                 value={editValue?.perDayLimit ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, perDayLimit: Number(e.target.value) })}
-                                                                className="w-full h-12 bg-white/[0.02] border border-white/5 rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold"
+                                                                className="w-full h-12 bg-white/[0.02] border border-white/[0.05] rounded-3xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold backdrop-blur-xl"
                                                                 placeholder="Sınırsız"
                                                             />
                                                         </div>
@@ -1444,7 +1444,7 @@ export function RulesManager() {
                                                                 type="number"
                                                                 value={editValue?.perWeekLimit ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, perWeekLimit: Number(e.target.value) })}
-                                                                className="w-full h-12 bg-white/[0.02] border border-white/5 rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold"
+                                                                className="w-full h-12 bg-white/[0.02] border border-white/[0.05] rounded-3xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold backdrop-blur-xl"
                                                                 placeholder="Sınırsız"
                                                             />
                                                         </div>
@@ -1461,7 +1461,7 @@ export function RulesManager() {
                                                                         .map((p) => p.trim())
                                                                         .filter(Boolean),
                                                                 })}
-                                                                className="w-full h-12 bg-white/[0.02] border border-white/5 rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold"
+                                                                className="w-full h-12 bg-white/[0.02] border border-white/[0.05] rounded-3xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold backdrop-blur-xl"
                                                                 placeholder="Pragmatic Play"
                                                             />
                                                         </div>
@@ -1474,7 +1474,7 @@ export function RulesManager() {
                                                         <div className="h-1.5 w-1.5 rounded-full bg-[color:var(--panel-accent,#0a84ff)]" />
                                                         Ekstra Kontrol Switchleri
                                                     </h4>
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                                                         <ToggleField
                                                             label="İlk Yatırım Bonusu"
                                                             description="Sadece kullanıcının ilk yatırımı için geçerli kıl."
@@ -1491,14 +1491,14 @@ export function RulesManager() {
                                                         <div className="h-1.5 w-1.5 rounded-full bg-[color:var(--panel-accent,#0a84ff)]" />
                                                         Talep Anı Koşulları
                                                     </h4>
-                                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                                                         <div className="space-y-2">
                                                             <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block pl-1">Aynı Gün Ardışık Kayıp Yatırımı</label>
                                                             <p className="text-[10px] text-slate-500 font-medium pl-1 mb-1">Kaç yatırımın aynı gün kaybedilmiş olması gerektiği. Boş bırakılırsa kontrol edilmez.</p>
                                                             <input type="number" placeholder="Örn: 3"
                                                                 value={editValue?.consecutiveLossDeposits ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, consecutiveLossDeposits: e.target.value === '' ? undefined : Number(e.target.value) })}
-                                                                className="w-full h-12 bg-white/[0.02] border border-white/5 rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all outline-none font-bold" />
+                                                                className="w-full h-12 bg-white/[0.02] border border-white/[0.05] rounded-3xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all outline-none font-bold backdrop-blur-xl" />
                                                         </div>
                                                         <div className="space-y-2">
                                                             <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block pl-1">Bakiye Üst Sınırı (₺)</label>
@@ -1506,7 +1506,7 @@ export function RulesManager() {
                                                             <input type="number" placeholder="Örn: 10"
                                                                 value={editValue?.balanceBelow ?? ''}
                                                                 onChange={(e) => setEditValue({ ...editValue, balanceBelow: e.target.value === '' ? undefined : Number(e.target.value) })}
-                                                                className="w-full h-12 bg-white/[0.02] border border-white/5 rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all outline-none font-bold" />
+                                                                className="w-full h-12 bg-white/[0.02] border border-white/[0.05] rounded-3xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all outline-none font-bold backdrop-blur-xl" />
                                                         </div>
                                                         <ToggleField
                                                             label="Açık Bahis Olmamalı"
@@ -1524,11 +1524,11 @@ export function RulesManager() {
                                                         <div className="h-1.5 w-1.5 rounded-full bg-[color:var(--panel-accent,#0a84ff)]" />
                                                         Zaman & Kategori Kısıtlamaları
                                                     </h4>
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                                         <div className="space-y-3">
                                                             <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block pl-1">Aktif Günler</label>
                                                             <p className="text-[10px] text-slate-500 font-medium pl-1 mb-1">Bonusun hangi günlerde talep edilebileceğini seçin.</p>
-                                                            <div className="grid grid-cols-4 gap-2">
+                                                            <div className="grid grid-cols-4 gap-8">
                                                                 {['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'].map((day, idx) => {
                                                                     const dayKey = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'][idx];
                                                                     const isActive = editValue?.activeDays?.includes(dayKey);
@@ -1543,7 +1543,7 @@ export function RulesManager() {
                                                                                 setEditValue({ ...editValue, activeDays: next });
                                                                             }}
                                                                             className={cn(
-                                                                                "h-10 rounded-xl text-[10px] font-semibold transition-all border",
+                                                                                "h-10 rounded-3xl text-[10px] font-semibold transition-all border backdrop-blur-xl",
                                                                                 isActive ? "bg-[color:var(--panel-accent,#0a84ff)]/20 text-purple-300 border-[color:var(--panel-accent,#0a84ff)]/30" : "bg-white/[0.02] text-slate-500 border-white/5"
                                                                             )}
                                                                         >
@@ -1553,14 +1553,14 @@ export function RulesManager() {
                                                                 })}
                                                             </div>
                                                         </div>
-                                                        <div className="grid grid-cols-2 gap-4">
+                                                        <div className="grid grid-cols-2 gap-8">
                                                             <div className="space-y-2">
                                                                 <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block pl-1">Başlangıç Saati</label>
                                                                 <input
                                                                     type="time"
                                                                     value={editValue?.startTime ?? ''}
                                                                     onChange={(e) => setEditValue({ ...editValue, startTime: e.target.value })}
-                                                                    className="w-full h-12 bg-white/[0.02] border border-white/5 rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold"
+                                                                    className="w-full h-12 bg-white/[0.02] border border-white/[0.05] rounded-3xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold backdrop-blur-xl"
                                                                 />
                                                             </div>
                                                             <div className="space-y-2">
@@ -1569,7 +1569,7 @@ export function RulesManager() {
                                                                     type="time"
                                                                     value={editValue?.endTime ?? ''}
                                                                     onChange={(e) => setEditValue({ ...editValue, endTime: e.target.value })}
-                                                                    className="w-full h-12 bg-white/[0.02] border border-white/5 rounded-xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold"
+                                                                    className="w-full h-12 bg-white/[0.02] border border-white/[0.05] rounded-3xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold backdrop-blur-xl"
                                                                 />
                                                             </div>
                                                         </div>
@@ -1607,7 +1607,7 @@ export function RulesManager() {
                                                 </div>
                                                 <div className="flex flex-wrap gap-8">
                                                     {spec.type && (
-                                                        <div className="space-y-1 p-3 rounded-xl bg-[color:var(--panel-accent,#0a84ff)]/5 border border-[color:var(--panel-accent,#0a84ff)]/10">
+                                                        <div className="space-y-1 p-8 rounded-3xl bg-[color:var(--panel-accent,#0a84ff)]/5 border border-[color:var(--panel-accent,#0a84ff)]/10 backdrop-blur-xl">
                                                             <p className="text-[9px] font-semibold text-purple-300/70 uppercase">Bonus Tipi</p>
                                                             <p className="text-sm font-semibold text-purple-300">
                                                                 {spec.type === 'partner' ? `Partner #${spec.partnerBonusId}` : 'Nakit'}
@@ -1615,7 +1615,7 @@ export function RulesManager() {
                                                         </div>
                                                     )}
                                                     {spec.amountType && (
-                                                        <div className="space-y-1 p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
+                                                        <div className="space-y-1 p-8 rounded-3xl bg-emerald-500/5 border border-emerald-500/10 backdrop-blur-xl">
                                                             <p className="text-[9px] font-semibold text-emerald-500/70 uppercase">Tutar Ayarı</p>
                                                             <p className="text-sm font-semibold text-emerald-400">
                                                                 {spec.amountType === 'fixed' ? `${spec.fixedAmount}₺ Sabit` :
@@ -1628,7 +1628,7 @@ export function RulesManager() {
                                                             </p>
                                                         </div>
                                                     )}
-                                                    <div className="space-y-1 p-3 rounded-xl bg-white/10 border border-white/5">
+                                                    <div className="space-y-1 p-8 rounded-3xl bg-white/10 border border-white/[0.05] backdrop-blur-xl">
                                                         <p className="text-[9px] font-semibold text-slate-400 uppercase">Kontroller</p>
                                                         <div className="flex gap-1.5 mt-1">
                                                             {spec.checkPendingWithdrawal && <div className="w-2 h-2 rounded-full bg-rose-500" title="Çekim Kontrolü" />}
@@ -1648,14 +1648,14 @@ export function RulesManager() {
                                                         setEditKey(key);
                                                         setEditValue({ ...spec, partnerBonusId: spec.partnerBonusId ?? (linked?.PartnerBonusId != null ? String(linked.PartnerBonusId) : undefined) });
                                                     }}
-                                                    className="h-12 w-12 flex items-center justify-center rounded-xl bg-[color:var(--panel-accent,#0a84ff)]/10 border border-[color:var(--panel-accent,#0a84ff)]/20 text-purple-300 hover:bg-[color:var(--panel-accent,#0a84ff)] hover:text-white transition-all shadow-lg"
+                                                    className="h-12 w-12 flex items-center justify-center rounded-full bg-[color:var(--panel-accent,#0a84ff)]/10 border border-[color:var(--panel-accent,#0a84ff)]/20 text-purple-300 hover:bg-[color:var(--panel-accent,#0a84ff)] hover:text-white transition-all shadow-lg"
                                                     title="Düzenle"
                                                 >
                                                     <Edit2 size={18} />
                                                 </button>
                                                 <button
                                                     onClick={() => handleDeleteRule(key)}
-                                                    className="h-12 w-12 flex items-center justify-center rounded-xl bg-white/10 hover:bg-rose-500 border border-white/5 text-slate-400 hover:text-white transition-all shadow-lg"
+                                                    className="h-12 w-12 flex items-center justify-center rounded-full bg-white/10 hover:bg-rose-500 border border-white/5 text-slate-400 hover:text-white transition-all shadow-lg"
                                                     title="Sil"
                                                 >
                                                     <Trash2 size={18} />
@@ -1671,7 +1671,7 @@ export function RulesManager() {
 
                 <div className="lg:col-span-3 space-y-8">
                     <Card className="flex items-center gap-3 border-white/5 bg-white/[0.02] p-4">
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400">
                             <CheckCircle2 size={18} />
                         </span>
                         <div className="min-w-0">
@@ -1683,7 +1683,7 @@ export function RulesManager() {
                     <Card className="p-8 border-white/5 bg-white/[0.02] shadow-xl overflow-hidden relative">
                         <div className="absolute top-0 right-0 h-1 w-full bg-gradient-to-r from-[color:var(--panel-accent,#0a84ff)] to-transparent opacity-20" />
                         <div className="flex items-center gap-3 mb-8">
-                            <div className="h-10 w-10 rounded-xl bg-[color:var(--panel-accent,#0a84ff)]/10 flex items-center justify-center text-purple-300 border border-[color:var(--panel-accent,#0a84ff)]/20">
+                            <div className="h-10 w-10 rounded-full bg-[color:var(--panel-accent,#0a84ff)]/10 flex items-center justify-center text-purple-300 border border-[color:var(--panel-accent,#0a84ff)]/20">
                                 <Info size={18} />
                             </div>
                             <h4 className="text-xs font-semibold text-white uppercase tracking-widest">Sistem Rehberi</h4>
@@ -1732,7 +1732,7 @@ export function RulesManager() {
                                 </div>
                             </section>
 
-                            <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/10">
+                            <div className="p-8 rounded-3xl bg-amber-500/5 border border-amber-500/10 backdrop-blur-xl">
                                 <div className="flex gap-3">
                                     <AlertCircle className="text-amber-500 shrink-0" size={16} />
                                     <p className="text-[10px] font-bold text-amber-500/80 leading-relaxed italic">Değişikliklerin sunucuda aktif hale gelmesi yaklaşık 3 saniye sürer.</p>
@@ -1749,7 +1749,7 @@ export function RulesManager() {
 function StatItem({ label, value, unit, color }: any) {
     if (value === undefined || value === null) return null;
     return (
-        <div className="space-y-1 px-4 py-2 rounded-xl bg-white/[0.02] border border-white/5">
+        <div className="space-y-1 px-4 py-2 rounded-3xl bg-white/[0.02] border border-white/[0.05] backdrop-blur-xl">
             <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-widest">{label}</p>
             <p className={cn("text-sm font-semibold", color || "text-slate-200")}>
                 {value} <span className="text-[10px] text-slate-400 font-bold uppercase">{unit}</span>
@@ -1760,12 +1760,12 @@ function StatItem({ label, value, unit, color }: any) {
 
 function ToggleField({ label, description, value, onChange }: { label: string; description?: string; value: boolean | undefined; onChange: (v: boolean | undefined) => void }) {
     return (
-        <div className="group space-y-4 p-6 rounded-xl bg-white/[0.02] border border-white/5 hover:border-[color:var(--panel-accent,#0a84ff)]/20 transition-all duration-500 hover:shadow-2xl hover:shadow-[color:var(--panel-accent,#0a84ff)]/5">
+        <div className="group space-y-4 p-8 rounded-3xl bg-white/[0.02] border border-white/[0.05] hover:border-[color:var(--panel-accent,#0a84ff)]/20 transition-all duration-500 hover:shadow-2xl hover:shadow-[color:var(--panel-accent,#0a84ff)]/5 backdrop-blur-xl">
             <div className="min-h-[48px]">
                 <p className="text-[10px] font-semibold text-slate-400 group-hover:text-white uppercase tracking-[0.1em] transition-colors">{label}</p>
                 {description && <p className="text-[11px] text-slate-500 font-medium mt-2 leading-relaxed line-clamp-2">{description}</p>}
             </div>
-            <div className="flex p-1.5 bg-black/60 rounded-2xl border border-white/5 shadow-inner">
+            <div className="flex p-1.5 bg-black/60 rounded-3xl border border-white/[0.05] shadow-inner backdrop-blur-xl">
                 {[
                     { val: true, label: 'EVET', color: 'bg-emerald-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.4)]' },
                     { val: false, label: 'HAYIR', color: 'bg-rose-500 text-white shadow-[0_0_20px_rgba(244,63,94,0.4)]' },
@@ -1845,7 +1845,7 @@ function LynonCampaignEditor({ campaignId }: { campaignId: number }) {
 
     if (!validId) return null;
     return (
-        <div className="rounded-2xl border border-amber-400/20 bg-amber-400/[0.035] p-6 md:p-8 space-y-6">
+        <div className="rounded-3xl border border-amber-400/20 bg-amber-400/[0.035] p-8 md:p-8 space-y-6 backdrop-blur-xl">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
                     <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-300">Lynon Bonus Engine V2</p>
@@ -1853,26 +1853,26 @@ function LynonCampaignEditor({ campaignId }: { campaignId: number }) {
                     <p className="mt-2 max-w-3xl text-xs leading-relaxed text-slate-400">Tarih, para birimi, atama limiti, şablon, assignmentLimits ve blocksConfiguration değerleri doğrudan Lynon’a kaydedilir. ID ve site alanları değiştirilemez.</p>
                 </div>
                 <div className="flex gap-2">
-                    <button type="button" onClick={() => refetch()} disabled={isLoading} className="h-11 rounded-2xl border border-white/5 bg-white/5 px-4 text-xs font-semibold text-slate-200 hover:bg-white/10 disabled:opacity-50">
+                    <button type="button" onClick={() => refetch()} disabled={isLoading} className="h-11 rounded-3xl border border-white/[0.05] bg-white/5 px-4 text-xs font-semibold text-slate-200 hover:bg-white/10 disabled:opacity-50 backdrop-blur-xl">
                         <RefreshCw size={15} className={cn('mr-2 inline', isLoading && 'animate-spin')} /> YENİLE
                     </button>
-                    <Button type="button" variant="primary" onClick={() => saveMutation.mutate()} disabled={isLoading || saveMutation.isPending} className="h-11 rounded-2xl border-none bg-amber-400 px-6 text-xs font-semibold text-[#050609] hover:bg-[color:var(--panel-warning,#ff9f0a)]">
+                    <Button type="button" variant="primary" onClick={() => saveMutation.mutate()} disabled={isLoading || saveMutation.isPending} className="h-11 rounded-3xl border-none bg-amber-400 px-6 text-xs font-semibold text-[#050609] hover:bg-[color:var(--panel-warning,#ff9f0a)] backdrop-blur-xl">
                         {saveMutation.isPending ? 'LYNON’A KAYDEDİLİYOR...' : 'LYNON’A KAYDET'}
                     </Button>
                 </div>
             </div>
-            {error && <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-4 text-xs font-bold text-rose-300">{(error as Error).message}</div>}
+            {error && <div className="rounded-3xl border border-rose-500/20 bg-rose-500/5 p-8 text-xs font-bold text-rose-300 backdrop-blur-xl">{(error as Error).message}</div>}
             {isLoading ? (
                 <div className="py-10 text-center text-xs font-semibold uppercase tracking-widest text-slate-500">Parametreler yükleniyor...</div>
             ) : (
-                <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+                <div className="grid grid-cols-1 gap-8 xl:grid-cols-2">
                     <label className="space-y-2">
-                        <span className="block text-[10px] font-semibold uppercase tracking-widest text-slate-400">Kampanya parametreleri</span>
-                        <textarea value={campaignJson} onChange={(event) => setCampaignJson(event.target.value)} spellCheck={false} className="min-h-[360px] w-full rounded-2xl border border-white/5 bg-black/50 p-4 font-mono text-[11px] leading-relaxed text-amber-100 outline-none focus:border-amber-400/50" />
+                        <span className="block text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Kampanya parametreleri</span>
+                        <textarea value={campaignJson} onChange={(event) => setCampaignJson(event.target.value)} spellCheck={false} className="min-h-[360px] w-full rounded-3xl border border-white/[0.05] bg-black/50 p-8 font-mono text-[11px] leading-relaxed text-amber-100 outline-none focus:border-amber-400/50 backdrop-blur-xl" />
                     </label>
                     <label className="space-y-2">
-                        <span className="block text-[10px] font-semibold uppercase tracking-widest text-slate-400">Bonuslar ve blocksConfiguration</span>
-                        <textarea value={bonusesJson} onChange={(event) => setBonusesJson(event.target.value)} spellCheck={false} className="min-h-[360px] w-full rounded-2xl border border-white/5 bg-black/50 p-4 font-mono text-[11px] leading-relaxed text-emerald-100 outline-none focus:border-emerald-400/50" />
+                        <span className="block text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Bonuslar ve blocksConfiguration</span>
+                        <textarea value={bonusesJson} onChange={(event) => setBonusesJson(event.target.value)} spellCheck={false} className="min-h-[360px] w-full rounded-3xl border border-white/[0.05] bg-black/50 p-8 font-mono text-[11px] leading-relaxed text-emerald-100 outline-none focus:border-emerald-400/50 backdrop-blur-xl" />
                     </label>
                 </div>
             )}
@@ -1950,12 +1950,12 @@ function PromoContentEditor({ externalId, promoTitle }: { externalId: number; pr
     });
 
     return (
-        <div className="space-y-6 p-8 rounded-xl bg-white/[0.02] border border-white/5 relative overflow-hidden group">
+        <div className="space-y-6 p-8 rounded-3xl bg-white/[0.02] border border-white/[0.05] relative overflow-hidden group backdrop-blur-xl">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500/50 via-[color:var(--panel-accent,#0a84ff)]/50 to-transparent opacity-30" />
 
             <div className="flex flex-col md:flex-row items-start justify-between gap-6 relative z-10">
                 <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-emerald-400">
+                    <div className="h-12 w-12 rounded-full bg-white/5 border border-white/5 flex items-center justify-center text-emerald-400">
                         <Sparkles size={24} />
                     </div>
                     <div className="space-y-1">
@@ -1975,7 +1975,7 @@ function PromoContentEditor({ externalId, promoTitle }: { externalId: number; pr
                         variant="primary"
                         disabled={saveMutation.isPending || isLoading}
                         onClick={() => saveMutation.mutate()}
-                        className="h-11 px-10 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-[#050609] font-semibold text-[10px] border-none shadow-lg shadow-emerald-500/10 uppercase tracking-widest"
+                        className="h-11 px-10 rounded-3xl bg-emerald-500 hover:bg-emerald-400 text-[#050609] font-semibold text-[10px] border-none shadow-lg shadow-emerald-500/10 uppercase tracking-widest backdrop-blur-xl"
                     >
                         {saveMutation.isPending ? 'KAYDEDİLİYOR...' : 'İÇERİĞİ GÜNCELLE'}
                     </Button>
@@ -1989,7 +1989,7 @@ function PromoContentEditor({ externalId, promoTitle }: { externalId: number; pr
                         <input
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
-                            className="w-full h-14 bg-black/40 border border-white/5 rounded-xl px-5 text-sm text-white focus:border-[color:var(--panel-accent,#0a84ff)]/50 transition-all outline-none font-bold"
+                            className="w-full h-14 bg-black/40 border border-white/[0.05] rounded-3xl px-5 text-sm text-white focus:border-[color:var(--panel-accent,#0a84ff)]/50 transition-all outline-none font-bold backdrop-blur-xl"
                             placeholder="Orijinal başlığı gizlemek için doldurun..."
                         />
                     </div>
@@ -1998,7 +1998,7 @@ function PromoContentEditor({ externalId, promoTitle }: { externalId: number; pr
                         <input
                             value={image}
                             onChange={(e) => setImage(e.target.value)}
-                            className="w-full h-14 bg-black/40 border border-white/5 rounded-xl px-5 text-sm text-white focus:border-[color:var(--panel-accent,#0a84ff)]/50 transition-all outline-none font-bold"
+                            className="w-full h-14 bg-black/40 border border-white/[0.05] rounded-3xl px-5 text-sm text-white focus:border-[color:var(--panel-accent,#0a84ff)]/50 transition-all outline-none font-bold backdrop-blur-xl"
                             placeholder="https://..."
                         />
                     </div>
@@ -2007,7 +2007,7 @@ function PromoContentEditor({ externalId, promoTitle }: { externalId: number; pr
                         <textarea
                             value={detailHtml}
                             onChange={(e) => setDetailHtml(e.target.value)}
-                            className="w-full min-h-[220px] bg-black/40 border border-white/5 rounded-xl px-5 py-4 text-sm text-slate-200 focus:border-[color:var(--panel-accent,#0a84ff)]/50 transition-all outline-none leading-relaxed"
+                            className="w-full min-h-[220px] bg-black/40 border border-white/[0.05] rounded-3xl px-5 py-4 text-sm text-slate-200 focus:border-[color:var(--panel-accent,#0a84ff)]/50 transition-all outline-none leading-relaxed backdrop-blur-xl"
                             placeholder="HTML formatında bonus detaylarını girin..."
                         />
                     </div>
@@ -2015,15 +2015,15 @@ function PromoContentEditor({ externalId, promoTitle }: { externalId: number; pr
 
                 <div className="space-y-3">
                     <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block pl-1">CANLI ÖNİZLEME</label>
-                    <div className="relative rounded-2xl border border-white/5 bg-white/[0.02] p-6 h-full min-h-[400px] overflow-hidden group/preview">
+                    <div className="relative rounded-3xl border border-white/[0.05] bg-white/[0.02] p-8 h-full min-h-[400px] overflow-hidden group/preview backdrop-blur-xl">
                         <div className="absolute inset-0 bg-gradient-to-b from-[color:var(--panel-accent,#0a84ff)]/5 to-transparent opacity-0 group-hover/preview:opacity-100 transition-opacity" />
 
                         {image?.trim() ? (
-                            <img src={image.trim()} alt="" className="w-full aspect-video object-cover rounded-2xl border border-white/5 shadow-2xl mb-6" />
+                            <img src={image.trim()} alt="" className="w-full aspect-video object-cover rounded-3xl border border-white/[0.05] shadow-2xl mb-6 backdrop-blur-xl" />
                         ) : (
-                            <div className="w-full aspect-video rounded-xl bg-black/40 border border-dashed border-white/5 flex flex-col items-center justify-center text-slate-500 gap-3 mb-6">
+                            <div className="w-full aspect-video rounded-3xl bg-black/40 border border-dashed border-white/[0.05] flex flex-col items-center justify-center text-slate-500 gap-3 mb-6 backdrop-blur-xl">
                                 <Sparkles size={32} className="opacity-20" />
-                                <span className="text-[10px] font-semibold uppercase tracking-widest">Görsel Bekleniyor</span>
+                                <span className="text-[10px] font-semibold uppercase tracking-[0.2em]">Görsel Bekleniyor</span>
                             </div>
                         )}
 

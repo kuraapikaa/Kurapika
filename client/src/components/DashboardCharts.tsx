@@ -45,7 +45,7 @@ export function DashboardCharts({ data }: DashboardChartsProps) {
     const CustomTooltip = ({ active, payload, label }: any) => {
         if (active && payload && payload.length) {
             return (
-                <div className="bg-black/80 backdrop-blur-xl border border-white/10 p-4 rounded-xl shadow-2xl">
+                <div className="bg-black/80 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl">
                     <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">{label}</p>
                     <div className="space-y-1.5">
                         {payload.map((item: any, idx: number) => (
@@ -73,7 +73,7 @@ export function DashboardCharts({ data }: DashboardChartsProps) {
                         <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-white">GGR Dağılımı</h3>
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">Dikey Bazlı Kâr Oranı</p>
                     </div>
-                    <div className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/5">
+                    <div className="h-10 w-10 rounded-full bg-white/5 flex items-center justify-center border border-white/5">
                         <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
                     </div>
                 </div>
@@ -108,7 +108,7 @@ export function DashboardCharts({ data }: DashboardChartsProps) {
                                 verticalAlign="bottom"
                                 height={36}
                                 iconType="circle"
-                                formatter={(val) => <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 ml-1">{val}</span>}
+                                formatter={(val) => <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400 ml-1">{val}</span>}
                             />
                         </PieChart>
                     </ResponsiveContainer>
@@ -162,7 +162,7 @@ export function DashboardCharts({ data }: DashboardChartsProps) {
                                 tick={{ fontWeight: 700 }}
                             />
                             <Tooltip content={<CustomTooltip />} cursor={{ fill: renk.izgara }} />
-                            <Legend iconType="circle" formatter={(val) => <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 ml-1">{val}</span>} />
+                            <Legend iconType="circle" formatter={(val) => <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400 ml-1">{val}</span>} />
                             <Bar dataKey="Turnover" fill="url(#barGradient1)" radius={[10, 10, 0, 0]} name="Ciro" barSize={40} />
                             <Bar dataKey="GGR" fill="url(#barGradient2)" radius={[10, 10, 0, 0]} name="Net GGR" barSize={40} />
                         </BarChart>

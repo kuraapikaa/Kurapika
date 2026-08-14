@@ -20,7 +20,7 @@ export function NetworkMap({ loginIp, clientId }: NetworkMapProps) {
 
     if (!loginIp) {
         return (
-            <div className="rounded-xl border border-white/5 bg-white/[0.02] p-20 text-center flex flex-col items-center justify-center text-slate-400 backdrop-blur-sm">
+            <div className="rounded-3xl border border-white/[0.05] bg-white/[0.02] p-20 text-center flex flex-col items-center justify-center text-slate-400 backdrop-blur-xl">
                 <div className="relative mb-6">
                     <Globe size={64} className="opacity-10" />
                     <AlertTriangle size={24} className="absolute -bottom-2 -right-2 text-amber-500/50" />
@@ -35,7 +35,7 @@ export function NetworkMap({ loginIp, clientId }: NetworkMapProps) {
 
     if (isLoading) {
         return (
-            <div className="flex h-[500px] items-center justify-center flex-col gap-6 bg-white/[0.02] rounded-xl border border-white/5">
+            <div className="flex h-[500px] items-center justify-center flex-col gap-6 bg-white/[0.02] rounded-3xl border border-white/[0.05] backdrop-blur-xl">
                 <div className="relative">
                     <motion.div
                         animate={{ rotate: 360 }}
@@ -60,7 +60,7 @@ export function NetworkMap({ loginIp, clientId }: NetworkMapProps) {
 
     if (isError) {
         return (
-            <div className="rounded-xl border border-rose-500/20 bg-rose-500/5 p-12 text-center text-rose-400 flex flex-col items-center gap-4">
+            <div className="rounded-3xl border border-rose-500/20 bg-rose-500/5 p-12 text-center text-rose-400 flex flex-col items-center gap-4 backdrop-blur-xl">
                 <AlertTriangle size={48} className="opacity-50" />
                 <div className="space-y-1">
                     <p className="font-bold">Bağlantı Hatası</p>
@@ -91,14 +91,14 @@ export function NetworkMap({ loginIp, clientId }: NetworkMapProps) {
                     <motion.div
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
-                        className="flex items-center gap-2 bg-rose-500/10 text-rose-400 px-4 py-2 rounded-xl text-[10px] font-semibold uppercase tracking-wider border border-rose-500/20 shadow-[0_0_20px_rgba(244,63,94,0.1)]"
+                        className="flex items-center gap-2 bg-rose-500/10 text-rose-400 px-4 py-2 rounded-3xl text-[10px] font-semibold uppercase tracking-[0.2em] border border-rose-500/20 shadow-[0_0_20px_rgba(244,63,94,0.1)] backdrop-blur-xl"
                     >
                         <AlertTriangle size={14} className="animate-pulse" /> Şüpheli İp Çakışması ({allClients.length} Hesap)
                     </motion.div>
                 )}
             </div>
 
-            <div className="relative w-full h-[600px] border border-white/5 bg-white/[0.02] rounded-xl overflow-hidden flex items-center justify-center group shadow-2xl">
+            <div className="relative w-full h-[600px] border border-white/[0.05] bg-white/[0.02] rounded-3xl overflow-hidden flex items-center justify-center group shadow-2xl backdrop-blur-xl">
                 {/* Visual Enhancers */}
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-500/5 via-transparent to-transparent opacity-50" />
                 <div className="absolute inset-0 opacity-[0.05]" style={{ backgroundImage: 'radial-gradient(circle at center, #ffffff 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
@@ -195,7 +195,7 @@ export function NetworkMap({ loginIp, clientId }: NetworkMapProps) {
                                     delay: index * 0.1 + 0.5
                                 }}
                                 className={cn(
-                                    "absolute flex flex-col items-center justify-center w-28 h-28 rounded-xl border backdrop-blur-md p-3 z-20 cursor-pointer pointer-events-auto transition-all duration-300 group/node",
+                                    "absolute flex flex-col items-center justify-center w-28 h-28 rounded-3xl border backdrop-blur-xl p-8 z-20 cursor-pointer pointer-events-auto transition-all duration-300 group/node",
                                     "hover:shadow-[0_0_30px_rgba(139,92,246,0.3)] hover:-translate-y-1",
                                     isCurrentClient
                                         ? 'border-amber-500/50 bg-amber-950/60 shadow-[0_0_20px_rgba(245,158,11,0.1)] ring-4 ring-amber-500/10'
@@ -240,7 +240,7 @@ export function NetworkMap({ loginIp, clientId }: NetworkMapProps) {
                 })}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {allClients.map((client) => {
                     const isMatch = String(client.Id) === String(clientId);
                     return (
@@ -248,7 +248,7 @@ export function NetworkMap({ loginIp, clientId }: NetworkMapProps) {
                             key={`list-${client.Id}`}
                             whileHover={{ y: -2 }}
                             className={cn(
-                                "flex items-center justify-between p-5 rounded-xl border transition-all duration-300",
+                                "flex items-center justify-between p-8 rounded-3xl border transition-all duration-300 backdrop-blur-xl",
                                 isMatch
                                     ? "bg-amber-500/5 border-amber-500/20 shadow-lg shadow-amber-500/5"
                                     : "bg-white/[0.02] border-white/5 hover:border-white/5"
@@ -283,7 +283,7 @@ export function NetworkMap({ loginIp, clientId }: NetworkMapProps) {
                                     window.open(`/#/oyuncu/${client.Id}/${username}`, '_blank');
                                 }}
                                 className={cn(
-                                    "text-[10px] font-semibold uppercase tracking-wider gap-2",
+                                    "text-[10px] font-semibold uppercase tracking-[0.2em] gap-2",
                                     isMatch ? "text-amber-500 hover:bg-amber-500/10" : "text-purple-300 hover:bg-purple-400/10"
                                 )}
                             >

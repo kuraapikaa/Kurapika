@@ -13,7 +13,7 @@ export function StatusBar({ isLoading, error, success }: StatusBarProps) {
   return (
     <div
       className={cn(
-        'mt-6 flex items-center gap-3 rounded-xl border px-4 py-3 text-sm font-medium',
+        'mt-6 flex items-center gap-3 rounded-3xl border px-4 py-3 text-sm font-medium backdrop-blur-xl',
         isError
           ? 'border-rose-500/30 bg-rose-500/10 text-rose-400'
           : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'

@@ -107,7 +107,7 @@ export function ManuelDuzeltmeler() {
 
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 xl:grid-cols-4">
         <PanoOlcu
           etiket="Eklenen Bakiye"
           deger={sayiYaz(isLoading ? null : toplam.giris ?? null, 'para')}
@@ -161,7 +161,7 @@ export function ManuelDuzeltmeler() {
         </PanoKart>
       )}
 
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
         {/*
           * YÖNETİCİ BAZINDA.
           *
@@ -248,7 +248,7 @@ export function ManuelDuzeltmeler() {
                 placeholder="Oyuncu, yönetici, hesap, not…"
                 value={arama}
                 onChange={(e) => { setArama(e.target.value); setSayfa(1); }}
-                className="h-9 w-full rounded-2xl border border-white/5 bg-[#0c1119] pl-9 pr-3 text-xs text-white placeholder:text-slate-400 focus:border-[color:var(--panel-accent,#0a84ff)] focus:outline-none sm:w-64"
+                className="h-9 w-full rounded-3xl border border-white/[0.05] bg-white/[0.02] pl-9 pr-3 text-xs text-white placeholder:text-slate-400 focus:border-[color:var(--panel-accent,#0a84ff)] focus:outline-none sm:w-64 backdrop-blur-xl"
               />
             </div>
           </div>

@@ -75,7 +75,7 @@ function numberValue(value: unknown): number {
 const tl = (n: number) => `${formatNumber(Math.round(n))} ₺`;
 const yuzde = (n: number) => `%${formatNumber(Math.round(n * 10) / 10)}`;
 
-const KART = 'rounded-2xl border border-white/5 bg-white/[0.02]';
+const KART = 'rounded-3xl border border-white/[0.05] bg-white/[0.02] backdrop-blur-xl';
 
 // ─── Ana bileşen ─────────────────────────────────────────────────────────────
 
@@ -155,7 +155,7 @@ export function AffiliatePanel() {
       <div className="space-y-5 animate-in fade-in duration-300">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <button type="button" onClick={() => setSelectedBTag(null)} className="rounded-2xl border border-white/5 bg-white/5 p-2 text-slate-400 hover:text-white" title="Geri dön">
+            <button type="button" onClick={() => setSelectedBTag(null)} className="rounded-3xl border border-white/[0.05] bg-white/5 p-2 text-slate-400 hover:text-white backdrop-blur-xl" title="Geri dön">
               <ChevronLeft size={18} />
             </button>
             <div>
@@ -175,7 +175,7 @@ export function AffiliatePanel() {
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full min-w-[900px] text-left text-xs">
-                <thead className="border-b border-white/5 bg-black/20 text-[10px] uppercase tracking-wider text-slate-400">
+                <thead className="border-b border-white/5 bg-black/20 text-[10px] uppercase tracking-[0.2em] text-slate-400">
                   <tr>
                     <th className="px-5 py-4">Oyuncu</th>
                     <th className="px-5 py-4">İletişim</th>
@@ -267,11 +267,11 @@ export function AffiliatePanel() {
 
       {sekme === 'performans' && (
         <>
-          <div className="grid grid-cols-2 gap-3 xl:grid-cols-5">
+          <div className="grid grid-cols-2 gap-8 xl:grid-cols-5">
             {cards.map((card) => (
               <div key={card.label} className={`${KART} p-4`}>
                 <div className={`mb-3 inline-flex rounded-xl bg-white/[0.04] p-2 ${card.color}`}><card.icon size={17} /></div>
-                <div className="text-[9px] font-bold uppercase tracking-[0.16em] text-slate-500">{card.label}</div>
+                <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500">{card.label}</div>
                 <div className="mt-1 text-xl font-semibold tabular-nums text-white">{card.value}</div>
               </div>
             ))}
@@ -289,7 +289,7 @@ export function AffiliatePanel() {
                   id="affiliate-siralama"
                   value={siralama}
                   onChange={(e) => setSiralama(e.target.value as Siralama)}
-                  className="h-9 rounded-2xl border border-white/5 bg-black/30 px-3 text-xs text-white outline-none focus:border-cyan-400/40"
+                  className="h-9 rounded-3xl border border-white/[0.05] bg-black/30 px-3 text-xs text-white outline-none focus:border-cyan-400/40 backdrop-blur-xl"
                 >
                   {(Object.keys(SIRALAMA_ADI) as Siralama[]).map((k) => (
                     <option key={k} value={k}>{SIRALAMA_ADI[k]}</option>
@@ -298,14 +298,14 @@ export function AffiliatePanel() {
                 <label className="relative block w-full sm:w-56">
                   <span className="sr-only">BTag ara</span>
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={15} />
-                  <input value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="BTag ara..." className="h-9 w-full rounded-2xl border border-white/5 bg-white/[0.02] pl-9 pr-3 text-xs text-white outline-none focus:border-cyan-400/40" />
+                  <input value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="BTag ara..." className="h-9 w-full rounded-3xl border border-white/[0.05] bg-white/[0.02] pl-9 pr-3 text-xs text-white outline-none focus:border-cyan-400/40 backdrop-blur-xl" />
                 </label>
                 <span className="text-[10px] text-slate-500">{filteredStats.length} kayıt</span>
               </div>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full min-w-[1000px] text-left text-xs">
-                <thead className="border-b border-white/5 bg-black/20 text-[10px] uppercase tracking-wider text-slate-400">
+                <thead className="border-b border-white/5 bg-black/20 text-[10px] uppercase tracking-[0.2em] text-slate-400">
                   <tr>
                     <th className="px-5 py-4">BTag / Kaynak</th>
                     <th className="px-5 py-4 text-right">Oyuncu / Aktif</th>

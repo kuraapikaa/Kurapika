@@ -51,7 +51,7 @@ export function BonusBlacklistPanel() {
     <Card className="p-8 border-white/5 bg-white/[0.02] shadow-xl overflow-hidden relative">
       <div className="absolute top-0 right-0 h-1 w-full bg-gradient-to-r from-rose-500 to-transparent opacity-20" />
       <div className="mb-6 flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-rose-500/20 bg-rose-500/10 text-rose-400">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full border border-rose-500/20 bg-rose-500/10 text-rose-400">
           <ShieldOff size={18} />
         </div>
         <div>
@@ -74,14 +74,14 @@ export function BonusBlacklistPanel() {
           value={login}
           onChange={(e) => setLogin(e.target.value)}
           placeholder="Kullanıcı adı"
-          className="h-10 w-full rounded-2xl border border-white/5 bg-black/20 px-3 text-xs font-bold text-white outline-none focus:border-rose-500/40"
+          className="h-10 w-full rounded-3xl border border-white/[0.05] bg-black/20 px-3 text-xs font-bold text-white outline-none focus:border-rose-500/40 backdrop-blur-xl"
         />
         <input
           type="text"
           value={neden}
           onChange={(e) => setNeden(e.target.value)}
           placeholder="Gerekçe (opsiyonel)"
-          className="h-10 w-full rounded-2xl border border-white/5 bg-black/20 px-3 text-xs font-medium text-slate-200 outline-none focus:border-rose-500/40"
+          className="h-10 w-full rounded-3xl border border-white/[0.05] bg-black/20 px-3 text-xs font-medium text-slate-200 outline-none focus:border-rose-500/40 backdrop-blur-xl"
         />
         <Button
           type="submit"
@@ -101,12 +101,12 @@ export function BonusBlacklistPanel() {
         {kayitlar.map((kayit) => (
           <div
             key={kayit.login}
-            className="flex items-start justify-between gap-2 rounded-2xl border border-white/5 bg-black/20 p-2.5"
+            className="flex items-start justify-between gap-2 rounded-3xl border border-white/[0.05] bg-black/20 p-2.5 backdrop-blur-xl"
           >
             <div className="min-w-0">
               <p className="truncate text-xs font-bold text-white">{kayit.login}</p>
               {kayit.neden && <p className="mt-0.5 text-[10px] text-slate-400">{kayit.neden}</p>}
-              <p className="mt-0.5 text-[9px] font-semibold uppercase tracking-widest text-slate-500">
+              <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500">
                 {kayit.ekleyen} · {new Date(kayit.eklendi).toLocaleDateString('tr-TR')}
               </p>
             </div>

@@ -89,7 +89,7 @@ export function ChurnPrevention() {
     <div className="animate-in space-y-4 pb-20">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-slate-500">CRM</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500">CRM</p>
           <h2 className="mt-1 text-2xl font-semibold text-white">Kayıp riski</h2>
           <p className="mt-1 text-[12px] text-slate-400">
             Skor sunucuda hesaplanır; her satırda riskin gerekçesi ve önerilen aksiyon görünür.
@@ -153,13 +153,13 @@ function OzetSerit({ ozet }: { ozet?: { toplam: number; kritik: number; yuksek: 
     { etiket: 'Risk altındaki net yatırım', deger: `${formatNumber(ozet?.riskAltindakiDeger ?? 0)} ₺`, Ikon: Crown, renk: 'var(--panel-success,#30d158)' },
   ];
   return (
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-8 lg:grid-cols-4">
       {kartlar.map(({ etiket, deger, Ikon, renk }) => (
-        <div key={etiket} className="rounded-xl border border-white/5 bg-white/[0.02] p-4">
+        <div key={etiket} className="rounded-3xl border border-white/[0.05] bg-white/[0.02] p-8 backdrop-blur-xl">
           <div className="mb-2 inline-flex rounded-lg p-2" style={{ backgroundColor: 'rgba(242,244,248,0.04)', color: renk }}>
             <Ikon size={16} />
           </div>
-          <div className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-500">{etiket}</div>
+          <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500">{etiket}</div>
           <div className="mt-1 text-xl font-semibold tabular-nums text-white">{deger}</div>
         </div>
       ))}
@@ -170,10 +170,10 @@ function OzetSerit({ ozet }: { ozet?: { toplam: number; kritik: number; yuksek: 
 function Satir({ oyuncu }: { oyuncu: ChurnOyuncu }) {
   const stil = SEVIYE_STILI[oyuncu.churn.seviye];
   return (
-    <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3.5">
+    <div className="rounded-3xl border border-white/[0.05] bg-white/[0.02] p-8.5 backdrop-blur-xl">
       <div className="flex flex-wrap items-center gap-3">
         <div
-          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-sm font-bold tabular-nums"
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-bold tabular-nums"
           style={{ backgroundColor: stil.zemin, color: stil.renk }}
           title={`Risk skoru: ${oyuncu.churn.skor}/100`}
         >
@@ -366,7 +366,7 @@ function Sayfalama({ yon, pasif, onTikla }: { yon: 'geri' | 'ileri'; pasif: bool
       onClick={onTikla}
       disabled={pasif}
       aria-label={yon === 'geri' ? 'Önceki sayfa' : 'Sonraki sayfa'}
-      className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/5 text-slate-400 disabled:opacity-40"
+      className="flex h-9 w-9 items-center justify-center rounded-full border border-white/5 text-slate-400 disabled:opacity-40"
     >
       {yon === 'geri' ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
     </button>
@@ -375,7 +375,7 @@ function Sayfalama({ yon, pasif, onTikla }: { yon: 'geri' | 'ileri'; pasif: bool
 
 function Durum({ ikon, baslik, alt }: { ikon: ReactNode; baslik: string; alt: string }) {
   return (
-    <div className="flex flex-col items-center gap-2 rounded-xl border border-white/5 bg-white/[0.02] px-6 py-14 text-center">
+    <div className="flex flex-col items-center gap-2 rounded-3xl border border-white/[0.05] bg-white/[0.02] px-6 py-14 text-center backdrop-blur-xl">
       <span className="text-slate-400">{ikon}</span>
       <p className="text-sm font-semibold text-white">{baslik}</p>
       <p className="text-[12px] text-slate-400">{alt}</p>

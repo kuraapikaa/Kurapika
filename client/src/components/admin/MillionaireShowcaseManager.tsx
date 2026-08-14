@@ -136,7 +136,7 @@ export function MillionaireShowcaseManager({
         }
       />
 
-      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-5">
           <Bolum baslik="Vitrin metinleri">
             <div className="space-y-4 px-5 py-4">
@@ -147,7 +147,7 @@ export function MillionaireShowcaseManager({
                 etiket="Vitrin yayında"
                 aciklama="Kapalıyken lobide kazanç bölümü görünmez."
               />
-              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+              <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
                 <Alan etiket="Üst etiket">
                   <Girdi modul={MODUL} value={veri.eyebrow} onChange={(e) => guncelle({ eyebrow: e.target.value })} />
                 </Alan>
@@ -164,7 +164,7 @@ export function MillionaireShowcaseManager({
                   <Girdi modul={MODUL} value={veri.disclaimer} onChange={(e) => guncelle({ disclaimer: e.target.value })} />
                 </Alan>
               </div>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
                 <Anahtar
                   modul={MODUL}
                   acik={veri.showTicker !== false}
@@ -202,7 +202,7 @@ export function MillionaireShowcaseManager({
                 {veri.records.map((kayit) => (
                   <div
                     key={kayit.id}
-                    className="rounded-2xl border bg-black/20 p-4"
+                    className="rounded-3xl border bg-black/20 p-8 backdrop-blur-xl"
                     style={{
                       borderColor: kayit.featured ? '#bf5af259' : 'var(--panel-border, rgba(242,244,248,0.1))',
                     }}
@@ -243,7 +243,7 @@ export function MillionaireShowcaseManager({
                         />
                       </div>
                     </div>
-                    <div className="grid grid-cols-1 gap-3 xl:grid-cols-4">
+                    <div className="grid grid-cols-1 gap-8 xl:grid-cols-4">
                       <Alan etiket="Başlık">
                         <Girdi modul={MODUL} value={kayit.title} onChange={(e) => kayitGuncelle(kayit.id, { title: e.target.value })} />
                       </Alan>

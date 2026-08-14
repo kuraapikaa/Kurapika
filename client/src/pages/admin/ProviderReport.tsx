@@ -86,7 +86,7 @@ export function ProviderReport() {
 
     if (error || data?.HasError) {
         return (
-            <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-12 text-center">
+            <div className="rounded-3xl border border-rose-500/20 bg-rose-500/5 p-12 text-center backdrop-blur-xl">
                 <AlertCircle size={48} className="mx-auto mb-4 text-rose-500/50" />
                 <h3 className="text-lg font-bold text-rose-400">Rapor Yüklenemedi</h3>
                 <p className="text-sm text-slate-400 mt-2">{data?.ErrorDescription || (error as Error)?.message}</p>
@@ -103,7 +103,7 @@ export function ProviderReport() {
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             {/* Header Cards */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-5">
                 <StatCard
                     label="Toplam Ciro (GGR)"
                     value={totalTurnover}
@@ -124,11 +124,11 @@ export function ProviderReport() {
                 />
 
                 {/* Faturalandırma Kartı */}
-                <div className="rounded-2xl border border-blue-500/30 bg-blue-950/40 p-5 shadow-lg relative overflow-hidden group">
+                <div className="rounded-3xl border border-blue-500/30 bg-blue-950/40 p-8 shadow-lg relative overflow-hidden group backdrop-blur-xl">
                     <div className="absolute top-0 right-0 p-3 opacity-20 group-hover:opacity-40 transition-opacity">
                         <Calculator size={24} className="text-purple-300" />
                     </div>
-                    <p className="text-[10px] font-semibold uppercase tracking-widest text-purple-300 mb-1">Tahmini Fatura</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-purple-300 mb-1">Tahmini Fatura</p>
                     <p className="text-xl font-semibold text-white tabular-nums">
                         {formatNumber(estimatedInvoice)} <span className="text-xs font-normal text-slate-400">TRY</span>
                     </p>
@@ -157,7 +157,7 @@ export function ProviderReport() {
             </div>
 
             {/* Table Section */}
-            <div className="rounded-2xl border border-white/5 bg-white/[0.02] shadow-xl overflow-hidden">
+            <div className="rounded-3xl border border-white/[0.05] bg-white/[0.02] shadow-xl overflow-hidden backdrop-blur-xl">
                 <div className="border-b border-white/5 bg-white/5 px-3 py-2.5 flex items-center justify-between">
                     <h3 className="text-sm font-semibold uppercase tracking-widest text-slate-400 flex items-center gap-2">
                         <BarChart3 size={18} className="text-purple-300" />
@@ -171,7 +171,7 @@ export function ProviderReport() {
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left">
                         <thead>
-                            <tr className="border-b border-white/5 text-[10px] font-semibold uppercase tracking-widest text-slate-400">
+                            <tr className="border-b border-white/5 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
                                 <th className="px-3 py-2.5">Sağlayıcı</th>
                                 <th className="px-3 py-2.5 text-right">Ciro (Bet)</th>
                                 <th className="px-3 py-2.5 text-right">Ödenen (Win)</th>
@@ -234,7 +234,7 @@ export function ProviderReport() {
 
 function StatCard({ label, value, icon, trend }: { label: string; value: number; icon: React.ReactNode; trend: 'up' | 'down' | 'neutral' }) {
     return (
-        <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 shadow-lg group hover:border-white/5 transition-all">
+        <div className="rounded-3xl border border-white/[0.05] bg-white/[0.02] p-8 shadow-lg group hover:border-white/[0.05] transition-all backdrop-blur-xl">
             <div className="flex items-center justify-between mb-3">
                 <div className="p-2 rounded-xl bg-white/5 group-hover:scale-110 transition-transform">
                     {icon}
@@ -245,7 +245,7 @@ function StatCard({ label, value, icon, trend }: { label: string; value: number;
                     </div>
                 )}
             </div>
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-1">{label}</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400 mb-1">{label}</p>
             <p className="text-xl font-semibold text-white tabular-nums">
                 {formatNumber(value)} <span className="text-xs font-normal text-slate-400">TRY</span>
             </p>

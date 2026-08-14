@@ -69,7 +69,7 @@ export function ModulBasligi({
     <header className="flex flex-wrap items-start justify-between gap-4">
       <div className="flex items-start gap-3">
         <span
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
           style={{ background: `${vurgu}1a`, color: vurgu }}
         >
           {ikon}
@@ -117,7 +117,7 @@ export function Bolum({
 
 // ─── Form ilkelleri ──────────────────────────────────────────────────────────
 
-export const ETIKET = 'block text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400';
+export const ETIKET = 'block text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400';
 
 export function Alan({
   etiket,
@@ -144,7 +144,7 @@ function odakStili(modul: ModulAnahtari): CSSProperties {
 }
 
 const GIRDI_TEMEL =
-  'h-10 w-full rounded-2xl border border-white/5 bg-black/30 px-3 text-[13px] text-white outline-none transition-colors placeholder:text-slate-500 focus:border-[color:var(--oyun-vurgu)]';
+  'h-10 w-full rounded-3xl border border-white/[0.05] bg-black/30 px-3 text-[13px] text-white outline-none transition-colors placeholder:text-slate-500 focus:border-[color:var(--oyun-vurgu)] backdrop-blur-xl';
 
 export function Girdi({
   modul,
@@ -206,7 +206,7 @@ export function Anahtar({
       aria-checked={acik}
       onClick={() => onDegis(!acik)}
       className={cn(
-        'flex w-full items-center justify-between gap-4 rounded-2xl border px-4 py-3 text-left transition-colors',
+        'flex w-full items-center justify-between gap-4 rounded-3xl border px-4 py-3 text-left transition-colors backdrop-blur-xl',
         acik
           ? 'border-transparent'
           : 'border-white/5 bg-black/20',
@@ -328,11 +328,11 @@ export function MaliyetKarti({
   const vurgu = MODUL_VURGU[modul];
   return (
     <div
-      className="rounded-2xl border p-5"
+      className="rounded-3xl border p-8 backdrop-blur-xl"
       style={{ borderColor: `${vurgu}38`, background: `linear-gradient(160deg, ${vurgu}12, transparent 70%)` }}
     >
       <div className={ETIKET}>100 oyunda beklenen ödeme</div>
-      <div className={cn(RAKAM, 'mt-2 text-[28px] font-semibold leading-none text-white')}>
+      <div className={cn(RAKAM, 'mt-2 text-3xl font-bold leading-none text-white')}>
         {lira(tutar)}
       </div>
       <p className="mt-2 text-[11px] font-medium text-slate-400">{altBaslik}</p>
@@ -381,7 +381,7 @@ export function Uyari({ tur = 'bilgi', children }: { tur?: 'bilgi' | 'dikkat' | 
         ? 'border-[color:var(--panel-warning,#ff9f0a)]/30 bg-[color:var(--panel-warning,#ff9f0a)]/10 text-[color:var(--panel-warning,#ff9f0a)]'
         : 'border-white/5 bg-black/20 text-slate-400';
   return (
-    <p className={cn('rounded-2xl border px-4 py-2.5 text-[11px] font-semibold', renk)} role={tur === 'hata' ? 'alert' : undefined}>
+    <p className={cn('rounded-3xl border px-4 py-2.5 text-[11px] font-semibold backdrop-blur-xl', renk)} role={tur === 'hata' ? 'alert' : undefined}>
       {children}
     </p>
   );
@@ -421,7 +421,7 @@ export function SilDugmesi({ onClick, etiket }: { onClick: () => void; etiket: s
       onClick={onClick}
       aria-label={etiket}
       title={etiket}
-      className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-[color:var(--panel-danger,#ff453a)]/10 hover:text-[color:var(--panel-danger,#ff453a)]"
+      className="flex h-9 w-9 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-[color:var(--panel-danger,#ff453a)]/10 hover:text-[color:var(--panel-danger,#ff453a)]"
     >
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
         <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" />
@@ -443,7 +443,7 @@ export function Izgara({ sutunlar, children }: { sutunlar: string; children: Rea
 
 export function IzgaraBaslik({ children }: { children: ReactNode }) {
   return (
-    <div className="grid items-center gap-3 border-b border-white/5 bg-black/20 px-5 py-2.5 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400"
+    <div className="grid items-center gap-8 border-b border-white/5 bg-black/20 px-5 py-2.5 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400"
       style={{ gridTemplateColumns: 'var(--oyun-sutunlar)' }}>
       {children}
     </div>
@@ -452,7 +452,7 @@ export function IzgaraBaslik({ children }: { children: ReactNode }) {
 
 export function IzgaraSatir({ children }: { children: ReactNode }) {
   return (
-    <div className="grid items-center gap-3 border-b border-white/5 px-5 py-2.5 last:border-b-0 hover:bg-white/[0.02]"
+    <div className="grid items-center gap-8 border-b border-white/5 px-5 py-2.5 last:border-b-0 hover:bg-white/[0.02]"
       style={{ gridTemplateColumns: 'var(--oyun-sutunlar)' }}>
       {children}
     </div>

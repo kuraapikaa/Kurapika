@@ -118,7 +118,7 @@ export function TransactionsList() {
 
     if (error) {
         return (
-            <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-12 text-center text-rose-400">
+            <div className="rounded-3xl border border-rose-500/20 bg-rose-500/5 p-12 text-center text-rose-400 backdrop-blur-xl">
                 <p className="text-lg font-semibold uppercase tracking-widest">Hata</p>
                 <p className="mt-2 text-sm opacity-70">{(error as any).message || 'İşlemler yüklenemedi.'}</p>
             </div>
@@ -130,7 +130,7 @@ export function TransactionsList() {
             {/* Header */}
             <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-400/10 text-purple-300 ring-1 ring-purple-400/20">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-400/10 text-purple-300 ring-1 ring-purple-400/20">
                         <History size={24} />
                     </div>
                     <div className="text-left">
@@ -141,7 +141,7 @@ export function TransactionsList() {
 
                 {/* Rows Per Page Selector (Top) */}
                 <div className="flex items-center gap-3 rounded-full border border-white/5 bg-white/[0.02] px-4 py-2 backdrop-blur-xl">
-                    <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">SATIR SAYISI:</span>
+                    <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">SATIR SAYISI:</span>
                     <select
                         value={rowsPerPage}
                         onChange={(e) => {
@@ -162,7 +162,7 @@ export function TransactionsList() {
 
 
             {/* Filter Section */}
-            <div className="rounded-2xl border border-white/5 bg-white/[0.02] backdrop-blur-md overflow-hidden transition-all">
+            <div className="rounded-3xl border border-white/[0.05] bg-white/[0.02] backdrop-blur-xl overflow-hidden transition-all">
                 <button
                     onClick={() => setIsFilterOpen(!isFilterOpen)}
                     className="flex w-full items-center justify-between px-3 py-2.5 text-left hover:bg-white/5 transition-colors"
@@ -176,7 +176,7 @@ export function TransactionsList() {
 
                 {isFilterOpen && (
                     <div className="p-6 border-t border-white/5 space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-8">
                             {/* Row 1 */}
                             <FilterInput label="Tarih seçici" value={`${dateRange.startDate} / ${dateRange.endDate}`} disabled icon={Clock} />
                             <FilterSelect
@@ -243,7 +243,7 @@ export function TransactionsList() {
             </div>
 
             {/* Table Section */}
-            <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-4 backdrop-blur-md overflow-hidden">
+            <div className="rounded-3xl border border-white/[0.05] bg-white/[0.02] p-8 backdrop-blur-xl overflow-hidden">
                 {isLoading ? (
                     <div className="flex flex-col items-center justify-center py-32 gap-6">
                         <Loader2 className="h-12 w-12 animate-spin text-purple-400" />
@@ -269,7 +269,7 @@ export function TransactionsList() {
                                     <tr key={tx.Id} className="group hover:bg-white/[0.02] transition-colors">
                                         <td className="py-6 pl-6">
                                             <div className="flex items-center gap-4">
-                                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/[0.02] text-slate-400 group-hover:bg-blue-500 group-hover:text-white transition-all ring-1 ring-white/5 shadow-inner">
+                                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/[0.02] text-slate-400 group-hover:bg-blue-500 group-hover:text-white transition-all ring-1 ring-white/5 shadow-inner">
                                                     <User size={18} />
                                                 </div>
                                                 <div className="text-left">
@@ -325,7 +325,7 @@ export function TransactionsList() {
                                                 const durum = islemDurumu(tx);
                                                 return (
                                                     <span
-                                                        className={`rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-widest ring-1 ${DURUM_SINIFI[durum]}`}
+                                                        className={`rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] ring-1 ${DURUM_SINIFI[durum]}`}
                                                         title={durumAyrintisi(tx)}
                                                     >
                                                         {durumAyrintisi(tx)}
@@ -351,7 +351,7 @@ export function TransactionsList() {
                             <button
                                 onClick={() => handlePageChange(1)}
                                 disabled={page === 1}
-                                className="h-8 w-8 flex items-center justify-center rounded-xl bg-white/5 text-slate-400 hover:text-white disabled:opacity-20 transition-all"
+                                className="h-8 w-8 flex items-center justify-center rounded-full bg-white/5 text-slate-400 hover:text-white disabled:opacity-20 transition-all"
                                 title="İlk Sayfa"
                             >
                                 <ChevronsLeft size={16} />
@@ -359,7 +359,7 @@ export function TransactionsList() {
                             <button
                                 onClick={() => handlePageChange(page - 1)}
                                 disabled={page === 1}
-                                className="h-8 w-8 flex items-center justify-center rounded-xl bg-white/5 text-slate-400 hover:text-white disabled:opacity-20 transition-all"
+                                className="h-8 w-8 flex items-center justify-center rounded-full bg-white/5 text-slate-400 hover:text-white disabled:opacity-20 transition-all"
                                 title="Önceki Sayfa"
                             >
                                 <ChevronLeft size={16} />
@@ -380,7 +380,7 @@ export function TransactionsList() {
                             <button
                                 onClick={() => handlePageChange(page + 1)}
                                 disabled={page === totalPages}
-                                className="h-8 w-8 flex items-center justify-center rounded-xl bg-white/5 text-slate-400 hover:text-white disabled:opacity-20 transition-all"
+                                className="h-8 w-8 flex items-center justify-center rounded-full bg-white/5 text-slate-400 hover:text-white disabled:opacity-20 transition-all"
                                 title="Sonraki Sayfa"
                             >
                                 <ChevronLeft size={16} className="rotate-180" />
@@ -388,7 +388,7 @@ export function TransactionsList() {
                             <button
                                 onClick={() => handlePageChange(totalPages)}
                                 disabled={page === totalPages}
-                                className="h-8 w-8 flex items-center justify-center rounded-xl bg-white/5 text-slate-400 hover:text-white disabled:opacity-20 transition-all"
+                                className="h-8 w-8 flex items-center justify-center rounded-full bg-white/5 text-slate-400 hover:text-white disabled:opacity-20 transition-all"
                                 title="Son Sayfa"
                             >
                                 <ChevronsLeft size={16} className="rotate-180" />
@@ -441,7 +441,7 @@ function FilterSelect({ label, value, onChange, options }: FilterSelectProps) {
             <select
                 value={value}
                 onChange={(e) => onChange?.(e.target.value)}
-                className="h-10 w-full rounded-2xl border border-white/5 bg-white/[0.02] px-3 py-2 text-xs font-medium text-white transition-all focus:border-blue-500/50 focus:ring-1 focus:ring-purple-400/20 outline-none appearance-none"
+                className="h-10 w-full rounded-3xl border border-white/[0.05] bg-white/[0.02] px-3 py-2 text-xs font-medium text-white transition-all focus:border-blue-500/50 focus:ring-1 focus:ring-purple-400/20 outline-none appearance-none backdrop-blur-xl"
             >
                 {options.map((opt: any) => (
                     <option key={opt.value} value={opt.value} className="bg-white/[0.02]">{opt.label}</option>

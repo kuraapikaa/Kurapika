@@ -41,18 +41,17 @@ const adminDateLabel = new Intl.DateTimeFormat('tr-TR', {
   year: 'numeric',
 }).format(new Date());
 
+// Menu ogesi hap. Aktif olan neon mor bir yuzeyle ayrilir.
 const tabStyle = (isActive: boolean) =>
-  `group relative flex min-h-8 items-center gap-2 rounded-lg px-2 py-1 text-[11.5px] font-semibold transition-colors duration-150 touch-manipulation ${
+  `group relative flex min-h-10 items-center gap-3 rounded-full px-4 py-2 text-[12.5px] font-semibold transition-colors duration-150 touch-manipulation ${
     isActive ? 'text-white' : 'text-slate-500 hover:bg-white/[0.04] hover:text-slate-200'
   }`;
 
 const ActiveTabIndicator = () => (
   <motion.div
     layoutId="activeTab"
-    className="absolute inset-0 rounded-lg border border-blue-400/20 bg-blue-400/[0.11]"
-  >
-    <div className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-r-full bg-blue-300" />
-  </motion.div>
+    className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-500/30 to-purple-500/[0.06] shadow-[0_0_24px_rgba(168,85,247,0.25)]"
+  />
 );
 
 /** Panonun bes sorgusunu tazeler. Pano acik olmasa da ust bardan cagrilir. */
@@ -164,17 +163,17 @@ export function AdminLayout() {
         // 29 menu ogesi 7 grupta; 200px'te uzun etiketler kirpiliyordu
         // ("Lynon API Dökümanı", "iFrame entegrasyonu"). 260px hepsini
         // tek satirda tutuyor.
-        style={{ ['--nav-w' as any]: navCollapsed ? '64px' : '260px' }}
+        style={{ ['--nav-w' as any]: navCollapsed ? '80px' : '288px' }}
         className={cn(
-          "premium-sidebar fixed left-0 top-0 z-50 flex h-full w-[268px] flex-col transition-[transform,width] duration-200 ease-out md:w-[var(--nav-w)] md:translate-x-0",
+          "premium-sidebar fixed left-0 top-0 z-50 flex h-full w-[288px] flex-col transition-[transform,width] duration-200 ease-out md:w-[var(--nav-w)] md:translate-x-0",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="sidebar-brand flex h-[60px] shrink-0 items-center justify-between gap-3 border-b border-white/[0.06] px-4">
+        <div className="sidebar-brand flex h-[76px] shrink-0 items-center justify-between gap-3 px-5">
           <div className="flex min-w-0 flex-1 items-center gap-2.5">
-            <span className="grid h-8 w-8 shrink-0 grid-cols-2 gap-1 rounded-lg border border-blue-300/20 bg-blue-300/[0.09] p-2">
-              <i className="rounded-[2px] bg-blue-300" /><i className="rounded-[2px] bg-blue-300" />
-              <i className="rounded-[2px] bg-blue-300" /><i className="rounded-[2px] bg-blue-300" />
+            <span className="grid h-10 w-10 shrink-0 grid-cols-2 gap-1 rounded-full border border-purple-400/25 bg-purple-400/10 p-2.5 shadow-[0_0_20px_rgba(168,85,247,0.25)]">
+              <i className="rounded-[2px] bg-purple-300" /><i className="rounded-[2px] bg-purple-300" />
+              <i className="rounded-[2px] bg-purple-300" /><i className="rounded-[2px] bg-purple-300" />
             </span>
             <span className={cn("min-w-0 leading-tight", navCollapsed && "md:hidden")}>
               <strong className="block truncate text-[13px] font-bold tracking-[-0.02em] text-white">Bugs Software</strong>
@@ -184,7 +183,7 @@ export function AdminLayout() {
           <button
             type="button"
             onClick={() => setSidebarOpen(false)}
-            className="md:hidden flex items-center justify-center w-7 h-7 rounded-lg text-zinc-500 hover:text-white transition-colors"
+            className="md:hidden flex items-center justify-center w-7 h-7 rounded-full text-zinc-500 hover:text-white transition-colors"
             aria-label="Menüyü kapat"
           >
             <X size={18} />
@@ -195,7 +194,7 @@ export function AdminLayout() {
             aria-expanded={!navCollapsed}
             aria-label={navCollapsed ? 'Menüyü genişlet' : 'Menüyü daralt'}
             title={navCollapsed ? 'Menüyü genişlet' : 'Menüyü daralt'}
-            className="hidden md:flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-zinc-500 transition-colors hover:bg-white/[0.06] hover:text-white"
+            className="hidden md:flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-zinc-500 transition-colors hover:bg-white/[0.06] hover:text-white"
           >
             {navCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
           </button>
@@ -210,12 +209,12 @@ export function AdminLayout() {
                 onChange={(e) => setNavQuery(e.target.value)}
                 placeholder="Menüde ara"
                 aria-label="Menüde ara"
-                className="h-9 w-full rounded-lg border border-white/[0.07] bg-black/25 pl-8 pr-2.5 text-[12px] font-medium text-white outline-none transition placeholder:text-slate-600 focus:border-blue-300/40"
+                className="h-10 w-full rounded-full border border-white/[0.05] bg-white/[0.02] pl-9 pr-3 text-[12px] font-medium text-white outline-none transition placeholder:text-slate-600 focus:border-blue-300/40"
               />
             </div>
           </div>
         )}
-        <nav className="flex-1 overflow-y-auto px-2.5 py-2.5" aria-label="Menü">
+        <nav className="flex-1 overflow-y-auto px-3.5 py-4" aria-label="Menü">
           <div ref={sidebarNavRef} className="space-y-4" onKeyDown={handleSidebarKeyDown} role="menu">
             {filteredNavGroups.length === 0 && (
               <p className="px-2 py-4 text-center text-[11px] text-slate-600">Eşleşen menü yok.</p>
@@ -251,7 +250,7 @@ export function AdminLayout() {
                               <Icon size={15} strokeWidth={1.85} />
                             </span>
                             <span className={cn('relative z-10 min-w-0 flex-1 truncate text-[12.5px]', navCollapsed && 'md:hidden')}>{item.nav.label}</span>
-                            {isActive && <span className={cn('relative z-10 h-1.5 w-1.5 rounded-full bg-blue-300', navCollapsed && 'md:hidden')} />}
+                            {isActive && <span className={cn('relative z-10 h-1.5 w-1.5 rounded-full bg-purple-300 shadow-[0_0_8px_rgba(216,180,254,0.9)]', navCollapsed && 'md:hidden')} />}
                           </>
                         )}
                       </NavLink>
@@ -275,7 +274,7 @@ export function AdminLayout() {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-300 opacity-50" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-300" />
               </span>
-              <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-300">Sistem aktif</span>
+              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-300">Sistem aktif</span>
             </div>
             <span className="text-[10px] text-slate-600">Yerel yönetici oturumu</span>
           </div>
@@ -296,21 +295,21 @@ export function AdminLayout() {
       {/* Content */}
       <div className={cn(
         "relative z-10 flex min-w-0 flex-1 flex-col pl-0 transition-[padding] duration-200 ease-out",
-        navCollapsed ? "md:pl-[64px]" : "md:pl-[260px]"
+        navCollapsed ? "md:pl-[80px]" : "md:pl-[288px]"
       )}>
         <header className="app-header relative z-40 w-full flex-shrink-0 px-3 md:px-4">
-          <div className="mx-auto flex h-[58px] max-w-[1900px] items-center justify-between gap-3">
+          <div className="mx-auto flex h-[76px] max-w-[1900px] items-center justify-between gap-6">
             <div className="flex min-w-0 flex-1 items-center gap-3">
               <button
                 type="button"
                 onClick={() => setSidebarOpen(true)}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/[0.07] bg-white/[0.035] text-slate-400 transition hover:text-white md:hidden"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/[0.07] bg-white/[0.035] text-slate-400 transition hover:text-white md:hidden"
                 aria-label="Menüyü aç"
               >
                 <Menu size={22} />
               </button>
               <div className="mr-2 min-w-[168px]">
-                <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-cyan-300/65">{meta?.eyebrow}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-cyan-300/65">{meta?.eyebrow}</p>
                 <h1 className="truncate text-lg font-bold tracking-[-0.025em] text-white">{meta?.title}</h1>
               </div>
               {hasDateFilters && (
@@ -349,7 +348,7 @@ export function AdminLayout() {
           <section className="tab-intro workspace-context-bar">
             <div className="flex min-w-0 items-start gap-4">
               <div className="min-w-0">
-                <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-cyan-300/65">{meta?.eyebrow}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-cyan-300/65">{meta?.eyebrow}</p>
                 <h2 className="sr-only">{meta?.title}</h2>
                 <p className="max-w-5xl truncate text-xs leading-5 text-slate-500">{meta?.description}</p>
               </div>

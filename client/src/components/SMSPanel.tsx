@@ -193,7 +193,7 @@ export const SMSPanel: React.FC = () => {
                     <p className="text-slate-400 text-sm mt-1">Gelişmiş SMS yönetim paneli</p>
                 </div>
 
-                <div className="flex bg-white/5 p-1 rounded-xl border border-white/5">
+                <div className="flex bg-white/5 p-1 rounded-3xl border border-white/[0.05] backdrop-blur-xl">
                     <button
                         onClick={() => setActiveTab('send')}
                         className={cn(
@@ -231,7 +231,7 @@ export const SMSPanel: React.FC = () => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
-                        className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+                        className="grid grid-cols-1 lg:grid-cols-3 gap-8"
                     >
                         {/* Sol: Giriş Bölümü */}
                         <div className="lg:col-span-2 space-y-6">
@@ -243,7 +243,7 @@ export const SMSPanel: React.FC = () => {
                                         </CardTitle>
                                         <button
                                             onClick={handleCleanNumbers}
-                                            className="flex items-center gap-1.5 px-3 py-1 bg-blue-600/10 hover:bg-blue-600/20 text-purple-300 rounded-lg text-[10px] font-semibold uppercase tracking-wider border border-purple-400/25 transition-all"
+                                            className="flex items-center gap-1.5 px-3 py-1 bg-blue-600/10 hover:bg-blue-600/20 text-purple-300 rounded-lg text-[10px] font-semibold uppercase tracking-[0.2em] border border-purple-400/25 transition-all"
                                             title="Numaraları temizle, kopyaları sil ve 90 formatına getir"
                                         >
                                             <Wand2 className="w-3.5 h-3.5" /> TEMİZLE
@@ -256,7 +256,7 @@ export const SMSPanel: React.FC = () => {
                                             value={phoneList}
                                             onChange={(e) => setPhoneList(e.target.value)}
                                             placeholder="Telefon numaralarını girin (Her satıra bir numara veya virgülle ayırın...)"
-                                            className="w-full bg-black/50 border border-white/5 rounded-xl p-4 text-slate-300 placeholder:text-slate-500 focus:ring-2 focus:ring-blue-500/50 outline-none min-h-[150px] transition-all"
+                                            className="w-full bg-black/50 border border-white/[0.05] rounded-3xl p-8 text-slate-300 placeholder:text-slate-500 focus:ring-2 focus:ring-blue-500/50 outline-none min-h-[150px] transition-all backdrop-blur-xl"
                                         />
                                         <div className="absolute top-3 right-3">
                                             <div className="bg-blue-600/20 text-purple-300 px-3 py-1 rounded-full text-xs font-bold border border-blue-500/30">
@@ -279,9 +279,9 @@ export const SMSPanel: React.FC = () => {
                                             value={message}
                                             onChange={(e) => setMessage(e.target.value)}
                                             placeholder="Mesajınızı buraya yazın..."
-                                            className="w-full bg-black/50 border border-white/5 rounded-xl p-4 text-slate-300 placeholder:text-slate-500 focus:ring-2 focus:ring-blue-500/50 outline-none min-h-[150px] transition-all"
+                                            className="w-full bg-black/50 border border-white/[0.05] rounded-3xl p-8 text-slate-300 placeholder:text-slate-500 focus:ring-2 focus:ring-blue-500/50 outline-none min-h-[150px] transition-all backdrop-blur-xl"
                                         />
-                                        <div className="absolute bottom-3 right-3 flex items-center gap-4 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                        <div className="absolute bottom-3 right-3 flex items-center gap-4 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
                                             <span>{stats.charCount} Karakter</span>
                                             <span className="text-purple-400">{stats.smsCount} SMS</span>
                                         </div>
@@ -329,20 +329,20 @@ export const SMSPanel: React.FC = () => {
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
-                                    <div className="flex justify-between items-center p-3 bg-white/5 rounded-xl border border-white/5">
+                                    <div className="flex justify-between items-center p-8 bg-white/5 rounded-3xl border border-white/[0.05] backdrop-blur-xl">
                                         <span className="text-sm text-slate-400">Toplam Kişi</span>
                                         <span className="text-lg font-bold text-white">{stats.phones.length}</span>
                                     </div>
-                                    <div className="flex justify-between items-center p-3 bg-white/5 rounded-xl border border-white/5">
+                                    <div className="flex justify-between items-center p-8 bg-white/5 rounded-3xl border border-white/[0.05] backdrop-blur-xl">
                                         <span className="text-sm text-slate-400">SMS / Kişi</span>
                                         <span className="text-lg font-bold text-white">{stats.smsCount}</span>
                                     </div>
-                                    <div className="flex justify-between items-center p-4 bg-blue-600/20 rounded-xl border border-blue-500/30">
+                                    <div className="flex justify-between items-center p-8 bg-blue-600/20 rounded-3xl border border-blue-500/30 backdrop-blur-xl">
                                         <span className="text-sm text-purple-300 font-bold uppercase tracking-wider">Toplam Tahmini SMS</span>
                                         <span className="text-2xl font-semibold text-white">{stats.totalSms}</span>
                                     </div>
 
-                                    <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl text-[11px] text-amber-200/70 leading-relaxed">
+                                    <div className="p-8 bg-amber-500/10 border border-amber-500/20 rounded-3xl text-[11px] text-amber-200/70 leading-relaxed backdrop-blur-xl">
                                         <p className="flex gap-2">
                                             <AlertCircle className="w-12 h-12 text-amber-400 shrink-0" />
                                             Numaraların başında ülke kodu (örn: İngiltere için 44, Hollanda için 31, Türkiye için 90) olduğundan emin olun. 160 karakteri geçen mesajlar çoklu SMS olarak ücretlendirilir.
@@ -353,7 +353,7 @@ export const SMSPanel: React.FC = () => {
 
                             <div className="relative group">
                                 <div className="absolute inset-0 bg-purple-400/10 blur-3xl rounded-full transition-opacity group-hover:opacity-100 opacity-50" />
-                                <div className="relative bg-[#0F0F12] border-8 border-white/5 rounded-xl p-4 shadow-2xl min-h-[400px]">
+                                <div className="relative bg-white/[0.02] border-8 border-white/[0.05] rounded-3xl p-8 shadow-2xl min-h-[400px] backdrop-blur-xl">
                                     <div className="w-20 h-1.5 bg-white/5 rounded-full mx-auto mb-6" />
                                     <div className="flex items-center gap-3 mb-6">
                                         <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold text-white">S</div>
@@ -362,7 +362,7 @@ export const SMSPanel: React.FC = () => {
                                             <div className="text-xs font-bold text-white tracking-wider uppercase">GÖNDERİCİ</div>
                                         </div>
                                     </div>
-                                    <div className="bg-white/5 rounded-xl rounded-tl-none p-4 text-xs text-slate-300 leading-relaxed border border-white/5 backdrop-blur-md">
+                                    <div className="bg-white/5 rounded-3xl rounded-tl-none p-8 text-xs text-slate-300 leading-relaxed border border-white/[0.05] backdrop-blur-xl">
                                         {message || "Mesaj önizlemesi burada görünecek..."}
                                     </div>
                                     <div className="mt-2 text-[10px] text-slate-500 font-medium">Şimdi • SMS</div>
@@ -378,7 +378,7 @@ export const SMSPanel: React.FC = () => {
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -20 }}
-                        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
                     >
                         {TEMPLATES.map((tmpl) => (
                             <Card key={tmpl.id} className="group hover:border-blue-500/50 transition-all cursor-pointer overflow-hidden" onClick={() => applyTemplate(tmpl.content)}>
@@ -462,15 +462,15 @@ export const SMSPanel: React.FC = () => {
                                                     </td>
                                                     <td className="p-4">
                                                         {log.status === 'success' ? (
-                                                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-emerald-400 px-2 py-1 bg-emerald-500/10 rounded-lg">
+                                                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-400 px-2 py-1 bg-emerald-500/10 rounded-lg">
                                                                 <CheckCircle2 className="w-3 h-3" /> BAŞARILI
                                                             </span>
                                                         ) : log.status === 'partial' ? (
-                                                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-amber-400 px-2 py-1 bg-amber-500/10 rounded-lg">
+                                                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-400 px-2 py-1 bg-amber-500/10 rounded-lg">
                                                                 <AlertCircle className="w-3 h-3" /> KISMİ
                                                             </span>
                                                         ) : (
-                                                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-rose-400 px-2 py-1 bg-rose-500/10 rounded-lg">
+                                                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-rose-400 px-2 py-1 bg-rose-500/10 rounded-lg">
                                                                 <AlertCircle className="w-3 h-3" /> HATALI
                                                             </span>
                                                         )}

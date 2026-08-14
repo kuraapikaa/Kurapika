@@ -178,7 +178,7 @@ export function PredictionLeagueManager({
         }
       />
 
-      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1fr)_340px]">
         <div className="space-y-5">
           <Bolum baslik="Lig ayarları">
             <div className="space-y-4 px-5 py-4">
@@ -189,7 +189,7 @@ export function PredictionLeagueManager({
                 etiket="Tahmin ligi yayında"
                 aciklama="Kapalıyken lobide skor tahmin sekmesi görünmez."
               />
-              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+              <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
                 <Alan etiket="Başlık">
                   <Girdi modul={MODUL} value={config.title || ''} onChange={(e) => alanGuncelle('title', e.target.value)} />
                 </Alan>
@@ -220,7 +220,7 @@ export function PredictionLeagueManager({
             ) : (
               <div className="space-y-3 p-4">
                 {maclar.map((mac) => (
-                  <div key={mac.id} className="rounded-2xl border border-white/5 bg-black/20 p-4">
+                  <div key={mac.id} className="rounded-3xl border border-white/[0.05] bg-black/20 p-8 backdrop-blur-xl">
                     <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                       <div className="flex min-w-0 items-center gap-2 text-[13px] font-semibold text-white">
                         {mac.homeLogoUrl && <img src={mac.homeLogoUrl} alt="" className="h-5 w-5 rounded-full object-contain" />}
@@ -240,7 +240,7 @@ export function PredictionLeagueManager({
                       />
                     </div>
 
-                    <div className="grid grid-cols-1 gap-3 xl:grid-cols-4">
+                    <div className="grid grid-cols-1 gap-8 xl:grid-cols-4">
                       <Alan etiket="Ev sahibi">
                         <Girdi
                           modul={MODUL}
@@ -319,7 +319,7 @@ export function PredictionLeagueManager({
           </Bolum>
 
           <Bolum baslik="Ayın oyuncusu" aciklama="Lobideki banner içeriği.">
-            <div className="grid grid-cols-1 gap-4 px-5 py-4 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-8 px-5 py-4 lg:grid-cols-2">
               <Alan etiket="Başlık">
                 <Girdi modul={MODUL} value={config.monthlyPlayer?.title || ''} onChange={(e) => ayinOyuncusu({ title: e.target.value })} />
               </Alan>
@@ -338,7 +338,7 @@ export function PredictionLeagueManager({
                     placeholder="https://..."
                   />
                   <label
-                    className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-2xl border border-white/5 text-slate-400 transition-colors hover:text-white"
+                    className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full border border-white/5 text-slate-400 transition-colors hover:text-white"
                     title="Görsel yükle"
                   >
                     <ImageUp size={15} />
@@ -392,7 +392,7 @@ export function PredictionLeagueManager({
                 const kampanya = config[kampanyaAnahtari];
                 return (
                   <div key={period} className="space-y-3">
-                    <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
+                    <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
                       {haftalik ? 'Haftalık' : 'Aylık'}
                     </div>
                     {haftalik && (

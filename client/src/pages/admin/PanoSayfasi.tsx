@@ -75,7 +75,7 @@ export function PanoSayfasi() {
       {(altSekme === 'all' || altSekme === 'financial') && (
         <div className="space-y-3">
           <SummaryCards data={summary.data} isLoading={summary.isLoading ?? false} error={summary.error ?? null} />
-          <Suspense fallback={<div className="h-64 animate-pulse rounded-2xl border border-white/5 bg-white/[0.02]" />}>
+          <Suspense fallback={<div className="h-64 animate-pulse rounded-3xl border border-white/[0.05] bg-white/[0.02] backdrop-blur-xl" />}>
             <DashboardCharts data={partnerProfit?.data?.Data} />
           </Suspense>
         </div>
@@ -87,7 +87,7 @@ export function PanoSayfasi() {
         </div>
       )}
       {(altSekme === 'all' || altSekme === 'sportbook') && (
-        <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+        <div className="grid grid-cols-1 gap-8 xl:grid-cols-2">
           <TopSports data={topSports?.data} isLoading={topSports?.isLoading ?? false} error={topSports?.error ?? null} />
           <TopCasinoGames data={topCasino?.data} isLoading={topCasino?.isLoading ?? false} error={topCasino?.error ?? null} />
         </div>

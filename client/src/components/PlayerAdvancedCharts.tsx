@@ -24,8 +24,8 @@ export function AdvancedCharts({ data }: AdvancedChartsProps) {
 
 
     return (
-        <div className="grid grid-cols-1 gap-6 mb-12">
-            <div className="rounded-xl border border-white/5 bg-white/[0.02] p-6 backdrop-blur-md">
+        <div className="grid grid-cols-1 gap-8 mb-12">
+            <div className="rounded-3xl border border-white/[0.05] bg-white/[0.02] p-8 backdrop-blur-xl">
                 <div className="flex items-center gap-3 mb-6">
                     <Activity className="text-purple-300" size={20} />
                     <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-300">Kategori Bazlı Kâr/Zarar</h3>

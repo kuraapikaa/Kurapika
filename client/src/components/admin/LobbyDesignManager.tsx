@@ -689,10 +689,10 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
   };
 
   return (
-    <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_420px]">
+    <div className="grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1fr)_420px]">
       <div className="space-y-5">
         <Panel title="Tasarım Önayarları" icon={Palette}>
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+          <div className="grid grid-cols-2 gap-8 md:grid-cols-3 xl:grid-cols-6">
             {LOBBY_THEME_PRESETS.map((preset) => {
               const active = theme.themePreset === preset.id;
 
@@ -719,7 +719,7 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
         </Panel>
 
         <Panel title="Lobi Renkleri" icon={Palette}>
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 2xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 2xl:grid-cols-3">
             <ColorField label="Ana renk" value={theme.primaryColor} onChange={(primaryColor) => updateTheme({ primaryColor })} />
             <ColorField label="İkincil renk" value={theme.secondaryColor} onChange={(secondaryColor) => updateTheme({ secondaryColor })} />
             <ColorField label="Vurgu rengi" value={theme.accentColor} onChange={(accentColor) => updateTheme({ accentColor })} />
@@ -731,7 +731,7 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
         </Panel>
 
         <Panel title="Arkaplan" icon={Image}>
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_220px]">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_220px]">
             <TextField
               label="Arkaplan görsel URL"
               value={theme.backgroundImageUrl}
@@ -739,7 +739,7 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
               onChange={(backgroundImageUrl) => updateTheme({ backgroundImageUrl })}
             />
             <div className="rounded-lg border border-white/5 bg-black/20 p-3">
-              <label className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+              <label className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
                 <SlidersHorizontal size={14} />
                 Koyuluk
               </label>
@@ -775,7 +775,7 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
               />
             </label>
 
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
               <TextField
                 label="Banner görsel URL"
                 value={theme.banner.imageUrl}
@@ -806,14 +806,14 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
               <button
                 type="button"
                 onClick={addQuickAccess}
-                className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-lg bg-[color:var(--panel-info,#64d2ff)] px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#050609] transition hover:bg-[color:var(--panel-info,#64d2ff)]"
+                className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-lg bg-[color:var(--panel-info,#64d2ff)] px-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#050609] transition hover:bg-[color:var(--panel-info,#64d2ff)]"
               >
                 <Plus size={14} />
                 Kart ekle
               </button>
             </div>
 
-            <div className="hidden grid-cols-[34px_40px_minmax(120px,1fr)_minmax(140px,1.2fr)_minmax(120px,1fr)_118px_76px_108px] gap-2 px-2 text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-500 xl:grid">
+            <div className="hidden grid-cols-[34px_40px_minmax(120px,1fr)_minmax(140px,1.2fr)_minmax(120px,1fr)_118px_76px_108px] gap-8 px-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500 xl:grid">
               <span>Aktif</span>
               <span>İkon</span>
               <span>Başlık</span>
@@ -830,11 +830,11 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
               return (
                 <div
                   key={item.id}
-                  className="grid grid-cols-[34px_40px_1fr] items-center gap-2 rounded-lg border border-white/5 bg-black/20 p-2 xl:grid-cols-[34px_40px_minmax(120px,1fr)_minmax(140px,1.2fr)_minmax(120px,1fr)_118px_76px_108px]"
+                  className="grid grid-cols-[34px_40px_1fr] items-center gap-8 rounded-lg border border-white/5 bg-black/20 p-2 xl:grid-cols-[34px_40px_minmax(120px,1fr)_minmax(140px,1.2fr)_minmax(120px,1fr)_118px_76px_108px]"
                 >
                   <CompactToggle checked={item.enabled} onChange={(enabled) => updateQuickAccess(index, { enabled })} label={`${item.label} aktif`} />
                   <span
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border"
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border"
                     style={{
                       borderColor: hexToRgba(item.accentColor, 0.3),
                       backgroundColor: hexToRgba(item.accentColor, 0.13),
@@ -873,7 +873,7 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
               const dedicatedOwner = DEDICATED_CONTENT_OWNER[pageId];
 
               return (
-                <details key={pageId} open={pageId === 'bonus'} className="group rounded-xl border border-white/5 bg-black/20">
+                <details key={pageId} open={pageId === 'bonus'} className="group rounded-3xl border border-white/[0.05] bg-black/20 backdrop-blur-xl">
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-3 marker:hidden">
                     <span className="min-w-0">
                       <span className="block truncate text-sm font-semibold text-white">{page.label}</span>
@@ -881,7 +881,7 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
                         {quickAccessItem ? `Kart: ${quickAccessItem.label} · ${page.path}` : page.path}
                       </span>
                     </span>
-                    <span className="rounded-lg border border-white/5 bg-white/[0.04] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400 group-open:text-cyan-300">
+                    <span className="rounded-lg border border-white/5 bg-white/[0.04] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400 group-open:text-cyan-300">
                       Düzenle
                     </span>
                   </summary>
@@ -893,7 +893,7 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
                       </div>
                     )}
 
-                    <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                    <div className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
                       <TextField label="Sayfa etiketi" value={page.label} onChange={(label) => updatePage(pageId, { label })} />
                       <TextField label="Sayfa yolu / kart linki" value={page.path} onChange={(path) => updatePagePath(pageId, path)} />
                       <TextField label="Üst etiket" value={page.eyebrow} onChange={(eyebrow) => updatePage(pageId, { eyebrow })} />
@@ -907,7 +907,7 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
                       />
                     </div>
 
-                    <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                    <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
                       <TextAreaField label="Açıklama" value={page.subtitle} onChange={(subtitle) => updatePage(pageId, { subtitle })} />
                       <TextAreaField label="Form açıklaması" value={page.formDescription} onChange={(formDescription) => updatePage(pageId, { formDescription })} />
                       <TextField label="Form başlığı" value={page.formTitle} onChange={(formTitle) => updatePage(pageId, { formTitle })} />
@@ -940,8 +940,8 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
 
                     {extraFields.length > 0 && (
                       <div className="rounded-lg border border-white/5 bg-white/[0.025] p-3">
-                        <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">Sayfaya özel elementler</p>
-                        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                        <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Sayfaya özel elementler</p>
+                        <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
                           {extraFields.map((field) => {
                             const value = page.extra[field.key];
 
@@ -987,7 +987,7 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
               value={theme.tabs.tournaments}
               onChange={(patch) => updateTab('tournaments', patch)}
             >
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+              <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
                 <TextField label="Sıralama etiketi" value={theme.tabs.tournaments.rankPrefix} onChange={(rankPrefix) => updateTab('tournaments', { rankPrefix })} />
                 <TextField label="Ödül eki" value={theme.tabs.tournaments.prizeSuffix} onChange={(prizeSuffix) => updateTab('tournaments', { prizeSuffix })} />
                 <TextField label="Kart açıklaması" value={theme.tabs.tournaments.cardDescription} onChange={(cardDescription) => updateTab('tournaments', { cardDescription })} />
@@ -995,7 +995,7 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
 
               <div className="mt-4 flex items-center justify-between gap-3">
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Turnuva kartları</p>
-                <button type="button" onClick={addTournamentCard} className="inline-flex h-9 items-center gap-2 rounded-lg bg-[color:var(--panel-info,#64d2ff)] px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#050609]">
+                <button type="button" onClick={addTournamentCard} className="inline-flex h-9 items-center gap-2 rounded-lg bg-[color:var(--panel-info,#64d2ff)] px-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#050609]">
                   <Plus size={14} />
                   Kart ekle
                 </button>
@@ -1009,7 +1009,7 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
                     <div key={item.id} className="rounded-lg border border-white/5 bg-black/20 p-3">
                       <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                         <div className="flex min-w-0 items-center gap-3">
-                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border" style={{ borderColor: hexToRgba(item.accentColor, 0.3), backgroundColor: hexToRgba(item.accentColor, 0.13), color: item.accentColor }}>
+                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border" style={{ borderColor: hexToRgba(item.accentColor, 0.3), backgroundColor: hexToRgba(item.accentColor, 0.13), color: item.accentColor }}>
                             <Icon size={19} />
                           </span>
                           <div className="min-w-0">
@@ -1025,7 +1025,7 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                      <div className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
                         <TextField label="Başlık" value={item.label} onChange={(label) => updateTournamentCard(index, { label })} />
                         <TextField label="Süre" value={item.period} onChange={(period) => updateTournamentCard(index, { period })} />
                         <TextField label="Varsayılan ödül" value={item.prizeFallback} onChange={(prizeFallback) => updateTournamentCard(index, { prizeFallback })} />
@@ -1044,7 +1044,7 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
               value={theme.tabs.support}
               onChange={(patch) => updateTab('support', patch)}
             >
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
                 <TextField label="Arama placeholder" value={theme.tabs.support.searchPlaceholder} onChange={(searchPlaceholder) => updateTab('support', { searchPlaceholder })} />
                 <ColorField label="Bilgi kutusu rengi" value={theme.tabs.support.infoAccentColor} onChange={(infoAccentColor) => updateTab('support', { infoAccentColor })} />
                 <TextField label="Bilgi başlığı" value={theme.tabs.support.infoTitle} onChange={(infoTitle) => updateTab('support', { infoTitle })} />
@@ -1053,7 +1053,7 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
 
               <div className="mt-4 flex items-center justify-between gap-3">
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Destek kartları</p>
-                <button type="button" onClick={addSupportCard} className="inline-flex h-9 items-center gap-2 rounded-lg bg-[color:var(--panel-info,#64d2ff)] px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#050609]">
+                <button type="button" onClick={addSupportCard} className="inline-flex h-9 items-center gap-2 rounded-lg bg-[color:var(--panel-info,#64d2ff)] px-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#050609]">
                   <Plus size={14} />
                   Kart ekle
                 </button>
@@ -1067,7 +1067,7 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
                     <div key={item.id} className="rounded-lg border border-white/5 bg-black/20 p-3">
                       <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                         <div className="flex min-w-0 items-center gap-3">
-                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border" style={{ borderColor: hexToRgba(item.accentColor, 0.3), backgroundColor: hexToRgba(item.accentColor, 0.13), color: item.accentColor }}>
+                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border" style={{ borderColor: hexToRgba(item.accentColor, 0.3), backgroundColor: hexToRgba(item.accentColor, 0.13), color: item.accentColor }}>
                             <Icon size={19} />
                           </span>
                           <div className="min-w-0">
@@ -1083,7 +1083,7 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                      <div className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
                         <TextField label="Başlık" value={item.title} onChange={(title) => updateSupportCard(index, { title })} />
                         <TextField label="Açıklama" value={item.desc} onChange={(desc) => updateSupportCard(index, { desc })} />
                         <TextField label="Hedef link" value={item.to} icon={Link2} onChange={(to) => updateSupportCard(index, { to })} />
@@ -1100,22 +1100,22 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
       </div>
 
       <aside className="space-y-4">
-        <div className="rounded-xl border border-white/5 bg-white/[0.02] p-4 shadow-[0_18px_60px_rgba(0,0,0,0.24)]">
+        <div className="rounded-3xl border border-white/[0.05] bg-white/[0.02] p-8 shadow-[0_18px_60px_rgba(0,0,0,0.24)] backdrop-blur-xl">
           <div className="mb-4 flex items-center justify-between">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-300/70">Canlı görünüm</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-cyan-300/70">Canlı görünüm</p>
               <h3 className="text-lg font-semibold text-white">Lobi önizlemesi</h3>
             </div>
             <MonitorSmartphone className="text-slate-400" size={20} />
           </div>
-          <div className="overflow-hidden rounded-xl border border-white/5" style={pagePreviewStyle}>
-            <div className="border-b border-white/5 bg-black/45 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.16em]">
+          <div className="overflow-hidden rounded-3xl border border-white/[0.05] backdrop-blur-xl" style={pagePreviewStyle}>
+            <div className="border-b border-white/5 bg-black/45 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.2em]">
               <span style={{ color: theme.accentColor }}>Canlı</span>
             </div>
             <div className="space-y-3 p-4">
               <div className="flex items-center gap-3">
                 <div
-                  className="flex h-10 w-10 items-center justify-center rounded-xl border"
+                  className="flex h-10 w-10 items-center justify-center rounded-full border"
                   style={{
                     borderColor: hexToRgba(theme.primaryColor, 0.35),
                     backgroundColor: hexToRgba(theme.primaryColor, 0.16),
@@ -1126,25 +1126,25 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
                 </div>
                 <div>
                   <p className="text-sm font-semibold">Ödül Merkezi</p>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.14em]" style={{ color: theme.mutedTextColor }}>Mobil lobi</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: theme.mutedTextColor }}>Mobil lobi</p>
                 </div>
               </div>
 
               {theme.banner.enabled && (
-                <div className="min-h-[96px] rounded-xl border border-white/5 p-4" style={bannerPreviewStyle}>
+                <div className="min-h-[96px] rounded-3xl border border-white/[0.05] p-8 backdrop-blur-xl" style={bannerPreviewStyle}>
                   <p className="max-w-[260px] text-lg font-semibold leading-tight">{theme.banner.title || 'Banner başlığı'}</p>
                   <p className="mt-1 max-w-[240px] text-xs font-semibold" style={{ color: theme.textColor }}>{theme.banner.subtitle || 'Banner açıklaması'}</p>
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-8">
                 {theme.quickAccess.filter((item) => item.enabled).slice(0, 4).map((item) => {
                   const Icon = getQuickAccessIcon(item.icon);
 
                   return (
-                    <div key={item.id} className="rounded-xl border border-white/5 bg-white/[0.045] p-3 text-center">
+                    <div key={item.id} className="rounded-3xl border border-white/[0.05] bg-white/[0.045] p-8 text-center backdrop-blur-xl">
                       <div
-                        className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg border"
+                        className="mx-auto flex h-10 w-10 items-center justify-center rounded-full border"
                         style={{
                           borderColor: hexToRgba(item.accentColor, 0.3),
                           backgroundColor: hexToRgba(item.accentColor, 0.13),
@@ -1161,13 +1161,13 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
               </div>
 
               <div
-                className="rounded-xl border p-4"
+                className="rounded-3xl border p-8 backdrop-blur-xl"
                 style={{
                   borderColor: hexToRgba(theme.primaryColor, 0.22),
                   background: `linear-gradient(135deg, ${hexToRgba(theme.primaryColor, 0.18)}, ${hexToRgba(theme.surfaceColor, 0.92)})`
                 }}
               >
-                <p className="text-[10px] font-semibold uppercase tracking-[0.18em]" style={{ color: theme.primaryColor }}>Öne çıkan</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em]" style={{ color: theme.primaryColor }}>Öne çıkan</p>
                 <p className="mt-2 text-2xl font-semibold leading-none">Bonusunu seç.</p>
                 <button
                   type="button"
@@ -1315,7 +1315,7 @@ function TabBaseEditor({
   children?: ReactNode;
 }) {
   return (
-    <section className="rounded-xl border border-white/5 bg-black/20 p-4">
+    <section className="rounded-3xl border border-white/[0.05] bg-black/20 p-8 backdrop-blur-xl">
       <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
           <h4 className="text-sm font-semibold text-white">{title}</h4>
@@ -1323,7 +1323,7 @@ function TabBaseEditor({
         </div>
         <TogglePill checked={value.enabled} onChange={(enabled) => onChange({ enabled })} />
       </div>
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
         <TextField label="Tab adı" value={value.label} onChange={(label) => onChange({ label })} />
         <TextField label="Tab kısa bilgi" value={value.hint} onChange={(hint) => onChange({ hint })} />
         <TextField label="İç başlık" value={value.sectionTitle} onChange={(sectionTitle) => onChange({ sectionTitle })} />
@@ -1336,7 +1336,7 @@ function TabBaseEditor({
 
 function TogglePill({ checked, onChange }: { checked: boolean; onChange: (checked: boolean) => void }) {
   return (
-    <label className="inline-flex h-9 items-center gap-2 rounded-lg border border-white/5 bg-white/[0.035] px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-200">
+    <label className="inline-flex h-9 items-center gap-2 rounded-lg border border-white/5 bg-white/[0.035] px-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-200">
       <input
         type="checkbox"
         checked={checked}
@@ -1351,7 +1351,7 @@ function TogglePill({ checked, onChange }: { checked: boolean; onChange: (checke
 function IconSelect({ value, onChange, label = 'İkon' }: { value: string; onChange: (value: string) => void; label?: string }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">{label}</span>
+      <span className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">{label}</span>
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
@@ -1367,9 +1367,9 @@ function IconSelect({ value, onChange, label = 'İkon' }: { value: string; onCha
 
 function Panel({ title, icon: Icon, children }: { title: string; icon: LucideIcon; children: ReactNode }) {
   return (
-    <section className="rounded-xl border border-white/5 bg-white/[0.02] p-4 shadow-[0_18px_60px_rgba(0,0,0,0.24)]">
+    <section className="rounded-3xl border border-white/[0.05] bg-white/[0.02] p-8 shadow-[0_18px_60px_rgba(0,0,0,0.24)] backdrop-blur-xl">
       <div className="mb-4 flex items-center gap-3">
-        <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[color:var(--panel-info,#64d2ff)] text-[#050609]">
+        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[color:var(--panel-info,#64d2ff)] text-[#050609]">
           <Icon size={18} />
         </span>
         <h3 className="text-base font-semibold text-white">{title}</h3>
@@ -1389,7 +1389,7 @@ function PageAccentField({ value, fallback, onChange }: { value: string; fallbac
   return (
     <div className="rounded-lg border border-white/5 bg-white/[0.035] p-3">
       <div className="mb-2 flex items-center justify-between gap-2">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">Vurgu rengi</span>
+        <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Vurgu rengi</span>
         {!inherited && (
           <button
             type="button"
@@ -1405,7 +1405,7 @@ function PageAccentField({ value, fallback, onChange }: { value: string; fallbac
           type="color"
           value={isHexColor(effective) ? effective : '#3b82f6'}
           onChange={(event) => onChange(event.target.value)}
-          className="h-10 w-12 shrink-0 cursor-pointer rounded-lg border border-white/5 bg-transparent p-1"
+          className="h-10 w-12 shrink-0 cursor-pointer rounded-full border border-white/5 bg-transparent p-1"
         />
         <input
           type="text"
@@ -1426,13 +1426,13 @@ function ColorField({ label, value, onChange }: { label: string; value: string; 
   const colorValue = isHexColor(value) ? value : '#000000';
   return (
     <label className="block rounded-lg border border-white/5 bg-white/[0.035] p-3">
-      <span className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">{label}</span>
+      <span className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">{label}</span>
       <span className="flex items-center gap-2">
         <input
           type="color"
           value={colorValue}
           onChange={(event) => onChange(event.target.value)}
-          className="h-10 w-12 shrink-0 cursor-pointer rounded-lg border border-white/5 bg-transparent p-1"
+          className="h-10 w-12 shrink-0 cursor-pointer rounded-full border border-white/5 bg-transparent p-1"
         />
         <input
           type="text"
@@ -1460,7 +1460,7 @@ function TextField({
 }) {
   return (
     <label className="block">
-      <span className="mb-2 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+      <span className="mb-2 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
         {Icon && <Icon size={13} />}
         {label}
       </span>
@@ -1493,7 +1493,7 @@ function TextAreaField({
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">{label}</span>
+      <span className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">{label}</span>
       <textarea
         value={value}
         placeholder={placeholder}

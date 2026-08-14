@@ -38,11 +38,11 @@ export function MasterLogin({ onLoginSuccess }: { onLoginSuccess: () => void }) 
       <motion.div
         initial={{ opacity: 0, y: 30, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
-        className="relative z-10 grid w-full max-w-5xl overflow-hidden rounded-3xl border border-white/5 bg-white/[0.03] shadow-2xl shadow-black/50 backdrop-blur-2xl md:grid-cols-[1fr_440px]"
+        className="relative z-10 grid w-full max-w-5xl overflow-hidden rounded-3xl border border-white/[0.05] bg-white/[0.03] shadow-2xl shadow-black/50 backdrop-blur-xl md:grid-cols-[1fr_440px]"
       >
         <div className="mesh-mor hidden min-h-[560px] flex-col justify-between border-r border-white/5 p-8 md:flex">
           <div>
-            <div className="grid h-14 w-14 grid-cols-2 place-items-center gap-1 rounded-2xl border border-purple-400/25 bg-purple-400/10 p-3 text-purple-300">
+            <div className="grid h-14 w-14 grid-cols-2 place-items-center gap-1 rounded-3xl border border-purple-400/25 bg-purple-400/10 p-8 text-purple-300 backdrop-blur-xl">
               <span className="h-2.5 w-2.5 rounded bg-current" />
               <span className="h-2.5 w-2.5 rounded bg-current" />
               <span className="h-2.5 w-2.5 rounded bg-current" />
@@ -53,11 +53,11 @@ export function MasterLogin({ onLoginSuccess }: { onLoginSuccess: () => void }) 
             <p className="mt-5 max-w-md text-sm leading-6 text-slate-400">Müşteri panelleri, domainler, erişim bilgileri ve marka ayarları tek merkezde.</p>
           </div>
 
-          <div className="grid grid-cols-3 gap-6">
+          <div className="grid grid-cols-3 gap-8">
             {['Oturum', 'Yetki', 'Kayıt'].map((item) => (
-              <div key={item} className="rounded-2xl border border-white/5 bg-white/[0.03] p-4 backdrop-blur-xl">
+              <div key={item} className="rounded-3xl border border-white/[0.05] bg-white/[0.03] p-8 backdrop-blur-xl">
                 <KeyRound className="mb-3 text-purple-300" size={18} />
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">{item}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">{item}</p>
               </div>
             ))}
           </div>
@@ -65,7 +65,7 @@ export function MasterLogin({ onLoginSuccess }: { onLoginSuccess: () => void }) 
 
         <form onSubmit={handleSubmit} className="p-6 sm:p-8">
           <div className="mb-8 text-center">
-            <div className="neon-glow-indigo mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-purple-400/25 bg-purple-400/10 text-purple-300">
+            <div className="neon-glow-indigo mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl border border-purple-400/25 bg-purple-400/10 text-purple-300 backdrop-blur-xl">
               <ShieldAlert size={30} />
             </div>
             <h2 className="text-3xl font-semibold tracking-[-0.05em] text-white">Master sistem</h2>
@@ -74,7 +74,7 @@ export function MasterLogin({ onLoginSuccess }: { onLoginSuccess: () => void }) 
 
           <div className="space-y-4">
             <label className="block">
-              <span className="mb-2 block text-[10px] font-semibold uppercase tracking-wider text-slate-400">Kullanıcı adı</span>
+              <span className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Kullanıcı adı</span>
               <div className="relative">
                 <User className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <input
@@ -88,7 +88,7 @@ export function MasterLogin({ onLoginSuccess }: { onLoginSuccess: () => void }) 
             </label>
 
             <label className="block">
-              <span className="mb-2 block text-[10px] font-semibold uppercase tracking-wider text-slate-400">Şifre</span>
+              <span className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Şifre</span>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <input
@@ -103,7 +103,7 @@ export function MasterLogin({ onLoginSuccess }: { onLoginSuccess: () => void }) 
           </div>
 
           {error && (
-            <div className="mt-4 rounded-2xl border border-rose-400/25 bg-rose-400/10 p-3 text-center text-sm font-bold text-rose-300">
+            <div className="mt-4 rounded-3xl border border-rose-400/25 bg-rose-400/10 p-8 text-center text-sm font-bold text-rose-300 backdrop-blur-xl">
               {error}
             </div>
           )}

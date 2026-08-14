@@ -31,7 +31,7 @@ export function BetReportDashboard({
 }: BetReportDashboardProps) {
   if (error) {
     return (
-      <div className="animate-in rounded-xl border border-rose-500/20 bg-rose-500/5 p-8 text-center text-rose-400 backdrop-blur-xl">
+      <div className="animate-in rounded-3xl border border-rose-500/20 bg-rose-500/5 p-8 text-center text-rose-400 backdrop-blur-xl">
         <ShieldAlert size={48} className="mx-auto mb-4 opacity-20" />
         <h3 className="text-lg font-bold">Veri İletişim Hatası</h3>
         <p className="mt-2 text-sm opacity-70">{error.message}</p>
@@ -42,7 +42,7 @@ export function BetReportDashboard({
   const firstPage = data?.pages?.[0];
   if (firstPage?.HasError) {
     return (
-      <div className="animate-in rounded-xl border border-amber-500/20 bg-amber-500/5 p-8 text-center text-amber-400 backdrop-blur-xl">
+      <div className="animate-in rounded-3xl border border-amber-500/20 bg-amber-500/5 p-8 text-center text-amber-400 backdrop-blur-xl">
         <ShieldAlert size={48} className="mx-auto mb-4 opacity-20" />
         <h3 className="text-lg font-bold">API Uyarısı</h3>
         <p className="mt-2 text-sm opacity-70">{firstPage.AlertMessage ?? 'Bilinmeyen sistem hatası'}</p>
@@ -113,7 +113,7 @@ export function BetReportDashboard({
 
   if (isLoading) {
     return (
-      <div className="flex h-64 flex-col items-center justify-center gap-4 rounded-xl border border-white/5 bg-white/[0.02]">
+      <div className="flex h-64 flex-col items-center justify-center gap-4 rounded-3xl border border-white/[0.05] bg-white/[0.02] backdrop-blur-xl">
         <div className="h-12 w-12 animate-spin rounded-full border-4 border-cyan-500 border-t-transparent" />
         <p className="text-sm font-bold text-slate-400 uppercase tracking-wider">Bahis motoru analiz ediliyor...</p>
       </div>
@@ -122,7 +122,7 @@ export function BetReportDashboard({
 
   return (
     <div className="space-y-8">
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
         {cards.map((card, idx) => (
           <motion.div
             key={card.label}
@@ -138,7 +138,7 @@ export function BetReportDashboard({
 
               <div className="relative flex flex-col gap-4">
                 <div className="flex items-center justify-between">
-                  <div className={cn("flex h-10 w-10 items-center justify-center rounded-xl bg-black/40 border border-white/5", card.iconClass, card.glowClass)}>
+                  <div className={cn("flex h-10 w-10 items-center justify-center rounded-full bg-black/40 border border-white/5", card.iconClass, card.glowClass)}>
                     <card.icon size={20} />
                   </div>
                   <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">{card.label}</span>
@@ -167,9 +167,9 @@ export function BetReportDashboard({
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="flex items-center gap-4 rounded-xl border border-amber-500/10 bg-amber-500/5 p-4 backdrop-blur-md"
+          className="flex items-center gap-4 rounded-3xl border border-amber-500/10 bg-amber-500/5 p-8 backdrop-blur-xl"
         >
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/20 text-amber-500 border border-amber-500/20 neon-glow-amber">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-500/20 text-amber-500 border border-amber-500/20 neon-glow-amber">
             <BarChart3 size={18} />
           </div>
           <div>

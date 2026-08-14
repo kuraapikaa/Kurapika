@@ -583,7 +583,7 @@ export function PlayerProfile() {
             <Card className="mb-3 p-3.5">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center gap-2">
-                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-purple-400/25 bg-[color:var(--panel-accent,#0a84ff)]/[0.1] text-purple-300">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-full border border-purple-400/25 bg-[color:var(--panel-accent,#0a84ff)]/[0.1] text-purple-300">
                             <User size={20} />
                         </div>
                         <div className="min-w-0 text-left">
@@ -595,7 +595,7 @@ export function PlayerProfile() {
                                     const category = getPlayerCategoryFromListRow({ Id: Number(id) }, (kpi as Record<string, unknown> | undefined) ?? undefined);
                                     return (
                                         <span
-                                            className="rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ring-1"
+                                            className="rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.2em] ring-1"
                                             style={{
                                                 backgroundColor: category.colorBg,
                                                 color: category.colorText,
@@ -625,7 +625,7 @@ export function PlayerProfile() {
             {/* Tab Navigation - Radix Tabs */}
             <Tabs.Root value={activeTab} onValueChange={(v) => setActiveTab(v as ProfileTab)} className="mb-3">
                 <Tabs.List className={cn(
-                    'inline-flex flex-wrap gap-0.5 rounded-2xl border border-white/5 bg-white/[0.02] p-0.5'
+                    'inline-flex flex-wrap gap-0.5 rounded-3xl border border-white/[0.05] bg-white/[0.02] p-0.5 backdrop-blur-xl'
                 )}>
                     {tabEntries.map(({ value, icon: Icon, label }) => (
                         <Tabs.Trigger
@@ -656,7 +656,7 @@ export function PlayerProfile() {
                         <p className="text-sm font-semibold text-slate-400 uppercase tracking-[0.4em] animate-pulse">Veriler Çekiliyor...</p>
                     </div>
                 ) : kpiError || !kpi ? (
-                    <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 py-32 text-center text-rose-400">
+                    <div className="rounded-3xl border border-rose-500/20 bg-rose-500/5 py-32 text-center text-rose-400 backdrop-blur-xl">
                         <p className="text-lg font-semibold uppercase tracking-widest">Veri Hatası</p>
                         <p className="mt-2 text-sm opacity-70">Bu oyuncuya ait veriler şu an BetConstruct servisinden alınamıyor.</p>
                     </div>
@@ -686,7 +686,7 @@ export function PlayerProfile() {
                                             <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-purple-400">Mali Performans</h3>
                                             <div className="h-px flex-1 bg-gradient-to-r from-blue-500/20 to-transparent" />
                                         </div>
-                                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                                        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
                                             <StatBox
                                                 title="Net Kar/Zarar"
                                                 value={`${formatNumber(kpi.DepositAmount - kpi.WithdrawalAmount)} TRY`}
@@ -714,7 +714,7 @@ export function PlayerProfile() {
                                                 colorClass="bg-rose-500/10 text-rose-400"
                                             />
                                         </div>
-                                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 mt-6">
+                                        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4 mt-6">
                                             <StatBox
                                                 title="Oyun Net Kar/Zarar"
                                                 value={`${formatNumber(kpi.GamingProfitAndLose)} TRY`}
@@ -740,7 +740,7 @@ export function PlayerProfile() {
                                                 colorClass="bg-[rgba(242,244,248,0.08)] text-slate-400"
                                             />
                                         </div>
-                                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 mt-6">
+                                        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4 mt-6">
                                             <StatBox
                                                 title="TotalDeposit"
                                                 value={`${formatNumber(kpi.TotalDeposit)} TRY`}
@@ -758,7 +758,7 @@ export function PlayerProfile() {
 
                                     <AdvancedCharts data={kpi} />
 
-                                    <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+                                    <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
                                         <Card className="p-4">
                                             <CardHeader className="flex flex-row p-0 pb-3 items-center justify-between">
                                                 <CardTitle className="text-purple-300">Sportbook Analizi</CardTitle>
@@ -803,7 +803,7 @@ export function PlayerProfile() {
 
                                     <Card className="p-4">
                                         <CardTitle className="mb-4 text-left text-slate-400">Hesap Özeti (tüm KPI alanları)</CardTitle>
-                                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+                                        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
                                             <InfoTile label="KPI Id" value={String(kpi.Id ?? '—')} icon={User} />
                                             <InfoTile label="Oyuncu Id" value={String(kpi.ClientId ?? '—')} icon={User} />
                                             <InfoTile label="Kullanıcı Adı" value={kpi.Login ?? login ?? '—'} icon={User} />
@@ -871,7 +871,7 @@ export function PlayerProfile() {
 
 
                             {activeTab === 'notes' && (
-                                <section className="rounded-2xl border border-white/5 bg-white/[0.02] p-8 backdrop-blur-md text-left">
+                                <section className="rounded-3xl border border-white/[0.05] bg-white/[0.02] p-8 backdrop-blur-xl text-left">
                                     <div className="mb-8 flex items-center justify-between">
                                         <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-amber-400">Oyuncu Notları</h3>
                                         <MessageSquare className="text-amber-400" size={20} />
@@ -884,7 +884,7 @@ export function PlayerProfile() {
                                     ) : (
                                         <div className="space-y-4">
                                             {notes.map((note: any) => (
-                                                <div key={note.Id} className="rounded-xl bg-white/[0.02] p-6 border border-white/5 hover:border-white/5 transition-all relative group">
+                                                <div key={note.Id} className="rounded-3xl bg-white/[0.02] p-8 border border-white/[0.05] hover:border-white/[0.05] transition-all relative group backdrop-blur-xl">
                                                     <div className="mb-2 flex items-center justify-between">
                                                         <div className="flex items-center gap-2">
                                                             <div className="rounded-xl bg-purple-400/10 p-2 text-purple-300">
@@ -911,19 +911,19 @@ export function PlayerProfile() {
                             )}
 
                             {activeTab === 'bonuses' && (
-                                <section className="rounded-2xl border border-white/5 bg-white/[0.02] p-8 backdrop-blur-md text-left">
+                                <section className="rounded-3xl border border-white/[0.05] bg-white/[0.02] p-8 backdrop-blur-xl text-left">
                                     <div className="space-y-6">
                                         <div className="flex items-center justify-between">
                                             <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-cyan-400">Bonus Hareketleri</h3>
                                         </div>
 
-                                        <div className="flex flex-col md:flex-row items-end gap-3 p-4 rounded-xl bg-white/[0.02] border border-white/5">
+                                        <div className="flex flex-col md:flex-row items-end gap-3 p-8 rounded-3xl bg-white/[0.02] border border-white/[0.05] backdrop-blur-xl">
                                             <div className="flex-1 w-full space-y-2">
                                                 <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest ml-1">Hızlı Bonus Tanımla</label>
                                                     <select
                                                         value={selectedQuickBonus}
                                                         onChange={(e) => setSelectedQuickBonus(e.target.value)}
-                                                        className="w-full h-10 bg-white/[0.02] border border-white/5 rounded-xl px-3 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-emerald-500/40 disabled:opacity-50"
+                                                        className="w-full h-10 bg-white/[0.02] border border-white/[0.05] rounded-3xl px-3 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-emerald-500/40 disabled:opacity-50 backdrop-blur-xl"
                                                     >
                                                         <option value="">{partnerBonusesList.length > 0 ? 'Bonus Seçin...' : 'Bonus Bulunamadı veya Yükleniyor...'}</option>
                                                         {partnerBonusesList.map((b: any) => (
@@ -938,7 +938,7 @@ export function PlayerProfile() {
                                                     value={quickBonusAmount}
                                                     onChange={(e) => setQuickBonusAmount(e.target.value)}
                                                     placeholder="0"
-                                                    className="w-full h-10 bg-white/[0.02] border border-white/5 rounded-xl px-3 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-emerald-500/40"
+                                                    className="w-full h-10 bg-white/[0.02] border border-white/[0.05] rounded-3xl px-3 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-emerald-500/40 backdrop-blur-xl"
                                                 />
                                             </div>
                                             <Button
@@ -951,20 +951,20 @@ export function PlayerProfile() {
                                             </Button>
                                         </div>
 
-                                        <div className="grid grid-cols-1 gap-3 rounded-2xl border border-white/5 bg-white/[0.02] p-4 md:grid-cols-[180px_140px_1fr_auto] md:items-end">
+                                        <div className="grid grid-cols-1 gap-8 rounded-3xl border border-white/[0.05] bg-white/[0.02] p-8 md:grid-cols-[180px_140px_1fr_auto] md:items-end backdrop-blur-xl">
                                             <div className="space-y-2">
-                                                <label className="ml-1 text-[10px] font-semibold uppercase tracking-widest text-slate-400">Correction Type</label>
+                                                <label className="ml-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Correction Type</label>
                                                 <select
                                                     value={correctionType}
                                                     onChange={(e) => setCorrectionType(e.target.value as 'crediting' | 'debiting')}
-                                                    className="h-10 w-full rounded-2xl border border-white/5 bg-white/[0.02] px-3 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-cyan-500/40"
+                                                    className="h-10 w-full rounded-3xl border border-white/[0.05] bg-white/[0.02] px-3 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-cyan-500/40 backdrop-blur-xl"
                                                 >
                                                     <option value="crediting">Düzeltme Üst · Crediting</option>
                                                     <option value="debiting">Düzeltme Alt · Debiting</option>
                                                 </select>
                                             </div>
                                             <div className="space-y-2">
-                                                <label className="ml-1 text-[10px] font-semibold uppercase tracking-widest text-slate-400">Amount (TRY)</label>
+                                                <label className="ml-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Amount (TRY)</label>
                                                 <input
                                                     type="number"
                                                     min="0.01"
@@ -972,18 +972,18 @@ export function PlayerProfile() {
                                                     value={correctionAmount}
                                                     onChange={(e) => setCorrectionAmount(e.target.value)}
                                                     placeholder="0.00"
-                                                    className="h-10 w-full rounded-2xl border border-white/5 bg-white/[0.02] px-3 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-cyan-500/40"
+                                                    className="h-10 w-full rounded-3xl border border-white/[0.05] bg-white/[0.02] px-3 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-cyan-500/40 backdrop-blur-xl"
                                                 />
                                             </div>
                                             <div className="space-y-2">
-                                                <label className="ml-1 text-[10px] font-semibold uppercase tracking-widest text-slate-400">İşlem Notu</label>
+                                                <label className="ml-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">İşlem Notu</label>
                                                 <input
                                                     type="text"
                                                     maxLength={50}
                                                     value={correctionNote}
                                                     onChange={(e) => setCorrectionNote(e.target.value)}
                                                     placeholder="Zorunlu denetim notu (maks. 50)"
-                                                    className="h-10 w-full rounded-2xl border border-white/5 bg-white/[0.02] px-3 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-cyan-500/40"
+                                                    className="h-10 w-full rounded-3xl border border-white/[0.05] bg-white/[0.02] px-3 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-cyan-500/40 backdrop-blur-xl"
                                                 />
                                             </div>
                                             <Button
@@ -991,7 +991,7 @@ export function PlayerProfile() {
                                                 onClick={handleBalanceCorrection}
                                                 disabled={isCorrectingBalance || !correctionAmount}
                                                 className={cn(
-                                                    'h-10 px-5 text-[10px] font-semibold uppercase tracking-widest text-white disabled:opacity-50',
+                                                    'h-10 px-5 text-[10px] font-semibold uppercase tracking-[0.2em] text-white disabled:opacity-50',
                                                     correctionType === 'crediting' ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-rose-600 hover:bg-rose-500'
                                                 )}
                                             >
@@ -1001,11 +1001,11 @@ export function PlayerProfile() {
 
                                         <div className="flex items-center justify-between pt-4 border-t border-white/5">
                                             <div className="flex items-center gap-2">
-                                                <h4 className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Mevcut Bonus Kayıtları</h4>
+                                                <h4 className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Mevcut Bonus Kayıtları</h4>
                                                 <Button
                                                     variant="primary"
                                                     size="sm"
-                                                    className="h-7 px-3 text-[10px] font-semibold uppercase tracking-widest gap-2 bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20"
+                                                    className="h-7 px-3 text-[10px] font-semibold uppercase tracking-[0.2em] gap-2 bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20"
                                                     onClick={() => navigate('/bonus-talep', { state: { login: kpi?.Login } })}
                                                 >
                                                     <Gift size={14} />
@@ -1034,7 +1034,7 @@ export function PlayerProfile() {
 
                                                 {isBonusDateOpen && (
                                                     <div
-                                                        className="absolute right-0 top-full z-[100] mt-2 w-full rounded-2xl border border-white/5 bg-white/[0.02] p-2 shadow-2xl animate-in fade-in slide-in-from-top-2"
+                                                        className="absolute right-0 top-full z-[100] mt-2 w-full rounded-3xl border border-white/[0.05] bg-white/[0.02] p-2 shadow-2xl animate-in fade-in slide-in-from-top-2 backdrop-blur-xl"
                                                         onClick={(e) => e.stopPropagation()}
                                                     >
                                                         {[
@@ -1059,14 +1059,14 @@ export function PlayerProfile() {
                                                         ))}
                                                         <div className="mt-2 border-t border-white/5 pt-2 flex flex-col gap-2 p-2">
                                                             <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-widest">Özel Tarih</span>
-                                                            <div className="grid grid-cols-2 gap-2">
+                                                            <div className="grid grid-cols-2 gap-8">
                                                                 <input
                                                                     type="date"
                                                                     value={bonusStart}
                                                                     onChange={(e) => setBonusStart(e.target.value)}
                                                                     min="2000-01-01"
                                                                     max={bonusEnd || defaultBonusEnd}
-                                                                    className="bg-white/5 border border-white/5 rounded-xl p-2 text-[10px] text-white outline-none focus:ring-2 focus:ring-cyan-500/40 [color-scheme:dark]"
+                                                                    className="bg-white/5 border border-white/[0.05] rounded-3xl p-2 text-[10px] text-white outline-none focus:ring-2 focus:ring-cyan-500/40 [color-scheme:dark] backdrop-blur-xl"
                                                                 />
                                                                 <input
                                                                     type="date"
@@ -1074,7 +1074,7 @@ export function PlayerProfile() {
                                                                     onChange={(e) => setBonusEnd(e.target.value)}
                                                                     min={bonusStart || defaultBonusStart}
                                                                     max={defaultBonusEnd}
-                                                                    className="bg-white/5 border border-white/5 rounded-xl p-2 text-[10px] text-white outline-none focus:ring-2 focus:ring-cyan-500/40 [color-scheme:dark]"
+                                                                    className="bg-white/5 border border-white/[0.05] rounded-3xl p-2 text-[10px] text-white outline-none focus:ring-2 focus:ring-cyan-500/40 [color-scheme:dark] backdrop-blur-xl"
                                                                 />
                                                             </div>
                                                             <button
@@ -1094,23 +1094,23 @@ export function PlayerProfile() {
                                         </div>
 
                                         {isBonusesLoading ? (
-                                            <div className="py-24 text-center rounded-xl bg-white/10 border border-white/5">
+                                            <div className="py-24 text-center rounded-3xl bg-white/10 border border-white/[0.05] backdrop-blur-xl">
                                                 <div className="inline-flex items-center gap-3 text-slate-400">
                                                     <div className="h-6 w-6 rounded-full border-2 border-cyan-500/40 border-t-cyan-400 animate-spin" />
                                                     <span className="text-xs font-bold uppercase tracking-widest">Bonuslar yükleniyor</span>
                                                 </div>
                                             </div>
                                         ) : bonuses.length === 0 ? (
-                                            <div className="py-24 text-center rounded-xl bg-white/10 border border-white/5">
+                                            <div className="py-24 text-center rounded-3xl bg-white/10 border border-white/[0.05] backdrop-blur-xl">
                                                 <Gift className="mx-auto text-slate-500 mb-3" size={32} />
                                                 <p className="text-sm text-slate-400 font-medium">Katılım sağlanan bir bonus bulunamadı.</p>
                                             </div>
                                         ) : (
-                                            <div className="rounded-2xl border border-white/5 bg-white/[0.02] overflow-hidden shadow-inner">
+                                            <div className="rounded-3xl border border-white/[0.05] bg-white/[0.02] overflow-hidden shadow-inner backdrop-blur-xl">
                                                 <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
                                                     <table className="w-full text-left min-w-[1200px]">
                                                         <thead>
-                                                            <tr className="bg-white/10 text-[10px] font-semibold uppercase tracking-wider text-slate-400 whitespace-nowrap border-b border-white/5">
+                                                            <tr className="bg-white/10 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400 whitespace-nowrap border-b border-white/5">
                                                                 <th className="py-3.5 pl-5 pr-3 font-medium">ID</th>
                                                                 <th className="py-3.5 px-3 font-medium">Bonus Adı</th>
                                                                 <th className="py-3.5 px-3 font-medium">Oluşturulma</th>
@@ -1169,11 +1169,11 @@ export function PlayerProfile() {
                                                                         <td className="py-3.5 pr-5 pl-3">
                                                                             <div className="flex items-center gap-2">
                                                                                 {showExpiredStatus ? (
-                                                                                    <span className="inline-flex items-center gap-1.5 rounded-xl bg-[rgba(242,244,248,0.08)] border border-white/5 px-2.5 py-1.5 text-[10px] font-bold text-slate-400">
+                                                                                    <span className="inline-flex items-center gap-1.5 rounded-3xl bg-[rgba(242,244,248,0.08)] border border-white/[0.05] px-2.5 py-1.5 text-[10px] font-bold text-slate-400 backdrop-blur-xl">
                                                                                         <Clock size={12} /> Süresi dolmuş
                                                                                     </span>
                                                                                 ) : (
-                                                                                    <span className="inline-flex items-center gap-1.5 rounded-xl bg-white/10 border border-white/5 px-2.5 py-1.5 text-[10px] font-bold text-slate-200">
+                                                                                    <span className="inline-flex items-center gap-1.5 rounded-3xl bg-white/10 border border-white/[0.05] px-2.5 py-1.5 text-[10px] font-bold text-slate-200 backdrop-blur-xl">
                                                                                         {getStatusIcon(bonus.ResultType)}
                                                                                         {getStatusText(bonus.ResultType)}
                                                                                     </span>
@@ -1194,13 +1194,13 @@ export function PlayerProfile() {
                             )}
 
                             {activeTab === 'transactions' && (
-                                <section className="rounded-2xl border border-white/5 bg-white/[0.02] p-8 backdrop-blur-md text-left">
+                                <section className="rounded-3xl border border-white/[0.05] bg-white/[0.02] p-8 backdrop-blur-xl text-left">
                                     <div className="mb-6 flex items-center justify-between">
                                         <div className="flex min-w-0 items-center gap-2.5">
                                             <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-purple-300">İşlem Hareketleri</h3>
                                             <History className="text-purple-300" size={20} />
                                         </div>
-                                        <div className="flex items-center gap-3 bg-white/[0.02] px-4 py-2 rounded-2xl border border-white/5 ring-1 ring-white/5">
+                                        <div className="flex items-center gap-3 bg-white/[0.02] px-4 py-2 rounded-3xl border border-white/[0.05] ring-1 ring-white/5 backdrop-blur-xl">
                                             <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">SATIR SAYISI:</span>
                                             <select
                                                 value={rowsPerPage}
@@ -1210,7 +1210,7 @@ export function PlayerProfile() {
                                                     setPage(1);
                                                     setJumpPage('1');
                                                 }}
-                                                className="h-8 rounded-xl bg-white/5 border border-white/5 px-2 text-xs font-bold text-slate-200 outline-none hover:border-white/5 transition-all focus:ring-1 focus:ring-purple-400/40"
+                                                className="h-8 rounded-3xl bg-white/5 border border-white/[0.05] px-2 text-xs font-bold text-slate-200 outline-none hover:border-white/[0.05] transition-all focus:ring-1 focus:ring-purple-400/40 backdrop-blur-xl"
                                             >
                                                 {ROWS_PER_PAGE_OPTIONS.map(opt => (
                                                     <option key={opt} value={opt} className="bg-white/[0.02]">{opt}</option>
@@ -1219,7 +1219,7 @@ export function PlayerProfile() {
                                         </div>
                                     </div>
 
-                                    <div className="mb-8 flex flex-wrap items-end gap-6 rounded-2xl border border-white/5 bg-white/[0.02] p-6">
+                                    <div className="mb-8 flex flex-wrap items-end gap-6 rounded-3xl border border-white/[0.05] bg-white/[0.02] p-8 backdrop-blur-xl">
                                         <div className="flex flex-col gap-3">
                                             <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Hızlı Tarih Seçimi</span>
                                             <div className="flex flex-wrap gap-2">
@@ -1252,14 +1252,14 @@ export function PlayerProfile() {
                                                         type="date"
                                                         value={txFilterStart}
                                                         onChange={(e) => setTxFilterStart(e.target.value)}
-                                                        className="h-9 rounded-xl bg-white/5 border border-white/5 px-3 text-xs font-bold text-slate-200 outline-none focus:ring-1 focus:ring-purple-400/40 [color-scheme:dark]"
+                                                        className="h-9 rounded-3xl bg-white/5 border border-white/[0.05] px-3 text-xs font-bold text-slate-200 outline-none focus:ring-1 focus:ring-purple-400/40 [color-scheme:dark] backdrop-blur-xl"
                                                     />
                                                     <span className="text-slate-400">/</span>
                                                     <input
                                                         type="date"
                                                         value={txFilterEnd}
                                                         onChange={(e) => setTxFilterEnd(e.target.value)}
-                                                        className="h-9 rounded-xl bg-white/5 border border-white/5 px-3 text-xs font-bold text-slate-200 outline-none focus:ring-1 focus:ring-purple-400/40 [color-scheme:dark]"
+                                                        className="h-9 rounded-3xl bg-white/5 border border-white/[0.05] px-3 text-xs font-bold text-slate-200 outline-none focus:ring-1 focus:ring-purple-400/40 [color-scheme:dark] backdrop-blur-xl"
                                                     />
                                                 </div>
                                             </div>
@@ -1270,13 +1270,13 @@ export function PlayerProfile() {
                                             <button
                                                 type="button"
                                                 onClick={() => setTxTypeDropdownOpen((o) => !o)}
-                                                className="flex items-center gap-2 h-9 min-w-[200px] rounded-xl bg-white/5 border border-white/5 px-3 text-left text-xs font-bold text-slate-200 hover:border-white/5 transition-all"
+                                                className="flex items-center gap-2 h-9 min-w-[200px] rounded-3xl bg-white/5 border border-white/[0.05] px-3 text-left text-xs font-bold text-slate-200 hover:border-white/[0.05] transition-all backdrop-blur-xl"
                                             >
                                                 {txFilterTypeIds.length === 0 ? 'Tümü' : `${txFilterTypeIds.length} tür seçili`}
                                                 <ChevronDown size={14} className="ml-auto shrink-0" />
                                             </button>
                                             {txTypeDropdownOpen && (
-                                                <div className="absolute left-0 top-full z-20 mt-1 max-h-[320px] w-[320px] overflow-y-auto rounded-2xl border border-white/5 bg-white/[0.02] shadow-xl">
+                                                <div className="absolute left-0 top-full z-20 mt-1 max-h-[320px] w-[320px] overflow-y-auto rounded-3xl border border-white/[0.05] bg-white/[0.02] shadow-xl backdrop-blur-xl">
                                                     <div className="p-2">
                                                         {transactionTypeOptions.map((t) => {
                                                             const tid = t.id;
@@ -1385,7 +1385,7 @@ export function PlayerProfile() {
                                                                         <span className="text-[11px] font-bold text-slate-400">{formatDateTimeWithSeconds(tx.CreatedLocal)}</span>
                                                                     </td>
                                                                     <td className="py-6">
-                                                                        <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 bg-white/5 px-2 py-1 rounded-md">
+                                                                        <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400 bg-white/5 px-2 py-1 rounded-md">
                                                                             {tx.UserName}
                                                                         </span>
                                                                     </td>
@@ -1398,7 +1398,7 @@ export function PlayerProfile() {
                                                                             return (
                                                                                 <div className="flex items-center gap-2">
                                                                                     <div className={`h-2 w-2 rounded-full ${dotClass}`} />
-                                                                                    <span className={`text-[10px] font-semibold uppercase tracking-widest ${textClass}`}>{label}</span>
+                                                                                    <span className={`text-[10px] font-semibold uppercase tracking-[0.2em] ${textClass}`}>{label}</span>
                                                                                 </div>
                                                                             );
                                                                         })()}
@@ -1423,7 +1423,7 @@ export function PlayerProfile() {
                                                 <button
                                                     onClick={() => handlePageChange(1)}
                                                     disabled={page === 1}
-                                                    className="h-8 w-8 flex items-center justify-center rounded-xl bg-white/5 text-slate-400 hover:text-white disabled:opacity-20 transition-all"
+                                                    className="h-8 w-8 flex items-center justify-center rounded-full bg-white/5 text-slate-400 hover:text-white disabled:opacity-20 transition-all"
                                                     title="İlk Sayfa"
                                                 >
                                                     <ChevronsLeft size={16} />
@@ -1431,7 +1431,7 @@ export function PlayerProfile() {
                                                 <button
                                                     onClick={() => handlePageChange(page - 1)}
                                                     disabled={page === 1}
-                                                    className="h-8 w-8 flex items-center justify-center rounded-xl bg-white/5 text-slate-400 hover:text-white disabled:opacity-20 transition-all"
+                                                    className="h-8 w-8 flex items-center justify-center rounded-full bg-white/5 text-slate-400 hover:text-white disabled:opacity-20 transition-all"
                                                     title="Önceki Sayfa"
                                                 >
                                                     <ChevronLeft size={16} />
@@ -1452,7 +1452,7 @@ export function PlayerProfile() {
                                                 <button
                                                     onClick={() => handlePageChange(page + 1)}
                                                     disabled={page === totalPages}
-                                                    className="h-8 w-8 flex items-center justify-center rounded-xl bg-white/5 text-slate-400 hover:text-white disabled:opacity-20 transition-all"
+                                                    className="h-8 w-8 flex items-center justify-center rounded-full bg-white/5 text-slate-400 hover:text-white disabled:opacity-20 transition-all"
                                                     title="Sonraki Sayfa"
                                                 >
                                                     <ChevronLeft size={16} className="rotate-180" />
@@ -1460,7 +1460,7 @@ export function PlayerProfile() {
                                                 <button
                                                     onClick={() => handlePageChange(totalPages)}
                                                     disabled={page === totalPages}
-                                                    className="h-8 w-8 flex items-center justify-center rounded-xl bg-white/5 text-slate-400 hover:text-white disabled:opacity-20 transition-all"
+                                                    className="h-8 w-8 flex items-center justify-center rounded-full bg-white/5 text-slate-400 hover:text-white disabled:opacity-20 transition-all"
                                                     title="Son Sayfa"
                                                 >
                                                     <ChevronsLeft size={16} className="rotate-180" />
@@ -1473,14 +1473,14 @@ export function PlayerProfile() {
 
                             {
                                 activeTab === 'detailed-report' && (
-                                    <section className="rounded-2xl border border-white/5 bg-white/[0.02] p-8 backdrop-blur-md text-left">
+                                    <section className="rounded-3xl border border-white/[0.05] bg-white/[0.02] p-8 backdrop-blur-xl text-left">
                                         <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                             <div className="flex min-w-0 items-center gap-2.5">
                                                 <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-purple-300">Detaylı Oyuncu Raporu</h3>
                                                 <BarChart3 className="text-purple-300" size={20} />
                                             </div>
 
-                                            <div className="flex flex-wrap items-center gap-4 bg-white/[0.02] p-4 rounded-2xl border border-white/5">
+                                            <div className="flex flex-wrap items-center gap-4 bg-white/[0.02] p-8 rounded-3xl border border-white/[0.05] backdrop-blur-xl">
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Tarih</span>
                                                     <button
@@ -1521,7 +1521,7 @@ export function PlayerProfile() {
                                                             setDetStart(kpi.LastDepositTimeLocal.slice(0, 10));
                                                         }
                                                     }}
-                                                    className="px-3 py-1.5 rounded-xl bg-purple-400/10 border border-purple-400/25 text-[10px] font-semibold text-purple-300 hover:bg-purple-400/20 transition-all uppercase tracking-widest"
+                                                    className="px-3 py-1.5 rounded-3xl bg-purple-400/10 border border-purple-400/25 text-[10px] font-semibold text-purple-300 hover:bg-purple-400/20 transition-all uppercase tracking-widest backdrop-blur-xl"
                                                 >
                                                     Son Yatırıma Git
                                                 </button>
@@ -1541,7 +1541,7 @@ export function PlayerProfile() {
                                                                 <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-purple-400">Bakiye ve Bonus Özeti</h3>
                                                                 <div className="h-px flex-1 bg-gradient-to-r from-blue-500/20 to-transparent" />
                                                             </div>
-                                                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                                                            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
                                                                 <StatBox
                                                                     title="Güncel Bakiye"
                                                                     value={`${formatNumber(report.CurrentBalance)} TRY`}
@@ -1576,7 +1576,7 @@ export function PlayerProfile() {
                                                                 <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-emerald-500">Dönem Performansı</h3>
                                                                 <div className="h-px flex-1 bg-gradient-to-r from-emerald-500/20 to-transparent" />
                                                             </div>
-                                                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                                                            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
                                                                 <StatBox
                                                                     title="Net Kar/Zarar"
                                                                     value={`${formatNumber(report.NetProfit)} TRY`}
@@ -1609,7 +1609,7 @@ export function PlayerProfile() {
                                                         </section>
 
                                                         <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
-                                                            <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-8 text-left backdrop-blur-md">
+                                                            <div className="rounded-3xl border border-white/[0.05] bg-white/[0.02] p-8 text-left backdrop-blur-xl">
                                                                 <div className="mb-8 flex items-center justify-between">
                                                                     <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-purple-300">Sportbook Analizi</h3>
                                                                     <TrendingUp className="text-purple-300" size={20} />
@@ -1625,7 +1625,7 @@ export function PlayerProfile() {
                                                                 </div>
                                                             </div>
 
-                                                            <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-8 text-left backdrop-blur-md">
+                                                            <div className="rounded-3xl border border-white/[0.05] bg-white/[0.02] p-8 text-left backdrop-blur-xl">
                                                                 <div className="mb-8 flex items-center justify-between">
                                                                     <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-purple-300">Casino Analizi</h3>
                                                                     <Gamepad2 className="text-purple-300" size={20} />
@@ -1642,7 +1642,7 @@ export function PlayerProfile() {
                                                             </div>
                                                         </div>
 
-                                                        <section className="rounded-2xl border border-white/5 bg-white/[0.02] p-10">
+                                                        <section className="rounded-3xl border border-white/[0.05] bg-white/[0.02] p-10 backdrop-blur-xl">
                                                             <h4 className="mb-10 text-center text-xs font-semibold uppercase tracking-[0.5em] text-slate-400">Dönem Sonu ve Bonus Kazanımları</h4>
                                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
                                                                 <InfoTile label="Real Para Toplam Kazanç" value={`${formatNumber(report.RealMoneyWonAmount)} TRY`} icon={Trophy} isSuccess={true} />
@@ -1651,12 +1651,12 @@ export function PlayerProfile() {
                                                             </div>
                                                         </section>
 
-                                                        <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-10 backdrop-blur-md">
+                                                        <div className="rounded-3xl border border-white/[0.05] bg-white/[0.02] p-10 backdrop-blur-xl">
                                                             <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-4">
                                                                 <div className="min-w-0 text-left">
                                                                     <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-3">Dönem Başlangıç Bakiyesi</p>
                                                                     <div className="flex items-center gap-2">
-                                                                        <div className="h-10 w-10 rounded-xl bg-purple-400/10 flex items-center justify-center text-purple-300 ring-1 ring-purple-400/20">
+                                                                        <div className="h-10 w-10 rounded-full bg-purple-400/10 flex items-center justify-center text-purple-300 ring-1 ring-purple-400/20">
                                                                             <Wallet size={20} />
                                                                         </div>
                                                                         <p className="text-xl font-semibold text-white">{formatNumber(report.PeriodStartBalance)} <span className="text-[10px] text-slate-400">TRY</span></p>
@@ -1667,7 +1667,7 @@ export function PlayerProfile() {
                                                                 <div className="min-w-0 text-left">
                                                                     <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-3">Dönem Bitiş Bakiyesi</p>
                                                                     <div className="flex items-center gap-2">
-                                                                        <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 ring-1 ring-emerald-500/20">
+                                                                        <div className="h-10 w-10 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400 ring-1 ring-emerald-500/20">
                                                                             <CheckCircle2 size={20} />
                                                                         </div>
                                                                         <p className="text-xl font-semibold text-white">{formatNumber(report.PeriodEndBalance)} <span className="text-[10px] text-slate-400">TRY</span></p>
@@ -1678,7 +1678,7 @@ export function PlayerProfile() {
                                                                 <div className="min-w-0 text-left">
                                                                     <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-3">Kayıt Bilgileri</p>
                                                                     <div className="flex items-center gap-2">
-                                                                        <div className="h-10 w-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-400 ring-1 ring-amber-500/20">
+                                                                        <div className="h-10 w-10 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-400 ring-1 ring-amber-500/20">
                                                                             <Calendar size={20} />
                                                                         </div>
                                                                         <p className="text-sm font-semibold text-white">{formatDateTimeDisplay(report.RegistrationDateLocal)}</p>
@@ -1689,7 +1689,7 @@ export function PlayerProfile() {
                                                                 <div className="min-w-0 text-left">
                                                                     <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-3">Hesap Detayı</p>
                                                                     <div className="flex items-center gap-2">
-                                                                        <div className="h-10 w-10 rounded-xl bg-purple-400/10 flex items-center justify-center text-purple-300 ring-1 ring-purple-400/20">
+                                                                        <div className="h-10 w-10 rounded-full bg-purple-400/10 flex items-center justify-center text-purple-300 ring-1 ring-purple-400/20">
                                                                             <Users size={20} />
                                                                         </div>
                                                                         <p className="text-sm font-semibold text-white">{report.IsVerified ? 'ONAYLI HESAP' : 'ONAYSIZ'}</p>
@@ -1706,7 +1706,7 @@ export function PlayerProfile() {
                                 )}
 
                             {activeTab === 'ip-addresses' && (
-                                <section className="rounded-2xl border border-white/5 bg-white/[0.02] p-8 backdrop-blur-md text-left">
+                                <section className="rounded-3xl border border-white/[0.05] bg-white/[0.02] p-8 backdrop-blur-xl text-left">
                                     <NetworkMap loginIp={loginIP || null} clientId={id!} />
                                 </section>
                             )}
@@ -1722,7 +1722,7 @@ function StatBox({ title, value, subValue, icon: Icon, colorClass }: any) {
     return (
         <Card className="p-3">
             <div className="mb-2 flex items-center justify-between">
-                <div className={cn('flex h-8 w-8 items-center justify-center rounded-xl ring-1 ring-current/10', colorClass)}>
+                <div className={cn('flex h-8 w-8 items-center justify-center rounded-full ring-1 ring-current/10', colorClass)}>
                     <Icon size={16} />
                 </div>
                 {subValue && (
@@ -1731,7 +1731,7 @@ function StatBox({ title, value, subValue, icon: Icon, colorClass }: any) {
                     </span>
                 )}
             </div>
-            <p className="mb-1 text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">{title}</p>
+            <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">{title}</p>
             <p className="text-lg font-bold tracking-[-0.025em] text-white">{value}</p>
         </Card>
     );
@@ -1746,7 +1746,7 @@ function DetailRow({ label, value, unit, icon: Icon, color }: any) {
     };
     return (
         <div className={cn(
-            'flex min-h-9 items-center justify-between rounded-2xl border border-white/5 bg-black/15 px-2.5 py-2 transition-colors hover:border-white/5',
+            'flex min-h-9 items-center justify-between rounded-3xl border border-white/[0.05] bg-black/15 px-2.5 py-2 transition-colors hover:border-white/[0.05] backdrop-blur-xl',
         )}>
             <div className="flex items-center gap-2">
                 <div className={cn('flex h-7 w-7 items-center justify-center rounded-md', colorMap[color] ?? colorMap.indigo)}>
@@ -1769,7 +1769,7 @@ function DetailRow({ label, value, unit, icon: Icon, color }: any) {
 function InfoTile({ label, value, icon: Icon, isSuccess }: any) {
     return (
         <div className="flex min-w-0 items-center gap-2.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/[0.035] text-slate-400 ring-1 ring-white/[0.05]">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/[0.035] text-slate-400 ring-1 ring-white/[0.05]">
                 <Icon size={15} />
             </div>
             <div className="min-w-0 text-left">
