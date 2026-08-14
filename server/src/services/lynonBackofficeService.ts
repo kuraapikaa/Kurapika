@@ -722,11 +722,53 @@ function providerReportResponse(rows: AnyRecord[], summary: AnyRecord = {}): Any
   };
 }
 
-function reportRowsByGameType(rows: AnyRecord[]): { casino?: AnyRecord; sport?: AnyRecord } {
-  return {
-    casino: rows.find((row) => textIncludes(row['Game Type'] ?? row.GameType, 'casino')),
-    sport: rows.find((row) => textIncludes(row['Game Type'] ?? row.GameType, 'sport')),
+/**
+ * Oyun turu raporunu (1846) kasino ve spor olarak TOPLAR.
+ *
+ * ── Bildirilen vaka ───────────────────────────────────────────────────
+ *
+ * Panoda "Casino cirosu 104₺" yaziyordu; ayni ekranin altindaki oyun
+ * turu tablosu ise ayni donem icin sunlari gosteriyordu:
+ *
+ *   Live Casino      5 bahis        104,00 ₺
+ *   Slot        18.292 bahis     88.854,55 ₺
+ *   Crash Games     94 bahis      3.905,40 ₺
+ *
+ * Sebep: satirlar `find` ile araniyordu — yani turunde "casino" gecen
+ * ILK satir aliniyor, geri kalani ATILIYORDU. "Live Casino" eslesip
+ * "Slot" ve "Crash Games" disarida kaliyor, 92.863,95 ₺'lik ciro 104 ₺
+ * olarak raporlaniyordu. Ayni dort deger panonun GGR halkasini ve
+ * finansal karsilastirma grafigini de besledigi icin uc gorsel birden
+ * yanlisti.
+ *
+ * Dogrusu toplamdir ve tur listesi sabit degildir (Slot, Live Casino,
+ * Crash Games, Table Games…), bu yuzden isim saymak yerine `sporSatiriMi`
+ * yuklemi kullanilir: spor olmayan her satir kasino tarafina toplanir.
+ * Boylece Lynon yarin yeni bir tur eklerse de rakam eksilmez.
+ *
+ * Hic satir yoksa `null` doner — cagiran taraf pano ham alanlarina
+ * dusebilsin diye; sifir donmek "olcum yok"u "ciro yok" gibi gosterirdi.
+ */
+export function oyunTuruToplamlari(rows: AnyRecord[]): {
+  casino: { ciro: number; kazanc: number } | null;
+  sport: { ciro: number; kazanc: number } | null;
+} {
+  const toplam = {
+    casino: { ciro: 0, kazanc: 0, satir: 0 },
+    sport: { ciro: 0, kazanc: 0, satir: 0 },
   };
+
+  for (const row of rows) {
+    const hedef = sporSatiriMi(row) ? toplam.sport : toplam.casino;
+    hedef.ciro += pickAmount(row, ['Total Bets (TRY)', 'Total Bets']);
+    hedef.kazanc += pickAmount(row, ['Total Wins (TRY)', 'Total Wins']);
+    hedef.satir += 1;
+  }
+
+  const cikti = (t: { ciro: number; kazanc: number; satir: number }) =>
+    (t.satir > 0 ? { ciro: t.ciro, kazanc: t.kazanc } : null);
+
+  return { casino: cikti(toplam.casino), sport: cikti(toplam.sport) };
 }
 
 export async function lynonMe(): Promise<unknown> {
@@ -825,11 +867,17 @@ export async function lynonPartnerProfit(startDate: string, endDate: string): Pr
     const summaryData = summaryResult.status === 'fulfilled' ? recordOf(summaryResult.value.Data) : {};
     const raw = recordOf(summaryData.raw);
     const gameTypeData = gameTypeResult.status === 'fulfilled' ? recordOf(gameTypeResult.value.Data) : {};
-    const { casino, sport } = reportRowsByGameType(rowsFromReportData(gameTypeData));
-    const casinoTurnover = casino ? pickAmount(casino, ['Total Bets (TRY)', 'Total Bets', 'Bet Count']) : numberFrom(raw['CASINO REAL BETS'] ?? raw['TOTAL REAL BET AMOUNT']);
-    const casinoWinning = casino ? pickAmount(casino, ['Total Wins (TRY)', 'Total Wins']) : numberFrom(raw['CASINO REAL WINS'] ?? raw['TOTAL REAL WIN AMOUNT']);
-    const sportTurnover = sport ? pickAmount(sport, ['Total Bets (TRY)', 'Total Bets']) : numberFrom(raw['SPORT REAL BETS']);
-    const sportWinning = sport ? pickAmount(sport, ['Total Wins (TRY)', 'Total Wins']) : numberFrom(raw['SPORT REAL WINS']);
+    const gameTypeRows = rowsFromReportData(gameTypeData);
+    const { casino, sport } = oyunTuruToplamlari(gameTypeRows);
+    /**
+     * Ciro icin `Bet Count` yedegi KALDIRILDI: bahis ADEDI bir tutar
+     * degil. Sutun eksik oldugunda ekrana "104 bahis"i "104 ₺" diye
+     * yazdirabilirdi.
+     */
+    const casinoTurnover = casino ? casino.ciro : numberFrom(raw['CASINO REAL BETS'] ?? raw['TOTAL REAL BET AMOUNT']);
+    const casinoWinning = casino ? casino.kazanc : numberFrom(raw['CASINO REAL WINS'] ?? raw['TOTAL REAL WIN AMOUNT']);
+    const sportTurnover = sport ? sport.ciro : numberFrom(raw['SPORT REAL BETS']);
+    const sportWinning = sport ? sport.kazanc : numberFrom(raw['SPORT REAL WINS']);
 
     /**
      * METRIKLER ARASI SESSIZ GERI DUSUS YOK.
@@ -848,8 +896,6 @@ export async function lynonPartnerProfit(startDate: string, endDate: string): Pr
      */
     const alan = (ad: string): number | null =>
       Object.prototype.hasOwnProperty.call(raw, ad) ? metrikSayisi(raw[ad]) : null;
-
-    const gameTypeRows = rowsFromReportData(gameTypeData);
 
     return {
       HasError: false,
