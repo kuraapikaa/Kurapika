@@ -59,8 +59,8 @@ export function LoginPage({ onLoginSuccess, tenantConfig }: LoginPageProps) {
         initial={{ opacity: 0, scale: 1.04 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
-        src="/assets/images/software-lab-login-sd4.png"
-        alt="Yazılım laboratuvarı"
+        src="/assets/images/grand-casino-login.jpg"
+        alt="Grand Casino girişi"
         className="login-backdrop"
       />
       <div className="login-overlay" />

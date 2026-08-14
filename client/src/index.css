@@ -879,7 +879,13 @@
 
   @media (max-width: 767px) {
     .login-backdrop {
-      object-position: 42% center;
+      /*
+       * Dar ekranda görselin yalnızca ~%26'lık dikey bir şeridi görünür.
+       * %42 kadrajı kapı ve tabelaya düşürüyordu — görselin konusu olan
+       * iki figür (yatayda ~%20-%45 arası) tamamen dışarıda kalıyordu.
+       * %28 şeridi ~%21-%47 aralığına oturtur; ikisi de kadraja girer.
+       */
+      object-position: 28% center;
     }
 
     .login-overlay {
