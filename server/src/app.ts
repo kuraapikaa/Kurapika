@@ -9,6 +9,7 @@ import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
 import { config } from './config.js';
 import { registerGlobalErrorHandler } from './lib/errorHandler.js';
+import { cerceveAtasiDirektifi, gomulebilirMi, listeyiAyristir } from './lib/cerceveAtaslari.js';
 import { registerRequestId } from './lib/requestId.js';
 import { createRedisSessionStore } from './lib/redisClient.js';
 import { resolveTenantKeyForRequest } from './lib/tenant.js';
@@ -76,18 +77,18 @@ export async function buildApp() {
   });
 
   // ─── Güvenlik Pluginleri ──────────────────────────────────────────────────
-  // FRAME_ANCESTORS: panelin hangi sitelere iframe olarak gömülebileceği.
-  // Önceden frameAncestors ["'self'"] olarak SABİT yazılıydı ve bu değişken
-  // hiç okunmuyordu — ayarlanmış olsa bile etkisizdi. Boş bırakılırsa yalnızca
-  // kendi origin'i (güvenli varsayılan) geçerlidir.
-  const frameAncestors = (process.env.FRAME_ANCESTORS ?? '')
-    .split(/[\s,]+/)
-    .map((v) => v.trim())
-    .filter(Boolean);
-  const frameAncestorsDirective = frameAncestors.length > 0
-    ? ["'self'", ...frameAncestors]
-    : ["'self'"];
-  const gomulebilir = frameAncestors.length > 0;
+  //
+  // FRAME_ANCESTORS         : sabit izinli origin listesi
+  // FRAME_ANCESTOR_PATTERNS : joker kalıplar (ör. https://narcosbahis*.com)
+  //
+  // Ana sitenin adresi düzenli olarak dönüyor (…484 → …485). Sabit liste her
+  // dönüşte geçersiz kalıyor, tarayıcı çerçeveyi reddediyor ve panel açılmıyor;
+  // elle güncelleyip yeniden dağıtmak gerekiyordu. CSP alan adının ORTASINDA
+  // joker kabul etmediği için bu statik olarak yazılamıyor — direktif artık
+  // istek başına üretiliyor. Ayrıntı ve güvenlik gerekçesi: lib/cerceveAtaslari.ts
+  const frameAncestors = listeyiAyristir(process.env.FRAME_ANCESTORS);
+  const frameAncestorPatterns = listeyiAyristir(process.env.FRAME_ANCESTOR_PATTERNS);
+  const gomulebilir = gomulebilirMi(frameAncestors, frameAncestorPatterns);
 
   await app.register(helmet, {
     contentSecurityPolicy: {
@@ -95,7 +96,23 @@ export async function buildApp() {
         defaultSrc: ["'self'"],
         baseUri: ["'self'"],
         objectSrc: ["'none'"],
-        frameAncestors: frameAncestorsDirective,
+        /**
+         * İSTEK BAŞINA hesaplanır: gömen sayfanın origin'i `Referer`'dan
+         * okunur, kalıplara karşı doğrulanır ve yalnızca eşleşirse eklenir.
+         * Eşleşme yoksa ya da Referer gelmediyse liste `'self'` + sabit
+         * listedir, yani KAPALI tarafa düşer.
+         *
+         * SPA kabuğu `Cache-Control: no-cache` ile servis edildiği için bu
+         * başlık her istekte yeniden üretilir (bkz. index.ts).
+         */
+        frameAncestors: [
+          (req: unknown) => cerceveAtasiDirektifi({
+            sabitler: frameAncestors,
+            kaliplar: frameAncestorPatterns,
+            referer: (req as { headers?: Record<string, string | string[] | undefined> })
+              ?.headers?.referer as string | undefined,
+          }).join(' '),
+        ],
         /**
          * scriptSrc'de 'unsafe-inline' YOK — bilerek.
          *
@@ -239,7 +256,7 @@ export async function buildApp() {
 
   if (gomulebilir && cookieSameSite !== 'none') {
     app.log.warn(
-      '[session] FRAME_ANCESTORS tanımlı ama SESSION_COOKIE_SAMESITE=none değil. ' +
+      '[session] FRAME_ANCESTORS/FRAME_ANCESTOR_PATTERNS tanımlı ama SESSION_COOKIE_SAMESITE=none değil. ' +
       'Panel iframe içinde çalışırken oturum çerezi gönderilmez; giriş sonrası tüm istekler 401 döner.'
     );
   }

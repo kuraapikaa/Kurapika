@@ -11,7 +11,7 @@
  */
 import { Suspense, useCallback, useMemo, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { AnimatePresence, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   CalendarDays,
   ChevronLeft,
@@ -367,22 +367,75 @@ export function AdminLayout() {
               <DateRangeBar range={dateRange} onRangeChange={setDateRange} onRefresh={panodayiz ? handleRefreshDashboard : undefined} isLoading={panodayiz ? panoYukleniyor : false} />
             </div>
           )}
-          <Suspense fallback={<div className="flex flex-1 items-center justify-center py-20"><LoadingState label="Yükleniyor..." /></div>}>
-            <div className="tab-workspace" data-tab={meta?.id}>
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={pathname}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className={meta?.icerikSinifi}
-                >
-                  <Outlet />
-                </motion.div>
-              </AnimatePresence>
+          {/*
+            * SUSPENSE, ANIMATEPRESENCE'IN ICINDE OLMALI.
+            *
+            * Tersi kuruluydu ve bazi sayfalar yalnizca sayfa yenilenince
+            * geliyordu. Sebep: bir rotanin lazy chunk'i ILK kez yuklenirken
+            * `<Outlet/>` askiya aliniyor; Suspense siniri yukarida oldugu
+            * icin butun AnimatePresence agaci sokuluyordu. Ayni anda
+            * `mode="wait"` eski cocugu cikis animasyonunda tutuyordu; ikisi
+            * cakisinca yeni cocuk hic commit edilmiyor ve calisma alani bos
+            * kaliyordu. Yenileme taze mount oldugu icin duzeltiyordu.
+            *
+            * Iki degisiklik:
+            *  1. Suspense her rotanin KENDI sinirina indi — askiya alinma
+            *     artik yalnizca o rotanin icerigini etkiliyor, kabuk ve
+            *     animasyon agaci ayakta kaliyor.
+            *  2. `mode="wait"` kaldirildi. Yeni cocuk eskisinin cikisini
+            *     beklemeden mount ediliyor; 0.2sn'lik solmada gorsel fark
+            *     yok ama bu hata sinifi tamamen ortadan kalkiyor.
+            */}
+          {/*
+            * ANIMATEPRESENCE KALDIRILDI — sayfalarin gorunmemesinin sebebi.
+            *
+            * Belirti: gezindikten sonra sayfa ekranda yok, ama DOM'da TAM
+            * duruyor (kullanicinin panelinden olculdu: 114 KB HTML, 3503px
+            * yukseklik). Icerik `opacity: 0`da takili kaliyordu; yenileme
+            * taze mount oldugu icin duzeltiyordu.
+            *
+            * Sebep: `<Outlet/>` lazy chunk yuklerken askiya aliniyor ve
+            * AnimatePresence'in giris/cikis muhasebesi bozuluyor. Yeni
+            * cocuga "animasyonu baslat" hic denmiyor, `initial` degerinde
+            * (opacity 0) kaliyor. `mode="wait"` ile takiliyor; `mode`suz
+            * denendiginde ise cikan cocuklar hic kaldirilmadi (olculdu:
+            * 9 olu kopya birikti) ve sorun surdu.
+            *
+            * Cozum: presence muhasebesini tamamen birak. Anahtar degisimi
+            * zaten yeniden mount ediyor, dolayisiyla `initial -> animate`
+            * her rotada calisiyor. Kaybedilen tek sey eski sayfanin solarak
+            * cikmasi; yenisi zaten solarak geldigi icin fark edilmiyor.
+            */}
+          {/*
+            * SAYFA GECISI CSS ILE — JS ANIMASYONUYLA DEGIL.
+            *
+            * Burada `motion.div` + `initial={{opacity:0}}` vardi ve sayfalar
+            * "yenilemeden gorunmuyor" diye bildirildi. Kullanicinin
+            * panelinden olculen sey belirleyici: icerik DOM'da TAM duruyordu
+            * (114 KB HTML, 3503px yukseklik) ama ekranda yoktu. Yani icerik
+            * mount oluyor, yalnizca GORUNUR hale gelmiyordu.
+            *
+            * Asil kusur bu bagimlilik: gorunurluk bir JS animasyonunun
+            * calismasina bagliydi. Animasyon herhangi bir sebeple
+            * ilerlemezse (sekme arka planda, rAF durmus, azaltilmis hareket
+            * tercihi, framer-motion hatasi) icerik `initial` degerinde,
+            * yani opacity 0'da kalir ve sayfa bos gorunur.
+            *
+            * Artik gecisi `index.css`'teki `workspace-enter` keyframe'i
+            * yapiyor. `forwards` olmadigi icin animasyon HIC calismasa bile
+            * eleman dogal opacity'sinde (1) durur — yani en kotu ihtimalde
+            * animasyon kaybedilir, icerik degil.
+            *
+            * `key={pathname}` duruyor: rota degisince yeniden mount edilip
+            * animasyon bastan oynasin diye.
+            */}
+          <div className="tab-workspace" data-tab={meta?.id}>
+            <div key={pathname} className={meta?.icerikSinifi}>
+              <Suspense fallback={<div className="flex flex-1 items-center justify-center py-20"><LoadingState label="Yükleniyor..." /></div>}>
+                <Outlet />
+              </Suspense>
             </div>
-          </Suspense>
+          </div>
         </div>
       </div>
       <GlobalNotifications />
