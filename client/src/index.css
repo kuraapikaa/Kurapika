@@ -367,16 +367,16 @@
   .login-overlay {
     @apply absolute inset-0;
     background:
-      radial-gradient(circle at 72% 16%, rgba(103, 232, 249, 0.1), transparent 27%),
-      linear-gradient(90deg, rgba(3, 7, 13, 0.08) 0%, rgba(3, 7, 13, 0.2) 38%, rgba(3, 7, 13, 0.86) 72%, #03070d 100%),
-      linear-gradient(180deg, rgba(3, 7, 13, 0.05), rgba(3, 7, 13, 0.54));
+      radial-gradient(circle at 72% 16%, rgba(168, 85, 247, 0.14), transparent 27%),
+      linear-gradient(90deg, rgba(5, 5, 5, 0.10) 0%, rgba(5, 5, 5, 0.24) 38%, rgba(5, 5, 5, 0.88) 72%, #050505 100%),
+      linear-gradient(180deg, rgba(5, 5, 5, 0.06), rgba(5, 5, 5, 0.56));
   }
 
   .login-grid {
     @apply absolute inset-0 opacity-25;
     background-image:
-      linear-gradient(rgba(103, 232, 249, 0.06) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(103, 232, 249, 0.06) 1px, transparent 1px);
+      linear-gradient(rgba(168, 85, 247, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(168, 85, 247, 0.06) 1px, transparent 1px);
     background-size: 64px 64px;
     mask-image: linear-gradient(90deg, transparent 30%, black);
   }
@@ -389,12 +389,12 @@
   }
 
   .login-panel {
-    @apply relative isolate overflow-y-auto rounded-[30px] border p-6;
+    @apply relative isolate overflow-y-auto rounded-3xl border p-8;
     max-height: calc(100dvh - 32px);
     scrollbar-width: none;
-    border-color: rgba(255, 255, 255, 0.17);
+    border-color: rgba(255, 255, 255, 0.05);
     background:
-      radial-gradient(circle at 12% -8%, rgba(103, 232, 249, 0.17), transparent 34%),
+      radial-gradient(circle at 12% -8%, rgba(168, 85, 247, 0.20), transparent 34%),
       linear-gradient(145deg, rgba(255, 255, 255, 0.115), rgba(255, 255, 255, 0.025) 32%, rgba(4, 13, 23, 0.7) 74%),
       rgba(4, 12, 22, 0.58);
     backdrop-filter: blur(32px) saturate(175%);
@@ -413,7 +413,7 @@
   .login-panel::before {
     content: '';
     @apply pointer-events-none absolute inset-x-5 top-0 h-px;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.74), rgba(103, 232, 249, 0.42), transparent);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), rgba(168, 85, 247, 0.42), transparent);
   }
 
   .login-brand-row {
@@ -428,7 +428,7 @@
 
   .login-provider-card {
     text-align: center;
-    border: 1px solid rgba(251, 146, 60, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.05);
     background:
       radial-gradient(circle at 92% 4%, rgba(56, 189, 248, 0.1), transparent 38%),
       linear-gradient(135deg, rgba(255, 255, 255, 0.07), rgba(1, 7, 14, 0.38));
@@ -490,19 +490,20 @@
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
   }
 
+  /* Girdiler hap biçimli ve gerçek cam: panelin geri kalanıyla aynı dil. */
   .login-field {
-    @apply flex h-11 items-center gap-3 rounded-xl border px-4 text-slate-500 transition;
-    border-color: rgba(255, 255, 255, 0.11);
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.075), rgba(0, 0, 0, 0.18));
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.055);
+    @apply flex h-12 items-center gap-3 rounded-full border px-5 text-slate-500 transition;
+    border-color: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.02);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
   }
 
   .login-field:focus-within {
-    @apply border-cyan-300/45 text-cyan-300;
-    background: linear-gradient(145deg, rgba(103, 232, 249, 0.1), rgba(0, 0, 0, 0.23));
-    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    @apply border-purple-400/45 text-purple-300;
+    background: rgba(168, 85, 247, 0.06);
+    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.08);
   }
 
   .login-field > svg {
@@ -521,10 +522,11 @@
     @apply border-0 bg-transparent shadow-none;
   }
 
+  /* Ana eylem: hap, neon mor, dışa vuran ışık. */
   .login-submit {
-    @apply mt-1 flex h-11 w-full items-center justify-center gap-3 rounded-xl px-5 text-sm font-bold text-slate-950 transition;
-    background: linear-gradient(135deg, #a5f3fc 0%, #67e8f9 42%, #38bdf8 100%);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72), 0 14px 34px rgba(34, 211, 238, 0.22);
+    @apply mt-3 flex h-12 w-full items-center justify-center gap-3 rounded-full px-6 text-sm font-bold text-white transition;
+    background: linear-gradient(135deg, #c084fc 0%, #a855f7 45%, #7e22ce 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 0 28px rgba(168, 85, 247, 0.42);
   }
 
   .login-submit:hover {
@@ -545,7 +547,7 @@
 
     .login-panel {
       max-height: calc(100dvh - 24px);
-      padding: 20px;
+      padding: 24px;
     }
 
     .login-brand-row,
@@ -893,7 +895,7 @@
 
     .login-panel {
       max-height: calc(100dvh - 24px);
-      padding: 20px;
+      padding: 24px;
       background:
         radial-gradient(circle at 12% -8%, rgba(103, 232, 249, 0.16), transparent 34%),
         linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(4, 13, 23, 0.82) 72%),

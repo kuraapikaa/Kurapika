@@ -90,7 +90,7 @@ export function LoginPage({ onLoginSuccess, tenantConfig }: LoginPageProps) {
                     )}
                   </div>
                   <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-cyan-300/70">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-purple-300/80">
                       Control system
                     </p>
                     <p className="text-sm font-semibold text-white">{tenantConfig?.adminTitle || 'Bugs Software Portal'}</p>
@@ -105,7 +105,7 @@ export function LoginPage({ onLoginSuccess, tenantConfig }: LoginPageProps) {
               <div className="login-provider-card mb-5 rounded-xl p-3.5">
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-orange-300">Partner altyapı</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-purple-300">Partner altyapı</p>
                     <p className="mt-1 text-xs font-medium text-slate-400">Seçili bağlantı, oturum boyunca veri kaynağını belirler.</p>
                   </div>
 
@@ -124,9 +124,9 @@ export function LoginPage({ onLoginSuccess, tenantConfig }: LoginPageProps) {
                       type="button"
                       onClick={() => setProvider(option)}
                       className={cn(
-                        'login-provider-option min-h-[44px] rounded-3xl border px-3 text-[10px] font-semibold uppercase tracking-[0.2em] transition-colors backdrop-blur-xl',
+                        'login-provider-option min-h-[44px] rounded-full border px-4 text-[10px] font-semibold uppercase tracking-[0.2em] transition-colors backdrop-blur-xl',
                         provider === option
-                          ? option === 'lynon' ? 'border-orange-400/50 bg-[color:var(--panel-warning,#ff9f0a)] text-[#050609]' : 'border-sky-400/50 bg-[color:var(--panel-accent,#0a84ff)] text-[#050609]'
+                          ? option === 'lynon' ? 'border-purple-400/50 bg-purple-500 text-white shadow-[0_0_20px_rgba(168,85,247,0.35)]' : 'border-sky-400/50 bg-sky-500 text-white shadow-[0_0_20px_rgba(56,189,248,0.3)]'
                           : 'border-white/5 bg-white/[0.04] text-slate-400 hover:bg-white/[0.08] hover:text-white'
                       )}
                     >
@@ -183,7 +183,7 @@ export function LoginPage({ onLoginSuccess, tenantConfig }: LoginPageProps) {
                       initial={{ opacity: 0, y: -4 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0 }}
-                      className="rounded-3xl border border-rose-400/20 bg-rose-400/[0.08] px-4 py-3 text-xs font-medium text-rose-300 backdrop-blur-xl"
+                      className="rounded-2xl border border-rose-400/25 bg-rose-400/[0.08] px-4 py-3 text-xs font-medium text-rose-300 backdrop-blur-xl"
                     >
                       {error}
                     </motion.p>
@@ -202,7 +202,7 @@ export function LoginPage({ onLoginSuccess, tenantConfig }: LoginPageProps) {
               </form>
 
               <div className="login-security mt-4 flex items-center gap-2 text-[11px] text-slate-400">
-                <ShieldCheck size={14} className="text-cyan-300/70" />
+                <ShieldCheck size={14} className="text-purple-300/80" />
                 Oturumunuz şifreli bağlantı üzerinden korunur.
               </div>
             </motion.section>

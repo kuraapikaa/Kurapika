@@ -942,26 +942,77 @@ export async function lynonAffiliateSummary(startDate: string, endDate: string):
  * 1840 olarak gosteriyor — 1900 aramasi yanlis raporu ceker, tz-id
  * farki da ayni gun icin farkli bir pencere donduruyordu.
  */
-export async function lynonTopCasinoGames(startDate: string, endDate: string, topRecordsCount = 5): Promise<AnyRecord> {
-  return cachedLynon(`top-casino:${lynonCfg().siteId}:${startDate}:${endDate}:${topRecordsCount}:${lynonCfg().currency}`, araligaGoreTtl(endDate, todayYmd()), async () => {
-    const report = await raporGetir(NARCOS_REPORT_IDS.game, 'Report By Game', {
-      startDate, endDate, currency: lynonCfg().currency, tzId: '16',
-    });
-    const rows = rowsFromReportData(recordOf(report.Data))
-      .filter((row) => !row['Game Type'] || textIncludes(row['Game Type'], 'casino'))
-      .map((row, index) => ({
-        ...row,
-        GameId: numberFrom(row['Game ID'] ?? row.GameId, index + 1),
-        Name: firstNonEmpty(row['Game Name'], row.GameName, `Game ${index + 1}`),
-        Turnover: pickAmount(row, ['Bet Sum Amount (TRY)', 'Bet Sum Amount', 'Total Bets (TRY)', 'Total Bets']),
-        WinningAmount: pickAmount(row, ['Win Sum Amount (TRY)', 'Win Sum Amount', 'Total Wins (TRY)', 'Total Wins']),
-        ProfitAmount: pickAmount(row, ['GGR (TRY)', 'GGR']),
-      }))
-      .sort((a, b) => numberFrom(b.Turnover) - numberFrom(a.Turnover))
-      .slice(0, Math.max(1, topRecordsCount));
+/**
+ * Rapor 1840'in ham satirlari. Kasino ve spor AYNI kaynaktan beslenir;
+ * rapor bir kez cekilip onbellege alinir, iki liste de onu suzer.
+ */
+async function rapor1840Satirlari(startDate: string, endDate: string): Promise<AnyRecord[]> {
+  return cachedLynon(
+    `rapor1840:${lynonCfg().siteId}:${startDate}:${endDate}:${lynonCfg().currency}`,
+    araligaGoreTtl(endDate, todayYmd()),
+    async () => {
+      const report = await raporGetir(NARCOS_REPORT_IDS.game, 'Report By Game', {
+        startDate, endDate, currency: lynonCfg().currency, tzId: '16',
+      });
+      return rowsFromReportData(recordOf(report.Data));
+    },
+  );
+}
 
-    return { HasError: false, Data: rows, Source: { reportId: NARCOS_REPORT_IDS.game, reportName: 'Report By Game', siteId: lynonCfg().siteId } };
-  });
+/** Rapor 1840 satirini ortak olcu alanlarina cevirir. */
+function olcuAlanlari(row: AnyRecord) {
+  return {
+    Turnover: pickAmount(row, ['Bet Sum Amount (TRY)', 'Bet Sum Amount', 'Total Bets (TRY)', 'Total Bets']),
+    WinningAmount: pickAmount(row, ['Win Sum Amount (TRY)', 'Win Sum Amount', 'Total Wins (TRY)', 'Total Wins']),
+    ProfitAmount: pickAmount(row, ['GGR (TRY)', 'GGR']),
+    NumberOfBets: pickAmount(row, ['Bet Count', 'Number of Bets', 'Bets Count', 'Bets']),
+  };
+}
+
+const RAPOR_1840_KAYNAK = () => ({
+  reportId: NARCOS_REPORT_IDS.game,
+  reportName: 'Report By Game',
+  siteId: lynonCfg().siteId,
+});
+
+/**
+ * Rapor 1840 satiri spor bahsi mi?
+ *
+ * ── Neden `Game Type` esitligi degil ──────────────────────────────────
+ *
+ * Rapor `Game Type` sutununda OYUN TURUNU yaziyor: "Slot", "Live Casino",
+ * "Table Games"... Yani "casino" kelimesi cogu kasino satirinda HIC
+ * gecmiyor. Gercek bir yanit satiri:
+ *
+ *   { "Game Name": "40 Shining Crown Bell Link", "Game Type": "Slot",
+ *     "Provider Name": "EGT Digital", ... }
+ *
+ * Bu yuzden kasino tarafi "icinde casino gecenler" diye SECILEMEZ; spor
+ * OLMAYAN her sey kasinodur. Iki liste tek yuklemin iki yuzu oldugu icin
+ * hicbir satir iki listede birden ya da hicbirinde cikmaz.
+ *
+ * Saglayici adina da bakilir: bazi kurulumlarda spor satirinin turu bos
+ * gelip yalnizca saglayici ("... Sportsbook") ele veriyor.
+ */
+export function sporSatiriMi(row: AnyRecord): boolean {
+  const tur = firstNonEmpty(row['Game Type'], row.GameType);
+  const saglayici = firstNonEmpty(row['Provider Name'], row.ProviderName);
+  return textIncludes(tur, 'sport') || textIncludes(saglayici, 'sport');
+}
+
+export async function lynonTopCasinoGames(startDate: string, endDate: string, topRecordsCount = 5): Promise<AnyRecord> {
+  const rows = (await rapor1840Satirlari(startDate, endDate))
+    .filter((row) => !sporSatiriMi(row))
+    .map((row, index) => ({
+      ...row,
+      GameId: numberFrom(row['Game ID'] ?? row.GameId, index + 1),
+      Name: firstNonEmpty(row['Game Name'], row.GameName, `Game ${index + 1}`),
+      ...olcuAlanlari(row),
+    }))
+    .sort((a, b) => numberFrom(b.Turnover) - numberFrom(a.Turnover))
+    .slice(0, Math.max(1, topRecordsCount));
+
+  return { HasError: false, Data: rows, Source: RAPOR_1840_KAYNAK() };
 }
 
 async function lynonDashboardSportRows(startDate: string, endDate: string): Promise<AnyRecord[]> {
@@ -972,22 +1023,96 @@ async function lynonDashboardSportRows(startDate: string, endDate: string): Prom
   });
 }
 
+/**
+ * En cok oynanan spor branslari — kasino ile AYNI kaynaktan: rapor 1840.
+ *
+ * ── Neden degisti ─────────────────────────────────────────────────────
+ *
+ * Onceden `lynonSportBets` ile tek tek bahis kayitlari cekilip elde
+ * gruplaniyordu ve o cagri `countPerPage: 500` ile sinirliydi. Yani liste
+ * donemin TAMAMINDAN degil, ilk 500 bahislik bir ORNEKLEMDEN uretiliyordu;
+ * gunluk bahis sayisi 500'u gectiginde "en cok oynanan" siralamasi
+ * gercegi yansitmiyordu. Kasino tarafi zaten 1840'tan besleniyordu, iki
+ * kart yan yana durdugu halde farkli kaynaklardan geliyordu.
+ *
+ * Rapor 1840 donemin tamamini sunucu tarafinda topluyor; sayfalama sinir
+ * getirmiyor ve iki kart artik ayni sayilari konusuyor.
+ *
+ * Satirlar ada gore ayrica gruplaniyor: rapor spor tarafini tek bir
+ * toplam satir olarak da, brans brans da dondurebilir — ikisinde de
+ * dogru calisir.
+ *
+ * Rapor spor tarafini HIC tasimiyorsa (kurulum sporu ayri bir sisteme
+ * baglamis olabilir) kart bos kalmasin diye eski bahis kaynagina dusulur;
+ * o kaynak ornekleme dayali ama hicten iyidir.
+ */
 export async function lynonTopSports(startDate: string, endDate: string, topRecordsCount = 5): Promise<AnyRecord> {
-  const rows = await lynonDashboardSportRows(startDate, endDate);
+  const rows = (await rapor1840Satirlari(startDate, endDate)).filter(sporSatiriMi);
+  if (rows.length === 0) return sporlariBahislerdenTopla(startDate, endDate, topRecordsCount);
+
+  const groups = new Map<string, AnyRecord>();
+  for (const row of rows) {
+    const name = firstNonEmpty(row['Game Name'], row.GameName, row.SportName, 'Sportbook');
+    const olcu = olcuAlanlari(row);
+    const current = groups.get(name)
+      ?? { SportId: groups.size + 1, Name: name, Turnover: 0, WinningAmount: 0, ProfitAmount: 0, NumberOfBets: 0 };
+    current.Turnover = numberFrom(current.Turnover) + numberFrom(olcu.Turnover);
+    current.WinningAmount = numberFrom(current.WinningAmount) + numberFrom(olcu.WinningAmount);
+    current.NumberOfBets = numberFrom(current.NumberOfBets) + numberFrom(olcu.NumberOfBets);
+    // Kar raporun GGR sutunundan degil, ciro eksi kazanctan: sutun eksikse
+    // sifir gorunmesin.
+    current.ProfitAmount = numberFrom(current.Turnover) - numberFrom(current.WinningAmount);
+    groups.set(name, current);
+  }
+
+  const data = Array.from(groups.values())
+    .sort((a, b) => numberFrom(b.Turnover) - numberFrom(a.Turnover))
+    .slice(0, Math.max(1, topRecordsCount));
+
+  return { HasError: false, Data: data, Source: RAPOR_1840_KAYNAK() };
+}
+
+/**
+ * Eski yol: tek tek bahis kayitlarindan gruplama. Yalnizca rapor 1840
+ * spor satiri dondurmediginde yedek olarak kullanilir, cunku IKI ayri
+ * kusuru var:
+ *
+ *   1. `countPerPage: 500` — donemin TAMAMI degil, bir ORNEKLEM.
+ *   2. Site geneli `sportBetEvent` cagrisi tarih parametresi KABUL ETMIYOR
+ *      (yalnizca `page`/`countPerPage`/`SiteIds` gonderiliyor). Yani gelen
+ *      kayitlar secilen araliga degil, "en son 500 bahse" karsilik
+ *      geliyordu; kartin altindaki "Seçili tarih aralığı" yazisi yaniltici
+ *      oluyordu.
+ *
+ * (2) icin araliga gore burada, sunucu tarafinda suzuluyor.
+ */
+async function sporlariBahislerdenTopla(startDate: string, endDate: string, topRecordsCount: number): Promise<AnyRecord> {
+  const bas = Date.parse(gunBasi(startDate));
+  const son = Date.parse(gunSonu(endDate));
+  const rows = (await lynonDashboardSportRows(startDate, endDate)).filter((row) => {
+    const an = Date.parse(String(row.CreatedLocal ?? ''));
+    // Tarihi okunamayan kayit disarida birakilmaz: aralik disinda oldugu
+    // KANITLANAMIYOR, atmak veri kaybi olur.
+    return Number.isFinite(an) ? an >= bas && an <= son : true;
+  });
   const groups = new Map<string, AnyRecord>();
 
   for (const row of rows) {
     const name = firstNonEmpty(row.SportName, row.CompetitionName, 'Sportbook');
-    const current = groups.get(name) ?? { SportId: groups.size + 1, Name: name, Turnover: 0, WinningAmount: 0, ProfitAmount: 0, NumberOfBets: 0 };
-    current.Turnover += numberFrom(row.Amount);
-    current.WinningAmount += numberFrom(row.WinningAmount);
-    current.ProfitAmount = current.Turnover - current.WinningAmount;
-    current.NumberOfBets += 1;
+    const current = groups.get(name)
+      ?? { SportId: groups.size + 1, Name: name, Turnover: 0, WinningAmount: 0, ProfitAmount: 0, NumberOfBets: 0 };
+    current.Turnover = numberFrom(current.Turnover) + numberFrom(row.Amount);
+    current.WinningAmount = numberFrom(current.WinningAmount) + numberFrom(row.WinningAmount);
+    current.ProfitAmount = numberFrom(current.Turnover) - numberFrom(current.WinningAmount);
+    current.NumberOfBets = numberFrom(current.NumberOfBets) + 1;
     groups.set(name, current);
   }
 
-  const data = Array.from(groups.values()).sort((a, b) => numberFrom(b.Turnover) - numberFrom(a.Turnover)).slice(0, Math.max(1, topRecordsCount));
-  return { HasError: false, Data: data };
+  const data = Array.from(groups.values())
+    .sort((a, b) => numberFrom(b.Turnover) - numberFrom(a.Turnover))
+    .slice(0, Math.max(1, topRecordsCount));
+
+  return { HasError: false, Data: data, Source: { reportName: 'Sport Bets (ornekleme)', siteId: lynonCfg().siteId } };
 }
 
 export async function lynonSportbookOverview(startDate: string, endDate: string): Promise<AnyRecord> {
