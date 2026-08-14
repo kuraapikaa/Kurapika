@@ -203,7 +203,7 @@ export function ScratchManager({ config, bonusOptions, onUpdate }: ScratchManage
                     </IzgaraSatir>
                   ))}
                 </Izgara>
-                <div className="border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
+                <div className="border-t border-white/5">
                   <PaySeridi
                     modul={MODUL}
                     parcalar={oduller.map((r) => ({
@@ -269,7 +269,7 @@ export function ScratchManager({ config, bonusOptions, onUpdate }: ScratchManage
           )}
 
           <Bolum baslik="Nasıl çalışır">
-            <ul className="space-y-2.5 px-5 py-4 text-[11px] font-medium leading-relaxed text-[color:var(--panel-muted,#8a919c)]">
+            <ul className="space-y-2.5 px-5 py-4 text-[11px] font-medium leading-relaxed text-slate-400">
               <li>
                 Önce kazanma oranı çekilir. Kaybeden oyunlarda havuza hiç bakılmaz.
               </li>

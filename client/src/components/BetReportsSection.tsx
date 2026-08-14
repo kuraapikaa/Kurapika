@@ -44,12 +44,12 @@ export function BetReportsSection({
             <h2 className="text-2xl font-semibold text-white tracking-tighter uppercase antialiased">Bahis Raporları</h2>
             <div className="flex items-center gap-2 mt-0.5">
               <div className="h-1.5 w-1.5 rounded-full bg-cyan-500 animate-pulse" />
-              <p className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-[0.2em]">Merkezi Bahis Analizi & Performans İzleme</p>
+              <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em]">Merkezi Bahis Analizi & Performans İzleme</p>
             </div>
           </div>
         </div>
 
-        <div className="inline-flex p-1.5 rounded-xl bg-black/40 backdrop-blur-3xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] relative gap-1">
+        <div className="inline-flex p-1.5 rounded-xl bg-black/40 backdrop-blur-3xl border border-white/5 relative gap-1">
           {[
             { id: 'summary' as const, label: 'ÖZET ANALİZ', icon: LayoutGrid },
             { id: 'list' as const, label: 'DETAYLI LİSTE', icon: List },
@@ -59,7 +59,7 @@ export function BetReportsSection({
               onClick={() => setSubTab(id)}
               className={cn(
                 "relative group flex items-center gap-2 px-5 py-2.5 text-[10px] font-semibold uppercase tracking-[0.1em] transition-all duration-500 rounded-xl overflow-hidden",
-                subTab === id ? "text-white" : "text-[color:var(--panel-muted,#8a919c)] hover:text-[color:var(--panel-text-dim,#c8cdd5)]"
+                subTab === id ? "text-white" : "text-slate-400 hover:text-slate-300"
               )}
             >
               {subTab === id && (
@@ -68,7 +68,7 @@ export function BetReportsSection({
                   className="absolute inset-0 bg-cyan-500/10 border border-cyan-500/20 rounded-xl neon-glow-cyan"
                 />
               )}
-              <Icon size={14} className={cn("relative z-10 transition-transform group-hover:scale-110", subTab === id ? "text-cyan-400" : "text-[color:var(--panel-faint,#5c6470)]")} />
+              <Icon size={14} className={cn("relative z-10 transition-transform group-hover:scale-110", subTab === id ? "text-cyan-400" : "text-slate-500")} />
               <span className="relative z-10">{label}</span>
             </button>
           ))}

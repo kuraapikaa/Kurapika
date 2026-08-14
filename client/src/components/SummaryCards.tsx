@@ -69,16 +69,16 @@ const GRUP_VURGU: Record<PanoMetrigi['grup'], PanoVurgu> = {
 
 export function SummaryCards({ data, isLoading, error, onRetry }: SummaryCardsProps) {
   if (error) {
-    return <ErrorState message={error.message} onRetry={onRetry} className="rounded-xl" />;
+    return <ErrorState message={error.message} onRetry={onRetry} className="rounded-2xl" />;
   }
 
   if (isLoading || !data?.Data) {
     return (
-      <div className="space-y-3">
-        <div className="h-[104px] animate-pulse rounded-xl border border-white/[0.07] bg-white/[0.025]" />
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="space-y-6">
+        <div className="h-[132px] animate-pulse rounded-2xl border border-white/5 bg-white/[0.02]" />
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-[116px] animate-pulse rounded-xl border border-white/[0.07] bg-white/[0.025]" />
+            <div key={i} className="h-[140px] animate-pulse rounded-2xl border border-white/5 bg-white/[0.02]" />
           ))}
         </div>
       </div>
@@ -139,12 +139,13 @@ export function SummaryCards({ data, isLoading, error, onRetry }: SummaryCardsPr
   ];
 
   return (
-    <div className="space-y-3">
+    // Kartlar birbirine degmesin: bolumler arasi da izgara ici de gap-6.
+    <div className="space-y-6">
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}>
         <AkisSeridi yatirim={d.Deposits} cekim={d.Withdrawals} />
       </motion.div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
         {anaOlculer.map((olcu, i) => (
           <motion.div
             key={olcu.etiket}
@@ -157,7 +158,7 @@ export function SummaryCards({ data, isLoading, error, onRetry }: SummaryCardsPr
         ))}
       </div>
 
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {[
           { etiket: 'Net Gelir', deger: net == null ? '—' : isaretliYaz(net), alt: marj != null ? `Marj %${marj.toFixed(1)}` : 'Marj hesaplanamıyor', simge: <Wallet size={15} />, vurgu: ((net ?? 0) >= 0 ? 'giris' : 'cikis') as PanoVurgu, veriYok: net == null },
           { etiket: 'Bahis Yapan Oyuncu', deger: sayiYaz(d.PlayersLoggedIn), alt: `${sayiYaz(bul('bahisAdedi'))} bahis`, simge: <Users size={15} />, vurgu: 'hacim' as PanoVurgu, veriYok: d.PlayersLoggedIn == null },
@@ -179,9 +180,9 @@ export function SummaryCards({ data, isLoading, error, onRetry }: SummaryCardsPr
         * gösteriliyordu; kalanı hiç görünmüyordu.
         */}
       {gruplar.map((grup) => (
-        <PanoKart key={grup} className="p-4">
+        <PanoKart key={grup} className="p-6">
           <PanoBolum baslik={GRUP_ADI[grup]} vurgu={GRUP_VURGU[grup]} />
-          <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3 xl:grid-cols-5">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-3 xl:grid-cols-5">
             {metrikler
               .filter((m) => m.grup === grup)
               .map((m) => (
@@ -209,8 +210,8 @@ export function SummaryCards({ data, isLoading, error, onRetry }: SummaryCardsPr
       ))}
 
       {(d.PlayersBalance != null || d.Aralik || (d.taninmayanAlanlar?.length ?? 0) > 0) && (
-        <PanoKart className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
-          <p className="text-[11px] text-[color:var(--panel-muted,#8a919c)]">
+        <PanoKart className="flex flex-wrap items-center justify-between gap-6 px-6 py-5">
+          <p className="text-sm text-slate-400">
             Oyuncu gerçek bakiyesi{' '}
             <span className="font-semibold tabular-nums text-white">{sayiYaz(d.PlayersBalance, 'para')}</span>
           </p>
@@ -223,7 +224,7 @@ export function SummaryCards({ data, isLoading, error, onRetry }: SummaryCardsPr
             * çıkarır.
             */}
           {d.Aralik && (
-            <p className="text-[11px] text-[color:var(--panel-muted,#8a919c)]">
+            <p className="text-sm text-slate-400">
               Sorulan aralık{' '}
               <span className="font-semibold tabular-nums text-white">
                 {d.Aralik.startDate === d.Aralik.endDate
@@ -234,7 +235,7 @@ export function SummaryCards({ data, isLoading, error, onRetry }: SummaryCardsPr
             </p>
           )}
           {(d.taninmayanAlanlar?.length ?? 0) > 0 && (
-            <p className="text-[11px] text-amber-400/90">
+            <p className="text-sm text-amber-300">
               Lynon {d.taninmayanAlanlar!.length} yeni ölçü döndürdü: {d.taninmayanAlanlar!.join(', ')}
             </p>
           )}

@@ -23,7 +23,7 @@ export function AIInsights() {
         return (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-pulse mt-8">
                 {[1, 2].map(i => (
-                    <div key={i} className="h-48 rounded-xl bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))]" />
+                    <div key={i} className="h-48 rounded-xl bg-white/[0.02] border border-white/5" />
                 ))}
             </div>
         );
@@ -38,12 +38,12 @@ export function AIInsights() {
         <div className="space-y-8 mt-8">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10 text-blue-400">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-400/10 text-purple-300">
                         <Sparkles size={20} />
                     </div>
                     <div>
                         <h2 className="text-xl font-semibold text-white uppercase tracking-tight">İşletme Analitikleri</h2>
-                        <p className="text-[10px] font-bold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">Veri Odaklı Stratejik Raporlama</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Veri Odaklı Stratejik Raporlama</p>
                     </div>
                 </div>
             </div>
@@ -53,12 +53,12 @@ export function AIInsights() {
                 <div className="space-y-6">
                     <div className="flex items-center gap-2 px-1">
                         <Lightbulb size={14} className="text-amber-400" />
-                        <span className="text-[10px] font-semibold text-amber-400 uppercase tracking-widest">Kritik Analizler</span>
+                        <span className="text-[10px] font-semibold text-amber-400 uppercase tracking-wider">Kritik Analizler</span>
                     </div>
                     {insights.length === 0 ? (
-                        <Card className="p-8 border-dashed border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.01] flex flex-col items-center justify-center text-center space-y-3">
-                            <ShieldCheck size={32} className="text-[color:var(--panel-faint,#5c6470)]" />
-                            <p className="text-[11px] font-bold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-tight">Kritik Risk Tespit Edilmedi</p>
+                        <Card className="p-8 border-dashed border-white/5 bg-white/[0.01] flex flex-col items-center justify-center text-center space-y-3">
+                            <ShieldCheck size={32} className="text-slate-500" />
+                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-tight">Kritik Risk Tespit Edilmedi</p>
                         </Card>
                     ) : insights.map((insight: any, i: number) => (
                         <motion.div
@@ -68,9 +68,9 @@ export function AIInsights() {
                             transition={{ delay: i * 0.1 }}
                         >
                             <Card className={cn(
-                                "relative overflow-hidden p-6 border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] backdrop-blur-2xl group hover:scale-[1.01] transition-all duration-500 shadow-2xl",
+                                "relative overflow-hidden p-6 border-white/5 bg-white/[0.02] backdrop-blur-2xl group hover:scale-[1.01] transition-all duration-500 shadow-2xl",
                                 insight.type === 'critical' ? "border-rose-500/20 shadow-rose-500/5" :
-                                    insight.type === 'warning' ? "border-amber-500/20 shadow-amber-500/5" : "border-blue-500/20 shadow-blue-500/5"
+                                    insight.type === 'warning' ? "border-amber-500/20 shadow-amber-500/5" : "border-purple-400/25 shadow-blue-500/5"
                             )}>
                                 <div className="flex items-start gap-4">
                                     <div className={cn(
@@ -87,13 +87,13 @@ export function AIInsights() {
                                                 <span className="text-[10px] font-semibold px-2 py-0.5 rounded-lg bg-white/10 text-white/80 uppercase tracking-tighter">{insight.metric}</span>
                                             )}
                                         </div>
-                                        <p className="text-xs font-semibold text-[color:var(--panel-muted,#8a919c)] leading-relaxed">{insight.description}</p>
-                                        <div className="pt-4 mt-4 border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))] relative bg-white/[0.02] -mx-6 px-3 py-2.5">
-                                            <div className="flex items-center gap-2 text-blue-400 mb-1.5">
+                                        <p className="text-xs font-semibold text-slate-400 leading-relaxed">{insight.description}</p>
+                                        <div className="pt-4 mt-4 border-t border-white/5 relative bg-white/[0.02] -mx-6 px-3 py-2.5">
+                                            <div className="flex items-center gap-2 text-purple-300 mb-1.5">
                                                 <Target size={14} />
-                                                <span className="text-[9px] font-semibold uppercase tracking-widest text-blue-300">Stratejik Tavsiye</span>
+                                                <span className="text-[9px] font-semibold uppercase tracking-wider text-purple-300">Stratejik Tavsiye</span>
                                             </div>
-                                            <p className="text-[12px] font-bold text-[color:var(--panel-text-dim,#c8cdd5)] leading-normal">{insight.recommendation}</p>
+                                            <p className="text-[12px] font-bold text-slate-300 leading-normal">{insight.recommendation}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -120,12 +120,12 @@ export function AIInsights() {
                 <div className="space-y-6">
                     <div className="flex items-center gap-2 px-1">
                         <Gift size={14} className="text-teal-400" />
-                        <span className="text-[10px] font-semibold text-teal-400 uppercase tracking-widest">Bonus & Kampanya Önerileri</span>
+                        <span className="text-[10px] font-semibold text-teal-400 uppercase tracking-wider">Bonus & Kampanya Önerileri</span>
                     </div>
                     {bonuses.length === 0 ? (
-                        <Card className="p-8 border-dashed border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.01] flex flex-col items-center justify-center text-center space-y-3">
-                            <Zap size={32} className="text-[color:var(--panel-faint,#5c6470)]" />
-                            <p className="text-[11px] font-bold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-tight">Yeni Kampanya Önerisi Yok</p>
+                        <Card className="p-8 border-dashed border-white/5 bg-white/[0.01] flex flex-col items-center justify-center text-center space-y-3">
+                            <Zap size={32} className="text-slate-500" />
+                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-tight">Yeni Kampanya Önerisi Yok</p>
                         </Card>
                     ) : bonuses.map((bonus: any, i: number) => (
                         <motion.div
@@ -134,39 +134,39 @@ export function AIInsights() {
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: i * 0.1 }}
                         >
-                            <Card className="p-6 bg-gradient-to-br from-blue-500/5 to-teal-500/5 border-[color:var(--panel-border,rgba(242,244,248,0.1))] group hover:border-blue-500/20 transition-all duration-300 shadow-xl backdrop-blur-sm">
+                            <Card className="p-6 bg-gradient-to-br from-blue-500/5 to-teal-500/5 border-white/5 group hover:border-purple-400/25 transition-all duration-300 shadow-xl backdrop-blur-sm">
                                 <div className="flex items-center justify-between mb-4">
                                     <div className="flex items-center gap-3">
-                                        <div className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center text-teal-400 border border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
+                                        <div className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center text-teal-400 border border-white/5">
                                             <Zap size={20} />
                                         </div>
                                         <div>
                                             <h4 className="text-sm font-semibold text-white uppercase tracking-tight">{bonus.bonusName}</h4>
-                                            <p className="text-[10px] font-bold text-[color:var(--panel-muted,#8a919c)] uppercase">{bonus.targetGroup}</p>
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase">{bonus.targetGroup}</p>
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-[10px] font-semibold text-emerald-400 uppercase tracking-widest">Tahmini Artış</p>
+                                        <p className="text-[10px] font-semibold text-emerald-400 uppercase tracking-wider">Tahmini Artış</p>
                                         <p className="text-lg font-semibold text-white">+{bonus.estimatedCvr}%</p>
                                     </div>
                                 </div>
-                                <div className="p-4 rounded-xl bg-black/40 border border-[color:var(--panel-border,rgba(242,244,248,0.1))] space-y-3">
+                                <div className="p-4 rounded-xl bg-black/40 border border-white/5 space-y-3">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">Önerilen Oran</span>
-                                        <span className="text-xs font-semibold text-blue-400">{bonus.suggestedAmount}</span>
+                                        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Önerilen Oran</span>
+                                        <span className="text-xs font-semibold text-purple-300">{bonus.suggestedAmount}</span>
                                     </div>
-                                    <p className="text-[11px] font-medium text-[color:var(--panel-muted,#8a919c)] leading-relaxed italic border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))] pt-3">
+                                    <p className="text-[11px] font-medium text-slate-400 leading-relaxed italic border-t border-white/5 pt-3">
                                         "{bonus.reasoning}"
                                     </p>
                                 </div>
-                                <button className="w-full mt-4 flex items-center justify-center gap-2 py-3 rounded-xl bg-[color:var(--panel-accent,#0a84ff)] text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-[color:var(--panel-accent-deep,#0060df)] transition-all group/btn shadow-lg">
+                                <button className="w-full mt-4 flex items-center justify-center gap-2 py-3 rounded-xl bg-[color:var(--panel-accent,#0a84ff)] text-white text-[10px] font-semibold uppercase tracking-wider hover:bg-[color:var(--panel-accent-deep,#0060df)] transition-all group/btn shadow-lg">
                                     Kampanya Oluştur <ArrowRight size={14} className="group-hover/btn:translate-x-1 transition-transform" />
                                 </button>
                             </Card>
                         </motion.div>
                     ))}
 
-                    <Card className="relative overflow-hidden p-6 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border-dashed border-[color:var(--panel-border,rgba(242,244,248,0.1))] flex flex-col items-center justify-center text-center space-y-4 py-10 group">
+                    <Card className="relative overflow-hidden p-6 bg-white/[0.02] border-dashed border-white/5 flex flex-col items-center justify-center text-center space-y-4 py-10 group">
                         {/* Scanning Line Animation */}
                         <motion.div
                             animate={{ top: ['0%', '100%', '0%'] }}
@@ -181,8 +181,8 @@ export function AIInsights() {
                                     transition={{ duration: 2, repeat: Infinity }}
                                     className="absolute inset-0 bg-blue-500 rounded-full blur-xl"
                                 />
-                                <div className="relative h-12 w-12 rounded-full bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-blue-500/30 flex items-center justify-center shadow-2xl">
-                                    <Zap size={20} className="text-blue-400 animate-pulse" />
+                                <div className="relative h-12 w-12 rounded-full bg-white/[0.02] border border-blue-500/30 flex items-center justify-center shadow-2xl">
+                                    <Zap size={20} className="text-purple-300 animate-pulse" />
                                 </div>
                             </div>
 
@@ -199,21 +199,21 @@ export function AIInsights() {
                                             />
                                         ))}
                                     </div>
-                                    <p className="text-[10px] text-[color:var(--panel-muted,#8a919c)] font-bold uppercase tracking-widest">Veri İşleme Devam Ediyor</p>
+                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Veri İşleme Devam Ediyor</p>
                                 </div>
                             </div>
 
                             <div className="flex flex-wrap justify-center gap-2 max-w-[280px]">
                                 {['Syncing KPI', 'Pattern Match', 'GGR Audit'].map((tag, idx) => (
-                                    <span key={idx} className="text-[8px] font-semibold px-2 py-0.5 rounded-full bg-white/5 border border-[color:var(--panel-border,rgba(242,244,248,0.1))] text-[color:var(--panel-muted,#8a919c)] uppercase tracking-tighter">
+                                    <span key={idx} className="text-[8px] font-semibold px-2 py-0.5 rounded-full bg-white/5 border border-white/5 text-slate-400 uppercase tracking-tighter">
                                         {tag}
                                     </span>
                                 ))}
                             </div>
 
-                            <p className="text-[10px] text-[color:var(--panel-muted,#8a919c)] font-medium leading-relaxed max-w-[300px] border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))] pt-4">
+                            <p className="text-[10px] text-slate-400 font-medium leading-relaxed max-w-[300px] border-t border-white/5 pt-4">
                                 YZ modelleri verilerinizi saniyeler içinde analiz etmeye devam ediyor. <br />
-                                <span className="text-blue-500/60 font-semibold italic">Sistemsel optimizasyon aktif.</span>
+                                <span className="text-purple-400/60 font-semibold italic">Sistemsel optimizasyon aktif.</span>
                             </p>
                         </div>
                     </Card>

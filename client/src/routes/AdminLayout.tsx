@@ -1,0 +1,392 @@
+/**
+ * ADMIN KABUGU: sol menu + ust bar + calisma alani.
+ *
+ * Layout rotasi oldugu icin sayfalar arasi gezinirken YENIDEN MONTE
+ * EDILMEZ; menunun kaydirma konumu, daraltilmis hali ve arama kutusu
+ * gezinme boyunca korunur. Eskiden ayni islevi `App.tsx` icindeki dev bir
+ * kosullu blok goruyordu ve her sey tek bilesende ic ice duruyordu.
+ *
+ * Baslik, aciklama, tarih filtresi ve yetki bilgisi rotanin kendi
+ * kaydindan (`routeMeta`) okunuyor.
+ */
+import { Suspense, useCallback, useMemo, useRef, useState } from 'react';
+import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  LogOut,
+  Menu,
+  RefreshCw,
+  Search,
+  X,
+} from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { matchesTr } from '@/lib/turkishSearch';
+import { cn } from '@/lib/utils';
+import { LoadingState } from '@/components/ui/LoadingState';
+import { DateRangeBar } from '@/components/DateRangeBar';
+import { DateRangePresets } from '@/components/DateRangePresets';
+import { NotificationCenter } from '@/components/NotificationCenter';
+import { GlobalNotifications } from '@/components/GlobalNotifications';
+import { useDateRange } from '@/context/DateRangeContext';
+import { useDashboardData } from '@/hooks/useDashboardData';
+import { buildNavGroups, findRouteMeta } from './routeMeta';
+import { useOturum } from './RequireAuth';
+
+const adminDateLabel = new Intl.DateTimeFormat('tr-TR', {
+  day: '2-digit',
+  month: 'short',
+  year: 'numeric',
+}).format(new Date());
+
+const tabStyle = (isActive: boolean) =>
+  `group relative flex min-h-8 items-center gap-2 rounded-lg px-2 py-1 text-[11.5px] font-semibold transition-colors duration-150 touch-manipulation ${
+    isActive ? 'text-white' : 'text-slate-500 hover:bg-white/[0.04] hover:text-slate-200'
+  }`;
+
+const ActiveTabIndicator = () => (
+  <motion.div
+    layoutId="activeTab"
+    className="absolute inset-0 rounded-lg border border-blue-400/20 bg-blue-400/[0.11]"
+  >
+    <div className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-r-full bg-blue-300" />
+  </motion.div>
+);
+
+/** Panonun bes sorgusunu tazeler. Pano acik olmasa da ust bardan cagrilir. */
+function panoyuTazele(queryClient: ReturnType<typeof useQueryClient>) {
+  for (const anahtar of ['summary', 'partner-profit', 'top-sports', 'top-casino', 'sportbook-overview']) {
+    queryClient.invalidateQueries({ queryKey: [anahtar] });
+  }
+}
+
+export function AdminLayout() {
+  const location = useLocation();
+  const pathname = location.pathname || '/';
+  const meta = findRouteMeta(pathname);
+  const panodayiz = meta?.id === 'dashboard';
+
+  const { kullanici, cikisYap } = useOturum();
+  const { dateRange, setDateRange } = useDateRange();
+  const queryClient = useQueryClient();
+
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  // 28 menü öğesi 6 grupta; sabit 224px her ekranda yer kaplıyordu ve daraltma
+  // yoktu. Rail modu tercihi oturumlar arası korunur.
+  const [navCollapsed, setNavCollapsed] = useState(() => {
+    try { return localStorage.getItem('admin_nav_collapsed') === '1'; } catch { return false; }
+  });
+  const [navQuery, setNavQuery] = useState('');
+
+  /**
+   * Panonun sorgularini YALNIZCA ONBELLEKTEN okur (`enabled: false`).
+   * "Son guncelleme" damgasi her sekmede gorunuyor ama veriyi pano sayfasi
+   * cekiyor; buradan ikinci bir istek cikmamali.
+   */
+  const panoSorgulari = useDashboardData(dateRange, { enabled: false });
+  const panoYukleniyor = panoSorgulari.some((q) => q.isLoading);
+  const panoGuncellemeAni = Math.max(0, ...panoSorgulari.map((q) => Number(q.dataUpdatedAt || 0)));
+  const panoGuncellemeSaati = panoGuncellemeAni > 0
+    ? new Intl.DateTimeFormat('tr-TR', {
+        timeZone: 'Europe/Istanbul',
+        hour: '2-digit',
+        minute: '2-digit',
+        hourCycle: 'h23',
+      }).format(new Date(panoGuncellemeAni))
+    : '—';
+
+  const handleRefreshDashboard = useCallback(() => panoyuTazele(queryClient), [queryClient]);
+
+  const sidebarNavRef = useRef<HTMLDivElement>(null);
+  const handleSidebarKeyDown = useCallback((e: React.KeyboardEvent) => {
+    const container = sidebarNavRef.current;
+    if (!container) return;
+    const links = Array.from(container.querySelectorAll<HTMLAnchorElement>('a[href]'));
+    if (links.length === 0) return;
+    const current = document.activeElement as HTMLAnchorElement | null;
+    const idx = current && links.includes(current) ? links.indexOf(current) : -1;
+    if (e.key === 'ArrowDown' && idx < links.length - 1) {
+      e.preventDefault();
+      links[idx + 1].focus();
+    } else if (e.key === 'ArrowUp' && idx > 0) {
+      e.preventDefault();
+      links[idx - 1].focus();
+    }
+  }, []);
+
+  const visibleNavGroups = useMemo(() => buildNavGroups(kullanici), [kullanici]);
+
+  // Hızlı menü araması. 28 öğe taramayı yavaşlatıyordu; Türkçe karakterler
+  // için locale-aware karşılaştırma (İ/ı sorunu için toLocaleLowerCase).
+  const filteredNavGroups = useMemo(() => {
+    const q = navQuery.trim();
+    if (!q) return visibleNavGroups;
+    return visibleNavGroups
+      .map((group) => ({
+        ...group,
+        items: group.items.filter((item) => matchesTr(item.nav.label, q)),
+      }))
+      .filter((group) => group.items.length > 0);
+  }, [visibleNavGroups, navQuery]);
+
+  const toggleNavCollapsed = useCallback(() => {
+    setNavCollapsed((prev) => {
+      const next = !prev;
+      try { localStorage.setItem('admin_nav_collapsed', next ? '1' : '0'); } catch { /* yoksay */ }
+      if (next) setNavQuery('');
+      return next;
+    });
+  }, []);
+
+  const hasDateFilters = !!meta?.dateFilters;
+
+  return (
+    <motion.div
+      key="main-app"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.2 }}
+      className="app-shell"
+    >
+      <div className="app-backdrop" />
+
+      {/* Mobil sidebar overlay */}
+      <div
+        aria-hidden="true"
+        className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity md:hidden"
+        style={{ opacity: sidebarOpen ? 1 : 0, pointerEvents: sidebarOpen ? 'auto' : 'none' }}
+        onClick={() => setSidebarOpen(false)}
+      />
+
+      <aside
+        // 29 menu ogesi 7 grupta; 200px'te uzun etiketler kirpiliyordu
+        // ("Lynon API Dökümanı", "iFrame entegrasyonu"). 260px hepsini
+        // tek satirda tutuyor.
+        style={{ ['--nav-w' as any]: navCollapsed ? '64px' : '260px' }}
+        className={cn(
+          "premium-sidebar fixed left-0 top-0 z-50 flex h-full w-[268px] flex-col transition-[transform,width] duration-200 ease-out md:w-[var(--nav-w)] md:translate-x-0",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
+        <div className="sidebar-brand flex h-[60px] shrink-0 items-center justify-between gap-3 border-b border-white/[0.06] px-4">
+          <div className="flex min-w-0 flex-1 items-center gap-2.5">
+            <span className="grid h-8 w-8 shrink-0 grid-cols-2 gap-1 rounded-lg border border-blue-300/20 bg-blue-300/[0.09] p-2">
+              <i className="rounded-[2px] bg-blue-300" /><i className="rounded-[2px] bg-blue-300" />
+              <i className="rounded-[2px] bg-blue-300" /><i className="rounded-[2px] bg-blue-300" />
+            </span>
+            <span className={cn("min-w-0 leading-tight", navCollapsed && "md:hidden")}>
+              <strong className="block truncate text-[13px] font-bold tracking-[-0.02em] text-white">Bugs Software</strong>
+              <small className="mt-0.5 block truncate text-[8px] font-semibold uppercase tracking-[0.18em] text-slate-600">Control Suite</small>
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(false)}
+            className="md:hidden flex items-center justify-center w-7 h-7 rounded-lg text-zinc-500 hover:text-white transition-colors"
+            aria-label="Menüyü kapat"
+          >
+            <X size={18} />
+          </button>
+          <button
+            type="button"
+            onClick={toggleNavCollapsed}
+            aria-expanded={!navCollapsed}
+            aria-label={navCollapsed ? 'Menüyü genişlet' : 'Menüyü daralt'}
+            title={navCollapsed ? 'Menüyü genişlet' : 'Menüyü daralt'}
+            className="hidden md:flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-zinc-500 transition-colors hover:bg-white/[0.06] hover:text-white"
+          >
+            {navCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+          </button>
+        </div>
+        {!navCollapsed && (
+          <div className="shrink-0 px-3 pt-3">
+            <div className="relative">
+              <Search size={14} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-600" />
+              <input
+                type="text"
+                value={navQuery}
+                onChange={(e) => setNavQuery(e.target.value)}
+                placeholder="Menüde ara"
+                aria-label="Menüde ara"
+                className="h-9 w-full rounded-lg border border-white/[0.07] bg-black/25 pl-8 pr-2.5 text-[12px] font-medium text-white outline-none transition placeholder:text-slate-600 focus:border-blue-300/40"
+              />
+            </div>
+          </div>
+        )}
+        <nav className="flex-1 overflow-y-auto px-2.5 py-2.5" aria-label="Menü">
+          <div ref={sidebarNavRef} className="space-y-4" onKeyDown={handleSidebarKeyDown} role="menu">
+            {filteredNavGroups.length === 0 && (
+              <p className="px-2 py-4 text-center text-[11px] text-slate-600">Eşleşen menü yok.</p>
+            )}
+            {filteredNavGroups.map((group) => (
+              <section key={group.label} className="sidebar-nav-group">
+                {/*
+                  * Daraltilmis modda grup adi gizleniyordu ve 29 oge
+                  * tek bir simge yiginina donuyordu. Artik yerine ince
+                  * bir ayirici geliyor; gruplar dar modda da okunuyor.
+                  */}
+                <p className={cn("sidebar-section-label flex items-center gap-2", navCollapsed && "md:hidden")}>
+                  <span>{group.label}</span>
+                  <span className="h-px flex-1 bg-white/[0.05]" />
+                  <span className="tabular-nums text-[9px] font-semibold text-slate-700">{group.items.length}</span>
+                </p>
+                {navCollapsed && <span className="mx-auto mb-2 hidden h-px w-6 bg-white/[0.07] md:block" />}
+                <div className="space-y-0.5">
+                  {group.items.map((item) => {
+                    const Icon = item.nav.icon;
+                    return (
+                      <NavLink
+                        key={item.path}
+                        to={item.path}
+                        end={item.nav.end}
+                        title={navCollapsed ? item.nav.label : undefined}
+                        className={({ isActive }) => cn(tabStyle(isActive), navCollapsed && 'md:justify-center md:px-0')}
+                      >
+                        {({ isActive }) => (
+                          <>
+                            {isActive && <ActiveTabIndicator />}
+                            <span className="sidebar-link-icon relative z-10">
+                              <Icon size={15} strokeWidth={1.85} />
+                            </span>
+                            <span className={cn('relative z-10 min-w-0 flex-1 truncate text-[12.5px]', navCollapsed && 'md:hidden')}>{item.nav.label}</span>
+                            {isActive && <span className={cn('relative z-10 h-1.5 w-1.5 rounded-full bg-blue-300', navCollapsed && 'md:hidden')} />}
+                          </>
+                        )}
+                      </NavLink>
+                    );
+                  })}
+                </div>
+              </section>
+            ))}
+          </div>
+
+        </nav>
+        <div className="sidebar-foot border-t p-2">
+          {/*
+            * Burada bir TEMA ANAHTARI vardi. Panel tek temaya
+            * (Premium Dark Glassmorphism) indirildigi icin kaldirildi;
+            * yariya kalmis bir acik tema birakmaktansa anahtar da gitti.
+            */}
+          <div className={cn("sidebar-system-card", navCollapsed && "md:hidden")}>
+            <div className="flex items-center gap-2">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-300 opacity-50" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-300" />
+              </span>
+              <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-300">Sistem aktif</span>
+            </div>
+            <span className="text-[10px] text-slate-600">Yerel yönetici oturumu</span>
+          </div>
+          <button
+            onClick={cikisYap}
+            title={navCollapsed ? 'Güvenli çıkış' : undefined}
+            className={cn(
+              'flex h-9 w-full items-center gap-2 rounded-full px-3 text-[11px] font-semibold text-slate-500 transition hover:bg-rose-400/[0.08] hover:text-rose-300',
+              navCollapsed && 'md:justify-center md:px-0'
+            )}
+          >
+            <LogOut size={18} />
+            <span className={cn(navCollapsed && 'md:hidden')}>Güvenli çıkış</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* Content */}
+      <div className={cn(
+        "relative z-10 flex min-w-0 flex-1 flex-col pl-0 transition-[padding] duration-200 ease-out",
+        navCollapsed ? "md:pl-[64px]" : "md:pl-[260px]"
+      )}>
+        <header className="app-header relative z-40 w-full flex-shrink-0 px-3 md:px-4">
+          <div className="mx-auto flex h-[58px] max-w-[1900px] items-center justify-between gap-3">
+            <div className="flex min-w-0 flex-1 items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setSidebarOpen(true)}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/[0.07] bg-white/[0.035] text-slate-400 transition hover:text-white md:hidden"
+                aria-label="Menüyü aç"
+              >
+                <Menu size={22} />
+              </button>
+              <div className="mr-2 min-w-[168px]">
+                <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-cyan-300/65">{meta?.eyebrow}</p>
+                <h1 className="truncate text-lg font-bold tracking-[-0.025em] text-white">{meta?.title}</h1>
+              </div>
+              {hasDateFilters && (
+                <div className="hidden min-w-0 flex-1 items-center gap-1.5 overflow-visible xl:flex">
+                  <DateRangePresets />
+                  <DateRangeBar range={dateRange} onRangeChange={setDateRange} onRefresh={panodayiz ? handleRefreshDashboard : undefined} isLoading={panodayiz ? panoYukleniyor : false} />
+                </div>
+              )}
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <div className={cn("hidden items-center gap-2 rounded-lg border border-white/[0.07] bg-white/[0.025] px-3 py-2 text-xs font-semibold text-slate-300 lg:flex", hasDateFilters && "xl:hidden")}>
+                <CalendarDays size={16} className="text-slate-500" />
+                {adminDateLabel}
+              </div>
+              <button
+                type="button"
+                onClick={handleRefreshDashboard}
+                className={cn("neon-glow-indigo hidden items-center gap-2 rounded-full bg-purple-500 px-4 py-2 text-xs font-bold text-white transition hover:bg-purple-400 lg:flex", hasDateFilters && "xl:hidden")}
+              >
+                <RefreshCw size={16} />
+                Verileri yenile
+              </button>
+              <NotificationCenter />
+              <div className="hidden h-9 items-center gap-2 rounded-lg border border-white/[0.07] bg-white/[0.025] px-2 lg:flex">
+                <div className="flex h-6 w-6 items-center justify-center rounded-md bg-blue-400 text-[9px] font-black text-white">BS</div>
+                <div className="leading-tight">
+                  <p className="text-[11px] font-bold tracking-[-0.01em] text-white">Bugs Software</p>
+                  <p className="text-[8px] font-medium uppercase tracking-[0.12em] text-slate-600">TR · Partner</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <div className="app-content">
+          <section className="tab-intro workspace-context-bar">
+            <div className="flex min-w-0 items-start gap-4">
+              <div className="min-w-0">
+                <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-cyan-300/65">{meta?.eyebrow}</p>
+                <h2 className="sr-only">{meta?.title}</h2>
+                <p className="max-w-5xl truncate text-xs leading-5 text-slate-500">{meta?.description}</p>
+              </div>
+            </div>
+            <div className="hidden items-center gap-3 sm:flex">
+              <div className="tab-intro-status">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
+                Canlı çalışma alanı · son güncelleme {panoGuncellemeSaati}
+              </div>
+            </div>
+          </section>
+
+          {hasDateFilters && (
+            <div className="tab-filter-dock mb-5 flex flex-wrap items-center gap-3 xl:hidden">
+              <DateRangePresets />
+              <DateRangeBar range={dateRange} onRangeChange={setDateRange} onRefresh={panodayiz ? handleRefreshDashboard : undefined} isLoading={panodayiz ? panoYukleniyor : false} />
+            </div>
+          )}
+          <Suspense fallback={<div className="flex flex-1 items-center justify-center py-20"><LoadingState label="Yükleniyor..." /></div>}>
+            <div className="tab-workspace" data-tab={meta?.id}>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={pathname}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className={meta?.icerikSinifi}
+                >
+                  <Outlet />
+                </motion.div>
+              </AnimatePresence>
+            </div>
+          </Suspense>
+        </div>
+      </div>
+      <GlobalNotifications />
+    </motion.div>
+  );
+}

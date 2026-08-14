@@ -146,7 +146,7 @@ function claimStatusClass(status: WheelClaim['status']) {
   if (status === 'fulfilled' || status === 'granted' || status === 'completed') return 'border-emerald-400/20 bg-emerald-400/10 text-emerald-300';
   if (status === 'fulfillment_pending' || status === 'pending') return 'border-amber-400/20 bg-amber-400/10 text-amber-200';
   if (status === 'failed' || status === 'cancelled') return 'border-rose-400/20 bg-rose-400/10 text-rose-300';
-  return 'border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.04] text-[color:var(--panel-text-dim,#c8cdd5)]';
+  return 'border-white/5 bg-white/[0.04] text-slate-200';
 }
 
 function validHex(color: string | undefined, fallback: string) {
@@ -208,10 +208,10 @@ function ColorField({
 
   return (
     <label className="block min-w-0">
-      <span className={cn('mb-1 block font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]', compact ? 'text-[9px]' : 'text-[10px]')}>
+      <span className={cn('mb-1 block font-semibold uppercase tracking-widest text-slate-400', compact ? 'text-[9px]' : 'text-[10px]')}>
         {label}
       </span>
-      <span className="flex h-10 items-center gap-2 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] px-2 transition focus-within:border-[color:var(--panel-accent,#0a84ff)]/50">
+      <span className="flex h-10 items-center gap-2 rounded-lg border border-white/5 bg-white/[0.02] px-2 transition focus-within:border-[color:var(--panel-accent,#0a84ff)]/50">
         <input
           type="color"
           value={safe}
@@ -222,7 +222,7 @@ function ColorField({
           type="text"
           value={color || safe}
           onChange={event => onChange(event.target.value)}
-          className="min-w-0 flex-1 bg-transparent text-[11px] font-semibold uppercase text-[color:var(--panel-text-dim,#c8cdd5)] outline-none"
+          className="min-w-0 flex-1 bg-transparent text-[11px] font-semibold uppercase text-slate-200 outline-none"
           spellCheck={false}
         />
       </span>
@@ -249,9 +249,9 @@ function RangeField({
 
   return (
     <label className="block">
-      <span className="mb-2 flex items-center justify-between gap-3 text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">
+      <span className="mb-2 flex items-center justify-between gap-3 text-[10px] font-semibold uppercase tracking-widest text-slate-400">
         <span>{label}</span>
-        <span className="text-[color:var(--panel-info,#64d2ff)]">{value}{suffix}</span>
+        <span className="text-purple-300">{value}{suffix}</span>
       </span>
       <span className="relative block h-2 rounded-full bg-black/50">
         <span className="absolute left-0 top-0 h-full rounded-full bg-[color:var(--panel-accent,#0a84ff)]/60" style={{ width: `${pct}%` }} />
@@ -370,28 +370,28 @@ function DeviceSimulationPanel({
   appearance: WheelAppearance;
 }) {
   return (
-    <section className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-4 shadow-[0_18px_70px_rgba(0,0,0,0.24)]">
+    <section className="rounded-xl border border-white/5 bg-white/[0.02] p-4 shadow-[0_18px_70px_rgba(0,0,0,0.24)]">
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="flex items-center gap-2 text-base font-semibold text-white">
-            <Monitor size={17} className="text-[color:var(--panel-accent,#0a84ff)]" />
+            <Monitor size={17} className="text-purple-300" />
             Cihaz Simülasyonu
           </h2>
-          <p className="mt-1 text-xs font-medium text-[color:var(--panel-muted,#8a919c)]">Oyuncu ekranının web ve mobil yerleşimini aynı çark verisiyle kontrol edin.</p>
+          <p className="mt-1 text-xs font-medium text-slate-400">Oyuncu ekranının web ve mobil yerleşimini aynı çark verisiyle kontrol edin.</p>
         </div>
-        <span className="inline-flex h-9 items-center gap-2 rounded-lg border border-[color:var(--panel-accent,#0a84ff)]/20 bg-[color:var(--panel-accent,#0a84ff)]/10 px-3 text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-info,#64d2ff)]">
+        <span className="inline-flex h-9 items-center gap-2 rounded-lg border border-[color:var(--panel-accent,#0a84ff)]/20 bg-[color:var(--panel-accent,#0a84ff)]/10 px-3 text-[10px] font-semibold uppercase tracking-widest text-purple-300">
           <Smartphone size={14} />
           Web + Mobil
         </span>
       </div>
 
       <div className="grid grid-cols-1 gap-4 2xl:grid-cols-[minmax(0,1fr)_340px]">
-        <div className="overflow-hidden rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))]">
-          <div className="flex h-10 items-center gap-2 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.03] px-4">
+        <div className="overflow-hidden rounded-xl border border-white/5 bg-white/[0.02]">
+          <div className="flex h-10 items-center gap-2 border-b border-white/5 bg-white/[0.03] px-4">
             <span className="h-2.5 w-2.5 rounded-full bg-rose-400/80" />
             <span className="h-2.5 w-2.5 rounded-full bg-[color:var(--panel-warning,#ff9f0a)]/80" />
             <span className="h-2.5 w-2.5 rounded-full bg-emerald-300/80" />
-            <div className="ml-3 flex h-6 min-w-0 flex-1 items-center rounded-md border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/25 px-3 text-[10px] font-bold text-[color:var(--panel-muted,#8a919c)]">
+            <div className="ml-3 flex h-6 min-w-0 flex-1 items-center rounded-md border border-white/5 bg-black/25 px-3 text-[10px] font-bold text-slate-400">
               /#/sans-carki
             </div>
           </div>
@@ -402,37 +402,37 @@ function DeviceSimulationPanel({
             <div className="flex justify-center">
               <WheelSvg wheel={wheel} appearance={appearance} size={330} />
             </div>
-            <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-4">
+            <div className="rounded-xl border border-white/5 bg-white/[0.02] p-4">
               <div className="mb-4">
-                <div className="text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-accent,#0a84ff)]">Şans Çarkı</div>
+                <div className="text-[10px] font-semibold uppercase tracking-widest text-purple-300">Şans Çarkı</div>
                 <div className="mt-1 text-xl font-semibold text-white">Çark hakkını kullan</div>
               </div>
               <div className="space-y-3">
-                <div className="h-11 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/30 px-3 py-3 text-xs font-bold text-[color:var(--panel-muted,#8a919c)]">Kullanıcı adı</div>
-                <div className="h-11 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/30 px-3 py-3 text-xs font-bold text-[color:var(--panel-muted,#8a919c)]">Çark kodu</div>
+                <div className="h-11 rounded-lg border border-white/5 bg-black/30 px-3 py-3 text-xs font-bold text-slate-400">Kullanıcı adı</div>
+                <div className="h-11 rounded-lg border border-white/5 bg-black/30 px-3 py-3 text-xs font-bold text-slate-400">Çark kodu</div>
                 <div className="flex h-11 items-center justify-center rounded-lg bg-[color:var(--panel-accent,#0a84ff)] text-xs font-semibold uppercase tracking-widest text-[#050609]">Çevir</div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="flex justify-center rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-4">
-          <div className="w-[286px] rounded-[32px] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black p-2 shadow-[0_20px_70px_rgba(0,0,0,0.35)]">
-            <div className="overflow-hidden rounded-[26px] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))]">
-              <div className="flex h-8 items-center justify-center border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
+        <div className="flex justify-center rounded-xl border border-white/5 bg-white/[0.02] p-4">
+          <div className="w-[286px] rounded-[32px] border border-white/5 bg-black p-2 shadow-[0_20px_70px_rgba(0,0,0,0.35)]">
+            <div className="overflow-hidden rounded-[26px] border border-white/5 bg-white/[0.02]">
+              <div className="flex h-8 items-center justify-center border-b border-white/5">
                 <span className="h-1.5 w-16 rounded-full bg-white/15" />
               </div>
               <div className="px-3 py-4">
                 <div className="mb-3 flex items-center justify-between">
-                  <span className="text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-accent,#0a84ff)]">Mobil</span>
+                  <span className="text-[10px] font-semibold uppercase tracking-widest text-purple-300">Mobil</span>
                   <span className="rounded-full bg-emerald-400/10 px-2 py-1 text-[9px] font-semibold uppercase tracking-widest text-emerald-300">Aktif</span>
                 </div>
                 <div className="flex justify-center">
                   <WheelSvg wheel={wheel} appearance={appearance} size={214} />
                 </div>
                 <div className="mt-4 space-y-2">
-                  <div className="h-10 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/30 px-3 py-2.5 text-[11px] font-bold text-[color:var(--panel-muted,#8a919c)]">Kullanıcı adı</div>
-                  <div className="h-10 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/30 px-3 py-2.5 text-[11px] font-bold text-[color:var(--panel-muted,#8a919c)]">Çark kodu</div>
+                  <div className="h-10 rounded-lg border border-white/5 bg-black/30 px-3 py-2.5 text-[11px] font-bold text-slate-400">Kullanıcı adı</div>
+                  <div className="h-10 rounded-lg border border-white/5 bg-black/30 px-3 py-2.5 text-[11px] font-bold text-slate-400">Çark kodu</div>
                   <div className="flex h-10 items-center justify-center rounded-lg bg-[color:var(--panel-accent,#0a84ff)] text-[11px] font-semibold uppercase tracking-widest text-[#050609]">Çevir</div>
                 </div>
               </div>
@@ -650,7 +650,7 @@ export function WheelManager({
               <Olcut etiket="Ortalama ödül" deger={lira(stats.avgReward)} />
               <Olcut etiket="Çevirme başına" deger={lira(stats.maliyet / 100)} />
             </OlcutListesi>
-            <div className="border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
+            <div className="border-t border-white/5">
               <PaySeridi
                 modul="cark"
                 parcalar={wheel.map((slice) => ({
@@ -685,9 +685,9 @@ export function WheelManager({
             * sürekli pas dönüyor" sorusunun cevabı burada.
             */}
           {analiz && (
-            <div className="space-y-2 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20 p-3">
+            <div className="space-y-2 rounded-lg border border-white/5 bg-black/20 p-3">
               <div className="flex items-baseline justify-between gap-3">
-                <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[color:var(--panel-muted,#8a919c)]">
+                <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
                   Gerçek pas oranı
                 </span>
                 <span
@@ -698,7 +698,7 @@ export function WheelManager({
                   {analiz.gercekPasYuzdesi === null ? '—' : `%${analiz.gercekPasYuzdesi.toFixed(1)}`}
                 </span>
               </div>
-              <p className="text-[10px] text-[color:var(--panel-muted,#8a919c)]">
+              <p className="text-[10px] text-slate-400">
                 Çekilişe giren {analiz.etkinDilim} dilim. Motorun uyguladığı oran budur; yukarıdaki
                 yüzdeler girdiğiniz değerlerden hesaplanıyor.
               </p>
@@ -708,7 +708,7 @@ export function WheelManager({
               {analiz.disaridaKalanlar.length > 0 && (
                 <ul className="space-y-1 border-t border-white/[0.06] pt-2">
                   {analiz.disaridaKalanlar.map((dis: any) => (
-                    <li key={dis.id} className="text-[10px] text-[color:var(--panel-text-dim,#c8cdd5)]">
+                    <li key={dis.id} className="text-[10px] text-slate-200">
                       <span className="font-semibold text-amber-300">{dis.label}</span>{' '}
                       <span className="tabular-nums">%{dis.ayarlananOlasilik}</span> — {dis.aciklama}
                     </li>
@@ -720,8 +720,8 @@ export function WheelManager({
         </aside>
       </div>
 
-      <section className="min-w-0 rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] shadow-[0_18px_70px_rgba(0,0,0,0.24)]">
-        <div className="border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] p-4">
+      <section className="min-w-0 rounded-xl border border-white/5 bg-white/[0.02] shadow-[0_18px_70px_rgba(0,0,0,0.24)]">
+        <div className="border-b border-white/5 p-4">
           <div className="flex flex-col gap-4 2xl:flex-row 2xl:items-center 2xl:justify-between">
             <div className="flex flex-wrap gap-2">
               {TABS.map(tab => {
@@ -737,7 +737,7 @@ export function WheelManager({
                       'inline-flex h-10 items-center gap-2 rounded-lg px-4 text-xs font-semibold uppercase tracking-widest transition',
                       active
                         ? 'bg-[#ff9f0a] text-[#050609]'
-                        : 'bg-white/[0.04] text-[color:var(--panel-muted,#8a919c)] hover:bg-white/[0.07] hover:text-[color:var(--panel-text-dim,#c8cdd5)]'
+                        : 'bg-white/[0.04] text-slate-400 hover:bg-white/[0.07] hover:text-slate-200'
                     )}
                   >
                     <Icon size={15} />
@@ -752,11 +752,11 @@ export function WheelManager({
 
         <div className="p-4">
           {activeTab === 'slices' && (
-            <div className="overflow-hidden rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
-              <div className="flex flex-col gap-3 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="overflow-hidden rounded-xl border border-white/5">
+              <div className="flex flex-col gap-3 border-b border-white/5 bg-black/20 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h2 className="text-base font-semibold text-white">Dilim Yönetimi</h2>
-                  <p className="mt-1 text-xs font-medium text-[color:var(--panel-muted,#8a919c)]">Ödül, pas, tutar ve olasılık ayarlarını buradan düzenleyin.</p>
+                  <p className="mt-1 text-xs font-medium text-slate-400">Ödül, pas, tutar ve olasılık ayarlarını buradan düzenleyin.</p>
                 </div>
                 <button
                   type="button"
@@ -778,16 +778,16 @@ export function WheelManager({
 
               {wheel.length === 0 ? (
                 <div className="flex flex-col items-center gap-3 py-16 text-center">
-                  <Target size={34} className="text-[color:var(--panel-faint,#5c6470)]" />
+                  <Target size={34} className="text-slate-500" />
                   <div>
                     <div className="font-semibold text-white">Henüz dilim yok</div>
-                    <div className="mt-1 text-sm text-[color:var(--panel-muted,#8a919c)]">İlk ödül dilimini ekleyerek başlayın.</div>
+                    <div className="mt-1 text-sm text-slate-400">İlk ödül dilimini ekleyerek başlayın.</div>
                   </div>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
                   <div className="min-w-[920px]">
-                    <div className="grid grid-cols-[70px_minmax(260px,1fr)_170px_120px_120px_52px] gap-3 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/25 px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">
+                    <div className="grid grid-cols-[70px_minmax(260px,1fr)_170px_120px_120px_52px] gap-3 border-b border-white/5 bg-black/25 px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-slate-400">
                       <span>Renk</span>
                       <span>Etiket / Bonus</span>
                       <span>Tip</span>
@@ -799,13 +799,13 @@ export function WheelManager({
                     {wheel.map((slice, index) => (
                       <div
                         key={slice.id || index}
-                        className="grid grid-cols-[70px_minmax(260px,1fr)_170px_120px_120px_52px] items-center gap-3 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] px-4 py-3 last:border-b-0 hover:bg-white/[0.025]"
+                        className="grid grid-cols-[70px_minmax(260px,1fr)_170px_120px_120px_52px] items-center gap-3 border-b border-white/5 px-4 py-3 last:border-b-0 hover:bg-white/[0.025]"
                       >
                         <div className="flex items-center gap-2">
                           <span className="flex h-8 w-8 items-center justify-center rounded-lg text-[10px] font-semibold text-white" style={{ backgroundColor: validHex(slice.bgColor, '#1f2937') }}>
                             {index + 1}
                           </span>
-                          <span className="text-[10px] font-semibold text-[color:var(--panel-faint,#5c6470)]">#{index + 1}</span>
+                          <span className="text-[10px] font-semibold text-slate-500">#{index + 1}</span>
                         </div>
 
                         <input
@@ -813,14 +813,14 @@ export function WheelManager({
                           list="wheel-bonus-options"
                           value={slice.bonusId ? String(slice.bonusId) : slice.label}
                           onChange={event => handleBonusChange(slice, event.target.value)}
-                          className="h-10 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] px-3 text-sm font-bold text-white outline-none transition focus:border-[color:var(--panel-accent,#0a84ff)]/50"
+                          className="h-10 rounded-lg border border-white/5 bg-white/[0.02] px-3 text-sm font-bold text-white outline-none transition focus:border-[color:var(--panel-accent,#0a84ff)]/50"
                           placeholder="Bonus ID veya etiket"
                         />
 
                         <select
                           value={slice.type}
                           onChange={event => changeRewardType(slice, event.target.value as WheelSlice['type'])}
-                          className="h-10 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] px-3 text-xs font-bold text-[color:var(--panel-text-dim,#c8cdd5)] outline-none transition focus:border-[color:var(--panel-accent,#0a84ff)]/50"
+                          className="h-10 rounded-lg border border-white/5 bg-white/[0.02] px-3 text-xs font-bold text-slate-200 outline-none transition focus:border-[color:var(--panel-accent,#0a84ff)]/50"
                         >
                           <option value="bonus">Lynon bonusu</option>
                           <option value="cash">Nakit / PlayerAccount</option>
@@ -832,20 +832,20 @@ export function WheelManager({
                           type="number"
                           value={slice.amount ?? 0}
                           onChange={event => handleUpdateSlice(slice.id, { amount: Number(event.target.value) })}
-                          className="h-10 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] px-3 text-sm font-semibold text-[color:var(--panel-text,#f2f4f8)] outline-none transition focus:border-[color:var(--panel-accent,#0a84ff)]/50"
+                          className="h-10 rounded-lg border border-white/5 bg-white/[0.02] px-3 text-sm font-semibold text-white outline-none transition focus:border-[color:var(--panel-accent,#0a84ff)]/50"
                         />
 
                         <input
                           type="number"
                           value={slice.probability ?? 0}
                           onChange={event => handleUpdateSlice(slice.id, { probability: Number(event.target.value) })}
-                          className="h-10 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] px-3 text-sm font-semibold text-[color:var(--panel-text,#f2f4f8)] outline-none transition focus:border-[color:var(--panel-accent,#0a84ff)]/50"
+                          className="h-10 rounded-lg border border-white/5 bg-white/[0.02] px-3 text-sm font-semibold text-white outline-none transition focus:border-[color:var(--panel-accent,#0a84ff)]/50"
                         />
 
                         <button
                           type="button"
                           onClick={() => handleRemoveSlice(slice.id)}
-                          className="flex h-10 w-10 items-center justify-center rounded-lg text-[color:var(--panel-faint,#5c6470)] transition hover:bg-rose-500/10 hover:text-rose-400"
+                          className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-500 transition hover:bg-rose-500/10 hover:text-rose-400"
                           aria-label="Dilim sil"
                         >
                           <Trash2 size={16} />
@@ -861,11 +861,11 @@ export function WheelManager({
           {activeTab === 'slices' && wheel.some(slice => !slice.isLoss && slice.type !== 'none') && (
             <div className="grid grid-cols-1 gap-3 rounded-xl border border-amber-300/15 bg-black/20 p-4 lg:grid-cols-2">
               {wheel.filter(slice => !slice.isLoss && slice.type !== 'none').map(slice => (
-                <div key={`delivery-${slice.id}`} className="space-y-3 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-3">
+                <div key={`delivery-${slice.id}`} className="space-y-3 rounded-lg border border-white/5 bg-white/[0.02] p-3">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="truncate text-sm font-bold text-white">{slice.label || `Dilim #${slice.id}`}</p>
-                      <p className="mt-1 text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-faint,#5c6470)]">
+                      <p className="mt-1 text-[10px] font-semibold uppercase tracking-widest text-slate-500">
                         {slice.type === 'bonus' ? `Lynon kampanyası ${slice.bonusId ? `#${slice.bonusId}` : 'seçilmedi'}` : slice.type === 'cash' ? 'PlayerAccount · crediting' : 'Manuel fiziksel teslimat'}
                       </p>
                     </div>
@@ -884,32 +884,32 @@ export function WheelManager({
                   </div>
 
                   <label className="block">
-                    <span className="mb-1 block text-[9px] font-semibold uppercase tracking-widest text-[color:var(--panel-faint,#5c6470)]">Ödül açıklaması</span>
+                    <span className="mb-1 block text-[9px] font-semibold uppercase tracking-widest text-slate-500">Ödül açıklaması</span>
                     <input
                       type="text"
                       value={slice.detail || ''}
                       onChange={event => handleUpdateSlice(slice.id, { detail: event.target.value })}
-                      className="h-9 w-full rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/25 px-3 text-xs text-[color:var(--panel-text-dim,#c8cdd5)] outline-none focus:border-[color:var(--panel-accent,#0a84ff)]/50"
+                      className="h-9 w-full rounded-lg border border-white/5 bg-black/25 px-3 text-xs text-slate-200 outline-none focus:border-[color:var(--panel-accent,#0a84ff)]/50"
                       placeholder="Oyuncuya gösterilecek koşul"
                     />
                   </label>
 
                   {slice.type === 'physical' && (
                     <label className="block">
-                      <span className="mb-1 block text-[9px] font-semibold uppercase tracking-widest text-[color:var(--panel-faint,#5c6470)]">Stok</span>
+                      <span className="mb-1 block text-[9px] font-semibold uppercase tracking-widest text-slate-500">Stok</span>
                       <input
                         type="number"
                         min={0}
                         value={slice.stock ?? 0}
                         onChange={event => handleUpdateSlice(slice.id, { stock: Math.max(0, Number(event.target.value)) })}
-                        className="h-9 w-full rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/25 px-3 text-xs font-bold text-white outline-none focus:border-[color:var(--panel-accent,#0a84ff)]/50"
+                        className="h-9 w-full rounded-lg border border-white/5 bg-black/25 px-3 text-xs font-bold text-white outline-none focus:border-[color:var(--panel-accent,#0a84ff)]/50"
                       />
                     </label>
                   )}
 
                   {slice.type === 'cash' && (
-                    <p className="rounded-lg border border-blue-300/10 bg-blue-300/[0.05] px-3 py-2 text-[11px] leading-relaxed text-[color:var(--panel-muted,#8a919c)]">
-                      Nakit ödül, Lynon Player Main hesabına <strong className="text-[color:var(--panel-text-dim,#c8cdd5)]">crediting</strong> düzeltmesi olarak işlenir.
+                    <p className="rounded-lg border border-blue-300/10 bg-blue-300/[0.05] px-3 py-2 text-[11px] leading-relaxed text-slate-400">
+                      Nakit ödül, Lynon Player Main hesabına <strong className="text-slate-200">crediting</strong> düzeltmesi olarak işlenir.
                     </p>
                   )}
 
@@ -927,16 +927,16 @@ export function WheelManager({
           {activeTab === 'appearance' && (
             <div className="space-y-4">
               <div className="space-y-4">
-                <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] p-4">
-                  <div className="mb-4 flex flex-col gap-3 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] pb-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="rounded-xl border border-white/5 p-4">
+                  <div className="mb-4 flex flex-col gap-3 border-b border-white/5 pb-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <h2 className="text-base font-semibold text-white">Görünüm Ayarları</h2>
-                      <p className="mt-1 text-xs font-medium text-[color:var(--panel-muted,#8a919c)]">Çarkın çerçevesi, merkezi, işaretçisi ve efektleri.</p>
+                      <p className="mt-1 text-xs font-medium text-slate-400">Çarkın çerçevesi, merkezi, işaretçisi ve efektleri.</p>
                     </div>
                     <button
                       type="button"
                       onClick={() => onAppearanceChange(DEFAULT_APPEARANCE)}
-                      className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] px-3 text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-text-dim,#c8cdd5)] transition hover:bg-white/[0.04]"
+                      className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-white/5 px-3 text-[10px] font-semibold uppercase tracking-widest text-slate-200 transition hover:bg-white/[0.04]"
                     >
                       <RotateCcw size={14} />
                       Varsayılana Dön
@@ -959,22 +959,22 @@ export function WheelManager({
                   </div>
                 </div>
 
-                <div className="overflow-hidden rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
-                  <div className="border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20 px-4 py-3">
+                <div className="overflow-hidden rounded-xl border border-white/5">
+                  <div className="border-b border-white/5 bg-black/20 px-4 py-3">
                     <h3 className="text-sm font-semibold text-white">Dilim Renkleri</h3>
-                    <p className="mt-1 text-xs font-medium text-[color:var(--panel-muted,#8a919c)]">Dilim renkleri sadece bu sekmede yönetilir.</p>
+                    <p className="mt-1 text-xs font-medium text-slate-400">Dilim renkleri sadece bu sekmede yönetilir.</p>
                   </div>
                   <div className="p-4">
                     <div className="space-y-3">
                       {wheel.map((slice, index) => (
-                        <div key={slice.id || index} className="grid grid-cols-1 gap-3 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20 p-3 md:grid-cols-[minmax(0,1fr)_160px_160px]">
+                        <div key={slice.id || index} className="grid grid-cols-1 gap-3 rounded-lg border border-white/5 bg-black/20 p-3 md:grid-cols-[minmax(0,1fr)_160px_160px]">
                           <div className="flex min-w-0 items-center gap-3">
                             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[10px] font-semibold text-white" style={{ backgroundColor: validHex(slice.bgColor, '#1f2937') }}>
                               {index + 1}
                             </span>
                             <span className="min-w-0">
                               <span className="block truncate text-sm font-semibold text-white">{slice.label}</span>
-                              <span className="text-[10px] font-bold text-[color:var(--panel-faint,#5c6470)]">%{Number(slice.probability) || 0}</span>
+                              <span className="text-[10px] font-bold text-slate-500">%{Number(slice.probability) || 0}</span>
                             </span>
                           </div>
                           <ColorField compact label="Zemin" color={slice.bgColor || '#1f2937'} onChange={bgColor => handleUpdateSlice(slice.id, { bgColor })} />
@@ -989,11 +989,11 @@ export function WheelManager({
           )}
 
           {activeTab === 'claims' && (
-            <div className="overflow-hidden rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
-              <div className="flex flex-col gap-2 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="overflow-hidden rounded-xl border border-white/5">
+              <div className="flex flex-col gap-2 border-b border-white/5 bg-black/20 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h2 className="text-base font-semibold text-white">Çark Ödül Teslimatları</h2>
-                  <p className="mt-1 text-xs font-medium text-[color:var(--panel-muted,#8a919c)]">Lynon bonusu ve nakit ödüller otomatik; fiziksel ödüller onay kuyruğunda ilerler.</p>
+                  <p className="mt-1 text-xs font-medium text-slate-400">Lynon bonusu ve nakit ödüller otomatik; fiziksel ödüller onay kuyruğunda ilerler.</p>
                 </div>
                 <div className="flex items-center gap-2">
                   {/*
@@ -1010,29 +1010,29 @@ export function WheelManager({
                         'rounded-md border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-widest transition-colors',
                         kayiplariGoster
                           ? 'border-amber-400/20 bg-amber-400/10 text-amber-200'
-                          : 'border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.03] text-[color:var(--panel-muted,#8a919c)] hover:text-white'
+                          : 'border-white/5 bg-white/[0.03] text-slate-400 hover:text-white'
                       )}
                       title="Ödül çıkmayan turlar kayıt olarak duruyor; bu düğme yalnızca görünümü değiştirir."
                     >
                       {kayiplariGoster ? 'Kayıp turları gizle' : `${kayipSayisi} kayıp tur gizli`}
                     </button>
                   )}
-                  <span className="rounded-md border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.03] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">
+                  <span className="rounded-md border border-white/5 bg-white/[0.03] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-slate-400">
                     {claims.length} kayıt
                   </span>
                 </div>
               </div>
 
               {claimsLoading ? (
-                <div className="py-14 text-center text-sm font-bold text-[color:var(--panel-muted,#8a919c)]">Teslimatlar yükleniyor...</div>
+                <div className="py-14 text-center text-sm font-bold text-slate-400">Teslimatlar yükleniyor...</div>
               ) : claims.length === 0 ? (
                 <div className="flex flex-col items-center gap-3 py-16 text-center">
-                  <PackageCheck size={34} className="text-[color:var(--panel-faint,#5c6470)]" />
+                  <PackageCheck size={34} className="text-slate-500" />
                   <div>
                     <div className="font-semibold text-white">
                       {kayipSayisi > 0 && !kayiplariGoster ? 'Teslim edilecek ödül yok' : 'Henüz ödül kaydı yok'}
                     </div>
-                    <div className="mt-1 text-sm text-[color:var(--panel-muted,#8a919c)]">
+                    <div className="mt-1 text-sm text-slate-400">
                       {kayipSayisi > 0 && !kayiplariGoster
                         ? `${kayipSayisi} tur oynanmış ama hiçbirinden ödül çıkmamış.`
                         : 'Çark kullanımları burada denetlenebilir olarak listelenecek.'}
@@ -1042,7 +1042,7 @@ export function WheelManager({
               ) : (
                 <div className="overflow-x-auto">
                   <table className="min-w-[980px] w-full text-left">
-                    <thead className="bg-black/25 text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">
+                    <thead className="bg-black/25 text-[10px] font-semibold uppercase tracking-widest text-slate-400">
                       <tr>
                         <th className="px-4 py-3">Oyuncu</th>
                         <th className="px-4 py-3">Ödül</th>
@@ -1054,20 +1054,20 @@ export function WheelManager({
                     </thead>
                     <tbody>
                       {claims.map(claim => (
-                        <tr key={claim.id} className="border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))] text-sm text-[color:var(--panel-text-dim,#c8cdd5)] hover:bg-white/[0.02]">
+                        <tr key={claim.id} className="border-t border-white/5 text-sm text-slate-200 hover:bg-white/[0.02]">
                           <td className="px-4 py-3">
                             <div className="font-bold text-white">{claim.username}</div>
-                            <div className="mt-0.5 font-mono text-[10px] text-[color:var(--panel-faint,#5c6470)]">{claim.id.slice(0, 8)}</div>
+                            <div className="mt-0.5 font-mono text-[10px] text-slate-500">{claim.id.slice(0, 8)}</div>
                           </td>
                           <td className="px-4 py-3">
-                            <div className="max-w-[260px] truncate font-bold text-[color:var(--panel-text,#f2f4f8)]">{claim.label}</div>
-                            {claim.message && <div className="mt-0.5 max-w-[300px] truncate text-[11px] text-[color:var(--panel-muted,#8a919c)]">{claim.message}</div>}
+                            <div className="max-w-[260px] truncate font-bold text-white">{claim.label}</div>
+                            {claim.message && <div className="mt-0.5 max-w-[300px] truncate text-[11px] text-slate-400">{claim.message}</div>}
                           </td>
                           <td className="px-4 py-3">
-                            <div className="text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">{claim.rewardType}</div>
+                            <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">{claim.rewardType}</div>
                             <div className="mt-1 font-mono font-semibold text-white">{claim.amount > 0 ? `${claim.amount.toLocaleString('tr-TR')} TL` : '—'}</div>
                           </td>
-                          <td className="px-4 py-3 whitespace-nowrap text-xs text-[color:var(--panel-muted,#8a919c)]">
+                          <td className="px-4 py-3 whitespace-nowrap text-xs text-slate-400">
                             {new Date(claim.createdAt).toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' })}
                           </td>
                           <td className="px-4 py-3">
@@ -1099,7 +1099,7 @@ export function WheelManager({
                                 </button>
                               </div>
                             ) : (
-                              <div className="text-right text-xs font-bold text-[color:var(--panel-faint,#5c6470)]">—</div>
+                              <div className="text-right text-xs font-bold text-slate-500">—</div>
                             )}
                           </td>
                         </tr>
@@ -1112,11 +1112,11 @@ export function WheelManager({
           )}
 
           {activeTab === 'codes' && (
-            <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
-              <div className="flex flex-col gap-3 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="rounded-xl border border-white/5">
+              <div className="flex flex-col gap-3 border-b border-white/5 bg-black/20 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h2 className="text-base font-semibold text-white">Manuel Kodlar</h2>
-                  <p className="mt-1 text-xs font-medium text-[color:var(--panel-muted,#8a919c)]">Yatırım şartını atlayan tek kullanımlık kodlar.</p>
+                  <p className="mt-1 text-xs font-medium text-slate-400">Yatırım şartını atlayan tek kullanımlık kodlar.</p>
                 </div>
                 <button
                   type="button"
@@ -1130,10 +1130,10 @@ export function WheelManager({
 
               {manualCodes.length === 0 ? (
                 <div className="flex flex-col items-center gap-3 py-16 text-center">
-                  <Ticket size={34} className="text-[color:var(--panel-faint,#5c6470)]" />
+                  <Ticket size={34} className="text-slate-500" />
                   <div>
                     <div className="font-semibold text-white">Henüz kod üretilmedi</div>
-                    <div className="mt-1 text-sm text-[color:var(--panel-muted,#8a919c)]">Manuel kullanım kodlarını buradan oluşturun.</div>
+                    <div className="mt-1 text-sm text-slate-400">Manuel kullanım kodlarını buradan oluşturun.</div>
                   </div>
                 </div>
               ) : (
@@ -1143,13 +1143,13 @@ export function WheelManager({
                       key={`${code.code}-${index}`}
                       className={cn(
                         'rounded-xl border p-4',
-                        code.used ? 'border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20 opacity-60' : 'border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.025]'
+                        code.used ? 'border-white/5 bg-black/20 opacity-60' : 'border-white/5 bg-white/[0.025]'
                       )}
                     >
                       <div className="mb-3 flex items-center justify-between">
                         <span className={cn(
                           'rounded-md px-2 py-1 text-[10px] font-semibold uppercase tracking-widest',
-                          code.used ? 'bg-[color:var(--panel-surface-2,rgba(242,244,248,0.05))] text-[color:var(--panel-muted,#8a919c)]' : 'bg-emerald-400/10 text-emerald-300'
+                          code.used ? 'bg-white/10 text-slate-400' : 'bg-emerald-400/10 text-emerald-300'
                         )}>
                           {code.used ? 'Kullanıldı' : 'Aktif'}
                         </span>
@@ -1158,7 +1158,7 @@ export function WheelManager({
                             <button
                               type="button"
                               onClick={() => copyCode(code.code)}
-                              className="rounded-lg p-2 text-[color:var(--panel-faint,#5c6470)] transition hover:bg-white/[0.05] hover:text-[color:var(--panel-text-dim,#c8cdd5)]"
+                              className="rounded-lg p-2 text-slate-500 transition hover:bg-white/[0.05] hover:text-slate-200"
                               aria-label="Kodu kopyala"
                             >
                               <Copy size={14} />
@@ -1167,7 +1167,7 @@ export function WheelManager({
                           <button
                             type="button"
                             onClick={() => onCodesUpdate(manualCodes.filter((_: any, itemIndex: number) => itemIndex !== index))}
-                            className="rounded-lg p-2 text-[color:var(--panel-faint,#5c6470)] transition hover:bg-rose-500/10 hover:text-rose-400"
+                            className="rounded-lg p-2 text-slate-500 transition hover:bg-rose-500/10 hover:text-rose-400"
                             aria-label="Kodu sil"
                           >
                             <Trash2 size={14} />
@@ -1175,7 +1175,7 @@ export function WheelManager({
                         </div>
                       </div>
                       <div className="font-mono text-xl font-semibold tracking-[0.18em] text-white">{code.code}</div>
-                      <div className="mt-2 text-[11px] font-medium text-[color:var(--panel-muted,#8a919c)]">
+                      <div className="mt-2 text-[11px] font-medium text-slate-400">
                         {code.used
                           ? `${code.usedBy || 'Oyuncu'} - ${code.usedAt ? new Date(code.usedAt).toLocaleDateString('tr-TR') : ''}`
                           : 'Henüz kullanılmadı'}

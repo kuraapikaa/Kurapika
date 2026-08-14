@@ -226,20 +226,20 @@ export function EngagementManager({
                   return (
                     <div
                       key={gorev.id}
-                      className={`rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20 p-4 transition-opacity ${pasif ? 'opacity-50' : ''}`}
+                      className={`rounded-2xl border border-white/5 bg-black/20 p-4 transition-opacity ${pasif ? 'opacity-50' : ''}`}
                     >
                       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                         <div className="flex items-center gap-3">
-                          <span className="text-[13px] font-semibold text-[color:var(--panel-text,#f2f4f8)]">
+                          <span className="text-[13px] font-semibold text-white">
                             {gorev.title || 'Adsız görev'}
                           </span>
                           {/* Gorevin ne istedigi tek satirda okunabilsin. */}
-                          <span className={`${RAKAM} rounded-md bg-white/[0.06] px-2 py-1 text-[10px] font-bold text-[color:var(--panel-muted,#8a919c)]`}>
+                          <span className={`${RAKAM} rounded-md bg-white/[0.06] px-2 py-1 text-[10px] font-bold text-slate-400`}>
                             {metrik.label} ≥ {sayi(Number(gorev.target) || 0)} {metrik.birim}
                           </span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <label className="flex cursor-pointer items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-[color:var(--panel-muted,#8a919c)]">
+                          <label className="flex cursor-pointer items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
                             <input
                               type="checkbox"
                               checked={!pasif}
@@ -350,7 +350,7 @@ export function EngagementManager({
               <Olcut etiket="Toplam XP" deger={sayi(ozet.gunlukXp)} />
               <Olcut etiket="Tümü tamamlanırsa" deger={lira(ozet.gunlukOdul)} vurgulu />
             </OlcutListesi>
-            <p className="border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))] px-5 py-3 text-[11px] font-medium text-[color:var(--panel-muted,#8a919c)]">
+            <p className="border-t border-white/5 px-5 py-3 text-[11px] font-medium text-slate-400">
               Bir oyuncu günün tüm görevlerini bitirirse maliyet bu kadar.
             </p>
           </Bolum>
@@ -370,7 +370,7 @@ export function EngagementManager({
           )}
 
           <Bolum baslik="Hesaplama">
-            <ul className="space-y-2.5 px-5 py-4 text-[11px] font-medium leading-relaxed text-[color:var(--panel-muted,#8a919c)]">
+            <ul className="space-y-2.5 px-5 py-4 text-[11px] font-medium leading-relaxed text-slate-400">
               <li>
                 İlerleme, Players Overview raporunun <span className="font-bold">dönem</span> kolonlarından
                 okunur — ömür boyu toplamdan değil.
@@ -498,9 +498,9 @@ function BattlePassBolumu({
         ) : (
           <div className="space-y-3 p-4">
             {pass.xpRules.map((kural: any) => (
-              <div key={kural.id} className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20 p-4">
+              <div key={kural.id} className="rounded-2xl border border-white/5 bg-black/20 p-4">
                 <div className="mb-4 flex items-center justify-between gap-3">
-                  <label className="flex cursor-pointer items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-[color:var(--panel-muted,#8a919c)]">
+                  <label className="flex cursor-pointer items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
                     <input type="checkbox" checked={kural.active !== false} onChange={(e) => kuralGuncelle(kural.id, { active: e.target.checked })} />
                     Aktif
                   </label>
@@ -568,13 +568,13 @@ function BattlePassBolumu({
         ) : (
           <div className="space-y-3 p-4">
             {pass.levels.map((seviye: any) => (
-              <div key={seviye.level} className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20 p-4">
+              <div key={seviye.level} className="rounded-2xl border border-white/5 bg-black/20 p-4">
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <span className={`${RAKAM} flex h-9 w-9 items-center justify-center rounded-lg bg-[color:var(--panel-success,#30d158)]/15 text-[13px] font-bold text-[color:var(--panel-success,#30d158)]`}>
+                    <span className={`${RAKAM} flex h-9 w-9 items-center justify-center rounded-xl bg-[color:var(--panel-success,#30d158)]/15 text-[13px] font-bold text-[color:var(--panel-success,#30d158)]`}>
                       {seviye.level}
                     </span>
-                    <span className={`${RAKAM} text-[11px] font-bold text-[color:var(--panel-muted,#8a919c)]`}>
+                    <span className={`${RAKAM} text-[11px] font-bold text-slate-400`}>
                       {sayi(Number(seviye.requiredXp) || 0)} XP
                     </span>
                   </div>

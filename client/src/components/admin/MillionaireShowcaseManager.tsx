@@ -202,21 +202,21 @@ export function MillionaireShowcaseManager({
                 {veri.records.map((kayit) => (
                   <div
                     key={kayit.id}
-                    className="rounded-xl border bg-black/20 p-4"
+                    className="rounded-2xl border bg-black/20 p-4"
                     style={{
                       borderColor: kayit.featured ? '#bf5af259' : 'var(--panel-border, rgba(242,244,248,0.1))',
                     }}
                   >
                     <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                       <div className="flex min-w-0 items-center gap-3">
-                        <span className={`${RAKAM} text-[15px] font-semibold text-[color:var(--panel-text,#f2f4f8)]`}>
+                        <span className={`${RAKAM} text-[15px] font-semibold text-white`}>
                           {kayit.amount || '—'}
                         </span>
-                        <span className="truncate text-[11px] font-medium text-[color:var(--panel-muted,#8a919c)]">
+                        <span className="truncate text-[11px] font-medium text-slate-400">
                           {kayit.player || 'Oyuncu yok'} · {kayit.game || 'Oyun yok'}
                         </span>
                         {(kayit.videoUrl || '').trim() && (
-                          <span className="inline-flex items-center gap-1 rounded-md bg-white/[0.06] px-2 py-1 text-[10px] font-bold text-[color:var(--panel-muted,#8a919c)]">
+                          <span className="inline-flex items-center gap-1 rounded-md bg-white/[0.06] px-2 py-1 text-[10px] font-bold text-slate-400">
                             <Film size={11} /> Video
                           </span>
                         )}
@@ -227,7 +227,7 @@ export function MillionaireShowcaseManager({
                           onClick={() => kayitGuncelle(kayit.id, { featured: !kayit.featured })}
                           aria-pressed={!!kayit.featured}
                           title={kayit.featured ? 'Öne çıkarmayı kaldır' : 'Öne çıkar'}
-                          className="flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-[10px] font-bold transition-colors"
+                          className="flex h-9 items-center gap-1.5 rounded-xl px-2.5 text-[10px] font-bold transition-colors"
                           style={
                             kayit.featured
                               ? { background: '#bf5af21f', color: '#bf5af2' }
@@ -313,7 +313,7 @@ export function MillionaireShowcaseManager({
               <Olcut etiket="En büyük kazanç" deger={lira(ozet.enBuyuk)} vurgulu />
               <Olcut etiket="Vitrindeki toplam" deger={lira(ozet.toplam)} />
             </OlcutListesi>
-            <p className="border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))] px-5 py-3 text-[11px] font-medium text-[color:var(--panel-muted,#8a919c)]">
+            <p className="border-t border-white/5 px-5 py-3 text-[11px] font-medium text-slate-400">
               {ozet.oneCikan
                 ? `Öne çıkan: ${ozet.oneCikan.title || ozet.oneCikan.amount}`
                 : 'Öne çıkan kayıt seçilmedi; vitrin ilk kaydı kullanır.'}
@@ -335,7 +335,7 @@ export function MillionaireShowcaseManager({
           )}
 
           <Bolum baslik="İçerik kuralı">
-            <ul className="space-y-2.5 px-5 py-4 text-[11px] font-medium leading-relaxed text-[color:var(--panel-muted,#8a919c)]">
+            <ul className="space-y-2.5 px-5 py-4 text-[11px] font-medium leading-relaxed text-slate-400">
               <li>Oyuncu adları maskeli yazılmalı; tam kullanıcı adı yayınlamayın.</li>
               <li>Görsel ve videolar yalnızca izin alınmış içeriklerden kullanılmalı.</li>
               <li>Aynı anda tek kayıt öne çıkabilir; yenisini seçince eskisi normale döner.</li>

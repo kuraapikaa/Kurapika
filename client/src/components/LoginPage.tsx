@@ -80,7 +80,7 @@ export function LoginPage({ onLoginSuccess, tenantConfig }: LoginPageProps) {
               <div className="login-brand-row mb-5 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div
-                    className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.06]"
+                    className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl border border-white/5 bg-white/[0.06]"
                     style={{ boxShadow: `0 0 36px ${accent}20` }}
                   >
                     {tenantConfig?.logoUrl ? (
@@ -106,7 +106,7 @@ export function LoginPage({ onLoginSuccess, tenantConfig }: LoginPageProps) {
                 <div className="flex items-center justify-between gap-4">
                   <div>
                     <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-orange-300">Partner altyapı</p>
-                    <p className="mt-1 text-xs font-medium text-[color:var(--panel-muted,#8a919c)]">Seçili bağlantı, oturum boyunca veri kaynağını belirler.</p>
+                    <p className="mt-1 text-xs font-medium text-slate-400">Seçili bağlantı, oturum boyunca veri kaynağını belirler.</p>
                   </div>
 
                   <div className="login-partner-logo-frame" aria-hidden="true">
@@ -127,7 +127,7 @@ export function LoginPage({ onLoginSuccess, tenantConfig }: LoginPageProps) {
                         'login-provider-option min-h-[44px] rounded-xl border px-3 text-xs font-semibold uppercase tracking-wider transition-colors',
                         provider === option
                           ? option === 'lynon' ? 'border-orange-400/50 bg-[color:var(--panel-warning,#ff9f0a)] text-[#050609]' : 'border-sky-400/50 bg-[color:var(--panel-accent,#0a84ff)] text-[#050609]'
-                          : 'border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/[0.04] text-[color:var(--panel-muted,#8a919c)] hover:bg-white/[0.08] hover:text-white'
+                          : 'border-white/5 bg-white/[0.04] text-slate-400 hover:bg-white/[0.08] hover:text-white'
                       )}
                     >
                       {option === 'lynon' ? 'LYNON ile giriş' : 'BetConstruct'}
@@ -138,14 +138,14 @@ export function LoginPage({ onLoginSuccess, tenantConfig }: LoginPageProps) {
 
               <div className="login-welcome mb-5">
                 <h1 className="text-[2rem] font-semibold tracking-[-0.04em] text-white sm:text-[2.25rem]">Tekrar hoş geldiniz.</h1>
-                <p className="mt-1.5 max-w-sm text-sm leading-5 text-[color:var(--panel-muted,#8a919c)]">
+                <p className="mt-1.5 max-w-sm text-sm leading-5 text-slate-400">
                   Yönetim araçlarına ve canlı operasyon verilerine güvenli erişim sağlayın.
                 </p>
               </div>
 
               <form onSubmit={handleSubmit} className="login-form space-y-3">
                 <label className="block">
-                  <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.14em] text-[color:var(--panel-muted,#8a919c)]">
+                  <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
                     Kullanıcı adı
                   </span>
                   <span className="login-field">
@@ -162,7 +162,7 @@ export function LoginPage({ onLoginSuccess, tenantConfig }: LoginPageProps) {
                 </label>
 
                 <label className="block">
-                  <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.14em] text-[color:var(--panel-muted,#8a919c)]">
+                  <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
                     Parola
                   </span>
                   <span className="login-field">
@@ -201,7 +201,7 @@ export function LoginPage({ onLoginSuccess, tenantConfig }: LoginPageProps) {
                 </motion.button>
               </form>
 
-              <div className="login-security mt-4 flex items-center gap-2 text-[11px] text-[color:var(--panel-muted,#8a919c)]">
+              <div className="login-security mt-4 flex items-center gap-2 text-[11px] text-slate-400">
                 <ShieldCheck size={14} className="text-cyan-300/70" />
                 Oturumunuz şifreli bağlantı üzerinden korunur.
               </div>
@@ -217,7 +217,7 @@ export function LoginPage({ onLoginSuccess, tenantConfig }: LoginPageProps) {
                 <CheckCircle2 size={30} />
               </div>
               <h2 className="mt-6 text-2xl font-semibold text-white">Erişim onaylandı</h2>
-              <p className="mt-2 text-sm text-[color:var(--panel-muted,#8a919c)]">Panel hazırlanıyor…</p>
+              <p className="mt-2 text-sm text-slate-400">Panel hazırlanıyor…</p>
             </motion.section>
           )}
         </AnimatePresence>

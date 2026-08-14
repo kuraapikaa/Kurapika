@@ -106,16 +106,16 @@ export function BetReportDashboard({
       icon: TrendingUp,
       color: 'zinc',
       glowClass: 'neon-glow-zinc',
-      borderClass: 'border-[color:var(--panel-border,rgba(242,244,248,0.1))]',
-      iconClass: 'text-[color:var(--panel-muted,#8a919c)]',
+      borderClass: 'border-white/5',
+      iconClass: 'text-slate-400',
     },
   ];
 
   if (isLoading) {
     return (
-      <div className="flex h-64 flex-col items-center justify-center gap-4 rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))]">
+      <div className="flex h-64 flex-col items-center justify-center gap-4 rounded-xl border border-white/5 bg-white/[0.02]">
         <div className="h-12 w-12 animate-spin rounded-full border-4 border-cyan-500 border-t-transparent" />
-        <p className="text-sm font-bold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">Bahis motoru analiz ediliyor...</p>
+        <p className="text-sm font-bold text-slate-400 uppercase tracking-wider">Bahis motoru analiz ediliyor...</p>
       </div>
     );
   }
@@ -131,17 +131,17 @@ export function BetReportDashboard({
             transition={{ delay: idx * 0.1 }}
           >
             <Card className={cn(
-              "group relative overflow-hidden p-6 border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] backdrop-blur-3xl transition-all duration-500 hover:scale-[1.02] hover:bg-[color:var(--panel-surface,rgba(242,244,248,0.028))]",
+              "group relative overflow-hidden p-6 border-white/5 bg-white/[0.02] backdrop-blur-3xl transition-all duration-500 hover:scale-[1.02] hover:bg-white/[0.02]",
               card.borderClass
             )}>
               <div className={cn("absolute -right-4 -top-4 h-24 w-24 rounded-full blur-3xl opacity-0 group-hover:opacity-20 transition-opacity duration-700", `bg-${card.color}-500`)} />
 
               <div className="relative flex flex-col gap-4">
                 <div className="flex items-center justify-between">
-                  <div className={cn("flex h-10 w-10 items-center justify-center rounded-xl bg-black/40 border border-[color:var(--panel-border,rgba(242,244,248,0.1))]", card.iconClass, card.glowClass)}>
+                  <div className={cn("flex h-10 w-10 items-center justify-center rounded-xl bg-black/40 border border-white/5", card.iconClass, card.glowClass)}>
                     <card.icon size={20} />
                   </div>
-                  <span className="text-[10px] font-semibold text-[color:var(--panel-faint,#5c6470)] uppercase tracking-widest">{card.label}</span>
+                  <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">{card.label}</span>
                 </div>
 
                 <div>
@@ -150,10 +150,10 @@ export function BetReportDashboard({
                       {card.value}
                     </span>
                     {card.currency && (
-                      <span className="text-xs font-semibold text-[color:var(--panel-faint,#5c6470)] uppercase">{card.currency}</span>
+                      <span className="text-xs font-semibold text-slate-500 uppercase">{card.currency}</span>
                     )}
                   </div>
-                  <p className="mt-1 text-[9px] font-bold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-tighter opacity-70">
+                  <p className="mt-1 text-[9px] font-bold text-slate-400 uppercase tracking-tighter opacity-70">
                     {card.sub}
                   </p>
                 </div>

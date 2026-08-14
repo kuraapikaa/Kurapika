@@ -50,7 +50,7 @@ export function GlobalNotifications() {
                             });
 
                             toast.custom(() => (
-                                <div className="flex items-start gap-3 p-4 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-emerald-500/20 backdrop-blur-xl rounded-xl shadow-2xl animate-in fade-in slide-in-from-right-8 pointer-events-auto w-80">
+                                <div className="flex items-start gap-3 p-4 bg-white/[0.02] border border-emerald-500/20 backdrop-blur-xl rounded-xl shadow-2xl animate-in fade-in slide-in-from-right-8 pointer-events-auto w-80">
                                     <div className="p-2 bg-emerald-500/10 rounded-full shrink-0">
                                         <ArrowUpFromLine size={20} className="text-emerald-400" />
                                     </div>
@@ -61,14 +61,14 @@ export function GlobalNotifications() {
                                                 {dep.CurrencyId}
                                             </span>
                                         </h4>
-                                        <p className="text-xs text-[color:var(--panel-muted,#8a919c)] mt-1 truncate">
-                                            <span className="font-bold text-[color:var(--panel-text-dim,#c8cdd5)]">{dep.ClientId}</span> numaralı oyuncu
+                                        <p className="text-xs text-slate-400 mt-1 truncate">
+                                            <span className="font-bold text-slate-300">{dep.ClientId}</span> numaralı oyuncu
                                         </p>
                                         <div className="mt-2 flex items-center justify-between">
                                             <span className="font-mono font-semibold text-emerald-400 text-lg">
                                                 + {formatNumber(dep.Amount)} ₺
                                             </span>
-                                            <span className="text-[10px] text-[color:var(--panel-muted,#8a919c)] truncate max-w-[100px]" title={dep.PaymentSystemName || ""}>
+                                            <span className="text-[10px] text-slate-400 truncate max-w-[100px]" title={dep.PaymentSystemName || ""}>
                                                 {dep.PaymentSystemName || "Sistem"}
                                             </span>
                                         </div>
@@ -96,7 +96,7 @@ export function GlobalNotifications() {
                             });
 
                             toast.custom(() => (
-                                <div className="flex items-start gap-3 p-4 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-amber-500/20 backdrop-blur-xl rounded-xl shadow-2xl animate-in fade-in slide-in-from-right-8 pointer-events-auto w-80">
+                                <div className="flex items-start gap-3 p-4 bg-white/[0.02] border border-amber-500/20 backdrop-blur-xl rounded-xl shadow-2xl animate-in fade-in slide-in-from-right-8 pointer-events-auto w-80">
                                     <div className="p-2 bg-amber-500/10 rounded-full shrink-0">
                                         <ArrowDownToLine size={20} className="text-amber-400" />
                                     </div>
@@ -107,14 +107,14 @@ export function GlobalNotifications() {
                                                 {wth.CurrencyId}
                                             </span>
                                         </h4>
-                                        <p className="text-xs text-[color:var(--panel-muted,#8a919c)] mt-1 truncate">
-                                            <span className="font-bold text-[color:var(--panel-text-dim,#c8cdd5)]">{wth.ClientId}</span> talep etti
+                                        <p className="text-xs text-slate-400 mt-1 truncate">
+                                            <span className="font-bold text-slate-300">{wth.ClientId}</span> talep etti
                                         </p>
                                         <div className="mt-2 flex items-center justify-between">
                                             <span className="font-mono font-semibold text-amber-400 text-lg">
                                                 - {formatNumber(wth.Amount)} ₺
                                             </span>
-                                            <span className="text-[10px] text-[color:var(--panel-muted,#8a919c)] truncate max-w-[100px]" title={wth.PaymentSystemName || ""}>
+                                            <span className="text-[10px] text-slate-400 truncate max-w-[100px]" title={wth.PaymentSystemName || ""}>
                                                 {wth.PaymentSystemName || "Sistem"}
                                             </span>
                                         </div>

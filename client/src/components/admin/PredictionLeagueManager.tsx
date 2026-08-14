@@ -220,12 +220,12 @@ export function PredictionLeagueManager({
             ) : (
               <div className="space-y-3 p-4">
                 {maclar.map((mac) => (
-                  <div key={mac.id} className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20 p-4">
+                  <div key={mac.id} className="rounded-2xl border border-white/5 bg-black/20 p-4">
                     <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                      <div className="flex min-w-0 items-center gap-2 text-[13px] font-semibold text-[color:var(--panel-text,#f2f4f8)]">
+                      <div className="flex min-w-0 items-center gap-2 text-[13px] font-semibold text-white">
                         {mac.homeLogoUrl && <img src={mac.homeLogoUrl} alt="" className="h-5 w-5 rounded-full object-contain" />}
                         <span className="truncate">{mac.homeTeam || 'Ev sahibi'}</span>
-                        <span className="text-[color:var(--panel-faint,#5c6470)]">–</span>
+                        <span className="text-slate-500">–</span>
                         <span className="truncate">{mac.awayTeam || 'Deplasman'}</span>
                         {mac.awayLogoUrl && <img src={mac.awayLogoUrl} alt="" className="h-5 w-5 rounded-full object-contain" />}
                         {mac.status === 'finished' && mac.homeScore != null && mac.awayScore != null && (
@@ -338,7 +338,7 @@ export function PredictionLeagueManager({
                     placeholder="https://..."
                   />
                   <label
-                    className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] text-[color:var(--panel-muted,#8a919c)] transition-colors hover:text-[color:var(--panel-text,#f2f4f8)]"
+                    className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-2xl border border-white/5 text-slate-400 transition-colors hover:text-white"
                     title="Görsel yükle"
                   >
                     <ImageUp size={15} />
@@ -392,7 +392,7 @@ export function PredictionLeagueManager({
                 const kampanya = config[kampanyaAnahtari];
                 return (
                   <div key={period} className="space-y-3">
-                    <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-[color:var(--panel-muted,#8a919c)]">
+                    <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
                       {haftalik ? 'Haftalık' : 'Aylık'}
                     </div>
                     {haftalik && (
@@ -456,7 +456,7 @@ export function PredictionLeagueManager({
 
           {sonuc && (
             <Bolum baslik="Son işlem sonucu">
-              <pre className="max-h-64 overflow-auto px-5 py-4 text-[10px] leading-relaxed text-[color:var(--panel-muted,#8a919c)]">
+              <pre className="max-h-64 overflow-auto px-5 py-4 text-[10px] leading-relaxed text-slate-400">
                 {JSON.stringify(sonuc?.data ?? sonuc, null, 2)}
               </pre>
             </Bolum>

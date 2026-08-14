@@ -70,7 +70,7 @@ export function PartnerProfit({ data, isLoading, error }: PartnerProfitProps) {
         * kendisi hiç gösterilmiyordu.
         */}
       {oyunTurleri.length > 0 && (
-        <div className="border-t border-[color:var(--panel-border,rgba(242,244,248,0.08))]">
+        <div className="border-t border-white/5">
           <PanoTablo
             basliklar={[
               { ad: 'Oyun türü' },
@@ -98,7 +98,7 @@ export function PartnerProfit({ data, isLoading, error }: PartnerProfitProps) {
       )}
 
       {d.oyunTuruKaynagi === 'alinamadi' && (
-        <p className="border-t border-[color:var(--panel-border,rgba(242,244,248,0.08))] px-4 py-3 text-[11px] text-amber-400/90">
+        <p className="border-t border-white/5 px-6 py-4 text-sm text-amber-300">
           Oyun türü raporu (1846) alınamadı. Casino ve spor toplamları pano özetinden türetildi.
         </p>
       )}

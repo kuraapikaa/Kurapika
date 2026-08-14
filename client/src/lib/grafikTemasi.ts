@@ -1,21 +1,14 @@
-import { usePanelTheme } from '../store/panelTheme';
-
 /**
- * GRAFİK RENKLERİ TEMAYA GÖRE.
+ * GRAFİK RENKLERİ.
  *
  * Recharts renkleri prop olarak, JavaScript'ten alıyor — CSS değişkeni
- * okumuyor. Bu yüzden panelin geri kalanını çeviren `--panel-*`
- * token'ları grafiklere hiç ulaşmıyordu ve açık temada üç şey birden
- * bozuluyordu:
+ * okumuyor. Bu yüzden panelin geri kalanını süren `--panel-*` token'ları
+ * grafiklere hiç ulaşmıyor; palet burada elle tutuluyor.
  *
- *   - Izgara çizgileri `rgba(255,255,255,0.03)` ve `#ffffff10` idi:
- *     beyaz zeminde tamamen görünmez.
- *   - Eksen etiketleri `#8a919c` ile ~2.6:1 kontrast veriyordu.
- *   - İpucu kutusu `#0b0d12` ile açık sayfanın ortasında siyah bir
- *     dikdörtgen olarak kalıyordu.
- *
- * Seri renkleri (mavi/yeşil/kırmızı) iki temada da okunuyor ve anlam
- * taşıyor; yalnızca açık temada bir tık koyulaştırılıyorlar.
+ * Panel tek temaya (Premium Dark Glassmorphism) indiği için açık varyant
+ * kaldırıldı. Seri renkleri tasarım sistemindeki neon aksanlarla
+ * hizalandı: mor / zümrüt / gül. Anlamları sabit — yeşil artı, kırmızı
+ * eksi — tema değişse de değişmemeli.
  */
 export interface GrafikRenkleri {
   izgara: string;
@@ -31,26 +24,17 @@ const KOYU: GrafikRenkleri = {
   izgara: 'rgba(255, 255, 255, 0.06)',
   eksen: '#5c6470',
   eksenYazi: '#8a919c',
-  ipucuZemin: '#0b0d12',
+  // Cam yüzey: ipucu kutusu da panelin geri kalanı gibi saydam-koyu.
+  ipucuZemin: 'rgba(11, 10, 16, 0.92)',
   ipucuKenar: 'rgba(255, 255, 255, 0.08)',
   ipucuYazi: '#f2f4f8',
-  seri: { mavi: '#0a84ff', yesil: '#30d158', kirmizi: '#ff453a', mor: '#bf5af2' },
+  seri: { mavi: '#38bdf8', yesil: '#34d399', kirmizi: '#fb7185', mor: '#a855f7' },
 };
 
-const ACIK: GrafikRenkleri = {
-  izgara: 'rgba(15, 23, 42, 0.09)',
-  eksen: '#94a3b8',
-  eksenYazi: '#5b6b86',
-  ipucuZemin: '#ffffff',
-  ipucuKenar: 'rgba(15, 23, 42, 0.12)',
-  ipucuYazi: '#0f172a',
-  seri: { mavi: '#0a6ed1', yesil: '#15803d', kirmizi: '#b91c1c', mor: '#7e22ce' },
-};
-
-export function grafikRenkleri(theme: 'light' | 'dark'): GrafikRenkleri {
-  return theme === 'light' ? ACIK : KOYU;
+export function grafikRenkleri(): GrafikRenkleri {
+  return KOYU;
 }
 
 export function useGrafikRenkleri(): GrafikRenkleri {
-  return grafikRenkleri(usePanelTheme((s) => s.theme));
+  return KOYU;
 }

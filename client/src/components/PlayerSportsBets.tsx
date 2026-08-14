@@ -62,7 +62,7 @@ export function PlayerSportsBets({ clientId }: PlayerSportsBetsProps) {
     if (betsQuery.isLoading) {
         return (
             <div className="flex h-64 items-center justify-center">
-                <Loader2 size={32} className="animate-spin text-blue-500" />
+                <Loader2 size={32} className="animate-spin text-purple-400" />
             </div>
         );
     }
@@ -82,8 +82,8 @@ export function PlayerSportsBets({ clientId }: PlayerSportsBetsProps) {
     return (
         <div className="space-y-4 pt-6">
             <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-                <h3 className="text-lg font-bold text-[color:var(--panel-text-dim,#c8cdd5)] flex items-center gap-2">
-                    <Activity size={18} className="text-blue-400" /> Spor Bahisleri ({totalCount})
+                <h3 className="text-lg font-bold text-slate-300 flex items-center gap-2">
+                    <Activity size={18} className="text-purple-300" /> Spor Bahisleri ({totalCount})
                 </h3>
                 <DateRangeBar
                     range={dateRange}
@@ -94,20 +94,20 @@ export function PlayerSportsBets({ clientId }: PlayerSportsBetsProps) {
             </div>
 
             {bets.length === 0 ? (
-                <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-8 text-center text-[color:var(--panel-muted,#8a919c)]">
+                <div className="rounded-xl border border-white/5 bg-white/[0.02] p-8 text-center text-slate-400">
                     Oynanmış spor bahsi bulunmuyor.
                 </div>
             ) : (
-                <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] overflow-x-auto">
+                <div className="rounded-xl border border-white/5 bg-white/[0.02] overflow-x-auto">
                     <table className="w-full text-left text-sm">
-                        <thead className="bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
+                        <thead className="bg-white/[0.02] border-b border-white/5">
                             <tr>
-                                <th className="p-4 text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">Kupon Id</th>
-                                <th className="p-4 text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">Tarih</th>
-                                <th className="p-4 text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)] text-right">Tutar</th>
-                                <th className="p-4 text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">Oran</th>
-                                <th className="p-4 text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">Durum</th>
-                                <th className="p-4 text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)] text-right">Kazanç</th>
+                                <th className="p-4 text-[10px] font-semibold uppercase tracking-wider text-slate-400">Kupon Id</th>
+                                <th className="p-4 text-[10px] font-semibold uppercase tracking-wider text-slate-400">Tarih</th>
+                                <th className="p-4 text-[10px] font-semibold uppercase tracking-wider text-slate-400 text-right">Tutar</th>
+                                <th className="p-4 text-[10px] font-semibold uppercase tracking-wider text-slate-400">Oran</th>
+                                <th className="p-4 text-[10px] font-semibold uppercase tracking-wider text-slate-400">Durum</th>
+                                <th className="p-4 text-[10px] font-semibold uppercase tracking-wider text-slate-400 text-right">Kazanç</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
@@ -123,67 +123,67 @@ export function PlayerSportsBets({ clientId }: PlayerSportsBetsProps) {
                                             className="hover:bg-white/[0.02] transition-colors cursor-pointer group"
                                             onClick={() => bet.Id && handleRowClick(bet.Id)}
                                         >
-                                            <td className="p-4 font-mono text-xs text-[color:var(--panel-muted,#8a919c)] font-bold flex items-center gap-2">
+                                            <td className="p-4 font-mono text-xs text-slate-400 font-bold flex items-center gap-2">
                                                 {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} className="opacity-50 group-hover:opacity-100 transition-opacity" />}
                                                 {bet.Id}
-                                                {bet.IsLive && <span className="px-1.5 py-0.5 rounded text-[9px] bg-rose-500/20 text-rose-400 uppercase tracking-widest ml-2">Live</span>}
+                                                {bet.IsLive && <span className="px-1.5 py-0.5 rounded text-[9px] bg-rose-500/20 text-rose-400 uppercase tracking-wider ml-2">Live</span>}
                                             </td>
                                             <td className="p-4">
-                                                <div className="flex items-center gap-2 text-[color:var(--panel-text-dim,#c8cdd5)]">
-                                                    <Calendar size={12} className="text-[color:var(--panel-muted,#8a919c)]" />
+                                                <div className="flex items-center gap-2 text-slate-300">
+                                                    <Calendar size={12} className="text-slate-400" />
                                                     {bet.CreatedLocal ? formatDateTimeDisplay(bet.CreatedLocal) : '—'}
                                                 </div>
                                             </td>
                                             <td className="p-4 text-right">
-                                                <span className="font-mono font-medium text-[color:var(--panel-text-dim,#c8cdd5)] bg-[color:var(--panel-surface-2,rgba(242,244,248,0.05))] px-2 py-1 rounded">
+                                                <span className="font-mono font-medium text-slate-300 bg-white/5 px-2 py-1 rounded">
                                                     {formatNumber(bet.Amount)} {bet.CurrencyId ?? 'TRY'}
                                                 </span>
                                             </td>
-                                            <td className="p-4 font-bold text-blue-300">
+                                            <td className="p-4 font-bold text-purple-300">
                                                 {Number(bet.Price ?? 0).toFixed(2)}
                                             </td>
                                             <td className="p-4">
-                                                <span className={`inline-flex px-2 py-1 text-[10px] font-bold uppercase tracking-widest rounded-md ${isWon ? 'bg-emerald-500/20 text-emerald-400' :
+                                                <span className={`inline-flex px-2 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md ${isWon ? 'bg-emerald-500/20 text-emerald-400' :
                                                     isLost ? 'bg-rose-500/20 text-rose-400' :
                                                         isReturned ? 'bg-amber-500/20 text-amber-400' :
-                                                            'bg-[rgba(242,244,248,0.08)] text-[color:var(--panel-muted,#8a919c)]'
+                                                            'bg-[rgba(242,244,248,0.08)] text-slate-400'
                                                     }`}>
                                                     {bet.StateName ?? 'Unknown'}
                                                 </span>
                                             </td>
                                             <td className="p-4 text-right">
-                                                <span className={`font-mono font-bold ${isWon ? 'text-emerald-400' : 'text-[color:var(--panel-muted,#8a919c)]'}`}>
+                                                <span className={`font-mono font-bold ${isWon ? 'text-emerald-400' : 'text-slate-400'}`}>
                                                     {isWon ? `+${formatNumber(bet.WinningAmount)}` : '0.00'}
                                                 </span>
                                             </td>
                                         </tr>
                                         {isExpanded && (
-                                            <tr className="bg-[color:var(--panel-surface,rgba(242,244,248,0.028))]">
+                                            <tr className="bg-white/[0.02]">
                                                 <td colSpan={6} className="p-4">
                                                     {betSelectionsQuery.isLoading && expandedBetId === bet.Id ? (
-                                                        <div className="flex justify-center p-4"><Loader2 size={16} className="animate-spin text-[color:var(--panel-muted,#8a919c)]" /></div>
+                                                        <div className="flex justify-center p-4"><Loader2 size={16} className="animate-spin text-slate-400" /></div>
                                                     ) : expandedBetId === bet.Id && (!betSelectionsQuery.data?.Data || betSelectionsQuery.data.Data.length === 0) ? (
-                                                        <p className="text-[color:var(--panel-muted,#8a919c)] text-sm text-center italic py-2">Seçim detayı bulunamadı.</p>
+                                                        <p className="text-slate-400 text-sm text-center italic py-2">Seçim detayı bulunamadı.</p>
                                                     ) : (
                                                         <div className="space-y-2 max-w-4xl mx-auto py-2">
                                                             {betSelectionsQuery.data?.Data?.map((sel: any) => (
-                                                                <div key={sel.SelectionId} className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] rounded-lg p-3 border border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
+                                                                <div key={sel.SelectionId} className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center bg-white/[0.02] rounded-lg p-3 border border-white/5">
                                                                     <div>
-                                                                        <p className="text-xs font-bold text-[color:var(--panel-muted,#8a919c)]">{sel.SportName} <span className="opacity-50 mx-1">/</span> {sel.CompetitionName}</p>
-                                                                        <p className="text-sm font-bold text-[color:var(--panel-text-dim,#c8cdd5)] mt-1">{sel.MatchName}</p>
-                                                                        <p className="text-xs text-[color:var(--panel-muted,#8a919c)] mt-1">{formatDateTimeDisplay(sel.StartTimeLocal)} | <span className="text-amber-500/80">{sel.MatchInfo}</span></p>
+                                                                        <p className="text-xs font-bold text-slate-400">{sel.SportName} <span className="opacity-50 mx-1">/</span> {sel.CompetitionName}</p>
+                                                                        <p className="text-sm font-bold text-slate-300 mt-1">{sel.MatchName}</p>
+                                                                        <p className="text-xs text-slate-400 mt-1">{formatDateTimeDisplay(sel.StartTimeLocal)} | <span className="text-amber-500/80">{sel.MatchInfo}</span></p>
                                                                     </div>
                                                                     <div className="text-left sm:text-right shrink-0">
-                                                                        <p className="text-xs text-[color:var(--panel-muted,#8a919c)] uppercase font-semibold">{sel.DisplayMarketName}</p>
+                                                                        <p className="text-xs text-slate-400 uppercase font-semibold">{sel.DisplayMarketName}</p>
                                                                         <div className="text-sm font-bold mt-1">
-                                                                            <span className="text-blue-300">{sel.DisplaySelectionName}</span>
-                                                                            <span className="text-[color:var(--panel-faint,#5c6470)] mx-2">•</span>
+                                                                            <span className="text-purple-300">{sel.DisplaySelectionName}</span>
+                                                                            <span className="text-slate-500 mx-2">•</span>
                                                                             <span className="text-emerald-400">@ {Number(sel.Price).toFixed(2)}</span>
                                                                         </div>
-                                                                        <p className="text-xs uppercase font-bold tracking-widest mt-1">
+                                                                        <p className="text-xs uppercase font-bold tracking-wider mt-1">
                                                                             {sel.StateName === 'Kazandı' || sel.StateName === 'Win' ? <span className="text-emerald-400">{sel.StateName}</span> :
                                                                                 sel.StateName === 'Kaybetti' || sel.StateName === 'Lost' ? <span className="text-rose-400">{sel.StateName}</span> :
-                                                                                    <span className="text-[color:var(--panel-muted,#8a919c)]">{sel.StateName}</span>}
+                                                                                    <span className="text-slate-400">{sel.StateName}</span>}
                                                                         </p>
                                                                     </div>
                                                                 </div>
@@ -205,7 +205,7 @@ export function PlayerSportsBets({ clientId }: PlayerSportsBetsProps) {
             {totalCount > 0 && (
                 <div className="flex items-center justify-between mt-4">
                     <div className="flex items-center gap-2">
-                        <select className="bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] text-[color:var(--panel-text-dim,#c8cdd5)] text-sm rounded-lg px-2 py-1" value={rowsPerPage} onChange={(e) => {
+                        <select className="bg-white/[0.02] border border-white/5 text-slate-300 text-sm rounded-lg px-2 py-1" value={rowsPerPage} onChange={(e) => {
                             setRowsPerPage(Number(e.target.value));
                             setPage(0);
                         }}>
@@ -213,12 +213,12 @@ export function PlayerSportsBets({ clientId }: PlayerSportsBetsProps) {
                                 <option key={val} value={val}>{val} satır</option>
                             ))}
                         </select>
-                        <span className="text-[color:var(--panel-muted,#8a919c)] text-xs">/ Sayfa</span>
+                        <span className="text-slate-400 text-xs">/ Sayfa</span>
                     </div>
                     <div className="flex items-center gap-4">
-                        <button className="text-[color:var(--panel-muted,#8a919c)] disabled:opacity-30" disabled={page === 0} onClick={() => setPage(page - 1)}>Önceki</button>
-                        <span className="text-[color:var(--panel-text-dim,#c8cdd5)] text-sm font-mono">{page + 1} / {Math.ceil(totalCount / rowsPerPage)}</span>
-                        <button className="text-[color:var(--panel-muted,#8a919c)] disabled:opacity-30" disabled={(page + 1) * rowsPerPage >= totalCount} onClick={() => setPage(page + 1)}>Sonraki</button>
+                        <button className="text-slate-400 disabled:opacity-30" disabled={page === 0} onClick={() => setPage(page - 1)}>Önceki</button>
+                        <span className="text-slate-300 text-sm font-mono">{page + 1} / {Math.ceil(totalCount / rowsPerPage)}</span>
+                        <button className="text-slate-400 disabled:opacity-30" disabled={(page + 1) * rowsPerPage >= totalCount} onClick={() => setPage(page + 1)}>Sonraki</button>
                     </div>
                 </div>
             )}

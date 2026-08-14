@@ -77,7 +77,7 @@ export function EnIyiListe({
               <PanoHucreYazi>
                 <span className="flex items-center gap-2.5">
                   {siraliMi && (
-                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/[0.05] text-[10px] font-semibold tabular-nums text-[color:var(--panel-muted,#8a919c)]">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/[0.05] text-[10px] font-semibold tabular-nums text-slate-400">
                       {i + 1}
                     </span>
                   )}

@@ -55,7 +55,7 @@ function KapasiteKarti({
   durum?: { ok: boolean; etiket: string };
 }) {
   return (
-    <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-4">
+    <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-4">
       <div className="flex items-start justify-between gap-3">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-500/10 text-cyan-300">
           <Ikon size={18} />
@@ -72,7 +72,7 @@ function KapasiteKarti({
         )}
       </div>
       <h4 className="mt-3 text-sm font-bold text-white">{baslik}</h4>
-      <p className="mt-1 text-xs font-medium leading-relaxed text-[color:var(--panel-muted,#8a919c)]">{aciklama}</p>
+      <p className="mt-1 text-xs font-medium leading-relaxed text-slate-400">{aciklama}</p>
     </div>
   );
 }
@@ -123,10 +123,10 @@ export function BugscrmSekmesi() {
 
   return (
     <div className="space-y-5 animate-in fade-in duration-300">
-      <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-5">
+      <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5">
         <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-cyan-300/70">BugsCRM Entegrasyonu</p>
         <h3 className="mt-1 text-lg font-semibold text-white">Tıklama ve dönüşüm izleme</h3>
-        <p className="mt-1 text-xs font-medium leading-relaxed text-[color:var(--panel-muted,#8a919c)]">
+        <p className="mt-1 text-xs font-medium leading-relaxed text-slate-400">
           BugsCRM, Lynon'un BTag sisteminden bağımsız kendi tıklama/dönüşüm kaydını tutar ve bize yalnızca postback
           (sunucudan sunucuya) ile bildirir. Kimlik bilgileri (ApiKey, ProductId, EndpointUrl) yalnızca sunucu ortam
           değişkenlerinden okunur; burada değiştirilemez, yalnızca durumu görüntülenir.
@@ -165,17 +165,17 @@ export function BugscrmSekmesi() {
         />
       </div>
 
-      <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-4">
+      <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)]">Postback URL</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Postback URL</p>
             <code className="mt-1 block truncate text-xs font-semibold text-white">{postbackUrl}</code>
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <button
               type="button"
               onClick={postbackUrlKopyala}
-              className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] px-3 text-[11px] font-bold text-[color:var(--panel-muted,#8a919c)] transition hover:text-white"
+              className="inline-flex h-9 items-center gap-1.5 rounded-2xl border border-white/5 px-3 text-[11px] font-bold text-slate-400 transition hover:text-white"
             >
               <Copy size={13} /> {kopyalandi ? 'Kopyalandı' : 'Kopyala'}
             </button>
@@ -183,7 +183,7 @@ export function BugscrmSekmesi() {
               type="button"
               onClick={testEt}
               disabled={testEdiliyor}
-              className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-cyan-500/15 px-3 text-[11px] font-bold text-cyan-300 transition hover:bg-cyan-500/25 disabled:opacity-50"
+              className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-cyan-500/15 px-3 text-[11px] font-bold text-cyan-300 transition hover:bg-cyan-500/25 disabled:opacity-50"
             >
               {testEdiliyor ? <Loader2 size={13} className="animate-spin" /> : <Zap size={13} />}
               Bağlantıyı Test Et
@@ -197,17 +197,17 @@ export function BugscrmSekmesi() {
         )}
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
-        <div className="border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20 px-4 py-3">
+      <div className="overflow-hidden rounded-2xl border border-white/5">
+        <div className="border-b border-white/5 bg-black/20 px-4 py-3">
           <h4 className="text-sm font-semibold text-white">Son Tıklama / Dönüşüm Kayıtları</h4>
-          <p className="mt-0.5 text-[11px] font-medium text-[color:var(--panel-muted,#8a919c)]">En yeni 50 postback.</p>
+          <p className="mt-0.5 text-[11px] font-medium text-slate-400">En yeni 50 postback.</p>
         </div>
         {kayitlarYukleniyor ? (
-          <div className="flex items-center justify-center gap-2 p-8 text-xs font-semibold text-[color:var(--panel-muted,#8a919c)]">
+          <div className="flex items-center justify-center gap-2 p-8 text-xs font-semibold text-slate-400">
             <Loader2 size={16} className="animate-spin" /> Yükleniyor…
           </div>
         ) : kayitlar.length === 0 ? (
-          <p className="p-8 text-center text-xs font-medium text-[color:var(--panel-muted,#8a919c)]">Henüz kayıt yok.</p>
+          <p className="p-8 text-center text-xs font-medium text-slate-400">Henüz kayıt yok.</p>
         ) : (
           <div className="divide-y divide-[color:var(--panel-border,rgba(242,244,248,0.1))]">
             {kayitlar.map((kayit) => {
@@ -215,7 +215,7 @@ export function BugscrmSekmesi() {
               const Ikon = etiket.ikon;
               return (
                 <div key={`${kayit.clickId}-${kayit.olayTuru}`} className="flex items-center gap-3 px-4 py-3">
-                  <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${etiket.renk}`}>
+                  <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${etiket.renk}`}>
                     <Ikon size={14} />
                   </span>
                   <div className="min-w-0 flex-1">
@@ -223,7 +223,7 @@ export function BugscrmSekmesi() {
                       {etiket.ad}
                       {kayit.playerLogin ? ` · ${kayit.playerLogin}` : ''}
                     </p>
-                    <p className="truncate text-[10px] font-medium text-[color:var(--panel-muted,#8a919c)]">
+                    <p className="truncate text-[10px] font-medium text-slate-400">
                       clickId: {kayit.clickId}
                       {kayit.subId ? ` · subId: ${kayit.subId}` : ''}
                     </p>
@@ -233,7 +233,7 @@ export function BugscrmSekmesi() {
                       {formatNumber(kayit.tutar)} {kayit.paraBirimi ?? ''}
                     </span>
                   )}
-                  <span className="shrink-0 text-[10px] font-semibold text-[color:var(--panel-faint,#5c6470)]">{saatYaz(kayit.alindi)}</span>
+                  <span className="shrink-0 text-[10px] font-semibold text-slate-500">{saatYaz(kayit.alindi)}</span>
                 </div>
               );
             })}

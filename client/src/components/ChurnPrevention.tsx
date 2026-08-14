@@ -89,13 +89,13 @@ export function ChurnPrevention() {
     <div className="animate-in space-y-4 pb-20">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-[color:var(--panel-faint,#5c6470)]">CRM</p>
-          <h2 className="mt-1 text-2xl font-semibold text-[color:var(--panel-text,#f2f4f8)]">Kayıp riski</h2>
-          <p className="mt-1 text-[12px] text-[color:var(--panel-muted,#8a919c)]">
+          <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-slate-500">CRM</p>
+          <h2 className="mt-1 text-2xl font-semibold text-white">Kayıp riski</h2>
+          <p className="mt-1 text-[12px] text-slate-400">
             Skor sunucuda hesaplanır; her satırda riskin gerekçesi ve önerilen aksiyon görünür.
           </p>
         </div>
-        {isFetching && <Loader2 size={16} className="animate-spin text-[color:var(--panel-muted,#8a919c)]" />}
+        {isFetching && <Loader2 size={16} className="animate-spin text-slate-400" />}
       </header>
 
       <OzetSerit ozet={ozet} />
@@ -112,12 +112,12 @@ export function ChurnPrevention() {
           onSec={(v) => { setSegment(v); setPage(1); }}
         />
         <div className="relative ml-auto">
-          <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--panel-faint,#5c6470)]" />
+          <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
           <input
             value={arama}
             onChange={(event) => setArama(event.target.value)}
             placeholder="Kullanıcı adı ara"
-            className="h-9 w-56 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/30 pl-9 pr-3 text-xs font-semibold text-[color:var(--panel-text,#f2f4f8)] outline-none"
+            className="h-9 w-56 rounded-lg border border-white/5 bg-black/30 pl-9 pr-3 text-xs font-semibold text-white outline-none"
           />
         </div>
       </div>
@@ -135,7 +135,7 @@ export function ChurnPrevention() {
       )}
 
       <div className="flex items-center justify-between gap-3">
-        <span className="text-[11px] text-[color:var(--panel-muted,#8a919c)]">Sayfa {page}</span>
+        <span className="text-[11px] text-slate-400">Sayfa {page}</span>
         <div className="flex gap-2">
           <Sayfalama yon="geri" pasif={page <= 1} onTikla={() => setPage((p) => Math.max(1, p - 1))} />
           <Sayfalama yon="ileri" pasif={oyuncular.length < countPerPage} onTikla={() => setPage((p) => p + 1)} />
@@ -155,12 +155,12 @@ function OzetSerit({ ozet }: { ozet?: { toplam: number; kritik: number; yuksek: 
   return (
     <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
       {kartlar.map(({ etiket, deger, Ikon, renk }) => (
-        <div key={etiket} className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-4">
+        <div key={etiket} className="rounded-xl border border-white/5 bg-white/[0.02] p-4">
           <div className="mb-2 inline-flex rounded-lg p-2" style={{ backgroundColor: 'rgba(242,244,248,0.04)', color: renk }}>
             <Ikon size={16} />
           </div>
-          <div className="text-[9px] font-bold uppercase tracking-[0.14em] text-[color:var(--panel-faint,#5c6470)]">{etiket}</div>
-          <div className="mt-1 text-xl font-semibold tabular-nums text-[color:var(--panel-text,#f2f4f8)]">{deger}</div>
+          <div className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-500">{etiket}</div>
+          <div className="mt-1 text-xl font-semibold tabular-nums text-white">{deger}</div>
         </div>
       ))}
     </div>
@@ -170,7 +170,7 @@ function OzetSerit({ ozet }: { ozet?: { toplam: number; kritik: number; yuksek: 
 function Satir({ oyuncu }: { oyuncu: ChurnOyuncu }) {
   const stil = SEVIYE_STILI[oyuncu.churn.seviye];
   return (
-    <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-3.5">
+    <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3.5">
       <div className="flex flex-wrap items-center gap-3">
         <div
           className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-sm font-bold tabular-nums"
@@ -182,11 +182,11 @@ function Satir({ oyuncu }: { oyuncu: ChurnOyuncu }) {
 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="truncate text-sm font-semibold text-[color:var(--panel-text,#f2f4f8)]">{oyuncu.login}</span>
+            <span className="truncate text-sm font-semibold text-white">{oyuncu.login}</span>
             <Rozet metin={stil.etiket} renk={stil.renk} zemin={stil.zemin} />
             <Rozet metin={SEGMENT_ETIKET[oyuncu.churn.segment]} renk="var(--panel-muted,#8a919c)" zemin="rgba(242,244,248,0.05)" />
           </div>
-          <p className="mt-1 text-[11px] text-[color:var(--panel-muted,#8a919c)]">
+          <p className="mt-1 text-[11px] text-slate-400">
             {oyuncu.churn.sessizGun == null ? 'Giriş kaydı yok' : `${oyuncu.churn.sessizGun} gündür sessiz`}
             {' · '}Net yatırım {formatNumber(oyuncu.churn.deger)} ₺
             {oyuncu.lastLoginDate ? ` · Son giriş ${formatDateDisplay(oyuncu.lastLoginDate)}` : ''}
@@ -203,11 +203,11 @@ function Satir({ oyuncu }: { oyuncu: ChurnOyuncu }) {
 
       {/* Skorun gerekçesi. Operatör neden aradığını bilmeli. */}
       {oyuncu.churn.sebepler.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-1.5 border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))] pt-3">
+        <div className="mt-3 flex flex-wrap gap-1.5 border-t border-white/5 pt-3">
           {oyuncu.churn.sebepler.map((sebep) => (
             <span
               key={sebep.kod}
-              className="rounded-md px-2 py-1 text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)]"
+              className="rounded-md px-2 py-1 text-[10px] font-semibold text-slate-400"
               style={{ backgroundColor: 'rgba(242,244,248,0.04)' }}
             >
               {sebep.aciklama}
@@ -250,14 +250,14 @@ function TemasSatiri({ oyuncu }: { oyuncu: ChurnOyuncu }) {
   const sonTemas = oyuncu.sonTemas;
 
   return (
-    <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))] pt-2.5">
+    <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-white/5 pt-2.5">
       {sonTemas ? (
         <span className="inline-flex items-center gap-1.5 rounded-md bg-[rgba(48,209,88,0.1)] px-2 py-1 text-[10px] font-semibold text-[color:var(--panel-success,#30d158)]">
           <Check size={11} />
           Son temas {formatDateDisplay(sonTemas.createdAt)} · {sonTemas.tur}
         </span>
       ) : (
-        <span className="inline-flex items-center gap-1.5 rounded-md bg-[rgba(242,244,248,0.04)] px-2 py-1 text-[10px] font-semibold text-[color:var(--panel-faint,#5c6470)]">
+        <span className="inline-flex items-center gap-1.5 rounded-md bg-[rgba(242,244,248,0.04)] px-2 py-1 text-[10px] font-semibold text-slate-500">
           <PhoneCall size={11} /> Hiç temas edilmemiş
         </span>
       )}
@@ -266,7 +266,7 @@ function TemasSatiri({ oyuncu }: { oyuncu: ChurnOyuncu }) {
         <button
           type="button"
           onClick={() => setAcik(true)}
-          className="ml-auto inline-flex items-center gap-1.5 rounded-md border border-[color:var(--panel-border,rgba(242,244,248,0.1))] px-3 py-1.5 text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)]"
+          className="ml-auto inline-flex items-center gap-1.5 rounded-md border border-white/5 px-3 py-1.5 text-[10px] font-semibold text-slate-400"
         >
           <MessageSquare size={11} /> Temas kaydet
         </button>
@@ -275,7 +275,7 @@ function TemasSatiri({ oyuncu }: { oyuncu: ChurnOyuncu }) {
           <select
             value={tur}
             onChange={(e) => setTur(e.target.value)}
-            className="h-8 rounded-md border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/30 px-2 text-[11px] text-[color:var(--panel-text,#f2f4f8)]"
+            className="h-8 rounded-md border border-white/5 bg-black/30 px-2 text-[11px] text-white"
           >
             <option value="arama">Arama</option>
             <option value="sms">SMS</option>
@@ -286,7 +286,7 @@ function TemasSatiri({ oyuncu }: { oyuncu: ChurnOyuncu }) {
           <select
             value={sonuc}
             onChange={(e) => setSonuc(e.target.value)}
-            className="h-8 rounded-md border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/30 px-2 text-[11px] text-[color:var(--panel-text,#f2f4f8)]"
+            className="h-8 rounded-md border border-white/5 bg-black/30 px-2 text-[11px] text-white"
           >
             <option value="ulasildi">Ulaşıldı</option>
             <option value="ulasilamadi">Ulaşılamadı</option>
@@ -298,7 +298,7 @@ function TemasSatiri({ oyuncu }: { oyuncu: ChurnOyuncu }) {
             value={not}
             onChange={(e) => setNot(e.target.value)}
             placeholder="Kısa not"
-            className="h-8 min-w-0 flex-1 rounded-md border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/30 px-2 text-[11px] text-[color:var(--panel-text,#f2f4f8)] outline-none"
+            className="h-8 min-w-0 flex-1 rounded-md border border-white/5 bg-black/30 px-2 text-[11px] text-white outline-none"
           />
           <button
             type="button"
@@ -311,7 +311,7 @@ function TemasSatiri({ oyuncu }: { oyuncu: ChurnOyuncu }) {
           <button
             type="button"
             onClick={() => setAcik(false)}
-            className="h-8 rounded-md px-2 text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)]"
+            className="h-8 rounded-md px-2 text-[10px] font-semibold text-slate-400"
           >
             Vazgeç
           </button>
@@ -339,7 +339,7 @@ function SecimGrubu({
   onSec: (value: string) => void;
 }) {
   return (
-    <div className="flex gap-1 rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20 p-1">
+    <div className="flex gap-1 rounded-lg border border-white/5 bg-black/20 p-1">
       {secenekler.map((secenek) => (
         <button
           key={secenek.id}
@@ -349,7 +349,7 @@ function SecimGrubu({
             'rounded-md px-3 py-1.5 text-[11px] font-semibold transition',
             deger === secenek.id
               ? 'bg-[color:var(--panel-accent,#0a84ff)] text-white'
-              : 'text-[color:var(--panel-muted,#8a919c)] hover:text-[color:var(--panel-text,#f2f4f8)]',
+              : 'text-slate-400 hover:text-white',
           )}
         >
           {secenek.label}
@@ -366,7 +366,7 @@ function Sayfalama({ yon, pasif, onTikla }: { yon: 'geri' | 'ileri'; pasif: bool
       onClick={onTikla}
       disabled={pasif}
       aria-label={yon === 'geri' ? 'Önceki sayfa' : 'Sonraki sayfa'}
-      className="flex h-9 w-9 items-center justify-center rounded-lg border border-[color:var(--panel-border,rgba(242,244,248,0.1))] text-[color:var(--panel-muted,#8a919c)] disabled:opacity-40"
+      className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/5 text-slate-400 disabled:opacity-40"
     >
       {yon === 'geri' ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
     </button>
@@ -375,10 +375,10 @@ function Sayfalama({ yon, pasif, onTikla }: { yon: 'geri' | 'ileri'; pasif: bool
 
 function Durum({ ikon, baslik, alt }: { ikon: ReactNode; baslik: string; alt: string }) {
   return (
-    <div className="flex flex-col items-center gap-2 rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] px-6 py-14 text-center">
-      <span className="text-[color:var(--panel-muted,#8a919c)]">{ikon}</span>
-      <p className="text-sm font-semibold text-[color:var(--panel-text,#f2f4f8)]">{baslik}</p>
-      <p className="text-[12px] text-[color:var(--panel-muted,#8a919c)]">{alt}</p>
+    <div className="flex flex-col items-center gap-2 rounded-xl border border-white/5 bg-white/[0.02] px-6 py-14 text-center">
+      <span className="text-slate-400">{ikon}</span>
+      <p className="text-sm font-semibold text-white">{baslik}</p>
+      <p className="text-[12px] text-slate-400">{alt}</p>
     </div>
   );
 }

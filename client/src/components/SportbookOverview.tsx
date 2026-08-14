@@ -30,7 +30,7 @@ function turRozeti(isLive: boolean | null) {
   if (isLive === false) {
     return <span className={cn(ortak, 'border-sky-400/20 bg-sky-400/[0.08] text-sky-300')}>Maç öncesi</span>;
   }
-  return <span className={cn(ortak, 'border-white/[0.08] bg-white/[0.04] text-[color:var(--panel-muted,#8a919c)]')}>Toplam</span>;
+  return <span className={cn(ortak, 'border-white/[0.08] bg-white/[0.04] text-slate-400')}>Toplam</span>;
 }
 
 const KUPON_ADI: Record<string, string> = {
@@ -88,7 +88,7 @@ export function SportbookOverview({ data, isLoading, error }: SportbookOverviewP
       )}
 
       {!error && !isLoading && counts && Object.keys(counts).length > 0 && (
-        <div className="border-t border-[color:var(--panel-border,rgba(242,244,248,0.08))] p-4">
+        <div className="border-t border-white/5 p-4">
           <PanoBolum baslik="Kupon türleri" vurgu="hacim" />
           <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
             {(['Single', 'Multiple', 'System', 'Chain'] as const).map((key) => (

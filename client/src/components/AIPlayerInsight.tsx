@@ -31,7 +31,7 @@ interface AIPlayerInsightProps {
 const TON_SINIFI: Record<EtiketTonu, string> = {
     bilgi: 'border-sky-400/30 bg-sky-400/10 text-sky-200',
     olumlu: 'border-emerald-400/30 bg-emerald-400/10 text-emerald-200',
-    notr: 'border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[rgba(242,244,248,0.08)] text-[color:var(--panel-text-dim,#c8cdd5)]',
+    notr: 'border-white/5 bg-[rgba(242,244,248,0.08)] text-slate-300',
     uyari: 'border-amber-400/30 bg-amber-400/10 text-amber-200',
     tehlike: 'border-rose-400/40 bg-rose-500/15 text-rose-200',
 };
@@ -84,8 +84,8 @@ export function AIPlayerInsight({ data, ipData, bonuslar }: AIPlayerInsightProps
     const personaSimgesi =
         risk === 'KRİTİK' || risk === 'YÜKSEK' ? <AlertTriangle size={18} className="text-rose-400" />
         : persona.ad === 'VIP' ? <Sparkles size={18} className="text-amber-400" />
-        : persona.ad === 'Mikro oyuncu' ? <Zap size={18} className="text-blue-400" />
-        : <ShieldCheck size={18} className="text-[color:var(--panel-muted,#8a919c)]" />;
+        : persona.ad === 'Mikro oyuncu' ? <Zap size={18} className="text-purple-300" />
+        : <ShieldCheck size={18} className="text-slate-400" />;
 
     return (
         <motion.div
@@ -93,21 +93,21 @@ export function AIPlayerInsight({ data, ipData, bonuslar }: AIPlayerInsightProps
             animate={{ opacity: 1, y: 0 }}
             className="rounded-xl border border-blue-500/30 bg-blue-950/20 p-6 md:p-8 backdrop-blur-md mb-8 relative overflow-hidden group"
         >
-            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-blue-500/20 transition-colors" />
+            <div className="absolute top-0 right-0 w-64 h-64 bg-purple-400/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-purple-400/20 transition-colors" />
 
             <div className="flex flex-col md:flex-row gap-6 items-start relative z-10">
-                <div className="flex-shrink-0 bg-blue-500/20 p-4 rounded-xl border border-blue-500/30">
-                    <BrainCircuit size={32} className="text-blue-400" />
+                <div className="flex-shrink-0 bg-purple-400/20 p-4 rounded-xl border border-blue-500/30">
+                    <BrainCircuit size={32} className="text-purple-300" />
                 </div>
 
                 <div className="flex-1 space-y-3">
                     <div className="flex items-center gap-3 flex-wrap">
-                        <h3 className="text-lg font-semibold text-blue-300 tracking-wide uppercase">Bugs Software AI Analiz Karnesi</h3>
-                        <span className={`px-3 py-1 text-[10px] font-semibold uppercase tracking-widest rounded-full border ${RISK_SINIFI[risk]}`}>
+                        <h3 className="text-lg font-semibold text-purple-300 tracking-wide uppercase">Bugs Software AI Analiz Karnesi</h3>
+                        <span className={`px-3 py-1 text-[10px] font-semibold uppercase tracking-wider rounded-full border ${RISK_SINIFI[risk]}`}>
                             Risk Seviyesi: {risk}
                         </span>
                         <div
-                            className="flex items-center gap-1.5 px-3 py-1 text-[10px] font-semibold uppercase tracking-widest rounded-full border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/20 text-[color:var(--panel-text-dim,#c8cdd5)]"
+                            className="flex items-center gap-1.5 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider rounded-full border border-white/5 bg-black/20 text-slate-300"
                             title={persona.aciklama}
                         >
                             {personaSimgesi} {persona.ad}
@@ -131,7 +131,7 @@ export function AIPlayerInsight({ data, ipData, bonuslar }: AIPlayerInsightProps
                     <p className="text-sm md:text-base text-blue-100/80 leading-relaxed font-medium">
                         {kategori ? (
                             <>
-                                Bu oyuncu ağırlıklı olarak <span className="font-bold text-white border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] pb-0.5">{kategori}</span> tarafında oynuyor.
+                                Bu oyuncu ağırlıklı olarak <span className="font-bold text-white border-b border-white/5 pb-0.5">{kategori}</span> tarafında oynuyor.
                                 {yatirimAdedi !== null && (
                                     <> Bugüne kadar <span className="font-mono text-emerald-400 font-bold">{yatirimAdedi} kez</span> yatırım yapmış.</>
                                 )}
@@ -158,7 +158,7 @@ export function AIPlayerInsight({ data, ipData, bonuslar }: AIPlayerInsightProps
                           * ediyordu.
                           */}
                         {hesapSayisi === null ? (
-                            <span className="text-[color:var(--panel-muted,#8a919c)] ml-1">IP bağlantı verisi yüklenmedi; çoklu hesap kontrolü yapılmadı.</span>
+                            <span className="text-slate-400 ml-1">IP bağlantı verisi yüklenmedi; çoklu hesap kontrolü yapılmadı.</span>
                         ) : cokluHesap ? (
                             <span className="text-amber-400 ml-1">Aynı IP üzerinden {hesapSayisi} hesapla bağlantı tespit edildi, manuel inceleme önerilir.</span>
                         ) : (

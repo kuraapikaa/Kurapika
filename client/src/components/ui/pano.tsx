@@ -30,12 +30,12 @@ import { formatNumber } from '../../lib/format';
 export type PanoVurgu = 'giris' | 'cikis' | 'maliyet' | 'hacim' | 'oyuncu' | 'notr';
 
 const CIP: Record<PanoVurgu, string> = {
-  giris: 'border-emerald-400/20 bg-emerald-400/[0.08] text-emerald-300',
-  cikis: 'border-rose-400/20 bg-rose-400/[0.08] text-rose-300',
-  maliyet: 'border-amber-400/20 bg-amber-400/[0.08] text-amber-300',
-  hacim: 'border-sky-400/20 bg-sky-400/[0.08] text-sky-300',
-  oyuncu: 'border-violet-400/20 bg-violet-400/[0.08] text-violet-300',
-  notr: 'border-white/[0.08] bg-white/[0.04] text-[color:var(--panel-text-dim,#c8cdd5)]',
+  giris: 'border-emerald-400/25 bg-emerald-400/10 text-emerald-300',
+  cikis: 'border-rose-400/25 bg-rose-400/10 text-rose-300',
+  maliyet: 'border-amber-400/25 bg-amber-400/10 text-amber-300',
+  hacim: 'border-sky-400/25 bg-sky-400/10 text-sky-300',
+  oyuncu: 'border-purple-400/25 bg-purple-400/10 text-purple-300',
+  notr: 'border-white/10 bg-white/[0.06] text-slate-200',
 };
 
 const SERIT: Record<PanoVurgu, string> = {
@@ -43,7 +43,7 @@ const SERIT: Record<PanoVurgu, string> = {
   cikis: 'from-rose-400/50',
   maliyet: 'from-amber-400/50',
   hacim: 'from-sky-400/50',
-  oyuncu: 'from-violet-400/50',
+  oyuncu: 'from-purple-400/50',
   notr: 'from-white/20',
 };
 
@@ -52,7 +52,7 @@ const NOKTA: Record<PanoVurgu, string> = {
   cikis: 'bg-rose-400',
   maliyet: 'bg-amber-400',
   hacim: 'bg-sky-400',
-  oyuncu: 'bg-violet-400',
+  oyuncu: 'bg-purple-400',
   notr: 'bg-white/40',
 };
 
@@ -61,7 +61,7 @@ const YAZI: Record<PanoVurgu, string> = {
   cikis: 'text-rose-300',
   maliyet: 'text-amber-300',
   hacim: 'text-sky-300',
-  oyuncu: 'text-violet-300',
+  oyuncu: 'text-purple-300',
   notr: 'text-white',
 };
 
@@ -81,8 +81,9 @@ export function PanoKart({
   return (
     <section
       className={cn(
-        'relative overflow-hidden rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))]',
-        'bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] backdrop-blur-xl',
+        // Yuzen cam kart: genis yaricap, neredeyse gorunmez kenarlik.
+        'relative overflow-hidden rounded-2xl border border-white/5',
+        'bg-white/[0.02] backdrop-blur-md',
         className,
       )}
     >
@@ -107,16 +108,16 @@ export function PanoBaslik({
   sag?: ReactNode;
 }) {
   return (
-    <div className="flex items-start justify-between gap-3 border-b border-[color:var(--panel-border,rgba(242,244,248,0.08))] px-4 py-3.5">
-      <div className="flex min-w-0 items-center gap-2.5">
+    <div className="flex items-start justify-between gap-3 border-b border-white/5 px-6 py-5">
+      <div className="flex min-w-0 items-center gap-3">
         {simge && (
-          <span className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border', CIP[vurgu])}>
+          <span className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border', CIP[vurgu])}>
             {simge}
           </span>
         )}
         <div className="min-w-0">
-          <h3 className="truncate text-[11px] font-semibold uppercase tracking-[0.16em] text-white">{baslik}</h3>
-          {ipucu && <p className="mt-0.5 truncate text-[11px] text-[color:var(--panel-faint,#5c6470)]">{ipucu}</p>}
+          <h3 className="truncate text-[13px] font-semibold tracking-[-0.01em] text-white">{baslik}</h3>
+          {ipucu && <p className="mt-0.5 truncate text-sm text-slate-400">{ipucu}</p>}
         </div>
       </div>
       {sag && <div className="shrink-0">{sag}</div>}
@@ -127,12 +128,10 @@ export function PanoBaslik({
 /** Kart içinde bölüm ayıracı — grup adı + renk noktası + çizgi. */
 export function PanoBolum({ baslik, vurgu = 'notr' }: { baslik: string; vurgu?: PanoVurgu }) {
   return (
-    <div className="mb-3.5 flex items-center gap-2.5">
+    <div className="mb-5 flex items-center gap-2.5">
       <span className={cn('h-1.5 w-1.5 rounded-full', NOKTA[vurgu])} />
-      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[color:var(--panel-muted,#8a919c)]">
-        {baslik}
-      </p>
-      <span className="h-px flex-1 bg-white/[0.06]" />
+      <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{baslik}</p>
+      <span className="h-px flex-1 bg-white/5" />
     </div>
   );
 }
@@ -179,27 +178,26 @@ export function PanoOlcu({
   veriYok?: boolean;
 }) {
   return (
-    <PanoKart vurgu={vurgu} className="flex min-h-[116px] flex-col justify-between p-4 transition-colors hover:border-white/[0.16]">
+    <PanoKart vurgu={vurgu} className="flex min-h-[140px] flex-col justify-between p-6 transition-colors hover:border-white/10">
       <div className="flex items-start justify-between gap-3">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[color:var(--panel-muted,#8a919c)]">
-          {etiket}
-        </p>
+        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{etiket}</p>
         {simge && (
-          <span className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border', CIP[vurgu])}>
+          <span className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border', CIP[vurgu])}>
             {simge}
           </span>
         )}
       </div>
-      <div className="mt-4">
+      <div className="mt-5">
+        {/* Olcu rakami ekranin en buyuk yazisi: bakis once buraya dussun. */}
         <p
           className={cn(
-            'text-[26px] font-semibold leading-none tracking-[-0.035em] tabular-nums',
-            veriYok ? 'text-[color:var(--panel-faint,#5c6470)]' : YAZI[vurgu],
+            'text-[32px] font-bold leading-none tracking-[-0.04em] tabular-nums',
+            veriYok ? 'text-slate-500' : YAZI[vurgu],
           )}
         >
           {deger}
         </p>
-        {alt && <p className="mt-2 text-[11px] font-medium text-[color:var(--panel-muted,#8a919c)]">{alt}</p>}
+        {alt && <p className="mt-2.5 text-sm text-slate-400">{alt}</p>}
       </div>
     </PanoKart>
   );
@@ -220,16 +218,16 @@ export function PanoHucre({
   return (
     <div
       title={aciklama}
-      className="rounded-lg border border-transparent px-2 py-1.5 transition-colors hover:border-white/[0.07] hover:bg-white/[0.02]"
+      className="rounded-xl border border-transparent px-3 py-2.5 transition-colors hover:border-white/5 hover:bg-white/5"
     >
-      <p className="text-[10px] font-medium leading-tight text-[color:var(--panel-faint,#5c6470)]">
+      <p className="text-xs font-medium leading-tight text-slate-500">
         {etiket}
-        {aciklama && <span className="ml-1 text-[color:var(--panel-muted,#8a919c)]">ⓘ</span>}
+        {aciklama && <span className="ml-1 text-slate-400">ⓘ</span>}
       </p>
       <p
         className={cn(
-          'mt-1 text-[15px] font-semibold leading-none tabular-nums tracking-[-0.02em]',
-          veriYok ? 'text-[color:var(--panel-faint,#5c6470)]' : 'text-white',
+          'mt-1.5 text-[17px] font-bold leading-none tabular-nums tracking-[-0.02em]',
+          veriYok ? 'text-slate-500' : 'text-white',
         )}
       >
         {deger}
@@ -263,36 +261,35 @@ export function AkisSeridi({
   const net = giren - cikan;
 
   return (
-    <PanoKart className="p-4">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+    // Panonun imza kartı: mesh gradyan ve glow ile premium alan olarak ayrılır.
+    <PanoKart className="mesh-zumrut p-6">
+      <div className="flex flex-wrap items-end justify-between gap-6">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[color:var(--panel-muted,#8a919c)]">
-            Günün akışı
-          </p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Günün akışı</p>
           <p
             className={cn(
-              'mt-1.5 text-[26px] font-semibold leading-none tracking-[-0.035em] tabular-nums',
+              'mt-2 text-[38px] font-bold leading-none tracking-[-0.04em] tabular-nums',
               net >= 0 ? 'text-emerald-300' : 'text-rose-300',
             )}
           >
             {isaretliYaz(net)}
           </p>
         </div>
-        <div className="flex gap-6 text-right">
+        <div className="flex gap-8 text-right">
           <div>
-            <p className="text-[10px] font-medium text-[color:var(--panel-faint,#5c6470)]">Giren</p>
-            <p className="mt-1 text-[15px] font-semibold tabular-nums text-emerald-300">{sayiYaz(yatirim, 'para')}</p>
+            <p className="text-xs font-medium text-slate-500">Giren</p>
+            <p className="mt-1.5 text-[17px] font-bold tabular-nums text-emerald-300">{sayiYaz(yatirim, 'para')}</p>
           </div>
           <div>
-            <p className="text-[10px] font-medium text-[color:var(--panel-faint,#5c6470)]">Çıkan</p>
-            <p className="mt-1 text-[15px] font-semibold tabular-nums text-rose-300">{sayiYaz(cekim, 'para')}</p>
+            <p className="text-xs font-medium text-slate-500">Çıkan</p>
+            <p className="mt-1.5 text-[17px] font-bold tabular-nums text-rose-300">{sayiYaz(cekim, 'para')}</p>
           </div>
         </div>
       </div>
 
-      <div className="mt-4 flex h-2 overflow-hidden rounded-full bg-white/[0.05]">
-        <div className="bg-emerald-400/70 transition-all duration-500" style={{ width: `${girenPay}%` }} />
-        <div className="bg-rose-400/70 transition-all duration-500" style={{ width: `${100 - girenPay}%` }} />
+      <div className="mt-6 flex h-2 overflow-hidden rounded-full bg-white/5">
+        <div className="bg-emerald-400/80 transition-all duration-500" style={{ width: `${girenPay}%` }} />
+        <div className="bg-rose-400/80 transition-all duration-500" style={{ width: `${100 - girenPay}%` }} />
       </div>
     </PanoKart>
   );
@@ -308,14 +305,15 @@ export function PanoTablo({ basliklar, children, minGenislik = 520 }: {
 }) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-left" style={{ minWidth: minGenislik }}>
+      {/* Tablo zemini SAYDAM: alttaki cam kart gorunsun. */}
+      <table className="w-full bg-transparent text-left" style={{ minWidth: minGenislik }}>
         <thead>
-          <tr className="border-b border-[color:var(--panel-border,rgba(242,244,248,0.08))]">
+          <tr className="border-b border-white/5">
             {basliklar.map(({ ad, sag }) => (
               <th
                 key={ad}
                 className={cn(
-                  'px-4 py-2.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-[color:var(--panel-muted,#8a919c)]',
+                  'px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500',
                   sag && 'text-right',
                 )}
               >
@@ -324,7 +322,7 @@ export function PanoTablo({ basliklar, children, minGenislik = 520 }: {
             ))}
           </tr>
         </thead>
-        <tbody>{children}</tbody>
+        <tbody className="divide-y divide-slate-800/50">{children}</tbody>
       </table>
     </div>
   );
@@ -332,7 +330,7 @@ export function PanoTablo({ basliklar, children, minGenislik = 520 }: {
 
 export function PanoSatir({ children }: { children: ReactNode }) {
   return (
-    <tr className="border-b border-white/[0.04] text-sm text-[color:var(--panel-text-dim,#c8cdd5)] last:border-b-0 hover:bg-white/[0.02]">
+    <tr className="text-sm text-slate-300 transition-colors hover:bg-white/5">
       {children}
     </tr>
   );
@@ -345,7 +343,7 @@ export function PanoHucreYazi({ children, sag, guclu, renk }: {
   renk?: string;
 }) {
   return (
-    <td className={cn('px-4 py-2.5', sag && 'text-right tabular-nums', guclu && 'font-semibold text-white', renk)}>
+    <td className={cn('px-6 py-3.5', sag && 'text-right tabular-nums', guclu && 'font-bold text-white', renk)}>
       {children}
     </td>
   );
@@ -356,9 +354,9 @@ export function PanoHucreYazi({ children, sag, guclu, renk }: {
 /** Tek yükleniyor göstergesi. Önceden üç ayrı biçim vardı. */
 export function PanoYukleniyor({ satir = 3 }: { satir?: number }) {
   return (
-    <div className="space-y-2 p-4">
+    <div className="space-y-3 p-6">
       {Array.from({ length: satir }).map((_, i) => (
-        <div key={i} className="h-9 animate-pulse rounded-lg bg-white/[0.04]" />
+        <div key={i} className="h-10 animate-pulse rounded-xl bg-white/5" />
       ))}
     </div>
   );
@@ -367,14 +365,14 @@ export function PanoYukleniyor({ satir = 3 }: { satir?: number }) {
 /** Tek hata bloğu. Ne olduğunu söyler, suçlamaz. */
 export function PanoHata({ mesaj }: { mesaj: string }) {
   return (
-    <div className="m-4 rounded-lg border border-rose-400/20 bg-rose-400/[0.06] p-3.5">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-rose-300">Veri alınamadı</p>
-      <p className="mt-1 text-[12px] text-[color:var(--panel-text-dim,#c8cdd5)]">{mesaj}</p>
+    <div className="m-6 rounded-2xl border border-rose-400/25 bg-rose-400/[0.08] p-5">
+      <p className="text-xs font-semibold uppercase tracking-wider text-rose-300">Veri alınamadı</p>
+      <p className="mt-1.5 text-sm text-slate-300">{mesaj}</p>
     </div>
   );
 }
 
 /** Tek boş durum. Ne olacağını söyler. */
 export function PanoBos({ children }: { children: ReactNode }) {
-  return <p className="px-4 py-10 text-center text-xs text-[color:var(--panel-faint,#5c6470)]">{children}</p>;
+  return <p className="px-6 py-14 text-center text-sm text-slate-500">{children}</p>;
 }

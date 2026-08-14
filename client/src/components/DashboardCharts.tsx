@@ -46,13 +46,13 @@ export function DashboardCharts({ data }: DashboardChartsProps) {
         if (active && payload && payload.length) {
             return (
                 <div className="bg-black/80 backdrop-blur-xl border border-white/10 p-4 rounded-xl shadow-2xl">
-                    <p className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest mb-2">{label}</p>
+                    <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">{label}</p>
                     <div className="space-y-1.5">
                         {payload.map((item: any, idx: number) => (
                             <div key={idx} className="flex items-center justify-between gap-4">
                                 <div className="flex items-center gap-2">
                                     <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
-                                    <span className="text-[11px] font-bold text-[color:var(--panel-text-dim,#c8cdd5)]">{item.name}:</span>
+                                    <span className="text-[11px] font-bold text-slate-300">{item.name}:</span>
                                 </div>
                                 <span className="text-[11px] font-semibold text-white">{formatNumber(item.value)}</span>
                             </div>
@@ -67,11 +67,11 @@ export function DashboardCharts({ data }: DashboardChartsProps) {
     return (
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
             <Card className="premium-card p-8 group">
-                <div className="absolute -right-16 -top-16 w-32 h-32 bg-blue-500/10 blur-[80px] rounded-full" />
+                <div className="absolute -right-16 -top-16 w-32 h-32 bg-purple-400/10 blur-[80px] rounded-full" />
                 <div className="flex items-center justify-between mb-8 relative z-10">
                     <div>
                         <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-white">GGR Dağılımı</h3>
-                        <p className="text-[10px] font-bold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest mt-1">Dikey Bazlı Kâr Oranı</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">Dikey Bazlı Kâr Oranı</p>
                     </div>
                     <div className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/5">
                         <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
@@ -108,13 +108,13 @@ export function DashboardCharts({ data }: DashboardChartsProps) {
                                 verticalAlign="bottom"
                                 height={36}
                                 iconType="circle"
-                                formatter={(val) => <span className="text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)] ml-1">{val}</span>}
+                                formatter={(val) => <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 ml-1">{val}</span>}
                             />
                         </PieChart>
                     </ResponsiveContainer>
                     {/* Centered Total */}
                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none mt-[-36px]">
-                        <span className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">Toplam GGR</span>
+                        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Toplam GGR</span>
                         <span className="text-xl font-semibold text-white tracking-tighter">{formatNumber(sportGgr + casinoGgr)}</span>
                     </div>
                 </div>
@@ -125,7 +125,7 @@ export function DashboardCharts({ data }: DashboardChartsProps) {
                 <div className="flex items-center justify-between mb-8 relative z-10">
                     <div>
                         <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-white">Finansal Karşılaştırma</h3>
-                        <p className="text-[10px] font-bold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest mt-1">Ciro ve Net Kazanç Analizi</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">Ciro ve Net Kazanç Analizi</p>
                     </div>
                     <div className="flex gap-1">
                         {[1, 2, 3].map(i => <div key={i} className="w-1 h-4 bg-white/10 rounded-full" />)}
@@ -162,7 +162,7 @@ export function DashboardCharts({ data }: DashboardChartsProps) {
                                 tick={{ fontWeight: 700 }}
                             />
                             <Tooltip content={<CustomTooltip />} cursor={{ fill: renk.izgara }} />
-                            <Legend iconType="circle" formatter={(val) => <span className="text-[10px] font-semibold uppercase tracking-widest text-[color:var(--panel-muted,#8a919c)] ml-1">{val}</span>} />
+                            <Legend iconType="circle" formatter={(val) => <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 ml-1">{val}</span>} />
                             <Bar dataKey="Turnover" fill="url(#barGradient1)" radius={[10, 10, 0, 0]} name="Ciro" barSize={40} />
                             <Bar dataKey="GGR" fill="url(#barGradient2)" radius={[10, 10, 0, 0]} name="Net GGR" barSize={40} />
                         </BarChart>

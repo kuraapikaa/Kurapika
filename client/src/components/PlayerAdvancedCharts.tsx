@@ -25,10 +25,10 @@ export function AdvancedCharts({ data }: AdvancedChartsProps) {
 
     return (
         <div className="grid grid-cols-1 gap-6 mb-12">
-            <div className="rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] p-6 backdrop-blur-md">
+            <div className="rounded-xl border border-white/5 bg-white/[0.02] p-6 backdrop-blur-md">
                 <div className="flex items-center gap-3 mb-6">
-                    <Activity className="text-blue-400" size={20} />
-                    <h3 className="text-sm font-semibold uppercase tracking-widest text-[color:var(--panel-text-dim,#c8cdd5)]">Kategori Bazlı Kâr/Zarar</h3>
+                    <Activity className="text-purple-300" size={20} />
+                    <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-300">Kategori Bazlı Kâr/Zarar</h3>
                 </div>
                 <div className="h-64">
                     <ResponsiveContainer width="100%" height="100%">

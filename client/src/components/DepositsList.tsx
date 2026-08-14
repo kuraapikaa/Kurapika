@@ -21,7 +21,7 @@ export function DepositsList({ data, isLoading, error }: DepositsListProps) {
 
     if (error) {
         return (
-            <Card className={cn('p-8 text-center border-rose-500/20 bg-rose-500/5 text-rose-400')}>
+            <Card className={cn('rounded-2xl border-rose-400/25 bg-rose-400/[0.08] p-8 text-center text-rose-300')}>
                 <AlertCircle size={48} className="mx-auto mb-4 opacity-30" />
                 <h3 className="text-lg font-bold">Yatırım Listesi Alınamadı</h3>
                 <p className="mt-2 text-sm opacity-80">{error.message}</p>
@@ -31,7 +31,7 @@ export function DepositsList({ data, isLoading, error }: DepositsListProps) {
 
     if (data?.HasError) {
         return (
-            <Card className={cn('p-8 text-center border-amber-500/20 bg-amber-500/5 text-amber-400')}>
+            <Card className={cn('rounded-2xl border-amber-400/25 bg-amber-400/[0.08] p-8 text-center text-amber-300')}>
                 <AlertCircle size={48} className="mx-auto mb-4 opacity-30" />
                 <h3 className="text-lg font-bold">Sistem Uyarısı</h3>
                 <p className="mt-2 text-sm opacity-80">{data.AlertMessage || 'İstek şu an işlenemiyor.'}</p>
@@ -102,7 +102,7 @@ export function DepositsList({ data, isLoading, error }: DepositsListProps) {
             const durum = islemDurumu(row);
             return (
                 <span className={cn(
-                    'inline-block rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-widest ring-1 whitespace-nowrap',
+                    'inline-block rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider ring-1 whitespace-nowrap',
                     DURUM_SINIFI[durum],
                 )} title={durumAyrintisi(row)}>
                     {durumAyrintisi(row)}
@@ -115,7 +115,7 @@ export function DepositsList({ data, isLoading, error }: DepositsListProps) {
             const inputs = row?.inputs ?? {};
             const no = String(inputs.account_no ?? inputs.accountNo ?? '').trim();
             const ad = String(inputs.account_title ?? inputs.accountTitle ?? '').trim();
-            if (!no && !ad) return <span className="text-[color:var(--panel-faint,#5c6470)]">–</span>;
+            if (!no && !ad) return <span className="text-slate-500">–</span>;
             return (
                 <span className="block max-w-[200px] truncate text-left" title={`${ad} ${no}`.trim()}>
                     {ad && <span className="block truncate text-white/80">{ad}</span>}
@@ -123,10 +123,10 @@ export function DepositsList({ data, isLoading, error }: DepositsListProps) {
                 </span>
             );
         }
-        if (val == null) return <span className="text-[color:var(--panel-faint,#5c6470)]">–</span>;
+        if (val == null) return <span className="text-slate-500">–</span>;
         if (key === 'commissionFee') {
             const n = Number(val);
-            if (!Number.isFinite(n) || n === 0) return <span className="text-[color:var(--panel-faint,#5c6470)]">–</span>;
+            if (!Number.isFinite(n) || n === 0) return <span className="text-slate-500">–</span>;
             return <span className="tabular-nums text-amber-300">{formatNumber(n)}</span>;
         }
         if (key === 'ModifiedLocal')
@@ -136,7 +136,7 @@ export function DepositsList({ data, isLoading, error }: DepositsListProps) {
         if (key === 'Amount' && typeof val === 'number')
             return <span className="font-bold text-white tabular-nums">{formatNumber(val)}</span>;
 
-        if (key === 'ClientId') return <span className="text-[10px] font-bold text-[color:var(--panel-muted,#8a919c)]">#{String(val)}</span>;
+        if (key === 'ClientId') return <span className="text-[10px] font-bold text-slate-400">#{String(val)}</span>;
         if (key === 'ClientLogin') {
             const clientId = row.ClientId;
             const clientLogin = row.ClientLogin;
@@ -170,19 +170,19 @@ export function DepositsList({ data, isLoading, error }: DepositsListProps) {
                         <h2 className="text-2xl font-semibold text-white tracking-tighter uppercase antialiased">Yatırım İşlemleri</h2>
                         <div className="flex items-center gap-2 mt-0.5">
                             <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                            <p className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-[0.2em]">Finansal Giriş & Bakiye Hareketleri</p>
+                            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em]">Finansal Giriş & Bakiye Hareketleri</p>
                         </div>
                     </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-4">
-                    <div className="premium-card flex items-center gap-6 rounded-xl px-6 py-3 border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] shadow-inner">
+                    <div className="premium-card flex items-center gap-6 rounded-full px-6 py-3 border-white/5 bg-white/[0.02] shadow-inner">
                         <div className="flex flex-col">
-                            <span className="text-[9px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">Toplam İşlem</span>
+                            <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider">Toplam İşlem</span>
                             <span className="text-sm font-semibold text-white tabular-nums">{formatNumber(count)}</span>
                         </div>
                         <div className="h-8 w-px bg-white/5" />
                         <div className="flex flex-col">
-                            <span className="text-[9px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">Başarılı Tutar</span>
+                            <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider">Başarılı Tutar</span>
                             <div className="flex items-baseline gap-1.5">
                                 <span className="text-sm font-semibold text-emerald-400 tabular-nums neon-glow-emerald">{formatNumber(basariliToplam)}</span>
                                 <span className="text-[9px] font-bold text-emerald-600/60 tracking-tighter">TRY</span>
@@ -192,8 +192,8 @@ export function DepositsList({ data, isLoading, error }: DepositsListProps) {
                             <>
                                 <div className="h-8 w-px bg-white/5" />
                                 <div className="flex flex-col" title="Reddedilen ve bekleyen işlemler dahil">
-                                    <span className="text-[9px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">Tüm Kayıtlar</span>
-                                    <span className="text-sm font-semibold text-[color:var(--panel-muted,#8a919c)] tabular-nums">{formatNumber(hamToplam)}</span>
+                                    <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider">Tüm Kayıtlar</span>
+                                    <span className="text-sm font-semibold text-slate-400 tabular-nums">{formatNumber(hamToplam)}</span>
                                 </div>
                             </>
                         )}
@@ -212,36 +212,36 @@ export function DepositsList({ data, isLoading, error }: DepositsListProps) {
                                 onClick={() => setSuzgec(id)}
                                 aria-pressed={suzgec === id}
                                 className={cn(
-                                    'rounded-lg px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-colors',
+                                    'rounded-full px-4 py-2 text-[10px] font-bold uppercase tracking-wider transition-colors',
                                     suzgec === id
                                         ? 'bg-white/10 text-white'
-                                        : 'text-[color:var(--panel-muted,#8a919c)] hover:bg-white/5',
+                                        : 'text-slate-400 hover:bg-white/5',
                                 )}
                             >
                                 {etiket}
                             </button>
                         ))}
                     </div>
-                    <Button variant="secondary" size="sm" className="rounded-xl border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-white/5 hover:bg-white/10 uppercase font-semibold text-[10px] tracking-widest gap-2">
+                    <Button variant="secondary" size="sm" className="rounded-full border-white/5 bg-white/5 hover:bg-white/10 uppercase font-semibold text-[10px] tracking-wider gap-2">
                         <Download size={14} /> DIŞA AKTAR
                     </Button>
                 </div>
             </header>
 
             {isLoading ? (
-                <div className="flex flex-1 flex-col items-center justify-center gap-4 rounded-xl border border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] min-h-[400px]">
+                <div className="flex flex-1 flex-col items-center justify-center gap-6 rounded-2xl border border-white/5 bg-white/[0.02] min-h-[400px]">
                     <div className="h-12 w-12 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent" />
-                    <p className="text-sm font-bold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">Yatırım verileri senkronize ediliyor...</p>
+                    <p className="text-sm font-bold text-slate-400 uppercase tracking-wider">Yatırım verileri senkronize ediliyor...</p>
                 </div>
             ) : (
-                <Card className="premium-card flex-1 overflow-hidden flex flex-col p-0 bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
+                <Card className="premium-card flex flex-1 flex-col overflow-hidden rounded-2xl p-0 backdrop-blur-md bg-white/[0.02] border-white/5">
                     <div className="overflow-auto scrollbar-hide relative h-full">
                         <table className="w-full text-sm border-separate border-spacing-0">
-                            <thead className="sticky top-0 z-20 bg-black/60 backdrop-blur-3xl border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
+                            <thead className="sticky top-0 z-20 bg-[#0b0a10]/80 backdrop-blur-xl border-b border-white/5">
                                 <tr>
                                     {allKeys.map((key, idx) => (
                                         <th key={key} className={cn(
-                                            "px-3 py-2.5 font-semibold text-[10px] uppercase tracking-[0.15em] text-[color:var(--panel-muted,#8a919c)] text-left whitespace-nowrap border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]",
+                                            "px-3 py-2.5 font-semibold text-[10px] uppercase tracking-[0.15em] text-slate-400 text-left whitespace-nowrap border-b border-white/5",
                                             idx === 0 && "pl-8"
                                         )}>
                                             {columnLabels[key] ?? key}
@@ -254,10 +254,10 @@ export function DepositsList({ data, isLoading, error }: DepositsListProps) {
                                     <tr>
                                         <td colSpan={allKeys.length} className="p-24 text-center">
                                             <div className="relative inline-block">
-                                                <div className="absolute inset-0 bg-[color:var(--panel-muted,#8a919c)] rounded-full blur-[40px] opacity-10" />
-                                                <Wallet size={48} className="relative mx-auto mb-6 text-[color:var(--panel-faint,#5c6470)]" />
+                                                <div className="absolute inset-0 bg-slate-500 rounded-full blur-[40px] opacity-10" />
+                                                <Wallet size={48} className="relative mx-auto mb-6 text-slate-500" />
                                             </div>
-                                            <p className="text-[11px] font-bold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">{suzgec === 'hepsi' ? 'Şu an için yatırım kaydı bulunamadı.' : `Bu durumda kayıt yok.`}</p>
+                                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">{suzgec === 'hepsi' ? 'Şu an için yatırım kaydı bulunamadı.' : `Bu durumda kayıt yok.`}</p>
                                         </td>
                                     </tr>
                                 ) : (
@@ -272,8 +272,8 @@ export function DepositsList({ data, isLoading, error }: DepositsListProps) {
                                             >
                                                 {allKeys.map((key, colIdx) => (
                                                     <td key={key} className={cn(
-                                                        "px-3 py-2.5 whitespace-nowrap text-[color:var(--panel-muted,#8a919c)] group-hover:text-white transition-colors border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]",
-                                                        colIdx === 0 && "pl-8 font-semibold text-[color:var(--panel-muted,#8a919c)]"
+                                                        "px-3 py-2.5 whitespace-nowrap text-slate-400 group-hover:text-white transition-colors border-b border-white/5",
+                                                        colIdx === 0 && "pl-8 font-semibold text-slate-400"
                                                     )}>
                                                         {formatCell(key, (row as any)[key], row)}
                                                     </td>

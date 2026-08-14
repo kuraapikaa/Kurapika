@@ -3,19 +3,35 @@
 @tailwind utilities;
 
 @layer base {
+  /*
+   * PREMIUM DARK GLASSMORPHISM.
+   *
+   * Zemin gece mavisine yakin bir mor-siyah (#0B0A10); yuzeyler o zeminin
+   * uzerinde SAYDAM cam. Kenarlik neredeyse gorunmez (white/6) — cam etkisi
+   * kenarliktan degil bulaniklik + ic isiktan geliyor, kalin kenarlik onu
+   * plastige cevirir.
+   *
+   * Aksanlar: neon mor (birincil), zumrut (artı/basari), gul (eksi/risk).
+   * Durum renklerinin ANLAMI sabit; dekorasyon icin kullanilmazlar.
+   */
   :root {
     color-scheme: dark;
-    --app-bg: #05080e;
-    --app-surface: rgba(15, 23, 36, 0.62);
-    --app-surface-strong: rgba(20, 30, 46, 0.78);
-    --app-border: rgba(148, 180, 255, 0.1);
-    --app-border-hover: rgba(56, 189, 248, 0.4);
-    --app-muted: #8993a8;
-    --app-accent: #3b82f6;
-    --app-accent-teal: #2dd4bf;
-    --app-accent-soft: rgba(59, 130, 246, 0.14);
-    --app-shadow: 0 20px 60px rgba(2, 6, 15, 0.45);
-    --app-blur: blur(24px) saturate(160%);
+    --app-bg: #0b0a10;
+    --app-surface: rgba(24, 22, 34, 0.55);
+    --app-surface-strong: rgba(32, 29, 46, 0.72);
+    --app-border: rgba(255, 255, 255, 0.06);
+    --app-border-hover: rgba(168, 85, 247, 0.34);
+    --app-muted: #8b8798;
+    --app-accent: #a855f7;
+    --app-accent-teal: #34d399;
+    --app-accent-soft: rgba(168, 85, 247, 0.14);
+    --app-shadow: 0 24px 70px rgba(4, 2, 10, 0.55);
+    --app-blur: blur(26px) saturate(165%);
+
+    /* Glow yaricaplari; kart altlarinda ve aktif ogelerde kullanilir. */
+    --glow-mor: 0 0 24px rgba(168, 85, 247, 0.28);
+    --glow-zumrut: 0 0 24px rgba(52, 211, 153, 0.26);
+    --glow-gul: 0 0 24px rgba(251, 113, 133, 0.26);
   }
 
   * {
@@ -102,8 +118,9 @@
     background-clip: padding-box;
   }
 
+  /* Aksan moru: hover'da kaydirma cubugu da panelin geri kalaniyla ayni dilde. */
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(34, 211, 238, 0.42);
+    background: rgba(168, 85, 247, 0.5);
     background-clip: padding-box;
   }
 }
@@ -227,14 +244,25 @@
     @apply rounded-xl border-cyan-300/10 bg-cyan-300/[0.065] text-cyan-200 shadow-none;
   }
 
+  /*
+   * Calisma alanindaki kartlar.
+   *
+   * Eskiden burada kartlar OPAK bir lacivert kutuya (rgba(13,19,29,0.82))
+   * ve gorunur bir slate kenarliga zorlaniyordu; cam efekti calisma
+   * alaninda tamamen kayboluyordu. Artik kartlar zemini gosteriyor,
+   * kenarlik neredeyse gorunmez ve yaricap genis.
+   */
   .tab-workspace .premium-card,
   .tab-workspace .glass-card,
   .tab-workspace [class*='bg-slate-900/40'],
   .tab-workspace [class*='bg-zinc-950/20'],
   .tab-workspace [class*='bg-zinc-950/40'] {
-    border-color: rgba(51, 65, 85, 0.65);
-    background-color: rgba(13, 19, 29, 0.82);
-    box-shadow: none;
+    border-color: var(--app-border);
+    background-color: var(--app-surface);
+    border-radius: 1rem;
+    backdrop-filter: var(--app-blur);
+    -webkit-backdrop-filter: var(--app-blur);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), var(--app-shadow);
   }
 
   .tab-workspace table {
@@ -295,13 +323,33 @@
   .premium-card {
     position: relative;
     overflow: hidden;
-    border-radius: 14px;
+    /* 14px -> 1rem: tasarim sistemi genis yuvarlaklik istiyor
+       (rounded-2xl). Kart ne kadar buyukse yaricap o kadar belirgin. */
+    border-radius: 1rem;
     border: 1px solid var(--app-border);
     background: var(--app-surface);
     backdrop-filter: var(--app-blur);
     -webkit-backdrop-filter: var(--app-blur);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), var(--app-shadow);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), var(--app-shadow);
     transition: border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
+  }
+
+  /*
+   * CAM YANSIMASI.
+   *
+   * Kartin ust kenarinda soldan saga sonen ince bir isik cizgisi. Gercek
+   * camda kenar isigi tek noktadan gelir; duz bir beyaz cizgi bunu
+   * vermiyordu, gradyan veriyor.
+   */
+  .glass-card::before,
+  .premium-glass::before,
+  .premium-card::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.14) 22%, rgba(255, 255, 255, 0.04) 60%, transparent);
+    pointer-events: none;
   }
 
   .premium-card {
@@ -312,13 +360,46 @@
   .glass-card:hover {
     border-color: var(--app-border-hover);
     background: var(--app-surface-strong);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 24px 70px rgba(2, 6, 15, 0.5);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 24px 70px rgba(4, 2, 10, 0.6);
   }
 
-  .neon-glow-indigo,
-  .neon-glow-emerald,
+  /*
+   * NEON GLOW.
+   *
+   * Uc sinif da `filter: none` ile etkisiz birakilmisti. Tasarim sistemi
+   * onemli/premium alanlarin altinda parilti istiyor; geri aciliyorlar.
+   * `drop-shadow` kullaniliyor cunku `box-shadow` saydam cam yuzeyde
+   * kartin ARKASINDA kalip gorunmuyor.
+   */
+  .neon-glow-indigo {
+    filter: drop-shadow(var(--glow-mor));
+  }
+
+  .neon-glow-emerald {
+    filter: drop-shadow(var(--glow-zumrut));
+  }
+
   .neon-glow-rose {
-    filter: none;
+    filter: drop-shadow(var(--glow-gul));
+  }
+
+  /*
+   * MESH GRADYAN.
+   *
+   * Premium alanlari (KPI seridi, vitrin kartlari) zeminden ayirmak icin
+   * kosede sonen renk bulutu. Tek bir duz renk yerine iki radyal:
+   * bir kaynaktan gelen isik hissi veriyor.
+   */
+  .mesh-mor {
+    background-image:
+      radial-gradient(ellipse 60% 80% at 0% 0%, rgba(168, 85, 247, 0.16), transparent 70%),
+      radial-gradient(ellipse 50% 70% at 100% 0%, rgba(56, 189, 248, 0.08), transparent 70%);
+  }
+
+  .mesh-zumrut {
+    background-image:
+      radial-gradient(ellipse 60% 80% at 0% 0%, rgba(52, 211, 153, 0.14), transparent 70%),
+      radial-gradient(ellipse 50% 70% at 100% 0%, rgba(168, 85, 247, 0.07), transparent 70%);
   }
 
   .text-premium-gradient {
@@ -953,23 +1034,35 @@
      Lobiden bilerek ayri: lobi oyuncuya bakan marka yuzeyi (sicak siyah +
      altin), burasi bir calisma araci (soguk, sistem yerlisi, yuksek
      okunabilirlik). Ikisini tek palete zorlamak ikisini de zayiflatirdi. */
-  --panel-bg: #050609;
-  --panel-sidebar: rgba(8, 10, 14, 0.82);
-  --panel-surface: rgba(242, 244, 248, 0.028);
-  --panel-surface-2: rgba(242, 244, 248, 0.05);
-  --panel-border: rgba(242, 244, 248, 0.1);
-  --panel-border-strong: rgba(10, 132, 255, 0.34);
+  --panel-bg: #0b0a10;
+  --panel-sidebar: rgba(16, 14, 24, 0.72);
+  --panel-surface: rgba(255, 255, 255, 0.028);
+  --panel-surface-2: rgba(255, 255, 255, 0.05);
+  /* Kenarlik neredeyse gorunmez: cam etkisi bulaniklik + ic isiktan
+     geliyor, kalin kenarlik onu plastige cevirir. */
+  --panel-border: rgba(255, 255, 255, 0.06);
+  --panel-border-strong: rgba(168, 85, 247, 0.4);
   --panel-text: #f2f4f8;
-  --panel-muted: #8a919c;
-  --panel-accent: #0a84ff;
-  --panel-accent-teal: #64d2ff;
-  --panel-accent-soft: rgba(10, 132, 255, 0.14);
-  --panel-blur: blur(28px) saturate(150%);
+  --panel-muted: #8b8798;
+  --panel-accent: #a855f7;
+  --panel-accent-teal: #38bdf8;
+  --panel-accent-soft: rgba(168, 85, 247, 0.14);
+  /*
+   * Bu ikisi HIC TANIMLI DEGILDI.
+   *
+   * Dokuz bilesen `var(--panel-info, #64d2ff)` biciminde kullaniyordu;
+   * degisken olmadigi icin her seferinde yedek cyan degere dusuyor,
+   * yani palet degisse de o alanlar eski rengi tutuyordu. Tanimlanmalari
+   * onlari tasarim sistemine baglar.
+   */
+  --panel-info: #38bdf8;
+  --panel-accent-deep: #7e22ce;
+  --panel-blur: blur(28px) saturate(160%);
   /* Durum renkleri: anlamlari sabit, veri gosteriminde de bunlar kullanilir. */
-  --panel-success: #30d158;
-  --panel-warning: #ff9f0a;
-  --panel-danger: #ff453a;
-  --panel-special: #bf5af2;
+  --panel-success: #34d399;
+  --panel-warning: #fbbf24;
+  --panel-danger: #fb7185;
+  --panel-special: #c084fc;
   --panel-text-dim: #c8cdd5;
   --panel-faint: #5c6470;
   /* Yuzey yukseltmesi ve ic cizgiler. Eskiden rgba(255,255,255,...) olarak
@@ -979,54 +1072,9 @@
   --panel-raise-strong: rgba(255, 255, 255, 0.06);
   --panel-inset-line: rgba(255, 255, 255, 0.035);
   --panel-active-text: #f2f6ff;
-  --panel-shadow: rgba(2, 6, 15, 0.35);
-  --panel-shadow-strong: rgba(2, 6, 15, 0.42);
+  --panel-shadow: rgba(4, 2, 10, 0.4);
+  --panel-shadow-strong: rgba(4, 2, 10, 0.5);
   color-scheme: dark;
-}
-
-/*
- * ACIK TEMA.
- *
- * Yalnizca yonetim panelini etkiler. Lobi (`narcos-theme`) BILEREK
- * disarida: oyuncuya bakan marka yuzeyi sicak siyah + altin ve acik bir
- * varyanti yok; ayni anahtarla ikisini birden cevirmek markayi bozardi.
- *
- * Palet, koyu temanin ters cevrilmisi degil. Zemin notr-soguk gri
- * (#f4f6fa), yuzeyler saf beyaz; boylece kartlar zeminden ONE cikiyor —
- * koyu temada tam tersi calisiyor. Aksan mavisi ayni kaldi, cunku secili
- * durumun anlami temaya gore degismemeli.
- */
-:root[data-panel-theme='light'] {
-  --panel-bg: #f4f6fa;
-  --panel-sidebar: rgba(255, 255, 255, 0.88);
-  --panel-surface: rgba(255, 255, 255, 0.72);
-  --panel-surface-2: #ffffff;
-  --panel-border: rgba(15, 23, 42, 0.12);
-  --panel-border-strong: rgba(10, 132, 255, 0.42);
-  --panel-text: #0f172a;
-  --panel-text-dim: #33415a;
-  --panel-muted: #5b6b86;
-  /* Beyaz uzerinde 4.5:1'in altina dusmemeli — bu token 8-9.5px'lik
-     buyuk harf mikro etiketlerde kullaniliyor, en zor okunan metin o. */
-  --panel-faint: #5f6d85;
-  --panel-header: rgba(255, 255, 255, 0.82);
-  --panel-accent: #0a6ed1;
-  --panel-accent-teal: #0891b2;
-  --panel-accent-soft: rgba(10, 110, 209, 0.1);
-  --panel-blur: blur(20px) saturate(140%);
-  /* Durum renkleri beyaz uzerinde koyulastirildi: #30d158 acik zeminde
-     okunmuyordu (kontrast ~1.6:1). */
-  --panel-success: #15803d;
-  --panel-warning: #b45309;
-  --panel-danger: #b91c1c;
-  --panel-special: #7e22ce;
-  --panel-raise: rgba(15, 23, 42, 0.045);
-  --panel-raise-strong: rgba(15, 23, 42, 0.08);
-  --panel-inset-line: rgba(255, 255, 255, 0.9);
-  --panel-active-text: #0b2545;
-  --panel-shadow: rgba(15, 23, 42, 0.1);
-  --panel-shadow-strong: rgba(15, 23, 42, 0.14);
-  color-scheme: light;
 }
 
 .app-shell {
@@ -1036,10 +1084,11 @@
   font-size: 13px;
 }
 
+/* Zemin mesh gradyani: sol ustte mor, sagda soguk mavi bulut. */
 .app-shell .app-backdrop {
   background:
-    radial-gradient(ellipse 1000px 600px at 17% -60px, rgba(10, 132, 255, 0.14), transparent 70%),
-    radial-gradient(ellipse 840px 560px at 88% 200px, rgba(191, 90, 242, 0.09), transparent 70%),
+    radial-gradient(ellipse 1000px 600px at 17% -60px, rgba(168, 85, 247, 0.16), transparent 70%),
+    radial-gradient(ellipse 840px 560px at 88% 200px, rgba(56, 189, 248, 0.08), transparent 70%),
     var(--panel-bg) !important;
 }
 
@@ -1181,7 +1230,8 @@
 .app-shell .tab-workspace [class*='bg-zinc-950/20'],
 .app-shell .tab-workspace [class*='bg-zinc-950/40'] {
   border: 1px solid var(--panel-border) !important;
-  border-radius: 14px !important;
+  /* Tasarim sistemi genis yuvarlaklik istiyor (rounded-2xl). */
+  border-radius: 1rem !important;
   background-color: var(--panel-surface) !important;
   background-image: none !important;
   backdrop-filter: var(--panel-blur) !important;
@@ -1293,9 +1343,24 @@
   box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.12) !important;
 }
 
+/*
+ * BUTON YARICAPI ARTIK BURADAN DAYATILMIYOR.
+ *
+ * Bu kural her butona ve baglantiya 9px veriyordu ve secici ozgullugu
+ * (0,2,1) Tailwind'in `.rounded-full` sinifini (0,1,0) EZIYORDU. Yani
+ * tasarim sisteminin "butonlar ve rozetler tamamen hap" kurali panelin
+ * hicbir yerinde tutmuyordu; sinifi yazmak sonucu degistirmiyordu.
+ *
+ * Yaricap artik bilesenin kendi sinifindan gelir. Yalnizca hicbir yaricap
+ * sinifi TASIMAYAN ogeler icin makul bir varsayilan birakiliyor.
+ */
+.app-shell button:not([class*='rounded']),
+.app-shell a:not([class*='rounded']) {
+  border-radius: 9999px;
+}
+
 .app-shell button,
 .app-shell a {
-  border-radius: 9px;
   transition: color 120ms ease, background-color 120ms ease, border-color 120ms ease !important;
 }
 
@@ -1431,308 +1496,5 @@
 
 .app-shell .sidebar-nav-group a[aria-current='page'] {
   color: var(--panel-active-text) !important;
-}
-
-/*
- * Açık temada aksan yüzeyleri güçlendirilir. Koyu temada %16 alfa mavi
- * siyah üstünde net okunuyor; beyaz üstünde aynı alfa neredeyse görünmez
- * kalıyor, seçili menü öğesi seçili görünmüyordu.
- */
-:root[data-panel-theme='light'] .app-shell .sidebar-nav-group a[aria-current='page'] {
-  border-color: rgba(10, 110, 209, 0.32) !important;
-  background: linear-gradient(135deg, rgba(10, 110, 209, 0.13), rgba(8, 145, 178, 0.08)) !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7) !important;
-}
-
-:root[data-panel-theme='light'] .app-shell .sidebar-nav-group a[aria-current='page'] .sidebar-link-icon {
-  background: rgba(10, 110, 209, 0.16) !important;
-  border-color: rgba(10, 110, 209, 0.3) !important;
-  color: #0a6ed1 !important;
-}
-
-:root[data-panel-theme='light'] .app-shell .sidebar-link-icon {
-  color: var(--panel-muted) !important;
-}
-
-:root[data-panel-theme='light'] .app-shell .premium-sidebar {
-  box-shadow: 1px 0 0 var(--panel-border), 12px 0 40px rgba(15, 23, 42, 0.05) !important;
-}
-
-:root[data-panel-theme='light'] .app-shell .premium-sidebar::after {
-  display: none;
-}
-
-/* Zemin halesi: koyu temada mavi/mor ışıma, açık temada yumuşak yıkama. */
-:root[data-panel-theme='light'] .app-shell .app-backdrop {
-  background:
-    radial-gradient(ellipse 1000px 600px at 17% -60px, rgba(10, 110, 209, 0.07), transparent 70%),
-    radial-gradient(ellipse 840px 560px at 88% 200px, rgba(126, 34, 206, 0.045), transparent 70%),
-    var(--panel-bg) !important;
-}
-
-/*
- * Gövde: kart, tablo, başlık ve form yüzeyleri.
- *
- * Bileşenlerde `bg-slate-900/40`, `text-white`, `text-slate-400` gibi
- * doğrudan koyu değerler var. Hepsini 65 dosyada tek tek değiştirmek
- * yerine panel kabuğu altında token'a bağlanıyorlar — Tailwind sınıfı
- * yerinde kalır, rengi tema belirler.
- */
-:root[data-panel-theme='light'] .app-shell .tab-workspace table thead {
-  background: rgba(15, 23, 42, 0.035) !important;
-}
-
-:root[data-panel-theme='light'] .app-shell .tab-workspace table th {
-  border-bottom-color: var(--panel-border) !important;
-  color: var(--panel-muted) !important;
-}
-
-:root[data-panel-theme='light'] .app-shell .tab-workspace table td {
-  border-bottom-color: rgba(15, 23, 42, 0.07) !important;
-  color: var(--panel-text-dim) !important;
-}
-
-:root[data-panel-theme='light'] .app-shell .tab-workspace table tbody tr:hover {
-  background: rgba(10, 110, 209, 0.045) !important;
-}
-
-:root[data-panel-theme='light'] .app-shell input:not([type='checkbox']):not([type='radio']),
-:root[data-panel-theme='light'] .app-shell select,
-:root[data-panel-theme='light'] .app-shell textarea {
-  border-color: var(--panel-border) !important;
-  background-color: #ffffff !important;
-  color: var(--panel-text) !important;
-}
-
-/*
- * Açık temada beyaz metin görünmez.
- *
- * Panelde `text-white`, `text-slate-100/200/300` ve `text-zinc-*`
- * yaygın; hepsi koyu zemin varsayıyor. Kabuk altında koyu metne
- * çevriliyor. Aksan renkli metinlere (cyan/blue/emerald/rose)
- * DOKUNULMUYOR — onlar durum bildiriyor ve iki temada da okunuyor.
- */
-:root[data-panel-theme='light'] .app-shell .tab-workspace [class*='text-white'],
-:root[data-panel-theme='light'] .app-shell .tab-workspace [class*='text-slate-100'],
-:root[data-panel-theme='light'] .app-shell .tab-workspace [class*='text-slate-200'],
-:root[data-panel-theme='light'] .app-shell .tab-workspace [class*='text-zinc-100'],
-:root[data-panel-theme='light'] .app-shell .tab-workspace [class*='text-zinc-200'],
-:root[data-panel-theme='light'] .app-shell .app-header [class*='text-white'] {
-  color: var(--panel-text) !important;
-}
-
-:root[data-panel-theme='light'] .app-shell .tab-workspace [class*='text-slate-400'],
-:root[data-panel-theme='light'] .app-shell .tab-workspace [class*='text-slate-500'],
-:root[data-panel-theme='light'] .app-shell .tab-workspace [class*='text-zinc-400'],
-:root[data-panel-theme='light'] .app-shell .tab-workspace [class*='text-zinc-500'] {
-  color: var(--panel-muted) !important;
-}
-
-:root[data-panel-theme='light'] .app-shell .tab-workspace [class*='text-slate-600'],
-:root[data-panel-theme='light'] .app-shell .tab-workspace [class*='text-zinc-600'] {
-  color: var(--panel-faint) !important;
-}
-
-/*
- * Bölüm başlıkları ve gövde metni.
- *
- * `.tab-workspace section > header h1/h2` rengini `@apply text-white` ile
- * ALIYOR — sınıf DOM'da bir attribute olarak görünmediği için yukarıdaki
- * `[class*='text-white']` seçicisi bunları hiç yakalamıyordu. Açık temada
- * beyaz üstüne beyaz başlık kalıyordu.
- */
-:root[data-panel-theme='light'] .app-shell .tab-workspace section > header h1,
-:root[data-panel-theme='light'] .app-shell .tab-workspace section > header h2,
-:root[data-panel-theme='light'] .app-shell .tab-workspace section > header h3 {
-  color: var(--panel-text) !important;
-}
-
-:root[data-panel-theme='light'] .app-shell .tab-workspace section > header p {
-  color: var(--panel-muted) !important;
-}
-
-/* Başlık çubuğundaki metin de kabuk altında token'a bağlı. */
-:root[data-panel-theme='light'] .app-shell .app-header {
-  color: var(--panel-text);
-}
-
-:root[data-panel-theme='light'] .app-shell .app-header [class*='text-slate-400'],
-:root[data-panel-theme='light'] .app-shell .app-header [class*='text-slate-500'],
-:root[data-panel-theme='light'] .app-shell .app-header [class*='text-zinc-400'] {
-  color: var(--panel-muted) !important;
-}
-
-/*
- * DURUM RENKLERİ AÇIK TEMADA KOYULAŞIR.
- *
- * Bunlara dokunmamak ilk düşünülen doğru karardı: emerald "onaylandı",
- * rose "reddedildi", amber "bekliyor" demek ve anlamları temaya göre
- * değişmemeli. Ama ölçüm aksini söyledi — beyaz zemin üzerinde
- * text-emerald-300 1.52:1, text-amber-300 1.44:1, text-rose-300 1.89:1
- * kontrast veriyordu; yani üç durum da fiilen okunmuyordu.
- *
- * Renkler aynı AİLEDE kalıp koyulaşıyor: anlam korunur, okunabilirlik
- * gelir. Yalnızca METİN rengi değişir; rozet zeminleri (bg-emerald-300/10)
- * ve kenarlıklar olduğu gibi kalır.
- */
-:root[data-panel-theme='light'] .app-shell [class*='text-emerald-2'],
-:root[data-panel-theme='light'] .app-shell [class*='text-emerald-3'],
-:root[data-panel-theme='light'] .app-shell [class*='text-emerald-4'],
-:root[data-panel-theme='light'] .app-shell [class*='text-green-3'],
-:root[data-panel-theme='light'] .app-shell [class*='text-green-4'],
-:root[data-panel-theme='light'] .app-shell [class*='text-teal-3'] {
-  color: var(--panel-success) !important;
-}
-
-:root[data-panel-theme='light'] .app-shell [class*='text-rose-2'],
-:root[data-panel-theme='light'] .app-shell [class*='text-rose-3'],
-:root[data-panel-theme='light'] .app-shell [class*='text-rose-4'],
-:root[data-panel-theme='light'] .app-shell [class*='text-red-3'],
-:root[data-panel-theme='light'] .app-shell [class*='text-red-4'] {
-  color: var(--panel-danger) !important;
-}
-
-:root[data-panel-theme='light'] .app-shell [class*='text-amber-2'],
-:root[data-panel-theme='light'] .app-shell [class*='text-amber-3'],
-:root[data-panel-theme='light'] .app-shell [class*='text-amber-4'],
-:root[data-panel-theme='light'] .app-shell [class*='text-yellow-3'],
-:root[data-panel-theme='light'] .app-shell [class*='text-orange-3'] {
-  color: var(--panel-warning) !important;
-}
-
-:root[data-panel-theme='light'] .app-shell [class*='text-cyan-1'],
-:root[data-panel-theme='light'] .app-shell [class*='text-cyan-2'],
-:root[data-panel-theme='light'] .app-shell [class*='text-cyan-3'],
-:root[data-panel-theme='light'] .app-shell [class*='text-sky-3'],
-:root[data-panel-theme='light'] .app-shell [class*='text-blue-2'],
-:root[data-panel-theme='light'] .app-shell [class*='text-blue-3'] {
-  color: var(--panel-accent) !important;
-}
-
-:root[data-panel-theme='light'] .app-shell [class*='text-violet-3'],
-:root[data-panel-theme='light'] .app-shell [class*='text-purple-3'],
-:root[data-panel-theme='light'] .app-shell [class*='text-fuchsia-3'] {
-  color: var(--panel-special) !important;
-}
-
-/*
- * Nötr gri metinler — kabuk GENELİNDE.
- *
- * Bu kurallar önce yalnızca `.tab-workspace` altındaydı; sidebar ve
- * altbilgideki `text-slate-300` gibi sınıflar dışarıda kalıp beyaz üstüne
- * açık gri olarak (1.48:1) çıkıyordu.
- */
-:root[data-panel-theme='light'] .app-shell [class*='text-slate-100'],
-:root[data-panel-theme='light'] .app-shell [class*='text-slate-200'],
-:root[data-panel-theme='light'] .app-shell [class*='text-slate-300'],
-:root[data-panel-theme='light'] .app-shell [class*='text-zinc-100'],
-:root[data-panel-theme='light'] .app-shell [class*='text-zinc-200'],
-:root[data-panel-theme='light'] .app-shell [class*='text-zinc-300'],
-:root[data-panel-theme='light'] .app-shell [class*='text-white'] {
-  color: var(--panel-text) !important;
-}
-
-:root[data-panel-theme='light'] .app-shell [class*='text-slate-400'],
-:root[data-panel-theme='light'] .app-shell [class*='text-slate-500'],
-:root[data-panel-theme='light'] .app-shell [class*='text-zinc-400'],
-:root[data-panel-theme='light'] .app-shell [class*='text-zinc-500'] {
-  color: var(--panel-muted) !important;
-}
-
-:root[data-panel-theme='light'] .app-shell [class*='text-slate-600'],
-:root[data-panel-theme='light'] .app-shell [class*='text-zinc-600'],
-:root[data-panel-theme='light'] .app-shell [class*='text-slate-700'] {
-  color: var(--panel-faint) !important;
-}
-
-/* ─── Açık tema: yüzey opaklıkları ────────────────────────────────────────
- *
- * Panelde `bg-white/N` (koyu zeminde yüzey YÜKSELTMESİ) 95'ten fazla,
- * `bg-black/N` (koyu zeminde ÇUKUR) 200'den fazla yerde kullanılıyor.
- * İkisi de koyu zemin varsayıyor ve açık temada tam ters çalışıyordu:
- * beyaz üstüne beyaz yüzeyler tamamen kayboluyor, siyah çukurlar ise
- * açık sayfanın ortasında koyu kutulara dönüşüyordu.
- *
- * Anlam korunuyor, yön çevriliyor: yükseltme açık temada hafif KOYU bir
- * tint, çukur ise hafif GRİ bir tint oluyor. Opaklık kademeleri
- * birebir taşınmıyor — koyu zeminde %3 beyaz görünür bir fark yaratırken
- * beyaz zeminde %3 siyah çok daha güçlü okunur.
- *
- * Tam ekran örtüler (`inset-0`) DIŞARIDA: modalin arkasındaki koyu perde
- * açık temada da koyu olmalı, standart olan bu.
- */
-:root[data-panel-theme='light'] .app-shell [class~='bg-white/[0.01]'] { background-color: rgba(15, 23, 42, 0.025) !important; }
-:root[data-panel-theme='light'] .app-shell [class~='hover:bg-white/[0.01]']:hover { background-color: rgba(15, 23, 42, 0.055) !important; }
-:root[data-panel-theme='light'] .app-shell [class~='bg-white/[0.015]'] { background-color: rgba(15, 23, 42, 0.025) !important; }
-:root[data-panel-theme='light'] .app-shell [class~='hover:bg-white/[0.015]']:hover { background-color: rgba(15, 23, 42, 0.055) !important; }
-:root[data-panel-theme='light'] .app-shell [class~='bg-white/[0.02]'] { background-color: rgba(15, 23, 42, 0.03) !important; }
-:root[data-panel-theme='light'] .app-shell [class~='hover:bg-white/[0.02]']:hover { background-color: rgba(15, 23, 42, 0.06) !important; }
-:root[data-panel-theme='light'] .app-shell [class~='bg-white/[0.025]'] { background-color: rgba(15, 23, 42, 0.03) !important; }
-:root[data-panel-theme='light'] .app-shell [class~='hover:bg-white/[0.025]']:hover { background-color: rgba(15, 23, 42, 0.06) !important; }
-:root[data-panel-theme='light'] .app-shell [class~='bg-white/[0.03]'] { background-color: rgba(15, 23, 42, 0.035) !important; }
-:root[data-panel-theme='light'] .app-shell [class~='hover:bg-white/[0.03]']:hover { background-color: rgba(15, 23, 42, 0.065) !important; }
-:root[data-panel-theme='light'] .app-shell [class~='bg-white/[0.035]'] { background-color: rgba(15, 23, 42, 0.04) !important; }
-:root[data-panel-theme='light'] .app-shell [class~='hover:bg-white/[0.035]']:hover { background-color: rgba(15, 23, 42, 0.07) !important; }
-:root[data-panel-theme='light'] .app-shell [class~='bg-white/[0.04]'] { background-color: rgba(15, 23, 42, 0.045) !important; }
-:root[data-panel-theme='light'] .app-shell [class~='hover:bg-white/[0.04]']:hover { background-color: rgba(15, 23, 42, 0.075) !important; }
-:root[data-panel-theme='light'] .app-shell [class~='bg-white/[0.045]'] { background-color: rgba(15, 23, 42, 0.05) !important; }
-:root[data-panel-theme='light'] .app-shell [class~='hover:bg-white/[0.045]']:hover { background-color: rgba(15, 23, 42, 0.08) !important; }
-:root[data-panel-theme='light'] .app-shell [class~='bg-white/[0.05]'] { background-color: rgba(15, 23, 42, 0.05) !important; }
-:root[data-panel-theme='light'] .app-shell [class~='hover:bg-white/[0.05]']:hover { background-color: rgba(15, 23, 42, 0.08) !important; }
-:root[data-panel-theme='light'] .app-shell [class~='bg-white/5'] { background-color: rgba(15, 23, 42, 0.05) !important; }
-:root[data-panel-theme='light'] .app-shell [class~='hover:bg-white/5']:hover { background-color: rgba(15, 23, 42, 0.08) !important; }
-:root[data-panel-theme='light'] .app-shell [class~='bg-white/[0.06]'] { background-color: rgba(15, 23, 42, 0.06) !important; }
-:root[data-panel-theme='light'] .app-shell [class~='hover:bg-white/[0.06]']:hover { background-color: rgba(15, 23, 42, 0.09) !important; }
-:root[data-panel-theme='light'] .app-shell [class~='bg-white/[0.07]'] { background-color: rgba(15, 23, 42, 0.07) !important; }
-:root[data-panel-theme='light'] .app-shell [class~='hover:bg-white/[0.07]']:hover { background-color: rgba(15, 23, 42, 0.1) !important; }
-:root[data-panel-theme='light'] .app-shell [class~='bg-white/[0.08]'] { background-color: rgba(15, 23, 42, 0.08) !important; }
-:root[data-panel-theme='light'] .app-shell [class~='hover:bg-white/[0.08]']:hover { background-color: rgba(15, 23, 42, 0.11) !important; }
-:root[data-panel-theme='light'] .app-shell [class~='bg-white/10'] { background-color: rgba(15, 23, 42, 0.08) !important; }
-:root[data-panel-theme='light'] .app-shell [class~='hover:bg-white/10']:hover { background-color: rgba(15, 23, 42, 0.11) !important; }
-:root[data-panel-theme='light'] .app-shell [class~='bg-white/15'] { background-color: rgba(15, 23, 42, 0.11) !important; }
-:root[data-panel-theme='light'] .app-shell [class~='hover:bg-white/15']:hover { background-color: rgba(15, 23, 42, 0.14) !important; }
-
-:root[data-panel-theme='light'] .app-shell [class~='bg-black/15']:not([class~='inset-0']) { background-color: rgba(15, 23, 42, 0.03) !important; }
-:root[data-panel-theme='light'] .app-shell [class~='bg-black/20']:not([class~='inset-0']) { background-color: rgba(15, 23, 42, 0.035) !important; }
-:root[data-panel-theme='light'] .app-shell [class~='bg-black/25']:not([class~='inset-0']) { background-color: rgba(15, 23, 42, 0.04) !important; }
-:root[data-panel-theme='light'] .app-shell [class~='bg-black/30']:not([class~='inset-0']) { background-color: rgba(15, 23, 42, 0.045) !important; }
-:root[data-panel-theme='light'] .app-shell [class~='bg-black/35']:not([class~='inset-0']) { background-color: rgba(15, 23, 42, 0.05) !important; }
-:root[data-panel-theme='light'] .app-shell [class~='bg-black/40']:not([class~='inset-0']) { background-color: rgba(15, 23, 42, 0.055) !important; }
-:root[data-panel-theme='light'] .app-shell [class~='bg-black/45']:not([class~='inset-0']) { background-color: rgba(15, 23, 42, 0.06) !important; }
-:root[data-panel-theme='light'] .app-shell [class~='bg-black/50']:not([class~='inset-0']) { background-color: rgba(15, 23, 42, 0.065) !important; }
-:root[data-panel-theme='light'] .app-shell [class~='bg-black/60']:not([class~='inset-0']) { background-color: rgba(15, 23, 42, 0.05) !important; }
-:root[data-panel-theme='light'] .app-shell [class~='bg-black/70']:not([class~='inset-0']) { background-color: rgba(15, 23, 42, 0.06) !important; }
-:root[data-panel-theme='light'] .app-shell [class~='bg-black/80']:not([class~='inset-0']) { background-color: rgba(15, 23, 42, 0.07) !important; }
-
-/* Beyaz üstüne beyaz kalan tek istisna: nötr rozet zemini. */
-:root[data-panel-theme='light'] .app-shell [class~='bg-white/40'] { background-color: rgba(15, 23, 42, 0.16) !important; }
-
-
-/* ─── @apply ile renk alan sınıflar ───────────────────────────────────────
- *
- * Bu sınıflar rengini `@apply text-cyan-200` gibi ifadelerden alıyor.
- * Tailwind bunu derlerken sınıf adı DOM'da bir öznitelik olarak
- * görünmüyor, dolayısıyla yukarıdaki `[class*='text-cyan-2']` seçicileri
- * hiçbirini yakalamıyor. Açık temada hepsi beyaz üstüne açık turkuaz
- * kalıyordu (`.tab-intro-chip` ölçümde 1.48:1).
- *
- * Aynı tuzağa bölüm başlıkları ve tablo başlıkları da düşmüştü; hepsi
- * burada açıkça ele alınıyor.
- */
-:root[data-panel-theme='light'] .app-shell .tab-intro-chip,
-:root[data-panel-theme='light'] .app-shell .tab-intro-status,
-:root[data-panel-theme='light'] .app-shell .tab-intro-icon {
-  color: var(--panel-accent) !important;
-  border-color: rgba(10, 110, 209, 0.24) !important;
-  background-color: rgba(10, 110, 209, 0.07) !important;
-}
-
-:root[data-panel-theme='light'] .app-shell .sidebar-nav-group a:hover .sidebar-link-icon {
-  color: var(--panel-text) !important;
-}
-
-:root[data-panel-theme='light'] .app-shell .sidebar-system-card {
-  border-color: rgba(21, 128, 61, 0.22) !important;
-  background: rgba(21, 128, 61, 0.07) !important;
 }
 

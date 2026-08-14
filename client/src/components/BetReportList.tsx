@@ -112,9 +112,9 @@ export function BetReportList({
   ];
 
   function formatCell(key: string, val: unknown, row: BetReportItem): string | ReactNode {
-    if (val == null) return <span className="text-[color:var(--panel-faint,#5c6470)]">/</span>;
+    if (val == null) return <span className="text-slate-500">/</span>;
     if (typeof val === 'string' && /^\d{4}-\d{2}-\d{2}/.test(val)) {
-      return <span className="tabular-nums text-[color:var(--panel-muted,#8a919c)] font-medium">{formatDateTimeDisplay(val)}</span>;
+      return <span className="tabular-nums text-slate-400 font-medium">{formatDateTimeDisplay(val)}</span>;
     }
     if (typeof val === 'number' && AMOUNT_KEYS.has(key)) {
       const isNegative = val < 0;
@@ -123,7 +123,7 @@ export function BetReportList({
     if (typeof val === 'boolean') {
       return val ?
         <span className="inline-flex items-center gap-1 text-cyan-400 font-semibold text-[10px] uppercase"><Zap size={10} /> EVET</span> :
-        <span className="text-[color:var(--panel-faint,#5c6470)] font-bold text-[10px] uppercase">HAYIR</span>;
+        <span className="text-slate-500 font-bold text-[10px] uppercase">HAYIR</span>;
     }
     if (key === 'StateName') {
       const v = String(val).toUpperCase();
@@ -133,11 +133,11 @@ export function BetReportList({
 
       return (
         <span className={cn(
-          "inline-flex items-center rounded-lg px-2.5 py-1 text-[9px] font-semibold border uppercase tracking-widest",
+          "inline-flex items-center rounded-lg px-2.5 py-1 text-[9px] font-semibold border uppercase tracking-wider",
           isWon ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 neon-glow-emerald" :
             isLost ? "bg-rose-500/10 text-rose-500 border-rose-500/20" :
               isPending ? "bg-amber-500/10 text-amber-500 border-amber-500/20" :
-                "bg-[rgba(242,244,248,0.08)] text-[color:var(--panel-muted,#8a919c)] border-[color:var(--panel-border,rgba(242,244,248,0.1))]"
+                "bg-[rgba(242,244,248,0.08)] text-slate-400 border-white/5"
         )}>
           {v}
         </span>
@@ -159,13 +159,13 @@ export function BetReportList({
           className="flex items-center gap-1.5 font-semibold text-white hover:text-cyan-400 transition-colors uppercase tracking-tight"
         >
           <div className="w-5 h-5 rounded bg-white/5 flex items-center justify-center">
-            <User size={10} className="text-[color:var(--panel-muted,#8a919c)]" />
+            <User size={10} className="text-slate-400" />
           </div>
           {login}
         </button>
       );
     }
-    return <span className="font-bold text-[color:var(--panel-text-dim,#c8cdd5)]">{String(val)}</span>;
+    return <span className="font-bold text-slate-300">{String(val)}</span>;
   }
 
   const totalCiro = objects.reduce((s, o) => s + (Number((o as any).Amount) || 0), 0);
@@ -176,22 +176,22 @@ export function BetReportList({
 
   return (
     <div className="flex flex-col gap-6 h-full">
-      <Card className="flex-1 flex flex-col overflow-hidden bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border-[color:var(--panel-border,rgba(242,244,248,0.1))] p-0">
+      <Card className="flex-1 flex flex-col overflow-hidden bg-white/[0.02] border-white/5 p-0">
         {showHeader && (
-          <div className="flex shrink-0 items-center justify-between border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/40 px-8 py-5 backdrop-blur-3xl">
+          <div className="flex shrink-0 items-center justify-between border-b border-white/5 bg-black/40 px-8 py-5 backdrop-blur-3xl">
             <div className="flex items-center gap-3">
               <div className="h-2 w-2 rounded-full bg-cyan-500 animate-pulse" />
-              <span className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-[0.2em] antialiased">Bahis Veri Akışı & Sinyal Analizi</span>
+              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em] antialiased">Bahis Veri Akışı & Sinyal Analizi</span>
             </div>
             {!isLoading && (
               <div className="flex items-center gap-6">
                 <div className="flex flex-col items-end">
-                  <span className="text-[9px] font-bold text-[color:var(--panel-faint,#5c6470)] uppercase tracking-tighter">İşlem Hacmi</span>
+                  <span className="text-[9px] font-bold text-slate-500 uppercase tracking-tighter">İşlem Hacmi</span>
                   <span className="text-xs font-semibold text-white tabular-nums">{formatNumber(objects.length)}</span>
                 </div>
                 <div className="w-px h-6 bg-white/5" />
                 <div className="flex flex-col items-end">
-                  <span className="text-[9px] font-bold text-[color:var(--panel-faint,#5c6470)] uppercase tracking-tighter">Toplam Ciro</span>
+                  <span className="text-[9px] font-bold text-slate-500 uppercase tracking-tighter">Toplam Ciro</span>
                   <span className="text-xs font-semibold text-emerald-400 tabular-nums">{formatNumber(totalCiro)} <span className="text-[8px] opacity-50">TRY</span></span>
                 </div>
               </div>
@@ -202,10 +202,10 @@ export function BetReportList({
         <div className="flex-1 overflow-auto scrollbar-hide">
           <table className="w-full text-sm border-separate border-spacing-0">
             <thead className="sticky top-0 z-20">
-              <tr className="text-left text-[10px] uppercase tracking-[0.2em] text-[color:var(--panel-muted,#8a919c)] bg-black/80 backdrop-blur-md">
-                <th className="px-3 py-2.5 font-semibold pl-4 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">Eylem</th>
+              <tr className="text-left text-[10px] uppercase tracking-[0.2em] text-slate-400 bg-black/80 backdrop-blur-md">
+                <th className="px-3 py-2.5 font-semibold pl-4 border-b border-white/5">Eylem</th>
                 {allKeys.map((key) => (
-                  <th key={key} className="px-3 py-2.5 font-semibold border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] whitespace-nowrap">
+                  <th key={key} className="px-3 py-2.5 font-semibold border-b border-white/5 whitespace-nowrap">
                     {COLUMN_LABELS[key] ?? key}
                   </th>
                 ))}
@@ -217,15 +217,15 @@ export function BetReportList({
                   <td colSpan={allKeys.length + 1} className="p-32 text-center">
                     <div className="flex flex-col items-center gap-4">
                       <div className="h-10 w-10 animate-spin rounded-full border-4 border-cyan-500 border-t-transparent" />
-                      <p className="text-[10px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest">Veri paketleri senkronize ediliyor...</p>
+                      <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Veri paketleri senkronize ediliyor...</p>
                     </div>
                   </td>
                 </tr>
               ) : objects.length === 0 ? (
                 <tr>
                   <td colSpan={allKeys.length + 1} className="p-32 text-center">
-                    <BarChart3 size={56} className="mx-auto mb-8 text-[color:var(--panel-faint,#5c6470)]" />
-                    <p className="text-[11px] font-bold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-[0.2em]">Analiz edilecek bahis kaydı bulunamadı.</p>
+                    <BarChart3 size={56} className="mx-auto mb-8 text-slate-500" />
+                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em]">Analiz edilecek bahis kaydı bulunamadı.</p>
                   </td>
                 </tr>
               ) : (
@@ -237,27 +237,27 @@ export function BetReportList({
                   return (
                     <Fragment key={rowId}>
                       <tr className="group transition-all duration-300 hover:bg-cyan-500/[0.02]">
-                        <td className="px-3 py-2.5 pl-4 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
+                        <td className="px-3 py-2.5 pl-4 border-b border-white/5">
                           <button
                             type="button"
                             onClick={() => setSelectionsModalBetId(isExpanded ? null : Number(r.Id))}
                             className={cn(
                               "flex h-8 w-8 items-center justify-center rounded-lg border transition-all",
-                              isExpanded ? "bg-cyan-500 border-cyan-400 text-white" : "bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border-[color:var(--panel-border,rgba(242,244,248,0.1))] text-[color:var(--panel-muted,#8a919c)] hover:border-cyan-500/30 hover:text-cyan-400"
+                              isExpanded ? "bg-cyan-500 border-cyan-400 text-white" : "bg-white/[0.02] border-white/5 text-slate-400 hover:border-cyan-500/30 hover:text-cyan-400"
                             )}
                           >
                             {isExpanded ? <X size={14} /> : <List size={14} />}
                           </button>
                         </td>
                         {allKeys.map((key) => (
-                          <td key={key} className="px-3 py-2.5 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))] whitespace-nowrap">
+                          <td key={key} className="px-3 py-2.5 border-b border-white/5 whitespace-nowrap">
                             {formatCell(key, r[key], row as BetReportItem)}
                           </td>
                         ))}
                       </tr>
                       {isExpanded && (
                         <tr>
-                          <td colSpan={allKeys.length + 1} className="p-0 border-b border-[color:var(--panel-border,rgba(242,244,248,0.1))]">
+                          <td colSpan={allKeys.length + 1} className="p-0 border-b border-white/5">
                             <motion.div
                               initial={{ opacity: 0, height: 0 }}
                               animate={{ opacity: 1, height: 'auto' }}
@@ -269,7 +269,7 @@ export function BetReportList({
                                     <div className="p-2 rounded-lg bg-cyan-500/10 text-cyan-400">
                                       <Zap size={16} />
                                     </div>
-                                    <span className="text-[11px] font-semibold text-white uppercase tracking-widest">Bahis Seçimleri & Piyasa Detayı</span>
+                                    <span className="text-[11px] font-semibold text-white uppercase tracking-wider">Bahis Seçimleri & Piyasa Detayı</span>
                                   </div>
                                 </div>
                                 <div className="p-4">
@@ -284,35 +284,35 @@ export function BetReportList({
                                         const isWon = /WON|KAZAN/i.test(s.StateName);
                                         const isLost = /LOST|KAYIP/i.test(s.StateName);
                                         return (
-                                          <div key={sIdx} className="rounded-xl bg-[color:var(--panel-surface,rgba(242,244,248,0.028))] border border-[color:var(--panel-border,rgba(242,244,248,0.1))] p-5">
+                                          <div key={sIdx} className="rounded-xl bg-white/[0.02] border border-white/5 p-5">
                                             <div className="flex items-start justify-between gap-4">
                                               <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2 mb-1">
-                                                  <Globe size={10} className="text-[color:var(--panel-faint,#5c6470)]" />
-                                                  <span className="text-[9px] font-semibold text-[color:var(--panel-muted,#8a919c)] uppercase tracking-widest truncate">{s.SportName} · {s.CompetitionName}</span>
+                                                  <Globe size={10} className="text-slate-500" />
+                                                  <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider truncate">{s.SportName} · {s.CompetitionName}</span>
                                                 </div>
                                                 <p className="text-sm font-semibold text-white uppercase tracking-tight truncate mb-3">{s.MatchName}</p>
                                                 <div className="grid grid-cols-2 gap-4">
                                                   <div className="flex flex-col">
-                                                    <span className="text-[8px] font-semibold text-[color:var(--panel-faint,#5c6470)] uppercase">Piyasa</span>
-                                                    <span className="text-[11px] font-bold text-[color:var(--panel-text-dim,#c8cdd5)] truncate">{s.MarketName}</span>
+                                                    <span className="text-[8px] font-semibold text-slate-500 uppercase">Piyasa</span>
+                                                    <span className="text-[11px] font-bold text-slate-300 truncate">{s.MarketName}</span>
                                                   </div>
                                                   <div className="flex flex-col">
-                                                    <span className="text-[8px] font-semibold text-[color:var(--panel-faint,#5c6470)] uppercase">Seçim</span>
+                                                    <span className="text-[8px] font-semibold text-slate-500 uppercase">Seçim</span>
                                                     <span className="text-[11px] font-semibold text-cyan-400 truncate">{s.SelectionName}</span>
                                                   </div>
                                                 </div>
                                               </div>
                                               <div className="flex flex-col items-end gap-3">
                                                 <div className="text-right">
-                                                  <span className="text-[8px] font-semibold text-[color:var(--panel-faint,#5c6470)] uppercase">Oran</span>
+                                                  <span className="text-[8px] font-semibold text-slate-500 uppercase">Oran</span>
                                                   <p className="text-lg font-semibold text-white tabular-nums">{formatNumber(s.Price)}</p>
                                                 </div>
                                                 <span className={cn(
-                                                  "px-2 py-0.5 rounded text-[9px] font-semibold uppercase tracking-widest border",
+                                                  "px-2 py-0.5 rounded text-[9px] font-semibold uppercase tracking-wider border",
                                                   isWon ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" :
                                                     isLost ? "bg-rose-500/10 text-rose-500 border-rose-500/20" :
-                                                      "bg-[rgba(242,244,248,0.08)] text-[color:var(--panel-muted,#8a919c)] border-[color:var(--panel-border,rgba(242,244,248,0.1))]"
+                                                      "bg-[rgba(242,244,248,0.08)] text-slate-400 border-white/5"
                                                 )}>{s.StateName}</span>
                                               </div>
                                             </div>
@@ -336,17 +336,17 @@ export function BetReportList({
         </div>
 
         {!isLoading && objects.length > 0 && (
-          <div className="shrink-0 border-t border-[color:var(--panel-border,rgba(242,244,248,0.1))] bg-black/40 px-8 py-6 backdrop-blur-3xl flex items-center justify-between">
+          <div className="shrink-0 border-t border-white/5 bg-black/40 px-8 py-6 backdrop-blur-3xl flex items-center justify-between">
             <div className="flex items-center gap-8">
               <div className="flex flex-col">
-                <span className="text-[9px] font-bold text-[color:var(--panel-faint,#5c6470)] uppercase tracking-tighter">Listedeki Veri</span>
+                <span className="text-[9px] font-bold text-slate-500 uppercase tracking-tighter">Listedeki Veri</span>
                 <span className="text-xs font-semibold text-white">
-                  {formatNumber(objects.length)} {totalCount > objects.length && <span className="text-[color:var(--panel-muted,#8a919c)]"> / {formatNumber(totalCount)}</span>}
+                  {formatNumber(objects.length)} {totalCount > objects.length && <span className="text-slate-400"> / {formatNumber(totalCount)}</span>}
                 </span>
               </div>
               <div className="w-px h-8 bg-white/5" />
               <div className="flex flex-col">
-                <span className="text-[9px] font-bold text-[color:var(--panel-faint,#5c6470)] uppercase tracking-tighter">Toplam Hacim</span>
+                <span className="text-[9px] font-bold text-slate-500 uppercase tracking-tighter">Toplam Hacim</span>
                 <span className="text-xs font-semibold text-emerald-400">{formatNumber(totalCiro)} <span className="text-[8px] opacity-50">TRY</span></span>
               </div>
             </div>
@@ -356,10 +356,10 @@ export function BetReportList({
                 type="button"
                 onClick={() => onLoadMore?.()}
                 disabled={isFetchingNextPage}
-                className="group relative flex items-center gap-3 rounded-xl bg-cyan-600 px-8 py-3.5 text-[11px] font-semibold text-white shadow-xl shadow-cyan-600/20 hover:bg-cyan-500 transition-all uppercase tracking-widest disabled:opacity-20"
+                className="group relative flex items-center gap-3 rounded-xl bg-cyan-600 px-8 py-3.5 text-[11px] font-semibold text-white shadow-xl shadow-cyan-600/20 hover:bg-cyan-500 transition-all uppercase tracking-wider disabled:opacity-20"
               >
                 {isFetchingNextPage ? (
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-[color:var(--panel-border,rgba(242,244,248,0.1))] border-t-white" />
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/5 border-t-white" />
                 ) : (
                   <ChevronDown size={16} className="group-hover:translate-y-0.5 transition-transform" />
                 )}

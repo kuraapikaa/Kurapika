@@ -10,12 +10,16 @@ import { cn } from '../../lib/utils';
  * kullanılıyordu. Bu dosya tek bir ölçek tanımlar; yeni ekranlar buradan
  * beslenir, eskiler kademeli taşınır.
  *
- * Ölçek — yüzey: rounded-xl (kart) / rounded-lg (kontrol) / rounded-md (rozet)
- *         zemin: bg-white/[0.025] + border-white/[0.07]
- *         iç boşluk: p-4 (kart), gap-3 (ızgara)
+ * Ölçek — yüzey: rounded-2xl (kart) / rounded-xl (kontrol) / rounded-full (rozet)
+ *         zemin: bg-white/[0.02] + border-white/5, backdrop-blur
+ *         iç boşluk: p-5 (kart), gap-6 (ızgara)
+ *
+ * Premium Dark Glassmorphism'e taşındı: kenarlık inceldi (0.07 → white/5),
+ * yarıçap genişledi, rozetler tamamen hap biçimli. Cam etkisi kenarlıktan
+ * değil bulanıklıktan gelir; kalın kenarlık onu plastiğe çevirir.
  */
 
-const SURFACE = 'border border-white/[0.07] bg-white/[0.025]';
+const SURFACE = 'border border-white/5 bg-white/[0.02]';
 
 export function AdminCard({
   className,
@@ -27,7 +31,7 @@ export function AdminCard({
   as?: 'section' | 'div' | 'article';
 }) {
   return (
-    <As className={cn('rounded-xl backdrop-blur-xl', SURFACE, className)}>
+    <As className={cn('rounded-2xl backdrop-blur-xl', SURFACE, className)}>
       {children}
     </As>
   );
@@ -48,12 +52,12 @@ export function AdminCardHeader({
   className?: string;
 }) {
   return (
-    <div className={cn('flex items-start justify-between gap-3 border-b border-white/[0.05] px-4 py-3', className)}>
+    <div className={cn('flex items-start justify-between gap-3 border-b border-white/5 px-5 py-4', className)}>
       <div className="flex min-w-0 items-center gap-2.5">
-        {icon && <span className="shrink-0 text-slate-400">{icon}</span>}
+        {icon && <span className="shrink-0 text-purple-300/70">{icon}</span>}
         <div className="min-w-0">
           <h3 className="truncate text-[13px] font-semibold tracking-[-0.01em] text-white">{title}</h3>
-          {hint && <p className="mt-0.5 truncate text-[11px] font-medium text-slate-500">{hint}</p>}
+          {hint && <p className="mt-0.5 truncate text-[11px] font-medium text-slate-400">{hint}</p>}
         </div>
       </div>
       {action && <div className="shrink-0">{action}</div>}
@@ -63,12 +67,16 @@ export function AdminCardHeader({
 
 type Tone = 'neutral' | 'success' | 'warning' | 'danger' | 'info';
 
+/**
+ * Rozet tonlari. Anlam sabit: yesil olumlu, gul olumsuz, kehribar bekleyen.
+ * Renkler neon aksanlara cekildi, semantik degismedi.
+ */
 const TONE_CLASS: Record<Tone, string> = {
-  neutral: 'border-slate-600/40 bg-slate-700/20 text-slate-300',
-  success: 'border-emerald-400/20 bg-emerald-400/10 text-emerald-300',
-  warning: 'border-amber-300/20 bg-amber-300/10 text-amber-200',
-  danger: 'border-rose-400/20 bg-rose-400/10 text-rose-300',
-  info: 'border-sky-400/20 bg-sky-400/10 text-sky-300',
+  neutral: 'border-white/10 bg-white/[0.06] text-slate-300',
+  success: 'border-emerald-400/25 bg-emerald-400/10 text-emerald-300',
+  warning: 'border-amber-300/25 bg-amber-300/10 text-amber-200',
+  danger: 'border-rose-400/25 bg-rose-400/10 text-rose-300',
+  info: 'border-purple-400/25 bg-purple-400/10 text-purple-300',
 };
 
 /** Durum rozeti — 'Doğrulandı', 'İşaretli', 'Bekliyor' gibi. */
@@ -86,7 +94,7 @@ export function StatusBadge({
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-[10px] font-semibold leading-none',
+        'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold leading-none',
         TONE_CLASS[tone],
         className
       )}
@@ -111,11 +119,12 @@ export function AdminTable({
 }) {
   return (
     <div className={cn('overflow-x-auto', className)}>
-      <table className="w-full border-collapse text-left" style={{ minWidth }}>
+      {/* Tablo zemini SAYDAM: alttaki cam kart gorunsun. */}
+      <table className="w-full border-collapse bg-transparent text-left" style={{ minWidth }}>
         <thead>
-          <tr className="border-b border-white/[0.05] bg-white/[0.015]">{head}</tr>
+          <tr className="border-b border-white/5">{head}</tr>
         </thead>
-        <tbody className="divide-y divide-white/[0.04]">{children}</tbody>
+        <tbody className="divide-y divide-slate-800/50">{children}</tbody>
       </table>
     </div>
   );
@@ -125,7 +134,7 @@ export function Th({ children, align = 'left', className }: { children: ReactNod
   return (
     <th
       className={cn(
-        'px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-500',
+        'px-5 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500',
         align === 'right' && 'text-right',
         className
       )}
@@ -137,7 +146,7 @@ export function Th({ children, align = 'left', className }: { children: ReactNod
 
 export function Td({ children, align = 'left', className }: { children: ReactNode; align?: 'left' | 'right'; className?: string }) {
   return (
-    <td className={cn('px-4 py-2.5 text-[12px] text-slate-300', align === 'right' && 'text-right tabular-nums', className)}>
+    <td className={cn('px-5 py-3 text-[12px] text-slate-300', align === 'right' && 'text-right tabular-nums', className)}>
       {children}
     </td>
   );
@@ -160,10 +169,10 @@ export function ToggleRow({
   action?: ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between gap-4 px-4 py-3">
+    <div className="flex items-center justify-between gap-4 px-5 py-3.5 transition-colors hover:bg-white/5">
       <div className="min-w-0">
         <p className="truncate text-[12px] font-semibold text-white">{title}</p>
-        {description && <p className="mt-0.5 text-[11px] leading-4 text-slate-500">{description}</p>}
+        {description && <p className="mt-0.5 text-[11px] leading-4 text-slate-400">{description}</p>}
       </div>
       <div className="flex shrink-0 items-center gap-2">
         {action}
