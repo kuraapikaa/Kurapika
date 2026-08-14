@@ -9,7 +9,7 @@ import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
 import { config } from './config.js';
 import { registerGlobalErrorHandler } from './lib/errorHandler.js';
-import { cerceveAtasiDirektifi, gomulebilirMi, listeyiAyristir } from './lib/cerceveAtaslari.js';
+import { cerceveAtasiDirektifi, gomulebilirMi, listeyiAyristir, sabitListeyiCoz } from './lib/cerceveAtaslari.js';
 import { registerRequestId } from './lib/requestId.js';
 import { createRedisSessionStore } from './lib/redisClient.js';
 import { resolveTenantKeyForRequest } from './lib/tenant.js';
@@ -86,7 +86,16 @@ export async function buildApp() {
   // elle güncelleyip yeniden dağıtmak gerekiyordu. CSP alan adının ORTASINDA
   // joker kabul etmediği için bu statik olarak yazılamıyor — direktif artık
   // istek başına üretiliyor. Ayrıntı ve güvenlik gerekçesi: lib/cerceveAtaslari.ts
-  const frameAncestors = listeyiAyristir(process.env.FRAME_ANCESTORS);
+  // FRAME_ANCESTOR_RANGE: sayısal aralık şablonu, açılışta bir kez açılır.
+  //   https://narcosbahis{480-560}.com
+  // Liste her istekte AYNI kaldığı için CDN'in yanıtı önbelleğe alması
+  // sorun çıkarmaz. PATTERNS ise direktifi istek başına değiştirir; HTML'i
+  // önbellekleyen bir CDN arkasında (bu kurulumda Cloudflare) tercih
+  // edilmemeli. Gerekçe: lib/cerceveAtaslari.ts
+  const frameAncestors = sabitListeyiCoz({
+    adresler: process.env.FRAME_ANCESTORS,
+    araliklar: process.env.FRAME_ANCESTOR_RANGE,
+  });
   const frameAncestorPatterns = listeyiAyristir(process.env.FRAME_ANCESTOR_PATTERNS);
   const gomulebilir = gomulebilirMi(frameAncestors, frameAncestorPatterns);
 

@@ -47,6 +47,7 @@ if (loaded.length === 0) {
 
 import { config } from './config.js';
 import { buildApp, TOKEN_UPDATE_RATE_LIMIT } from './app.js';
+import { listeyiAyristir } from './lib/cerceveAtaslari.js';
 import { authRoutes } from './routes/auth.js';
 import { registerAuthMiddleware } from './middleware/authGuard.js';
 import { maybeSendDemoMock } from './lib/demoMockData.js';
@@ -203,6 +204,10 @@ if (isProduction) {
   // Gerekce ve test edilebilirlik icin bkz. lib/affiliateYonlendirme.ts
   affiliateYonlendirmeleriKur(app);
 
+  // Kabuk yanıtı yalnızca kalıp modunda Referer'a göre değişir; sabit liste
+  // ve aralık her istekte aynıdır.
+  const istekBasinaDegisiyor = listeyiAyristir(process.env.FRAME_ANCESTOR_PATTERNS).length > 0;
+
   app.get('*', async (request, reply) => {
     const pathname = request.url?.split('?')[0] ?? '/';
     const safePath = join(clientDist, pathname === '/' ? 'index.html' : pathname.replace(/^\//, ''));
@@ -238,13 +243,20 @@ if (isProduction) {
      * önbellekteki kopya hâlâ eski adresi listeler ve tarayıcı çerçeveyi
      * yeniden reddeder — yani düzeltme aralıklı olarak geri alınır.
      *
-     * `no-store` saklamayı tamamen yasaklar. `Vary: Referer` ise araya
-     * giren herhangi bir vekilin yine de saklaması hâlinde doğru kopyayı
-     * ayırt etmesini sağlar; ikisi birlikte hem CF hem kurumsal vekiller
-     * için güvenli.
+     * `no-store` saklamayı tamamen yasaklar.
+     *
+     * `Vary: Referer` YALNIZCA yanıt gerçekten Referer'a göre değiştiğinde
+     * gönderilir; yani FRAME_ANCESTOR_PATTERNS kullanıldığında. Sabit liste
+     * (FRAME_ANCESTORS / FRAME_ANCESTOR_RANGE) her istekte aynı olduğu için
+     * orada `Vary` yanıltıcı olurdu ve gereksiz yere önbellek bölerdi.
+     *
+     * NOT: Cloudflare `Accept-Encoding` dışındaki `Vary` değerlerini
+     * önbellekleme için YOK SAYAR — ölçüldü. Bu yüzden CDN arkasında
+     * PATTERNS yerine RANGE tercih edilmeli; `Vary` yalnızca araya giren
+     * standart vekiller için doğru davranışı korur.
      */
     reply.header('Cache-Control', 'no-store, must-revalidate');
-    reply.header('Vary', 'Referer');
+    if (istekBasinaDegisiyor) reply.header('Vary', 'Referer');
     return reply.type('text/html').send(createReadStream(indexHtml));
   });
 } else {

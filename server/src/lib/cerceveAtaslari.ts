@@ -81,6 +81,63 @@ export function listeyiAyristir(deger: string | undefined): string[] {
   return (deger ?? '').split(/[\s,]+/).map((v) => v.trim()).filter(Boolean);
 }
 
+/**
+ * Başlığın şişmesini ve yanlışlıkla yazılmış dev aralıkların (1-100000)
+ * sunucuyu kilitlemesini önler.
+ */
+export const ARALIK_UST_SINIRI = 300;
+
+/**
+ * Sayısal aralık şablonunu somut origin listesine açar.
+ *
+ *   https://narcosbahis{480-500}.com
+ *     -> https://narcosbahis480.com … https://narcosbahis500.com
+ *
+ * ── Neden var ─────────────────────────────────────────────────────────
+ *
+ * `FRAME_ANCESTOR_PATTERNS` direktifi İSTEK BAŞINA değiştiriyor. Araya
+ * HTML'i önbellekleyen bir CDN girdiğinde (bu kurulumda Cloudflare)
+ * önbellekteki kopya, onu ilk dolduran isteğin izin listesini taşıyor;
+ * adres döndüğünde eski listeyi gören tarayıcı çerçeveyi yeniden
+ * reddediyor. `Vary: Referer` çare değil: Cloudflare `Accept-Encoding`
+ * dışındaki `Vary` değerlerini önbellekleme için yok sayıyor.
+ *
+ * Aralık bunu kökten çözer: liste açılışta bir kez üretilir, her istekte
+ * AYNIDIR, dolayısıyla önbelleklenmesi zararsızdır.
+ */
+export function araligiGenislet(sablon: string): string[] {
+  const m = sablon.trim().match(/^(https?:\/\/[^{]*)\{(\d+)-(\d+)\}(.*)$/i);
+  if (!m) return [];
+
+  const [, on, basStr, sonStr, arka] = m;
+  const bas = Number(basStr);
+  const son = Number(sonStr);
+  if (!Number.isFinite(bas) || !Number.isFinite(son) || son < bas) return [];
+  if (son - bas + 1 > ARALIK_UST_SINIRI) return [];
+
+  const cikti: string[] = [];
+  for (let i = bas; i <= son; i++) {
+    const aday = `${on}${i}${arka}`;
+    // Genişletilen her değer yine de geçerli bir origin olmalı.
+    if (ORIGIN_BICIMI.test(aday)) cikti.push(aday);
+  }
+  return cikti;
+}
+
+/**
+ * Sabit (değişmeyen) izin listesi: doğrudan yazılmış adresler + açılmış
+ * sayısal aralıklar. Bu liste her istekte aynı olduğu için yanıtın
+ * önbelleklenmesi sorun çıkarmaz.
+ */
+export function sabitListeyiCoz(secenekler: {
+  adresler?: string;
+  araliklar?: string;
+}): string[] {
+  const dogrudan = listeyiAyristir(secenekler.adresler);
+  const acilmis = listeyiAyristir(secenekler.araliklar).flatMap(araligiGenislet);
+  return [...new Set([...dogrudan, ...acilmis])];
+}
+
 /** `Referer` başlığından origin çıkarır. Başlık yoksa/bozuksa null. */
 export function refererOrigini(referer: string | undefined): string | null {
   if (!referer) return null;

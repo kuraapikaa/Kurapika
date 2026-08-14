@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
+  ARALIK_UST_SINIRI,
+  araligiGenislet,
   cerceveAtasiDirektifi,
   cerceveAtasiUyuyorMu,
   gomulebilirMi,
   listeyiAyristir,
   refererOrigini,
+  sabitListeyiCoz,
 } from './lib/cerceveAtaslari.js';
 
 // NOT: bu dosya eskiden app.ts'teki ayristirma mantiginin KOPYASINI test
@@ -73,6 +76,59 @@ describe('dönen alan adı kalıpları', () => {
     expect(cerceveAtasiUyuyorMu('https://her-yer.com', ['*'])).toBe(false);
     expect(cerceveAtasiUyuyorMu('https://her-yer.com', ['https://*'])).toBe(false);
     expect(cerceveAtasiUyuyorMu('https://her-yer.com', ['*.com'])).toBe(false);
+  });
+});
+
+describe('sayısal aralık — CDN önbelleğine karşı', () => {
+  it('şablonu somut adreslere açar', () => {
+    expect(araligiGenislet('https://narcosbahis{484-487}.com')).toEqual([
+      'https://narcosbahis484.com',
+      'https://narcosbahis485.com',
+      'https://narcosbahis486.com',
+      'https://narcosbahis487.com',
+    ]);
+  });
+
+  it('tek elemanlı aralık', () => {
+    expect(araligiGenislet('https://a{5-5}.com')).toEqual(['https://a5.com']);
+  });
+
+  it('ters aralık yok sayılır', () => {
+    expect(araligiGenislet('https://a{9-2}.com')).toEqual([]);
+  });
+
+  it('şablon değilse boş', () => {
+    expect(araligiGenislet('https://duz.com')).toEqual([]);
+    expect(araligiGenislet('sema-yok{1-2}.com')).toEqual([]);
+  });
+
+  it('devasa aralık reddedilir — başlık şişmesin', () => {
+    expect(araligiGenislet(`https://a{1-${ARALIK_UST_SINIRI + 1}}.com`)).toEqual([]);
+    expect(araligiGenislet(`https://a{1-${ARALIK_UST_SINIRI}}.com`)).toHaveLength(ARALIK_UST_SINIRI);
+  });
+
+  it('sabit liste ile aralık birleşir ve yinelenmez', () => {
+    const liste = sabitListeyiCoz({
+      adresler: 'https://narcosbahis485.com https://ortak.com',
+      araliklar: 'https://narcosbahis{484-486}.com',
+    });
+    expect(liste).toEqual([
+      'https://narcosbahis485.com',
+      'https://ortak.com',
+      'https://narcosbahis484.com',
+      'https://narcosbahis486.com',
+    ]);
+  });
+
+  it('aralık listesi her çağrıda AYNI — önbelleklenmesi güvenli', () => {
+    const a = sabitListeyiCoz({ araliklar: 'https://n{1-3}.com' });
+    const b = sabitListeyiCoz({ araliklar: 'https://n{1-3}.com' });
+    expect(a).toEqual(b);
+  });
+
+  it('aralık tanımlıysa panel gömülebilir sayılır', () => {
+    const liste = sabitListeyiCoz({ araliklar: 'https://n{1-3}.com' });
+    expect(gomulebilirMi(liste, [])).toBe(true);
   });
 });
 
