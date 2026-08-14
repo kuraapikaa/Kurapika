@@ -221,11 +221,30 @@ if (isProduction) {
     }
 
     const indexHtml = join(clientDist, 'index.html');
-    // SPA kabuğu asla önbelleğe alınmamalı: güvenlik başlıkları (CSP,
-    // frame-ancestors) yanıtla birlikte taşındığı için önbellekten servis
-    // edilen eski bir kopya, sunucu güncellense bile eski politikayı uygular.
-    // Ayrıca yeni deploy'lar kullanıcılara ulaşmaz.
-    reply.header('Cache-Control', 'no-cache, must-revalidate');
+    /*
+     * SPA kabuğu önbelleğe ALINMAMALI: güvenlik başlıkları (CSP,
+     * frame-ancestors) yanıtla birlikte taşındığı için önbellekten servis
+     * edilen eski bir kopya, sunucu güncellense bile eski politikayı
+     * uygular. Ayrıca yeni deploy'lar kullanıcılara ulaşmaz.
+     *
+     * `no-cache` YETMİYOR — ölçüldü. `no-cache` saklamayı yasaklamaz,
+     * yalnızca kullanmadan önce doğrulama ister; Cloudflare kabuğu
+     * saklıyordu ve üretimde şu görüldü: farklı `Referer` ile yapılan
+     * isteklerin hepsine, önbelleği İLK dolduran isteğin CSP başlığı
+     * dönüyordu (CF-Cache-Status: HIT).
+     *
+     * Bu, frame-ancestors artık istek başına hesaplandığı için doğrudan
+     * arızaya yol açar: ana sitenin adresi döndüğünde (…486 → …487)
+     * önbellekteki kopya hâlâ eski adresi listeler ve tarayıcı çerçeveyi
+     * yeniden reddeder — yani düzeltme aralıklı olarak geri alınır.
+     *
+     * `no-store` saklamayı tamamen yasaklar. `Vary: Referer` ise araya
+     * giren herhangi bir vekilin yine de saklaması hâlinde doğru kopyayı
+     * ayırt etmesini sağlar; ikisi birlikte hem CF hem kurumsal vekiller
+     * için güvenli.
+     */
+    reply.header('Cache-Control', 'no-store, must-revalidate');
+    reply.header('Vary', 'Referer');
     return reply.type('text/html').send(createReadStream(indexHtml));
   });
 } else {
