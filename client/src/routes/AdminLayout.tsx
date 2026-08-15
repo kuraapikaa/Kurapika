@@ -171,14 +171,13 @@ export function AdminLayout() {
       >
         <div className="sidebar-brand flex h-[76px] shrink-0 items-center justify-between gap-3 px-5">
           <div className="flex min-w-0 flex-1 items-center gap-2.5">
-            {/* Marka işareti giriş ekranıyla aynı altın: #d4a24c ailesi. */}
-            <span className="grid h-10 w-10 shrink-0 grid-cols-2 gap-1 rounded-full border border-amber-400/25 bg-amber-400/10 p-2.5 shadow-[0_0_20px_rgba(212,162,76,0.28)]">
-              <i className="rounded-[2px] bg-amber-300" /><i className="rounded-[2px] bg-amber-300" />
-              <i className="rounded-[2px] bg-amber-300" /><i className="rounded-[2px] bg-amber-300" />
+            <span className="grid h-10 w-10 shrink-0 grid-cols-2 gap-1 rounded-full border border-purple-400/25 bg-purple-400/10 p-2.5 shadow-[0_0_20px_rgba(168,85,247,0.25)]">
+              <i className="rounded-[2px] bg-purple-300" /><i className="rounded-[2px] bg-purple-300" />
+              <i className="rounded-[2px] bg-purple-300" /><i className="rounded-[2px] bg-purple-300" />
             </span>
             <span className={cn("min-w-0 leading-tight", navCollapsed && "md:hidden")}>
               <strong className="block truncate text-[13px] font-bold tracking-[-0.02em] text-white">Arwen Software Solutions</strong>
-              <small className="mt-0.5 block truncate text-[8px] font-semibold uppercase tracking-[0.18em] text-amber-200/40">Control Suite</small>
+              <small className="mt-0.5 block truncate text-[8px] font-semibold uppercase tracking-[0.18em] text-slate-600">Control Suite</small>
             </span>
           </div>
           <button
@@ -335,8 +334,7 @@ export function AdminLayout() {
               </button>
               <NotificationCenter />
               <div className="hidden h-9 items-center gap-2 rounded-lg border border-white/[0.07] bg-white/[0.025] px-2 lg:flex">
-                {/* Kenar çubuğundaki marka işaretiyle aynı altın; metin koyu kahve (kontrast). */}
-                <div className="flex h-6 w-6 items-center justify-center rounded-md bg-amber-400 text-[9px] font-black text-[#1a1206]">AS</div>
+                <div className="flex h-6 w-6 items-center justify-center rounded-md bg-blue-400 text-[9px] font-black text-white">AS</div>
                 <div className="leading-tight">
                   <p className="text-[11px] font-bold tracking-[-0.01em] text-white">Arwen Software Solutions</p>
                   <p className="text-[8px] font-medium uppercase tracking-[0.12em] text-slate-600">TR · Partner</p>
