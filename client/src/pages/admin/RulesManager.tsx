@@ -211,6 +211,19 @@ export function RulesManager() {
     const [searchTerm, setSearchTerm] = useState('');
     /** Gizlenen Lynon kampanyalarini da listele (geri almak icin). */
     const [gizlenenleriGoster, setGizlenenleriGoster] = useState(false);
+    /**
+     * ALAN KALABALIGI.
+     *
+     * Duzenleme paneli 30'u askin alan tasiyor ama tipik bir kural bunlarin
+     * ancak birkacini kullaniyor; geri kalani bos kutu olarak akip gidiyor
+     * ve dolu olani bulmak zorlasiyordu. Varsayilan olarak yalnizca DOLU
+     * alanlar gorunur; bos olanlar tek tusla acilir.
+     *
+     * Gizleme `hidden` sinifiyla yapiliyor, kosullu render ile DEGIL:
+     * alanlar DOM'da kalir, dolayisiyla acip kapatmak girdi durumunu ya da
+     * odagi kaybetmez.
+     */
+    const [bosAlanlariGoster, setBosAlanlariGoster] = useState(false);
     const [editKey, setEditKey] = useState<string | null>(null);
     const [editValue, setEditValue] = useState<PromoSpec | null>(null);
     const [isAdding, setIsAdding] = useState(false);
@@ -496,6 +509,36 @@ export function RulesManager() {
      * Etiketler buna gore degisiyor; sabit "Yatirim" yazmak kayip bonusunda
      * yanlis alani ayarladigi izlenimi veriyordu.
      */
+    /** Alan dolu mu? Bos dizi ve bos metin "dolu" sayilmaz. */
+    const alanDolu = (deger: unknown): boolean => {
+        if (deger === undefined || deger === null || deger === '') return false;
+        if (Array.isArray(deger)) return deger.length > 0;
+        return true;
+    };
+
+    /**
+     * Bos alani gizler; "bos alanlari goster" acikken hepsi gorunur.
+     * `ek` izgara genisligi gibi alana ozel siniflar icin (gizliyken
+     * gerekmez: `hidden` zaten display:none).
+     */
+    const alanSinifi = (deger: unknown, ek = ''): string =>
+        (bosAlanlariGoster || alanDolu(deger)) ? `space-y-2 ${ek}`.trim() : 'hidden';
+
+    /**
+     * Su an gizlenen alan sayisi. `alanSinifi` ile sarilan alanlarin
+     * listesiyle AYNI sirada tutulmali; ayrisirsa sayac yaniltir.
+     */
+    const gizliAlanSayisi = bosAlanlariGoster ? 0 : [
+        editValue?.minBalanceToClaim, editValue?.maxBalanceToClaim,
+        editValue?.principalWagerMult, editValue?.bonusWagerMult,
+        editValue?.casinoWagering, editValue?.sportWagering,
+        editValue?.minSportOdds, editValue?.maxPayoutMult, editValue?.maxPayoutFixed,
+        editValue?.minDepositAmount, editValue?.maxDepositAmount,
+        editValue?.perDayLimit, editValue?.perWeekLimit,
+        editValue?.allowedProviders, editValue?.consecutiveLossDeposits,
+        editValue?.balanceBelow, editValue?.startTime, editValue?.endTime,
+    ].filter((deger) => !alanDolu(deger)).length;
+
     const tabanAdi = editValue?.lossBonus ? 'Kayıp' : 'Yatırım';
     const tabanAdiKucuk = editValue?.lossBonus ? 'kayıp' : 'yatırım';
 
@@ -786,6 +829,28 @@ export function RulesManager() {
                                                     </div>
                                                 </div>
                                                 <div className="flex gap-3">
+                                                    {/*
+                                                      Gizli alan sayisi ekranda yazar: kullanici neyin
+                                                      saklandigini bilmeden karar veremez.
+                                                    */}
+                                                    {gizliAlanSayisi > 0 && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setBosAlanlariGoster(true)}
+                                                            className="h-12 rounded-full border border-white/[0.08] bg-white/[0.03] px-5 text-[10px] font-bold uppercase tracking-widest text-slate-300 transition-all hover:bg-white/[0.08] hover:text-white"
+                                                        >
+                                                            + {gizliAlanSayisi} boş alan
+                                                        </button>
+                                                    )}
+                                                    {bosAlanlariGoster && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setBosAlanlariGoster(false)}
+                                                            className="h-12 rounded-full border border-white/[0.08] bg-white/[0.03] px-5 text-[10px] font-bold uppercase tracking-widest text-slate-300 transition-all hover:bg-white/[0.08] hover:text-white"
+                                                        >
+                                                            Boşları gizle
+                                                        </button>
+                                                    )}
                                                     <button
                                                         onClick={() => setEditKey(null)}
                                                         className="px-6 py-3 rounded-xl bg-white/5 text-[11px] font-semibold text-slate-400 hover:text-white transition-all uppercase tracking-widest"
@@ -1457,7 +1522,7 @@ export function RulesManager() {
                                                         Gelişmiş Limitler
                                                     </h4>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                                                        <div className="space-y-2">
+                                                        <div className={alanSinifi(editValue?.minBalanceToClaim)}>
                                                             <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block pl-1">Min Bakiye Limiti</label>
                                                             <p className="text-[10px] text-slate-500 font-medium pl-1 mb-1">Bonus talebi anındaki minimum bakiye sınırı.</p>
                                                             <input
@@ -1468,7 +1533,7 @@ export function RulesManager() {
                                                                 placeholder="N/A"
                                                             />
                                                         </div>
-                                                        <div className="space-y-2">
+                                                        <div className={alanSinifi(editValue?.maxBalanceToClaim)}>
                                                             <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block pl-1">Max Bakiye Limiti</label>
                                                             <p className="text-[10px] text-slate-500 font-medium pl-1 mb-1">Bonus talebi anındaki maksimum bakiye sınırı.</p>
                                                             <input
@@ -1489,7 +1554,7 @@ export function RulesManager() {
                                                         Çevrim & Ödeme Kuralları
                                                     </h4>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                                                        <div className="space-y-2">
+                                                        <div className={alanSinifi(editValue?.principalWagerMult)}>
                                                             <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block pl-1">Ana Para Çevrimi</label>
                                                             <p className="text-[10px] text-slate-500 font-medium pl-1 mb-1">Anaparanın kaç katı çevrilmeli?</p>
                                                             <input
@@ -1500,7 +1565,7 @@ export function RulesManager() {
                                                                 placeholder="0 (çevrim şartı yok)"
                                                             />
                                                         </div>
-                                                        <div className="space-y-2">
+                                                        <div className={alanSinifi(editValue?.bonusWagerMult)}>
                                                             <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block pl-1">Bonus Çevrimi</label>
                                                             <p className="text-[10px] text-slate-500 font-medium pl-1 mb-1">Bonusun kaç katı çevrilmeli?</p>
                                                             <input
@@ -1511,7 +1576,7 @@ export function RulesManager() {
                                                                 placeholder="0 (Çevrimsiz)"
                                                             />
                                                         </div>
-                                                        <div className="space-y-2">
+                                                        <div className={alanSinifi(editValue?.casinoWagering)}>
                                                             <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block pl-1">Ürün Çevrimi — Casino</label>
                                                             <p className="text-[10px] text-slate-500 font-medium pl-1 mb-1">Otomatik çekim onayında casino bahisleri için ayrı çarpan.</p>
                                                             <input
@@ -1522,7 +1587,7 @@ export function RulesManager() {
                                                                 placeholder="Kullanılmıyor"
                                                             />
                                                         </div>
-                                                        <div className="space-y-2">
+                                                        <div className={alanSinifi(editValue?.sportWagering)}>
                                                             <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block pl-1">Ürün Çevrimi — Spor</label>
                                                             <p className="text-[10px] text-slate-500 font-medium pl-1 mb-1">Otomatik çekim onayında spor bahisleri için ayrı çarpan.</p>
                                                             <input
@@ -1533,7 +1598,7 @@ export function RulesManager() {
                                                                 placeholder="Kullanılmıyor"
                                                             />
                                                         </div>
-                                                        <div className="space-y-2">
+                                                        <div className={alanSinifi(editValue?.minSportOdds)}>
                                                             <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block pl-1">Spor Kuponu Şartı (Min Oran)</label>
                                                             <p className="text-[10px] text-slate-500 font-medium pl-1 mb-1">Otomatik çekim onayında en az bu orana sahip bir kupon aranır.</p>
                                                             <input
@@ -1545,7 +1610,7 @@ export function RulesManager() {
                                                                 placeholder="Kullanılmıyor"
                                                             />
                                                         </div>
-                                                        <div className="space-y-2">
+                                                        <div className={alanSinifi(editValue?.maxPayoutMult)}>
                                                             <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block pl-1">Kazanç Çarpanı (Max)</label>
                                                             <p className="text-[10px] text-slate-500 font-medium pl-1 mb-1">Bonusun max kaç katı çekilebilir?</p>
                                                             <input
@@ -1556,7 +1621,7 @@ export function RulesManager() {
                                                                 placeholder="10 (Örn)"
                                                             />
                                                         </div>
-                                                        <div className="space-y-2">
+                                                        <div className={alanSinifi(editValue?.maxPayoutFixed)}>
                                                             <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block pl-1">Sabit Max Kazanç</label>
                                                             <p className="text-[10px] text-slate-500 font-medium pl-1 mb-1">Çekilebilecek maksimum net tutar.</p>
                                                             <input
@@ -1577,7 +1642,7 @@ export function RulesManager() {
                                                         Gelişmiş Yatırım Limitleri
                                                     </h4>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                                                        <div className="space-y-2">
+                                                        <div className={alanSinifi(editValue?.minDepositAmount)}>
                                                             <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block pl-1">Min Yatırım (Aralık)</label>
                                                             <p className="text-[10px] text-slate-500 font-medium pl-1 mb-1">Yatırım tutarı en az kaç olmalı?</p>
                                                             <input
@@ -1588,7 +1653,7 @@ export function RulesManager() {
                                                                 placeholder="Alt sınır"
                                                             />
                                                         </div>
-                                                        <div className="space-y-2">
+                                                        <div className={alanSinifi(editValue?.maxDepositAmount)}>
                                                             <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block pl-1">Max Yatırım (Aralık)</label>
                                                             <p className="text-[10px] text-slate-500 font-medium pl-1 mb-1">Yatırım tutarı en fazla kaç olmalı?</p>
                                                             <input
@@ -1599,7 +1664,7 @@ export function RulesManager() {
                                                                 placeholder="Üst sınır"
                                                             />
                                                         </div>
-                                                        <div className="space-y-2">
+                                                        <div className={alanSinifi(editValue?.perDayLimit)}>
                                                             <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block pl-1">Günlük Kullanım</label>
                                                             <p className="text-[10px] text-slate-500 font-medium pl-1 mb-1">Bir günde kaç kez alınabilir?</p>
                                                             <input
@@ -1610,7 +1675,7 @@ export function RulesManager() {
                                                                 placeholder="Sınırsız"
                                                             />
                                                         </div>
-                                                        <div className="space-y-2">
+                                                        <div className={alanSinifi(editValue?.perWeekLimit)}>
                                                             <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block pl-1">Haftalık Kullanım</label>
                                                             <p className="text-[10px] text-slate-500 font-medium pl-1 mb-1">Bir haftada kaç kez alınabilir?</p>
                                                             <input
@@ -1621,7 +1686,7 @@ export function RulesManager() {
                                                                 placeholder="Sınırsız"
                                                             />
                                                         </div>
-                                                        <div className="space-y-2 md:col-span-2">
+                                                        <div className={alanSinifi(editValue?.allowedProviders, 'md:col-span-2')}>
                                                             <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block pl-1">İzin Verilen Sağlayıcılar</label>
                                                             <p className="text-[10px] text-slate-500 font-medium pl-1 mb-1">Virgülle ayırın. Boş bırakılırsa tüm sağlayıcılar geçerlidir. Ör: Pragmatic Play, Evolution</p>
                                                             <input
@@ -1665,7 +1730,7 @@ export function RulesManager() {
                                                         Talep Anı Koşulları
                                                     </h4>
                                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                                                        <div className="space-y-2">
+                                                        <div className={alanSinifi(editValue?.consecutiveLossDeposits)}>
                                                             <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block pl-1">Aynı Gün Ardışık Kayıp Yatırımı</label>
                                                             <p className="text-[10px] text-slate-500 font-medium pl-1 mb-1">Kaç yatırımın aynı gün kaybedilmiş olması gerektiği. Boş bırakılırsa kontrol edilmez.</p>
                                                             <input type="number" placeholder="Örn: 3"
@@ -1673,7 +1738,7 @@ export function RulesManager() {
                                                                 onChange={(e) => setEditValue({ ...editValue, consecutiveLossDeposits: e.target.value === '' ? undefined : Number(e.target.value) })}
                                                                 className="w-full h-12 bg-white/[0.02] border border-white/[0.05] rounded-3xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all outline-none font-bold backdrop-blur-xl" />
                                                         </div>
-                                                        <div className="space-y-2">
+                                                        <div className={alanSinifi(editValue?.balanceBelow)}>
                                                             <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block pl-1">Bakiye Üst Sınırı (₺)</label>
                                                             <p className="text-[10px] text-slate-500 font-medium pl-1 mb-1">Talep anında bakiye bu tutarın altında olmalı. Kayıp bonuslarında tipik değer 10.</p>
                                                             <input type="number" placeholder="Örn: 10"
@@ -1727,7 +1792,7 @@ export function RulesManager() {
                                                             </div>
                                                         </div>
                                                         <div className="grid grid-cols-2 gap-8">
-                                                            <div className="space-y-2">
+                                                            <div className={alanSinifi(editValue?.startTime)}>
                                                                 <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block pl-1">Başlangıç Saati</label>
                                                                 <input
                                                                     type="time"
@@ -1736,7 +1801,7 @@ export function RulesManager() {
                                                                     className="w-full h-12 bg-white/[0.02] border border-white/[0.05] rounded-3xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all font-bold backdrop-blur-xl"
                                                                 />
                                                             </div>
-                                                            <div className="space-y-2">
+                                                            <div className={alanSinifi(editValue?.endTime)}>
                                                                 <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block pl-1">Bitiş Saati</label>
                                                                 <input
                                                                     type="time"
