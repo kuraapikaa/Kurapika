@@ -451,16 +451,32 @@ export function BonusTalepSayfasi() {
               key={bonus.promoTitle}
               className="group flex flex-col overflow-hidden rounded-xl border border-[rgba(243,236,221,0.075)] bg-[rgba(243,236,221,0.032)] transition hover:border-[rgba(243,236,221,0.15)]"
             >
+              {/*
+                GÖRSEL ALANI 692×336.
+                Sabit piksel değil ORAN kullanılıyor: 692px genişlik dar
+                ekranda taşardı. `aspect-ratio` ile kart hangi genişliğe
+                düşerse düşsün görsel tam 692:336 oranını korur, yani
+                yüklenen artwork hiçbir kırpma olmadan oturur.
+
+                Önceden alan `h-[108px]` ve görsel yalnızca sağ YARIDA
+                (`w-1/2`) duruyordu; 692×336 gibi geniş bir görselin büyük
+                kısmı kırpılıyordu. Artık tam genişlikte.
+              */}
               <div
-                className="relative h-[108px] w-full overflow-hidden"
-                style={{ background: `linear-gradient(135deg, ${hexToRgba(palette.primaryColor, 0.22)}, ${hexToRgba(palette.backgroundColor, 0.9)})` }}
+                className="relative w-full overflow-hidden"
+                style={{
+                  aspectRatio: '692 / 336',
+                  background: `linear-gradient(135deg, ${hexToRgba(palette.primaryColor, 0.22)}, ${hexToRgba(palette.backgroundColor, 0.9)})`,
+                }}
               >
-                <div className="pointer-events-none absolute bottom-0 right-0 top-0 flex w-1/2 items-end justify-end overflow-hidden">
+                <div className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden">
                   {bonus.image ? (
                     <img
                       src={bonus.image}
                       alt=""
-                      className="h-full object-cover object-right transition-transform duration-500 group-hover:scale-105"
+                      width={692}
+                      height={336}
+                      className="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
                       onError={(e) => {
                         (e.target as any).style.display = 'none';
                         const next = (e.target as any).nextElementSibling;
@@ -469,11 +485,25 @@ export function BonusTalepSayfasi() {
                     />
                   ) : null}
                   <div
-                    className={cn('absolute inset-0 items-center justify-end pr-2', bonus.image ? 'hidden' : 'flex')}
+                    className={cn('absolute inset-0 items-center justify-center', bonus.image ? 'hidden' : 'flex')}
                   >
                     <BonusPlaceholder size={92} tone="amber" className="border-none bg-transparent shadow-none" />
                   </div>
                 </div>
+
+                {/*
+                  Okunabilirlik perdesi: başlık ve rozet artık görselin
+                  ÜSTÜNDE duruyor. Yalnızca görsel varsa çiziliyor —
+                  yoksa gradyan zemini gereksiz yere koyulaştırırdı.
+                */}
+                {bonus.image ? (
+                  <div
+                    className="pointer-events-none absolute inset-0"
+                    style={{
+                      background: `linear-gradient(90deg, ${hexToRgba(palette.backgroundColor, 0.86)} 0%, ${hexToRgba(palette.backgroundColor, 0.45)} 42%, ${hexToRgba(palette.backgroundColor, 0)} 72%)`,
+                    }}
+                  />
+                ) : null}
 
                 <span
                   className="absolute left-2.5 top-2.5 z-10 rounded border px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.08em]"
