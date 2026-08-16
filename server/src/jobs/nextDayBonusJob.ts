@@ -6,6 +6,8 @@ import { assignmentValuesForPromoSpec, freespinAtamasiVar, getRules, type PromoS
 import { atamaNotu } from '../services/bonusAtamaNotu.js';
 import { bonusDenetimAciklamasi } from '../services/bonusDenetimAciklamasi.js';
 import { audit } from '../lib/auditLog.js';
+import { araligaGorePartnerBonusId, araliklariOzetle } from '../services/bonusAraliklari.js';
+import { depositBasis } from '../services/promoEvaluator.js';
 import { dagitikKilitle, odulAnahtari } from '../lib/odulKilidi.js';
 import { currentTenantKey, safeTenantKey } from '../lib/tenantContext.js';
 import { bekleyenGun, gunEkle, VARSAYILAN_PENCERE, type GunDurumu, type PencereAyari } from './ertesiGunPenceresi.js';
@@ -260,8 +262,28 @@ export async function nextDayBonusKuruCalistir(
   for (const rule of activeRules) {
     const configuredType = String(rule.spec.type ?? 'partner').toLocaleLowerCase('tr-TR');
     const isCash = configuredType === 'cash' || configuredType === 'nakit';
-    const campaignId = Number(rule.spec.partnerBonusId);
+
+    /**
+     * KAMPANYA KIMLIGI YATIRIM TUTARINA BAGLI OLABILIR.
+     *
+     * Kural `partnerBonusRanges` tasiyorsa verilecek bonus, tutarin
+     * dustugu kademeye gore secilir. Bu is eskiden `spec.partnerBonusId`
+     * alanini DOGRUDAN okuyordu; aralik kullanan bir kuralda o alan bos
+     * kalabildigi icin (panel, aralik girildiginde tek-ID alanini devre
+     * disi birakiyor) her gece sessizce "kampanya bulunamadi" deyip
+     * bonusu HIC vermiyordu.
+     *
+     * Hesap anlik goruntusu bu yuzden kampanya kapisindan ONCE aliniyor:
+     * kademeyi secmek icin yatirim tabani gerekiyor. Taban `depositBasis`
+     * — yani ertesi gun bonusunda DUNUN toplami, kayip bonusunda net
+     * kayip; tutar hesabiyla ayni sayi.
+     */
+    const account = await lynonBuildBonusEligibilitySnapshot({ playerId, asOf: new Date(`${dateKey}T12:00:00+03:00`) });
+    const yatirimTabani = depositBasis(account as any, rule.spec as any);
+    const cozulenId = araligaGorePartnerBonusId(rule.spec as any, yatirimTabani);
+    const campaignId = Number(cozulenId);
     const campaign = isCash ? null : campaignById.get(campaignId);
+    const aralikOzeti = araliklariOzetle((rule.spec as any).partnerBonusRanges ?? []);
 
     if (!ekle(
       `[${rule.key}] Lynon kampanyasi`,
@@ -269,11 +291,11 @@ export async function nextDayBonusKuruCalistir(
       isCash
         ? 'Nakit bonus; kampanya gerekmiyor'
         : campaign
-          ? `Aktif: ${campaign.Name ?? campaignId}`
-          : `PartnerBonusId ${rule.spec.partnerBonusId ?? 'eksik'} icin aktif kampanya YOK (silinmis/pasif olabilir)`,
+          ? `Aktif: ${campaign.Name ?? campaignId}${aralikOzeti ? ` (${yatirimTabani} TRY -> ${campaignId})` : ''}`
+          : aralikOzeti
+            ? `${yatirimTabani} TRY hicbir bonus araligina dusmuyor (${aralikOzeti})`
+            : `PartnerBonusId ${rule.spec.partnerBonusId ?? 'eksik'} icin aktif kampanya YOK (silinmis/pasif olabilir)`,
     )) continue;
-
-    const account = await lynonBuildBonusEligibilitySnapshot({ playerId, asOf: new Date(`${dateKey}T12:00:00+03:00`) });
     const promoId = rule.group === 'id' && Number.isFinite(Number(rule.key)) ? Number(rule.key) : campaignId;
     const promoTitle = rule.group === 'title' ? rule.key : String(campaign?.Name ?? rule.key);
     const check = await evaluateForAccount(account as any, { id: promoId, title: promoTitle, kuralAnahtari: rule.key, ...rule.spec } as any, rules, tenantKey, 'bonus');
@@ -398,9 +420,16 @@ export async function runNextDayBonusJob(
           const account = await lynonBuildBonusEligibilitySnapshot({ playerId, asOf: new Date(`${dateKey}T12:00:00+03:00`) });
           const configuredType = String(rule.spec.type ?? 'partner').toLocaleLowerCase('tr-TR');
           const isCash = configuredType === 'cash' || configuredType === 'nakit';
-          const campaignId = Number(rule.spec.partnerBonusId);
+          // Kuru koşumla AYNI çözümleme: kademe, yatırım tabanına göre.
+          const cozulenId = araligaGorePartnerBonusId(rule.spec as any, depositBasis(account as any, rule.spec as any));
+          const campaignId = Number(cozulenId);
           const campaign = isCash ? null : campaignById.get(campaignId);
-          if (!isCash && !campaign) throw new Error(`Aktif Lynon kampanyası bulunamadı: ${rule.spec.partnerBonusId ?? 'eksik'}`);
+          if (!isCash && !campaign) {
+            const aralikOzeti = araliklariOzetle((rule.spec as any).partnerBonusRanges ?? []);
+            throw new Error(aralikOzeti
+              ? `Aktif Lynon kampanyası bulunamadı: ${depositBasis(account as any, rule.spec as any)} TRY için çözülen ID ${cozulenId ?? 'yok'} (${aralikOzeti})`
+              : `Aktif Lynon kampanyası bulunamadı: ${rule.spec.partnerBonusId ?? 'eksik'}`);
+          }
 
           const promoId = rule.group === 'id' && Number.isFinite(Number(rule.key)) ? Number(rule.key) : campaignId;
           const promoTitle = rule.group === 'title' ? rule.key : String(campaign?.Name ?? rule.key);

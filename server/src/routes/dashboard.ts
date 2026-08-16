@@ -2551,16 +2551,27 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
    * Zaman penceresi ve idempotency KASITLI atlanir: "su anda calissaydi ne
    * olurdu" sorusunu cevapliyoruz.
    */
-  fastify.post<{ Body: { playerId?: string | number } }>(
+  fastify.post<{ Body: { playerId?: string | number; date?: string } }>(
     '/admin/bonus/next-day/dry-run',
     async (request, reply) => {
       const playerId = request.body?.playerId;
       if (playerId == null || String(playerId).trim() === '') {
         return reply.status(400).send({ HasError: true, AlertMessage: 'playerId gerekli.' });
       }
+      /**
+       * `date` GECMISE DONUK kuru kosum icin: "15.08.2026 gecesi calissaydi
+       * ne olurdu". Verilmezse bugun. Isin kendisi zaten tarihi
+       * parametre olarak aliyordu; yalnizca uc noktasi disari acmiyordu.
+       */
+      const tarih = String(request.body?.date ?? '').trim();
+      if (tarih && !/^\d{4}-\d{2}-\d{2}$/.test(tarih)) {
+        return reply.status(400).send({ HasError: true, AlertMessage: 'date YYYY-AA-GG biciminde olmali.' });
+      }
       try {
         const { nextDayBonusKuruCalistir } = await import('../jobs/nextDayBonusJob.js');
-        const sonuc = await nextDayBonusKuruCalistir(playerId);
+        // Turkiye gunu: is `istanbulDateKey` ile ayni gune duser.
+        const an = tarih ? new Date(`${tarih}T12:00:00+03:00`) : new Date();
+        const sonuc = await nextDayBonusKuruCalistir(playerId, an);
         return reply.send({ HasError: false, Data: sonuc });
       } catch (err) {
         request.log.warn({ err, playerId }, 'Ertesi gun kuru calistirma basarisiz.');
