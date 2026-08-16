@@ -278,6 +278,20 @@ export function freespinAtamasiVar(assignmentValues: Record<string, unknown>): b
 export interface RulesConfig {
     PROMO_SPECS: Record<string, PromoSpec>;
     PROMO_TITLE_SPECS: Record<string, PromoSpec>;
+    /**
+     * KURAL MERKEZI'NDE GIZLENEN LYNON KAMPANYALARI.
+     *
+     * Liste, Lynon katalogundaki her kampanyayi kural kaydi olmasa da
+     * gosteriyor (yeni kampanya kesfedilebilsin diye). Yan etkisi: bir
+     * kurali silmek satiri KALDIRMIYORDU — kayit gerçekten siliniyor ama
+     * katalog satiri yerine bos bir yer tutucu koyuyordu ve kullaniciya
+     * "silinmiyor" gibi gorunuyordu.
+     *
+     * Burada tutulan ID'ler yer tutucu olarak da uretilmez. Kesfedilebilirlik
+     * kaybolmasin diye karar GERI ALINABILIR: panelde "gizlenenleri goster"
+     * ile listelenip geri acilabilir.
+     */
+    HIDDEN_PROMO_IDS?: string[];
 }
 
 export async function getRules(tenantKey: string = 'default'): Promise<RulesConfig> {
@@ -370,8 +384,18 @@ export async function saveRules(tenantKey: string, config: RulesConfig): Promise
     throw new Error(errors.join(' | '));
   }
 
+  /**
+   * Gizlenen ID listesi normalize edilir: metne cevrilir, bosluklar
+   * atilir, tekillestirilir. Panelden sayi da gelebiliyor; katalog
+   * karsilastirmasi metin uzerinden yapildigi icin tip karisirsa gizleme
+   * sessizce calismaz.
+   */
+  const gizlenenler = Array.isArray(config?.HIDDEN_PROMO_IDS)
+    ? [...new Set(config.HIDDEN_PROMO_IDS.map((deger) => String(deger ?? '').trim()).filter(Boolean))]
+    : undefined;
+
   await writeStoredDocument(
     { tenantKey: safeTenantKey(tenantKey), namespace: 'bonus-rules', filePath: rulesPathForTenant(tenantKey) },
-    config,
+    gizlenenler ? { ...config, HIDDEN_PROMO_IDS: gizlenenler } : config,
   );
 }

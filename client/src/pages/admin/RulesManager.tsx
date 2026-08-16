@@ -110,6 +110,12 @@ interface PromoSpec {
 interface RulesConfig {
     PROMO_SPECS: Record<string, PromoSpec>;
     PROMO_TITLE_SPECS: Record<string, PromoSpec>;
+    /**
+     * Listeden gizlenen Lynon kampanyalari. Katalog satirlari kural kaydi
+     * olmasa da gosterildigi icin, silinen bir kampanya buraya yazilmazsa
+     * yer tutucu olarak hemen geri gelir.
+     */
+    HIDDEN_PROMO_IDS?: string[];
 }
 
 type RulePreset = {
@@ -203,6 +209,8 @@ export function RulesManager() {
     const queryClient = useQueryClient();
     const activeTab = 'id';
     const [searchTerm, setSearchTerm] = useState('');
+    /** Gizlenen Lynon kampanyalarini da listele (geri almak icin). */
+    const [gizlenenleriGoster, setGizlenenleriGoster] = useState(false);
     const [editKey, setEditKey] = useState<string | null>(null);
     const [editValue, setEditValue] = useState<PromoSpec | null>(null);
     const [isAdding, setIsAdding] = useState(false);
@@ -390,14 +398,48 @@ export function RulesManager() {
         mutation.mutate(newConfig);
     };
 
+    /**
+     * SILME ARTIK SATIRI GERCEKTEN KALDIRIR.
+     *
+     * Onceden kayit siliniyordu ama liste, Lynon katalogundaki her
+     * kampanyayi kural kaydi olmasa da gosterdigi icin satir hemen bos bir
+     * yer tutucu olarak geri geliyordu — disaridan "silinmiyor" gibi
+     * gorunuyordu. Katalogda karsiligi olan bir ID silindiginde artik
+     * gizlenenler listesine de yaziliyor.
+     *
+     * Karar GERI ALINABILIR: "gizlenenleri goster" ile listelenip geri
+     * acilabilir. Kalici olarak kaybolsaydi yeni kampanya kesfetmenin tek
+     * yolu kapanmis olurdu.
+     */
     const handleDeleteRule = (key: string) => {
-        if (!config || !window.confirm(`${key} kuralını silmek istediğinize emin misiniz?`)) return;
+        if (!config) return;
+        const katalogdaVar = promos.some((promo) => String(promo?.PartnerBonusId ?? '').trim() === String(key));
+        const soru = katalogdaVar
+            ? `${key} kuralı silinecek ve Lynon kampanyası listeden gizlenecek. "Gizlenenleri göster" ile geri alabilirsiniz. Devam edilsin mi?`
+            : `${key} kuralını silmek istediğinize emin misiniz?`;
+        if (!window.confirm(soru)) return;
+
         const newConfig = { ...config };
         const targetMap = activeTab === 'id' ? 'PROMO_SPECS' : 'PROMO_TITLE_SPECS';
         const updatedMap = { ...newConfig[targetMap] };
         delete updatedMap[key];
         newConfig[targetMap] = updatedMap;
+
+        if (katalogdaVar && activeTab === 'id') {
+            const mevcut = newConfig.HIDDEN_PROMO_IDS ?? [];
+            newConfig.HIDDEN_PROMO_IDS = [...new Set([...mevcut, String(key)])];
+        }
+
         mutation.mutate(newConfig);
+    };
+
+    /** Gizlenen bir kampanyayi listeye geri getirir. */
+    const handleUnhideRule = (key: string) => {
+        if (!config) return;
+        mutation.mutate({
+            ...config,
+            HIDDEN_PROMO_IDS: (config.HIDDEN_PROMO_IDS ?? []).filter((id) => String(id) !== String(key)),
+        });
     };
 
     const handleAddRule = () => {
@@ -445,10 +487,14 @@ export function RulesManager() {
         const merged = new Map<string, PromoSpec>(Object.entries(source) as Array<[string, PromoSpec]>);
 
         // Lynon kataloğundaki her kampanya, henüz kural kaydı olmasa da görünür.
+        // GİZLENENLER hariç: silinen bir kampanyanın yer tutucusu geri gelirse
+        // silme işlemi çalışmamış gibi görünüyordu.
         if (activeTab === 'id') {
+            const gizli = new Set((config.HIDDEN_PROMO_IDS ?? []).map((id) => String(id)));
             for (const promo of promos) {
                 const partnerBonusId = String(promo?.PartnerBonusId ?? '').trim();
                 if (!partnerBonusId || merged.has(partnerBonusId)) continue;
+                if (!gizlenenleriGoster && gizli.has(partnerBonusId)) continue;
                 merged.set(partnerBonusId, {
                     enabled: false,
                     type: 'partner',
@@ -466,7 +512,10 @@ export function RulesManager() {
                 return `${key} ${title} ${spec?.title ?? ''}`.toLocaleLowerCase('tr-TR').includes(needle);
             })
             .sort((a, b) => Number(a[0]) - Number(b[0]) || a[0].localeCompare(b[0], 'tr'));
-    }, [config, activeTab, searchTerm, promos, promoTitleByNormalizedTitle]);
+    }, [config, activeTab, searchTerm, promos, promoTitleByNormalizedTitle, gizlenenleriGoster]);
+
+    /** Gizlenen kampanya sayisi — sifirsa dugmeyi hic gostermiyoruz. */
+    const gizliSayisi = (config?.HIDDEN_PROMO_IDS ?? []).length;
 
     if (isLoading) return (
         <div className="flex flex-col items-center justify-center p-40 space-y-4">
@@ -562,6 +611,25 @@ export function RulesManager() {
                                 className="w-full h-14 bg-white/[0.02] backdrop-blur-xl border border-white/[0.05] rounded-3xl pl-12 pr-4 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[color:var(--panel-accent,#0a84ff)]/20 focus:border-[color:var(--panel-accent,#0a84ff)]/20 transition-all font-bold"
                             />
                         </div>
+                        {/*
+                          Gizleme geri alinabilir olsun diye: sifir gizli varsa
+                          dugme hic gorunmez, gurultu yapmaz.
+                        */}
+                        {activeTab === 'id' && gizliSayisi > 0 && (
+                            <button
+                                type="button"
+                                onClick={() => setGizlenenleriGoster((v) => !v)}
+                                aria-pressed={gizlenenleriGoster}
+                                className={cn(
+                                    'h-14 shrink-0 rounded-3xl border px-6 text-[11px] font-bold uppercase tracking-widest backdrop-blur-xl transition-all',
+                                    gizlenenleriGoster
+                                        ? 'border-amber-300/40 bg-amber-400/15 text-amber-200'
+                                        : 'border-white/[0.05] bg-white/[0.02] text-slate-400 hover:text-white'
+                                )}
+                            >
+                                {gizlenenleriGoster ? 'Gizlenenleri gizle' : `Gizlenenleri göster (${gizliSayisi})`}
+                            </button>
+                        )}
                     </div>
 
                     <AnimatePresence>
@@ -1740,13 +1808,24 @@ export function RulesManager() {
                                                 >
                                                     <Edit2 size={18} />
                                                 </button>
-                                                <button
-                                                    onClick={() => handleDeleteRule(key)}
-                                                    className="h-12 w-12 flex items-center justify-center rounded-full bg-white/10 hover:bg-rose-500 border border-white/5 text-slate-400 hover:text-white transition-all shadow-lg"
-                                                    title="Sil"
-                                                >
-                                                    <Trash2 size={18} />
-                                                </button>
+                                                {/* Gizlenmis kampanyada silme yerine geri getirme sunulur. */}
+                                                {(config?.HIDDEN_PROMO_IDS ?? []).some((id) => String(id) === String(key)) ? (
+                                                    <button
+                                                        onClick={() => handleUnhideRule(key)}
+                                                        className="h-12 rounded-full border border-amber-300/30 bg-amber-400/10 px-5 text-[10px] font-bold uppercase tracking-widest text-amber-200 transition-all hover:bg-amber-400/20"
+                                                        title="Listeye geri getir"
+                                                    >
+                                                        Geri getir
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => handleDeleteRule(key)}
+                                                        className="h-12 w-12 flex items-center justify-center rounded-full bg-white/10 hover:bg-rose-500 border border-white/5 text-slate-400 hover:text-white transition-all shadow-lg"
+                                                        title="Sil"
+                                                    >
+                                                        <Trash2 size={18} />
+                                                    </button>
+                                                )}
                                             </div>
                                         </motion.div>
                                     )}
