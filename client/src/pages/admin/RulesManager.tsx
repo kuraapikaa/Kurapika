@@ -525,6 +525,20 @@ export function RulesManager() {
         (bosAlanlariGoster || alanDolu(deger)) ? `space-y-2 ${ek}`.trim() : 'hidden';
 
     /**
+     * BOLUM BASLIGI, ICI BOSKEN GORUNMEZ.
+     *
+     * Bolumler acilir kapanir DEGIL — duz baslik + altinda alan izgarasi.
+     * Bos alanlar gizlenince basliklar ALTI BOS kaliyordu ve disaridan
+     * "bolum acilmiyor" gibi gorunuyordu. Bolumun tum alanlari bossa
+     * basligiyla birlikte tamamen gizlenir; "+ N bos alan" ile hepsi
+     * geri gelir.
+     */
+    const bolumSinifi = (degerler: unknown[]): string =>
+        (bosAlanlariGoster || degerler.some(alanDolu))
+            ? 'space-y-4 pt-4 border-t border-white/5'
+            : 'hidden';
+
+    /**
      * Su an gizlenen alan sayisi. `alanSinifi` ile sarilan alanlarin
      * listesiyle AYNI sirada tutulmali; ayrisirsa sayac yaniltir.
      */
@@ -877,8 +891,8 @@ export function RulesManager() {
                                                     </h4>
                                                     <div className="mb-4">
                                                         <ToggleField
-                                                            label="Kural Durumu"
-                                                            description="Bu bonusun uygunluk kontrollerinde ve ödül atamalarında kullanılmasını belirler."
+                                                            label="Kural aktif"
+                                                            description="Kapalıyken bu bonus hiç verilmez: listede görünse bile talep reddedilir."
                                                             value={editValue?.enabled}
                                                             onChange={(value) => setEditValue({ ...editValue, enabled: value })}
                                                         />
@@ -1426,25 +1440,25 @@ export function RulesManager() {
                                                     </h4>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                                                         <ToggleField
-                                                            label="Otomatik Ekleme"
-                                                            description="Onay gerektirmeden direkt platforma eklenir."
+                                                            label="Operatör onayı gerekmesin"
+                                                            description="Açıkken talep doğrudan platforma işlenir. Kapalıyken bir operatörün elle onaylaması gerekir."
                                                             value={editValue?.isAutoCharge}
                                                             onChange={(v) => setEditValue({ ...editValue, isAutoCharge: v })}
                                                         />
                                                         <ToggleField
-                                                            label="Ertesi gün bonusu mu?"
-                                                            description="Uygunluğu ve bonus tutarını Türkiye saatine göre bir önceki günün başarılı yatırımları toplamından hesaplar."
+                                                            label="Dünkü yatırımlara göre hesapla"
+                                                            description="Tutar son yatırıma değil, DÜNÜN toplam yatırımına göre hesaplanır (Türkiye saati)."
                                                             value={editValue?.isNextDayBonus}
                                                             onChange={(v) => setEditValue({ ...editValue, isNextDayBonus: v, autoGrantNextDayAt0015: v ? editValue?.autoGrantNextDayAt0015 : false })}
                                                         />
                                                         <ToggleField
-                                                            label="00:15'te Otomatik Ekle"
-                                                            description="Ertesi gün 00:15'te uygun üyeleri Lynon'da kontrol eder ve ödülü idempotent olarak yalnızca bir kez tanımlar."
+                                                            label="Her gece 00:15'te kendiliğinden dağıt"
+                                                            description="Uygun oyuncular gece 00:15'te taranır ve bonus tanımlanır. Aynı oyuncuya iki kez verilmez."
                                                             value={editValue?.autoGrantNextDayAt0015}
                                                             onChange={(v) => setEditValue({ ...editValue, isNextDayBonus: v ? true : editValue?.isNextDayBonus, autoGrantNextDayAt0015: v })}
                                                         />                                                        <ToggleField
-                                                            label="Kayıp Hesabından Hariç Tut"
-                                                            description="Bu bonus için kullanılan yatırımlar kayıp hesabına dahil edilmez."
+                                                            label="Kayıp bonusu hesabına girmesin"
+                                                            description="Bu bonusla kullanılan yatırımlar, kayıp bonusu hesaplanırken sayılmaz — oyuncu aynı parayı iki kez kazanmasın."
                                                             value={editValue?.excludeFromLossCalculations}
                                                             onChange={(v) => setEditValue({ ...editValue, excludeFromLossCalculations: v })}
                                                         />
@@ -1459,56 +1473,56 @@ export function RulesManager() {
                                                     </h4>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                                                         <ToggleField
-                                                            label="Açıkta Çekim Kontrolü"
-                                                            description="Bekleyen çekim talebi olan kullanıcıları reddeder."
+                                                            label="Bekleyen çekimi olana verme"
+                                                            description="Oyuncunun onay bekleyen bir çekim talebi varsa bonus reddedilir."
                                                             value={editValue?.checkPendingWithdrawal}
                                                             onChange={(v) => setEditValue({ ...editValue, checkPendingWithdrawal: v })}
                                                         />
                                                         <ToggleField
-                                                            label="Son Yatırım Kontrolü"
-                                                            description="Kullanıcının son işleminin yatırım olmasını zorunlu kılar."
+                                                            label="Son işlemi yatırım olsun"
+                                                            description="Oyuncunun en son işlemi yatırım değilse (örneğin çekimse) bonus reddedilir."
                                                             value={editValue?.checkLastTransactionIsDeposit}
                                                             onChange={(v) => setEditValue({ ...editValue, checkLastTransactionIsDeposit: v })}
                                                         />
                                                         <ToggleField
-                                                            label="Yatırım ID Takibi"
-                                                            description="Bir yatırımın yalnızca bir kez bonus için kullanılmasını sağlar."
+                                                            label="Bir yatırıma bir bonus"
+                                                            description="Aynı yatırım ikinci bir bonus için kullanılamaz. Kapatırsanız oyuncu tek yatırımla birden fazla bonus alabilir."
                                                             value={editValue?.checkSingleInvestmentUsage}
                                                             onChange={(v) => setEditValue({ ...editValue, checkSingleInvestmentUsage: v })}
                                                         />
                                                         <ToggleField
-                                                            label="Aynı Gün Tekrar Alamaz"
-                                                            description="Kullanıcının aynı gün içerisinde bu kuralı 2. kez kullanmasını engeller."
+                                                            label="Günde bir kez"
+                                                            description="Oyuncu bu bonusu aynı gün ikinci kez alamaz."
                                                             value={editValue?.checkSameDayUsage}
                                                             onChange={(v) => setEditValue({ ...editValue, checkSameDayUsage: v })}
                                                         />
                                                         <ToggleField
-                                                            label="Sadece İşlem Görmemiş Üyeler"
-                                                            description="Sadece hiç yatırımı, çekimi ve bahsi olmayan 'bakir' üyeler yararlanabilir."
+                                                            label="Yalnızca hiç işlem yapmamışlar"
+                                                            description="Yatırımı, çekimi ve bahsi olmayan yeni üyelere verilir. Bir kez bile işlem yapmış oyuncu alamaz."
                                                             value={editValue?.onlyNewUsersNoDepositNoWithdraw}
                                                             onChange={(v) => setEditValue({ ...editValue, onlyNewUsersNoDepositNoWithdraw: v })}
                                                         />
                                                         <ToggleField
-                                                            label="Telefon Numarası Onayı Zorunlu"
-                                                            description="Yalnızca telefon numarası onaylı kullanıcılar bu bonustan yararlanabilir."
+                                                            label="Telefonu onaylı olsun"
+                                                            description="Telefon numarası doğrulanmamış oyuncu bu bonusu alamaz."
                                                             value={editValue?.requiresPhoneVerified}
                                                             onChange={(v) => setEditValue({ ...editValue, requiresPhoneVerified: v })}
                                                         />
                                                         <ToggleField
-                                                            label="Telegram Kanal Üyeliği Zorunlu"
+                                                            label="Telegram kanalına üye olsun"
                                                             description="Bonus verilmeden önce oyuncunun Telegram kanalına üyeliği canlı sorgulanır. Hesabını bağlamamış veya kanaldan ayrılmış oyuncu alamaz."
                                                             value={editValue?.requiresTelegramMember}
                                                             onChange={(v) => setEditValue({ ...editValue, requiresTelegramMember: v })}
                                                         />
                                                         <ToggleField
-                                                            label="E-posta Onayı Zorunlu"
-                                                            description="Yalnızca e-posta adresi onaylı kullanıcılar bu bonustan yararlanabilir."
+                                                            label="E-postası onaylı olsun"
+                                                            description="E-posta adresi doğrulanmamış oyuncu bu bonusu alamaz."
                                                             value={editValue?.requiresEmailVerified}
                                                             onChange={(v) => setEditValue({ ...editValue, requiresEmailVerified: v })}
                                                         />
                                                         <ToggleField
-                                                            label="Aynı IP Kontrolü"
-                                                            description="Son giriş IP'sini paylaşan başka bir hesap varsa bonusu reddeder (çoklu hesap şüphesi)."
+                                                            label="Aynı IP'den ikinci hesaba verme"
+                                                            description="Son giriş IP'sini paylaşan başka bir hesap varsa bonus reddedilir — çoklu hesap şüphesi."
                                                             value={editValue?.checkIPDuplicate}
                                                             onChange={(v) => setEditValue({ ...editValue, checkIPDuplicate: v })}
                                                         />
@@ -1516,7 +1530,7 @@ export function RulesManager() {
                                                 </div>
 
                                                 {/* Section: Limits */}
-                                                <div className="space-y-4 pt-4 border-t border-white/5">
+                                                <div className={bolumSinifi([editValue?.minBalanceToClaim, editValue?.maxBalanceToClaim])}>
                                                     <h4 className="text-[10px] font-semibold text-amber-400 uppercase tracking-[0.2em] flex items-center gap-2">
                                                         <div className="h-1.5 w-1.5 rounded-full bg-amber-500" />
                                                         Gelişmiş Limitler
@@ -1548,7 +1562,7 @@ export function RulesManager() {
                                                 </div>
 
                                                 {/* Section: Wager & Payout Rules */}
-                                                <div className="space-y-4 pt-4 border-t border-white/5">
+                                                <div className={bolumSinifi([editValue?.principalWagerMult, editValue?.bonusWagerMult, editValue?.casinoWagering, editValue?.sportWagering, editValue?.minSportOdds, editValue?.maxPayoutMult, editValue?.maxPayoutFixed])}>
                                                     <h4 className="text-[10px] font-semibold text-amber-400 uppercase tracking-[0.2em] flex items-center gap-2">
                                                         <div className="h-1.5 w-1.5 rounded-full bg-amber-500" />
                                                         Çevrim & Ödeme Kuralları
@@ -1636,7 +1650,7 @@ export function RulesManager() {
                                                 </div>
 
                                                 {/* Section: Advanced Deposit Limits */}
-                                                <div className="space-y-4 pt-4 border-t border-white/5">
+                                                <div className={bolumSinifi([editValue?.minDepositAmount, editValue?.maxDepositAmount, editValue?.perDayLimit, editValue?.perWeekLimit, editValue?.allowedProviders, editValue?.consecutiveLossDeposits, editValue?.balanceBelow, editValue?.startTime, editValue?.endTime])}>
                                                     <h4 className="text-[10px] font-semibold text-purple-300 uppercase tracking-[0.2em] flex items-center gap-2">
                                                         <div className="h-1.5 w-1.5 rounded-full bg-[color:var(--panel-accent,#0a84ff)]" />
                                                         Gelişmiş Yatırım Limitleri
@@ -1715,7 +1729,7 @@ export function RulesManager() {
                                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                                                         <ToggleField
                                                             label="İlk Yatırım Bonusu"
-                                                            description="Sadece kullanıcının ilk yatırımı için geçerli kıl."
+                                                            description="Yalnızca oyuncunun ilk yatırımında verilir; sonraki yatırımlarda geçerli değildir."
                                                             value={editValue?.isFirstDepositBonus}
                                                             onChange={(v) => setEditValue({ ...editValue, isFirstDepositBonus: v })}
                                                         />
@@ -1748,7 +1762,7 @@ export function RulesManager() {
                                                         </div>
                                                         <ToggleField
                                                             label="Açık Bahis Olmamalı"
-                                                            description="Talep anında açık kupon veya casino turu varsa bonus verilmesin."
+                                                            description="Talep anında sonuçlanmamış kuponu veya süren casino turu varsa bonus verilmez."
                                                             value={editValue?.noOpenBets}
                                                             onChange={(v) => setEditValue({ ...editValue, noOpenBets: v })}
                                                         />
