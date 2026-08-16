@@ -3,6 +3,14 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { existsSync } from 'fs';
 import { readStoredDocument, writeStoredDocument } from '../lib/documentStore.js';
+import {
+  araliklariDogrula,
+  araliklariNormalize,
+  specPartnerBonusIdleri,
+  type PartnerBonusAraligi,
+} from './bonusAraliklari.js';
+
+export type { PartnerBonusAraligi };
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const RULES_DIR = join(__dirname, '..', 'data', 'rules');
@@ -77,6 +85,17 @@ export type PromoSpec = {
      */
     title?: string;
     partnerBonusId?: string;
+    /**
+     * TEK KURAL, BIRDEN FAZLA BONUS ID.
+     *
+     * Lynon'da ayni kampanyanin kademeleri ayri bonus tanimlari olarak
+     * durabiliyor. Bu liste doluysa hangi ID'nin verilecegini YATIRIM
+     * TUTARI belirler; oyuncu listede yine tek bir bonus gorur.
+     *
+     * Bos ise `partnerBonusId` ile eski davranis surer. Kurallar ve
+     * gerekceler: `bonusAraliklari.ts`.
+     */
+    partnerBonusRanges?: PartnerBonusAraligi[];
     amountType?:
       | 'fixed'
       | 'percentage'
@@ -309,9 +328,39 @@ export async function saveRules(tenantKey: string, config: RulesConfig): Promise
           errors.push(`${groupName}.${key}: Freespin Games için geçerli Game ID ve Provider ID zorunludur`);
         }
       }
+      /**
+       * ARALIKLAR: cakisma kaydetme aninda yakalanir.
+       *
+       * Calisma aninda "once eslesen kazanir" gibi sirali bir kural
+       * olsaydi listenin sirasi para anlamina gelirdi ve editorde
+       * gorunmezdi. Gerekce: `bonusAraliklari.ts`.
+       */
+      const araliklar = araliklariNormalize(spec.partnerBonusRanges);
+      if (Array.isArray(spec.partnerBonusRanges) && spec.partnerBonusRanges.length > 0 && araliklar.length === 0) {
+        errors.push(`${groupName}.${key}: Bonus ID aralıklarının hepsi geçersiz (ID ve alt sınır zorunlu)`);
+      }
+      const aralikDogrulama = araliklariDogrula(araliklar);
+      if (!aralikDogrulama.gecerli) {
+        errors.push(`${groupName}.${key}: ${aralikDogrulama.hata}`);
+      }
+      for (const aralik of araliklar) {
+        const id = Number(aralik.partnerBonusId);
+        if (!Number.isInteger(id) || id <= 0) {
+          errors.push(`${groupName}.${key}: Aralık için geçersiz Partner Bonus ID (${aralik.partnerBonusId})`);
+        }
+      }
+
       if (spec.enabled !== false && (spec.type ?? 'partner') === 'partner') {
-        const partnerBonusId = Number(spec.partnerBonusId);
-        if (!Number.isInteger(partnerBonusId) || partnerBonusId <= 0) {
+        /**
+         * Aralik tanimliysa kural duzeyinde tek bir ID ZORUNLU DEGIL:
+         * bonusun kimligi artik aralik listesinde. En az bir yerden
+         * gecerli bir ID cikmasi yeterli.
+         */
+        const gecerliIdVar = specPartnerBonusIdleri(spec).some((deger) => {
+          const id = Number(deger);
+          return Number.isInteger(id) && id > 0;
+        });
+        if (!gecerliIdVar) {
           errors.push(`${groupName}.${key}: Partner Bonus ID eksik veya geçersiz`);
         }
       }

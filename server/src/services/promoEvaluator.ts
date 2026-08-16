@@ -74,7 +74,13 @@ function lossBasisAlani(spec: PromoSpec | undefined): 'netLoss' | 'netLossWeekly
  * otomatik olarak netLoss tabanını kullanır; ayrıca basisSource ile açıkça
  * seçilebilir.
  */
-function depositBasis(account: AccountSnapshot, spec: PromoSpec | undefined): number {
+/**
+ * Disari acik: bonus ID araligi da AYNI tabani kullanmali. Iki ayri taban
+ * olsaydi ayni ekranda iki farkli "yatirim" kavrami dolasirdi — kural
+ * `minDepositAmount` icin son yatirima, kademe secimi baska bir seye
+ * bakardi. Bkz. `bonusAraliklari.ts`.
+ */
+export function depositBasis(account: AccountSnapshot, spec: PromoSpec | undefined): number {
   if (spec?.basisSource === 'netLoss' || (spec?.lossBonus === true && spec?.basisSource == null)) {
     return Number((account as any)[lossBasisAlani(spec)] ?? 0);
   }

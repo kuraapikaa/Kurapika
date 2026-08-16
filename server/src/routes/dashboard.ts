@@ -19,6 +19,13 @@ import { readTournamentSettings, writeTournamentSettings } from '../services/tur
 import { evaluateForAccount, evaluateWithdrawalRules, evaluateRiskAnalysis, evaluateWagerSummary, evaluateBonusRules, refreshRules, getRulesForTenant } from '../services/withdrawalEngine.js';
 import { buildAccountSnapshotFromClientId } from '../services/accountSnapshotService.js';
 import { assignmentValuesForPromoSpec, getRules, saveRules, type RulesConfig } from '../services/rulesService.js';
+import {
+  araligaGorePartnerBonusId,
+  araliklariOzetle,
+  specBonusIdSahipleniyorMu,
+  specPartnerBonusIdleri,
+} from '../services/bonusAraliklari.js';
+import { depositBasis } from '../services/promoEvaluator.js';
 import { istekKimligi, oyuncuVerisineErisebilir } from '../lib/istekKimligi.js';
 import { getPromoOverrides, setPromoOverride } from '../services/promoOverridesService.js';
 import { detectOppositeBetting, getPlayedGameNames } from '../services/oppositeBettingService.js';
@@ -572,7 +579,7 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
           const findRule = (campaignId: unknown, title: string) => {
             const direct = specs[String(campaignId)];
             if (direct) return direct;
-            const linked = Object.values(specs).find((spec: any) => String(spec.partnerBonusId ?? '') === String(campaignId));
+            const linked = Object.values(specs).find((spec: any) => specBonusIdSahipleniyorMu(spec, campaignId));
             if (linked) return linked;
             const normalized = normalizeTitleForKey(title);
             if (titleSpecs[normalized]) return titleSpecs[normalized];
@@ -1709,10 +1716,15 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
     const requestedId = String(bonusId);
     const direct = rules.PROMO_SPECS[requestedId];
     if (direct) return { key: requestedId, spec: direct };
+    /**
+     * Kural, birden fazla bonus ID sahiplenebilir (yatirim araligi basina
+     * bir ID). Oyuncu HANGI kademeye tiklarsa tiklasin ayni kurala
+     * ulasmali; bu yuzden esitlik yerine `specBonusIdSahipleniyorMu`.
+     */
     const linked = [
       ...Object.entries(rules.PROMO_SPECS),
       ...Object.entries(rules.PROMO_TITLE_SPECS),
-    ].find(([, spec]) => String(spec.partnerBonusId ?? '') === requestedId);
+    ].find(([, spec]) => specBonusIdSahipleniyorMu(spec, requestedId));
     return linked ? { key: linked[0], spec: linked[1] } : null;
   };
   const hasCompleteEligibilityData = (account: any) => {
@@ -2004,8 +2016,14 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
           }
           const configuredRuleType = String(spec.type ?? 'partner').toLocaleLowerCase('tr-TR');
           const ruleType = ['cash', 'nakit'].includes(configuredRuleType) ? 'cash' : 'partner';
-          const partnerBonusId = Number(spec.partnerBonusId);
-          if (ruleType === 'partner' && (!Number.isInteger(partnerBonusId) || partnerBonusId <= 0)) {
+          // Kural en az bir gecerli ID sahipleniyor mu? (Kural duzeyinde ya
+          // da araliklarda.) Hangisinin verilecegi asagida, yatirim tutari
+          // bilindikten sonra belirlenir.
+          const sahiplenilenIdler = specPartnerBonusIdleri(spec).filter((deger) => {
+            const id = Number(deger);
+            return Number.isInteger(id) && id > 0;
+          });
+          if (ruleType === 'partner' && sahiplenilenIdler.length === 0) {
             return reply.status(409).send({
               HasError: true,
               AlertMessage: 'Bonus eklenemedi: Partner Bonus ID eksik veya geçersiz.',
@@ -2017,6 +2035,30 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
             return reply.status(502).send({
               HasError: true,
               AlertMessage: 'Lynon kampanya, spor, casino veya finans verilerinden biri tamamlanamadı; işlem durduruldu.',
+            });
+          }
+
+          /**
+           * HANGI BONUS ID VERILECEK?
+           *
+           * Aralik tanimliysa oyuncunun TIKLADIGI kademe degil, YATIRIM
+           * TUTARININ dustugu kademe verilir — kademeler tek bir bonusun
+           * ic detayi. Aralik yoksa kuralin kendi ID'si (eski davranis).
+           *
+           * Hicbir araliga dusmuyorsa bonus VERILMEZ: bosluga denk gelen
+           * bir yatirima "herhangi bir bonus" vermek yanlis bonus
+           * vermektir. Gerekce: `bonusAraliklari.ts`.
+           */
+          const yatirimTabani = depositBasis(currentAccount as any, spec as any);
+          const cozulenBonusId = araligaGorePartnerBonusId(spec as any, yatirimTabani);
+          const partnerBonusId = Number(cozulenBonusId);
+          if (ruleType === 'partner' && (!Number.isInteger(partnerBonusId) || partnerBonusId <= 0)) {
+            const araliklar = araliklariOzetle((spec as any).partnerBonusRanges ?? []);
+            return reply.status(409).send({
+              HasError: true,
+              AlertMessage: araliklar
+                ? `Bonus eklenemedi: ${yatirimTabani} TRY yatırım hiçbir bonus aralığına düşmüyor (${araliklar}).`
+                : 'Bonus eklenemedi: Partner Bonus ID eksik veya geçersiz.',
             });
           }
           const currentCheck = await evaluateForAccount(currentAccount as any, {
@@ -2624,16 +2666,30 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
         const invalidRules = [
           ...Object.entries(request.body?.PROMO_SPECS ?? {}),
           ...Object.entries(request.body?.PROMO_TITLE_SPECS ?? {}),
-        ].filter(([key, spec]) => {
-          const ruleType = String(spec.type ?? 'partner').toLocaleLowerCase('tr-TR');
-          if (spec.enabled === false || ['cash', 'nakit', 'wheel'].includes(ruleType)) return false;
-          if (validPartnerBonusIds.has(Number(spec.partnerBonusId))) return false;
-          // Rule already existed with this exact (now-stale) partner ID and isn't being changed here —
-          // don't block unrelated edits (e.g. deleting a different rule) because of it.
-          const existing = existingSpecs[key];
-          if (existing && Number(existing.partnerBonusId) === Number(spec.partnerBonusId)) return false;
-          return true;
-        }).map(([key, spec]) => `${key} → ${spec.partnerBonusId ?? 'eksik'}`);
+        ]
+          /**
+           * Kural birden fazla bonus ID tasiyabiliyor (yatirim araligi
+           * basina bir ID). Dogrulama tek alan yerine kuralin
+           * SAHIPLENDIGI TUM ID'leri gezer; biri bile katalogda yoksa
+           * kayit reddedilir — yoksa aralik editorune yazilan hatali bir
+           * ID, o araliga denk gelen yatirimda sessizce "bonus yok"a
+           * donusurdu.
+           */
+          .map(([key, spec]) => {
+            const ruleType = String(spec.type ?? 'partner').toLocaleLowerCase('tr-TR');
+            if (spec.enabled === false || ['cash', 'nakit', 'wheel'].includes(ruleType)) return null;
+
+            // Kuralda ZATEN duran (artik bayat) ID'ler ilgisiz duzenlemeleri
+            // bloke etmesin; yalnizca bu kayitta YENI gelenler denetlenir.
+            const eskiIdler = new Set(specPartnerBonusIdleri(existingSpecs[key]));
+            const bozuk = specPartnerBonusIdleri(spec).filter((deger) => {
+              if (validPartnerBonusIds.has(Number(deger))) return false;
+              return !eskiIdler.has(deger);
+            });
+
+            return bozuk.length > 0 ? `${key} → ${bozuk.join(', ')}` : null;
+          })
+          .filter((satir): satir is string => satir !== null);
         if (invalidRules.length > 0) {
           return reply.status(422).send({
             HasError: true,
