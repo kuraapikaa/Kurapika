@@ -18,6 +18,14 @@ export type PromoOverride = {
   title?: string;
   image?: string;
   detailHtml?: string;
+  /**
+   * LOBIDEKI SIRA. Kucuk once gelir; tanimsiz olanlar sirali olanlarin
+   * ARDINDAN, katalog sirasini koruyarak dizilir.
+   *
+   * Gorunum ayarlarinin yaninda duruyor cunku sira da bir gorunum karari:
+   * hangi bonusun once cikacagi kampanyanin kendi tanimini degistirmez.
+   */
+  sortOrder?: number;
 };
 
 export type PromoOverridesFile = {

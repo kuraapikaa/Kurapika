@@ -589,8 +589,19 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
             })?.[1] as any;
           };
           const includeUnconfigured = request.query.includeUnconfigured === 'true';
+          /**
+           * KURAL MERKEZI'NDE GIZLENENLER LOBIDE DE GORUNMEZ.
+           *
+           * Liste Lynon KATALOGUNDAN kuruluyor, kurallardan degil; bu yuzden
+           * bir kurali silmek kampanyayi lobiden kaldirmiyordu — yalnizca
+           * "kuralsiz" hale getiriyordu ve bonus oyuncuya gorunmeye devam
+           * ediyordu. Operatorun zihinsel modeli "kural merkezinden sildim,
+           * gitti"; ikisi ayni listeyi konusmali.
+           */
+          const gizliIdler = new Set((rules?.HIDDEN_PROMO_IDS ?? []).map((id) => String(id)));
           const promotions = catalogRows
             .filter((campaign: any) => Number.isInteger(Number(campaign.PartnerBonusId)) && Number(campaign.PartnerBonusId) > 0 && campaign.IsDeleted !== true)
+            .filter((campaign: any) => !gizliIdler.has(String(campaign.PartnerBonusId)))
             .map((campaign: any) => {
               const campaignId = Number(campaign.PartnerBonusId);
               const title = String(campaign.Name ?? campaign.systemName ?? `Bonus ${campaignId}`);
@@ -637,10 +648,31 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
             new Set(promotions.map((promo: any) => String(promo?.id))),
           );
 
+          /**
+           * SIRALAMA: `sortOrder` verilmis bonuslar kucukten buyuge basa
+           * gecer; verilmemis olanlar katalog sirasini KORUYARAK arkada
+           * kalir. Tanimsizi 0 saymak, sira verilmemis her bonusu one
+           * atardi — operator tek bir bonusa sira verdiginde liste
+           * bastan asagi degisirdi.
+           */
+          const siraliListe = [...promotions, ...sanallar]
+            .map((promo: any, index: number) => ({ promo, index }))
+            .sort((a, b) => {
+              const as = Number(overrides?.byExternalId?.[String(a.promo?.id)]?.sortOrder);
+              const bs = Number(overrides?.byExternalId?.[String(b.promo?.id)]?.sortOrder);
+              const aVar = Number.isFinite(as);
+              const bVar = Number.isFinite(bs);
+              if (aVar && bVar) return as - bs || a.index - b.index;
+              if (aVar) return -1;
+              if (bVar) return 1;
+              return a.index - b.index;
+            })
+            .map((satir) => satir.promo);
+
           return reply.send({
             HasError: false,
             Data: {
-              promotions: [...promotions, ...sanallar],
+              promotions: siraliListe,
               fetchedAt: new Date().toISOString(),
               source: 'Lynon Bonus Engine V2 + Bonus Kuralları (site 137)',
               dataCompleteness: catalog.DataCompleteness,
@@ -2721,7 +2753,7 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
   });
 
   fastify.post<{
-    Body: { externalId: number; override: { title?: string; image?: string; detailHtml?: string } | null };
+    Body: { externalId: number; override: { title?: string; image?: string; detailHtml?: string; sortOrder?: number } | null };
   }>('/admin/promos/overrides', async (request: any, reply) => {
     try {
       const tenantKey = await getTenantKeyForAdmin(request);

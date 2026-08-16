@@ -411,11 +411,30 @@ export function RulesManager() {
      * acilabilir. Kalici olarak kaybolsaydi yeni kampanya kesfetmenin tek
      * yolu kapanmis olurdu.
      */
-    const handleDeleteRule = (key: string) => {
+    const handleDeleteRule = (key: string, spec?: PromoSpec) => {
         if (!config) return;
-        const katalogdaVar = promos.some((promo) => String(promo?.PartnerBonusId ?? '').trim() === String(key));
-        const soru = katalogdaVar
-            ? `${key} kuralı silinecek ve Lynon kampanyası listeden gizlenecek. "Gizlenenleri göster" ile geri alabilirsiniz. Devam edilsin mi?`
+
+        /**
+         * KURAL ANAHTARI ILE BONUS ID AYNI DEGIL.
+         *
+         * Ornek: kural anahtari `1874`, bagli oldugu Lynon kampanyasi
+         * `2046`. Yalnizca anahtara bakmak bu kurallarda gizlemeyi sessizce
+         * atliyordu: kayit siliniyor, satir 2046 yer tutucusu olarak geri
+         * geliyordu. Kuralin SAHIPLENDIGI tum ID'ler gizlenir — anahtar,
+         * `partnerBonusId` ve varsa yatirim araliklarindaki ID'ler.
+         */
+        const sahiplenilen = new Set<string>([String(key)]);
+        const canliSpec = spec ?? (config.PROMO_SPECS?.[key] as PromoSpec | undefined);
+        if (canliSpec?.partnerBonusId) sahiplenilen.add(String(canliSpec.partnerBonusId).trim());
+        for (const aralik of canliSpec?.partnerBonusRanges ?? []) {
+            if (aralik?.partnerBonusId) sahiplenilen.add(String(aralik.partnerBonusId).trim());
+        }
+
+        const katalogIdleri = new Set(promos.map((promo) => String(promo?.PartnerBonusId ?? '').trim()));
+        const gizlenecek = [...sahiplenilen].filter((id) => id && katalogIdleri.has(id));
+
+        const soru = gizlenecek.length > 0
+            ? `${key} kuralı silinecek ve ilgili Lynon kampanyası (${gizlenecek.join(', ')}) listeden gizlenecek. "Gizlenenleri göster" ile geri alabilirsiniz. Devam edilsin mi?`
             : `${key} kuralını silmek istediğinize emin misiniz?`;
         if (!window.confirm(soru)) return;
 
@@ -425,9 +444,8 @@ export function RulesManager() {
         delete updatedMap[key];
         newConfig[targetMap] = updatedMap;
 
-        if (katalogdaVar && activeTab === 'id') {
-            const mevcut = newConfig.HIDDEN_PROMO_IDS ?? [];
-            newConfig.HIDDEN_PROMO_IDS = [...new Set([...mevcut, String(key)])];
+        if (gizlenecek.length > 0 && activeTab === 'id') {
+            newConfig.HIDDEN_PROMO_IDS = [...new Set([...(newConfig.HIDDEN_PROMO_IDS ?? []), ...gizlenecek])];
         }
 
         mutation.mutate(newConfig);
@@ -1819,7 +1837,7 @@ export function RulesManager() {
                                                     </button>
                                                 ) : (
                                                     <button
-                                                        onClick={() => handleDeleteRule(key)}
+                                                        onClick={() => handleDeleteRule(key, spec)}
                                                         className="h-12 w-12 flex items-center justify-center rounded-full bg-white/10 hover:bg-rose-500 border border-white/5 text-slate-400 hover:text-white transition-all shadow-lg"
                                                         title="Sil"
                                                     >
@@ -2063,13 +2081,16 @@ function PromoContentEditor({ externalId, promoTitle }: { externalId: number; pr
     const [title, setTitle] = useState<string>('');
     const [image, setImage] = useState<string>('');
     const [detailHtml, setDetailHtml] = useState<string>('');
+    /** Lobideki sira. Bos birakilirsa katalog sirasi korunur. */
+    const [sortOrder, setSortOrder] = useState<string>('');
 
     useEffect(() => {
         setTitle(String(current?.title ?? ''));
         setImage(String(current?.image ?? ''));
         setDetailHtml(String(current?.detailHtml ?? ''));
+        setSortOrder(current?.sortOrder == null ? '' : String(current.sortOrder));
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [externalId, (current as any)?.title, (current as any)?.image, (current as any)?.detailHtml]);
+    }, [externalId, (current as any)?.title, (current as any)?.image, (current as any)?.detailHtml, (current as any)?.sortOrder]);
 
     const saveMutation = useMutation({
         mutationFn: async () => {
@@ -2079,6 +2100,9 @@ function PromoContentEditor({ externalId, promoTitle }: { externalId: number; pr
                     title: title.trim() || undefined,
                     image: image.trim() || undefined,
                     detailHtml: detailHtml.trim() || undefined,
+                    // Bos birakilirsa alan hic gonderilmez: "0" ile "sira
+                    // verilmemis" ayni sey degil.
+                    sortOrder: sortOrder.trim() === '' ? undefined : Number(sortOrder),
                 }
             };
             const res = await fetch('/api/admin/promos/overrides', {
@@ -2166,6 +2190,19 @@ function PromoContentEditor({ externalId, promoTitle }: { externalId: number; pr
                             onChange={(e) => setImage(e.target.value)}
                             className="w-full h-14 bg-black/40 border border-white/[0.05] rounded-3xl px-5 text-sm text-white focus:border-[color:var(--panel-accent,#0a84ff)]/50 transition-all outline-none font-bold backdrop-blur-xl"
                             placeholder="https://..."
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block pl-1">Lobideki sıra</label>
+                        <p className="text-[10px] text-slate-500 font-medium pl-1 mb-1">
+                            Küçük olan önce görünür. Boş bırakılırsa sıra verilmiş bonusların ardından, katalog sırasıyla dizilir.
+                        </p>
+                        <input
+                            type="number"
+                            value={sortOrder}
+                            onChange={(e) => setSortOrder(e.target.value)}
+                            className="w-full h-14 bg-black/40 border border-white/[0.05] rounded-3xl px-5 text-sm text-white focus:border-[color:var(--panel-accent,#0a84ff)]/50 transition-all outline-none font-bold backdrop-blur-xl"
+                            placeholder="Örn: 1"
                         />
                     </div>
                     <div className="space-y-2">
