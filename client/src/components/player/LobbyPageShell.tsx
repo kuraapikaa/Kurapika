@@ -117,14 +117,9 @@ export function LobbyCard({
 }) {
   return (
     <section
-      className={cn('border', padded && 'p-3.5 md:p-4', className)}
-      style={{
-        borderRadius: LOBBY_TOKENS.radius.card,
-        borderColor: LOBBY_TOKENS.border(0.09),
-        // Yüzey rengi zeminden yalnızca bir tık açık; ayrım kenarlıkla kuruluyor,
-        // gölge ve blur ile değil. Mockup'ın düz, baskı gibi duran dili bu.
-        backgroundColor: 'rgba(243, 236, 221, 0.022)',
-      }}
+      // Dolgu mobile-first: dar ekranda 16px, geniş ekranda 20px.
+      // Yüzey dili ortak `cam` sınıfından; renkler paletten (index.css).
+      className={cn('cam', padded && 'p-4 md:p-5', className)}
     >
       {children}
     </section>
@@ -178,12 +173,7 @@ export function LobbyIdentityBar({
     <LobbyCard>
       <div className="flex flex-col gap-2 md:flex-row md:items-center">
         <div
-          className="flex min-w-0 flex-1 items-center gap-2.5 border px-3 py-2"
-          style={{
-            borderRadius: LOBBY_TOKENS.radius.control,
-            borderColor: LOBBY_TOKENS.border(0.1),
-            backgroundColor: 'rgba(0, 0, 0, 0.28)',
-          }}
+          className="cam-kontrol dokunma flex min-w-0 flex-1 items-center gap-2.5 px-3.5 py-2.5"
         >
           {icon && <span className="shrink-0" style={{ color: palette.mutedTextColor }}>{icon}</span>}
           <div className="min-w-0 flex-1">

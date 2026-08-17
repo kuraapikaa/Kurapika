@@ -1241,3 +1241,129 @@
     margin-bottom: 20px;
   }
 }
+
+/*
+ * ────────────────────────────────────────────────────────────────────────
+ * OYUNCU TARAFI — LIQUID GLASS YÜZEY DİLİ
+ * ────────────────────────────────────────────────────────────────────────
+ *
+ * Kapsam `.narcos-theme` (PlayerLayout kökte açıyor): admin paneline
+ * sızmaz. Sayfalar bugün yüzeyleri elle yazılmış beş Tailwind yardımcısıyla
+ * kuruyor —
+ *
+ *   rounded-xl border border-[rgba(243,236,221,0.075)] bg-[rgba(...,0.032)]
+ *
+ * — ve bu 6600 satıra dağıldığı için tek tek değiştirmek gerekiyordu.
+ * Aşağıdaki sınıflar o beşlinin yerine geçiyor; bir sayfa `cam` yazınca
+ * dilin tamamını alıyor.
+ *
+ * ── Renkler paletten, sabit değil ────────────────────────────────────
+ *
+ * `--lobby-*` değişkenleri `lobbyTheme.ts` tarafından admin'in "Lobi
+ * Tasarımı" paletinden besleniyor. `color-mix` ile o değişkenleri
+ * okuyoruz; admin temayı değiştirdiğinde cam da uyum sağlar. Sabit altın
+ * yazsaydık tema değiştiren müşteride cam yanlış renkte kalırdı.
+ *
+ * ── Camı cam yapan dört şey ──────────────────────────────────────────
+ *
+ * 1. `backdrop-filter: blur + saturate` — saturate olmadan blur griye
+ *    çalar ve yüzey "buzlu plastik" olur.
+ * 2. Üst kenarda speküler çizgi (`inset 0 1px 0`) — ışığın cam kenarına
+ *    çarpması; camı düz translucent kutudan ayıran asıl ipucu.
+ * 3. Çok düşük opaklıkta zemin — daha koyusu blur'u boğar.
+ * 4. Geniş yumuşak dış gölge — yüzeyin zeminden ayrı durduğunu söyler.
+ */
+@layer components {
+  .narcos-theme .cam,
+  .narcos-theme .cam-panel,
+  .narcos-theme .cam-kontrol {
+    border: 1px solid color-mix(in srgb, var(--lobby-primary, #f59e0b) 14%, transparent);
+    background:
+      linear-gradient(
+        160deg,
+        color-mix(in srgb, var(--lobby-text, #fff7ed) 7%, transparent),
+        color-mix(in srgb, var(--lobby-text, #fff7ed) 4%, transparent) 42%,
+        color-mix(in srgb, var(--lobby-bg, #090805) 28%, transparent)
+      );
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, var(--lobby-text, #fff7ed) 22%, transparent),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.35),
+      0 8px 28px rgba(0, 0, 0, 0.38);
+  }
+
+  .narcos-theme .cam {
+    border-radius: 20px;
+    backdrop-filter: blur(18px) saturate(155%);
+    -webkit-backdrop-filter: blur(18px) saturate(155%);
+  }
+
+  .narcos-theme .cam-panel {
+    border-radius: 28px;
+    backdrop-filter: blur(26px) saturate(155%);
+    -webkit-backdrop-filter: blur(26px) saturate(155%);
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, var(--lobby-text, #fff7ed) 22%, transparent),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.35),
+      0 16px 44px rgba(0, 0, 0, 0.46);
+  }
+
+  .narcos-theme .cam-kontrol {
+    border-radius: 14px;
+    backdrop-filter: blur(12px) saturate(150%);
+    -webkit-backdrop-filter: blur(12px) saturate(150%);
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, var(--lobby-text, #fff7ed) 18%, transparent),
+      0 4px 14px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Birincil eylem ve seçili durum: altın vurgulu cam. */
+  .narcos-theme .cam-altin {
+    border: 1px solid color-mix(in srgb, var(--lobby-primary, #f59e0b) 42%, transparent);
+    border-radius: 14px;
+    background:
+      linear-gradient(
+        160deg,
+        color-mix(in srgb, var(--lobby-primary, #f59e0b) 28%, transparent),
+        color-mix(in srgb, var(--lobby-secondary, #eab308) 14%, transparent) 55%,
+        color-mix(in srgb, var(--lobby-bg, #090805) 30%, transparent)
+      );
+    backdrop-filter: blur(14px) saturate(160%);
+    -webkit-backdrop-filter: blur(14px) saturate(160%);
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, var(--lobby-text, #fff7ed) 30%, transparent),
+      0 8px 26px color-mix(in srgb, var(--lobby-primary, #f59e0b) 22%, transparent);
+  }
+
+  /*
+   * MOBILE-FIRST DOKUNMA HEDEFİ.
+   *
+   * Oyuncu ekranları ağırlıklı olarak telefonda açılıyor. Parmak hedefi
+   * 44px altına düştüğünde ıskalama başlıyor (WCAG 2.5.8 asgari 24px'i
+   * şart koşuyor; 44px pratikte kabul gören ölçü).
+   */
+  .narcos-theme .dokunma {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Hover yalnızca gerçek işaretçide; dokunmatikte "yapışık hover" olur. */
+  @media (hover: hover) {
+    .narcos-theme .cam-tiklanabilir {
+      transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+    }
+    .narcos-theme .cam-tiklanabilir:hover {
+      border-color: color-mix(in srgb, var(--lobby-primary, #f59e0b) 34%, transparent);
+      box-shadow:
+        inset 0 1px 0 color-mix(in srgb, var(--lobby-text, #fff7ed) 26%, transparent),
+        0 14px 38px rgba(0, 0, 0, 0.46);
+      transform: translateY(-1px);
+    }
+  }
+
+  /* Hareket azaltma tercihi: cam parlaklığı kalsın, hareket gitsin. */
+  @media (prefers-reduced-motion: reduce) {
+    .narcos-theme .cam-tiklanabilir:hover {
+      transform: none;
+    }
+  }
+}

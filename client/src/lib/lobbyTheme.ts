@@ -58,8 +58,17 @@ export const DEFAULT_LOBBY_PALETTE: LobbyPalette = {
  * köşe yarıçapı ve kenarlık şiddeti tasarımın kimliği ve tema değişse de sabit.
  */
 export const LOBBY_TOKENS = {
-  /** Mockup'ta baskın yarıçaplar: kart 12, geniş yüzey 20, rozet tam yuvarlak. */
-  radius: { pill: '9999px', card: '12px', panel: '20px', control: '10px' },
+  /**
+   * Yarıçaplar LIQUID GLASS için büyütüldü (kart 12→20, panel 20→28).
+   *
+   * Cam yüzeyde küçük yarıçap plastik gösteriyor: kenar yumuşaklığı ile
+   * bulanıklık aynı dili konuşmalı. Kontrol yüksekliği de dokunmatik için
+   * arttı — mobile-first'te 10px yarıçaplı 32px'lik bir hedef parmakla
+   * ıskalanıyor.
+   */
+  radius: { pill: '9999px', card: '20px', panel: '28px', control: '14px' },
+  /** Dokunma hedefi alt sınırı (WCAG 2.5.8 asgari 24px, pratikte 44px). */
+  touch: '44px',
   /** Büyük harf mikro etiketlerin harf aralığı — tasarımın en belirgin imzası. */
   tracking: { label: '0.16em', tight: '0.12em' },
   /** Kenarlıklar metin renginin düşük alfası; ayrı bir gri getirilmiyor. */
@@ -67,6 +76,58 @@ export const LOBBY_TOKENS = {
   /** Kazanç/pozitif tutar rengi. */
   win: '#5fd6a7',
 } as const;
+
+/**
+ * LIQUID GLASS YÜZEY REÇETESİ.
+ *
+ * ── Neden ─────────────────────────────────────────────────────────────
+ *
+ * Önceki dil bilerek DÜZDÜ: ayrım yalnızca kenarlıkla kuruluyor, gölge ve
+ * bulanıklık yoktu ("baskı gibi duran dil"). Bu karar tersine çevrildi;
+ * yüzeyler artık altın-siyah zeminin üzerinde yüzen cam katmanlar.
+ *
+ * ── Camı cam yapan dört şey ───────────────────────────────────────────
+ *
+ * 1. `backdrop-filter: blur + saturate` — arkasındaki zemini taşır.
+ *    Saturate olmadan blur griye çalar ve cam "buzlu plastik" olur.
+ * 2. Üst kenarda SPEKÜLER çizgi (içeriden 1px beyaz) — ışığın cam kenarına
+ *    çarpması. Camı düz translucent bir kutudan ayıran asıl ipucu budur.
+ * 3. Çok düşük opaklıkta zemin (0.04–0.06). Daha koyusu blur'u boğar.
+ * 4. Geniş ve yumuşak dış gölge — yüzeyin zeminden AYRI durduğunu söyler.
+ *
+ * Kenarlık altın tonunun düşük alfası: nötr beyaz kenarlık sıcak zeminde
+ * soğuk bir çizgi bırakıyor ve palet dağılıyordu.
+ */
+export type CamKatmani = 'yuzey' | 'panel' | 'kontrol' | 'yukseltilmis';
+
+export function camYuzey(katman: CamKatmani = 'yuzey'): CSSProperties {
+  const olcu = {
+    yuzey: { radius: LOBBY_TOKENS.radius.card, blur: 18, zemin: 0.045, golge: '0 8px 28px rgba(0,0,0,0.38)' },
+    panel: { radius: LOBBY_TOKENS.radius.panel, blur: 26, zemin: 0.055, golge: '0 16px 44px rgba(0,0,0,0.46)' },
+    kontrol: { radius: LOBBY_TOKENS.radius.control, blur: 12, zemin: 0.035, golge: '0 4px 14px rgba(0,0,0,0.3)' },
+    yukseltilmis: { radius: LOBBY_TOKENS.radius.panel, blur: 32, zemin: 0.075, golge: '0 24px 60px rgba(0,0,0,0.55)' },
+  }[katman];
+
+  return {
+    borderRadius: olcu.radius,
+    border: `1px solid rgba(245, 158, 11, 0.14)`,
+    background: `linear-gradient(160deg, rgba(255,247,237,${olcu.zemin + 0.03}), rgba(255,247,237,${olcu.zemin}) 42%, rgba(9,8,5,0.28))`,
+    backdropFilter: `blur(${olcu.blur}px) saturate(155%)`,
+    WebkitBackdropFilter: `blur(${olcu.blur}px) saturate(155%)`,
+    // Üst speküler çizgi + alt iç gölge: camın kalınlığı.
+    boxShadow: `inset 0 1px 0 rgba(255,247,237,0.22), inset 0 -1px 0 rgba(0,0,0,0.35), ${olcu.golge}`,
+  };
+}
+
+/** Altın vurgulu cam — birincil eylem ve seçili durum için. */
+export function camAltin(palette: LobbyPalette, katman: CamKatmani = 'kontrol'): CSSProperties {
+  return {
+    ...camYuzey(katman),
+    border: `1px solid ${hexToRgba(palette.primaryColor, 0.42)}`,
+    background: `linear-gradient(160deg, ${hexToRgba(palette.primaryColor, 0.28)}, ${hexToRgba(palette.secondaryColor, 0.14)} 55%, rgba(9,8,5,0.3))`,
+    boxShadow: `inset 0 1px 0 rgba(255,247,237,0.3), 0 8px 26px ${hexToRgba(palette.primaryColor, 0.22)}`,
+  };
+}
 
 const HEX_PATTERN = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
 
