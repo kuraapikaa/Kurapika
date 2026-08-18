@@ -75,7 +75,7 @@ export function YaziTuraSayfasi() {
         </div>
 
         {/* Controls */}
-        <div className="w-full space-y-8 bg-[rgba(243,236,221,0.03)] p-8 rounded-[3rem] border border-[rgba(243,236,221,0.05)] backdrop-blur-xl">
+ <div className="cam-panel w-full space-y-8 p-8 backdrop-blur-xl">
           <div className="text-center">
              <h3 className="text-[color:var(--lobby-muted,#8f8674)] font-black uppercase tracking-widest text-sm mb-4">Seçimini Yap</h3>
              <div className="flex gap-4 justify-center">

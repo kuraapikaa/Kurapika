@@ -107,7 +107,7 @@ export function LoyaltyHub() {
 
                         {/* Balance Stats */}
                         <div className="grid w-full grid-cols-3 gap-1.5 md:w-auto md:min-w-[520px] md:gap-2">
-                            <div className="min-w-0 rounded-xl border border-[rgba(243,236,221,0.10)] bg-[rgba(243,236,221,0.05)] p-2 sm:p-3 md:p-4">
+ <div className="cam min-w-0 p-2 sm:p-3 md:p-4">
                                 <div className="mb-1.5 flex h-8 w-8 items-center justify-center rounded-xl bg-blue-500/10 sm:h-10 sm:w-10">
                                     <RefreshCcw size={16} className="text-blue-400 sm:size-5" />
                                 </div>
@@ -116,7 +116,7 @@ export function LoyaltyHub() {
                                     <p className="truncate text-sm font-black text-[color:var(--lobby-text,#f3ecdd)] sm:text-lg">{status?.totalWagerSynced?.toLocaleString()} TL</p>
                                 </div>
                             </div>
-                            <div className="min-w-0 rounded-xl border border-[rgba(243,236,221,0.10)] bg-[rgba(243,236,221,0.05)] p-2 sm:p-3 md:p-4">
+ <div className="cam min-w-0 p-2 sm:p-3 md:p-4">
                                 <div className="mb-1.5 flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/10 sm:h-10 sm:w-10">
                                     <Coins size={16} className="text-emerald-500 sm:size-5" />
                                 </div>
@@ -125,7 +125,7 @@ export function LoyaltyHub() {
                                     <p className="truncate text-sm font-black text-[color:var(--lobby-text,#f3ecdd)] sm:text-lg">{status?.points?.toLocaleString() || 0}</p>
                                 </div>
                             </div>
-                            <div className="min-w-0 rounded-xl border border-[rgba(243,236,221,0.10)] bg-[rgba(243,236,221,0.05)] p-2 sm:p-3 md:p-4">
+ <div className="cam min-w-0 p-2 sm:p-3 md:p-4">
                                 <div className="mb-1.5 flex h-8 w-8 items-center justify-center rounded-xl bg-amber-500/10 sm:h-10 sm:w-10">
                                     <Wallet size={16} className="text-amber-500 sm:size-5" />
                                 </div>
@@ -253,7 +253,7 @@ export function LoyaltyHub() {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -20 }}
-                            className="flex flex-col items-center justify-center rounded-[2rem] border border-[rgba(243,236,221,0.05)] bg-[rgba(243,236,221,0.02)] px-4 py-16 text-center sm:py-20"
+ className="cam-panel flex flex-col items-center justify-center px-4 py-16 text-center sm:py-20"
                         >
                             <Package size={48} className="text-[color:var(--lobby-muted,#8f8674)] mb-4" aria-hidden="true" />
                             <h3 className="font-black text-[color:var(--lobby-muted,#8f8674)] uppercase">{pageContent.emptyTitle}</h3>

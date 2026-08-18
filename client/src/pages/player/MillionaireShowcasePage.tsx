@@ -132,7 +132,7 @@ export function MillionaireShowcasePage() {
             <Loader2 className="animate-spin text-amber-200" size={34} />
           </div>
         ) : !config.isActive || records.length === 0 || !featured ? (
-          <section className="flex min-h-[60vh] flex-col items-center justify-center rounded-[2rem] border border-[rgba(243,236,221,0.10)] bg-[rgba(243,236,221,0.035)] p-8 text-center">
+ <section className="cam-panel flex min-h-[60vh] flex-col items-center justify-center p-8 text-center">
             <Crown className="mb-4 text-[color:var(--lobby-muted,#8f8674)]" size={42} />
             <h1 className="text-3xl font-black tracking-[-0.05em] text-[color:var(--lobby-text,#f3ecdd)]">{pageContent.emptyTitle}</h1>
             <p className="mt-2 max-w-md text-sm font-semibold leading-6 text-[color:var(--lobby-muted,#8f8674)]">
@@ -203,7 +203,7 @@ export function MillionaireShowcasePage() {
               </div>
 
               <div className="border-t border-[rgba(243,236,221,0.10)] bg-black/25 p-4 lg:border-l lg:border-t-0 md:p-5">
-                <div className="h-full rounded-[1.5rem] border border-[rgba(243,236,221,0.10)] bg-[rgba(243,236,221,0.035)] p-3">
+ <div className="cam h-full p-3">
                   <ShowcaseVisual record={featured} large />
                   <div className="mt-4 rounded-xl border border-[rgba(243,236,221,0.10)] bg-black/30 p-4">
                     <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[color:var(--lobby-muted,#8f8674)]">Rekor kayıt</p>
@@ -347,7 +347,7 @@ function ShowcaseRecordCard({
   onPlay: () => void;
 }) {
   return (
-    <div className="group overflow-hidden rounded-[1.35rem] border border-[rgba(243,236,221,0.075)] bg-[rgba(243,236,221,0.035)] p-3">
+ <div className="cam group overflow-hidden p-3">
       <ShowcaseVisual record={record} />
       <div className="mt-3 space-y-3">
         <div className="min-w-0">

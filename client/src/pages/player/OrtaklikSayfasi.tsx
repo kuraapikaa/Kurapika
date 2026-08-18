@@ -179,7 +179,7 @@ export function OrtaklikSayfasi() {
           {AVANTAJLAR.map((avantaj) => (
             <div
               key={avantaj.baslik}
-              className="rounded-2xl border border-[rgba(243,236,221,0.08)] bg-[rgba(243,236,221,0.02)] p-5"
+ className="cam p-5"
             >
               <div className="mb-3 inline-flex rounded-xl bg-[color:var(--lobby-gold,#e7c574)]/10 p-2.5 text-[color:var(--lobby-gold,#e7c574)]">
                 <avantaj.ikon size={18} aria-hidden="true" />
@@ -191,7 +191,7 @@ export function OrtaklikSayfasi() {
         </section>
 
         {/* ── Komisyon kademeleri ──────────────────────────────────────── */}
-        <section className="mb-8 overflow-hidden rounded-2xl border border-[rgba(243,236,221,0.08)] bg-[rgba(243,236,221,0.02)]">
+ <section className="cam mb-8 overflow-hidden ">
           <div className="border-b border-[rgba(243,236,221,0.06)] px-5 py-4">
             <h2 className="text-sm font-black">Gelir paylaşımı kademeleri</h2>
             <p className="mt-1 text-xs text-[color:var(--lobby-muted,#8f8674)]">
@@ -220,7 +220,7 @@ export function OrtaklikSayfasi() {
             {ADIMLAR.map((adim) => (
               <li
                 key={adim.no}
-                className="rounded-2xl border border-[rgba(243,236,221,0.08)] bg-[rgba(243,236,221,0.02)] p-5"
+ className="cam p-5"
               >
                 <div className="text-2xl font-black text-[color:var(--lobby-gold,#e7c574)]/30">{adim.no}</div>
                 <h3 className="mt-2 text-sm font-black">{adim.baslik}</h3>

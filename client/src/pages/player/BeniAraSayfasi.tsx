@@ -104,7 +104,7 @@ export function BeniAraSayfasi() {
                 <button
                   type="button"
                   onClick={() => setStatus('idle')}
-                  className="mt-2 rounded-xl border border-[rgba(243,236,221,0.10)] bg-[rgba(243,236,221,0.05)] px-4 py-2 text-[11px] font-black uppercase tracking-[0.12em] text-[color:var(--lobby-text,#f3ecdd)] transition hover:bg-[rgba(243,236,221,0.10)] hover:text-[color:var(--lobby-text,#f3ecdd)]"
+ className="cam mt-2 px-4 py-2 text-[11px] font-black uppercase tracking-[0.12em] text-[color:var(--lobby-text,#f3ecdd)] transition hover:hover:text-[color:var(--lobby-text,#f3ecdd)]"
                 >
                   {pageContent.successButton}
                 </button>

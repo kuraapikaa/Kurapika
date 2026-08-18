@@ -68,7 +68,7 @@ function StatCard({ value, label, end }: { value: string; label: string; end: nu
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      className="flex flex-col items-center justify-center rounded-xl border border-[rgba(243,236,221,0.07)] bg-[rgba(243,236,221,0.04)] px-4 py-5 text-center"
+ className="cam flex flex-col items-center justify-center px-4 py-5 text-center"
     >
       <span className="text-3xl font-black tracking-[-0.05em] text-[color:var(--lobby-text,#f3ecdd)] md:text-4xl">{display}</span>
       <span className="mt-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-[color:var(--lobby-muted,#8f8674)]">{label}</span>
@@ -299,7 +299,7 @@ export function VipSayfasi() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.3, delay: i * 0.05 }}
-                className="overflow-hidden rounded-[1.5rem] border border-[rgba(243,236,221,0.07)] bg-[rgba(243,236,221,0.03)]"
+ className="cam-panel overflow-hidden "
               >
                 <button
                   type="button"
@@ -379,7 +379,7 @@ export function VipSayfasi() {
                         value={(form as any)[key]}
                         onChange={(e) => setForm({ ...form, [key]: e.target.value })}
                         required={required}
-                        className="w-full rounded-xl border border-[rgba(243,236,221,0.08)] bg-[rgba(243,236,221,0.05)] px-4 py-3.5 text-sm font-bold text-[color:var(--lobby-text,#f3ecdd)] outline-none placeholder:text-[color:var(--lobby-muted,#8f8674)] transition focus:border-blue-400/50 focus:bg-[rgba(243,236,221,0.07)]"
+ className="cam w-full px-4 py-3.5 text-sm font-bold text-[color:var(--lobby-text,#f3ecdd)] outline-none placeholder:text-[color:var(--lobby-muted,#8f8674)] transition focus:border-blue-400/50 focus:"
                       />
                     ))}
                   </div>
