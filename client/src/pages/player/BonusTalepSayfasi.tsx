@@ -72,7 +72,7 @@ function TelegramBonusCard({ username }: { username: string }) {
   if (!data?.enabled) return null;
 
   return (
-    <div className="flex flex-col gap-2.5 rounded-xl border border-[rgba(243,236,221,0.08)] bg-[rgba(243,236,221,0.04)] p-3 sm:flex-row sm:items-center sm:justify-between md:p-3.5">
+    <div className="cam flex flex-col gap-2.5 p-3.5 sm:flex-row sm:items-center sm:justify-between md:p-4">
       <div className="flex items-center gap-2.5">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[color:var(--lobby-primary,#e7c574)]/15 text-[color:var(--lobby-accent,#5fd6a7)]">
           <Send size={17} />
@@ -449,7 +449,7 @@ export function BonusTalepSayfasi() {
           return (
             <article
               key={bonus.promoTitle}
-              className="group flex flex-col overflow-hidden rounded-xl border border-[rgba(243,236,221,0.075)] bg-[rgba(243,236,221,0.032)] transition hover:border-[rgba(243,236,221,0.15)]"
+              className="cam cam-tiklanabilir group flex flex-col overflow-hidden"
             >
               {/*
                 GÖRSEL ALANI 692×336.
@@ -540,7 +540,7 @@ export function BonusTalepSayfasi() {
                     type="button"
                     onClick={() => handleOpenDetails(bonus)}
                     aria-label={`${bonus.promoTitle} ${lobbyExtraText(pageContent, 'detailTitleSuffix', 'detaylarını görüntüle')}`}
-                    className="h-9 flex-1 rounded-xl border border-[rgba(243,236,221,0.08)] bg-[rgba(243,236,221,0.04)] text-[10px] font-black uppercase tracking-[0.08em] text-[color:var(--lobby-muted,#8f8674)] transition hover:bg-[rgba(243,236,221,0.09)] hover:text-[color:var(--lobby-text,#f3ecdd)]"
+                    className="cam-kontrol cam-tiklanabilir dokunma flex-1 text-[10px] font-black uppercase tracking-[0.08em] text-[color:var(--lobby-muted,#8f8674)] hover:text-[color:var(--lobby-text,#f3ecdd)]"
                   >
                     {pageContent.secondaryButton}
                   </button>
@@ -602,7 +602,7 @@ export function BonusTalepSayfasi() {
 
                      <button
                         onClick={closeModal}
-                        className="h-10 w-full rounded-xl border border-[rgba(243,236,221,0.10)] bg-[rgba(243,236,221,0.05)] text-[11px] font-black uppercase tracking-[0.12em] text-[color:var(--lobby-text,#f3ecdd)] transition hover:bg-[rgba(243,236,221,0.10)]"
+                        className="cam-kontrol cam-tiklanabilir dokunma w-full text-[11px] font-black uppercase tracking-[0.12em] text-[color:var(--lobby-text,#f3ecdd)]"
                      >
                         {pageContent.successButton}
                      </button>
@@ -653,7 +653,7 @@ export function BonusTalepSayfasi() {
                         {/* Status Area */}
                         {debouncedUsername ? (
                            playerLoading ? (
-                              <div className="flex items-center justify-center gap-2 rounded-xl border border-[rgba(243,236,221,0.07)] bg-[rgba(243,236,221,0.04)] py-4 text-[12px] font-bold text-[color:var(--lobby-accent,#5fd6a7)]">
+                              <div className="cam-kontrol flex items-center justify-center gap-2 py-4 text-[12px] font-bold text-[color:var(--lobby-accent,#5fd6a7)]">
                                  <Loader2 className="animate-spin" size={18} /> {lobbyExtraText(pageContent, 'checkingText', 'Hesap kontrol ediliyor...')}
                               </div>
                            ) : playerData?.error ? (

@@ -194,7 +194,7 @@ export function SkorTahminSayfasi() {
       )}
 
       {message && (
-        <p className="rounded-xl border border-[rgba(243,236,221,0.08)] bg-[rgba(243,236,221,0.04)] px-3 py-2 text-[11px] font-bold text-[color:var(--lobby-text,#f3ecdd)]">
+        <p className="cam-kontrol px-3 py-2.5 text-[11px] font-bold text-[color:var(--lobby-text,#f3ecdd)]">
           {message}
         </p>
       )}

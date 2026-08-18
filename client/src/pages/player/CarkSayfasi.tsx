@@ -283,7 +283,7 @@ export function CarkSayfasi() {
                       <button
                         type="button"
                         onClick={() => { setResult(null); }}
-                        className="mt-2.5 flex h-10 w-full items-center justify-center rounded-xl border border-[rgba(243,236,221,0.10)] bg-[rgba(243,236,221,0.05)] text-[11px] font-black uppercase tracking-[0.16em] text-[color:var(--lobby-text,#f3ecdd)] transition hover:bg-[rgba(243,236,221,0.10)] hover:text-[color:var(--lobby-text,#f3ecdd)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+                        className="cam-kontrol cam-tiklanabilir dokunma mt-2.5 flex w-full items-center justify-center text-[11px] font-black uppercase tracking-[0.16em] text-[color:var(--lobby-text,#f3ecdd)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
                       >
                         {pageContent.successButton}
                       </button>
