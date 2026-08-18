@@ -468,14 +468,30 @@ function ScoreInput({
   );
 }
 
+/**
+ * Panelden gelen `datetime-local` dizgesi saat dilimi TASIMIYOR
+ * (`2026-08-20T18:00`). Duz `new Date(...)` onu CIHAZIN dilimine gore
+ * okur: Turkiye'deki oyuncu 18:00, Almanya'daki 17:00, sunucu (UTC) 21:00
+ * anlar. Ayni mac ucunde uc farkli "kapanis" demekti.
+ *
+ * Istanbul ofseti acikca ekleniyor; sunucudaki `istanbulYerelAn` ile AYNI
+ * kural. Dizgede dilim zaten varsa dokunulmaz.
+ */
+function istanbulAn(value?: string | null): number {
+  const metin = String(value ?? '').trim();
+  if (!metin) return Number.NaN;
+  if (/(?:Z|[+-]\d{2}:?\d{2})$/i.test(metin)) return new Date(metin).getTime();
+  const m = metin.match(/^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2})(:\d{2})?$/);
+  if (!m) return new Date(metin).getTime();
+  return new Date(`${m[1]}T${m[2]}${m[3] ?? ':00'}+03:00`).getTime();
+}
+
 function isMatchOpen(match: Match) {
   // Sunucudaki tahminKapanisZamani ile ayni kural: acik son tarih varsa o,
   // yoksa baslama saati. Ikisi ayrisirsa arayuz "acik" gosterip sunucu
   // reddederdi.
-  const acikKapanis = match.predictionClosesAt ? new Date(match.predictionClosesAt).getTime() : NaN;
-  const kapanis = Number.isFinite(acikKapanis)
-    ? acikKapanis
-    : (match.startsAt ? new Date(match.startsAt).getTime() : NaN);
+  const acikKapanis = istanbulAn(match.predictionClosesAt);
+  const kapanis = Number.isFinite(acikKapanis) ? acikKapanis : istanbulAn(match.startsAt);
   return match.status === 'open' && (!Number.isFinite(kapanis) || kapanis > Date.now());
 }
 

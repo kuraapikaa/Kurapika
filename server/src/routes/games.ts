@@ -11,6 +11,7 @@ import { kilitle, odulAnahtari } from '../lib/odulKilidi.js';
 import { atamaDurumu, telegramBonusuAlinmis } from '../services/telegramBonusHakki.js';
 import { atamaNotu } from '../services/bonusAtamaNotu.js';
 import { bonusDenetimAciklamasi } from '../services/bonusDenetimAciklamasi.js';
+import { istanbulYerelAn } from '../lib/istanbulGunu.js';
 import { audit } from '../lib/auditLog.js';
 import { yatirimHakki } from '../services/yatirimHakki.js';
 import { isLynonConfigured, lynonAssignCampaignToPlayer, lynonBuildBonusEligibilitySnapshot, lynonCreditPlayerMainAccount, lynonFindPlayerByLogin, lynonOyuncuKpiSorgula, lynonPlayerActivity } from '../services/lynonBackofficeService.js';
@@ -1432,9 +1433,13 @@ function scorePredictionLeaderboard(entries: any[], matches: any[], from: Date, 
  * geriye dönük uyumluluk için maçın başlama saati kullanılır.
  */
 export function tahminKapanisZamani(match: any): number | null {
-  const acik = match?.predictionClosesAt ? new Date(match.predictionClosesAt).getTime() : NaN;
+  // `istanbulYerelAn`: panelden gelen `datetime-local` dizgesi saat dilimi
+  // TASIMIYOR. Duz `new Date(...)` bunu SUNUCUNUN dilimine (Railway'de UTC)
+  // gore okuyor ve yoneticinin girdigi 18:00 (Istanbul) 21:00'e kayiyordu —
+  // "kapanis ayarladim ama acik kaliyor" sikayetinin sebebi buydu.
+  const acik = istanbulYerelAn(match?.predictionClosesAt);
   if (Number.isFinite(acik)) return acik;
-  const baslangic = match?.startsAt ? new Date(match.startsAt).getTime() : NaN;
+  const baslangic = istanbulYerelAn(match?.startsAt);
   return Number.isFinite(baslangic) ? baslangic : null;
 }
 

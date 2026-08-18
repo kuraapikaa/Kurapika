@@ -123,3 +123,44 @@ export function gunAraligindaMi(
   if (bitis && gun > bitis) return false;
   return true;
 }
+
+/**
+ * PANELDEN GİRİLEN YEREL TARİHİ İSTANBUL SAATİ OLARAK OKUR.
+ *
+ * ── Bildirilen vaka ───────────────────────────────────────────────────
+ *
+ * "Tahmin başlangıç ve kapanış ayarladığım halde durum tahmine açık
+ * olmaya devam ediyor."
+ *
+ * ── Mekanizma ─────────────────────────────────────────────────────────
+ *
+ * `<input type="datetime-local">` saat dilimi TAŞIMAYAN bir dizge üretir:
+ * `2026-08-20T18:00`. JS bunu ÇALIŞTIĞI ORTAMIN yerel saati sayar:
+ *
+ *   UTC sunucuda  : 2026-08-20T18:00:00.000Z
+ *   TR tarayıcıda : 2026-08-20T15:00:00.000Z   ← üç saat fark
+ *
+ * Railway'de `TZ` tanımlı değil, yani sunucu UTC. Yönetici 18:00 (İstanbul)
+ * yazıyor, sunucu bunu 18:00 UTC = 21:00 İstanbul sanıyor ve üç saat daha
+ * tahmin kabul ediyor. Operatör "kapattım ama açık" diyor; haklı.
+ *
+ * Bu, deponun daha önce yaşadığı hatanın aynısı (bkz. dosya başı: pano
+ * tarihleri üç saat kayıyordu). Tahmin yoluna uygulanmamış.
+ *
+ * Dizgede saat dilimi ZATEN varsa (`Z` ya da `+03:00`) dokunulmaz —
+ * eski kayıtlar ve API'den gelen ISO damgaları bozulmasın.
+ */
+export function istanbulYerelAn(value: unknown): number {
+  const metin = String(value ?? '').trim();
+  if (!metin) return Number.NaN;
+
+  // Saat dilimi taşıyor mu? `Z`, `+03:00`, `-0500` …
+  const dilimVar = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(metin);
+  if (dilimVar) return new Date(metin).getTime();
+
+  // `YYYY-MM-DDTHH:mm[:ss]` — saniye yoksa tamamlanır.
+  const m = metin.match(/^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2})(:\d{2})?$/);
+  if (!m) return new Date(metin).getTime();
+
+  return new Date(`${m[1]}T${m[2]}${m[3] ?? ':00'}${ISTANBUL_OFSETI}`).getTime();
+}
