@@ -698,7 +698,7 @@ export function PlayerLobby() {
 
       <main className="relative z-10 mx-auto flex w-full max-w-[1400px] flex-col gap-3.5 px-3 py-3.5 sm:px-5 md:gap-4 md:px-7 md:py-5">
         {!activeUser && (
-          <section className="rounded-xl border border-[rgba(243,236,221,0.08)] bg-[rgba(243,236,221,0.04)] p-2.5 md:p-3">
+          <section className="cam p-3 md:p-4">
             <div className="flex flex-col gap-2 md:flex-row md:items-center">
               <div className="flex min-w-0 flex-1 items-center gap-2.5 rounded-xl border border-[rgba(243,236,221,0.06)] bg-black/25 px-3 py-2">
                 <span className="shrink-0 text-[color:var(--lobby-muted,#8f8674)]">
@@ -819,7 +819,7 @@ export function PlayerLobby() {
               </div>
             </motion.section>
 
-            <section className="rounded-xl border border-[rgba(243,236,221,0.075)] bg-[rgba(243,236,221,0.032)] p-2 md:p-2.5">
+            <section className="cam p-2.5 md:p-3">
               <div role="tablist" aria-label="Lobi bölümleri" className="grid grid-cols-3 gap-1 rounded-xl border border-[rgba(243,236,221,0.06)] bg-black/25 p-1">
                 {lobbyTabs.map((tab) => {
                   const Icon = tab.icon;
@@ -911,7 +911,7 @@ function GamesTab({ items, config }: { items: LobbyQuickAccessItem[]; config: Lo
             <Link
               key={item.id}
               to={item.to}
-              className="group flex items-center gap-2.5 rounded-xl border border-[rgba(243,236,221,0.07)] bg-[rgba(243,236,221,0.035)] p-2.5 transition hover:border-[rgba(243,236,221,0.16)] hover:bg-[rgba(243,236,221,0.065)] active:scale-[0.98]"
+              className="cam-kontrol cam-tiklanabilir dokunma group flex items-center gap-2.5 p-3 active:scale-[0.98]"
             >
               <span
                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition group-hover:scale-105"
@@ -1386,7 +1386,7 @@ function FeatureCard({ card }: { card: LobbySupportCardConfig }) {
   return (
     <Link
       to={card.to}
-      className="group flex items-start gap-2.5 rounded-xl border border-[rgba(243,236,221,0.075)] bg-[rgba(243,236,221,0.038)] p-3 transition hover:border-[rgba(243,236,221,0.16)] hover:bg-[rgba(243,236,221,0.065)] active:scale-[0.98]"
+      className="cam-kontrol cam-tiklanabilir dokunma group flex items-start gap-2.5 p-3 active:scale-[0.98]"
     >
       <span
         className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border"
@@ -1570,7 +1570,7 @@ export function VIPTab() {
       {showStats && (
       <div className="grid grid-cols-4 gap-2">
         {stats.map((stat: any) => (
-          <div key={stat.label} className="rounded-[1.25rem] border border-[rgba(243,236,221,0.07)] bg-[rgba(243,236,221,0.035)] p-3 text-center">
+          <div key={stat.label} className="cam p-3 text-center">
             <p className="text-lg font-black tracking-[-0.04em] text-[color:var(--lobby-text,#f3ecdd)] md:text-2xl">{stat.value}</p>
             <p className="mt-0.5 text-[9px] font-black uppercase tracking-[0.12em] text-[color:var(--lobby-muted,#8f8674)]">{stat.label}</p>
           </div>
@@ -1624,7 +1624,7 @@ export function VIPTab() {
       <div className="space-y-2">
         <p className="px-1 text-[10px] font-black uppercase tracking-[0.18em] text-[color:var(--lobby-muted,#8f8674)]">Sık sorulan sorular</p>
         {faq.map((item: any, i: number) => (
-          <div key={i} className="overflow-hidden rounded-[1.25rem] border border-[rgba(243,236,221,0.07)] bg-[rgba(243,236,221,0.035)]">
+          <div key={i} className="cam overflow-hidden">
             <button
               type="button"
               onClick={() => setOpenFaq(openFaq === i ? null : i)}
