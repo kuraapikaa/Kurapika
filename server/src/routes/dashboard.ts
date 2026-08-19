@@ -7,7 +7,6 @@ import type { Config } from '../config.js';
 import { validateDateRange } from '../lib/validation.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const PROMOTIONS_JSON_PATH = path.join(__dirname, '..', '..', 'promotions-data.json');
 import { getDashboardToken, getBackofficeToken } from '../lib/authStore.js';
 import { proxyDashboard, proxyPostToUrl, proxyDashboardPost, proxyBonusPost, proxyFreeBetPost, proxyClientsPost, proxyRegistrationStats, proxyClientsByIP, proxyWithdrawalPost, proxyDepositsPost, proxyBetReportPost, proxyBetSelectionsPost, proxyClientKpi, proxyClientNotes, proxyClientBonuses, proxyClientTransactions, proxyDetailedReport, fetchBackofficeClientTransactions, proxyClientTurnoversPaging, proxyChargeBonus, proxyManualAdjustment, proxySmsSend, proxyTournamentReportPost, DASHBOARD_HEADERS, BACKOFFICE_HEADERS } from '../lib/proxy.js';
 import { getAllPromosNormalized } from '../services/promosService.js';
@@ -19,6 +18,8 @@ import { readTournamentSettings, writeTournamentSettings } from '../services/tur
 import { evaluateForAccount, evaluateWithdrawalRules, evaluateRiskAnalysis, evaluateWagerSummary, evaluateBonusRules, refreshRules, getRulesForTenant } from '../services/withdrawalEngine.js';
 import { buildAccountSnapshotFromClientId } from '../services/accountSnapshotService.js';
 import { assignmentValuesForPromoSpec, getRules, saveRules, type RulesConfig } from '../services/rulesService.js';
+import { promoBul, promoVerisiOku, promoVerisiYaz } from '../services/promosDeposu.js';
+import { fetchRawPromotions, getLastPromosError } from '../services/promosService.js';
 import {
   araligaGorePartnerBonusId,
   araliklariOzetle,
@@ -486,13 +487,14 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
 
   /** Structured promo list (from fetch-promos-details script). Used by Bonus Kuralları and otomatik çekim. */
   fastify.get('/promos/list', async (request, reply) => {
-    if (!existsSync(PROMOTIONS_JSON_PATH)) {
-      return reply.status(404).send({ HasError: true, AlertMessage: 'promotions-data.json not found. Run: npm run fetch-promos-details' });
-    }
     try {
-      const raw = await readFile(PROMOTIONS_JSON_PATH, 'utf-8');
-      const data = JSON.parse(raw) as { fetchedAt?: string; source?: string; count?: number; promotions?: unknown[] };
-      return reply.send({ HasError: false, Data: { promotions: data.promotions ?? [], fetchedAt: data.fetchedAt, source: data.source } });
+      // Artik dosyadan DEGIL belge deposundan; dosya yalnizca ilk okumada
+      // tohum. Gerekce: services/promosDeposu.ts
+      const data = await promoVerisiOku();
+      return reply.send({
+        HasError: false,
+        Data: { promotions: data.promotions, fetchedAt: data.fetchedAt, source: data.source },
+      });
     } catch (err) {
       request.log.error({ err }, 'promos/list read error');
       return reply.status(500).send({ HasError: true, AlertMessage: (err as Error).message });
@@ -1928,10 +1930,9 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
         // 4. Spesifik Bonus Kontrolü (Seçilen bonus varsa)
         let specificBonusCheck = null;
         if (bonusId || bonusName) {
-          const { readFileSync, existsSync } = await import('fs');
-          const { join } = await import('path');
-          const promosDataPath = join(process.cwd(), 'promotions-data.json');
-
+          // Ikinci kullanim da ayni kaynaga baglandi. Onceden BASKA bir yol
+          // okunuyordu (`process.cwd()`), uretimde bu farkli bir dizin —
+          // biri dosyayi bulurken digeri bulamiyordu.
           let promo: any = null;
 
           // A) Önce Kural Merkezindeki (specs) tanımlara bak
@@ -1949,15 +1950,10 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
           const activeSpec = specById || specByTitle;
 
           // B) promotions-data.json'dan ek verileri getir (image, detailHtml vb.)
-          if (existsSync(promosDataPath)) {
+          {
             try {
-              const promosRaw = readFileSync(promosDataPath, 'utf-8');
-              const promosJson = JSON.parse(promosRaw);
-              promo = promosJson.promotions?.find((p: any) =>
-                (bonusId && String(p.id) === String(bonusId)) ||
-                (bonusName && p.title.toLowerCase().trim() === bonusName.toLowerCase().trim()) ||
-                (bonusName && bonusName.toLowerCase().includes(p.title.toLowerCase().trim()))
-              );
+              const promosJson = await promoVerisiOku();
+              promo = promoBul(promosJson.promotions, bonusId, bonusName);
             } catch (e) { console.error('Error reading promos data:', e); }
           }
 
@@ -2777,6 +2773,37 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
         HasError: true,
         AlertMessage: message,
       });
+    }
+  });
+
+  /**
+   * PROMOSYON ICERIGINI KAYNAKTAN TAZELE.
+   *
+   * Once bu is yalnizca elle `npm run fetch-promos-details` calistirmakla
+   * yapiliyordu ve cikti konteyner diskine yaziliyordu — yani her
+   * deploy'da kayboluyordu. Artik sonuc belge deposuna yaziliyor ve
+   * yenileme DEPLOY GEREKTIRMIYOR.
+   */
+  fastify.post('/admin/promos/refresh', async (request: any, reply) => {
+    try {
+      const ham = await fetchRawPromotions();
+      if (!Array.isArray(ham) || ham.length === 0) {
+        return reply.status(502).send({
+          ok: false,
+          message: `Kaynaktan promosyon alinamadi. ${getLastPromosError() ?? ''}`.trim(),
+        });
+      }
+
+      const kayit = await promoVerisiYaz({
+        promotions: ham,
+        source: 'promos-api',
+        fetchedAt: new Date().toISOString(),
+      });
+
+      return reply.send({ ok: true, count: kayit.count, fetchedAt: kayit.fetchedAt });
+    } catch (err) {
+      request.log.error({ err }, 'promos/refresh hatasi');
+      return reply.status(502).send({ ok: false, message: (err as Error).message });
     }
   });
 
