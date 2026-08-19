@@ -79,6 +79,9 @@ import { watchConfigFile, getWatcherStatus } from './lib/configWatcher.js';
 import { closeDatabase, getDatabaseStatus, initializeDatabase } from './lib/database.js';
 import { closeRedis, getRedisStatus, initializeRedis } from './lib/redisClient.js';
 import { hydrateTenantRuntime } from './lib/tenantRuntimeConfig.js';
+import { kiraciTanilamasi } from './lib/kiraciTanilama.js';
+import { loadTenants } from './repositories/tenantRepository.js';
+import { varsayilanTenantKey } from './lib/tenantContext.js';
 import { sifrelemeHazirMi } from './lib/secretBox.js';
 
 // ─── Ortam Değişkeni Doğrulama ─────────────────────────────────────────────
@@ -92,6 +95,17 @@ await initializeRedis();
 // (varsayılan) siteye bağlanmamalarının tek güvencesi.
 const yuklenenTenant = await hydrateTenantRuntime();
 console.log(`[tenant] ${yuklenenTenant} site yapılandırması yüklendi.${sifrelemeHazirMi() ? '' : ' TENANT_SECRET_KEY tanımlı değil; panelden kimlik bilgisi kaydedilemez.'}`);
+
+/**
+ * Site kaydı yoksa çok kiracılılık FİİLEN KAPALIDIR: her istek yedek
+ * anahtara düşer ve bütün siteler aynı bonus kurallarını, oyun ayarlarını
+ * ve kimlikleri paylaşır. Bu, veritabanı sıfırlandığında sessizce oluyordu
+ * — açılışta yüksek sesle söylenmeli.
+ */
+{
+  const tani = kiraciTanilamasi(await loadTenants().catch(() => []), varsayilanTenantKey());
+  if (tani.uyari) console.warn(`[tenant] UYARI: ${tani.uyari}`);
+}
 
 const { port } = config;
 
@@ -175,6 +189,15 @@ app.get('/api/health', async (_, reply) => {
     circuitBreakers: (await import('./lib/httpClient.js')).getCircuitBreakerStatus(),
     configWatchers: getWatcherStatus(),
     persistence: { database: getDatabaseStatus(), redis: getRedisStatus() },
+    /**
+     * KIRACI DURUMU — sessiz cokusu gorunur kilar.
+     *
+     * `tenants` bos oldugunda her istek yedek anahtara duser ve butun
+     * siteler ayni bonus kurallarini, oyun ayarlarini ve kimlikleri
+     * paylasir. Bu durum hicbir yerde uyari uretmiyordu; "kurallar tenant
+     * basina degil" sikayeti buradan geldi.
+     */
+    tenants: kiraciTanilamasi(await loadTenants().catch(() => []), varsayilanTenantKey()),
   });
 });
 
