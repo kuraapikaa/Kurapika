@@ -576,6 +576,19 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
           const catalogRows = Array.isArray(catalog.Result) ? catalog.Result : [];
           const specs = rules?.PROMO_SPECS ?? {};
           const titleSpecs = rules?.PROMO_TITLE_SPECS ?? {};
+          /** `findRule` ile AYNI sira, ama kuralin ANAHTARINI dondurur. */
+          const findRuleKey = (campaignId: unknown, title: string): string | null => {
+            if (specs[String(campaignId)]) return String(campaignId);
+            const linked = Object.entries(specs).find(([, spec]: any) => specBonusIdSahipleniyorMu(spec, campaignId));
+            if (linked) return linked[0];
+            const normalized = normalizeTitleForKey(title);
+            if (titleSpecs[normalized]) return normalized;
+            return Object.keys(titleSpecs).find((key) => {
+              const ruleTitle = normalizeTitleForKey(key);
+              return ruleTitle && (normalized.includes(ruleTitle) || ruleTitle.includes(normalized));
+            }) ?? null;
+          };
+
           const findRule = (campaignId: unknown, title: string) => {
             const direct = specs[String(campaignId)];
             if (direct) return direct;
@@ -607,7 +620,22 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
               const title = String(campaign.Name ?? campaign.systemName ?? `Bonus ${campaignId}`);
               const spec = findRule(campaignId, title);
               const definition = findNarcosBonusByCampaignTitle(title);
-              const override = overrides?.byExternalId?.[String(campaignId)];
+              /**
+               * OVERRIDE ANAHTARI: KURAL ANAHTARI ya da BONUS ID.
+               *
+               * Panel "Bonus Görünümü & İçerik"i KURAL ANAHTARIYLA
+               * kaydediyor (`externalId={Number(key)}`), lobi ise kampanya
+               * ID'siyle ariyordu. Kural anahtari ile bonus ID ayni
+               * degilse (ornek: kural 1874 -> kampanya 2046) yonetici
+               * gorseli kaydediyor ama lobide HIC gorunmuyordu.
+               *
+               * Once kampanya ID'siyle bakilir; bulunamazsa bu kampanyayi
+               * SAHIPLENEN kuralin anahtariyla. Boylece iki bicimde
+               * kaydedilmis mevcut override'lar da calismaya devam eder.
+               */
+              const kuralAnahtari = findRuleKey(campaignId, title);
+              const override = overrides?.byExternalId?.[String(campaignId)]
+                ?? (kuralAnahtari ? overrides?.byExternalId?.[kuralAnahtari] : undefined);
               const isCampaignActive = campaign.IsDisabled !== true;
               const hasRule = Boolean(spec);
               const isConfigured = hasRule && (spec as any).enabled !== false && isCampaignActive;

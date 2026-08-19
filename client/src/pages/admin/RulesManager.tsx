@@ -2162,6 +2162,8 @@ function PromoContentEditor({ externalId, promoTitle }: { externalId: number; pr
     const [detailHtml, setDetailHtml] = useState<string>('');
     /** Lobideki sira. Bos birakilirsa katalog sirasi korunur. */
     const [sortOrder, setSortOrder] = useState<string>('');
+    /** Yuklenen gorselin gercek olcusu; oran uyarisi icin. */
+    const [olcu, setOlcu] = useState<{ w: number; h: number } | null>(null);
 
     useEffect(() => {
         setTitle(String(current?.title ?? ''));
@@ -2264,6 +2266,20 @@ function PromoContentEditor({ externalId, promoTitle }: { externalId: number; pr
                     </div>
                     <div className="space-y-2">
                         <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block pl-1">Preview Görsel URL</label>
+                        <p className="text-[10px] text-slate-500 font-medium pl-1 mb-1">
+                            Lobide <strong className="text-slate-400">692 × 336</strong> oranında gösterilir. Farklı oranda bir görsel kırpılır.
+                        </p>
+                        {/*
+                          Yuklenen gorselin GERCEK olcusu okunup orana gore
+                          uyariliyor. Yonetici "kirpildi" durumunu canlida
+                          degil, burada gormeli.
+                        */}
+                        {olcu && Math.abs(olcu.w / olcu.h - 692 / 336) > 0.06 && (
+                            <p className="mb-1 rounded-xl bg-amber-500/10 px-3 py-2 text-[10px] font-semibold text-amber-300">
+                                Görsel {olcu.w}×{olcu.h} ({(olcu.w / olcu.h).toFixed(2)}:1) — lobi oranı 2.06:1.
+                                Kenarlardan kırpılacak. 692×336 önerilir.
+                            </p>
+                        )}
                         <input
                             value={image}
                             onChange={(e) => setImage(e.target.value)}
@@ -2300,12 +2316,29 @@ function PromoContentEditor({ externalId, promoTitle }: { externalId: number; pr
                     <div className="relative rounded-3xl border border-white/[0.05] bg-white/[0.02] p-8 h-full min-h-[400px] overflow-hidden group/preview backdrop-blur-xl">
                         <div className="absolute inset-0 bg-gradient-to-b from-[color:var(--panel-accent,#0a84ff)]/5 to-transparent opacity-0 group-hover/preview:opacity-100 transition-opacity" />
 
+                        {/*
+                          ORAN LOBIYLE AYNI: 692/336.
+                          Onizleme `aspect-video` (16:9) idi; lobi ise 2.06
+                          oraninda cizdiriyor. Yonetici burada gordugu
+                          kadraji ALMIYORDU — gorselin alti ve ustu lobide
+                          kirpiliyor, fark ancak canlida ortaya cikiyordu.
+                        */}
                         {image?.trim() ? (
-                            <img src={image.trim()} alt="" className="w-full aspect-video object-cover rounded-3xl border border-white/[0.05] shadow-2xl mb-6 backdrop-blur-xl" />
+                            <img
+                                src={image.trim()}
+                                alt=""
+                                onLoad={(e) => {
+                                    const el = e.currentTarget;
+                                    setOlcu({ w: el.naturalWidth, h: el.naturalHeight });
+                                }}
+                                onError={() => setOlcu(null)}
+                                className="w-full aspect-[692/336] object-cover rounded-3xl border border-white/[0.05] shadow-2xl mb-6 backdrop-blur-xl"
+                            />
                         ) : (
-                            <div className="w-full aspect-video rounded-3xl bg-black/40 border border-dashed border-white/[0.05] flex flex-col items-center justify-center text-slate-500 gap-3 mb-6 backdrop-blur-xl">
+                            <div className="w-full aspect-[692/336] rounded-3xl bg-black/40 border border-dashed border-white/[0.05] flex flex-col items-center justify-center text-slate-500 gap-3 mb-6 backdrop-blur-xl">
                                 <Sparkles size={32} className="opacity-20" />
                                 <span className="text-[10px] font-semibold uppercase tracking-[0.2em]">Görsel Bekleniyor</span>
+                                <span className="text-[10px] font-medium text-slate-600">Önerilen: 692 × 336</span>
                             </div>
                         )}
 
