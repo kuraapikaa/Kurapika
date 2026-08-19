@@ -1433,6 +1433,37 @@ function scorePredictionLeaderboard(entries: any[], matches: any[], from: Date, 
  * predictionClosesAt yönetici tarafından girilebilen açık son tarih. Boşsa
  * geriye dönük uyumluluk için maçın başlama saati kullanılır.
  */
+/**
+ * Tahminlerin ACILDIGI an (ms) — yoksa null (hemen acik).
+ *
+ * ── Bildirilen vaka ───────────────────────────────────────────────────
+ *
+ * "Tahmin baslangic tarihi ileri tarihli olsa da mac tahmine acik
+ * gozukuyor."
+ *
+ * Sebep: boyle bir alan HIC YOKTU. Panelde "Baslangic" yazan alan macin
+ * kickoff'u (`startsAt`) ve kapanis icin YEDEK olarak kullaniliyordu;
+ * ileri bir tarih girmek kapanisi ileri atiyor, yani maci daha da ACIK
+ * tutuyordu. Operatorun bekledigi "su ana kadar kapali kalsin" davranisi
+ * hicbir yerde uygulanmiyordu.
+ *
+ * `istanbulYerelAn`: panelden gelen `datetime-local` dizgesi saat dilimi
+ * tasimiyor; sunucu UTC oldugu icin duz `new Date(...)` uc saat kaydirir.
+ */
+export function tahminAcilisZamani(match: any): number | null {
+  const acilis = istanbulYerelAn(match?.predictionOpensAt);
+  return Number.isFinite(acilis) ? acilis : null;
+}
+
+/** Mac su an tahmine acik mi? Acilis/kapanis ve durum birlikte. */
+export function tahmineAcikMi(match: any, simdi: number = Date.now()): boolean {
+  if (match?.status !== 'open') return false;
+  const acilis = tahminAcilisZamani(match);
+  if (acilis != null && acilis > simdi) return false;
+  const kapanis = tahminKapanisZamani(match);
+  return kapanis == null || kapanis > simdi;
+}
+
 export function tahminKapanisZamani(match: any): number | null {
   // `istanbulYerelAn`: panelden gelen `datetime-local` dizgesi saat dilimi
   // TASIMIYOR. Duz `new Date(...)` bunu SUNUCUNUN dilimine (Railway'de UTC)
@@ -2687,6 +2718,13 @@ const selectedSlice = selected.slice;
     // "açık" işaretlese bile tahmine kapanıyordu. predictionClosesAt
     // tanımlıysa son tarih odur; tanımlı değilse eski davranış (başlama
     // saati) sürüyor, yani mevcut maçlar etkilenmiyor.
+    // ACILIS: henuz baslamadiysa reddet. Kapanistan AYRI mesaj —
+    // "kapandi" demek operatoru yanlis yere baktirirdi.
+    const acilis = tahminAcilisZamani(match);
+    if (acilis != null && acilis > Date.now()) {
+      return reply.status(400).send({ ok: false, message: 'Bu maç için tahminler henüz açılmadı.' });
+    }
+
     const kapanis = tahminKapanisZamani(match);
     const isClosed = match.status === 'closed'
       || match.status === 'finished'

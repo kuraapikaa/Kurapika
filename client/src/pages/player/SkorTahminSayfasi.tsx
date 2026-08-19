@@ -12,6 +12,8 @@ type Match = {
   id: string;
   homeTeam: string;
   awayTeam: string;
+  /** Tahminlerin acildigi an; bos ise hemen acik. */
+  predictionOpensAt?: string | null;
   homeLogoUrl?: string | null;
   awayLogoUrl?: string | null;
   league: string;
@@ -245,7 +247,11 @@ export function SkorTahminSayfasi() {
                             ? lobbyExtraText(pageContent, 'openStatus', 'Tahmine açık')
                             : match.status === 'finished'
                               ? lobbyExtraText(pageContent, 'finishedStatus', 'Sonuçlandı')
-                              : lobbyExtraText(pageContent, 'closedStatus', 'Kapalı')}
+                              : isMatchPending(match)
+                                // "Kapalı" demek yaniltici olurdu: mac kapanmadi,
+                                // HENUZ ACILMADI. Operator de oyuncu da farki bilmeli.
+                                ? lobbyExtraText(pageContent, 'pendingStatus', 'Yakında')
+                                : lobbyExtraText(pageContent, 'closedStatus', 'Kapalı')}
                         </span>
                         {finished && (
                           <span className="rounded-lg bg-[rgba(243,236,221,0.06)] px-1.5 py-1 tabular-nums text-[color:var(--lobby-text,#f3ecdd)]">
@@ -576,10 +582,20 @@ function istanbulAn(value?: string | null): number {
   return new Date(`${m[1]}T${m[2]}${m[3] ?? ':00'}+03:00`).getTime();
 }
 
+/** Tahminler henuz acilmadi mi? */
+function isMatchPending(match: Match) {
+  const acilis = istanbulAn(match.predictionOpensAt);
+  return Number.isFinite(acilis) && acilis > Date.now();
+}
+
 function isMatchOpen(match: Match) {
   // Sunucudaki tahminKapanisZamani ile ayni kural: acik son tarih varsa o,
   // yoksa baslama saati. Ikisi ayrisirsa arayuz "acik" gosterip sunucu
   // reddederdi.
+  //
+  // ACILIS de burada: ileri tarihli baslangic girilmis bir mac, kapanisi
+  // gelmemis olsa bile ACIK DEGILDIR.
+  if (isMatchPending(match)) return false;
   const acikKapanis = istanbulAn(match.predictionClosesAt);
   const kapanis = Number.isFinite(acikKapanis) ? acikKapanis : istanbulAn(match.startsAt);
   return match.status === 'open' && (!Number.isFinite(kapanis) || kapanis > Date.now());

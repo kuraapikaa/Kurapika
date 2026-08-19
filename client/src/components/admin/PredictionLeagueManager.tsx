@@ -29,6 +29,8 @@ type PredictionMatch = {
   league: string;
   startsAt: string;
   /** Tahminlerin kapandigi an; bos birakilirsa startsAt gecerli. */
+  /** Tahminlerin acildigi an; bos ise hemen acik. */
+  predictionOpensAt?: string;
   predictionClosesAt?: string;
   status: 'open' | 'closed' | 'finished';
   homeScore: number | null;
@@ -68,6 +70,7 @@ const yeniMac = (): PredictionMatch => ({
   awayLogoUrl: '',
   league: 'Süper Lig',
   startsAt: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString().slice(0, 16),
+  predictionOpensAt: '',
   predictionClosesAt: '',
   status: 'open',
   homeScore: null,
@@ -206,7 +209,7 @@ export function PredictionLeagueManager({
             </div>
           </Bolum>
 
-          <Bolum baslik="Maçlar" aciklama="Tahmin kapanışı boş bırakılırsa maç başlangıcı kullanılır.">
+          <Bolum baslik="Maçlar" aciklama="Tahmin başlangıcı boşsa hemen açık; kapanış boşsa maç başlangıcı kullanılır. Saatler Türkiye saatidir.">
             {maclar.length === 0 ? (
               <BosDurum
                 ikon={<Trophy size={26} />}
@@ -275,6 +278,14 @@ export function PredictionLeagueManager({
                           type="datetime-local"
                           value={(mac.startsAt || '').slice(0, 16)}
                           onChange={(e) => macGuncelle(mac.id, { startsAt: e.target.value })}
+                        />
+                      </Alan>
+                      <Alan etiket="Tahmin başlangıcı" ipucu="Boşsa hemen açık. İleri tarih girilirse o ana kadar 'Yakında' görünür.">
+                        <Girdi
+                          modul={MODUL}
+                          type="datetime-local"
+                          value={(mac.predictionOpensAt || '').slice(0, 16)}
+                          onChange={(e) => macGuncelle(mac.id, { predictionOpensAt: e.target.value })}
                         />
                       </Alan>
                       <Alan etiket="Tahmin kapanışı" ipucu="Boşsa başlangıç anı kullanılır.">
