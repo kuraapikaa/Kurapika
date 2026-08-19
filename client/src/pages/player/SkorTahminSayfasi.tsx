@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { CalendarClock, Loader2, Medal, Send, Trophy, User } from 'lucide-react';
+import { CalendarClock, ChevronDown, ChevronUp, Loader2, Medal, Send, Trophy, User } from 'lucide-react';
 import { bonusPanelApi, gamesApi } from '@/api/client';
 import { cn, resolveTeamLogoUrl } from '@/lib/utils';
 import { lobbyExtraText } from '@/lib/lobbyContent';
@@ -225,9 +225,13 @@ export function SkorTahminSayfasi() {
                     initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: Math.min(index * 0.025, 0.2) }}
-                    className="flex flex-col gap-2.5 px-3.5 py-2.5 transition hover:bg-[rgba(243,236,221,0.02)] md:flex-row md:items-center md:justify-between md:gap-3 md:px-4"
+                    // MOBILE-FIRST: kart artik her ekranda DIKEY akiyor.
+                    // Onceden md'de yatay satira gecip takim adlarini ve
+                    // skoru ayni hizaya sikistiriyordu; 48px logolarla o
+                    // duzen dar ekranda tasardi.
+                    className="flex flex-col gap-3 px-3.5 py-4 transition hover:bg-[rgba(243,236,221,0.02)] md:px-4"
                   >
-                    <div className="min-w-0 flex-1">
+                    <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.12em]">
                         <span className="rounded-lg bg-[rgba(243,236,221,0.06)] px-1.5 py-1 text-[color:var(--lobby-muted,#8f8674)]">{match.league}</span>
                         <span
@@ -250,47 +254,57 @@ export function SkorTahminSayfasi() {
                         )}
                       </div>
 
-                      <div className="mt-1.5 flex items-center gap-2">
-                        <TeamBadge logoUrl={resolveTeamLogoUrl(match.homeLogoUrl)} alt={match.homeTeam} />
-                        <h3 className="truncate text-[12px] font-black leading-tight text-[color:var(--lobby-text,#f3ecdd)] md:text-[13px]">
-                          {match.homeTeam} - {match.awayTeam}
-                        </h3>
-                        <TeamBadge logoUrl={resolveTeamLogoUrl(match.awayLogoUrl)} alt={match.awayTeam} />
-                      </div>
-
                       <p className="mt-1 flex items-center gap-1.5 text-[11px] font-semibold text-[color:var(--lobby-muted,#8f8674)]">
                         <CalendarClock size={12} /> {formatMatchDate(match.startsAt, dateFallback)}
                       </p>
                     </div>
 
-                    <div className="flex shrink-0 items-center gap-1.5">
-                      <ScoreInput
-                        value={current.home}
-                        palette={palette}
-                        disabled={!activeUser || !open}
-                        onChange={(value) => setScores({ ...scores, [match.id]: { ...current, home: value } })}
-                      />
-                      <span className="text-[11px] font-black text-[color:var(--lobby-muted,#8f8674)]">:</span>
-                      <ScoreInput
-                        value={current.away}
-                        palette={palette}
-                        disabled={!activeUser || !open}
-                        onChange={(value) => setScores({ ...scores, [match.id]: { ...current, away: value } })}
-                      />
-                      <button
-                        type="button"
-                        disabled={!activeUser || !open || savingMatchId === match.id}
-                        onClick={() => submitPrediction(match)}
-                        aria-label={lobbyExtraText(pageContent, 'submitAria', 'Tahmini gönder')}
-                        className="ml-1 flex h-10 w-10 items-center justify-center rounded-xl text-[color:var(--lobby-text,#f3ecdd)] transition active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40"
-                        style={{
-                          background: `linear-gradient(90deg, ${palette.primaryColor}, ${palette.secondaryColor})`,
-                          boxShadow: `0 8px 22px ${hexToRgba(palette.primaryColor, 0.26)}`,
-                        }}
-                      >
-                        {savingMatchId === match.id ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
-                      </button>
+                    {/*
+                      Referans duzen: ev armasi — skor — deplasman armasi.
+                      Armalar `flex-1` ile esit pay aliyor, secici `shrink-0`;
+                      uzun takim adi skoru yerinden oynatmiyor.
+                    */}
+                    <div className="flex items-start justify-center gap-2 sm:gap-4">
+                      <TeamBadge logoUrl={resolveTeamLogoUrl(match.homeLogoUrl)} alt={match.homeTeam} />
+
+                      <div className="flex shrink-0 items-center gap-1.5 pt-1 sm:gap-2">
+                        <ScoreInput
+                          label={`${match.homeTeam} skoru`}
+                          value={current.home}
+                          palette={palette}
+                          disabled={!activeUser || !open}
+                          onChange={(value) => setScores({ ...scores, [match.id]: { ...current, home: value } })}
+                        />
+                        <span className="text-[16px] font-black text-[color:var(--lobby-muted,#8f8674)]">:</span>
+                        <ScoreInput
+                          label={`${match.awayTeam} skoru`}
+                          value={current.away}
+                          palette={palette}
+                          disabled={!activeUser || !open}
+                          onChange={(value) => setScores({ ...scores, [match.id]: { ...current, away: value } })}
+                        />
+                      </div>
+
+                      <TeamBadge logoUrl={resolveTeamLogoUrl(match.awayLogoUrl)} alt={match.awayTeam} />
                     </div>
+
+                    {/*
+                      Gonder tam genislikte: 40x40 ikon dugmesi dokunma
+                      hedefinin altindaydi ve skorun yaninda kaybolyordu.
+                    */}
+                    <button
+                      type="button"
+                      disabled={!activeUser || !open || savingMatchId === match.id}
+                      onClick={() => submitPrediction(match)}
+                      className="dokunma flex w-full items-center justify-center gap-2 rounded-full px-4 text-[12px] font-black uppercase tracking-[0.12em] text-[color:var(--lobby-text,#f3ecdd)] transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
+                      style={{
+                        background: `linear-gradient(90deg, ${palette.primaryColor}, ${palette.secondaryColor})`,
+                        boxShadow: `0 8px 22px ${hexToRgba(palette.primaryColor, 0.26)}`,
+                      }}
+                    >
+                      {savingMatchId === match.id ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
+                      {lobbyExtraText(pageContent, 'submitAria', 'Tahmini gönder')}
+                    </button>
                   </motion.li>
                 );
               })}
@@ -427,44 +441,120 @@ export function SkorTahminSayfasi() {
   );
 }
 
+/**
+ * TAKIM ROZETI — logo + ad, dikey.
+ *
+ * Logo 24px'ti; referans tasarimda arma skorla ayni gorsel agirlikta.
+ * 48px (mobil) / 56px (sm+) yapildi ve takim adi ALTINA alindi: eskiden
+ * "Ev - Deplasman" tek satirda yazildigi icin uzun adlar kirpiliyordu
+ * ("Istanbul Basaksehir" -> "Istanbul Bas...").
+ *
+ * Logo yoksa bilesen KAYBOLMUYOR; ad yine gerekiyor ve iki takim
+ * hizasi bozulmamali. Yer tutucu olarak takimin bas harfi.
+ */
 function TeamBadge({ logoUrl, alt }: { logoUrl: string | null; alt: string }) {
-  if (!logoUrl) return null;
+  const basHarf = String(alt ?? '').trim().charAt(0).toLocaleUpperCase('tr-TR') || '?';
 
   return (
-    <img
-      src={logoUrl}
-      alt={alt}
-      className="h-6 w-6 shrink-0 rounded-full border border-[rgba(243,236,221,0.10)] bg-black/30 object-contain"
-      onError={(event) => {
-        const target = event.currentTarget as HTMLImageElement;
-        target.style.display = 'none';
-      }}
-    />
+    <div className="flex min-w-0 flex-1 flex-col items-center gap-1.5">
+      {logoUrl ? (
+        <img
+          src={logoUrl}
+          alt=""
+          width={56}
+          height={56}
+          loading="lazy"
+          className="h-12 w-12 shrink-0 rounded-full border border-[rgba(243,236,221,0.10)] bg-black/30 object-contain p-1 sm:h-14 sm:w-14"
+          onError={(event) => {
+            // Kirik gorselde ikon yerine bas harfe dus; hiza korunur.
+            const target = event.currentTarget as HTMLImageElement;
+            target.style.display = 'none';
+            const kardes = target.nextElementSibling as HTMLElement | null;
+            if (kardes) kardes.style.display = 'flex';
+          }}
+        />
+      ) : null}
+      <span
+        style={{ display: logoUrl ? 'none' : 'flex' }}
+        aria-hidden="true"
+        className="h-12 w-12 shrink-0 items-center justify-center rounded-full border border-[rgba(243,236,221,0.10)] bg-black/30 text-[18px] font-black text-[color:var(--lobby-muted,#8f8674)] sm:h-14 sm:w-14"
+      >
+        {basHarf}
+      </span>
+      <span className="line-clamp-2 w-full text-center text-[11px] font-black leading-tight text-[color:var(--lobby-text,#f3ecdd)] sm:text-[12px]">
+        {alt}
+      </span>
+    </div>
   );
 }
 
+const SKOR_TAVANI = 20;
+
+/**
+ * SKOR SECICI — yukari/asagi basamakli.
+ *
+ * Onceden `<input type="number">` idi. Telefonda uc sorunu vardi:
+ *
+ *   1. Sayisal klavye aciliyor, ekranin yarisini kapatiyordu; oyuncu bir
+ *      skor icin klavye ac-kapa yapmak zorundaydi.
+ *   2. Tarayicinin kendi ok dugmeleri masaustunde ~10px, dokunmatikte
+ *      hic yok.
+ *   3. Serbest metin: "-3", "999", "abc" yazilabiliyor, dogrulama
+ *      gonderimde patliyordu.
+ *
+ * Basamakli secici klavye actirmiyor, hedefler 44px ve deger yapisal
+ * olarak 0..SKOR_TAVANI arasinda kaliyor.
+ */
 function ScoreInput({
   value,
   disabled,
   palette,
   onChange,
+  label,
 }: {
   value: string;
   disabled: boolean;
   palette: LobbyPalette;
   onChange: (value: string) => void;
+  label: string;
 }) {
+  const sayi = Number.parseInt(value, 10);
+  const mevcut = Number.isFinite(sayi) && sayi >= 0 ? Math.min(sayi, SKOR_TAVANI) : 0;
+  const yaz = (yeniDeger: number) => onChange(String(Math.max(0, Math.min(SKOR_TAVANI, yeniDeger))));
+
+  /** Ok dugmesi: 44px dokunma hedefi, dokunmatikte hover yok. */
+  const ok = (yon: 'yukari' | 'asagi') => (
+    <button
+      type="button"
+      disabled={disabled || (yon === 'yukari' ? mevcut >= SKOR_TAVANI : mevcut <= 0)}
+      onClick={() => yaz(yon === 'yukari' ? mevcut + 1 : mevcut - 1)}
+      aria-label={`${label} ${yon === 'yukari' ? 'artır' : 'azalt'}`}
+      className="dokunma flex w-full items-center justify-center text-[color:var(--lobby-muted,#8f8674)] transition active:scale-95 disabled:opacity-25"
+    >
+      {yon === 'yukari' ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+    </button>
+  );
+
   return (
-    <input
-      type="number"
-      min={0}
-      max={99}
-      value={value}
-      disabled={disabled}
-      onChange={(event) => onChange(event.target.value)}
-      className="h-10 w-12 rounded-xl border border-[rgba(243,236,221,0.08)] bg-black/35 text-center text-[13px] font-black text-[color:var(--lobby-text,#f3ecdd)] outline-none transition focus:border-[color:var(--lobby-primary,#e7c574)] disabled:text-[color:var(--lobby-muted,#8f8674)]"
-      style={{ caretColor: palette.accentColor }}
-    />
+    <div
+      className="cam-kontrol flex w-[58px] shrink-0 flex-col items-center overflow-hidden sm:w-[64px]"
+      role="group"
+      aria-label={label}
+    >
+      {ok('yukari')}
+      {/*
+        Deger alani: `aria-live` ile ok'a basildiginda ekran okuyucu yeni
+        skoru duyurur — gorsel degisiklik tek basina erisilebilir degil.
+      */}
+      <span
+        aria-live="polite"
+        className="flex h-11 w-full items-center justify-center border-y border-[rgba(243,236,221,0.06)] bg-black/25 text-[22px] font-black tabular-nums leading-none"
+        style={{ color: disabled ? undefined : palette.textColor }}
+      >
+        {mevcut}
+      </span>
+      {ok('asagi')}
+    </div>
   );
 }
 

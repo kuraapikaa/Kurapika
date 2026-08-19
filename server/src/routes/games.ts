@@ -12,6 +12,7 @@ import { atamaDurumu, telegramBonusuAlinmis } from '../services/telegramBonusHak
 import { atamaNotu } from '../services/bonusAtamaNotu.js';
 import { bonusDenetimAciklamasi } from '../services/bonusDenetimAciklamasi.js';
 import { istanbulYerelAn } from '../lib/istanbulGunu.js';
+import { bilinenLogo } from '../lib/takimLogosu.js';
 import { audit } from '../lib/auditLog.js';
 import { yatirimHakki } from '../services/yatirimHakki.js';
 import { isLynonConfigured, lynonAssignCampaignToPlayer, lynonBuildBonusEligibilitySnapshot, lynonCreditPlayerMainAccount, lynonFindPlayerByLogin, lynonOyuncuKpiSorgula, lynonPlayerActivity } from '../services/lynonBackofficeService.js';
@@ -1445,7 +1446,23 @@ export function tahminKapanisZamani(match: any): number | null {
 
 function buildPredictionLeaguePayload(settings: any, entries: any[], username?: string) {
   const league = settings.predictionLeague || DEFAULT_GAME_SETTINGS.predictionLeague;
-  const matches = Array.isArray(league.matches) ? league.matches : [];
+  /**
+   * LOGO ALANI BOSSA TAKIM ADINDAN COZULUR.
+   *
+   * Maclar elle giriliyor ve operator her mac icin iki ayri logo URL'i
+   * yapistirmak zorundaydi; girilmedigi icin cogu macta logo yoktu.
+   * Eslesme tablosu SUNUCUDA (`takimLogosu.ts`) — istemci ile ayni
+   * tabloyu iki yerde tutmak, birinin guncellenip digerinin unutulmasi
+   * demekti.
+   *
+   * Elle girilmis bir URL varsa ona DOKUNULMAZ: operatorun bilincli
+   * secimi otomatik esleme tarafindan ezilmemeli.
+   */
+  const matches = (Array.isArray(league.matches) ? league.matches : []).map((mac: any) => ({
+    ...mac,
+    homeLogoUrl: String(mac?.homeLogoUrl ?? '').trim() || bilinenLogo(mac?.homeTeam) || null,
+    awayLogoUrl: String(mac?.awayLogoUrl ?? '').trim() || bilinenLogo(mac?.awayTeam) || null,
+  }));
   const weekly = turkeyPeriodWindow('weekly');
   const monthly = turkeyPeriodWindow('monthly');
   const weeklyLeaderboard = scorePredictionLeaderboard(entries, matches, weekly.from, weekly.to);
