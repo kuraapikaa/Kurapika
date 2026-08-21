@@ -38,3 +38,5 @@ server/src/data/*.bak.*
 server/src/data/**/*.bak.*
 server/src/data/*-auth.json
 server/src/data/audit*.json
+# Affiliate paneli ayri bir urun; bu depoda tutulmuyor.
+affiliate-panel/
