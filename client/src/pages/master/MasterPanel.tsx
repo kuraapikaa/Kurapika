@@ -2,28 +2,23 @@ import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
-  Calendar,
   CheckCircle2,
-  Database,
+  Copy,
   ExternalLink,
   Globe,
-  KeyRound,
   Loader2,
-  Lock,
   Pause,
   Play,
   PlugZap,
   Plus,
-  Save,
-  Copy,
   RefreshCw,
+  Save,
   Search,
   Server,
-  Timer,
   Settings,
-  Shield,
   ShieldAlert,
   Sparkles,
+  Timer,
   X,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -31,45 +26,113 @@ import { masterApi } from '@/api/client';
 import { cn } from '@/lib/utils';
 
 /**
- * Kurulum formu, siteyi TEK adimda calisir hale getirir.
+ * MASTER PANELİ — SİTE AYARLARI.
  *
- * Onceden yalnizca site kaydi olusturuluyor, Lynon bilgileri ayri bir
- * pencereden giriliyordu. Arada kalan sitenin hicbir kimligi yoktu ve o
- * aralikta calisan her arka plan isi sessizce ENV'deki -- yani BASKA bir
- * sitenin -- bilgilerine dusuyordu.
+ * ── Neden bu kadar az alan var ────────────────────────────────────────
+ * Panel eskiden tema rengi, logo, panel başlığı, partner ID, bitiş
+ * tarihi, cihaz parmak izi, OTP algoritması/hane/periyot, saat dilimi ve
+ * iki ayrı backoffice token'ı da soruyordu. Bunların çoğu hiç
+ * doldurulmuyordu ve dolduranı da yanıltıyordu: bir sitenin ÇALIŞMASI
+ * için gereken şey aşağıdaki dokuz değer. Geri kalanı ya varsayılanıyla
+ * doğru çalışıyor ya da o sitede hiç kullanılmıyordu.
+ *
+ * Bu dokuz değer sunucudaki ortam değişkenlerinin site başına
+ * karşılığıdır; boş bırakılan her alan o ortam değişkenine düşer — yani
+ * BAŞKA bir sitenin değerine. Bu yüzden her alanın yanında ENV adı
+ * yazıyor: panelde gördüğünüz kutunun sunucuda hangi değeri ezdiği
+ * tahmin edilmek zorunda kalmasın.
+ *
+ * ── Listede olmayan ama tutulan iki alan ──────────────────────────────
+ * `siteName` ve `domain` ayar değil, KİMLİK. Domain, çok kiracılı
+ * çözümlemenin tek anahtarı: gelen isteğin hangi siteye ait olduğu
+ * yalnızca ondan bulunuyor. Domainsiz bir site panelde görünür ama
+ * hiçbir istek ona ulaşmaz ve tüm trafik yedek kiracıya düşer.
  */
-const initialForm = {
-  siteName: '',
-  domain: '',
-  adminEmail: '',
-  adminPassword: '',
-  partnerId: '',
-  expireDate: '',
-  themeColor: '#22d3ee',
-  logoUrl: '',
-  adminTitle: '',
-  // Lynon bağlantısı — hepsi opsiyonel, boş bırakılan ENV'e düşer.
-  lynonBackofficeBaseUrl: '',
-  lynonIdBaseUrl: '',
-  lynonSiteId: '',
-  lynonCurrency: '',
-  lynonUsername: '',
-  lynonPassword: '',
-  lynonOtpSecret: '',
-  lynonOtpToken: '',
-  lynonTrustDevice: '',
+
+type AyarTipi = 'metin' | 'sir' | 'sayi';
+
+type AyarTanimi = {
+  anahtar: string;
+  env: string;
+  etiket: string;
+  tip: AyarTipi;
+  /** 'tenant' = site kaydı, 'lynon' = site bağlantı kaydı. */
+  hedef: 'tenant' | 'lynon';
+  /** Bağlantı kaydındaki/site kaydındaki gerçek alan adı. */
+  alan: string;
+  yerTutucu?: string;
+  ipucu?: string;
 };
 
-type TenantForm = typeof initialForm;
+/** Panel yönetici girişi — bu sitenin kendi admin hesabı. */
+const PANEL_AYARLARI: AyarTanimi[] = [
+  {
+    anahtar: 'adminUser', env: 'ADMIN_USER', etiket: 'Panel kullanıcı adı',
+    tip: 'metin', hedef: 'tenant', alan: 'adminEmail',
+    yerTutucu: 'admin',
+    // Kayıtta alan adı `adminEmail` ama giriş bunu KULLANICI ADI olarak
+    // karşılaştırıyor (auth.ts). Etiketin "e-posta" demesi yanlıştı.
+    ipucu: 'Bu siteye panelden giriş yaparken kullanılan ad.',
+  },
+  {
+    anahtar: 'adminPass', env: 'ADMIN_PASS', etiket: 'Panel şifresi',
+    tip: 'sir', hedef: 'tenant', alan: 'adminPassword',
+    ipucu: 'Boş bırakılırsa mevcut şifre korunur.',
+  },
+];
+
+/** Lynon backoffice bağlantısı. */
+const LYNON_AYARLARI: AyarTanimi[] = [
+  {
+    anahtar: 'backofficeBaseUrl', env: 'LYNON_BACKOFFICE_BASE_URL', etiket: 'Backoffice adresi',
+    tip: 'metin', hedef: 'lynon', alan: 'backofficeBaseUrl',
+    yerTutucu: 'https://backoffice.site.com',
+  },
+  {
+    anahtar: 'idBaseUrl', env: 'LYNON_ID_BASE_URL', etiket: 'Kimlik (ID) adresi',
+    tip: 'metin', hedef: 'lynon', alan: 'idBaseUrl',
+    yerTutucu: 'https://id.site.com',
+    ipucu: 'İki adımlı doğrulama bu adrese yapılıyor.',
+  },
+  {
+    anahtar: 'siteId', env: 'LYNON_SITE_ID', etiket: 'Site ID',
+    tip: 'sayi', hedef: 'lynon', alan: 'siteId', yerTutucu: '137',
+  },
+  {
+    anahtar: 'currency', env: 'LYNON_CURRENCY', etiket: 'Para birimi',
+    tip: 'metin', hedef: 'lynon', alan: 'currency', yerTutucu: 'TRY',
+  },
+  {
+    anahtar: 'username', env: 'LYNON_PANEL_USERNAME', etiket: 'Lynon kullanıcı adı',
+    tip: 'metin', hedef: 'lynon', alan: 'username', yerTutucu: 'raporcu',
+  },
+  {
+    anahtar: 'password', env: 'LYNON_PANEL_PASSWORD', etiket: 'Lynon şifresi',
+    tip: 'sir', hedef: 'lynon', alan: 'password',
+  },
+  {
+    anahtar: 'otpSecret', env: 'LYNON_PANEL_OTP_SECRET', etiket: 'OTP sırrı (TOTP)',
+    tip: 'sir', hedef: 'lynon', alan: 'otpSecret',
+    yerTutucu: 'Base32 (A-Z, 2-7)',
+    ipucu: 'Authenticator kurulum sırrı veya otpauth:// bağlantısının tamamı. Doğruluğunu aşağıdaki anlık kodla sınayın.',
+  },
+];
+
+const TUM_AYARLAR = [...PANEL_AYARLARI, ...LYNON_AYARLARI];
+
+type Form = { siteName: string; domain: string } & Record<string, string>;
+
+const bosForm = (): Form => {
+  const temel: Form = { siteName: '', domain: '' };
+  for (const ayar of TUM_AYARLAR) temel[ayar.anahtar] = '';
+  return temel;
+};
 
 export function MasterPanel() {
   const queryClient = useQueryClient();
-  const [showAdd, setShowAdd] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [search, setSearch] = useState('');
-  const [form, setForm] = useState<TenantForm>(initialForm);
-  /** Bağlantı ayarları açık olan site; null ise kapalı. */
-  const [connectionTenant, setConnectionTenant] = useState<any>(null);
+  const [arama, setArama] = useState('');
+  /** Açık olan düzenleyici: 'yeni' | site nesnesi | null. */
+  const [duzenlenen, setDuzenlenen] = useState<'yeni' | any | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ['master-tenants'],
@@ -88,137 +151,31 @@ export function MasterPanel() {
     refetchInterval: 60_000,
   });
 
-  const tenants = data?.data || [];
-  const filteredTenants = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    if (!term) return tenants;
-    return tenants.filter((tenant: any) =>
-      [tenant.siteName, tenant.domain, tenant.adminEmail, tenant.partnerId]
+  const siteler = data?.data || [];
+  const suzulmus = useMemo(() => {
+    const terim = arama.trim().toLocaleLowerCase('tr-TR');
+    if (!terim) return siteler;
+    return siteler.filter((site: any) =>
+      [site.siteName, site.domain, site.adminEmail]
         .filter(Boolean)
-        .some((value) => String(value).toLowerCase().includes(term))
+        .some((deger: any) => String(deger).toLocaleLowerCase('tr-TR').includes(terim))
     );
-  }, [search, tenants]);
+  }, [arama, siteler]);
 
-  const stats = useMemo(() => {
-    const active = tenants.filter((tenant: any) => tenant.isActive).length;
-    const passive = tenants.length - active;
-    const expiring = tenants.filter((tenant: any) => {
-      if (!tenant.expireDate) return false;
-      const diff = new Date(tenant.expireDate).getTime() - Date.now();
-      return diff > 0 && diff < 1000 * 60 * 60 * 24 * 14;
-    }).length;
-    return { total: tenants.length, active, passive, expiring };
-  }, [tenants]);
+  const sayilar = useMemo(() => {
+    const aktif = siteler.filter((site: any) => site.isActive).length;
+    return { toplam: siteler.length, aktif, pasif: siteler.length - aktif };
+  }, [siteler]);
 
-  /** Form alanlarını sunucunun beklediği gövdeye ayırır. */
-  const govdeyiKur = () => ({
-    siteName: form.siteName,
-    domain: form.domain,
-    adminEmail: form.adminEmail,
-    adminPassword: form.adminPassword,
-    partnerId: form.partnerId,
-    expireDate: form.expireDate,
-    themeColor: form.themeColor,
-    logoUrl: form.logoUrl,
-    adminTitle: form.adminTitle,
-    lynon: {
-      backofficeBaseUrl: form.lynonBackofficeBaseUrl,
-      idBaseUrl: form.lynonIdBaseUrl,
-      siteId: form.lynonSiteId,
-      currency: form.lynonCurrency,
-      username: form.lynonUsername,
-      password: form.lynonPassword,
-      otpSecret: form.lynonOtpSecret,
-      otpToken: form.lynonOtpToken,
-      trustDevice: form.lynonTrustDevice,
-    },
-  });
-
-  const createMutation = useMutation({
-    mutationFn: () => masterApi.createTenant(govdeyiKur()),
-    onSuccess: (cevap: any) => {
-      if (cevap?.ok === false) {
-        toast.error(cevap.message || 'Panel oluşturulamadı');
-        return;
-      }
-      // Site olustu ama sirlar yazilamadiysa bunu YUTMA: operator
-      // bilgileri girdigini sanip devam ederdi.
-      if (cevap?.baglantiUyarisi) toast.warning(cevap.baglantiUyarisi);
-      else toast.success('Yeni müşteri paneli oluşturuldu');
-      handleReset();
-      queryClient.invalidateQueries({ queryKey: ['master-tenants'] });
-      queryClient.invalidateQueries({ queryKey: ['master-durum'] });
-    },
-    onError: () => toast.error('Panel oluşturulamadı'),
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: (args: { id: string; data: any }) => masterApi.updateTenant(args.id, args.data),
+  const durumDegistir = useMutation({
+    mutationFn: (args: { id: string; isActive: boolean }) =>
+      masterApi.updateTenant(args.id, { isActive: args.isActive }),
     onSuccess: () => {
-      toast.success('Panel ayarları güncellendi');
-      handleReset();
       queryClient.invalidateQueries({ queryKey: ['master-tenants'] });
       queryClient.invalidateQueries({ queryKey: ['master-durum'] });
     },
+    onError: () => toast.error('Durum değiştirilemedi'),
   });
-
-  const isSaving = createMutation.isPending || updateMutation.isPending;
-
-  const handleReset = () => {
-    setShowAdd(false);
-    setEditingId(null);
-    setForm(initialForm);
-  };
-
-  const updateForm = (key: keyof TenantForm, value: string) => {
-    setForm((current) => ({ ...current, [key]: value }));
-  };
-
-  const handleEdit = (tenant: any) => {
-    setForm({
-      // Baglanti alanlari BOS baslar: duzenleme kipinde devre disi ve
-      // sirlar zaten panele hic gelmiyor. Eski degerleri doldurmaya
-      // calismak, maskeli bir metni gercek sir sanip kaydetmek olurdu.
-      ...initialForm,
-      siteName: tenant.siteName || '',
-      domain: tenant.domain || '',
-      adminEmail: tenant.adminEmail || '',
-      adminPassword: tenant.adminPassword || '',
-      partnerId: tenant.partnerId || '',
-      expireDate: tenant.expireDate || '',
-      themeColor: tenant.themeColor || '#22d3ee',
-      logoUrl: tenant.logoUrl || '',
-      adminTitle: tenant.adminTitle || '',
-    });
-    setEditingId(tenant.id);
-    setShowAdd(true);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  /**
-   * Site adi ve domain sunucuda ZORUNLU. Onceden panelde hicbir isaret
-   * yoktu: operator kaydet'e basiyor, istek 400 donuyor ve arayuz
-   * sessizce hicbir sey gostermiyordu.
-   *
-   * Domain ayrica cok kiracili cozumlemenin TEK anahtari; bos birakilan
-   * bir site panelde gorunur ama hicbir istek ona ulasmaz.
-   */
-  const eksikAlanlar = [
-    !form.siteName.trim() && 'Site adı',
-    !editingId && !form.domain.trim() && 'Domain',
-  ].filter(Boolean) as string[];
-
-  const handleSubmit = () => {
-    if (eksikAlanlar.length > 0) {
-      toast.error('Zorunlu alan boş: ' + eksikAlanlar.join(', '));
-      return;
-    }
-    if (editingId) {
-      updateMutation.mutate({ id: editingId, data: govdeyiKur() });
-    } else {
-      createMutation.mutate();
-    }
-  };
 
   if (isLoading) {
     return (
@@ -235,10 +192,10 @@ export function MasterPanel() {
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/40 to-transparent" />
       </div>
 
-      <main className="relative mx-auto w-full max-w-[1900px] space-y-4 p-4">
-        <header className="flex flex-col gap-3 rounded-3xl border border-white/[0.05] bg-white/10 p-8 md:flex-row md:items-center md:justify-between backdrop-blur-xl">
+      <main className="relative mx-auto w-full max-w-[1500px] space-y-4 p-4">
+        <header className="flex flex-col gap-3 rounded-3xl border border-white/[0.05] bg-white/10 p-6 backdrop-blur-xl md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-3">
-            <div className="grid h-10 w-10 grid-cols-2 place-items-center gap-1 rounded-full border border-purple-400/25 bg-blue-400/[0.1] p-2.5 text-purple-300">
+            <div className="grid h-10 w-10 shrink-0 grid-cols-2 place-items-center gap-1 rounded-full border border-purple-400/25 bg-blue-400/[0.1] p-2.5 text-purple-300">
               <span className="h-2.5 w-2.5 rounded bg-current" />
               <span className="h-2.5 w-2.5 rounded bg-current" />
               <span className="h-2.5 w-2.5 rounded bg-current" />
@@ -246,8 +203,10 @@ export function MasterPanel() {
             </div>
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-purple-300/75">Master control</p>
-              <h1 className="mt-0.5 text-xl font-bold tracking-[-0.03em] text-white md:text-2xl">Müşteri panelleri</h1>
-              <p className="mt-1 max-w-2xl text-xs font-medium text-slate-400">Tenant erişimlerini, domainleri ve marka ayarlarını tek merkezden yönetin.</p>
+              <h1 className="mt-0.5 text-xl font-bold tracking-[-0.03em] text-white md:text-2xl">Siteler</h1>
+              <p className="mt-1 max-w-2xl text-xs font-medium text-slate-400">
+                Her sitenin kendi Lynon bağlantısı ve panel girişi. Boş bırakılan alan sunucunun ortam değişkenine düşer.
+              </p>
             </div>
           </div>
 
@@ -255,195 +214,55 @@ export function MasterPanel() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <input
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                className="h-9 w-full rounded-3xl border border-white/[0.05] bg-white/[0.02] pl-9 pr-3 text-xs font-semibold text-white outline-none transition focus:border-blue-400/40 sm:w-64 backdrop-blur-xl"
-                placeholder="Panel, domain veya e-posta ara"
+                value={arama}
+                onChange={(event) => setArama(event.target.value)}
+                className="h-9 w-full rounded-3xl border border-white/[0.05] bg-white/[0.02] pl-9 pr-3 text-xs font-semibold text-white outline-none backdrop-blur-xl transition focus:border-blue-400/40 sm:w-64"
+                placeholder="Site, domain veya kullanıcı ara"
               />
             </div>
             <button
-              onClick={() => {
-                if (showAdd && !editingId) setShowAdd(false);
-                else {
-                  handleReset();
-                  setShowAdd(true);
-                }
-              }}
+              onClick={() => setDuzenlenen((mevcut: any) => (mevcut === 'yeni' ? null : 'yeni'))}
               className="inline-flex h-9 items-center justify-center gap-2 rounded-xl bg-blue-400 px-4 text-xs font-bold text-white transition hover:bg-blue-300"
             >
-              <Plus size={18} /> Yeni panel
+              <Plus size={18} /> Yeni site
             </button>
           </div>
         </header>
 
-        <TenantResolutionBanner durum={durum} />
+        <CozumlemeSeridi durum={durum} />
 
-        <section className="grid grid-cols-2 gap-8 xl:grid-cols-4">
-          <MetricCard label="Toplam panel" value={stats.total} icon={Server} tone="cyan" />
-          <MetricCard label="Aktif" value={stats.active} icon={CheckCircle2} tone="emerald" />
-          <MetricCard label="Pasif" value={stats.passive} icon={Pause} tone="rose" />
-          <MetricCard label="Yaklaşan bitiş" value={stats.expiring} icon={Calendar} tone="amber" />
+        <section className="grid grid-cols-3 gap-4">
+          <SayiKarti etiket="Toplam site" deger={sayilar.toplam} ikon={Server} ton="cyan" />
+          <SayiKarti etiket="Aktif" deger={sayilar.aktif} ikon={CheckCircle2} ton="emerald" />
+          <SayiKarti etiket="Pasif" deger={sayilar.pasif} ikon={Pause} ton="rose" />
         </section>
 
-        {showAdd && (
-          <motion.section
-            initial={{ opacity: 0, y: -12 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="relative overflow-hidden rounded-3xl border border-white/[0.05] bg-white/10 p-8 backdrop-blur-xl"
-          >
-            <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-[color:var(--panel-info,#64d2ff)]/10 blur-3xl" />
-            <div className="relative mb-4 flex items-start justify-between gap-4">
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-cyan-300/70">{editingId ? 'Düzenleme modu' : 'Yeni kurulum'}</p>
-                <h2 className="mt-1 text-lg font-bold tracking-[-0.025em] text-white">{editingId ? 'Panel ayarlarını düzenle' : 'Yeni müşteri paneli oluştur'}</h2>
-              </div>
-              <button onClick={handleReset} className="rounded-3xl border border-white/[0.05] bg-white/[0.03] p-2 text-slate-400 transition hover:text-white backdrop-blur-xl">
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="relative space-y-6">
-              <FormBolumu
-                baslik="Site kimliği"
-                aciklama="Domain, çok kiracılı çözümlemenin tek anahtarı: gelen isteğin hangi siteye ait olduğu buradan bulunur."
-              >
-                <Field label="Site adı" value={form.siteName} onChange={(value) => updateForm('siteName', value)} placeholder="Örn: Bugs Casino" zorunlu />
-                <Field label="Domain" value={form.domain} onChange={(value) => updateForm('domain', value)} placeholder="ornek-domain.com" zorunlu ipucu="www. yazmayın; alt alan adları da eşleşir." />
-                <Field label="Partner ID" value={form.partnerId} onChange={(value) => updateForm('partnerId', value)} placeholder="Opsiyonel" />
-              </FormBolumu>
-
-              <FormBolumu baslik="Panel erişimi">
-                <Field label="Admin e-posta" value={form.adminEmail} onChange={(value) => updateForm('adminEmail', value)} placeholder={form.domain ? `admin@${form.domain}` : 'admin@domain.com'} />
-                <Field
-                  label="Admin şifre"
-                  value={form.adminPassword}
-                  onChange={(value) => updateForm('adminPassword', value)}
-                  type="password"
-                  placeholder={editingId ? 'Boş: değiştirme' : 'Boş: otomatik üretilir'}
-                  ipucu={editingId ? 'Boş bırakılırsa mevcut şifre korunur.' : 'Boş bırakılırsa güçlü bir şifre üretilir.'}
-                />
-                <Field label="Bitiş tarihi" value={form.expireDate} onChange={(value) => updateForm('expireDate', value)} type="date" ipucu="Boş: süresiz." />
-              </FormBolumu>
-
-              <FormBolumu baslik="Marka">
-                <div>
-                  <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Tema rengi</label>
-                  <div className="flex h-9 items-center gap-2 overflow-hidden rounded-3xl border border-white/[0.05] bg-white/[0.02] pl-1.5 pr-3 backdrop-blur-xl">
-                    <input
-                      type="color"
-                      value={form.themeColor}
-                      onChange={(event) => updateForm('themeColor', event.target.value)}
-                      className="h-6 w-6 shrink-0 cursor-pointer rounded-full border-0 bg-transparent p-0 [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-full [&::-webkit-color-swatch]:border-0"
-                    />
-                    <input
-                      value={form.themeColor}
-                      onChange={(event) => updateForm('themeColor', event.target.value)}
-                      className="min-w-0 flex-1 bg-transparent font-mono text-xs font-bold uppercase text-white outline-none"
-                    />
-                  </div>
-                </div>
-                <Field label="Logo URL" value={form.logoUrl} onChange={(value) => updateForm('logoUrl', value)} placeholder="https://.../logo.png" />
-                <Field label="Panel başlığı" value={form.adminTitle} onChange={(value) => updateForm('adminTitle', value)} placeholder="Arwen Software Solutions" />
-              </FormBolumu>
-
-              <FormBolumu
-                baslik="Lynon bağlantısı"
-                aciklama={editingId
-                  ? 'Bağlantı bilgileri yalnızca kurulumda girilir. Mevcut bir sitede kartındaki "Bağlantı" düğmesini kullanın — anlık TOTP kodu da orada.'
-                  : 'Boş bırakılan her alan sunucunun ortam değişkenindeki değeri kullanır — yani BAŞKA bir sitenin bilgilerini. Burada girmek, kurulumla kimlik arasında boşluk bırakmaz.'}
-                sonuk={Boolean(editingId)}
-              >
-                <Field label="Backoffice adresi" value={form.lynonBackofficeBaseUrl} onChange={(v) => updateForm('lynonBackofficeBaseUrl', v)} placeholder="https://backoffice.site.com" devreDisi={Boolean(editingId)} />
-                <Field label="Kimlik (ID) adresi" value={form.lynonIdBaseUrl} onChange={(v) => updateForm('lynonIdBaseUrl', v)} placeholder="https://id.site.com" devreDisi={Boolean(editingId)} />
-                <Field label="Site ID" value={form.lynonSiteId} onChange={(v) => updateForm('lynonSiteId', v)} placeholder="Örn: 137" devreDisi={Boolean(editingId)} />
-                <Field label="Para birimi" value={form.lynonCurrency} onChange={(v) => updateForm('lynonCurrency', v)} placeholder="TRY" devreDisi={Boolean(editingId)} />
-                <Field label="Panel kullanıcısı" value={form.lynonUsername} onChange={(v) => updateForm('lynonUsername', v)} placeholder="raporcu" devreDisi={Boolean(editingId)} />
-                <Field label="Panel şifresi" value={form.lynonPassword} onChange={(v) => updateForm('lynonPassword', v)} type="password" devreDisi={Boolean(editingId)} />
-              </FormBolumu>
-
-              <FormBolumu
-                baslik="İki adımlı doğrulama (TOTP)"
-                aciklama="Lynon girişi iki adımlı doğrulama istiyor. Kalıcı çalışma için OTP SIRRI gerekir; token tek seferliktir ve dakikalar içinde geçersiz olur."
-                sonuk={Boolean(editingId)}
-              >
-                <Field
-                  label="OTP sırrı"
-                  value={form.lynonOtpSecret}
-                  onChange={(v) => updateForm('lynonOtpSecret', v)}
-                  placeholder="Base32 (A-Z, 2-7)"
-                  type="password"
-                  devreDisi={Boolean(editingId)}
-                  ipucu="Authenticator kurulum sırrı veya otpauth:// bağlantısının tamamı."
-                />
-                <Field
-                  label="OTP token (tek seferlik)"
-                  value={form.lynonOtpToken}
-                  onChange={(v) => updateForm('lynonOtpToken', v)}
-                  placeholder="6 haneli anlık kod"
-                  type="password"
-                  devreDisi={Boolean(editingId)}
-                  ipucu="Sır elinizde yoksa geçici çözüm; kalıcı değildir."
-                />
-                <SecimAlani
-                  label="Cihaza güven"
-                  value={form.lynonTrustDevice}
-                  onChange={(v) => updateForm('lynonTrustDevice', v)}
-                  secenekler={[['', 'ENV değeri'], ['true', 'Açık — önerilen'], ['false', 'Kapalı']]}
-                  ipucu="Kapalıyken Lynon yetkilendirme hatası dönebilir."
-                  devreDisi={Boolean(editingId)}
-                />
-              </FormBolumu>
-
-              {!editingId && (
-                <p className="text-[11px] font-medium leading-relaxed text-slate-500">
-                  Bağlantı alanları opsiyoneldir; boş bırakıp site kartındaki
-                  <span className="font-bold text-slate-400"> Bağlantı </span>
-                  düğmesinden sonra da girebilirsiniz. TOTP sırrının doğruluğunu orada anlık kodla sınayabilirsiniz.
-                </p>
-              )}
-            </div>
-
-            <div className="relative mt-4 flex flex-col-reverse justify-end gap-3 sm:flex-row">
-              <button onClick={handleReset} className="h-9 rounded-3xl border border-white/[0.05] bg-white/[0.03] px-4 text-xs font-bold text-slate-400 transition hover:text-white backdrop-blur-xl">
-                İptal
-              </button>
-              <button
-                onClick={handleSubmit}
-                disabled={isSaving || eksikAlanlar.length > 0}
-                title={eksikAlanlar.length > 0 ? `Zorunlu alan boş: ${eksikAlanlar.join(', ')}` : undefined}
-                className="inline-flex items-center justify-center gap-2 h-9 rounded-xl bg-blue-400 px-5 text-xs font-bold text-white transition hover:bg-blue-300 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {isSaving ? <Loader2 size={17} className="animate-spin" /> : <Save size={17} />}
-                {isSaving ? 'Kaydediliyor...' : editingId ? 'Ayarları kaydet' : 'Paneli oluştur'}
-              </button>
-            </div>
-          </motion.section>
-        )}
-
-        <section className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
-          {filteredTenants.map((tenant: any) => (
-            <TenantCard
-              key={tenant.id}
-              tenant={tenant}
-              onEdit={() => handleEdit(tenant)}
-              onConnection={() => setConnectionTenant(tenant)}
-              onToggle={() => updateMutation.mutate({ id: tenant.id, data: { isActive: !tenant.isActive } })}
-              isUpdating={updateMutation.isPending}
+        <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {suzulmus.map((site: any) => (
+            <SiteKarti
+              key={site.id}
+              site={site}
+              onAyarlar={() => setDuzenlenen(site)}
+              onDurum={() => durumDegistir.mutate({ id: site.id, isActive: !site.isActive })}
+              islemde={durumDegistir.isPending}
             />
           ))}
 
-          {filteredTenants.length === 0 && (
+          {suzulmus.length === 0 && (
             <div className="col-span-full rounded-3xl border border-dashed border-white/[0.05] bg-white/10 py-12 text-center backdrop-blur-xl">
               <Sparkles className="mx-auto mb-4 text-slate-500" size={32} />
-              <p className="text-sm font-bold text-slate-400">Gösterilecek müşteri paneli bulunamadı.</p>
-              <p className="mt-1 text-xs text-slate-500">Aramayı temizleyin veya yeni panel oluşturun.</p>
+              <p className="text-sm font-bold text-slate-400">Gösterilecek site yok.</p>
+              <p className="mt-1 text-xs text-slate-500">Aramayı temizleyin veya yeni site ekleyin.</p>
             </div>
           )}
         </section>
       </main>
 
-      {connectionTenant && (
-        <ConnectionModal tenant={connectionTenant} onClose={() => setConnectionTenant(null)} />
+      {duzenlenen && (
+        <SiteDuzenleyici
+          site={duzenlenen === 'yeni' ? null : duzenlenen}
+          onKapat={() => setDuzenlenen(null)}
+        />
       )}
     </div>
   );
@@ -463,7 +282,7 @@ export function MasterPanel() {
  * Üçü de panel "çalışıyor" görünürken olur; bu yüzden uyarıyı düzeltmenin
  * yapılacağı yerde, listenin üstünde gösteriyoruz.
  */
-function TenantResolutionBanner({ durum }: { durum: any }) {
+function CozumlemeSeridi({ durum }: { durum: any }) {
   if (!durum?.ok) return null;
   const tanilama = durum.tanilama || {};
   const alanAdiOlmayan: string[] = durum.alanAdiOlmayan || [];
@@ -486,7 +305,7 @@ function TenantResolutionBanner({ durum }: { durum: any }) {
 
   if (sorunlar.length === 0) {
     return (
-      <section className="rounded-3xl border border-emerald-300/20 bg-emerald-300/[0.06] p-5 backdrop-blur-xl">
+      <section className="rounded-3xl border border-emerald-300/20 bg-emerald-300/[0.06] p-4 backdrop-blur-xl">
         <div className="flex flex-wrap items-center gap-3 text-xs font-bold text-emerald-200">
           <CheckCircle2 size={16} />
           <span>Çözümleme sağlıklı — {tanilama.aktifSite} aktif site domainiyle eşleşiyor.</span>
@@ -497,17 +316,14 @@ function TenantResolutionBanner({ durum }: { durum: any }) {
   }
 
   return (
-    <section className="space-y-2 rounded-3xl border border-amber-300/25 bg-amber-300/[0.07] p-5 backdrop-blur-xl">
+    <section className="space-y-2 rounded-3xl border border-amber-300/25 bg-amber-300/[0.07] p-4 backdrop-blur-xl">
       <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-amber-200">
         <ShieldAlert size={16} /> Çok kiracılı çözümleme
       </div>
       {sorunlar.map((sorun, i) => (
         <p
           key={i}
-          className={cn(
-            'text-xs font-semibold leading-relaxed',
-            sorun.tur === 'kritik' ? 'text-rose-200' : 'text-amber-200/90'
-          )}
+          className={cn('text-xs font-semibold leading-relaxed', sorun.tur === 'kritik' ? 'text-rose-200' : 'text-amber-200/90')}
         >
           {sorun.metin}
         </p>
@@ -519,74 +335,395 @@ function TenantResolutionBanner({ durum }: { durum: any }) {
   );
 }
 
-function MetricCard({ label, value, icon: Icon, tone }: { label: string; value: number; icon: any; tone: 'cyan' | 'emerald' | 'rose' | 'amber' }) {
-  const toneClass = {
+function SayiKarti({ etiket, deger, ikon: Ikon, ton }: { etiket: string; deger: number; ikon: any; ton: 'cyan' | 'emerald' | 'rose' }) {
+  const tonSinifi = {
     cyan: 'bg-[color:var(--panel-info,#64d2ff)]/10 text-cyan-300 border-cyan-300/20',
     emerald: 'bg-emerald-300/10 text-emerald-300 border-emerald-300/20',
     rose: 'bg-rose-300/10 text-rose-300 border-rose-300/20',
-    amber: 'bg-amber-300/10 text-amber-300 border-amber-300/20',
-  }[tone];
+  }[ton];
 
   return (
-    <div className="rounded-3xl border border-white/[0.05] bg-white/10 p-8.5 backdrop-blur-xl">
+    <div className="rounded-3xl border border-white/[0.05] bg-white/10 p-5 backdrop-blur-xl">
       <div className="flex items-center justify-between">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">{label}</p>
-        <div className={cn('flex h-8 w-8 items-center justify-center rounded-full border', toneClass)}>
-          <Icon size={18} />
+        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">{etiket}</p>
+        <div className={cn('flex h-8 w-8 items-center justify-center rounded-full border', tonSinifi)}>
+          <Ikon size={18} />
         </div>
       </div>
-      <p className="mt-3 text-2xl font-bold tracking-[-0.04em] text-white">{value}</p>
+      <p className="mt-3 text-2xl font-bold tracking-[-0.04em] text-white">{deger}</p>
+    </div>
+  );
+}
+
+function SiteKarti({ site, onAyarlar, onDurum, islemde }: { site: any; onAyarlar: () => void; onDurum: () => void; islemde: boolean }) {
+  const domainYok = !String(site.domain ?? '').trim();
+
+  return (
+    <article className="group relative overflow-hidden rounded-3xl border border-white/[0.05] bg-white/10 p-5 backdrop-blur-xl transition hover:border-purple-400/25">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/5 bg-white/[0.035]">
+            <Globe className={cn(domainYok ? 'text-amber-300' : 'text-cyan-300')} size={20} />
+          </div>
+          <div className="min-w-0">
+            <h3 className="truncate text-base font-bold tracking-[-0.025em] text-white">{site.siteName || 'İsimsiz site'}</h3>
+            {domainYok ? (
+              <span className="mt-1 inline-block text-xs font-bold text-amber-300" title="Host eşleşmesi bu siteyi bulamaz">
+                domain tanımsız
+              </span>
+            ) : (
+              <a
+                href={`https://${site.domain}`}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-1 inline-flex max-w-full items-center gap-1.5 truncate text-xs font-bold text-slate-400 transition hover:text-cyan-300"
+              >
+                {site.domain} <ExternalLink size={12} />
+              </a>
+            )}
+          </div>
+        </div>
+        <button
+          onClick={onDurum}
+          disabled={islemde}
+          className={cn(
+            'shrink-0 rounded-md border px-2 py-1 text-[9px] font-bold uppercase tracking-[0.1em] transition disabled:cursor-wait disabled:opacity-70',
+            site.isActive ? 'border-emerald-300/20 bg-emerald-300/10 text-emerald-300' : 'border-rose-300/20 bg-rose-300/10 text-rose-300'
+          )}
+        >
+          {site.isActive ? 'Aktif' : 'Pasif'}
+        </button>
+      </div>
+
+      <div className="mt-4 space-y-1.5">
+        <BilgiSatiri etiket="ADMIN_USER" deger={site.adminEmail || 'Tanımsız'} />
+        <BilgiSatiri etiket="Kiracı" deger={site.id} />
+      </div>
+
+      <div className="mt-4 flex gap-2">
+        <button
+          onClick={onAyarlar}
+          className="flex h-8 flex-1 items-center justify-center rounded-3xl border border-cyan-300/20 bg-cyan-300/[0.08] text-[10px] font-bold text-cyan-200 backdrop-blur-xl transition hover:bg-cyan-300/[0.14]"
+        >
+          <span className="inline-flex items-center gap-2"><Settings size={14} /> Ayarlar</span>
+        </button>
+        <button
+          onClick={onDurum}
+          disabled={islemde}
+          className={cn(
+            'flex h-8 flex-1 items-center justify-center rounded-xl text-[10px] font-bold transition disabled:cursor-wait disabled:opacity-70',
+            site.isActive ? 'bg-rose-400/10 text-rose-300 hover:bg-rose-400/15' : 'bg-emerald-400/10 text-emerald-300 hover:bg-emerald-400/15'
+          )}
+        >
+          <span className="inline-flex items-center gap-2">
+            {site.isActive ? <Pause size={14} /> : <Play size={14} />} {site.isActive ? 'Pasifleştir' : 'Aktifleştir'}
+          </span>
+        </button>
+      </div>
+    </article>
+  );
+}
+
+function BilgiSatiri({ etiket, deger }: { etiket: string; deger: string }) {
+  return (
+    <div className="flex min-h-7 items-center gap-2 rounded-3xl border border-white/[0.05] bg-black/15 px-2.5 py-1 text-[11px] backdrop-blur-xl">
+      <span className="w-24 shrink-0 font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-gray-500">{etiket}</span>
+      <span className="min-w-0 truncate font-semibold text-slate-200">{deger}</span>
     </div>
   );
 }
 
 /**
- * Form alanlarini gruplayan bolum.
+ * TEK DÜZENLEYİCİ.
  *
- * Onceden dokuz alan tek bir uc sutunlu izgarada, hicbir baslik olmadan
- * duruyordu: hangi alanin neye ait oldugu ve hangisinin zorunlu oldugu
- * gorunmuyordu. Gruplama, formu okunur kilmanin yani sira "bu bolumu
- * simdi bos birakabilirim" karari verilebilmesini sagliyor.
+ * Ayarlar eskiden İKİ yere bölünmüştü: site bilgileri "Ayarlar"
+ * penceresinde, Lynon bilgileri ayrı bir "Bağlantı" penceresinde. Yeni
+ * site kurarken ikincisi ancak site oluştuktan SONRA açılabiliyordu;
+ * arada kalan sitenin hiçbir kimliği yoktu ve o boşlukta çalışan her
+ * arka plan işi sessizce ortam değişkenindeki — yani başka bir sitenin —
+ * bilgilerine düşüyordu.
+ *
+ * Artık tek pencere: dokuz ayar, kaydet, ve sırrı doğrulamak için anlık
+ * TOTP kodu.
  */
-function FormBolumu({ baslik, aciklama, sonuk, children }: {
-  baslik: string;
-  aciklama?: string;
-  sonuk?: boolean;
-  children: React.ReactNode;
-}) {
+function SiteDuzenleyici({ site, onKapat }: { site: any | null; onKapat: () => void }) {
+  const queryClient = useQueryClient();
+  const yeni = site === null;
+  const [form, setForm] = useState<Form>(() => ({
+    ...bosForm(),
+    siteName: site?.siteName || '',
+    domain: site?.domain || '',
+    adminUser: site?.adminEmail || '',
+  }));
+  const [testSonucu, setTestSonucu] = useState<{ ok: boolean; message: string } | null>(null);
+
+  /** Mevcut sitenin kayıtlı değerleri — sırlar maskeli gelir. */
+  const { data: baglanti, isLoading: baglantiYukleniyor } = useQuery({
+    queryKey: ['master-connection', site?.id],
+    queryFn: () => masterApi.getConnection(site.id),
+    enabled: !yeni,
+  });
+
+  const mevcut = baglanti?.data?.lynon;
+  const sifrelemeHazir = baglanti?.sifrelemeHazir !== false;
+
+  const alan = (anahtar: string, deger: string) => setForm((c) => ({ ...c, [anahtar]: deger }));
+
+  /** Form değerlerini sunucunun beklediği iki gövdeye ayırır. */
+  const govdeler = () => {
+    const lynon: Record<string, string> = {};
+    for (const ayar of LYNON_AYARLARI) {
+      const deger = String(form[ayar.anahtar] ?? '').trim();
+      if (deger) lynon[ayar.alan] = deger;
+    }
+    return {
+      tenant: {
+        siteName: form.siteName.trim(),
+        domain: form.domain.trim(),
+        adminEmail: String(form.adminUser ?? '').trim(),
+        adminPassword: String(form.adminPass ?? '').trim(),
+      },
+      lynon,
+    };
+  };
+
+  const olustur = useMutation({
+    mutationFn: () => {
+      const { tenant, lynon } = govdeler();
+      return masterApi.createTenant({ ...tenant, lynon });
+    },
+    onSuccess: (cevap: any) => {
+      if (cevap?.ok === false) return toast.error(cevap.message || 'Site oluşturulamadı');
+      // Site oluştu ama sırlar yazılamadıysa bunu YUTMA.
+      if (cevap?.baglantiUyarisi) toast.warning(cevap.baglantiUyarisi);
+      else toast.success('Site oluşturuldu');
+      if (cevap?.generatedPassword) {
+        toast.info(`Üretilen panel şifresi: ${cevap.generatedPassword}`, { duration: 30_000 });
+      }
+      queryClient.invalidateQueries({ queryKey: ['master-tenants'] });
+      queryClient.invalidateQueries({ queryKey: ['master-durum'] });
+      onKapat();
+    },
+    onError: () => toast.error('Site oluşturulamadı'),
+  });
+
+  const guncelle = useMutation({
+    mutationFn: async () => {
+      const { tenant, lynon } = govdeler();
+      const siteCevabi = await masterApi.updateTenant(site.id, tenant);
+      if (siteCevabi?.ok === false) throw new Error(siteCevabi.message || 'Site bilgileri kaydedilemedi');
+      // Lynon alanlarının hiçbiri girilmediyse bağlantıya HİÇ dokunma:
+      // boş bir istek göndermek gereksiz bir oturum sıfırlaması yapardı.
+      if (Object.keys(lynon).length > 0) {
+        const baglantiCevabi = await masterApi.updateConnection(site.id, { lynon });
+        if (baglantiCevabi?.ok === false) throw new Error(baglantiCevabi.message || 'Bağlantı kaydedilemedi');
+      }
+      return true;
+    },
+    onSuccess: () => {
+      toast.success('Ayarlar kaydedildi');
+      queryClient.invalidateQueries({ queryKey: ['master-tenants'] });
+      queryClient.invalidateQueries({ queryKey: ['master-durum'] });
+      queryClient.invalidateQueries({ queryKey: ['master-connection', site.id] });
+      queryClient.invalidateQueries({ queryKey: ['master-otp', site.id] });
+      // Sırlar maskeli döndüğü için alanları temizle: ekranda kalan metin
+      // gerçek değer sanılıp yeniden kaydedilirse maskeyi sır yapardı.
+      setForm((c) => {
+        const temiz = { ...c };
+        for (const ayar of TUM_AYARLAR) if (ayar.tip === 'sir') temiz[ayar.anahtar] = '';
+        return temiz;
+      });
+    },
+    onError: (hata: any) => toast.error(hata?.message || 'Kaydedilemedi'),
+  });
+
+  const test = useMutation({
+    mutationFn: () => masterApi.testConnection(site.id),
+    onSuccess: (cevap: any) => setTestSonucu({ ok: Boolean(cevap?.ok), message: cevap?.message || '' }),
+    onError: (hata: any) => setTestSonucu({ ok: false, message: hata?.message || 'Bağlantı denenemedi.' }),
+  });
+
+  const kaydediliyor = olustur.isPending || guncelle.isPending;
+
+  /**
+   * Site adı ve domain sunucuda ZORUNLU. Önceden panelde hiçbir işaret
+   * yoktu: kaydet'e basılıyor, istek 400 dönüyor, arayüz sessizce
+   * hiçbir şey göstermiyordu.
+   */
+  const eksik = [
+    !form.siteName.trim() && 'Site adı',
+    !form.domain.trim() && 'Domain',
+  ].filter(Boolean) as string[];
+
+  const yerTutucu = (ayar: AyarTanimi) => {
+    if (yeni) return ayar.yerTutucu || 'ENV değeri';
+    if (ayar.hedef === 'tenant') return ayar.tip === 'sir' ? 'Boş: değiştirme' : (site?.adminEmail || ayar.yerTutucu || '');
+    if (ayar.tip === 'sir') return mevcut?.[`${ayar.alan}Mask`] || 'ENV değeri';
+    const deger = mevcut?.[ayar.alan];
+    return deger != null && String(deger) !== '' ? String(deger) : 'ENV değeri';
+  };
+
   return (
-    <section className={cn('rounded-3xl border border-white/[0.05] bg-white/[0.015] p-5', sonuk && 'opacity-60')}>
+    <div className="fixed inset-0 z-[60] flex items-start justify-center overflow-y-auto bg-black/70 p-4 backdrop-blur-sm">
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative my-8 w-full max-w-3xl rounded-3xl border border-white/[0.05] bg-[#0b0f16]/95 p-6 backdrop-blur-xl"
+      >
+        <div className="mb-5 flex items-start justify-between gap-4">
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-cyan-300/70">
+              {yeni ? 'Yeni site' : 'Site ayarları'}
+            </p>
+            <h2 className="mt-1 text-lg font-bold tracking-[-0.025em] text-white">
+              {yeni ? 'Yeni site ekle' : site.siteName || site.domain}
+            </h2>
+            <p className="mt-1 max-w-xl text-xs font-medium leading-relaxed text-slate-400">
+              Boş bırakılan her alan sunucunun ortam değişkenindeki değeri kullanır — yani BAŞKA bir sitenin değerini.
+            </p>
+          </div>
+          <button onClick={onKapat} className="rounded-3xl border border-white/[0.05] bg-white/[0.03] p-2 text-slate-400 backdrop-blur-xl transition hover:text-white">
+            <X size={18} />
+          </button>
+        </div>
+
+        {!sifrelemeHazir && (
+          <div className="mb-4 rounded-3xl border border-amber-300/25 bg-amber-300/[0.08] p-4 text-xs font-semibold text-amber-200 backdrop-blur-xl">
+            <span className="inline-flex items-center gap-2"><ShieldAlert size={15} /> TENANT_SECRET_KEY tanımlı değil.</span>
+            <p className="mt-1 font-medium text-amber-200/80">
+              Şifre ve OTP sırrı şifrelenemediği için kaydedilemez. Adres ve site kimliği gibi sır olmayan alanlar kaydedilebilir.
+            </p>
+          </div>
+        )}
+
+        {!yeni && baglantiYukleniyor ? (
+          <div className="flex justify-center py-12"><Loader2 size={28} className="animate-spin text-cyan-300" /></div>
+        ) : (
+          <div className="space-y-5">
+            <Bolum baslik="Kimlik" aciklama="Domain, çok kiracılı çözümlemenin tek anahtarı: gelen isteğin hangi siteye ait olduğu buradan bulunur.">
+              <Alan etiket="Site adı" zorunlu value={form.siteName} onChange={(v) => alan('siteName', v)} placeholder="Örn: Narcos Bahis" />
+              <Alan etiket="Domain" zorunlu value={form.domain} onChange={(v) => alan('domain', v)} placeholder="panel.site.com" ipucu="www. yazmayın; alt alan adları da eşleşir." />
+            </Bolum>
+
+            <Bolum baslik="Panel girişi">
+              {PANEL_AYARLARI.map((ayar) => (
+                <Alan
+                  key={ayar.anahtar}
+                  etiket={ayar.etiket}
+                  env={ayar.env}
+                  value={form[ayar.anahtar] ?? ''}
+                  onChange={(v) => alan(ayar.anahtar, v)}
+                  placeholder={yerTutucu(ayar)}
+                  type={ayar.tip === 'sir' ? 'password' : 'text'}
+                  ipucu={ayar.ipucu}
+                />
+              ))}
+            </Bolum>
+
+            <Bolum baslik="Lynon bağlantısı">
+              {LYNON_AYARLARI.map((ayar) => (
+                <Alan
+                  key={ayar.anahtar}
+                  etiket={ayar.etiket}
+                  env={ayar.env}
+                  value={form[ayar.anahtar] ?? ''}
+                  onChange={(v) => alan(ayar.anahtar, v)}
+                  placeholder={yerTutucu(ayar)}
+                  type={ayar.tip === 'sir' ? 'password' : 'text'}
+                  ipucu={ayar.ipucu}
+                />
+              ))}
+            </Bolum>
+
+            {!yeni && <TotpKarti tenantId={site.id} />}
+
+            {testSonucu && (
+              <div className={cn(
+                'rounded-3xl border p-4 text-xs font-semibold backdrop-blur-xl',
+                testSonucu.ok ? 'border-emerald-300/25 bg-emerald-300/[0.08] text-emerald-200' : 'border-rose-300/25 bg-rose-300/[0.08] text-rose-200'
+              )}>
+                {testSonucu.ok ? 'Bağlantı kuruldu.' : testSonucu.message || 'Bağlantı kurulamadı.'}
+              </div>
+            )}
+
+            <div className="flex flex-col-reverse justify-between gap-3 sm:flex-row">
+              {!yeni ? (
+                <button
+                  onClick={() => test.mutate()}
+                  disabled={test.isPending}
+                  className="inline-flex h-9 items-center justify-center gap-2 rounded-3xl border border-white/[0.05] bg-white/[0.03] px-4 text-xs font-bold text-slate-200 backdrop-blur-xl transition hover:bg-white/[0.08] disabled:cursor-wait disabled:opacity-70"
+                >
+                  {test.isPending ? <Loader2 size={16} className="animate-spin" /> : <PlugZap size={16} />}
+                  {test.isPending ? 'Deneniyor...' : 'Bağlantıyı dene'}
+                </button>
+              ) : <span />}
+
+              <div className="flex gap-3">
+                <button onClick={onKapat} className="h-9 rounded-3xl border border-white/[0.05] bg-white/[0.03] px-4 text-xs font-bold text-slate-400 backdrop-blur-xl transition hover:text-white">
+                  Kapat
+                </button>
+                <button
+                  onClick={() => (yeni ? olustur.mutate() : guncelle.mutate())}
+                  disabled={kaydediliyor || eksik.length > 0}
+                  title={eksik.length > 0 ? `Zorunlu alan boş: ${eksik.join(', ')}` : undefined}
+                  className="inline-flex h-9 items-center justify-center gap-2 rounded-xl bg-blue-400 px-5 text-xs font-bold text-white transition hover:bg-blue-300 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {kaydediliyor ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                  {kaydediliyor ? 'Kaydediliyor...' : yeni ? 'Siteyi oluştur' : 'Kaydet'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </motion.div>
+    </div>
+  );
+}
+
+function Bolum({ baslik, aciklama, children }: { baslik: string; aciklama?: string; children: React.ReactNode }) {
+  return (
+    <section className="rounded-3xl border border-white/[0.05] bg-white/[0.015] p-5">
       <div className="mb-4">
         <h3 className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-300">{baslik}</h3>
-        {aciklama && <p className="mt-1 max-w-3xl text-[11px] font-medium leading-relaxed text-slate-500">{aciklama}</p>}
+        {aciklama && <p className="mt-1 max-w-2xl text-[11px] font-medium leading-relaxed text-slate-500">{aciklama}</p>}
       </div>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">{children}</div>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">{children}</div>
     </section>
   );
 }
 
-function Field({ label, value, onChange, placeholder, type = 'text', zorunlu, ipucu, devreDisi }: {
-  label: string;
+/**
+ * ENV adı etiketin yanında duruyor: panelde gördüğünüz kutunun sunucuda
+ * hangi değeri ezdiği tahmin edilmek zorunda kalmasın.
+ */
+function Alan({ etiket, env, value, onChange, placeholder, type = 'text', zorunlu, ipucu }: {
+  etiket: string;
+  env?: string;
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
   type?: string;
   zorunlu?: boolean;
   ipucu?: string;
-  devreDisi?: boolean;
 }) {
   return (
     <div>
-      <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
-        {label}
-        {zorunlu && <span className="ml-1 text-rose-300" title="Zorunlu">*</span>}
+      <label className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+          {etiket}
+          {zorunlu && <span className="ml-1 text-rose-300" title="Zorunlu">*</span>}
+        </span>
+        {env && (
+          <code className="rounded bg-white/[0.04] px-1.5 py-0.5 font-mono text-[9px] font-semibold tracking-tight text-slate-500">
+            {env}
+          </code>
+        )}
       </label>
       <input
         type={type}
         value={value}
-        disabled={devreDisi}
         onChange={(event) => onChange(event.target.value)}
-        className="h-9 w-full rounded-3xl border border-white/[0.05] bg-white/[0.02] px-3 text-xs font-semibold text-white outline-none transition placeholder:text-slate-500 focus:border-blue-400/40 disabled:cursor-not-allowed disabled:opacity-50 [color-scheme:dark] backdrop-blur-xl"
+        className="h-9 w-full rounded-3xl border border-white/[0.05] bg-white/[0.02] px-3 text-xs font-semibold text-white outline-none backdrop-blur-xl transition placeholder:text-slate-500 focus:border-blue-400/40 [color-scheme:dark]"
         placeholder={placeholder}
       />
       {ipucu && <p className="mt-1 text-[10px] leading-relaxed text-slate-500">{ipucu}</p>}
@@ -594,301 +731,17 @@ function Field({ label, value, onChange, placeholder, type = 'text', zorunlu, ip
   );
 }
 
-/** Üç durumlu seçim: boş = ENV değerini kullan. */
-function SecimAlani({ label, value, onChange, secenekler, ipucu, devreDisi }: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  secenekler: Array<[string, string]>;
-  ipucu?: string;
-  devreDisi?: boolean;
-}) {
-  return (
-    <div>
-      <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">{label}</label>
-      <select
-        value={value}
-        disabled={devreDisi}
-        onChange={(event) => onChange(event.target.value)}
-        className="h-9 w-full rounded-3xl border border-white/[0.05] bg-white/[0.02] px-3 text-xs font-semibold text-white outline-none transition focus:border-blue-400/40 disabled:cursor-not-allowed disabled:opacity-50 [color-scheme:dark] backdrop-blur-xl"
-      >
-        {secenekler.map(([deger, etiket]) => (
-          <option key={deger} value={deger}>{etiket}</option>
-        ))}
-      </select>
-      {ipucu && <p className="mt-1 text-[10px] text-slate-500">{ipucu}</p>}
-    </div>
-  );
-}
-
-function TenantCard({ tenant, onEdit, onConnection, onToggle, isUpdating }: { tenant: any; onEdit: () => void; onConnection: () => void; onToggle: () => void; isUpdating: boolean }) {
-  return (
-    <article className="group relative overflow-hidden rounded-3xl border border-white/[0.05] bg-white/10 p-8 transition hover:border-purple-400/25 backdrop-blur-xl">
-      <div className={cn('hidden absolute right-0 top-0 h-36 w-36 rounded-full blur-3xl', tenant.isActive ? 'bg-emerald-400/10' : 'bg-rose-400/10')} />
-
-      <div className="relative flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/5 bg-white/[0.035]">
-              {tenant.logoUrl ? (
-                <img src={tenant.logoUrl} alt="" className="h-7 w-7 rounded-full object-contain" />
-              ) : (
-                <Globe className="text-cyan-300" size={20} />
-              )}
-            </div>
-            <div className="min-w-0">
-              <h3 className="truncate text-base font-bold tracking-[-0.025em] text-white">{tenant.siteName || 'İsimsiz panel'}</h3>
-              <a href={`https://${tenant.domain}`} target="_blank" rel="noreferrer" className="mt-1 inline-flex max-w-full items-center gap-1.5 truncate text-xs font-bold text-slate-400 transition hover:text-cyan-300">
-                {tenant.domain || 'domain yok'} <ExternalLink size={12} />
-              </a>
-            </div>
-          </div>
-        </div>
-        <button
-          onClick={onToggle}
-          disabled={isUpdating}
-          className={cn(
-            'shrink-0 rounded-md border px-2 py-1 text-[9px] font-bold uppercase tracking-[0.1em] transition disabled:cursor-wait disabled:opacity-70',
-            tenant.isActive ? 'border-emerald-300/20 bg-emerald-300/10 text-emerald-300' : 'border-rose-300/20 bg-rose-300/10 text-rose-300'
-          )}
-        >
-          {tenant.isActive ? 'Aktif' : 'Pasif'}
-        </button>
-      </div>
-
-      <div className="relative mt-4 grid gap-8">
-        <InfoRow icon={Shield} label="E-posta" value={tenant.adminEmail || 'Tanımsız'} />
-        <InfoRow icon={Lock} label="Şifre" value={tenant.adminPassword ? '••••••••' : 'Tanımsız'} />
-        <InfoRow icon={KeyRound} label="Partner" value={tenant.partnerId || 'Yok'} />
-        <InfoRow icon={Calendar} label="Bitiş" value={tenant.expireDate || 'Süresiz'} />
-        <InfoRow icon={Database} label="Kurulum" value={tenant.createdAt ? new Date(tenant.createdAt).toLocaleDateString('tr-TR') : 'Bilinmiyor'} />
-      </div>
-
-      <div className="relative mt-4 flex gap-2">
-        <button onClick={onEdit} className="flex h-8 flex-1 items-center justify-center rounded-3xl border border-white/[0.05] bg-white/[0.035] text-[10px] font-bold text-slate-200 transition hover:bg-white/[0.08] backdrop-blur-xl">
-          <span className="inline-flex items-center gap-2"><Settings size={14} /> Ayarlar</span>
-        </button>
-        <button onClick={onConnection} className="flex h-8 flex-1 items-center justify-center rounded-3xl border border-cyan-300/20 bg-cyan-300/[0.08] text-[10px] font-bold text-cyan-200 transition hover:bg-cyan-300/[0.14] backdrop-blur-xl">
-          <span className="inline-flex items-center gap-2"><PlugZap size={14} /> Bağlantı</span>
-        </button>
-        <button
-          onClick={onToggle}
-          disabled={isUpdating}
-          className={cn(
-            'flex h-8 flex-1 items-center justify-center rounded-xl text-[10px] font-bold transition disabled:cursor-wait disabled:opacity-70',
-            tenant.isActive ? 'bg-rose-400/10 text-rose-300 hover:bg-rose-400/15' : 'bg-emerald-400/10 text-emerald-300 hover:bg-emerald-400/15'
-          )}
-        >
-          <span className="inline-flex items-center gap-2">{tenant.isActive ? <Pause size={14} /> : <Play size={14} />} {tenant.isActive ? 'Pasifleştir' : 'Aktifleştir'}</span>
-        </button>
-      </div>
-    </article>
-  );
-}
-
-/**
- * ALT SİTENİN KENDİ LYNON/BACKOFFICE BAĞLANTISI.
- *
- * Boş bırakılan her alan ortam değişkenindeki değere düşer; form bunu
- * yer tutucularda açıkça söyler. Sır alanları sunucudan MASKELİ gelir ve
- * boş gönderildiğinde "değiştirme" anlamına gelir — aksi halde forma
- * dokunmadan kaydet'e basmak sitenin şifresini silerdi.
- */
-function ConnectionModal({ tenant, onClose }: { tenant: any; onClose: () => void }) {
-  const queryClient = useQueryClient();
-  const [lynon, setLynon] = useState<Record<string, string>>({});
-  const [backoffice, setBackoffice] = useState<Record<string, string>>({});
-  const [testSonucu, setTestSonucu] = useState<{ ok: boolean; message: string } | null>(null);
-
-  const { data, isLoading } = useQuery({
-    queryKey: ['master-connection', tenant.id],
-    queryFn: () => masterApi.getConnection(tenant.id),
-  });
-
-  const mevcut = data?.data;
-  const sifrelemeHazir = data?.sifrelemeHazir !== false;
-
-  const kaydet = useMutation({
-    mutationFn: () => masterApi.updateConnection(tenant.id, { lynon, backoffice }),
-    onSuccess: (cevap: any) => {
-      if (cevap?.ok === false) {
-        toast.error(cevap.message || 'Kaydedilemedi');
-        return;
-      }
-      toast.success('Bağlantı bilgileri kaydedildi');
-      setLynon({});
-      setBackoffice({});
-      setTestSonucu(null);
-      queryClient.invalidateQueries({ queryKey: ['master-connection', tenant.id] });
-    },
-    onError: () => toast.error('Kaydedilemedi'),
-  });
-
-  const test = useMutation({
-    mutationFn: () => masterApi.testConnection(tenant.id),
-    onSuccess: (cevap: any) => setTestSonucu({ ok: Boolean(cevap?.ok), message: cevap?.message || '' }),
-    onError: (hata: any) => setTestSonucu({ ok: false, message: hata?.message || 'Bağlantı denenemedi.' }),
-  });
-
-  const alan = (key: string, value: string) => setLynon((current) => ({ ...current, [key]: value }));
-
-  return (
-    <div className="fixed inset-0 z-[60] flex items-start justify-center overflow-y-auto bg-black/70 p-4 backdrop-blur-sm">
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="relative my-8 w-full max-w-3xl rounded-3xl border border-white/[0.05] bg-white/[0.02] p-8 backdrop-blur-xl"
-      >
-        <div className="mb-4 flex items-start justify-between gap-4">
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-cyan-300/70">Site bağlantısı</p>
-            <h2 className="mt-1 text-lg font-bold tracking-[-0.025em] text-white">{tenant.siteName || tenant.domain}</h2>
-            <p className="mt-1 text-xs font-medium text-slate-400">
-              Boş bırakılan alanlar sunucunun ortam değişkenindeki değeri kullanır.
-            </p>
-          </div>
-          <button onClick={onClose} className="rounded-3xl border border-white/[0.05] bg-white/[0.03] p-2 text-slate-400 transition hover:text-white backdrop-blur-xl">
-            <X size={18} />
-          </button>
-        </div>
-
-        {!sifrelemeHazir && (
-          <div className="mb-4 rounded-3xl border border-amber-300/25 bg-amber-300/[0.08] p-8 text-xs font-semibold text-amber-200 backdrop-blur-xl">
-            <span className="inline-flex items-center gap-2"><ShieldAlert size={15} /> TENANT_SECRET_KEY tanımlı değil.</span>
-            <p className="mt-1 font-medium text-amber-200/80">
-              Şifre, OTP sırrı ve token alanları şifrelenemediği için kaydedilemez. Adres ve site kimliği gibi sır olmayan alanlar kaydedilebilir.
-            </p>
-          </div>
-        )}
-
-        {isLoading ? (
-          <div className="flex justify-center py-12"><Loader2 size={28} className="animate-spin text-cyan-300" /></div>
-        ) : (
-          <>
-            <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500">Lynon backoffice</p>
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
-              <Field label="Backoffice adresi" value={lynon.backofficeBaseUrl ?? ''} onChange={(v) => alan('backofficeBaseUrl', v)} placeholder={mevcut?.lynon?.backofficeBaseUrl || 'ENV değeri'} />
-              <Field label="Kimlik (ID) adresi" value={lynon.idBaseUrl ?? ''} onChange={(v) => alan('idBaseUrl', v)} placeholder={mevcut?.lynon?.idBaseUrl || 'ENV değeri'} />
-              <Field label="Site ID" value={lynon.siteId ?? ''} onChange={(v) => alan('siteId', v)} placeholder={mevcut?.lynon?.siteId ? String(mevcut.lynon.siteId) : 'ENV değeri'} />
-              <Field label="Para birimi" value={lynon.currency ?? ''} onChange={(v) => alan('currency', v)} placeholder={mevcut?.lynon?.currency || 'ENV değeri'} />
-              <Field label="Panel kullanıcısı" value={lynon.username ?? ''} onChange={(v) => alan('username', v)} placeholder={mevcut?.lynon?.username || 'ENV değeri'} />
-              <Field label="Panel şifresi" value={lynon.password ?? ''} onChange={(v) => alan('password', v)} placeholder={mevcut?.lynon?.passwordMask || 'ENV değeri'} type="password" />
-              <Field label="Saat dilimi ofseti" value={lynon.timezoneOffset ?? ''} onChange={(v) => alan('timezoneOffset', v)} placeholder={mevcut?.lynon?.timezoneOffset != null ? String(mevcut.lynon.timezoneOffset) : 'ENV değeri'} />
-              {/*
-                Cihaz alanlari sunucuda ZATEN destekleniyordu ama panelde
-                hic gorunmuyordu. `trustDevice` acilana kadar Lynon
-                "User isn't authorized" donduruyor ve sebebi hicbir yerde
-                yazmiyordu; parmak izi bos birakildiginda sunucu degismeyen
-                girdilerden kararli bir deger turetiyor.
-              */}
-              <Field label="Cihaz parmak izi" value={lynon.deviceFingerprint ?? ''} onChange={(v) => alan('deviceFingerprint', v)} placeholder={mevcut?.lynon?.deviceFingerprint || 'Boş: otomatik türetilir'} />
-              <SecimAlani
-                label="Cihaza güven"
-                value={lynon.trustDevice ?? (mevcut?.lynon?.trustDevice == null ? '' : String(mevcut.lynon.trustDevice))}
-                onChange={(v) => alan('trustDevice', v)}
-                secenekler={[['', 'ENV değeri'], ['true', 'Açık — önerilen'], ['false', 'Kapalı']]}
-                ipucu="Kapalıyken Lynon her istekte yeniden doğrulama isteyip &quot;User isn't authorized&quot; dönebilir."
-              />
-            </div>
-
-            <p className="mb-2 mt-5 text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500">İki adımlı doğrulama (TOTP)</p>
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
-              <Field label="OTP sırrı" value={lynon.otpSecret ?? ''} onChange={(v) => alan('otpSecret', v)} placeholder={mevcut?.lynon?.otpSecretMask || 'ENV değeri'} type="password" />
-              <Field label="OTP token (tek seferlik)" value={lynon.otpToken ?? ''} onChange={(v) => alan('otpToken', v)} placeholder={mevcut?.lynon?.otpTokenMask || 'ENV değeri'} type="password" />
-              <SecimAlani
-                label="Algoritma"
-                value={lynon.otpAlgorithm ?? (mevcut?.lynon?.otpAlgorithm || '')}
-                onChange={(v) => alan('otpAlgorithm', v)}
-                secenekler={[['', 'ENV değeri (SHA1)'], ['sha1', 'SHA1'], ['sha256', 'SHA256'], ['sha512', 'SHA512']]}
-              />
-              <Field label="Hane sayısı" value={lynon.otpDigits ?? ''} onChange={(v) => alan('otpDigits', v)} placeholder={mevcut?.lynon?.otpDigits != null ? String(mevcut.lynon.otpDigits) : 'ENV değeri (6)'} />
-              <Field label="Periyot (saniye)" value={lynon.otpPeriodSeconds ?? ''} onChange={(v) => alan('otpPeriodSeconds', v)} placeholder={mevcut?.lynon?.otpPeriodSeconds != null ? String(mevcut.lynon.otpPeriodSeconds) : 'ENV değeri (30)'} />
-            </div>
-
-            {/*
-              Kaydedilen sirrin dogru olup olmadigi baska turlu ancak bir
-              sonraki gercek girisin dusmesiyle anlasiliyordu.
-            */}
-            <div className="mt-3">
-              <TotpKarti tenantId={tenant.id} />
-            </div>
-
-            <p className="mb-2 mt-5 text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500">Bu sitenin durumu</p>
-            <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-              <InfoRow icon={KeyRound} label="Kiracı" value={tenant.id} />
-              <InfoRow icon={Globe} label="Domain" value={tenant.domain || 'TANIMSIZ — host eşleşmesi çalışmaz'} />
-              <InfoRow icon={Database} label="Güncellendi" value={mevcut?.updatedAt ? new Date(mevcut.updatedAt).toLocaleString('tr-TR') : 'Hiç'} />
-              <InfoRow icon={Shield} label="Değiştiren" value={mevcut?.updatedBy || '—'} />
-            </div>
-
-            <p className="mb-2 mt-5 text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500">Backoffice token</p>
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-              <Field
-                label="Backoffice token"
-                value={backoffice.authToken ?? ''}
-                onChange={(v) => setBackoffice((c) => ({ ...c, authToken: v }))}
-                placeholder={mevcut?.backoffice?.authTokenMask || 'ENV değeri'}
-                type="password"
-              />
-              <Field
-                label="Dashboard token"
-                value={backoffice.dashboardAuthToken ?? ''}
-                onChange={(v) => setBackoffice((c) => ({ ...c, dashboardAuthToken: v }))}
-                placeholder={mevcut?.backoffice?.dashboardAuthTokenMask || 'ENV değeri'}
-                type="password"
-              />
-            </div>
-
-            {testSonucu && (
-              <div className={cn(
-                'mt-4 rounded-3xl border p-8 text-xs font-semibold backdrop-blur-xl',
-                testSonucu.ok ? 'border-emerald-300/25 bg-emerald-300/[0.08] text-emerald-200' : 'border-rose-300/25 bg-rose-300/[0.08] text-rose-200'
-              )}>
-                {testSonucu.ok ? 'Bağlantı kuruldu.' : testSonucu.message || 'Bağlantı kurulamadı.'}
-              </div>
-            )}
-
-            <div className="mt-5 flex flex-col-reverse justify-between gap-3 sm:flex-row">
-              <button
-                onClick={() => test.mutate()}
-                disabled={test.isPending}
-                className="inline-flex h-9 items-center justify-center gap-2 rounded-3xl border border-white/[0.05] bg-white/[0.03] px-4 text-xs font-bold text-slate-200 transition hover:bg-white/[0.08] disabled:cursor-wait disabled:opacity-70 backdrop-blur-xl"
-              >
-                {test.isPending ? <Loader2 size={16} className="animate-spin" /> : <PlugZap size={16} />}
-                {test.isPending ? 'Deneniyor...' : 'Bağlantıyı dene'}
-              </button>
-              <div className="flex gap-3">
-                <button onClick={onClose} className="h-9 rounded-3xl border border-white/[0.05] bg-white/[0.03] px-4 text-xs font-bold text-slate-400 transition hover:text-white backdrop-blur-xl">
-                  Kapat
-                </button>
-                <button
-                  onClick={() => kaydet.mutate()}
-                  disabled={kaydet.isPending}
-                  className="inline-flex h-9 items-center justify-center gap-2 rounded-xl bg-blue-400 px-5 text-xs font-bold text-white transition hover:bg-blue-300 disabled:cursor-wait disabled:opacity-70"
-                >
-                  {kaydet.isPending ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-                  {kaydet.isPending ? 'Kaydediliyor...' : 'Kaydet'}
-                </button>
-              </div>
-            </div>
-          </>
-        )}
-      </motion.div>
-    </div>
-  );
-}
-
 /**
  * ANLIK TOTP KODU.
  *
- * Neden var: operatör OTP sırrını kaydediyor, doğru olup olmadığını ise
- * ancak bir sonraki gerçek girişin düşmesiyle öğreniyordu — ve o giriş
- * gece yarısı bir rapor işinin ortasında olabiliyor. Burada üretilen kod
+ * Operatör OTP sırrını kaydediyor, doğru olup olmadığını ise ancak bir
+ * sonraki gerçek girişin düşmesiyle öğreniyordu — ve o giriş gece yarısı
+ * bir rapor işinin ortasında olabiliyor. Burada üretilen kod
  * authenticator uygulamasındakiyle aynıysa sır doğrudur.
  *
  * Kodu sunucu üretir, sır tarayıcıya HİÇ gelmez. Geri sayım yerelde
- * işler ama sıfıra ulaştığında kod sunucudan yeniden istenir; saat
- * kayması olan bir makinede yerel hesap yanlış kod gösterirdi.
+ * işler ama sıfıra ulaştığında kod sunucudan yeniden istenir; saati
+ * kaymış bir makinede yerel hesap yanlış kod gösterirdi.
  */
 function TotpKarti({ tenantId }: { tenantId: string }) {
   const [kalan, setKalan] = useState<number | null>(null);
@@ -978,20 +831,8 @@ function TotpKarti({ tenantId }: { tenantId: string }) {
           )}
         </>
       ) : (
-        <p className="text-[11px] font-semibold text-slate-400">
-          {data?.message || 'Kod üretilemedi.'}
-        </p>
+        <p className="text-[11px] font-semibold text-slate-400">{data?.message || 'Kod üretilemedi.'}</p>
       )}
-    </div>
-  );
-}
-
-function InfoRow({ icon: Icon, label, value, title }: { icon: any; label: string; value: string; title?: string }) {
-  return (
-    <div className="flex min-h-8 items-center gap-2 rounded-3xl border border-white/[0.05] bg-black/15 px-2.5 py-1.5 text-[11px] backdrop-blur-xl" title={title}>
-      <Icon className="h-4 w-4 shrink-0 text-slate-400" />
-      <span className="w-16 shrink-0 text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500">{label}</span>
-      <span className="min-w-0 truncate font-semibold text-slate-200">{value}</span>
     </div>
   );
 }
