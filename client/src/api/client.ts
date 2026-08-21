@@ -1367,6 +1367,14 @@ export const masterApi = {
       body: JSON.stringify(body)
   }).then(r => r.json()),
   testConnection: (id: string) => post<any>(`/master/tenants/${id}/connection/test`, {}),
+  /**
+   * Sitenin ANLIK TOTP kodu. Sırrın kendisi dönmez, ondan türetilen
+   * 30 saniyelik kod döner — kaydedilen sırrın doğru olup olmadığı
+   * ancak böyle sınanabiliyor.
+   */
+  getTenantOtp: (id: string) => get<any>(`/master/tenants/${id}/otp`),
+  /** Çok kiracılı çözümleme durumu: site sayısı, yedek kiracı, çakışmalar. */
+  getDurum: () => get<any>('/master/durum'),
   getJobs: () => get<any>('/master/jobs'),
 };
 

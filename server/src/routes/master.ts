@@ -17,6 +17,10 @@ import { ensureTenantRuntime, tenantBaglantisiKurulduMu, tenantRuntimeYaz } from
 import { aktifTenantAnahtarlari } from '../lib/tenantFanout.js';
 import { clearLynonSession, ensureLynonSession, getLynonAuthStatus, isLynonConfigured } from '../lib/lynonAuth.js';
 import { hashPassword } from './auth.js';
+import { kiraciTanilamasi } from '../lib/kiraciTanilama.js';
+import { boolCozumle } from '../lib/baglantiAlanlari.js';
+import { kalanSaniye, totpKodu, TotpHatasi } from '../lib/totp.js';
+import { varsayilanTenantKey } from '../lib/tenantContext.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -258,8 +262,23 @@ export async function masterRoutes(app: FastifyInstance) {
       const n = Number(gelenLynon.timezoneOffset);
       if (Number.isFinite(n)) lynon.timezoneOffset = n;
     }
-    if (typeof gelenLynon.enabled === 'boolean') lynon.enabled = gelenLynon.enabled;
-    if (typeof gelenLynon.trustDevice === 'boolean') lynon.trustDevice = gelenLynon.trustDevice;
+    /**
+     * Boolean alanlar METIN olarak da gelebilir.
+     *
+     * Panel bu iki alani bir <select> ile gonderiyor ve HTML select'in
+     * degeri her zaman string'dir ("true" / "false" / ""). Yalnizca
+     * `typeof === 'boolean'` kontrolu yapilirken form degeri SESSIZCE
+     * yok sayiliyordu: operator "Cihaza guven: Acik" secip kaydediyor,
+     * panel "kaydedildi" diyor, kayit degismiyordu.
+     *
+     * Bos string "degistirme" demek -- diger alanlarla ayni kural.
+     */
+    const boolAta = <K extends keyof TenantLynonConnection>(alan: K, deger: unknown) => {
+      const sonuc = boolCozumle(deger);
+      if (sonuc.degisti) (lynon[alan] as unknown) = sonuc.deger;
+    };
+    boolAta('enabled', gelenLynon.enabled);
+    boolAta('trustDevice', gelenLynon.trustDevice);
 
     if (typeof gelenBackoffice.authToken === 'string' && gelenBackoffice.authToken.trim()) {
       backoffice.authToken = gelenBackoffice.authToken.trim();
@@ -313,6 +332,109 @@ export async function masterRoutes(app: FastifyInstance) {
       } catch (error) {
         return reply.send({ ok: false, message: error instanceof Error ? error.message : 'Bağlantı kurulamadı.' });
       }
+    });
+  });
+
+
+  /**
+   * SITENIN ANLIK TOTP KODU.
+   *
+   * Neden var: operator OTP sirrini kaydediyor ama dogru olup olmadigini
+   * ancak bir sonraki gercek girisin dusmesiyle ogreniyordu -- ve o giris
+   * bir rapor isinin ortasinda, gece yarisinda olabiliyor. Burasi sirri
+   * KAYDETMEDEN once dogrulamayi mumkun kiliyor: uretilen kod
+   * authenticator uygulamasindakiyle ayni ise sir dogrudur.
+   *
+   * Sirrin KENDISI donmez, yalnizca ondan turetilen 30 saniyelik kod.
+   * Kod zaten panelin her Lynon girisinde urettigi degerin ayni; bu uc
+   * yeni bir yetki vermiyor, var olani gorunur kiliyor. Yine de master
+   * oturumu sart.
+   */
+  app.get('/master/tenants/:id/otp', async (request: any, reply) => {
+    if (!request.session.isMaster) return reply.status(401).send({ error: 'Yetkisiz' });
+    const { id } = request.params as any;
+    if (!(await tenantVarMi(id))) return reply.status(404).send({ ok: false, message: 'Tenant bulunamadı' });
+
+    const kayit = await loadTenantConnection(id);
+    const token = String(kayit.lynon.otpToken ?? '').trim();
+    const sir = String(kayit.lynon.otpSecret ?? '').trim();
+
+    // Token alani ONCELIKLI -- giris akisi da oyle davraniyor
+    // (lynonAuth.currentOtp). Burada farkli davransaydik onizleme
+    // "calisiyor" derken giris baska bir kod gonderirdi.
+    if (/^\d{6}$/.test(token)) {
+      return reply.send({
+        ok: true, kod: token, kaynak: 'token', sabit: true,
+        kalanSaniye: null, periyot: null,
+        uyari: 'Sabit OTP token tanımlı. Tek seferlik kodlar dakikalar içinde geçersiz olur; kalıcı çalışma için OTP sırrı kullanın.',
+      });
+    }
+
+    if (!sir) {
+      return reply.send({ ok: false, kaynak: 'yok', message: 'Bu site için OTP sırrı tanımlı değil.' });
+    }
+
+    try {
+      const simdi = Date.now();
+      const sonuc = totpKodu(sir, {
+        algorithm: kayit.lynon.otpAlgorithm as never,
+        digits: kayit.lynon.otpDigits as never,
+        periodSeconds: kayit.lynon.otpPeriodSeconds as never,
+      }, simdi);
+      return reply.send({
+        ok: true,
+        kod: sonuc.kod,
+        kaynak: sonuc.kaynak === 'anlikKod' ? 'token' : 'sir',
+        sabit: sonuc.kaynak === 'anlikKod',
+        periyot: sonuc.options.periodSeconds,
+        kalanSaniye: sonuc.kaynak === 'anlikKod' ? null : kalanSaniye(sonuc.options.periodSeconds, simdi),
+        algoritma: sonuc.options.algorithm,
+        hane: sonuc.options.digits,
+      });
+    } catch (hata) {
+      return reply.send({
+        ok: false,
+        kaynak: 'sir',
+        message: hata instanceof TotpHatasi
+          ? 'OTP sırrı geçerli bir Base32 TOTP secret değil. Authenticator kurulum sırrını (A-Z, 2-7) yazın.'
+          : 'Kod üretilemedi.',
+      });
+    }
+  });
+
+  /**
+   * COK KIRACILI DURUM OZETI.
+   *
+   * Master paneli site listesini gosteriyordu ama COZUMLEMENIN nasil
+   * calistigini gostermiyordu. DB silindiginde site sayisi sifira
+   * dustu ve her istek "default" kiracisina dusmeye basladi -- panel
+   * calismaya devam ettigi icin haftalarca fark edilmedi. Uyariyi,
+   * duzeltmenin yapilacagi yerde gostermek icin bu uc var.
+   */
+  app.get('/master/durum', async (request: any, reply) => {
+    if (!request.session.isMaster) return reply.status(401).send({ error: 'Yetkisiz' });
+    const tenants = (await loadTenants()) as Array<any>;
+    const yedek = varsayilanTenantKey();
+
+    // Ayni domain iki siteye yazilmissa host eslesmesi ilk eslesene
+    // gider ve digeri SESSIZCE erisilemez olur.
+    const sayac = new Map<string, string[]>();
+    for (const t of tenants) {
+      const d = String(t?.domain ?? '').trim().toLowerCase().replace(/^www\./, '');
+      if (!d) continue;
+      sayac.set(d, [...(sayac.get(d) ?? []), String(t?.siteName || t?.id || '?')]);
+    }
+    const cakisanlar = [...sayac.entries()].filter(([, l]) => l.length > 1)
+      .map(([domain, siteler]) => ({ domain, siteler }));
+
+    return reply.send({
+      ok: true,
+      tanilama: kiraciTanilamasi(tenants, yedek),
+      yedekAnahtar: yedek,
+      alanAdiOlmayan: tenants
+        .filter((t) => t?.isActive !== false && !String(t?.domain ?? '').trim())
+        .map((t) => String(t?.siteName || t?.id || '?')),
+      cakisanAlanAdlari: cakisanlar,
     });
   });
 

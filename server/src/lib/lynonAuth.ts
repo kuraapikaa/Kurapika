@@ -2,6 +2,7 @@ import { createHash, createHmac } from 'crypto';
 import { LYNON_SL_TIMEZONE } from './istanbulGunu.js';
 import { currentTenantKey } from './tenantContext.js';
 import { lynonCfg } from './tenantRuntimeConfig.js';
+import { base32Coz, hotpKodu, totpAlgoritmasi, totpKodu, totpSirriniCozumle, TotpHatasi, type TotpSecenekleri } from './totp.js';
 
 type JsonValue = unknown;
 
@@ -131,16 +132,17 @@ interface LynonSession {
 const sessions = new Map<string, LynonSession>();
 const loginPromises = new Map<string, Promise<LynonSession>>();
 
-interface TotpOptions {
-  algorithm: 'sha1' | 'sha256' | 'sha512';
-  digits: number;
-  periodSeconds: number;
-}
-
-interface ParsedTotpSecret {
-  secret: string;
-  options: TotpOptions;
-}
+/**
+ * TOTP hesabi `lib/totp.ts`e tasindi: Master paneli de ayni hesabi
+ * kullaniyor (bir sitenin sirrini kaydettikten sonra dogrulayabilmek
+ * icin). Iki ayri uygulama olsaydi biri dogru kod uretip digeri
+ * uretmeyebilirdi ve fark ancak canlida gorunurdu.
+ *
+ * Buradaki sarmalayicilar iki isi yapiyor: varsayilan secenekleri
+ * calisan kiracinin yapilandirmasindan doldurmak ve TotpHatasi'ni
+ * operatore ne yapacagini soyleyen LynonAuthError'a cevirmek.
+ */
+type TotpOptions = TotpSecenekleri;
 
 function splitSetCookieHeader(header: string | null): string[] {
   if (!header) return [];
@@ -371,97 +373,62 @@ function stableDeviceFingerprint(): string {
 }
 
 function normalizeTotpAlgorithm(value: string | undefined): TotpOptions['algorithm'] {
-  const normalized = String(value || '').trim().toLowerCase().replace('-', '');
-  if (normalized === 'sha256') return 'sha256';
-  if (normalized === 'sha512') return 'sha512';
-  return 'sha1';
+  return totpAlgoritmasi(value);
 }
 
-function parseTotpSecret(secret: string): ParsedTotpSecret {
-  const trimmed = secret.trim();
-  const fallback: TotpOptions = {
+/** Calisan kiracinin ayarlarini varsayilan olarak verir. */
+function kiraciTotpVarsayilani(): Partial<TotpSecenekleri> {
+  return {
     algorithm: normalizeTotpAlgorithm(lynonCfg().otpAlgorithm),
-    digits: Math.max(4, Math.min(10, Number(lynonCfg().otpDigits) || 6)),
-    periodSeconds: Math.max(10, Number(lynonCfg().otpPeriodSeconds) || 30),
+    digits: Number(lynonCfg().otpDigits),
+    periodSeconds: Number(lynonCfg().otpPeriodSeconds),
   };
+}
 
-  if (!trimmed.toLowerCase().startsWith('otpauth://')) {
-    return { secret: trimmed, options: fallback };
-  }
-
-  try {
-    const url = new URL(trimmed);
-    return {
-      secret: url.searchParams.get('secret') ?? trimmed,
-      options: {
-        algorithm: normalizeTotpAlgorithm(url.searchParams.get('algorithm') ?? lynonCfg().otpAlgorithm),
-        digits: Math.max(4, Math.min(10, Number(url.searchParams.get('digits') ?? lynonCfg().otpDigits) || 6)),
-        periodSeconds: Math.max(10, Number(url.searchParams.get('period') ?? lynonCfg().otpPeriodSeconds) || 30),
-      },
-    };
-  } catch {
-    return { secret: trimmed, options: fallback };
-  }
+function parseTotpSecret(secret: string): { secret: string; options: TotpOptions } {
+  return totpSirriniCozumle(secret, kiraciTotpVarsayilani());
 }
 
 function base32Decode(secret: string): { bytes: Buffer; options: TotpOptions } {
-  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
   const parsed = parseTotpSecret(secret);
-  const normalized = parsed.secret.replace(/[\s-]/g, '').replace(/=+$/g, '').toUpperCase();
-  const invalid = Array.from(new Set(normalized.split('').filter((char) => !alphabet.includes(char))));
-  if (invalid.length > 0) {
-    throw new LynonAuthError(
+  try {
+    return { bytes: base32Coz(parsed.secret), options: parsed.options };
+  } catch (hata) {
+    throw totpHatasiniCevir(hata);
+  }
+}
+
+/**
+ * Mesajlar DEGISMEDI: operatore ne yapacagini soyluyorlar ve bu metinler
+ * kurulum belgelerinde geciyor.
+ */
+function totpHatasiniCevir(hata: unknown): LynonAuthError {
+  if (hata instanceof TotpHatasi && hata.kod === 'gecersizKarakter') {
+    return new LynonAuthError(
       'LYNON_PANEL_OTP_SECRET geçerli bir Base32 TOTP secret değil. Authenticator kurulum secretını (A-Z, 2-7) yazın veya anlık 6 haneli kodu LYNON_PANEL_OTP_TOKEN alanına koyun.',
       500
     );
   }
-
-  let bits = '';
-  const bytes: number[] = [];
-
-  for (const char of normalized) {
-    const value = alphabet.indexOf(char);
-    if (value === -1) continue;
-    bits += value.toString(2).padStart(5, '0');
-    while (bits.length >= 8) {
-      bytes.push(parseInt(bits.slice(0, 8), 2));
-      bits = bits.slice(8);
-    }
+  if (hata instanceof TotpHatasi) {
+    return new LynonAuthError('LYNON_PANEL_OTP_SECRET / LYNON_PANEL_OTP_TOKEN geçerli bir TOTP secret değil.', 500);
   }
-
-  if (bytes.length === 0) {
-    throw new LynonAuthError('LYNON_PANEL_OTP_SECRET / LYNON_PANEL_OTP_TOKEN geçerli bir TOTP secret değil.', 500);
-  }
-
-  return { bytes: Buffer.from(bytes), options: parsed.options };
+  return hata instanceof LynonAuthError ? hata : new LynonAuthError('TOTP kodu üretilemedi.', 500);
 }
 
 function hotp(secret: Buffer, counter: number, options: TotpOptions): string {
-  const buf = Buffer.alloc(8);
-  const high = Math.floor(counter / 0x100000000);
-  const low = counter >>> 0;
-  buf.writeUInt32BE(high, 0);
-  buf.writeUInt32BE(low, 4);
-
-  const digest = createHmac(options.algorithm, secret).update(buf).digest();
-  const offset = digest[digest.length - 1] & 0x0f;
-  const code = (
-    ((digest[offset] & 0x7f) << 24) |
-    ((digest[offset + 1] & 0xff) << 16) |
-    ((digest[offset + 2] & 0xff) << 8) |
-    (digest[offset + 3] & 0xff)
-  ) % (10 ** options.digits);
-
-  return String(code).padStart(options.digits, '0');
+  return hotpKodu(secret, counter, options);
 }
 
 function currentOtp(nowMs = Date.now()): string {
+  // Token alani ONCELIKLI: operator kalici sirri bilmiyorsa anlik kodu
+  // buraya yazip tek seferlik giris yapabiliyor.
   const token = lynonCfg().otpToken.trim();
   if (/^\d{6}$/.test(token)) return token;
-  const value = lynonCfg().otpSecret.trim();
-  if (/^\d{6}$/.test(value)) return value;
-  const { bytes, options } = base32Decode(value);
-  return hotp(bytes, Math.floor(nowMs / 1000 / options.periodSeconds), options);
+  try {
+    return totpKodu(lynonCfg().otpSecret.trim(), kiraciTotpVarsayilani(), nowMs).kod;
+  } catch (hata) {
+    throw totpHatasiniCevir(hata);
+  }
 }
 
 async function postJson(url: string, body: Record<string, unknown>, jar: CookieJar): Promise<{ status: number; ok: boolean; data: JsonValue; responseDateMs?: number }> {

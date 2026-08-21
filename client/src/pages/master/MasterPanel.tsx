@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
@@ -15,8 +15,11 @@ import {
   PlugZap,
   Plus,
   Save,
+  Copy,
+  RefreshCw,
   Search,
   Server,
+  Timer,
   Settings,
   Shield,
   ShieldAlert,
@@ -53,6 +56,18 @@ export function MasterPanel() {
   const { data, isLoading } = useQuery({
     queryKey: ['master-tenants'],
     queryFn: () => masterApi.getTenants(),
+  });
+
+  /**
+   * Çok kiracılı çözümlemenin durumu. Panel site listesini gösteriyordu
+   * ama isteklerin hangi kiracıya düştüğünü göstermiyordu; veritabanı
+   * silindiğinde site sayısı sıfıra düştü, her istek yedek kiracıya
+   * gitmeye başladı ve panel çalışmaya devam ettiği için fark edilmedi.
+   */
+  const { data: durum } = useQuery({
+    queryKey: ['master-durum'],
+    queryFn: () => masterApi.getDurum(),
+    refetchInterval: 60_000,
   });
 
   const tenants = data?.data || [];
@@ -188,6 +203,8 @@ export function MasterPanel() {
           </div>
         </header>
 
+        <TenantResolutionBanner durum={durum} />
+
         <section className="grid grid-cols-2 gap-8 xl:grid-cols-4">
           <MetricCard label="Toplam panel" value={stats.total} icon={Server} tone="cyan" />
           <MetricCard label="Aktif" value={stats.active} icon={CheckCircle2} tone="emerald" />
@@ -275,6 +292,76 @@ export function MasterPanel() {
   );
 }
 
+/**
+ * ÇOK KİRACILI ÇÖZÜMLEME DURUMU.
+ *
+ * Üç sessiz arıza burada görünür oluyor:
+ *  1. Hiç site yok  → her istek yedek kiracıya düşer ve bonus kuralları,
+ *     oyun ayarları, kimlikler siteler arasında PAYLAŞILIR.
+ *  2. Domain'i olmayan aktif site → host eşleşmesi onu hiç bulamaz;
+ *     panelde görünür ama hiçbir istek ona ulaşmaz.
+ *  3. Aynı domain iki sitede → eşleşme ilk siteye gider, diğeri sessizce
+ *     erişilemez olur.
+ *
+ * Üçü de panel "çalışıyor" görünürken olur; bu yüzden uyarıyı düzeltmenin
+ * yapılacağı yerde, listenin üstünde gösteriyoruz.
+ */
+function TenantResolutionBanner({ durum }: { durum: any }) {
+  if (!durum?.ok) return null;
+  const tanilama = durum.tanilama || {};
+  const alanAdiOlmayan: string[] = durum.alanAdiOlmayan || [];
+  const cakisanlar: Array<{ domain: string; siteler: string[] }> = durum.cakisanAlanAdlari || [];
+  const sorunlar: Array<{ tur: 'kritik' | 'uyari'; metin: string }> = [];
+
+  if (tanilama.uyari) sorunlar.push({ tur: 'kritik', metin: tanilama.uyari });
+  if (alanAdiOlmayan.length > 0) {
+    sorunlar.push({
+      tur: 'uyari',
+      metin: `Domain tanımsız: ${alanAdiOlmayan.join(', ')}. Host eşleşmesi bu siteleri bulamaz; istekler "${durum.yedekAnahtar}" kiracısına düşer.`,
+    });
+  }
+  for (const c of cakisanlar) {
+    sorunlar.push({
+      tur: 'kritik',
+      metin: `"${c.domain}" birden fazla siteye tanımlı (${c.siteler.join(', ')}). Eşleşme ilkine gider, diğerleri erişilemez kalır.`,
+    });
+  }
+
+  if (sorunlar.length === 0) {
+    return (
+      <section className="rounded-3xl border border-emerald-300/20 bg-emerald-300/[0.06] p-5 backdrop-blur-xl">
+        <div className="flex flex-wrap items-center gap-3 text-xs font-bold text-emerald-200">
+          <CheckCircle2 size={16} />
+          <span>Çözümleme sağlıklı — {tanilama.aktifSite} aktif site domainiyle eşleşiyor.</span>
+          <span className="font-medium text-emerald-200/70">Eşleşmeyen istekler: {durum.yedekAnahtar}</span>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="space-y-2 rounded-3xl border border-amber-300/25 bg-amber-300/[0.07] p-5 backdrop-blur-xl">
+      <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-amber-200">
+        <ShieldAlert size={16} /> Çok kiracılı çözümleme
+      </div>
+      {sorunlar.map((sorun, i) => (
+        <p
+          key={i}
+          className={cn(
+            'text-xs font-semibold leading-relaxed',
+            sorun.tur === 'kritik' ? 'text-rose-200' : 'text-amber-200/90'
+          )}
+        >
+          {sorun.metin}
+        </p>
+      ))}
+      <p className="pt-1 text-[11px] font-medium text-amber-200/60">
+        Toplam {tanilama.siteSayisi ?? 0} site, {tanilama.aktifSite ?? 0} aktif. Eşleşmeyen istekler "{durum.yedekAnahtar}" kiracısına düşer.
+      </p>
+    </section>
+  );
+}
+
 function MetricCard({ label, value, icon: Icon, tone }: { label: string; value: number; icon: any; tone: 'cyan' | 'emerald' | 'rose' | 'amber' }) {
   const toneClass = {
     cyan: 'bg-[color:var(--panel-info,#64d2ff)]/10 text-cyan-300 border-cyan-300/20',
@@ -307,6 +394,31 @@ function Field({ label, value, onChange, placeholder, type = 'text' }: { label: 
         className="h-9 w-full rounded-3xl border border-white/[0.05] bg-white/[0.02] px-3 text-xs font-semibold text-white outline-none transition placeholder:text-slate-500 focus:border-blue-400/40 [color-scheme:dark] backdrop-blur-xl"
         placeholder={placeholder}
       />
+    </div>
+  );
+}
+
+/** Üç durumlu seçim: boş = ENV değerini kullan. */
+function SecimAlani({ label, value, onChange, secenekler, ipucu }: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  secenekler: Array<[string, string]>;
+  ipucu?: string;
+}) {
+  return (
+    <div>
+      <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">{label}</label>
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="h-9 w-full rounded-3xl border border-white/[0.05] bg-white/[0.02] px-3 text-xs font-semibold text-white outline-none transition focus:border-blue-400/40 [color-scheme:dark] backdrop-blur-xl"
+      >
+        {secenekler.map(([deger, etiket]) => (
+          <option key={deger} value={deger}>{etiket}</option>
+        ))}
+      </select>
+      {ipucu && <p className="mt-1 text-[10px] text-slate-500">{ipucu}</p>}
     </div>
   );
 }
@@ -463,9 +575,52 @@ function ConnectionModal({ tenant, onClose }: { tenant: any; onClose: () => void
               <Field label="Para birimi" value={lynon.currency ?? ''} onChange={(v) => alan('currency', v)} placeholder={mevcut?.lynon?.currency || 'ENV değeri'} />
               <Field label="Panel kullanıcısı" value={lynon.username ?? ''} onChange={(v) => alan('username', v)} placeholder={mevcut?.lynon?.username || 'ENV değeri'} />
               <Field label="Panel şifresi" value={lynon.password ?? ''} onChange={(v) => alan('password', v)} placeholder={mevcut?.lynon?.passwordMask || 'ENV değeri'} type="password" />
-              <Field label="OTP sırrı" value={lynon.otpSecret ?? ''} onChange={(v) => alan('otpSecret', v)} placeholder={mevcut?.lynon?.otpSecretMask || 'ENV değeri'} type="password" />
-              <Field label="OTP token" value={lynon.otpToken ?? ''} onChange={(v) => alan('otpToken', v)} placeholder={mevcut?.lynon?.otpTokenMask || 'ENV değeri'} type="password" />
               <Field label="Saat dilimi ofseti" value={lynon.timezoneOffset ?? ''} onChange={(v) => alan('timezoneOffset', v)} placeholder={mevcut?.lynon?.timezoneOffset != null ? String(mevcut.lynon.timezoneOffset) : 'ENV değeri'} />
+              {/*
+                Cihaz alanlari sunucuda ZATEN destekleniyordu ama panelde
+                hic gorunmuyordu. `trustDevice` acilana kadar Lynon
+                "User isn't authorized" donduruyor ve sebebi hicbir yerde
+                yazmiyordu; parmak izi bos birakildiginda sunucu degismeyen
+                girdilerden kararli bir deger turetiyor.
+              */}
+              <Field label="Cihaz parmak izi" value={lynon.deviceFingerprint ?? ''} onChange={(v) => alan('deviceFingerprint', v)} placeholder={mevcut?.lynon?.deviceFingerprint || 'Boş: otomatik türetilir'} />
+              <SecimAlani
+                label="Cihaza güven"
+                value={lynon.trustDevice ?? (mevcut?.lynon?.trustDevice == null ? '' : String(mevcut.lynon.trustDevice))}
+                onChange={(v) => alan('trustDevice', v)}
+                secenekler={[['', 'ENV değeri'], ['true', 'Açık — önerilen'], ['false', 'Kapalı']]}
+                ipucu="Kapalıyken Lynon her istekte yeniden doğrulama isteyip &quot;User isn't authorized&quot; dönebilir."
+              />
+            </div>
+
+            <p className="mb-2 mt-5 text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500">İki adımlı doğrulama (TOTP)</p>
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
+              <Field label="OTP sırrı" value={lynon.otpSecret ?? ''} onChange={(v) => alan('otpSecret', v)} placeholder={mevcut?.lynon?.otpSecretMask || 'ENV değeri'} type="password" />
+              <Field label="OTP token (tek seferlik)" value={lynon.otpToken ?? ''} onChange={(v) => alan('otpToken', v)} placeholder={mevcut?.lynon?.otpTokenMask || 'ENV değeri'} type="password" />
+              <SecimAlani
+                label="Algoritma"
+                value={lynon.otpAlgorithm ?? (mevcut?.lynon?.otpAlgorithm || '')}
+                onChange={(v) => alan('otpAlgorithm', v)}
+                secenekler={[['', 'ENV değeri (SHA1)'], ['sha1', 'SHA1'], ['sha256', 'SHA256'], ['sha512', 'SHA512']]}
+              />
+              <Field label="Hane sayısı" value={lynon.otpDigits ?? ''} onChange={(v) => alan('otpDigits', v)} placeholder={mevcut?.lynon?.otpDigits != null ? String(mevcut.lynon.otpDigits) : 'ENV değeri (6)'} />
+              <Field label="Periyot (saniye)" value={lynon.otpPeriodSeconds ?? ''} onChange={(v) => alan('otpPeriodSeconds', v)} placeholder={mevcut?.lynon?.otpPeriodSeconds != null ? String(mevcut.lynon.otpPeriodSeconds) : 'ENV değeri (30)'} />
+            </div>
+
+            {/*
+              Kaydedilen sirrin dogru olup olmadigi baska turlu ancak bir
+              sonraki gercek girisin dusmesiyle anlasiliyordu.
+            */}
+            <div className="mt-3">
+              <TotpKarti tenantId={tenant.id} />
+            </div>
+
+            <p className="mb-2 mt-5 text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500">Bu sitenin durumu</p>
+            <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+              <InfoRow icon={KeyRound} label="Kiracı" value={tenant.id} />
+              <InfoRow icon={Globe} label="Domain" value={tenant.domain || 'TANIMSIZ — host eşleşmesi çalışmaz'} />
+              <InfoRow icon={Database} label="Güncellendi" value={mevcut?.updatedAt ? new Date(mevcut.updatedAt).toLocaleString('tr-TR') : 'Hiç'} />
+              <InfoRow icon={Shield} label="Değiştiren" value={mevcut?.updatedBy || '—'} />
             </div>
 
             <p className="mb-2 mt-5 text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500">Backoffice token</p>
@@ -521,6 +676,114 @@ function ConnectionModal({ tenant, onClose }: { tenant: any; onClose: () => void
           </>
         )}
       </motion.div>
+    </div>
+  );
+}
+
+/**
+ * ANLIK TOTP KODU.
+ *
+ * Neden var: operatör OTP sırrını kaydediyor, doğru olup olmadığını ise
+ * ancak bir sonraki gerçek girişin düşmesiyle öğreniyordu — ve o giriş
+ * gece yarısı bir rapor işinin ortasında olabiliyor. Burada üretilen kod
+ * authenticator uygulamasındakiyle aynıysa sır doğrudur.
+ *
+ * Kodu sunucu üretir, sır tarayıcıya HİÇ gelmez. Geri sayım yerelde
+ * işler ama sıfıra ulaştığında kod sunucudan yeniden istenir; saat
+ * kayması olan bir makinede yerel hesap yanlış kod gösterirdi.
+ */
+function TotpKarti({ tenantId }: { tenantId: string }) {
+  const [kalan, setKalan] = useState<number | null>(null);
+  const [kopyalandi, setKopyalandi] = useState(false);
+
+  const { data, isFetching, refetch } = useQuery({
+    queryKey: ['master-otp', tenantId],
+    queryFn: () => masterApi.getTenantOtp(tenantId),
+    refetchOnWindowFocus: false,
+  });
+
+  useEffect(() => {
+    if (data?.kalanSaniye == null) { setKalan(null); return; }
+    setKalan(data.kalanSaniye);
+  }, [data]);
+
+  useEffect(() => {
+    if (kalan == null) return;
+    if (kalan <= 0) { refetch(); return; }
+    const t = setTimeout(() => setKalan((k) => (k == null ? null : k - 1)), 1000);
+    return () => clearTimeout(t);
+  }, [kalan, refetch]);
+
+  const kopyala = async () => {
+    if (!data?.kod) return;
+    try {
+      await navigator.clipboard.writeText(String(data.kod));
+      setKopyalandi(true);
+      setTimeout(() => setKopyalandi(false), 1500);
+    } catch {
+      toast.error('Kopyalanamadı');
+    }
+  };
+
+  const periyot = Number(data?.periyot) || 30;
+  const oran = kalan == null ? 0 : Math.max(0, Math.min(1, kalan / periyot));
+
+  return (
+    <div className="rounded-3xl border border-white/[0.05] bg-black/20 p-5 backdrop-blur-xl">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <p className="inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500">
+          <Timer size={13} /> Anlık TOTP kodu
+        </p>
+        <button
+          onClick={() => refetch()}
+          disabled={isFetching}
+          className="inline-flex items-center gap-1.5 rounded-3xl border border-white/[0.05] bg-white/[0.03] px-2.5 py-1 text-[10px] font-bold text-slate-300 transition hover:text-white disabled:opacity-60"
+        >
+          <RefreshCw size={12} className={cn(isFetching && 'animate-spin')} /> Yenile
+        </button>
+      </div>
+
+      {isFetching && !data ? (
+        <div className="flex justify-center py-4"><Loader2 size={20} className="animate-spin text-cyan-300" /></div>
+      ) : data?.ok ? (
+        <>
+          <div className="flex flex-wrap items-center gap-4">
+            <button
+              onClick={kopyala}
+              title="Kopyala"
+              className="group inline-flex items-center gap-3 rounded-3xl border border-cyan-300/20 bg-cyan-300/[0.07] px-4 py-2.5 transition hover:bg-cyan-300/[0.13]"
+            >
+              <span className="font-mono text-2xl font-bold tracking-[0.25em] text-cyan-200">{data.kod}</span>
+              {kopyalandi ? <CheckCircle2 size={16} className="text-emerald-300" /> : <Copy size={16} className="text-cyan-300/60 group-hover:text-cyan-200" />}
+            </button>
+
+            {kalan != null && (
+              <div className="flex items-center gap-2">
+                <div className="h-1.5 w-24 overflow-hidden rounded-full bg-white/10">
+                  <div
+                    className={cn('h-full rounded-full transition-[width] duration-1000 ease-linear', kalan <= 5 ? 'bg-rose-400' : 'bg-cyan-300')}
+                    style={{ width: `${oran * 100}%` }}
+                  />
+                </div>
+                <span className={cn('text-xs font-bold tabular-nums', kalan <= 5 ? 'text-rose-300' : 'text-slate-400')}>{kalan}s</span>
+              </div>
+            )}
+          </div>
+
+          {data.sabit ? (
+            <p className="mt-3 text-[11px] font-semibold leading-relaxed text-amber-200/90">{data.uyari}</p>
+          ) : (
+            <p className="mt-3 text-[11px] font-medium text-slate-500">
+              {String(data.algoritma || '').toUpperCase()} · {data.hane} hane · {periyot}s.
+              Authenticator uygulamanızdaki kodla aynıysa sır doğru kaydedilmiş.
+            </p>
+          )}
+        </>
+      ) : (
+        <p className="text-[11px] font-semibold text-slate-400">
+          {data?.message || 'Kod üretilemedi.'}
+        </p>
+      )}
     </div>
   );
 }
