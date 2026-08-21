@@ -2472,7 +2472,20 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
 
       // Kural Kontrolü: Eğer bu bonus "cash" (nakit) olarak tanımlandıysa manual adjustment'a pasla
       try {
-          const tenantKey = await resolveTenantKeyFromHost(request as any);
+          /**
+           * OTURUMDAN çözülüyor, host'tan DEĞİL.
+           *
+           * Burası bir OPERATÖR isteği: hangi sitenin kurallarına
+           * bakılacağını oturumdaki kiracı belirler. Host'a bakmak, tek
+           * bir panel adresinden birden fazla site yönetildiğinde
+           * (oturum kiracıyı taşıyor ama host hepsinde aynı) BAŞKA bir
+           * sitenin bonus kurallarını uygulardı -- ve bu kurallar
+           * tutarın kendisini belirliyor.
+           *
+           * Aynı rotanın Lynon dalı zaten `getTenantKeyForAdmin`
+           * kullanıyordu; iki dal iki farklı kiracı okuyordu.
+           */
+          const tenantKey = await getTenantKeyForAdmin(request as any);
           const rules = await getRules(tenantKey);
           const strId = String(BonusId);
           let spec = rules?.PROMO_SPECS?.[strId];
