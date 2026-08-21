@@ -1,4 +1,5 @@
 import { config } from '../config.js';
+import { gonderilecekKanalVarMi, tanimliKanallar } from './telegramKanalVar.js';
 import { getBackofficeToken } from '../lib/authStore.js';
 import { herTenantIcin } from '../lib/tenantFanout.js';
 
@@ -273,10 +274,22 @@ export async function registerTelegramRaporJob(): Promise<void> {
     console.log('[scheduler] Telegram rapor botu Lynon kapalı olduğu için atlandı.');
     return;
   }
-  if (!config.telegram.botToken || !config.telegram.raporChatId) {
-    console.log('[scheduler] Telegram rapor botu kapalı (TELEGRAM_RAPOR_CHAT_ID tanımlı değil).');
+  if (!config.telegram.botToken) {
+    console.log('[scheduler] Telegram rapor botu kapalı (TELEGRAM_BOT_TOKEN tanımlı değil).');
     return;
   }
+  /**
+   * Kosul YALNIZCA `raporChatId`'ye bakiyordu. Ama o bir YEDEK: her akis
+   * kendi kanalina gidiyor (`sohbetSec`), yedek yalnizca tanimlanmamis
+   * olanlar icin. Sonuc: bonus/yatirim/correction kanallarini dogru
+   * tanimlayan bir kurulum, alakasiz bir dorduncu degisken yuzunden
+   * tamamen sessiz kaliyordu. Gerekce: `telegramKanalVar.ts`.
+   */
+  if (!gonderilecekKanalVarMi(config.telegram)) {
+    console.log('[scheduler] Telegram rapor botu kapalı (hiçbir sohbet kimliği tanımlı değil).');
+    return;
+  }
+  console.log(`[scheduler] Telegram rapor botu açık — kanallar: ${tanimliKanallar(config.telegram).join(', ')}`);
   const { runTelegramRaporJob } = await import('./telegramRaporJob.js');
   scheduler.register('telegram-rapor', config.telegram.raporAralikMs, async () => {
     const sonuc = await runTelegramRaporJob();
