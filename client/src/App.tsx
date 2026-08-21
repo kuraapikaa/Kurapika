@@ -43,10 +43,7 @@ const PlayerProfile = lazy(() => import('@/pages/admin/PlayerProfile').then(m =>
 const TransactionsList = lazy(() => import('@/pages/admin/TransactionsList').then(m => ({ default: m.TransactionsList })));
 const TopluIslemOzeti = lazy(() => import('@/pages/admin/TopluIslemOzeti').then(m => ({ default: m.TopluIslemOzeti })));
 const AutoWithdrawPanel = lazy(() => import('@/pages/admin/AutoWithdrawPanel').then(m => ({ default: m.AutoWithdrawPanel })));
-const RiskAnalysisPage = lazy(() => import('@/pages/admin/RiskAnalysisPage').then(m => ({ default: m.RiskAnalysisPage })));
-const OyuncuKategorileme = lazy(() => import('@/pages/admin/OyuncuKategorileme').then(m => ({ default: m.OyuncuKategorileme })));
 const ManuelDuzeltmeler = lazy(() => import('@/pages/admin/ManuelDuzeltmeler').then(m => ({ default: m.ManuelDuzeltmeler })));
-const Mutabakat = lazy(() => import('@/pages/admin/Mutabakat').then(m => ({ default: m.Mutabakat })));
 const LiveRadar = lazy(() => import('@/pages/admin/LiveRadar').then(m => ({ default: m.LiveRadar })));
 const RegistrationStats = lazy(() => import('@/pages/admin/RegistrationStats').then(m => ({ default: m.RegistrationStats })));
 const ProviderReport = lazy(() => import('@/pages/admin/ProviderReport').then(m => ({ default: m.ProviderReport })));
@@ -58,7 +55,6 @@ const IFrameGenerator = lazy(() => import('@/pages/admin/IFrameGenerator').then(
 const LoyaltySettings = lazy(() => import('@/pages/admin/LoyaltySettings').then(m => ({ default: m.LoyaltySettings })));
 const UserSystem = lazy(() => import('@/pages/admin/UserSystem').then(m => ({ default: m.UserSystem })));
 const VIPSettings = lazy(() => import('@/pages/admin/VIPSettings').then(m => ({ default: m.VIPSettings })));
-const AffiliatePanel = lazy(() => import('@/pages/admin/AffiliatePanel').then(m => ({ default: m.AffiliatePanel })));
 const AdminTournamentSettings = lazy(() => import('@/pages/admin/AdminTournamentSettings').then(m => ({ default: m.AdminTournamentSettings })));
 
 // ── Oyuncu ekranlari ──────────────────────────────────────────────────
@@ -161,10 +157,7 @@ export default function App() {
 
             <Route path="/oyuncular" element={<OyuncularSayfasi />} />
             <Route path="/oyuncu/:id/:login" element={<PlayerProfile />} />
-            <Route path="/risk-analizi" element={<RiskAnalysisPage />} />
-            <Route path="/oyuncu-kategorileme" element={<OyuncuKategorileme />} />
             <Route path="/admin/kullanici-sistemi" element={<UserSystem />} />
-            <Route path="/affiliate" element={<AffiliatePanel />} />
 
             <Route path="/bonuslar" element={<BonuslarSayfasi />} />
             <Route path="/bonus-kurallari" element={<RulesManager />} />
@@ -184,7 +177,6 @@ export default function App() {
 
             <Route path="/saglayici-raporu" element={<ProviderReport />} />
             <Route path="/manuel-duzeltmeler" element={<ManuelDuzeltmeler />} />
-            <Route path="/mutabakat" element={<Mutabakat />} />
             <Route path="/audit" element={<AuditLogPage />} />
 
             <Route path="/admin/formlar" element={<AdminForms />} />

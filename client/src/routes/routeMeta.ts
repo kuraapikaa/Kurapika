@@ -41,15 +41,11 @@ import {
   Ticket,
   Palette,
   Crown,
-  Handshake,
   LineChart,
-  Layers,
   Scale,
-  ShieldAlert,
   SlidersHorizontal,
   ClipboardList,
   ScrollText,
-  BookOpen,
   Sparkles,
   CalendarDays,
   type LucideIcon,
@@ -214,26 +210,6 @@ export const ADMIN_ROUTES: RouteMeta[] = [
     nav: { group: 'Oyuncular', label: 'Oyuncu listesi', icon: Users },
   },
   {
-    id: 'riskAnalizi',
-    icerikSinifi: 'mt-4 min-h-0 flex-1',
-    path: '/risk-analizi',
-    permission: 'reports',
-    eyebrow: 'İstihbarat',
-    title: 'Risk analizi',
-    description: 'Şüpheli davranışları ve finansal anomalileri öncelik sırasına göre inceleyin.',
-    nav: { group: 'Oyuncular', label: 'Risk analizi', icon: ShieldAlert },
-  },
-  {
-    id: 'oyuncuKategorileme',
-    icerikSinifi: 'mt-4 min-h-0 flex-1',
-    path: '/oyuncu-kategorileme',
-    permission: 'reports',
-    eyebrow: 'İstihbarat',
-    title: 'Otomatik kategorileme',
-    description: 'Seviye eşikleri Lynon kategori açıklamalarından okunur; risk ve durgunluk kararı bekletebilir.',
-    nav: { group: 'Oyuncular', label: 'Otomatik kategori', icon: Layers },
-  },
-  {
     id: 'userSystem',
     path: '/admin/kullanici-sistemi',
     permission: 'system',
@@ -241,18 +217,6 @@ export const ADMIN_ROUTES: RouteMeta[] = [
     title: 'Kullanıcı sistemi',
     description: 'Çalışan alt panellerini açın, rollerini ve modül yetkilerini yönetin.',
     nav: { group: 'Oyuncular', label: 'Kullanıcı sistemi', icon: UserCog },
-  },
-  {
-    // "Affiliate merkezi" idi. Ortaklik yonetimi Bugs Affiliate'e tasindi;
-    // eski ad, iki ayri affiliate arayuzunden hangisinin guncel oldugunu
-    // belirsiz birakiyordu. Burada kalan sey Lynon'un BTag raporu.
-    id: 'affiliate',
-    path: '/affiliate',
-    permission: 'players',
-    eyebrow: 'CRM & Affiliate',
-    title: 'Affiliate Merkezi',
-    description: 'BTag kaynaklarını, bağlı oyuncuları ve affiliate performansını tek merkezden takip edin.',
-    nav: { group: 'Oyuncular', label: 'BTag performansı', icon: Handshake },
   },
 
   // ── Bonus ───────────────────────────────────────────────────────────
@@ -391,16 +355,6 @@ export const ADMIN_ROUTES: RouteMeta[] = [
     title: 'Manuel düzeltmeler',
     description: 'Lynon arayüzünden elle yapılan bakiye eklemeleri; hangi yönetici, hangi hesap, hangi gerekçe.',
     nav: { group: 'Denetim', label: 'Manuel düzeltmeler', icon: Scale },
-  },
-  {
-    id: 'mutabakat',
-    icerikSinifi: 'mt-4 min-h-0 flex-1',
-    path: '/mutabakat',
-    permission: 'reports',
-    eyebrow: 'Denetim',
-    title: 'Günlük mutabakat',
-    description: 'Günün ödeme yöntemi kırılımı, yöntem komisyonları ve elle eklenen kalemler; rapor ile kasa arasındaki fark görünür.',
-    nav: { group: 'Denetim', label: 'Günlük mutabakat', icon: BookOpen },
   },
   {
     id: 'audit',
