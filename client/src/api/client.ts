@@ -969,6 +969,18 @@ export const adminApi = {
   manualAdjustment: (body: { ClientId: number; Amount: number; Info?: string; DocTypeInt?: number; CorrectionType: 'crediting' | 'debiting' }) =>
     post<any>('/admin/manual-adjustment', body),
 
+  /**
+   * Toplu yatırım/çekim özeti. Yatırım ve çekim AYRI tarih aralığı
+   * kullanabilir; boş bırakılan sınır uygulanmaz.
+   */
+  topluIslemOzeti: (body: {
+    kullanicilar: string;
+    yatirimBaslangic?: string;
+    yatirimBitis?: string;
+    cekimBaslangic?: string;
+    cekimBitis?: string;
+  }) => post<any>('/admin/toplu-islem-ozeti', body),
+
   chargeBonus: (body: { ClientId: number; BonusId: number; Amount?: number; AssignmentValues?: Record<string, unknown> }) =>
     post<any>('/admin/bonus/charge', body),
 

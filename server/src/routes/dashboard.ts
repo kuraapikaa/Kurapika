@@ -27,6 +27,8 @@ import {
   specPartnerBonusIdleri,
 } from '../services/bonusAraliklari.js';
 import { bonusTalepGirdisiniDogrula } from '../services/bonusTalepGirdisi.js';
+import { genelToplam, kullaniciAdlariniAyikla, oyuncuOzeti } from '../services/topluIslemOzeti.js';
+import { istanbulYerelAn } from '../lib/istanbulGunu.js';
 import { depositBasis } from '../services/promoEvaluator.js';
 import { istekKimligi, oyuncuVerisineErisebilir } from '../lib/istekKimligi.js';
 import { getPromoOverrides, setPromoOverride } from '../services/promoOverridesService.js';
@@ -61,6 +63,7 @@ import {
   lynonErrorResponse,
   lynonFindPlayerByLogin,
   lynonPartnerProfit,
+  lynonPaymentTransactions,
   lynonPlayerActivity,
   lynonPlayerKpi,
   lynonPlayers,
@@ -95,6 +98,44 @@ const dateBodySchema = {
     endDate: { type: 'string', pattern: '^\\d{4}-\\d{2}-\\d{2}$' },
   },
 } as const;
+
+/**
+ * Toplu sorgu sınırları.
+ *
+ * `SINIR`: tek istekte kaç kullanıcı. Üstü sessizce KIRPILMAZ; kaç
+ * kişinin sorulduğu yanıtta `istenen` olarak dönüyor.
+ * `ESZAMANLI`: Lynon'a aynı anda kaç istek. Panelin başka ekranları da
+ * aynı Lynon oturumunu paylaşıyor; pencereyi geniş tutmak onları da
+ * hız sınırına sokardı.
+ */
+const TOPLU_SORGU_SINIRI = 300;
+const TOPLU_SORGU_ESZAMANLI = 4;
+
+/** "2026-08-01" -> günün başlangıcı (İstanbul). Boş girdi null döner. */
+function gunBasinaCevir(deger: unknown): string | null {
+  const metin = String(deger ?? '').trim();
+  if (!metin) return null;
+  const ms = istanbulYerelAn(/\d{2}:\d{2}/.test(metin) ? metin : `${metin}T00:00:00`);
+  return Number.isFinite(ms) ? new Date(ms).toISOString() : null;
+}
+
+/**
+ * "2026-08-31" -> o günün SONU (23:59:59.999, İstanbul).
+ *
+ * Tarih seçici gün veriyor. Gün başlangıcı olarak alsaydık seçilen son
+ * gün tamamen dışarıda kalır ve operatör "31'i de dahil" derken 30'a
+ * kadar olan toplamı görürdü.
+ */
+function gunSonunaCevir(deger: unknown): string | null {
+  const metin = String(deger ?? '').trim();
+  if (!metin) return null;
+  if (/\d{2}:\d{2}/.test(metin)) {
+    const ms = istanbulYerelAn(metin);
+    return Number.isFinite(ms) ? new Date(ms).toISOString() : null;
+  }
+  const ms = istanbulYerelAn(`${metin}T23:59:59`);
+  return Number.isFinite(ms) ? new Date(ms + 999).toISOString() : null;
+}
 
 export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: Config }) {
   const { config } = opts;
@@ -2027,6 +2068,114 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
     const { audit } = await import('../lib/auditLog.js');
     audit(user.username ?? 'admin', 'admin', 'bonus_blacklist_cikar', `login:${request.params.login}`, 'Bonus blacklistinden çıkarıldı.');
     return reply.send({ HasError: false, Data: kayitlar });
+  });
+
+  /**
+   * TOPLU YATIRIM / ÇEKİM SORGUSU.
+   *
+   * Operatör bir kullanıcı adı listesi yapıştırıyor, her biri için
+   * toplam yatırım ve toplam çekim dönüyor. Yatırım ve çekim AYRI tarih
+   * aralığı kullanabiliyor: "şu tarihten sonra yatıranların şu hafta
+   * içindeki çekimleri" tek bir aralıkla sorulamıyor.
+   *
+   * ── Neden oyuncu başına iki istek ────────────────────────────────
+   * Site geneli işlem ucu yalnızca istenen sayfadaki kayıtları
+   * döndürüyor; yoğun bir sitede aradığımız oyuncunun işlemi o pencerede
+   * hiç yer almayabilir ve sonuç SESSİZCE eksik dönerdi. Bu yüzden önce
+   * login -> ClientId çözülüyor, sonra oyuncuya özel uç çağrılıyor --
+   * o uç kişinin tüm işlemlerini veriyor.
+   *
+   * Ödeme kaydı oyuncu başına BİR kez çekilip iki aralık için yerelde
+   * süzülüyor. İki ayrı istek atmak aynı veriyi iki kez indirmek olurdu.
+   *
+   * ── Neden sıralı değil, sınırlı paralel ──────────────────────────
+   * 200 kullanıcı sırayla sorulsa dakikalar sürer; hepsi aynı anda
+   * sorulsa Lynon oturumunu hız sınırına çarpar ve panelin BAŞKA
+   * ekranları da o oturumu paylaştığı için onlar da düşer. Aradaki
+   * pencere dar tutuldu.
+   */
+  fastify.post<{
+    Body: {
+      kullanicilar?: unknown;
+      yatirimBaslangic?: string;
+      yatirimBitis?: string;
+      cekimBaslangic?: string;
+      cekimBitis?: string;
+    };
+  }>('/admin/toplu-islem-ozeti', async (request, reply) => {
+    const session = request.session as any;
+    if (!session?.user) {
+      return reply.status(401).send({ ok: false, message: 'Oturum bulunamadı.' });
+    }
+
+    const govde = request.body || {};
+    const kullanicilar = kullaniciAdlariniAyikla(govde.kullanicilar, TOPLU_SORGU_SINIRI);
+    if (kullanicilar.length === 0) {
+      return reply.status(400).send({ ok: false, message: 'En az bir kullanıcı adı girin.' });
+    }
+
+    // Tarih seçici gün verir ("2026-08-31"); bitiş sınırı o günün SONU
+    // olmalı, yoksa seçilen son gün tamamen dışarıda kalırdı.
+    const yatirimAraligi = {
+      baslangic: gunBasinaCevir(govde.yatirimBaslangic),
+      bitis: gunSonunaCevir(govde.yatirimBitis),
+    };
+    const cekimAraligi = {
+      baslangic: gunBasinaCevir(govde.cekimBaslangic),
+      bitis: gunSonunaCevir(govde.cekimBitis),
+    };
+
+    const satirlar: Array<Record<string, unknown>> = new Array(kullanicilar.length);
+    let sira = 0;
+
+    const isci = async () => {
+      for (;;) {
+        const indis = sira++;
+        if (indis >= kullanicilar.length) return;
+        const login = kullanicilar[indis];
+        try {
+          const oyuncu = await lynonFindPlayerByLogin(login);
+          if (!oyuncu) {
+            satirlar[indis] = { login, bulundu: false, hata: null };
+            continue;
+          }
+          const playerId = Number((oyuncu as any).Id ?? (oyuncu as any).id ?? (oyuncu as any).userId);
+          const hareketler = await lynonPaymentTransactions({ ClientId: playerId });
+          satirlar[indis] = {
+            login,
+            bulundu: true,
+            playerId,
+            // Panelde gorunen ad Lynon'daki YAZILISIYLA gosterilsin;
+            // operator yanlis kisiyi sorguladigini boyle fark eder.
+            lynonLogin: (oyuncu as any).Login ?? (oyuncu as any).userName ?? login,
+            ozet: oyuncuOzeti(hareketler as any, yatirimAraligi, cekimAraligi),
+            hata: null,
+          };
+        } catch (error) {
+          // TEK bir oyuncunun hatasi tum raporu dusurmemeli; hangi
+          // satirin eksik oldugu gorunur kalsin.
+          request.log.warn({ login, err: error }, 'Toplu işlem özeti: oyuncu sorgulanamadı.');
+          satirlar[indis] = {
+            login,
+            bulundu: false,
+            hata: error instanceof Error ? error.message : 'Sorgulanamadı',
+          };
+        }
+      }
+    };
+
+    await Promise.all(
+      Array.from({ length: Math.min(TOPLU_SORGU_ESZAMANLI, kullanicilar.length) }, () => isci()),
+    );
+
+    const temiz = satirlar.map((satir) => satir ?? { login: '?', bulundu: false, hata: 'Sorgulanamadı' });
+    return reply.send({
+      ok: true,
+      satirlar: temiz,
+      toplam: genelToplam(temiz as any),
+      istenen: kullanicilar.length,
+      araliklar: { yatirim: yatirimAraligi, cekim: cekimAraligi },
+    });
   });
 
   // Admin: Bonus Ekle (Charge Bonus)

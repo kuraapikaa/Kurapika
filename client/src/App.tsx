@@ -41,6 +41,7 @@ const CekimTalepleriSayfasi = lazy(() => import('@/pages/admin/CekimTalepleriSay
 const YatirimlarSayfasi = lazy(() => import('@/pages/admin/YatirimlarSayfasi').then(m => ({ default: m.YatirimlarSayfasi })));
 const PlayerProfile = lazy(() => import('@/pages/admin/PlayerProfile').then(m => ({ default: m.PlayerProfile })));
 const TransactionsList = lazy(() => import('@/pages/admin/TransactionsList').then(m => ({ default: m.TransactionsList })));
+const TopluIslemOzeti = lazy(() => import('@/pages/admin/TopluIslemOzeti').then(m => ({ default: m.TopluIslemOzeti })));
 const AutoWithdrawPanel = lazy(() => import('@/pages/admin/AutoWithdrawPanel').then(m => ({ default: m.AutoWithdrawPanel })));
 const RiskAnalysisPage = lazy(() => import('@/pages/admin/RiskAnalysisPage').then(m => ({ default: m.RiskAnalysisPage })));
 const OyuncuKategorileme = lazy(() => import('@/pages/admin/OyuncuKategorileme').then(m => ({ default: m.OyuncuKategorileme })));
@@ -156,6 +157,7 @@ export default function App() {
             <Route path="/para-cekme-talepleri" element={<CekimTalepleriSayfasi />} />
             <Route path="/admin/auto-withdraw" element={<AutoWithdrawPanel />} />
             <Route path="/islemler" element={<TransactionsList />} />
+            <Route path="/toplu-islem-ozeti" element={<TopluIslemOzeti />} />
 
             <Route path="/oyuncular" element={<OyuncularSayfasi />} />
             <Route path="/oyuncu/:id/:login" element={<PlayerProfile />} />

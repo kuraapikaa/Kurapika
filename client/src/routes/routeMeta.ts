@@ -191,6 +191,17 @@ export const ADMIN_ROUTES: RouteMeta[] = [
     dateFilters: true,
     nav: { group: 'Para', label: 'Tüm işlemler', icon: ListOrdered },
   },
+  {
+    id: 'topluIslemOzeti',
+    path: '/toplu-islem-ozeti',
+    permission: 'finance',
+    eyebrow: 'Operasyon',
+    title: 'Toplu yatırım / çekim',
+    description: 'Kullanıcı adı listesi yapıştırın; her biri için toplam yatırımı ve çekimi ayrı tarih aralıklarıyla görün.',
+    // Tarih filtreleri sayfanın KENDİ içinde: yatırım ve çekim ayrı
+    // aralık kullanıyor, üstteki tek aralık ikisini de yönetemezdi.
+    nav: { group: 'Para', label: 'Toplu sorgu', icon: Users },
+  },
 
   // ── Oyuncular ───────────────────────────────────────────────────────
   {

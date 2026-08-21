@@ -1,0 +1,217 @@
+/**
+ * TOPLU YATIRIM / ÇEKİM ÖZETİ.
+ *
+ * Birden fazla kullanıcı adı için toplam yatırım ve toplam çekim.
+ * Yatırım ve çekim AYRI tarih aralıkları kullanabilir: operatör
+ * "şu tarihten sonra yatıranların şu hafta içindeki çekimleri" gibi
+ * sorular soruyor ve tek bir aralıkla bu yanıtlanamıyor.
+ *
+ * ── Neden ayrı bir dosya ──────────────────────────────────────────────
+ * Toplama işi Lynon'a hiç gitmeden test edilebilmeli. Rotanın içine
+ * gömülseydi, "başarısız işlemler sayılıyor mu", "sınır tarihi dahil mi"
+ * gibi soruların yanıtı ancak canlı veriyle görülebilirdi.
+ *
+ * ── Hangi işlemler sayılır ────────────────────────────────────────────
+ * Yalnızca durumu `success` olanlar. Bekleyen ya da reddedilen bir çekim
+ * kasadan çıkmış para DEĞİLDİR; toplama katılırsa oyuncunun çektiği para
+ * olduğundan fazla görünür. Aynı kural `kayipTabaniService` içinde de
+ * geçerli — iki yerde farklı davransaydı aynı oyuncu iki ekranda iki
+ * farklı toplam gösterirdi.
+ *
+ * Tutarlar MUTLAK değere çevrilir: Lynon çekimleri kimi kurulumda
+ * negatif, kimisinde pozitif döndürüyor ve işaretine güvenmek toplamı
+ * sessizce sıfıra yaklaştırırdı.
+ */
+
+export type OdemeSatiri = {
+  transactionType?: unknown;
+  type?: unknown;
+  status?: unknown;
+  state?: unknown;
+  amount?: unknown;
+  actualAmount?: unknown;
+  receivedAmount?: unknown;
+  createdAt?: unknown;
+  creationDate?: unknown;
+  updatedAt?: unknown;
+  [key: string]: unknown;
+};
+
+export type Aralik = {
+  /** ISO tarih/zaman. Boş = alt sınır yok. */
+  baslangic?: string | null;
+  /** ISO tarih/zaman. Boş = üst sınır yok. */
+  bitis?: string | null;
+};
+
+export type TurOzeti = {
+  toplam: number;
+  adet: number;
+  /** Aralıktaki en eski ve en yeni işlem — verinin gerçekten kapsandığını görmek için. */
+  ilk: string | null;
+  son: string | null;
+};
+
+export type OyuncuOzeti = {
+  yatirim: TurOzeti;
+  cekim: TurOzeti;
+  /** yatırım − çekim. Oyuncunun kasada bıraktığı net tutar. */
+  net: number;
+};
+
+const BASARILI = 'success';
+
+function metin(deger: unknown): string {
+  return String(deger ?? '').trim().toLowerCase();
+}
+
+function tutar(satir: OdemeSatiri): number {
+  // `amount` bazı kayıtlarda 0 gelip gerçek değer `actualAmount`ta
+  // duruyor; sırayla ilk anlamlı olan alınır.
+  for (const aday of [satir.amount, satir.actualAmount, satir.receivedAmount]) {
+    const n = Number(aday);
+    if (Number.isFinite(n) && n !== 0) return Math.abs(n);
+  }
+  return 0;
+}
+
+function zaman(satir: OdemeSatiri): number {
+  for (const aday of [satir.createdAt, satir.creationDate, satir.updatedAt]) {
+    const t = Date.parse(String(aday ?? ''));
+    if (Number.isFinite(t)) return t;
+  }
+  return Number.NaN;
+}
+
+/**
+ * Sınırlar DAHİL: operatör "01.08 - 31.08" derken 31 Ağustos'u da
+ * kastediyor. Gün sonu bilgisi çağıranın sorumluluğunda (tarih seçici
+ * `2026-08-31` gönderirse bunu `23:59:59.999`e genişletmek gerekir);
+ * burada verilen an neyse o uygulanır.
+ */
+function araliktaMi(ms: number, aralik: Aralik | undefined): boolean {
+  if (!Number.isFinite(ms)) return false;
+  const bas = aralik?.baslangic ? Date.parse(aralik.baslangic) : null;
+  const bit = aralik?.bitis ? Date.parse(aralik.bitis) : null;
+  if (bas != null && Number.isFinite(bas) && ms < bas) return false;
+  if (bit != null && Number.isFinite(bit) && ms > bit) return false;
+  return true;
+}
+
+function bosOzet(): TurOzeti {
+  return { toplam: 0, adet: 0, ilk: null, son: null };
+}
+
+function ozetle(satirlar: OdemeSatiri[], aralik: Aralik | undefined): TurOzeti {
+  const sonuc = bosOzet();
+  let enEski = Number.POSITIVE_INFINITY;
+  let enYeni = Number.NEGATIVE_INFINITY;
+
+  for (const satir of satirlar) {
+    const ms = zaman(satir);
+    if (!araliktaMi(ms, aralik)) continue;
+    sonuc.toplam += tutar(satir);
+    sonuc.adet += 1;
+    if (ms < enEski) enEski = ms;
+    if (ms > enYeni) enYeni = ms;
+  }
+
+  if (sonuc.adet > 0) {
+    sonuc.ilk = new Date(enEski).toISOString();
+    sonuc.son = new Date(enYeni).toISOString();
+  }
+  // Kayan nokta birikimi: 2 hane yeterli, para birimi zaten kuruşlu.
+  sonuc.toplam = Math.round(sonuc.toplam * 100) / 100;
+  return sonuc;
+}
+
+export function oyuncuOzeti(
+  satirlar: OdemeSatiri[] | null | undefined,
+  yatirimAraligi?: Aralik,
+  cekimAraligi?: Aralik,
+): OyuncuOzeti {
+  const liste = (Array.isArray(satirlar) ? satirlar : []).filter(
+    (satir) => metin(satir?.status ?? satir?.state) === BASARILI,
+  );
+
+  const yatirimlar = liste.filter((satir) => metin(satir.transactionType ?? satir.type) === 'deposit');
+  const cekimler = liste.filter((satir) => metin(satir.transactionType ?? satir.type) === 'withdrawal');
+
+  const yatirim = ozetle(yatirimlar, yatirimAraligi);
+  const cekim = ozetle(cekimler, cekimAraligi);
+
+  return {
+    yatirim,
+    cekim,
+    net: Math.round((yatirim.toplam - cekim.toplam) * 100) / 100,
+  };
+}
+
+/**
+ * Girilen metinden kullanıcı adı listesi çıkarır.
+ *
+ * Operatör listeyi Excel'den, Telegram'dan ya da elle yapıştırıyor;
+ * araya virgül, noktalı virgül, sekme ve satır sonu karışıyor. Hepsi
+ * ayırıcı sayılır. Tekrarlar ELENİR ama sıra korunur: 200 satırlık bir
+ * yapıştırmada aynı adın iki kez sorgulanması hem yavaşlatır hem de
+ * sonucu iki kez sayılmış gibi gösterirdi.
+ *
+ * Karşılaştırma Türkçe'ye duyarlı küçültmeyle yapılır ("İSMAİL" ile
+ * "ismail" aynı kişi), fakat listeye kullanıcının YAZDIĞI hali girer --
+ * Lynon'a kendi yazdığı biçimde sormak, eşleşmeyi bize bağlı olmaktan
+ * çıkarır.
+ */
+export function kullaniciAdlariniAyikla(ham: unknown, sinir = 500): string[] {
+  const parcalar = String(ham ?? '')
+    .split(/[\s,;]+/)
+    .map((parca) => parca.trim())
+    .filter(Boolean);
+
+  const gorulen = new Set<string>();
+  const sonuc: string[] = [];
+  for (const parca of parcalar) {
+    const anahtar = parca.toLocaleLowerCase('tr-TR');
+    if (gorulen.has(anahtar)) continue;
+    gorulen.add(anahtar);
+    sonuc.push(parca);
+    if (sonuc.length >= sinir) break;
+  }
+  return sonuc;
+}
+
+/**
+ * Satır toplamlarından genel toplam.
+ *
+ * Ayrı hesaplanıyor çünkü bulunamayan oyuncular listede kalıyor ve
+ * toplamlara katılmamalı; "10 kullanıcıdan 7'si bulundu" bilgisi
+ * kaybolursa toplam sessizce eksik okunur.
+ */
+export function genelToplam(satirlar: Array<{ bulundu: boolean; ozet?: OyuncuOzeti | null }>): {
+  yatirimToplam: number;
+  cekimToplam: number;
+  net: number;
+  bulunan: number;
+  bulunamayan: number;
+} {
+  let yatirimToplam = 0;
+  let cekimToplam = 0;
+  let bulunan = 0;
+  let bulunamayan = 0;
+
+  for (const satir of satirlar) {
+    if (!satir.bulundu || !satir.ozet) { bulunamayan += 1; continue; }
+    bulunan += 1;
+    yatirimToplam += satir.ozet.yatirim.toplam;
+    cekimToplam += satir.ozet.cekim.toplam;
+  }
+
+  yatirimToplam = Math.round(yatirimToplam * 100) / 100;
+  cekimToplam = Math.round(cekimToplam * 100) / 100;
+  return {
+    yatirimToplam,
+    cekimToplam,
+    net: Math.round((yatirimToplam - cekimToplam) * 100) / 100,
+    bulunan,
+    bulunamayan,
+  };
+}
