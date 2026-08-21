@@ -26,6 +26,7 @@ import {
   specBonusIdSahipleniyorMu,
   specPartnerBonusIdleri,
 } from '../services/bonusAraliklari.js';
+import { bonusTalepGirdisiniDogrula } from '../services/bonusTalepGirdisi.js';
 import { depositBasis } from '../services/promoEvaluator.js';
 import { istekKimligi, oyuncuVerisineErisebilir } from '../lib/istekKimligi.js';
 import { getPromoOverrides, setPromoOverride } from '../services/promoOverridesService.js';
@@ -2043,9 +2044,30 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
 
       if (shouldUseLynon(request)) {
         try {
-          if (!Number.isFinite(Number(ClientId)) || !Number.isFinite(Number(BonusId))) {
+          /**
+           * BonusId SAYI OLMAK ZORUNDA DEGIL.
+           *
+           * Partner bonuslarinda Lynon kampanya ID'si gelir (sayi), NAKIT
+           * bonuslarda ise kural anahtari gelir ve o anahtar bir slug
+           * olabilir -- canlida "kayip-bonusu" boyleydi. Burasi ikisini de
+           * `Number()` ile sayiya cevirip eliyordu, dolayisiyla nakit
+           * bonuslarin TAMAMI daha ilk satirda 400 aliyordu: oyuncu
+           * "hesabiniz uygun gorunuyor" yazisini goruyor, talebi
+           * gonderiyor, istek 3ms icinde reddediliyordu. Sanal nakit
+           * bonuslari `sanalNakitBonuslar` uretiyor ve `backofficeId`
+           * olarak kural anahtarini veriyor; akisin geri kalani
+           * (`resolveBonusRule`, `kuralAnahtari`) zaten string ile
+           * calisiyordu -- yalnizca bu kapi sayisal bekliyordu.
+           *
+           * ClientId gercekten sayi olmali. BonusId icin tek sart BOS
+           * olmamasi; gecerli bir kurala karsilik gelip gelmedigini bir
+           * alt satirdaki `resolveBonusRule` 409 ile ayrica soyluyor.
+           */
+          const girdi = bonusTalepGirdisiniDogrula({ ClientId, BonusId });
+          if (!girdi.gecerli) {
             return reply.status(400).send({ HasError: true, AlertMessage: 'Geçerli oyuncu ve kampanya bilgisi gerekli.' });
           }
+          const bonusKimligi = girdi.bonusKimligi;
           const tenantKey = await getTenantKeyForAdmin(request as any);
           if (!chargeKimligi) {
             return reply.status(401).send({ HasError: true, AlertMessage: 'Oturum bulunamadı.' });
@@ -2118,7 +2140,10 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
             });
           }
           const currentCheck = await evaluateForAccount(currentAccount as any, {
-            id: Number(BonusId),
+            // Sayisal ise sayi, degilse anahtarin KENDISI: promoEvaluator
+            // kurali `PROMO_SPECS[String(promo.id)]` ile de ariyor ve
+            // `Number('kayip-bonusu')` -> NaN o aramayi kor birakiyordu.
+            id: Number.isFinite(Number(BonusId)) ? Number(BonusId) : bonusKimligi,
             title: (spec as any).title || String(BonusId),
             // Mukerrer kontrolu notu bu anahtarla ariyor; asagida not da
             // bununla yaziliyor. Ikisi ayrilirsa kontrol kor kalir.
