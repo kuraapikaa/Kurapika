@@ -1,14 +1,17 @@
-# Iki panelin Docker imajini her PR'da derler.
+# Ana panelin Docker imajini her PR'da derler.
 #
 # Neden var: yerelde `npm run build` gecip Railway'de dusen bir hata
 # sinifi mevcut. Docker katmanlari depoyu butun halinde gormedigi icin
-# yerelde bulunan bir dosya imaj icinde bulunmayabiliyor -- affiliate
-# arayuzu sunucu kaynagindaki tip sozlesmesini boyle kaybetti ve iki
-# dagitim ust uste dustu, uretim iki commit geride kaldi.
+# yerelde bulunan bir dosya imaj icinde bulunmayabiliyor -- bir arayuz
+# sunucu kaynagindaki tip sozlesmesini boyle kaybetti ve iki dagitim ust
+# uste dustu, uretim iki commit geride kaldi.
 #
 # Testler burada kosmuyor; bu is akisi yalnizca "imaj derleniyor mu"
 # sorusunu yanitliyor. Kapsam bilerek dar tutuldu ki her PR'da hizli ve
 # guvenilir bir sinyal versin.
+#
+# Matris tek satirli: affiliate paneli bu depodan cikarildi. Yapi
+# korundu ki ikinci bir imaj gerektiginde tek satir eklemek yetsin.
 name: İmaj derleme
 
 on:
@@ -29,14 +32,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # `baglam` degerleri Railway'deki Root Directory ayarlariyla
-          # ayni olmali; yoksa CI gercekten dagitilan seyi derlemez.
+          # `baglam` degeri Railway'deki Root Directory ayariyla ayni
+          # olmali; yoksa CI gercekten dagitilan seyi derlemez.
           - ad: Ana panel
             baglam: .
             dosya: Dockerfile
-          - ad: Affiliate paneli
-            baglam: affiliate-panel
-            dosya: affiliate-panel/Dockerfile
     steps:
       - uses: actions/checkout@v4
 

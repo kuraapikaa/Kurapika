@@ -1,13 +1,19 @@
-# Affiliate panelinin testleri, GERÇEK Postgres'e karşı.
+# Ana panelin testleri: sunucu ve istemci, birbirinden bagimsiz.
 #
-# Depolama katmanının iki uygulaması var (tablo ve JSON belgesi) ve
-# ikisinin AYNI davranması gerekiyor. Bunu ancak veritabanı varken
-# doğrulayabiliyoruz; `TEST_DATABASE_URL` yoksa o testler sessizce
-# atlanıyor, yani veritabanısız bir CI "yeşil" der ama taşımanın en
-# riskli kısmını hiç çalıştırmamış olur.
+# Bu dosya eskiden YALNIZCA affiliate panelini test ediyordu ve ana
+# panele hic dokunmuyordu. Affiliate ayri bir depoya ayrildiginda geriye
+# var olmayan bir dizini arayan bir is kaldi; CI her itmede "Some
+# specified paths were not resolved" ile dusuyordu. Yani kirmizi bir CI
+# vardi ve kimseye bir sey anlatmiyordu.
 #
-# Ana panelin testleri burada KOŞMUYOR: kendi servis bağımlılıkları
-# doğrulanmadı, yeşil olduğu bilinmeden eklemek CI'ı gürültüye çevirir.
+# Eski notta ana panel testlerinin "yesil oldugu bilinmedigi" icin
+# eklenmedigi yaziyordu. Artik biliniyor: sunucu 98 dosya / 1418 test,
+# istemci 13 dosya / 121 test, ikisi de veritabani ISTEMEDEN geciyor.
+# Bu yuzden burada `services:` yok — ihtiyac duyulmayan bir Postgres'i
+# ayaga kaldirmak her kosuyu yavaslatir ve yeni bir dusme sebebi ekler.
+#
+# Sunucu ve istemci AYRI isler: biri duserse digerinin sonucu yine de
+# gorunur, "test dustu" demek yerine hangi tarafin dustugu okunur.
 name: Testler
 
 on:
@@ -20,25 +26,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  affiliate:
-    name: Affiliate paneli
+  sunucu:
+    name: Sunucu
     runs-on: ubuntu-latest
-
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_PASSWORD: test
-        ports:
-          - 5432:5432
-        # Adim baslamadan once veritabaninin gercekten hazir olmasi
-        # gerekiyor; yoksa ilk baglanti yarisi kaybediyor.
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
     steps:
       - uses: actions/checkout@v4
 
@@ -46,20 +36,41 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: affiliate-panel/backend/package-lock.json
+          cache-dependency-path: server/package-lock.json
 
       - name: Bağımlılıklar
-        working-directory: affiliate-panel/backend
+        working-directory: server
         run: npm ci
 
       - name: Tipler
-        working-directory: affiliate-panel/backend
+        working-directory: server
         run: npm run typecheck
 
       - name: Testler
-        working-directory: affiliate-panel/backend
-        env:
-          # Testler bu adresten kendi veritabanlarini olusturuyor;
-          # dosyalar paralel kostugu icin ortak bir sema paylasmiyorlar.
-          TEST_DATABASE_URL: postgres://postgres:test@127.0.0.1:5432/postgres
+        working-directory: server
         run: npm test
+
+  istemci:
+    name: İstemci
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+
+      - name: Bağımlılıklar
+        working-directory: client
+        run: npm ci
+
+      # `tsc -b` derleme yapiyor; `test:run` izlemesiz tek gecis.
+      - name: Tipler
+        working-directory: client
+        run: npx tsc -b
+
+      - name: Testler
+        working-directory: client
+        run: npm run test:run
