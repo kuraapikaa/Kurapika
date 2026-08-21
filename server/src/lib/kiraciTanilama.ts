@@ -51,9 +51,17 @@ export function kiraciTanilamasi(
 
   let uyari: string | null = null;
   if (liste.length === 0) {
+    // ÖNEMLİ: burada "siteleri ekleyin" demek tek başına TEHLİKELİ bir
+    // tavsiye. Ayarlar `yedekAnahtar` altında birikmiş durumda; aynı
+    // domain için bir site eklendiği an istek o sitenin anahtarını
+    // okumaya başlıyor ve panel BOMBOŞ açılıyor. Hiçbir şey silinmiyor
+    // ama dışarıdan "ayarlar uçtu" gibi görünüyor. Uyarı, kopyalama
+    // adımını da söylemek zorunda.
     uyari = `Tanımlı site YOK; her istek "${yedekAnahtar}" kiracısına düşüyor. `
       + 'Bonus kuralları, oyun ayarları ve kimlikler siteler arasında PAYLAŞILIYOR. '
-      + 'Master panelinden siteleri yeniden ekleyin.';
+      + `Site eklerken dikkat: mevcut ayarlar "${yedekAnahtar}" altında duruyor ve `
+      + 'aynı alan adı için site eklendiğinde panel onları okumayı bırakır. '
+      + 'Site kaydını açıp "Ayarları kopyala" adımını çalıştırın.';
   } else if (aktif.length === 0) {
     uyari = `${liste.length} site tanımlı ama hiçbiri aktif değil; her istek "${yedekAnahtar}" kiracısına düşüyor.`;
   } else if (alanAdiOlan.length === 0) {

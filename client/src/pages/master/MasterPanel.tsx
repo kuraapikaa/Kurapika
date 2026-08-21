@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import {
   CheckCircle2,
   Copy,
+  DatabaseZap,
   ExternalLink,
   Globe,
   Loader2,
@@ -262,6 +263,7 @@ export function MasterPanel() {
         <SiteDuzenleyici
           site={duzenlenen === 'yeni' ? null : duzenlenen}
           onKapat={() => setDuzenlenen(null)}
+          yedekAnahtar={durum?.yedekAnahtar || 'default'}
         />
       )}
     </div>
@@ -446,7 +448,7 @@ function BilgiSatiri({ etiket, deger }: { etiket: string; deger: string }) {
  * Artık tek pencere: dokuz ayar, kaydet, ve sırrı doğrulamak için anlık
  * TOTP kodu.
  */
-function SiteDuzenleyici({ site, onKapat }: { site: any | null; onKapat: () => void }) {
+function SiteDuzenleyici({ site, onKapat, yedekAnahtar }: { site: any | null; onKapat: () => void; yedekAnahtar: string }) {
   const queryClient = useQueryClient();
   const yeni = site === null;
   const [form, setForm] = useState<Form>(() => ({
@@ -637,6 +639,8 @@ function SiteDuzenleyici({ site, onKapat }: { site: any | null; onKapat: () => v
 
             {!yeni && <TotpKarti tenantId={site.id} />}
 
+            {!yeni && <VeriKopyalaKarti tenantId={site.id} yedekAnahtar={yedekAnahtar} />}
+
             {testSonucu && (
               <div className={cn(
                 'rounded-3xl border p-4 text-xs font-semibold backdrop-blur-xl',
@@ -676,6 +680,118 @@ function SiteDuzenleyici({ site, onKapat }: { site: any | null; onKapat: () => v
           </div>
         )}
       </motion.div>
+    </div>
+  );
+}
+
+/**
+ * AYARLARI BAŞKA BİR SİTEDEN KOPYALA.
+ *
+ * Neden var: bu panelin bütün ayarları (bonus kuralları, oyun ayarları,
+ * kampanyalar, lobi tasarımı) hiç site kaydı yokken `default` kiracısı
+ * altında birikti. Siteyi buraya EKLEDİĞİNİZ an domain eşleşmeye başlıyor
+ * ve aynı istek artık `default` yerine bu sitenin anahtarını okuyor --
+ * panel bomboş açılıyor. Hiçbir şey silinmiyor, ama dışarıdan "ayarlar
+ * uçtu" gibi görünüyor.
+ *
+ * Önce KURU GÖSTERİM çalışır: ne kopyalanacağı listelenir, hiçbir şey
+ * yazılmaz. Yazma ayrı bir onayla yapılır -- geri alınamayan bir işlemi
+ * tek tıkla yaptırmak, kurtarmaya çalıştığımız hatanın aynısı olurdu.
+ */
+function VeriKopyalaKarti({ tenantId, yedekAnahtar }: { tenantId: string; yedekAnahtar: string }) {
+  const queryClient = useQueryClient();
+  const [onizleme, setOnizleme] = useState<any>(null);
+  const [uzerineYaz, setUzerineYaz] = useState(false);
+
+  const calistir = useMutation({
+    mutationFn: (kuru: boolean) =>
+      masterApi.veriKopyala(tenantId, { kaynak: yedekAnahtar, kuruGosterim: kuru, uzerineYaz }),
+    onSuccess: (cevap: any, kuru) => {
+      if (cevap?.ok === false) return toast.error(cevap.message || 'Kopyalanamadı');
+      setOnizleme(cevap);
+      if (!kuru) {
+        toast.success(`${cevap.kopyalanan} alan kopyalandı.`);
+        queryClient.invalidateQueries({ queryKey: ['master-tenants'] });
+      }
+    },
+    onError: () => toast.error('Kopyalanamadı'),
+  });
+
+  const durumRengi = (durum: string) =>
+    durum === 'kopyalandi' ? 'text-emerald-300'
+      : durum === 'hata' ? 'text-rose-300'
+        : 'text-slate-500';
+  const durumMetni = (durum: string) =>
+    durum === 'kopyalandi' ? 'kopyalanacak'
+      : durum === 'hedefDolu' ? 'bu sitede zaten var — atlanacak'
+        : durum === 'kaynakBos' ? 'kaynakta yok'
+          : 'hata';
+
+  return (
+    <div className="rounded-3xl border border-white/[0.05] bg-black/20 p-5 backdrop-blur-xl">
+      <p className="mb-2 inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500">
+        <DatabaseZap size={13} /> Ayarları "{yedekAnahtar}" kiracısından kopyala
+      </p>
+      <p className="mb-3 text-[11px] font-medium leading-relaxed text-slate-500">
+        Bu siteyi eklemeden önceki ayarlar "{yedekAnahtar}" altında duruyor olabilir. Domain eşleşmeye
+        başladığında panel onları okumayı bırakır; buradan kopyalayarak taşıyabilirsiniz.
+        Kaynak <span className="font-bold text-slate-400">değişmez</span>.
+      </p>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          onClick={() => calistir.mutate(true)}
+          disabled={calistir.isPending}
+          className="inline-flex h-8 items-center gap-2 rounded-3xl border border-white/[0.05] bg-white/[0.03] px-3 text-[10px] font-bold text-slate-200 transition hover:bg-white/[0.08] disabled:opacity-60"
+        >
+          {calistir.isPending ? <Loader2 size={12} className="animate-spin" /> : <Search size={12} />}
+          Ne kopyalanacak?
+        </button>
+
+        {onizleme?.kuruGosterim && onizleme.kopyalanan > 0 && (
+          <button
+            onClick={() => calistir.mutate(false)}
+            disabled={calistir.isPending}
+            className="inline-flex h-8 items-center gap-2 rounded-xl bg-amber-400 px-3 text-[10px] font-bold text-black transition hover:bg-amber-300 disabled:opacity-60"
+          >
+            <DatabaseZap size={12} /> {onizleme.kopyalanan} alanı kopyala
+          </button>
+        )}
+
+        <label className="inline-flex cursor-pointer items-center gap-1.5 text-[10px] font-semibold text-slate-500">
+          <input
+            type="checkbox"
+            checked={uzerineYaz}
+            onChange={(e) => { setUzerineYaz(e.target.checked); setOnizleme(null); }}
+            className="h-3 w-3 accent-amber-400"
+          />
+          Bu sitedekilerin üzerine yaz
+        </label>
+      </div>
+
+      {onizleme?.satirlar && (
+        <div className="mt-3 space-y-1">
+          {onizleme.satirlar
+            .filter((satir: any) => satir.durum !== 'kaynakBos')
+            .map((satir: any) => (
+              <div key={satir.namespace} className="flex items-center justify-between gap-3 text-[10px]">
+                <span className="font-semibold text-slate-300">{satir.ad}</span>
+                <span className={cn('font-bold', durumRengi(satir.durum))}>
+                  {satir.mesaj || durumMetni(satir.durum)}
+                </span>
+              </div>
+            ))}
+          {onizleme.kopyalanan === 0 && (
+            <p className="text-[10px] font-semibold text-slate-500">
+              Kopyalanacak bir şey yok.
+            </p>
+          )}
+          <p className="pt-1 text-[10px] leading-relaxed text-slate-600">
+            Oyuncu verisi kopyalanmaz ({(onizleme.kopyalanmayanAlanlar || []).join(', ')}): bunlar o sitenin
+            kendi oyuncularına ait.
+          </p>
+        </div>
+      )}
     </div>
   );
 }

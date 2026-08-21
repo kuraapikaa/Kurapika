@@ -1385,6 +1385,13 @@ export const masterApi = {
    * ancak böyle sınanabiliyor.
    */
   getTenantOtp: (id: string) => get<any>(`/master/tenants/${id}/otp`),
+  /**
+   * Bir kiracının ayarlarını bu siteye kopyalar. `kuruGosterim` ile önce
+   * ne olacağı raporlanır, hiçbir şey yazılmaz.
+   */
+  veriKopyala: (id: string, body: { kaynak?: string; kuruGosterim?: boolean; uzerineYaz?: boolean }) =>
+    post<any>(`/master/tenants/${id}/veri-kopyala`, body),
+
   /** Çok kiracılı çözümleme durumu: site sayısı, yedek kiracı, çakışmalar. */
   getDurum: () => get<any>('/master/durum'),
   getJobs: () => get<any>('/master/jobs'),

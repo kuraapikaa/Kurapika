@@ -54,7 +54,11 @@ export type AuditAction =
   // kimin ne zaman actigi denetlenebilir olmali.
   | 'api_trafik_yakalama'
   | 'api_trafik_temizle'
-  | 'withdrawal_resolve';
+  | 'withdrawal_resolve'
+  // Bir sitenin ayarlarini baska bir siteye kopyalama. Bonus kurallari ve
+  // oyun ayarlari para dagitimini belirliyor; bir sitenin kurallarinin
+  // NEREDEN geldigi sonradan sorulacak bir soru ve tek kayit bu.
+  | 'kiraci_veri_kopyala';
 
 export interface AuditEntry {
   at: string;

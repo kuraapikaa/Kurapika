@@ -19,6 +19,8 @@ import { clearLynonSession, ensureLynonSession, getLynonAuthStatus, isLynonConfi
 import { hashPassword } from './auth.js';
 import { kiraciTanilamasi } from '../lib/kiraciTanilama.js';
 import { boolCozumle } from '../lib/baglantiAlanlari.js';
+import { kiraciVerisiniKopyala, KOPYALANMAYAN_ALANLAR } from '../services/kiraciVeriKopyasi.js';
+import { getDatabaseDocument, isDatabaseReady, putDatabaseDocument } from '../lib/database.js';
 import { kalanSaniye, totpKodu, TotpHatasi } from '../lib/totp.js';
 import { varsayilanTenantKey } from '../lib/tenantContext.js';
 
@@ -483,6 +485,68 @@ export async function masterRoutes(app: FastifyInstance) {
         .map((t) => String(t?.siteName || t?.id || '?')),
       cakisanAlanAdlari: cakisanlar,
     });
+  });
+
+  /**
+   * BİR KİRACININ AYARLARINI BU SİTEYE KOPYALA.
+   *
+   * Neden var: canlı sitenin bütün ayarları `default` altında duruyordu
+   * çünkü hiç site kaydı yoktu. Site Master panelinden eklendiği an
+   * domain eşleşmeye başlıyor ve aynı istek artık `default` yerine yeni
+   * anahtarı okuyor -- panel bomboş açılıyor. Hiçbir şey silinmiyor ama
+   * dışarıdan "ayarlar uçtu" gibi görünüyor; veritabanının silindiği
+   * kazayla birebir aynı his.
+   *
+   * `kuruGosterim: true` ile önce NE OLACAĞI raporlanır, yazma yapılmaz.
+   * Gerekçe ve hangi alanların kopyalanmadığı: kiraciVeriKopyasi.ts.
+   */
+  app.post('/master/tenants/:id/veri-kopyala', async (request: any, reply) => {
+    if (!request.session.isMaster) return reply.status(401).send({ error: 'Yetkisiz' });
+    const { id } = request.params as any;
+    if (!(await tenantVarMi(id))) return reply.status(404).send({ ok: false, message: 'Tenant bulunamadı' });
+
+    if (!isDatabaseReady()) {
+      // Dosya tabanli kurulumda kopyalama yapilmiyor: Railway diski
+      // efemer ve yazilan sey bir sonraki dagitimda kaybolurdu.
+      return reply.status(400).send({
+        ok: false,
+        message: 'PostgreSQL bağlı değil; kopyalama yalnızca veritabanı kuruluyken yapılabilir.',
+      });
+    }
+
+    const govde = request.body || {};
+    const kaynak = safeTenantKey(String(govde.kaynak ?? varsayilanTenantKey()));
+    const hedef = safeTenantKey(id);
+
+    try {
+      const sonuc = await kiraciVerisiniKopyala(
+        (kiraci, ns) => getDatabaseDocument(kiraci, ns),
+        (kiraci, ns, payload) => putDatabaseDocument(kiraci, ns, payload),
+        {
+          kaynak,
+          hedef,
+          kuruGosterim: govde.kuruGosterim === true,
+          uzerineYaz: govde.uzerineYaz === true,
+        },
+      );
+
+      if (!sonuc.kuruGosterim && sonuc.kopyalanan > 0) {
+        // Kopyalanan ayarlar bellekteki calisma yapilandirmasini
+        // ETKILEMIYOR (o baglanti kaydindan geliyor), ama denetim kaydi
+        // birakmak sart: bir sitenin ayarlarinin nereden geldigi sonradan
+        // sorulacak bir soru.
+        const { audit } = await import('../lib/auditLog.js');
+        audit('master', 'admin', 'kiraci_veri_kopyala', hedef,
+          `${kaynak} -> ${hedef}: ${sonuc.kopyalanan} alan kopyalandı.`);
+      }
+
+      return reply.send({ ok: true, kaynak, hedef, kopyalanmayanAlanlar: KOPYALANMAYAN_ALANLAR, ...sonuc });
+    } catch (hata) {
+      return reply.status(400).send({
+        ok: false,
+        message: hata instanceof Error ? hata.message : 'Kopyalanamadı',
+      });
+    }
   });
 
   /** Arka plan işlerinin durumu; hangi site için ne zaman çalıştığı. */
