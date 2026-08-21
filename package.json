@@ -1,0 +1,29 @@
+{
+  "name": "betconstruct-dashboard",
+  "version": "2.0.0",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=20.x"
+  },
+  "description": "BetConstruct Dashboard – Fastify + React",
+  "scripts": {
+    "postinstall": "npm install --prefix client && npm install --prefix server",
+    "dev": "concurrently -n server,client \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "build": "npm ci --prefix client && npm ci --prefix server && npm run build --prefix client && npm run build --prefix server",
+    "start": "npm run start --prefix server",
+    "start:server": "npm run dev --prefix server",
+    "start:client": "npm run dev --prefix client"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.2.1",
+    "helmet": "^8.1.0",
+    "node-fetch": "^3.3.2"
+  }
+}
