@@ -136,8 +136,47 @@ export async function masterRoutes(app: FastifyInstance) {
     tenants.push(newTenant);
     await saveTenants(tenants);
     seedTenantFiles(newTenant.id);
-    
-    return reply.send({ ok: true, tenant: newTenant, generatedPassword: adminPassword ? undefined : generatedPassword });
+
+    /**
+     * BAGLANTI BILGILERI KURULUMLA AYNI ADIMDA.
+     *
+     * Once site olusturuluyor, sonra "Baglanti" penceresi acilip Lynon
+     * bilgileri giriliyordu. Arada kalan sitenin hicbir kimligi yoktu ve
+     * bu bos aralikta calisan her arka plan isi o site icin sessizce
+     * ENV'deki (yani BASKA bir sitenin) bilgilerine dusuyordu.
+     *
+     * Alanlar opsiyonel: bos birakilirsa davranis eskisi gibi.
+     */
+    const gelenLynon = (request.body?.lynon || {}) as Record<string, unknown>;
+    const gelenBackoffice = (request.body?.backoffice || {}) as Record<string, unknown>;
+    const baglantiVerildi = Object.values({ ...gelenLynon, ...gelenBackoffice })
+      .some((deger) => deger !== undefined && deger !== null && String(deger).trim() !== '');
+
+    let baglantiUyarisi: string | null = null;
+    if (baglantiVerildi) {
+      if (sirGirildiMi(gelenLynon, gelenBackoffice) && !sifrelemeHazirMi()) {
+        // Site OLUSTU; yalnizca sirlar yazilamadi. Bunu sessizce yutmak,
+        // operatorun bilgileri girdigini sanmasina yol acardi.
+        baglantiUyarisi = 'Site oluşturuldu ancak TENANT_SECRET_KEY tanımlı olmadığı için bağlantı bilgileri kaydedilemedi.';
+      } else {
+        const mevcut = await loadTenantConnection(newTenant.id);
+        const kayitVerisi = baglantiAlanlariniUygula(mevcut, gelenLynon, gelenBackoffice);
+        const kayit = { version: 1 as const, ...kayitVerisi, updatedAt: new Date().toISOString(), updatedBy: 'master' };
+        try {
+          await saveTenantConnection(newTenant.id, kayit);
+          tenantRuntimeYaz(newTenant.id, kayit);
+        } catch (error) {
+          baglantiUyarisi = error instanceof Error ? error.message : 'Bağlantı bilgileri kaydedilemedi.';
+        }
+      }
+    }
+
+    return reply.send({
+      ok: true,
+      tenant: newTenant,
+      generatedPassword: adminPassword ? undefined : generatedPassword,
+      baglantiUyarisi,
+    });
   });
 
   app.put('/master/tenants/:id', async (request: any, reply) => {
@@ -172,6 +211,76 @@ export async function masterRoutes(app: FastifyInstance) {
   // Her tenant kendi backoffice'ine bağlanır. Sırlar `secretBox` ile
   // şifreli saklanır ve panele ASLA açık dönmez — yalnızca "tanımlı mı"
   // bilgisi ve son iki karakter gösterilir.
+
+/**
+   * Gelen bağlantı alanlarını mevcut kaydın ÜSTÜNE yazar.
+   *
+   * Hem "bağlantıyı güncelle" hem de "yeni site oluştur" bu fonksiyonu
+   * kullanıyor. İki ayrı kopya olsaydı biri yeni bir alanı destekleyip
+   * diğeri desteklemezdi ve fark ancak o alan sessizce kaydedilmediğinde
+   * görünürdü -- `trustDevice` ile tam olarak bu yaşandı.
+   *
+   * TEK KURAL: boş = "değiştirme", "sil" DEĞİL. Sır alanları panele
+   * maskeli döndüğü için form her açıldığında boş gelir; boşu kayda
+   * yazsaydık, parolaya hiç dokunmadan "kaydet"e basmak sitenin Lynon
+   * şifresini silerdi.
+   */
+  function baglantiAlanlariniUygula(
+    mevcut: { lynon: TenantLynonConnection; backoffice: TenantBackofficeConnection },
+    gelenLynon: Record<string, unknown>,
+    gelenBackoffice: Record<string, unknown>,
+  ): { lynon: TenantLynonConnection; backoffice: TenantBackofficeConnection } {
+    const lynon: TenantLynonConnection = { ...mevcut.lynon };
+    const backoffice: TenantBackofficeConnection = { ...mevcut.backoffice };
+  
+    const metinAta = <K extends keyof TenantLynonConnection>(alan: K, deger: unknown) => {
+      if (typeof deger !== 'string') return;
+      const kirpik = deger.trim();
+      if (kirpik === '') return;
+      (lynon[alan] as unknown) = kirpik;
+    };
+    const sayiAta = <K extends keyof TenantLynonConnection>(alan: K, deger: unknown) => {
+      if (deger === undefined || deger === null || deger === '') return;
+      const n = Number(deger);
+      if (Number.isFinite(n)) (lynon[alan] as unknown) = n;
+    };
+    const boolAta = <K extends keyof TenantLynonConnection>(alan: K, deger: unknown) => {
+      const sonuc = boolCozumle(deger);
+      if (sonuc.degisti) (lynon[alan] as unknown) = sonuc.deger;
+    };
+  
+    metinAta('backofficeBaseUrl', gelenLynon.backofficeBaseUrl);
+    metinAta('idBaseUrl', gelenLynon.idBaseUrl);
+    metinAta('returnUrl', gelenLynon.returnUrl);
+    metinAta('currency', gelenLynon.currency);
+    metinAta('username', gelenLynon.username);
+    metinAta('password', gelenLynon.password);
+    metinAta('otpSecret', gelenLynon.otpSecret);
+    metinAta('otpToken', gelenLynon.otpToken);
+    metinAta('deviceFingerprint', gelenLynon.deviceFingerprint);
+    metinAta('otpAlgorithm', gelenLynon.otpAlgorithm);
+    sayiAta('siteId', gelenLynon.siteId);
+    sayiAta('otpDigits', gelenLynon.otpDigits);
+    sayiAta('otpPeriodSeconds', gelenLynon.otpPeriodSeconds);
+    sayiAta('timezoneOffset', gelenLynon.timezoneOffset);
+    boolAta('enabled', gelenLynon.enabled);
+    boolAta('trustDevice', gelenLynon.trustDevice);
+  
+    if (typeof gelenBackoffice.authToken === 'string' && gelenBackoffice.authToken.trim()) {
+      backoffice.authToken = gelenBackoffice.authToken.trim();
+    }
+    if (typeof gelenBackoffice.dashboardAuthToken === 'string' && gelenBackoffice.dashboardAuthToken.trim()) {
+      backoffice.dashboardAuthToken = gelenBackoffice.dashboardAuthToken.trim();
+    }
+  
+    return { lynon, backoffice };
+  }
+  
+  /** Sır alanlarından herhangi biri girilmiş mi? Şifreleme gerektirir. */
+  function sirGirildiMi(gelenLynon: Record<string, unknown>, gelenBackoffice: Record<string, unknown>): boolean {
+    return [gelenLynon.password, gelenLynon.otpSecret, gelenLynon.otpToken, gelenBackoffice.authToken, gelenBackoffice.dashboardAuthToken]
+      .some((deger) => typeof deger === 'string' && deger.trim() !== '');
+  }
 
   async function tenantVarMi(id: string): Promise<boolean> {
     return (await loadTenants()).some((tenant: any) => tenant.id === id);
@@ -225,71 +334,9 @@ export async function masterRoutes(app: FastifyInstance) {
     const gelenBackoffice = govde.backoffice || {};
 
     const mevcut = await loadTenantConnection(id);
-    const lynon: TenantLynonConnection = { ...mevcut.lynon };
-    const backoffice: TenantBackofficeConnection = { ...mevcut.backoffice };
+    const { lynon, backoffice } = baglantiAlanlariniUygula(mevcut, gelenLynon, gelenBackoffice);
 
-    // BOŞ ALAN "DEĞİŞTİRME" DEMEK, "SİL" DEĞİL.
-    //
-    // Sır alanları panele maskeli döndüğü için form her açıldığında boş
-    // gelir. Boş değeri kayda yazsaydık, kullanıcının parolaya hiç
-    // dokunmadan "kaydet"e basması sitenin Lynon şifresini silerdi.
-    const metinAta = <K extends keyof TenantLynonConnection>(alan: K, deger: unknown) => {
-      if (typeof deger !== 'string') return;
-      const kirpik = deger.trim();
-      if (kirpik === '') return;
-      (lynon[alan] as unknown) = kirpik;
-    };
-    const sayiAta = <K extends keyof TenantLynonConnection>(alan: K, deger: unknown) => {
-      if (deger === undefined || deger === null || deger === '') return;
-      const n = Number(deger);
-      if (Number.isFinite(n)) (lynon[alan] as unknown) = n;
-    };
-
-    metinAta('backofficeBaseUrl', gelenLynon.backofficeBaseUrl);
-    metinAta('idBaseUrl', gelenLynon.idBaseUrl);
-    metinAta('returnUrl', gelenLynon.returnUrl);
-    metinAta('currency', gelenLynon.currency);
-    metinAta('username', gelenLynon.username);
-    metinAta('password', gelenLynon.password);
-    metinAta('otpSecret', gelenLynon.otpSecret);
-    metinAta('otpToken', gelenLynon.otpToken);
-    metinAta('deviceFingerprint', gelenLynon.deviceFingerprint);
-    metinAta('otpAlgorithm', gelenLynon.otpAlgorithm);
-    sayiAta('siteId', gelenLynon.siteId);
-    sayiAta('otpDigits', gelenLynon.otpDigits);
-    sayiAta('otpPeriodSeconds', gelenLynon.otpPeriodSeconds);
-    if (gelenLynon.timezoneOffset !== undefined && gelenLynon.timezoneOffset !== null && gelenLynon.timezoneOffset !== '') {
-      const n = Number(gelenLynon.timezoneOffset);
-      if (Number.isFinite(n)) lynon.timezoneOffset = n;
-    }
-    /**
-     * Boolean alanlar METIN olarak da gelebilir.
-     *
-     * Panel bu iki alani bir <select> ile gonderiyor ve HTML select'in
-     * degeri her zaman string'dir ("true" / "false" / ""). Yalnizca
-     * `typeof === 'boolean'` kontrolu yapilirken form degeri SESSIZCE
-     * yok sayiliyordu: operator "Cihaza guven: Acik" secip kaydediyor,
-     * panel "kaydedildi" diyor, kayit degismiyordu.
-     *
-     * Bos string "degistirme" demek -- diger alanlarla ayni kural.
-     */
-    const boolAta = <K extends keyof TenantLynonConnection>(alan: K, deger: unknown) => {
-      const sonuc = boolCozumle(deger);
-      if (sonuc.degisti) (lynon[alan] as unknown) = sonuc.deger;
-    };
-    boolAta('enabled', gelenLynon.enabled);
-    boolAta('trustDevice', gelenLynon.trustDevice);
-
-    if (typeof gelenBackoffice.authToken === 'string' && gelenBackoffice.authToken.trim()) {
-      backoffice.authToken = gelenBackoffice.authToken.trim();
-    }
-    if (typeof gelenBackoffice.dashboardAuthToken === 'string' && gelenBackoffice.dashboardAuthToken.trim()) {
-      backoffice.dashboardAuthToken = gelenBackoffice.dashboardAuthToken.trim();
-    }
-
-    const sirGirildi = [gelenLynon.password, gelenLynon.otpSecret, gelenLynon.otpToken, gelenBackoffice.authToken, gelenBackoffice.dashboardAuthToken]
-      .some((deger) => typeof deger === 'string' && deger.trim() !== '');
-    if (sirGirildi && !sifrelemeHazirMi()) {
+    if (sirGirildiMi(gelenLynon, gelenBackoffice) && !sifrelemeHazirMi()) {
       return reply.status(400).send({
         ok: false,
         message: 'TENANT_SECRET_KEY tanımlı değil. Kimlik bilgileri şifrelenemediği için kaydedilmedi.',

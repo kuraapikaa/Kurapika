@@ -30,6 +30,14 @@ import { toast } from 'sonner';
 import { masterApi } from '@/api/client';
 import { cn } from '@/lib/utils';
 
+/**
+ * Kurulum formu, siteyi TEK adimda calisir hale getirir.
+ *
+ * Onceden yalnizca site kaydi olusturuluyor, Lynon bilgileri ayri bir
+ * pencereden giriliyordu. Arada kalan sitenin hicbir kimligi yoktu ve o
+ * aralikta calisan her arka plan isi sessizce ENV'deki -- yani BASKA bir
+ * sitenin -- bilgilerine dusuyordu.
+ */
 const initialForm = {
   siteName: '',
   domain: '',
@@ -40,6 +48,16 @@ const initialForm = {
   themeColor: '#22d3ee',
   logoUrl: '',
   adminTitle: '',
+  // Lynon bağlantısı — hepsi opsiyonel, boş bırakılan ENV'e düşer.
+  lynonBackofficeBaseUrl: '',
+  lynonIdBaseUrl: '',
+  lynonSiteId: '',
+  lynonCurrency: '',
+  lynonUsername: '',
+  lynonPassword: '',
+  lynonOtpSecret: '',
+  lynonOtpToken: '',
+  lynonTrustDevice: '',
 };
 
 type TenantForm = typeof initialForm;
@@ -92,13 +110,46 @@ export function MasterPanel() {
     return { total: tenants.length, active, passive, expiring };
   }, [tenants]);
 
+  /** Form alanlarını sunucunun beklediği gövdeye ayırır. */
+  const govdeyiKur = () => ({
+    siteName: form.siteName,
+    domain: form.domain,
+    adminEmail: form.adminEmail,
+    adminPassword: form.adminPassword,
+    partnerId: form.partnerId,
+    expireDate: form.expireDate,
+    themeColor: form.themeColor,
+    logoUrl: form.logoUrl,
+    adminTitle: form.adminTitle,
+    lynon: {
+      backofficeBaseUrl: form.lynonBackofficeBaseUrl,
+      idBaseUrl: form.lynonIdBaseUrl,
+      siteId: form.lynonSiteId,
+      currency: form.lynonCurrency,
+      username: form.lynonUsername,
+      password: form.lynonPassword,
+      otpSecret: form.lynonOtpSecret,
+      otpToken: form.lynonOtpToken,
+      trustDevice: form.lynonTrustDevice,
+    },
+  });
+
   const createMutation = useMutation({
-    mutationFn: () => masterApi.createTenant(form),
-    onSuccess: () => {
-      toast.success('Yeni müşteri paneli oluşturuldu');
+    mutationFn: () => masterApi.createTenant(govdeyiKur()),
+    onSuccess: (cevap: any) => {
+      if (cevap?.ok === false) {
+        toast.error(cevap.message || 'Panel oluşturulamadı');
+        return;
+      }
+      // Site olustu ama sirlar yazilamadiysa bunu YUTMA: operator
+      // bilgileri girdigini sanip devam ederdi.
+      if (cevap?.baglantiUyarisi) toast.warning(cevap.baglantiUyarisi);
+      else toast.success('Yeni müşteri paneli oluşturuldu');
       handleReset();
       queryClient.invalidateQueries({ queryKey: ['master-tenants'] });
+      queryClient.invalidateQueries({ queryKey: ['master-durum'] });
     },
+    onError: () => toast.error('Panel oluşturulamadı'),
   });
 
   const updateMutation = useMutation({
@@ -107,6 +158,7 @@ export function MasterPanel() {
       toast.success('Panel ayarları güncellendi');
       handleReset();
       queryClient.invalidateQueries({ queryKey: ['master-tenants'] });
+      queryClient.invalidateQueries({ queryKey: ['master-durum'] });
     },
   });
 
@@ -124,6 +176,10 @@ export function MasterPanel() {
 
   const handleEdit = (tenant: any) => {
     setForm({
+      // Baglanti alanlari BOS baslar: duzenleme kipinde devre disi ve
+      // sirlar zaten panele hic gelmiyor. Eski degerleri doldurmaya
+      // calismak, maskeli bir metni gercek sir sanip kaydetmek olurdu.
+      ...initialForm,
       siteName: tenant.siteName || '',
       domain: tenant.domain || '',
       adminEmail: tenant.adminEmail || '',
@@ -139,9 +195,26 @@ export function MasterPanel() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  /**
+   * Site adi ve domain sunucuda ZORUNLU. Onceden panelde hicbir isaret
+   * yoktu: operator kaydet'e basiyor, istek 400 donuyor ve arayuz
+   * sessizce hicbir sey gostermiyordu.
+   *
+   * Domain ayrica cok kiracili cozumlemenin TEK anahtari; bos birakilan
+   * bir site panelde gorunur ama hicbir istek ona ulasmaz.
+   */
+  const eksikAlanlar = [
+    !form.siteName.trim() && 'Site adı',
+    !editingId && !form.domain.trim() && 'Domain',
+  ].filter(Boolean) as string[];
+
   const handleSubmit = () => {
+    if (eksikAlanlar.length > 0) {
+      toast.error('Zorunlu alan boş: ' + eksikAlanlar.join(', '));
+      return;
+    }
     if (editingId) {
-      updateMutation.mutate({ id: editingId, data: form });
+      updateMutation.mutate({ id: editingId, data: govdeyiKur() });
     } else {
       createMutation.mutate();
     }
@@ -229,22 +302,105 @@ export function MasterPanel() {
               </button>
             </div>
 
-            <div className="relative grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
-              <Field label="Site adı" value={form.siteName} onChange={(value) => updateForm('siteName', value)} placeholder="Örn: Bugs Casino" />
-              <Field label="Domain" value={form.domain} onChange={(value) => updateForm('domain', value)} placeholder="ornek-domain.com" />
-              <Field label="Admin e-posta" value={form.adminEmail} onChange={(value) => updateForm('adminEmail', value)} placeholder="admin@domain.com" />
-              <Field label="Admin şifre" value={form.adminPassword} onChange={(value) => updateForm('adminPassword', value)} placeholder="Opsiyonel" />
-              <Field label="Partner ID" value={form.partnerId} onChange={(value) => updateForm('partnerId', value)} placeholder="Opsiyonel" />
-              <Field label="Bitiş tarihi" value={form.expireDate} onChange={(value) => updateForm('expireDate', value)} type="date" />
-              <div>
-                <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Tema rengi</label>
-                <div className="flex items-center gap-2 rounded-3xl border border-white/[0.05] bg-white/[0.02] p-1 backdrop-blur-xl">
-                  <input type="color" value={form.themeColor} onChange={(event) => updateForm('themeColor', event.target.value)} className="h-10 w-12 cursor-pointer rounded-full border-0 bg-transparent" />
-                  <input value={form.themeColor} onChange={(event) => updateForm('themeColor', event.target.value)} className="min-w-0 flex-1 bg-transparent px-2 py-2 text-sm font-bold text-white outline-none" />
+            <div className="relative space-y-6">
+              <FormBolumu
+                baslik="Site kimliği"
+                aciklama="Domain, çok kiracılı çözümlemenin tek anahtarı: gelen isteğin hangi siteye ait olduğu buradan bulunur."
+              >
+                <Field label="Site adı" value={form.siteName} onChange={(value) => updateForm('siteName', value)} placeholder="Örn: Bugs Casino" zorunlu />
+                <Field label="Domain" value={form.domain} onChange={(value) => updateForm('domain', value)} placeholder="ornek-domain.com" zorunlu ipucu="www. yazmayın; alt alan adları da eşleşir." />
+                <Field label="Partner ID" value={form.partnerId} onChange={(value) => updateForm('partnerId', value)} placeholder="Opsiyonel" />
+              </FormBolumu>
+
+              <FormBolumu baslik="Panel erişimi">
+                <Field label="Admin e-posta" value={form.adminEmail} onChange={(value) => updateForm('adminEmail', value)} placeholder={form.domain ? `admin@${form.domain}` : 'admin@domain.com'} />
+                <Field
+                  label="Admin şifre"
+                  value={form.adminPassword}
+                  onChange={(value) => updateForm('adminPassword', value)}
+                  type="password"
+                  placeholder={editingId ? 'Boş: değiştirme' : 'Boş: otomatik üretilir'}
+                  ipucu={editingId ? 'Boş bırakılırsa mevcut şifre korunur.' : 'Boş bırakılırsa güçlü bir şifre üretilir.'}
+                />
+                <Field label="Bitiş tarihi" value={form.expireDate} onChange={(value) => updateForm('expireDate', value)} type="date" ipucu="Boş: süresiz." />
+              </FormBolumu>
+
+              <FormBolumu baslik="Marka">
+                <div>
+                  <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Tema rengi</label>
+                  <div className="flex h-9 items-center gap-2 overflow-hidden rounded-3xl border border-white/[0.05] bg-white/[0.02] pl-1.5 pr-3 backdrop-blur-xl">
+                    <input
+                      type="color"
+                      value={form.themeColor}
+                      onChange={(event) => updateForm('themeColor', event.target.value)}
+                      className="h-6 w-6 shrink-0 cursor-pointer rounded-full border-0 bg-transparent p-0 [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-full [&::-webkit-color-swatch]:border-0"
+                    />
+                    <input
+                      value={form.themeColor}
+                      onChange={(event) => updateForm('themeColor', event.target.value)}
+                      className="min-w-0 flex-1 bg-transparent font-mono text-xs font-bold uppercase text-white outline-none"
+                    />
+                  </div>
                 </div>
-              </div>
-              <Field label="Logo URL" value={form.logoUrl} onChange={(value) => updateForm('logoUrl', value)} placeholder="Logo bağlantısı" />
-              <Field label="Panel başlığı" value={form.adminTitle} onChange={(value) => updateForm('adminTitle', value)} placeholder="Örn: Arwen Software Solutions" />
+                <Field label="Logo URL" value={form.logoUrl} onChange={(value) => updateForm('logoUrl', value)} placeholder="https://.../logo.png" />
+                <Field label="Panel başlığı" value={form.adminTitle} onChange={(value) => updateForm('adminTitle', value)} placeholder="Arwen Software Solutions" />
+              </FormBolumu>
+
+              <FormBolumu
+                baslik="Lynon bağlantısı"
+                aciklama={editingId
+                  ? 'Bağlantı bilgileri yalnızca kurulumda girilir. Mevcut bir sitede kartındaki "Bağlantı" düğmesini kullanın — anlık TOTP kodu da orada.'
+                  : 'Boş bırakılan her alan sunucunun ortam değişkenindeki değeri kullanır — yani BAŞKA bir sitenin bilgilerini. Burada girmek, kurulumla kimlik arasında boşluk bırakmaz.'}
+                sonuk={Boolean(editingId)}
+              >
+                <Field label="Backoffice adresi" value={form.lynonBackofficeBaseUrl} onChange={(v) => updateForm('lynonBackofficeBaseUrl', v)} placeholder="https://backoffice.site.com" devreDisi={Boolean(editingId)} />
+                <Field label="Kimlik (ID) adresi" value={form.lynonIdBaseUrl} onChange={(v) => updateForm('lynonIdBaseUrl', v)} placeholder="https://id.site.com" devreDisi={Boolean(editingId)} />
+                <Field label="Site ID" value={form.lynonSiteId} onChange={(v) => updateForm('lynonSiteId', v)} placeholder="Örn: 137" devreDisi={Boolean(editingId)} />
+                <Field label="Para birimi" value={form.lynonCurrency} onChange={(v) => updateForm('lynonCurrency', v)} placeholder="TRY" devreDisi={Boolean(editingId)} />
+                <Field label="Panel kullanıcısı" value={form.lynonUsername} onChange={(v) => updateForm('lynonUsername', v)} placeholder="raporcu" devreDisi={Boolean(editingId)} />
+                <Field label="Panel şifresi" value={form.lynonPassword} onChange={(v) => updateForm('lynonPassword', v)} type="password" devreDisi={Boolean(editingId)} />
+              </FormBolumu>
+
+              <FormBolumu
+                baslik="İki adımlı doğrulama (TOTP)"
+                aciklama="Lynon girişi iki adımlı doğrulama istiyor. Kalıcı çalışma için OTP SIRRI gerekir; token tek seferliktir ve dakikalar içinde geçersiz olur."
+                sonuk={Boolean(editingId)}
+              >
+                <Field
+                  label="OTP sırrı"
+                  value={form.lynonOtpSecret}
+                  onChange={(v) => updateForm('lynonOtpSecret', v)}
+                  placeholder="Base32 (A-Z, 2-7)"
+                  type="password"
+                  devreDisi={Boolean(editingId)}
+                  ipucu="Authenticator kurulum sırrı veya otpauth:// bağlantısının tamamı."
+                />
+                <Field
+                  label="OTP token (tek seferlik)"
+                  value={form.lynonOtpToken}
+                  onChange={(v) => updateForm('lynonOtpToken', v)}
+                  placeholder="6 haneli anlık kod"
+                  type="password"
+                  devreDisi={Boolean(editingId)}
+                  ipucu="Sır elinizde yoksa geçici çözüm; kalıcı değildir."
+                />
+                <SecimAlani
+                  label="Cihaza güven"
+                  value={form.lynonTrustDevice}
+                  onChange={(v) => updateForm('lynonTrustDevice', v)}
+                  secenekler={[['', 'ENV değeri'], ['true', 'Açık — önerilen'], ['false', 'Kapalı']]}
+                  ipucu="Kapalıyken Lynon yetkilendirme hatası dönebilir."
+                  devreDisi={Boolean(editingId)}
+                />
+              </FormBolumu>
+
+              {!editingId && (
+                <p className="text-[11px] font-medium leading-relaxed text-slate-500">
+                  Bağlantı alanları opsiyoneldir; boş bırakıp site kartındaki
+                  <span className="font-bold text-slate-400"> Bağlantı </span>
+                  düğmesinden sonra da girebilirsiniz. TOTP sırrının doğruluğunu orada anlık kodla sınayabilirsiniz.
+                </p>
+              )}
             </div>
 
             <div className="relative mt-4 flex flex-col-reverse justify-end gap-3 sm:flex-row">
@@ -253,8 +409,9 @@ export function MasterPanel() {
               </button>
               <button
                 onClick={handleSubmit}
-                disabled={isSaving}
-                className="inline-flex items-center justify-center gap-2 h-9 rounded-xl bg-blue-400 px-5 text-xs font-bold text-white transition hover:bg-blue-300 disabled:cursor-wait disabled:opacity-70"
+                disabled={isSaving || eksikAlanlar.length > 0}
+                title={eksikAlanlar.length > 0 ? `Zorunlu alan boş: ${eksikAlanlar.join(', ')}` : undefined}
+                className="inline-flex items-center justify-center gap-2 h-9 rounded-xl bg-blue-400 px-5 text-xs font-bold text-white transition hover:bg-blue-300 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isSaving ? <Loader2 size={17} className="animate-spin" /> : <Save size={17} />}
                 {isSaving ? 'Kaydediliyor...' : editingId ? 'Ayarları kaydet' : 'Paneli oluştur'}
@@ -383,36 +540,77 @@ function MetricCard({ label, value, icon: Icon, tone }: { label: string; value: 
   );
 }
 
-function Field({ label, value, onChange, placeholder, type = 'text' }: { label: string; value: string; onChange: (value: string) => void; placeholder?: string; type?: string }) {
+/**
+ * Form alanlarini gruplayan bolum.
+ *
+ * Onceden dokuz alan tek bir uc sutunlu izgarada, hicbir baslik olmadan
+ * duruyordu: hangi alanin neye ait oldugu ve hangisinin zorunlu oldugu
+ * gorunmuyordu. Gruplama, formu okunur kilmanin yani sira "bu bolumu
+ * simdi bos birakabilirim" karari verilebilmesini sagliyor.
+ */
+function FormBolumu({ baslik, aciklama, sonuk, children }: {
+  baslik: string;
+  aciklama?: string;
+  sonuk?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className={cn('rounded-3xl border border-white/[0.05] bg-white/[0.015] p-5', sonuk && 'opacity-60')}>
+      <div className="mb-4">
+        <h3 className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-300">{baslik}</h3>
+        {aciklama && <p className="mt-1 max-w-3xl text-[11px] font-medium leading-relaxed text-slate-500">{aciklama}</p>}
+      </div>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">{children}</div>
+    </section>
+  );
+}
+
+function Field({ label, value, onChange, placeholder, type = 'text', zorunlu, ipucu, devreDisi }: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  type?: string;
+  zorunlu?: boolean;
+  ipucu?: string;
+  devreDisi?: boolean;
+}) {
   return (
     <div>
-      <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">{label}</label>
+      <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+        {label}
+        {zorunlu && <span className="ml-1 text-rose-300" title="Zorunlu">*</span>}
+      </label>
       <input
         type={type}
         value={value}
+        disabled={devreDisi}
         onChange={(event) => onChange(event.target.value)}
-        className="h-9 w-full rounded-3xl border border-white/[0.05] bg-white/[0.02] px-3 text-xs font-semibold text-white outline-none transition placeholder:text-slate-500 focus:border-blue-400/40 [color-scheme:dark] backdrop-blur-xl"
+        className="h-9 w-full rounded-3xl border border-white/[0.05] bg-white/[0.02] px-3 text-xs font-semibold text-white outline-none transition placeholder:text-slate-500 focus:border-blue-400/40 disabled:cursor-not-allowed disabled:opacity-50 [color-scheme:dark] backdrop-blur-xl"
         placeholder={placeholder}
       />
+      {ipucu && <p className="mt-1 text-[10px] leading-relaxed text-slate-500">{ipucu}</p>}
     </div>
   );
 }
 
 /** Üç durumlu seçim: boş = ENV değerini kullan. */
-function SecimAlani({ label, value, onChange, secenekler, ipucu }: {
+function SecimAlani({ label, value, onChange, secenekler, ipucu, devreDisi }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   secenekler: Array<[string, string]>;
   ipucu?: string;
+  devreDisi?: boolean;
 }) {
   return (
     <div>
       <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">{label}</label>
       <select
         value={value}
+        disabled={devreDisi}
         onChange={(event) => onChange(event.target.value)}
-        className="h-9 w-full rounded-3xl border border-white/[0.05] bg-white/[0.02] px-3 text-xs font-semibold text-white outline-none transition focus:border-blue-400/40 [color-scheme:dark] backdrop-blur-xl"
+        className="h-9 w-full rounded-3xl border border-white/[0.05] bg-white/[0.02] px-3 text-xs font-semibold text-white outline-none transition focus:border-blue-400/40 disabled:cursor-not-allowed disabled:opacity-50 [color-scheme:dark] backdrop-blur-xl"
       >
         {secenekler.map(([deger, etiket]) => (
           <option key={deger} value={deger}>{etiket}</option>
