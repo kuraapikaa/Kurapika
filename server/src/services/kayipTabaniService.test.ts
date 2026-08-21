@@ -297,3 +297,126 @@ describe('lossBonusPeriod: weekly — uçtan uca', () => {
     expect(madde?.reason).toContain('bu hafta');
   });
 });
+
+/**
+ * SON 24 SAAT PENCERESI.
+ *
+ * Bildirilen sorun: kayip bonusu tum zamanlarin yatirim ve cekimini
+ * topluyordu; yalnizca son 24 saati almasi gerekiyor. Varsayilan taban
+ * son ODENEN CEKIMDEN itibaren hesaplaniyor ve arada cekim yoksa omur
+ * boyu birikiyor -- aylar once yatirilan para bugun hala taban.
+ */
+describe('donemTipi: son24Saat', () => {
+  const SIMDI = Date.parse('2026-08-21T12:00:00Z');
+  const saatOnce = (s: number) => new Date(SIMDI - s * 3_600_000).toISOString();
+
+  const hesapla = (hareketler: any[]) =>
+    kayipTabani(hareketler, { donemTipi: 'son24Saat', simdi: SIMDI });
+
+  it('24 saatten ESKI yatirimi saymaz', () => {
+    const sonuc = hesapla([
+      { tur: 'deposit', durum: 'success', tutar: 50_000, tarih: saatOnce(200) }, // ~8 gun once
+      { tur: 'deposit', durum: 'success', tutar: 1_000, tarih: saatOnce(3) },
+    ]);
+    expect(sonuc.netLoss).toBe(1_000);
+    expect(sonuc.donemYatirimi).toBe(1_000);
+  });
+
+  it('24 saat icindeki cekimi yatirimdan duser', () => {
+    const sonuc = hesapla([
+      { tur: 'deposit', durum: 'success', tutar: 5_000, tarih: saatOnce(10) },
+      { tur: 'withdrawal', durum: 'success', tutar: 2_000, tarih: saatOnce(8) },
+      { tur: 'deposit', durum: 'success', tutar: 3_000, tarih: saatOnce(6) },
+    ]);
+    // Cekim siniri: 8 saat once. Taban ondan SONRAKI yatirim = 3.000.
+    // Cekimden onceki 5.000 sayilmaz -- oyuncu parasini geri aldi.
+    expect(sonuc.netLoss).toBe(3_000);
+  });
+
+  it('pencere KAYAR, gece yarisinda sifirlanmaz', () => {
+    // 23 saat once yapilan yatirim hala kapsamda; takvim gunu olsaydi
+    // dunku yatirim kapsam disi kalirdi.
+    const sonuc = hesapla([
+      { tur: 'deposit', durum: 'success', tutar: 4_000, tarih: saatOnce(23) },
+    ]);
+    expect(sonuc.netLoss).toBe(4_000);
+  });
+
+  it('tam 24 saat sinirindaki kayit kapsam DISI (sinir dahil degil)', () => {
+    const sonuc = hesapla([
+      { tur: 'deposit', durum: 'success', tutar: 9_000, tarih: saatOnce(24) },
+      { tur: 'deposit', durum: 'success', tutar: 100, tarih: saatOnce(1) },
+    ]);
+    expect(sonuc.netLoss).toBe(100);
+  });
+
+  it('basarisiz islemleri saymaz', () => {
+    const sonuc = hesapla([
+      { tur: 'deposit', durum: 'failed', tutar: 10_000, tarih: saatOnce(2) },
+      { tur: 'deposit', durum: 'success', tutar: 500, tarih: saatOnce(2) },
+    ]);
+    expect(sonuc.netLoss).toBe(500);
+  });
+
+  it('24 saat icinde yatirim yoksa taban 0 (veri yok DEGIL)', () => {
+    const sonuc = hesapla([
+      { tur: 'deposit', durum: 'success', tutar: 50_000, tarih: saatOnce(100) },
+    ]);
+    // Yatirim kaydi VAR ama pencerede degil: "kayip yok" demek dogru.
+    expect(sonuc.netLoss).toBe(0);
+  });
+
+  it('hic yatirim yoksa undefined (veri eksikligi gorunur kalsin)', () => {
+    expect(hesapla([]).netLoss).toBeUndefined();
+  });
+
+  it('varsayilan donem AYNI veride tum zamanlari alir — farki gosterir', () => {
+    const hareketler = [
+      { tur: 'deposit', durum: 'success', tutar: 50_000, tarih: saatOnce(200) },
+      { tur: 'deposit', durum: 'success', tutar: 1_000, tarih: saatOnce(3) },
+    ];
+    // Bildirilen hatanin ta kendisi: cekim yoksa varsayilan taban her seyi topluyor.
+    expect(kayipTabani(hareketler).netLoss).toBe(51_000);
+    expect(hesapla(hareketler).netLoss).toBe(1_000);
+  });
+});
+
+describe('lossBonusPeriod: last24h — uçtan uca', () => {
+  const kurallar = {
+    PROMO_SPECS: {
+      'kayip-bonusu': {
+        enabled: true, type: 'cash', title: '%30 Kayıp Bonusu',
+        lossBonus: true, lossBonusPeriod: 'last24h',
+        amountType: 'percentage', percentageAmount: 30,
+      },
+    },
+    PROMO_TITLE_SPECS: {},
+  } as any;
+
+  const hesap = (netLoss: number | undefined, netLoss24h: number | undefined) => ({
+    id: 2492369, balance: 0, netLoss, netLoss24h,
+    lastDeposit: { amount: 10_000, dateLocal: '2026-08-21T10:00:00Z' },
+    bonuses: [], profileTransactions: [], profileTransactionsByType: {},
+    dataCompleteness: { kpi: true, payments: true, financialMovements: true, bonuses: true, casino: true, sport: true },
+  }) as any;
+
+  it('last24h isaretli kural netLoss24h okur, omur boyu netLoss degil', async () => {
+    const sonuc = await evaluateForAccount(
+      hesap(50_000, 1_000), // omur boyu 50.000, son 24 saatte 1.000
+      { id: 'kayip-bonusu', title: '%30 Kayıp Bonusu' } as any,
+      kurallar, 'default', 'bonus',
+    );
+    expect(sonuc.calculatedAmount).toBe(300); // %30 x 1.000
+  });
+
+  it('son 24 saatte kayip yoksa reddeder, omur boyu kayip olsa bile', async () => {
+    const sonuc = await evaluateForAccount(
+      hesap(50_000, 0),
+      { id: 'kayip-bonusu', title: '%30 Kayıp Bonusu' } as any,
+      kurallar, 'default', 'bonus',
+    );
+    const madde = sonuc.items.find((i) => i.id === 'loss-bonus-net-loss');
+    expect(madde?.ok).toBe(false);
+    expect(madde?.reason).toContain('son 24 saatte');
+  });
+});

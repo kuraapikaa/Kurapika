@@ -51,7 +51,7 @@ interface PromoSpec {
     /** Bonus tabanini yatirimdan NET KAYBA cevirir (promoEvaluator.depositBasis). */
     lossBonus?: boolean;
     /** lossBonus tabaninin donemi: omur boyu (son cekimden itibaren) ya da takvim haftasi. */
-    lossBonusPeriod?: 'sinceLastWithdrawal' | 'weekly';
+    lossBonusPeriod?: 'sinceLastWithdrawal' | 'weekly' | 'last24h';
 
     // Automation & Loss Bonus
     isAutoCharge?: boolean;
@@ -1268,10 +1268,15 @@ export function RulesManager() {
                                                                     className="w-full h-11 bg-white/[0.02] border border-white/[0.05] rounded-3xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all outline-none font-bold backdrop-blur-xl"
                                                                 >
                                                                     <option value="sinceLastWithdrawal">Son ödenen çekimden itibaren (ömür boyu birikebilir)</option>
+                                                                    <option value="last24h">Son 24 saat (yalnızca son 24 saatteki yatırım ve çekim)</option>
                                                                     <option value="weekly">Haftalık (Pazartesi 00:00'da sıfırlanır)</option>
                                                                 </select>
                                                                 <p className="mt-1 text-[10px] text-slate-500">
-                                                                    Haftalık seçilirse net kayıp o Türkiye haftasıyla (ve varsa hafta içindeki bir çekimle) sınırlanır; her Pazartesi sıfırdan başlar.
+                                                                    {editValue?.lossBonusPeriod === 'last24h'
+                                                                        ? 'Net kayıp yalnızca son 24 saatteki yatırım ve çekimlerden hesaplanır; kayan pencere, gece yarısı sıfırlanmaz. Bu süre içinde çekim yapıldıysa taban o çekimden sonrasına daralır.'
+                                                                        : editValue?.lossBonusPeriod === 'weekly'
+                                                                            ? 'Net kayıp o Türkiye haftasıyla (ve varsa hafta içindeki bir çekimle) sınırlanır; her Pazartesi sıfırdan başlar.'
+                                                                            : 'Net kayıp son ödenen çekimden itibaren hesaplanır ve ömür boyu birikebilir; oyuncunun aylar önceki kaybı da tabana girer.'}
                                                                 </p>
                                                             </div>
                                                         )}

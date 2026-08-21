@@ -142,7 +142,7 @@ export type PromoSpec = {
      * birikebilir). `weekly` takvim haftasıyla (Pazartesi 00:00
      * Europe/Istanbul) DA sınırlar — bkz. kayipTabaniService.ts.
      */
-    lossBonusPeriod?: 'sinceLastWithdrawal' | 'weekly';
+    lossBonusPeriod?: 'sinceLastWithdrawal' | 'weekly' | 'last24h';
     requestWithinHours?: number;
     balanceBelow?: number;
     noOpenBets?: boolean;

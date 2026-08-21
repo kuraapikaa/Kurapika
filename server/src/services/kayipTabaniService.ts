@@ -27,6 +27,17 @@
  * Kampanya metni de bunu soyluyor: "son yatirimi kaybeden oyunculara",
  * talep 24 saat icinde ve bakiye 10 TL altinda olmali.
  *
+ * ── 24 saatlik varyant ────────────────────────────────────────────────
+ * Kayip bonusunun "son 24 saat" surumu, tabani YALNIZCA son 24 saatteki
+ * yatirim ve cekimlerden hesaplar. Varsayilan surum son odenen cekimden
+ * beri omur boyu birikebiliyor; bir oyuncu aylar once kaybettigi parayi
+ * bugun hala taban olarak gosterebiliyordu. Gunluk calisan bir kampanya
+ * icin dogru pencere gunun kendisi.
+ *
+ * Cekim siniri burada da uygulanir: `max(son odenen cekim, simdi - 24s)`.
+ * Oyuncu 6 saat once para cektiyse taban o cekimden sonrasina daralir —
+ * aksi halde geri aldigi parayi kaybetmis sayardik.
+ *
  * ── Haftalik varyant ──────────────────────────────────────────────────
  * Bazi kurallar (haftalik kayip bonusu) donemi TAKVIM HAFTASIYLA
  * (Pazartesi 00:00 Europe/Istanbul) sinirlamak ister — "son cekimden
@@ -61,8 +72,12 @@ function sayi(v: unknown): number {
 const BASARILI = 'success';
 
 export type KayipTabaniSecenekleri = {
-  /** 'sonOdenenCekim' (varsayilan, omur boyu) | 'haftalik' (takvim haftasiyla da sinirli). */
-  donemTipi?: 'sonOdenenCekim' | 'haftalik';
+  /**
+   * 'sonOdenenCekim' (varsayilan, omur boyu)
+   * 'haftalik'       — takvim haftasiyla da sinirli
+   * 'son24Saat'      — yalnizca son 24 saat
+   */
+  donemTipi?: 'sonOdenenCekim' | 'haftalik' | 'son24Saat';
   /** Test edilebilirlik icin "su an" — varsayilan gercek zaman. */
   simdi?: number;
 };
@@ -101,9 +116,16 @@ export function kayipTabani(hareketler: OdemeHareketi[], secenekler: KayipTabani
   // Haftalik varyantta ayrica bu haftanin baslangiciyla da sinirlanir —
   // hangisi DAHA GEC ise o gecerli (cekim hafta ortasindaysa taban yine
   // ondan sonrasina daralir).
+  // 24 saatlik varyantta pencere kayan: `simdi - 24 saat`. Takvim gunu
+  // DEGIL -- kampanya "son 24 saat" diyor, "bugun" demiyor; gece yarisi
+  // sifirlanan bir pencere 23:50'deki yatirimi 00:10'da kapsam disi
+  // birakirdi.
+  const simdi = secenekler.simdi ?? Date.now();
   const donemSiniri = secenekler.donemTipi === 'haftalik'
     ? Math.max(sonCekimAni, istanbulHaftaBaslangiciMs(secenekler.simdi))
-    : sonCekimAni;
+    : secenekler.donemTipi === 'son24Saat'
+      ? Math.max(sonCekimAni, simdi - 24 * 60 * 60 * 1000)
+      : sonCekimAni;
 
   const donemYatirimlari = yatirimlar.filter((y) => zaman(y.tarih) > donemSiniri);
   const donemYatirimi = donemYatirimlari.reduce((t, y) => t + sayi(y.tutar), 0);

@@ -65,6 +65,8 @@ export interface AccountSnapshot {
   netLoss?: number;
   /** Kayıp bonusu tabanı — TAKVİM HAFTASIYLA da sınırlı (Pazartesi 00:00 Europe/Istanbul). */
   netLossWeekly?: number;
+  /** Kayıp bonusu tabanı — yalnızca SON 24 SAATteki yatırım ve çekimler. */
+  netLoss24h?: number;
   [key: string]: unknown;
 }
 

@@ -4045,12 +4045,18 @@ export async function lynonBuildBonusEligibilitySnapshot(input: { login?: string
       // kural ayni netLoss'u kullanmiyor; `spec.lossBonusPeriod` hangisini
       // sececegini promoEvaluator'da belirliyor.
       const tabanHaftalik = kayipTabani(hareketler, { donemTipi: 'haftalik' });
+      // 24 saatlik varyant: yalnizca son 24 saatteki yatirim ve cekim.
+      // Varsayilan taban son odenen cekimden beri omur boyu birikiyor;
+      // gunluk calisan bir kampanya icin dogru pencere gunun kendisi.
+      const taban24Saat = kayipTabani(hareketler, { donemTipi: 'son24Saat' });
       return {
         netLoss: taban.netLoss,
         netLossWeekly: tabanHaftalik.netLoss,
+        netLoss24h: taban24Saat.netLoss,
         // Denetim icin: tabanin nasil olustugu panelden gorulebilsin.
         kayipTabaniDetay: taban,
         kayipTabaniDetayHaftalik: tabanHaftalik,
+        kayipTabaniDetay24Saat: taban24Saat,
       };
     })(),
     rawKpi: kpi,
