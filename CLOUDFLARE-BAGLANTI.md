@@ -94,3 +94,88 @@ Bu yöntemde DNS’i yine Cloudflare’da yönetirsin; CNAME’i tunnel’a yön
 - [ ] SSL/TLS: Full veya Full (strict).
 
 Bu adımlarla “Cloudflare’a bağlanmış” olursun: domain Cloudflare’da, trafik Cloudflare’dan geçer, uygulama Railway/Render’da çalışır.
+
+---
+
+# BU PROJEYE ÖZGÜ AYARLAR
+
+Yukarıdaki adımlar her proje için geçerli. Aşağıdakiler **bu panele özgü** ve
+birkaçı üretimde canlı arızayla öğrenildi — atlanırsa aynı arızalar geri gelir.
+
+## 1. SSL/TLS: **Full (strict)** — "Full" değil
+
+Railway geçerli sertifika sunuyor. `Full` (strict olmayan) kendinden imzalı
+sertifikayı da kabul eder, yani Cloudflare ile origin arasındaki bacak
+doğrulanmaz. `Flexible` ise **kesinlikle kullanılmamalı**: origin HTTPS
+beklerken Cloudflare HTTP konuşur ve sonsuz yönlendirme döngüsü oluşur.
+
+## 2. `/api/*` için **Bypass cache** kuralı — en kritik madde
+
+> **Rules → Cache Rules → Create**
+> `(http.request.uri.path contains "/api/")` → **Bypass cache**
+
+Kod zaten her `/api` yanıtına `no-store, private` yazıyor. Buna rağmen bu
+kuralı AÇIKÇA koyun, çünkü üretimde şu yaşandı:
+
+`/api/bonus-panel/me` oturum sahibinin kimliğini döndürüyor. Yanıtta
+`Cache-Control` yokken Cloudflare bu ucu önbelleğe aldı (`cf-cache-status:
+EXPIRED` ile doğrulandı) ve **TEK girdiyi tüm ziyaretçilere servis etti** —
+bir oyuncu lobide BAŞKA bir oyuncunun kullanıcı adıyla doğrulanmış göründü.
+
+## 3. `Vary` başlığına güvenmeyin
+
+**Ölçüldü:** Cloudflare `Accept-Encoding` dışındaki `Vary` değerlerini
+önbellekleme için **yok sayıyor**. `Vary: Cookie` ya da `Vary: Referer`
+yazmak yanıtı ayrıştırmaz.
+
+Bunun somut sonucu: `FRAME_ANCESTOR_PATTERNS` kullanılırsa CSP başlığı istek
+başına değişir, ama önbellekteki kopya onu **ilk dolduran** isteğin listesini
+taşır; ana sitenin adresi döndüğünde tarayıcı çerçeveyi reddeder. Bu yüzden
+CDN arkasında **`FRAME_ANCESTOR_RANGE`** kullanılıyor — liste her istekte
+aynı olduğu için önbelleklenmesi zararsız.
+
+## 4. Statik varlıklarda ad değişmeden içerik değiştirmeyin
+
+Sunucu, dosya adında içerik hash'i varsa bir yıllık `immutable` veriyor.
+Hash tespiti bir desene bakıyor ve **tirenin ardından 8+ karakter** gören her
+adı hash'li sanıyor:
+
+    grand-casino-login.jpg   -> "casino-login" 12 karakter -> immutable, 1 YIL
+    bugs-logo.png            -> "logo" 4 karakter          -> max-age=3600
+
+Yani elle konmuş bir görseli **aynı adla** değiştirirseniz kimse yenisini
+görmez. İki çözüm: dosya adını değiştirin, ya da Cloudflare'da
+**Purge Cache → Custom Purge** ile o URL'i temizleyin.
+
+## 5. Kapatılması gerekenler
+
+- **Rocket Loader**: script yükleme sırasını değiştirir, React uygulamasını
+  bozabilir. Kapalı olsun.
+- **Auto Minify**: derlenmiş çıktı zaten küçültülmüş; ikinci kez işlemek
+  fayda getirmez.
+- **Email Obfuscation**: panel HTML'ine script enjekte eder; CSP
+  `script-src 'self'` olduğu için o script ENGELLENİR ve konsola hata düşer.
+
+## 6. Domain değişince güncellenecek değişkenler
+
+| Değişken | Değer |
+|---|---|
+| `CORS_ORIGIN` | `https://<panel-adresi>` — `*` veya `true` KULLANMAYIN |
+| `FRAME_ANCESTOR_RANGE` | Paneli gömen ana sitelerin aralığı |
+
+`CORS_ORIGIN` panelin kendi adresi, `FRAME_ANCESTOR_RANGE` ise onu **gömen**
+sitelerin adresi. İkisi farklı şeyler; karıştırmak "panel açılıyor ama
+iframe'de boş" ya da "istekler CORS'tan düşüyor" olarak görünür.
+
+## 7. Bağlantı sonrası doğrulama
+
+```bash
+# API önbelleğe alınmamalı: BYPASS ya da DYNAMIC bekleriz
+curl -sI https://<adres>/api/health | grep -i cf-cache-status
+
+# SPA kabuğu da önbelleğe alınmamalı
+curl -sI https://<adres>/ | grep -iE "cf-cache-status|cache-control"
+
+# Kiracı kaydı var mı (yoksa bütün siteler default'a çöker)
+curl -s https://<adres>/api/health | grep -o '"tenants":{[^}]*}'
+```

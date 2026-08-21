@@ -69,6 +69,8 @@ jobs:
       # tutarsiz davrandi (ayni isim bir seferinde "Service not found"
       # verdi, baska seferinde baska bir servise cozuldu). ID hic sasmadi.
       - name: Dağıt
-        run: railway up --service 1bdd822a-3f35-4920-88ff-9d9a21c8bc16 --ci
+        # Proje de ACIKCA yaziliyor: token hesap kapsamli olursa hedef
+        # sessizce baska bir projeye kayabilir.
+        run: railway up --service 3bb3967b-bb1f-4659-995d-a99b6f3f2c5c --project 1eff229b-94a4-4716-86a0-1f897bc7d316 --ci
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
