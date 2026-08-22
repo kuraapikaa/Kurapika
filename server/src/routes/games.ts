@@ -630,19 +630,28 @@ const DEFAULT_GAME_SETTINGS = {
       { id: 's3', value: '%99', label: 'Memnuniyet' },
       { id: 's4', value: '8M₺', label: 'Aylık Bonus' }
     ],
-    tiers: [
-      { id: 'prestij', badge: '🏅', label: 'Prestij', sublabel: 'Başlangıç', popular: false, perks: ['7/24 Kişisel VIP Asistanı', 'Öncelikli müşteri desteği', 'Özel hoşgeldin bonusu', 'Haftalık cashback teklifi'] },
-      { id: 'champion', badge: '🏆', label: 'Champion', sublabel: 'Popüler', popular: true, perks: ['Tüm Prestij avantajları', 'Özel etkinliklere davet', 'Extra promosyonlar', 'Hızlandırılmış çekim', 'Kişisel bonus danışmanı'] },
-      { id: 'elite', badge: '💠', label: 'Elite', sublabel: 'Premium', popular: false, perks: ['Tüm Champion avantajları', 'VIP çekim limitleri', 'Doğum günü özel bonusu', 'Lüks etkinlik davetleri', 'Öncelikli VIP hattı'] },
-      { id: 'master', badge: '👑', label: 'Master', sublabel: 'Ultimate', popular: false, perks: ['Tüm Elite avantajları', 'Limitsiz avantajlar', 'Özel günlerde hediyeler', 'Kişisel VIP koordinatörü', 'Sınırsız bonus fırsatı'] }
+    /*
+     * VIP SEVİYELERİ. Ölçü XP: oyuncunun sadakat seviyesi
+     * (`level = floor(xp/1000)+1`) hangi eşiği geçtiyse VIP seviyesi odur.
+     * Başvuru/onay yok. Eşik yalnızca `minLevel` ile yazılıyor; gereken XP
+     * ondan türetiliyor ki ikisi ayrışmasın.
+     */
+    ranks: [
+      { id: 'bronz', label: 'Bronz', minLevel: 1, badge: '🥉', perks: ['Hoş geldin paketi', 'Standart cashback'] },
+      { id: 'gumus', label: 'Gümüş', minLevel: 6, badge: '🥈', perks: ['Haftalık cashback', 'Doğum günü bonusu'] },
+      { id: 'altin', label: 'Altın', minLevel: 16, badge: '🥇', oneCikan: true, perks: ['Öncelikli destek', 'Artırılmış çekim limiti'] },
+      { id: 'platin', label: 'Platin', minLevel: 26, badge: '💠', perks: ['Hızlandırılmış çekim', 'Özel promosyonlar'] },
+      { id: 'elmas', label: 'Elmas', minLevel: 36, badge: '💎', perks: ['Kişisel VIP asistanı', 'Yükseltilmiş cashback'] },
+      { id: 'sampiyon', label: 'Şampiyon', minLevel: 46, badge: '🏆', perks: ['Özel etkinlik davetleri', 'Turnuva öncelikleri'] },
+      { id: 'efsane', label: 'Efsane', minLevel: 56, badge: '👑', perks: ['Limitsiz ayrıcalık', 'Kişisel VIP koordinatörü'] }
     ],
     faq: [
-      { id: 'f1', q: 'VIP üyelik nasıl alınır?', a: 'Aşağıdaki formu doldurarak başvuru yapabilirsiniz. Ekibimiz en kısa sürede sizinle iletişime geçecektir.' },
-      { id: 'f2', q: 'VIP seviyeleri nasıl belirlenir?', a: 'Yatırım miktarı, platform aktiviteniz ve sadakat puanlarınıza göre seviyeniz otomatik olarak güncellenir.' },
-      { id: 'f3', q: 'VIP üyeliğin ücretli olup olmadığı?', a: 'VIP programımız tamamen ücretsizdir. Belirli aktivite eşiklerini geçtiğinizde otomatik olarak davet edilirsiniz.' },
+      { id: 'f1', kategori: 'Üyelik', q: 'VIP üyelik nasıl alınır?', a: 'Başvuru gerekmez. Oynadıkça XP kazanırsınız; seviyeniz bir VIP eşiğini geçtiğinde o seviyenin ayrıcalıkları otomatik olarak açılır.' },
+      { id: 'f2', kategori: 'Rütbe', q: 'VIP seviyeleri nasıl belirlenir?', a: 'Tamamen XP ile. Her 1.000 XP bir seviye, belirli seviyeler ise yeni bir VIP rütbesi anlamına gelir. Nerede olduğunuzu rütbe merdiveninde görebilirsiniz.' },
+      { id: 'f3', kategori: 'Üyelik', q: 'VIP üyeliğin ücretli olup olmadığı?', a: 'VIP programımız tamamen ücretsizdir. Yeterli XP topladığınızda seviyeniz kendiliğinden yükselir.' },
       { id: 'f4', q: 'Hangi bonuslar VIP üyelere özel?', a: 'Cashback oranları, yükleme bonusları, freespin miktarları ve özel etkinlik ödülleri VIP seviyenize göre artış gösterir.' }
     ],
-    formActive: true,
+    formActive: false,
     formTitle: 'VIP başvurusu',
     formButtonText: 'Başvur',
     formSuccessMessage: 'VIP başvurunuz alındı! Ekibimiz en kısa sürede sizinle iletişime geçecek.',

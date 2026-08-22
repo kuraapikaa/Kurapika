@@ -9,13 +9,10 @@ import { formsApi, gamesApi, loyaltyApi } from '@/api/client';
 import { cn } from '@/lib/utils';
 import { lobbyExtraText, useLobbyPageContent } from '@/lib/lobbyContent';
 import { VipRutbeMerdiveni } from '@/components/player/VipRutbeMerdiveni';
+import { seviyeXp, seviyeleriNormalize } from '@/lib/vipSeviyeleri';
 
-const DEFAULT_TIERS = [
-  { id: 'prestij', badge: '🏅', label: 'Prestij', sublabel: 'Başlangıç', minDeposit: '10.000 TL', popular: false, perks: ['7/24 Kişisel VIP Asistanı', 'Öncelikli müşteri desteği', 'Özel hoşgeldin bonusu', 'Haftalık cashback teklifi'] },
-  { id: 'champion', badge: '🏆', label: 'Champion', sublabel: 'Popüler', minDeposit: '50.000 TL', popular: true, perks: ['Tüm Prestij avantajları', 'Özel etkinliklere davet', 'Extra promosyonlar', 'Hızlandırılmış çekim', 'Kişisel bonus danışmanı'] },
-  { id: 'elite', badge: '💠', label: 'Elite', sublabel: 'Premium', minDeposit: '100.000 TL', popular: false, perks: ['Tüm Champion avantajları', 'VIP çekim limitleri', 'Doğum günü özel bonusu', 'Lüks etkinlik davetleri', 'Öncelikli VIP hattı'] },
-  { id: 'master', badge: '👑', label: 'Master', sublabel: 'Ultimate', minDeposit: '250.000 TL', popular: false, perks: ['Tüm Elite avantajları', 'Limitsiz avantajlar', 'Özel günlerde hediyeler', 'Kişisel VIP koordinatörü', 'Sınırsız bonus fırsatı', 'Yıllık lüks sürpriz'] },
-];
+const xpBicimle = (n: number) => new Intl.NumberFormat('tr-TR').format(Math.max(0, Math.round(n)));
+
 
 const DEFAULT_STATS = [
   { id: 's1', value: '15K+', label: 'VIP Üye', end: 15000 },
@@ -92,7 +89,6 @@ export function VipSayfasi() {
   const [form, setForm] = useState({ username: '', name: '', email: '', phone: '' });
   const [sent, setSent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [selectedTier, setSelectedTier] = useState<string | null>(null);
   /**
    * Oyuncunun kendi XP'si. Doğrulanmamış oyuncuda istek yapılmıyor;
    * merdiven yine görünüyor ama konum işaretlenmiyor.
@@ -114,10 +110,16 @@ export function VipSayfasi() {
     }).catch(() => {});
   }, []);
 
-  const tiers = (cfg.tiers || DEFAULT_TIERS).map((tier: any, index: number) => ({
-    ...DEFAULT_TIERS[index],
-    ...tier,
-  }));
+  /*
+   * SEVİYELER TEK KAYNAK.
+   *
+   * Önce iki ayrı merdiven vardı: burada `tiers` (eşiği olmayan
+   * pazarlama kartları, seviye BAŞVURUYLA veriliyordu) ve aşağıda XP
+   * merdiveni. Oyuncu ikisini birden görüyor, hangisinin gerçek
+   * olduğunu anlayamıyordu. Artık ikisi de aynı listeden çiziliyor ve
+   * ölçü XP. Eski `tiers` kaydı olan kiracılarda içerik göç ediyor.
+   */
+  const seviyeler = useMemo(() => seviyeleriNormalize(cfg), [cfg]);
   const stats = (cfg.stats || DEFAULT_STATS).map((s: any, i: number) => ({ ...DEFAULT_STATS[i], ...s }));
   const faq = cfg.faq || DEFAULT_FAQ;
   /**
@@ -154,7 +156,13 @@ export function VipSayfasi() {
   const formSuccessMessage = cfg.formSuccessMessage || pageContent.successDescription || 'VIP başvurunuz alındı! Ekibimiz en kısa sürede sizinle iletişime geçecek.';
   const showStats = cfg.showStats !== false;
   const showFaq = cfg.showFaq !== false;
-  const formActive = cfg.formActive !== false;
+  /*
+   * Başvuru formu artık VARSAYILAN KAPALI: seviye XP ile otomatik
+   * açılıyor, başvurunun seviyeye etkisi yok. Açık bırakmış kiracılarda
+   * (`formActive: true`) form yerinde kalıyor -- yayındaki bir iletişim
+   * kanalını sessizce kapatmak bize düşmez.
+   */
+  const formActive = cfg.formActive === true;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -163,11 +171,6 @@ export function VipSayfasi() {
     try { await formsApi.submitVipRequest(form); } catch { /* */ }
     setSent(true);
     setSubmitting(false);
-  };
-
-  const handleSelectTier = (id: string) => {
-    setSelectedTier(id);
-    document.getElementById('vip-form')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
@@ -226,13 +229,22 @@ export function VipSayfasi() {
           transition={{ duration: 0.5, delay: 0.26 }}
           className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center"
         >
+          {/*
+            Birincil düğme forma değil, RÜTBE MERDİVENİNE gidiyor -- form
+            varsayılan olarak kapalı ve seviye artık başvuruyla değil XP
+            ile açılıyor. Hedefi sabit bıraksaydık düğme hiçbir yere
+            gitmeyen ölü bir bağlantı olurdu.
+          */}
           <a
-            href="#vip-form"
-            onClick={(e) => { e.preventDefault(); document.getElementById('vip-form')?.scrollIntoView({ behavior: 'smooth' }); }}
+            href={formActive ? '#vip-form' : '#rutbeler'}
+            onClick={(e) => {
+              e.preventDefault();
+              document.getElementById(formActive ? 'vip-form' : 'rutbeler')?.scrollIntoView({ behavior: 'smooth' });
+            }}
             className="inline-flex h-14 items-center gap-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 px-8 text-sm font-black uppercase tracking-[0.14em] text-[#171204] shadow-[0_18px_45px_rgba(251,191,36,0.28)] transition hover:from-amber-300 hover:to-amber-400 active:scale-[0.98]"
           >
             <Sparkles size={18} />
-            {pageContent.primaryButton}
+            {formActive ? pageContent.primaryButton : 'Rütbeni gör'}
           </a>
           <a
             href="#tiers"
@@ -263,11 +275,15 @@ export function VipSayfasi() {
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4 md:gap-5">
-          {tiers.map((tier: any, i: number) => {
+          {seviyeler.map((seviye, i) => {
             const style = TIER_STYLES[i % TIER_STYLES.length];
+            const sonraki = seviyeler[i + 1];
+            const gerekli = seviyeXp(seviye);
+            const acildi = Boolean(sadakat) && (sadakat?.level ?? 0) >= seviye.minLevel;
+            const kalan = Math.max(0, gerekli - (sadakat?.xp ?? 0));
             return (
               <motion.div
-                key={tier.id}
+                key={seviye.id}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -275,10 +291,10 @@ export function VipSayfasi() {
                 className={cn(
                   'relative flex flex-col overflow-hidden rounded-[2rem] border bg-gradient-to-b p-6 transition-transform duration-300 hover:-translate-y-1 md:p-7',
                   style.gradient, style.border, style.glow,
-                  tier.popular && 'scale-[1.02] xl:scale-[1.04]'
+                  seviye.oneCikan && 'scale-[1.02] xl:scale-[1.04]'
                 )}
               >
-                {tier.popular && (
+                {seviye.oneCikan && (
                   <div className="absolute right-0 top-0">
                     <div className="rounded-bl-2xl rounded-tr-2xl bg-amber-400 px-4 py-1.5 text-[9px] font-black uppercase tracking-[0.16em] text-[#171204] shadow-[0_4px_20px_rgba(251,191,36,0.4)]">
                       <Star size={10} className="inline mr-1 fill-current" />
@@ -288,24 +304,36 @@ export function VipSayfasi() {
                 )}
 
                 <div className="flex items-center gap-3">
-                  <div className={cn('flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border text-3xl', style.badge_bg)}>
-                    {tier.badge}
+                  {/* Panelden yüklenen logo varsa simgenin yerini alıyor. */}
+                  <div className={cn('flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border text-3xl', style.badge_bg)}>
+                    {seviye.logoUrl
+                      ? <img src={seviye.logoUrl} alt="" className="h-full w-full object-contain" loading="lazy" />
+                      : (seviye.badge || '★')}
                   </div>
                   <div>
-                    <p className={cn('text-lg font-black tracking-[-0.04em]', style.text)}>{tier.label}</p>
-                    <p className={cn('text-[10px] font-black uppercase tracking-[0.16em] opacity-60', style.text)}>{tier.sublabel}</p>
+                    <p className={cn('text-lg font-black tracking-[-0.04em]', style.text)}>{seviye.label}</p>
+                    <p className={cn('text-[10px] font-black uppercase tracking-[0.16em] opacity-60', style.text)}>
+                      Seviye {seviye.minLevel}{sonraki ? `–${sonraki.minLevel - 1}` : '+'}
+                    </p>
                   </div>
                 </div>
 
+                {/*
+                  Eskiden burada "Minimum yatırım" yazıyordu ve seviye
+                  başvuruyla veriliyordu. Ölçü artık XP; kart da onu
+                  gösteriyor.
+                */}
                 <div className="mt-5 rounded-xl border border-[rgba(243,236,221,0.07)] bg-black/20 px-4 py-3">
-                  <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[color:var(--lobby-muted,#8f8674)]">Minimum yatırım</p>
-                  <p className={cn('mt-1 text-sm font-black', style.accent)}>{tier.minDeposit || 'Belirtilmedi'}</p>
+                  <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[color:var(--lobby-muted,#8f8674)]">Gereken XP</p>
+                  <p className={cn('mt-1 text-sm font-black', style.accent)}>
+                    {gerekli === 0 ? 'Başlangıç seviyesi' : `${xpBicimle(gerekli)} XP`}
+                  </p>
                 </div>
 
                 <div className="my-5 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
                 <ul className="flex-1 space-y-2.5">
-                  {(tier.perks || []).map((perk: string) => (
+                  {seviye.perks.map((perk) => (
                     <li key={perk} className="flex items-start gap-2.5 text-[13px] font-medium leading-5 text-[color:var(--lobby-text,#f3ecdd)]">
                       <span className={cn('mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full', style.badge_bg)}>
                         <Check size={10} className={style.accent} />
@@ -315,18 +343,25 @@ export function VipSayfasi() {
                   ))}
                 </ul>
 
-                <button
-                  type="button"
-                  onClick={() => handleSelectTier(tier.id)}
+                {/*
+                  Başvuru düğmesi yok: seviye otomatik açılıyor. Yerine
+                  oyuncunun gerçekten sorduğu şey var -- açık mı, değilse
+                  ne kadar kaldı.
+                */}
+                <div
                   className={cn(
-                    'mt-6 flex h-11 w-full items-center justify-center rounded-xl text-xs font-black uppercase tracking-[0.12em] transition active:scale-[0.97]',
-                    tier.popular
-                      ? 'bg-amber-400 text-[#171204] shadow-[0_8px_28px_rgba(251,191,36,0.3)] hover:bg-amber-300'
-                      : 'border border-[rgba(243,236,221,0.10)] bg-[rgba(243,236,221,0.06)] text-[color:var(--lobby-text,#f3ecdd)] hover:bg-[rgba(243,236,221,0.12)]'
+                    'mt-6 flex h-11 w-full items-center justify-center gap-2 rounded-xl text-xs font-black uppercase tracking-[0.12em]',
+                    acildi
+                      ? 'border border-emerald-400/30 bg-emerald-400/10 text-emerald-200'
+                      : 'border border-[rgba(243,236,221,0.10)] bg-[rgba(243,236,221,0.04)] text-[color:var(--lobby-muted,#8f8674)]'
                   )}
                 >
-                  {lobbyExtraText(pageContent, 'tierApplyButton', 'Bu seviyeye başvur')}
-                </button>
+                  {acildi
+                    ? <><Check size={13} /> Açık</>
+                    : sadakat
+                      ? `${xpBicimle(kalan)} XP kaldı`
+                      : gerekli === 0 ? 'Herkese açık' : `${xpBicimle(gerekli)} XP gerekli`}
+                </div>
               </motion.div>
             );
           })}
@@ -340,7 +375,7 @@ export function VipSayfasi() {
         İkisi ayrı sorular ve oyuncu ikincisini soruyor.
       */}
       <VipRutbeMerdiveni
-        rutbeler={cfg.ranks}
+        rutbeler={seviyeler}
         xp={sadakat?.xp}
         seviye={sadakat?.level}
         girisYapildi={Boolean(sadakat)}
@@ -430,11 +465,6 @@ export function VipSayfasi() {
                 </div>
                 <h2 className="text-2xl font-black tracking-[-0.04em] text-[color:var(--lobby-text,#f3ecdd)] md:text-3xl">{formTitle}</h2>
                 <p className="mt-2 text-sm font-medium text-[color:var(--lobby-muted,#8f8674)]">{pageContent.formDescription}</p>
-                {selectedTier && (
-                  <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-amber-300/25 bg-amber-300/10 px-3 py-1.5 text-xs font-black text-amber-200">
-                    {tiers.find((t: any) => t.id === selectedTier)?.badge} {tiers.find((t: any) => t.id === selectedTier)?.label} seviyesi seçildi
-                  </div>
-                )}
               </div>
 
               {sent ? (

@@ -1,133 +1,133 @@
-import { useEffect, useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { gamesApi, formsApi } from '@/api/client';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
-  Crown, Loader2, Plus, Save, Trash2,
-  ChevronDown, ChevronUp, Users
+  AlertTriangle, ArrowDown, ArrowUp, Crown, ImageUp, Loader2,
+  Plus, Save, Trash2, TrendingUp, X,
 } from 'lucide-react';
+import { gamesApi } from '@/api/client';
 import { cn } from '@/lib/utils';
+import { SEVIYE_BASINA_XP } from '@/lib/sadakatIlerlemesi';
+import {
+  EN_BUYUK_KENAR, gorseliKucult, kbYaz, veriUriBoyutu,
+} from '@/lib/gorselKucult';
+import {
+  oyuncununSeviyesi, seviyeUyarilari, seviyeXp,
+  seviyeleriNormalize, seviyeleriSirala, type VipSeviye,
+} from '@/lib/vipSeviyeleri';
 
-type VIPTier = { id: string; badge: string; label: string; sublabel: string; minDeposit: string; popular: boolean; perks: string[] };
-type VIPStat = { id: string; value: string; label: string };
-type VIPFaq = { id: string; q: string; a: string };
+/**
+ * VIP SEVİYE AYARLARI.
+ *
+ * ── Neden baştan yazıldı ──────────────────────────────────────────────
+ * Eski sayfa VIP'i BAŞVURUYLA yönetiyordu: oyuncu form dolduruyor, burada
+ * bir başvuru listesi onaylanıyordu. Yanı sıra iki ayrı merdiven vardı ve
+ * birbirlerinden habersizdiler -- pazarlama kartları (`tiers`, eşiği yok)
+ * ve XP merdiveni (`ranks`, panelden hiç düzenlenemiyordu). Oyuncu VIP
+ * sayfasında ikisini birden görüyor, hangisinin gerçek olduğunu
+ * anlayamıyordu.
+ *
+ * Artık tek bir liste var ve ölçüsü XP: oyuncunun sadakat seviyesi
+ * (sunucuda `level = floor(xp/1000)+1`) hangi eşiği geçtiyse VIP seviyesi
+ * odur. Onay, başvuru, elle atama yok.
+ *
+ * ── Eşik nasıl yazılıyor ──────────────────────────────────────────────
+ * Operatör BAŞLANGIÇ SEVİYESİ giriyor, gereken XP ondan türetilip anında
+ * gösteriliyor. İkisi ayrı ayrı girilseydi biri değişip diğeri kalınca
+ * merdiven kendi içinde çelişirdi.
+ */
 
-interface VIPConfig {
+type VipYapilandirma = {
   isActive: boolean;
   eyebrow: string;
   title: string;
   description: string;
-  stats: VIPStat[];
-  tiers: VIPTier[];
-  faq: VIPFaq[];
-  formActive: boolean;
-  formTitle: string;
-  formButtonText: string;
-  formSuccessMessage: string;
+  stats: Array<{ id: string; value: string; label: string }>;
+  faq: Array<{ id: string; q: string; a: string; kategori?: string }>;
+  ranks: VipSeviye[];
   showStats: boolean;
   showFaq: boolean;
-}
-
-const DEFAULT_VIP: VIPConfig = {
-  isActive: true,
-  eyebrow: 'VIP Üyelik Programı',
-  title: 'Ayrıcalıklı deneyim, özel avantajlar',
-  description: 'Sadık oyuncularımıza özel 4 kademeli VIP programıyla kazancını ve deneyimini üst seviyeye taşı.',
-  stats: [
-    { id: 's1', value: '15K+', label: 'VIP Üye' },
-    { id: 's2', value: '7/24', label: 'Destek' },
-    { id: 's3', value: '%99', label: 'Memnuniyet' },
-    { id: 's4', value: '8M₺', label: 'Aylık Bonus' },
-  ],
-  tiers: [
-    { id: 'prestij', badge: '🏅', label: 'Prestij', sublabel: 'Başlangıç', minDeposit: '10.000 TL', popular: false, perks: ['7/24 Kişisel VIP Asistanı', 'Öncelikli müşteri desteği'] },
-    { id: 'champion', badge: '🏆', label: 'Champion', sublabel: 'Popüler', minDeposit: '50.000 TL', popular: true, perks: ['Tüm Prestij avantajları', 'Özel etkinliklere davet'] },
-    { id: 'elite', badge: '💠', label: 'Elite', sublabel: 'Premium', minDeposit: '100.000 TL', popular: false, perks: ['Tüm Champion avantajları', 'VIP çekim limitleri'] },
-    { id: 'master', badge: '👑', label: 'Master', sublabel: 'Ultimate', minDeposit: '250.000 TL', popular: false, perks: ['Tüm Elite avantajları', 'Limitsiz avantajlar'] },
-  ],
-  faq: [
-    { id: 'f1', q: 'VIP üyelik nasıl alınır?', a: 'Formu doldurarak başvuru yapabilirsiniz.' },
-  ],
-  formActive: true,
-  formTitle: 'VIP başvurusu',
-  formButtonText: 'Başvur',
-  formSuccessMessage: 'VIP başvurunuz alındı! Ekibimiz en kısa sürede sizinle iletişime geçecek.',
-  showStats: true,
-  showFaq: true,
+  /** Başvuru formu artık seviyeyi belirlemiyor; varsayılan kapalı. */
+  formActive: boolean;
 };
 
-type AdminTab = 'settings' | 'applications';
+const xpYaz = (n: number) => new Intl.NumberFormat('tr-TR').format(Math.max(0, Math.round(n)));
 
-function normalizeVipConfig(vip?: Partial<VIPConfig>): VIPConfig {
-  const sourceTiers = Array.isArray(vip?.tiers) ? vip.tiers : [];
-  const tiers = DEFAULT_VIP.tiers.map((defaultTier, index) => ({
-    ...defaultTier,
-    ...(sourceTiers.find((tier) => tier.id === defaultTier.id) || sourceTiers[index] || {}),
-  }));
+const yeniKimlik = (onEk: string) => `${onEk}-${Math.random().toString(36).slice(2, 8)}`;
 
+function yapilandirmayiNormalize(ham: any): VipYapilandirma {
+  const kayit = ham ?? {};
   return {
-    ...DEFAULT_VIP,
-    ...vip,
-    tiers,
+    isActive: kayit.isActive !== false,
+    eyebrow: String(kayit.eyebrow ?? 'VIP Üyelik Programı'),
+    title: String(kayit.title ?? 'Ayrıcalıklı deneyim, özel avantajlar'),
+    description: String(
+      kayit.description ??
+        'Oynadıkça XP kazan, seviyen yükseldikçe VIP ayrıcalıkların otomatik olarak açılsın.',
+    ),
+    stats: Array.isArray(kayit.stats) ? kayit.stats : [],
+    faq: Array.isArray(kayit.faq) ? kayit.faq : [],
+    ranks: seviyeleriNormalize(kayit),
+    showStats: kayit.showStats !== false,
+    showFaq: kayit.showFaq !== false,
+    formActive: kayit.formActive === true,
   };
 }
 
 export function VIPSettings() {
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<AdminTab>('settings');
-  const [config, setConfig] = useState<VIPConfig | null>(null);
-  const [expandedTier, setExpandedTier] = useState<string | null>(null);
-  const [expandedFaq, setExpandedFaq] = useState<string | null>(null);
+  const [cfg, setCfg] = useState<VipYapilandirma | null>(null);
+  const [acikSeviye, setAcikSeviye] = useState<string | null>(null);
+  /** Önizleme için denenen sadakat seviyesi. */
+  const [denemeSeviyesi, setDenemeSeviyesi] = useState(1);
 
-  const gamesConfigQuery = useQuery({
+  const yapilandirma = useQuery({
     queryKey: ['admin-games-config'],
     queryFn: () => gamesApi.config(),
   });
 
   useEffect(() => {
-    if (gamesConfigQuery.data?.data?.vip) {
-      setConfig(normalizeVipConfig(gamesConfigQuery.data.data.vip));
-      return;
-    }
+    if (cfg) return;
+    if (yapilandirma.data) setCfg(yapilandirmayiNormalize(yapilandirma.data?.data?.vip));
+    else if (yapilandirma.isError) setCfg(yapilandirmayiNormalize(null));
+  }, [cfg, yapilandirma.data, yapilandirma.isError]);
 
-    if (gamesConfigQuery.isSuccess || gamesConfigQuery.isError) {
-      setConfig(normalizeVipConfig());
-    }
-  }, [gamesConfigQuery.data, gamesConfigQuery.isError, gamesConfigQuery.isSuccess]);
-
-  const saveMutation = useMutation({
+  const kaydet = useMutation({
     mutationFn: async () => {
-      if (!config) throw new Error('VIP config is not ready.');
-      const current = await gamesApi.config();
-      return gamesApi.saveConfig({ ...(current?.data || {}), vip: config });
+      if (!cfg) throw new Error('Ayarlar henüz yüklenmedi.');
+      const mevcut = await gamesApi.config();
+      /*
+       * `tiers` KASITLI olarak yazılmıyor: seviyeler artık `ranks`.
+       * Eski alan kaydın içinde kalırsa (mevcut.data.vip'ten gelerek)
+       * oyuncu sayfası hangisini çizeceğini bilemez ve iki merdiven
+       * sorunu geri döner.
+       */
+      const oncekiVip = (mevcut?.data?.vip ?? {}) as any;
+      const { tiers: _eskiKartlar, ...korunan } = oncekiVip;
+      return gamesApi.saveConfig({
+        ...(mevcut?.data || {}),
+        vip: { ...korunan, ...cfg, ranks: seviyeleriSirala(cfg.ranks) },
+      });
     },
     onSuccess: () => {
-      toast.success('VIP ayarları kaydedildi.');
+      toast.success('VIP seviyeleri kaydedildi.');
       queryClient.invalidateQueries({ queryKey: ['admin-games-config'] });
     },
-    onError: () => toast.error('Kaydetme başarısız.'),
+    onError: (hata: any) => toast.error(hata?.message || 'Kaydetme başarısız.'),
   });
 
-  const formsQuery = useQuery({
-    queryKey: ['admin-forms'],
-    queryFn: () => formsApi.getAdminForms(),
-    enabled: activeTab === 'applications',
-  });
+  const seviyeler = cfg?.ranks ?? [];
+  const uyarilar = useMemo(() => seviyeUyarilari(seviyeler), [seviyeler]);
+  const denenenIndis = useMemo(
+    () => oyuncununSeviyesi(denemeSeviyesi, seviyeler),
+    [denemeSeviyesi, seviyeler],
+  );
+  const logoAgirligi = useMemo(
+    () => seviyeler.reduce((t, s) => t + veriUriBoyutu(s.logoUrl), 0),
+    [seviyeler],
+  );
 
-  const updateStatus = useMutation({
-    mutationFn: (body: { id: string; status: string }) => formsApi.updateVipStatus(body),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-forms'] }),
-  });
-
-  const deleteApp = useMutation({
-    mutationFn: (id: string) => formsApi.deleteVipForm({ id }),
-    onSuccess: () => {
-      toast.success('Başvuru silindi.');
-      queryClient.invalidateQueries({ queryKey: ['admin-forms'] });
-    },
-  });
-
-  if (!config) {
+  if (!cfg) {
     return (
       <div className="flex h-64 items-center justify-center">
         <Loader2 className="animate-spin text-white/40" size={28} />
@@ -135,300 +135,441 @@ export function VIPSettings() {
     );
   }
 
-  const vipApps: any[] = formsQuery.data?.data?.vipRequests || [];
+  const guncelle = (yama: Partial<VipYapilandirma>) => setCfg({ ...cfg, ...yama });
+
+  const seviyeGuncelle = (id: string, yama: Partial<VipSeviye>) =>
+    guncelle({ ranks: seviyeler.map((s) => (s.id === id ? { ...s, ...yama } : s)) });
+
+  const seviyeEkle = () => {
+    const enYuksek = seviyeler.reduce((m, s) => Math.max(m, s.minLevel), 0);
+    const id = yeniKimlik('seviye');
+    guncelle({
+      ranks: [
+        ...seviyeler,
+        { id, label: 'Yeni seviye', minLevel: enYuksek + 10, badge: '⭐', perks: [] },
+      ],
+    });
+    setAcikSeviye(id);
+  };
+
+  const seviyeSil = (id: string) => guncelle({ ranks: seviyeler.filter((s) => s.id !== id) });
+
+  /**
+   * Sıra değiştirme, eşikleri TAKAS ederek çalışıyor.
+   * Yalnızca dizideki yeri değişseydi liste kaydedilirken `minLevel`e göre
+   * yeniden sıralanır ve düğme hiçbir şey yapmamış gibi görünürdü.
+   */
+  const seviyeTasi = (id: string, yon: -1 | 1) => {
+    const sirali = seviyeleriSirala(seviyeler);
+    const i = sirali.findIndex((s) => s.id === id);
+    const j = i + yon;
+    if (i < 0 || j < 0 || j >= sirali.length) return;
+    const a = sirali[i];
+    const b = sirali[j];
+    guncelle({
+      ranks: seviyeler.map((s) =>
+        s.id === a.id ? { ...s, minLevel: b.minLevel } : s.id === b.id ? { ...s, minLevel: a.minLevel } : s,
+      ),
+    });
+  };
 
   return (
-    <div className="mx-auto w-full max-w-[1200px] space-y-5 p-4 pb-28 md:p-6">
-      {/* Toolbar */}
-      <div className="flex flex-col gap-3 rounded-3xl border border-white/[0.05] bg-white/[0.02] p-8 sm:flex-row sm:items-center sm:justify-between backdrop-blur-xl">
-        <div className="flex gap-1 rounded-3xl border border-white/[0.05] bg-black/30 p-1 backdrop-blur-xl">
-          {([['settings', Crown, 'Ayarlar'], ['applications', Users, 'Başvurular']] as const).map(([id, Icon, label]) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => setActiveTab(id)}
-              className={cn(
-                'flex items-center gap-2 rounded-xl px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] transition',
-                activeTab === id ? 'bg-cyan-400 text-[#050609]' : 'text-slate-400 hover:text-white'
-              )}
-            >
-              <Icon size={14} />
-              {label}
-              {id === 'applications' && vipApps.length > 0 && (
-                <span className="rounded-full bg-rose-500 px-1.5 py-0.5 text-[9px] text-white">{vipApps.filter((a) => a.status === 'pending').length || ''}</span>
-              )}
-            </button>
-          ))}
+    <div className="space-y-5">
+      <header className="flex flex-wrap items-start justify-between gap-4 rounded-3xl border border-white/[0.05] bg-white/[0.02] p-5 backdrop-blur-xl">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-amber-400/10 text-amber-300">
+            <Crown size={20} />
+          </span>
+          <div className="min-w-0">
+            <h1 className="text-lg font-black tracking-[-0.02em] text-white">VIP seviyeleri</h1>
+            <p className="mt-1 max-w-2xl text-xs font-medium leading-5 text-slate-400">
+              Seviyeler <b className="text-slate-200">otomatik</b> belirleniyor: oyuncunun sadakat
+              seviyesi (her {xpYaz(SEVIYE_BASINA_XP)} XP bir seviye) hangi eşiği geçtiyse VIP seviyesi
+              odur. Başvuru, onay veya elle atama yok.
+            </p>
+          </div>
         </div>
-        {activeTab === 'settings' && (
+
+        <div className="flex items-center gap-2">
+          <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-white/5 bg-white/[0.02] px-3 py-2 text-[11px] font-bold text-slate-300">
+            <input
+              type="checkbox"
+              checked={cfg.isActive}
+              onChange={(e) => guncelle({ isActive: e.target.checked })}
+              className="h-3.5 w-3.5 accent-amber-400"
+            />
+            Sayfa yayında
+          </label>
           <button
             type="button"
-            onClick={() => saveMutation.mutate()}
-            disabled={saveMutation.isPending}
-            className="inline-flex h-10 items-center gap-2 rounded-xl bg-[color:var(--panel-info,#64d2ff)] px-5 text-xs font-semibold uppercase tracking-widest text-[#050609] transition hover:bg-[color:var(--panel-info,#64d2ff)] disabled:opacity-60"
+            onClick={() => kaydet.mutate()}
+            disabled={kaydet.isPending}
+            className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#ff9f0a] px-4 text-xs font-black uppercase tracking-widest text-[#050609] transition hover:brightness-110 disabled:opacity-50"
           >
-            {saveMutation.isPending ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+            {kaydet.isPending ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
             Kaydet
           </button>
-        )}
-      </div>
+        </div>
+      </header>
 
-      {activeTab === 'settings' && (
-        <div className="space-y-5">
-          {/* Genel */}
-          <Section title="Genel Ayarlar">
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-              <Toggle label="VIP sekmesini göster" value={config.isActive} onChange={(v) => setConfig({ ...config, isActive: v })} />
-              <Toggle label="İstatistikleri göster" value={config.showStats} onChange={(v) => setConfig({ ...config, showStats: v })} />
-              <Toggle label="SSS bölümünü göster" value={config.showFaq} onChange={(v) => setConfig({ ...config, showFaq: v })} />
-              <Toggle label="Başvuru formunu göster" value={config.formActive} onChange={(v) => setConfig({ ...config, formActive: v })} />
-            </div>
-            <div className="mt-3 grid grid-cols-1 gap-8 md:grid-cols-2">
-              <Field label="Üst başlık (eyebrow)" value={config.eyebrow} onChange={(v) => setConfig({ ...config, eyebrow: v })} />
-              <Field label="Başlık" value={config.title} onChange={(v) => setConfig({ ...config, title: v })} />
-              <Field label="Açıklama" value={config.description} onChange={(v) => setConfig({ ...config, description: v })} className="md:col-span-2" />
-            </div>
-          </Section>
+      {uyarilar.length > 0 && (
+        <div className="space-y-2 rounded-2xl border border-amber-300/20 bg-amber-400/[0.06] p-4">
+          {uyarilar.map((uyari) => (
+            <p key={uyari} className="flex items-start gap-2 text-[11px] font-semibold leading-5 text-amber-200">
+              <AlertTriangle size={13} className="mt-0.5 shrink-0" />
+              {uyari}
+            </p>
+          ))}
+        </div>
+      )}
 
-          {/* İstatistikler */}
-          <Section title="İstatistikler">
-            <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
-              {config.stats.map((stat) => (
-                <div key={stat.id} className="space-y-2 rounded-3xl border border-white/[0.05] bg-black/20 p-8 backdrop-blur-xl">
-                  <Field label="Değer" value={stat.value} onChange={(v) => setConfig({ ...config, stats: config.stats.map((s) => s.id === stat.id ? { ...s, value: v } : s) })} />
-                  <Field label="Etiket" value={stat.label} onChange={(v) => setConfig({ ...config, stats: config.stats.map((s) => s.id === stat.id ? { ...s, label: v } : s) })} />
-                </div>
-              ))}
-            </div>
-          </Section>
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
+        <section className="min-w-0 space-y-3">
+          {seviyeleriSirala(seviyeler).map((seviye, sira, hepsi) => {
+            const acik = acikSeviye === seviye.id;
+            const sonraki = hepsi[sira + 1];
+            return (
+              <article
+                key={seviye.id}
+                className={cn(
+                  'overflow-hidden rounded-2xl border bg-white/[0.02] transition',
+                  denenenIndis === sira ? 'border-amber-400/40' : 'border-white/[0.05]',
+                )}
+              >
+                <div className="flex flex-wrap items-center gap-3 p-3">
+                  <SeviyeLogosu
+                    seviye={seviye}
+                    onDegis={(logoUrl) => seviyeGuncelle(seviye.id, { logoUrl })}
+                  />
 
-          {/* VIP Seviyeleri */}
-          <Section title="VIP Seviyeleri">
-            <div className="space-y-2">
-              {config.tiers.map((tier) => (
-                <div key={tier.id} className="overflow-hidden rounded-3xl border border-white/[0.05] bg-black/20 backdrop-blur-xl">
-                  <button
-                    type="button"
-                    onClick={() => setExpandedTier(expandedTier === tier.id ? null : tier.id)}
-                    className="flex w-full items-center justify-between gap-3 px-4 py-3"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-xl">{tier.badge}</span>
-                      <div className="text-left">
-                        <p className="text-sm font-semibold text-white">{tier.label}</p>
-                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500">{tier.sublabel}</p>
-                        <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-cyan-300/80">Min. yatırım: {tier.minDeposit || 'Belirtilmedi'}</p>
-                      </div>
-                      {tier.popular && <span className="rounded-full bg-[color:var(--panel-warning,#ff9f0a)]/20 px-2 py-0.5 text-[9px] font-semibold text-amber-300">Popüler</span>}
-                    </div>
-                    {expandedTier === tier.id ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
-                  </button>
-                  {expandedTier === tier.id && (
-                    <div className="border-t border-white/5 p-4 space-y-3">
-                      <div className="grid grid-cols-2 gap-8 md:grid-cols-5">
-                        <Field label="Emoji/Badge" value={tier.badge} onChange={(v) => updateTier(tier.id, 'badge', v)} />
-                        <Field label="İsim" value={tier.label} onChange={(v) => updateTier(tier.id, 'label', v)} />
-                        <Field label="Alt başlık" value={tier.sublabel} onChange={(v) => updateTier(tier.id, 'sublabel', v)} />
-                        <Field label="Minimum yatırım" value={tier.minDeposit || ''} onChange={(v) => updateTier(tier.id, 'minDeposit', v)} />
-                        <div className="flex items-end">
-                          <Toggle label="Popüler rozeti" value={tier.popular} onChange={(v) => updateTier(tier.id, 'popular', v)} />
-                        </div>
-                      </div>
-                      <div>
-                        <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500">Avantajlar</p>
-                        <div className="space-y-2">
-                          {tier.perks.map((perk, pi) => (
-                            <div key={pi} className="flex gap-2">
-                              <input
-                                value={perk}
-                                onChange={(e) => {
-                                  const perks = [...tier.perks];
-                                  perks[pi] = e.target.value;
-                                  updateTier(tier.id, 'perks', perks);
-                                }}
-                                className="flex-1 h-9 rounded-3xl border border-white/[0.05] bg-black/30 px-3 text-xs font-bold text-white outline-none placeholder:text-slate-500 focus:border-cyan-400/40 backdrop-blur-xl"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => updateTier(tier.id, 'perks', tier.perks.filter((_, i) => i !== pi))}
-                                className="flex h-9 w-9 items-center justify-center rounded-full border border-rose-300/15 bg-rose-400/10 text-rose-300"
-                              >
-                                <Trash2 size={13} />
-                              </button>
-                            </div>
-                          ))}
-                          <button
-                            type="button"
-                            onClick={() => updateTier(tier.id, 'perks', [...tier.perks, ''])}
-                            className="flex h-9 items-center gap-2 rounded-3xl border border-white/[0.05] bg-white/[0.03] px-3 text-xs font-semibold text-slate-400 hover:text-white backdrop-blur-xl"
-                          >
-                            <Plus size={13} /> Avantaj ekle
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </Section>
+                  <div className="min-w-[160px] flex-1">
+                    <input
+                      value={seviye.label}
+                      onChange={(e) => seviyeGuncelle(seviye.id, { label: e.target.value })}
+                      placeholder="Seviye adı"
+                      className="w-full rounded-lg border border-white/5 bg-white/[0.02] px-3 py-2 text-sm font-bold text-white outline-none transition focus:border-amber-400/50"
+                    />
+                    <p className="mt-1.5 text-[10px] font-semibold text-slate-500">
+                      {xpYaz(seviyeXp(seviye))} XP
+                      {sonraki
+                        ? ` — ${xpYaz(seviyeXp(sonraki) - 1)} XP arası`
+                        : ' ve üzeri'}
+                    </p>
+                  </div>
 
-          {/* SSS */}
-          <Section title="SSS (Sık Sorulan Sorular)">
-            <div className="space-y-2">
-              {config.faq.map((item) => (
-                <div key={item.id} className="overflow-hidden rounded-3xl border border-white/[0.05] bg-black/20 backdrop-blur-xl">
-                  <div className="flex w-full items-center justify-between gap-3 px-4 py-3">
+                  <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.14em] text-slate-500">
+                    Başlangıç seviyesi
+                    <input
+                      type="number"
+                      min={1}
+                      value={seviye.minLevel}
+                      onChange={(e) =>
+                        seviyeGuncelle(seviye.id, { minLevel: Math.max(1, Number(e.target.value) || 1) })
+                      }
+                      className="h-9 w-20 rounded-lg border border-white/5 bg-white/[0.02] px-2 text-center text-sm font-bold text-white outline-none transition focus:border-amber-400/50"
+                    />
+                  </label>
+
+                  <div className="flex items-center gap-1">
+                    <IkonDugme etiket="Yukarı taşı" onClick={() => seviyeTasi(seviye.id, -1)} pasif={sira === 0}>
+                      <ArrowUp size={14} />
+                    </IkonDugme>
+                    <IkonDugme
+                      etiket="Aşağı taşı"
+                      onClick={() => seviyeTasi(seviye.id, 1)}
+                      pasif={sira === hepsi.length - 1}
+                    >
+                      <ArrowDown size={14} />
+                    </IkonDugme>
                     <button
                       type="button"
-                      onClick={() => setExpandedFaq(expandedFaq === item.id ? null : item.id)}
-                      className="min-w-0 flex-1 text-left"
+                      onClick={() => setAcikSeviye(acik ? null : seviye.id)}
+                      className="rounded-lg border border-white/5 px-3 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-slate-300 transition hover:bg-white/[0.04]"
                     >
-                      <p className="truncate text-sm font-bold text-white">{item.q || 'Yeni soru'}</p>
+                      {seviye.perks.length} avantaj
                     </button>
-                    <div className="flex shrink-0 items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setConfig({ ...config, faq: config.faq.filter((f) => f.id !== item.id) })}
-                        className="flex h-7 w-7 items-center justify-center rounded-full border border-rose-300/15 bg-rose-400/10 text-rose-300"
-                      >
-                        <Trash2 size={12} />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setExpandedFaq(expandedFaq === item.id ? null : item.id)}
-                        className="flex h-7 w-7 items-center justify-center rounded-full text-slate-400 hover:bg-white/[0.04] hover:text-white"
-                      >
-                        {expandedFaq === item.id ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
-                      </button>
-                    </div>
+                    <IkonDugme etiket="Seviyeyi sil" onClick={() => seviyeSil(seviye.id)} tehlike>
+                      <Trash2 size={14} />
+                    </IkonDugme>
                   </div>
-                  {expandedFaq === item.id && (
-                    <div className="border-t border-white/5 p-3 space-y-2">
-                      <Field label="Soru" value={item.q} onChange={(v) => setConfig({ ...config, faq: config.faq.map((f) => f.id === item.id ? { ...f, q: v } : f) })} />
-                      <Field label="Cevap" value={item.a} onChange={(v) => setConfig({ ...config, faq: config.faq.map((f) => f.id === item.id ? { ...f, a: v } : f) })} multiline />
-                    </div>
-                  )}
                 </div>
-              ))}
-              <button
-                type="button"
-                onClick={() => setConfig({ ...config, faq: [...config.faq, { id: `f${Date.now()}`, q: '', a: '' }] })}
-                className="flex h-9 items-center gap-2 rounded-3xl border border-white/[0.05] bg-white/[0.03] px-4 text-xs font-semibold text-slate-400 hover:text-white backdrop-blur-xl"
-              >
-                <Plus size={13} /> Soru ekle
-              </button>
-            </div>
-          </Section>
 
-          {/* Form */}
-          <Section title="Başvuru Formu Metinleri">
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-              <Field label="Form başlığı" value={config.formTitle} onChange={(v) => setConfig({ ...config, formTitle: v })} />
-              <Field label="Buton metni" value={config.formButtonText} onChange={(v) => setConfig({ ...config, formButtonText: v })} />
-              <Field label="Başarı mesajı" value={config.formSuccessMessage} onChange={(v) => setConfig({ ...config, formSuccessMessage: v })} className="md:col-span-2" />
-            </div>
-          </Section>
-        </div>
-      )}
+                {acik && (
+                  <div className="space-y-3 border-t border-white/5 bg-black/20 p-4">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <label className="flex items-center gap-2 text-[11px] font-bold text-slate-300">
+                        Simge
+                        <input
+                          value={seviye.badge ?? ''}
+                          onChange={(e) => seviyeGuncelle(seviye.id, { badge: e.target.value })}
+                          placeholder="🥇"
+                          className="h-9 w-16 rounded-lg border border-white/5 bg-white/[0.02] text-center text-base outline-none focus:border-amber-400/50"
+                        />
+                        <span className="text-[10px] font-medium text-slate-500">logo yoksa kullanılır</span>
+                      </label>
+                      <label className="flex cursor-pointer items-center gap-2 text-[11px] font-bold text-slate-300">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(seviye.oneCikan)}
+                          onChange={(e) => seviyeGuncelle(seviye.id, { oneCikan: e.target.checked })}
+                          className="h-3.5 w-3.5 accent-amber-400"
+                        />
+                        Sayfada öne çıkar
+                      </label>
+                    </div>
 
-      {activeTab === 'applications' && (
-        <div className="space-y-3">
-          {formsQuery.isLoading ? (
-            <div className="flex h-40 items-center justify-center"><Loader2 className="animate-spin text-white/40" size={24} /></div>
-          ) : vipApps.length === 0 ? (
-            <div className="flex h-40 flex-col items-center justify-center gap-2 rounded-3xl border border-white/[0.05] bg-white/[0.02] backdrop-blur-xl">
-              <Crown className="text-slate-500" size={28} />
-              <p className="text-sm font-bold text-slate-500">Henüz VIP başvurusu yok</p>
+                    <AvantajListesi
+                      perks={seviye.perks}
+                      onDegis={(perks) => seviyeGuncelle(seviye.id, { perks })}
+                    />
+                  </div>
+                )}
+              </article>
+            );
+          })}
+
+          <button
+            type="button"
+            onClick={seviyeEkle}
+            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-white/10 py-3 text-xs font-black uppercase tracking-[0.14em] text-slate-400 transition hover:border-amber-400/30 hover:text-amber-200"
+          >
+            <Plus size={15} />
+            Seviye ekle
+          </button>
+        </section>
+
+        <aside className="space-y-4">
+          {/*
+            ÖNİZLEME. Eşikleri yazarken "bu XP'de oyuncu hangi seviyede
+            olur" sorusunun cevabı ancak canlıda görülüyordu; yanlış bir
+            eşik ise sessizce yanlış kalıyordu.
+          */}
+          <div className="space-y-3 rounded-2xl border border-white/[0.05] bg-white/[0.02] p-4">
+            <p className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+              <TrendingUp size={13} />
+              Önizleme
+            </p>
+            <label className="block text-[11px] font-semibold text-slate-400">
+              Sadakat seviyesi
+              <input
+                type="range"
+                min={1}
+                max={80}
+                value={denemeSeviyesi}
+                onChange={(e) => setDenemeSeviyesi(Number(e.target.value))}
+                className="mt-2 w-full accent-amber-400"
+              />
+            </label>
+            <div className="rounded-xl bg-black/30 p-3">
+              <p className="text-[11px] font-semibold text-slate-400">
+                Seviye {denemeSeviyesi} · {xpYaz((denemeSeviyesi - 1) * SEVIYE_BASINA_XP)} XP
+              </p>
+              <p className="mt-1 text-sm font-black text-white">
+                {denenenIndis >= 0
+                  ? seviyeleriSirala(seviyeler)[denenenIndis].label
+                  : 'Hiçbir VIP seviyesinde değil'}
+              </p>
             </div>
-          ) : (
-            <div className="overflow-hidden rounded-3xl border border-white/[0.05] backdrop-blur-xl">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="border-b border-white/5 bg-black/30">
-                    {['Kullanıcı', 'Ad Soyad', 'E-posta', 'Telefon', 'Tarih', 'Durum', ''].map((h) => (
-                      <th key={h} className="px-3 py-2.5 text-left font-semibold uppercase tracking-wider text-slate-500">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {vipApps.map((app) => (
-                    <tr key={app.id} className="border-b border-white/5 hover:bg-white/[0.02]">
-                      <td className="px-3 py-2.5 font-semibold text-white">{app.username}</td>
-                      <td className="px-3 py-2.5 text-slate-400">{app.name || '—'}</td>
-                      <td className="px-3 py-2.5 text-slate-400">{app.email || '—'}</td>
-                      <td className="px-3 py-2.5 text-slate-400">{app.phone || '—'}</td>
-                      <td className="px-3 py-2.5 text-slate-500">{new Date(app.createdAt).toLocaleDateString('tr-TR')}</td>
-                      <td className="px-3 py-2.5">
-                        <select
-                          value={app.status}
-                          onChange={(e) => updateStatus.mutate({ id: app.id, status: e.target.value })}
-                          className="rounded-3xl border border-white/[0.05] bg-black/30 px-2 py-1 text-xs font-bold text-white outline-none backdrop-blur-xl"
-                        >
-                          <option value="pending">Bekliyor</option>
-                          <option value="approved">Onaylandı</option>
-                          <option value="rejected">Reddedildi</option>
-                        </select>
-                      </td>
-                      <td className="px-3 py-2.5">
-                        <button
-                          type="button"
-                          onClick={() => deleteApp.mutate(app.id)}
-                          className="flex h-7 w-7 items-center justify-center rounded-full border border-rose-300/15 bg-rose-400/10 text-rose-300 hover:bg-rose-400/20"
-                        >
-                          <Trash2 size={12} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+          </div>
+
+          <div className="space-y-3 rounded-2xl border border-white/[0.05] bg-white/[0.02] p-4">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Sayfa metni</p>
+            <Alan etiket="Üst başlık" deger={cfg.eyebrow} onDegis={(eyebrow) => guncelle({ eyebrow })} />
+            <Alan etiket="Başlık" deger={cfg.title} onDegis={(title) => guncelle({ title })} />
+            <Alan
+              etiket="Açıklama"
+              deger={cfg.description}
+              onDegis={(description) => guncelle({ description })}
+              cokSatir
+            />
+            <label className="flex cursor-pointer items-center gap-2 text-[11px] font-bold text-slate-300">
+              <input
+                type="checkbox"
+                checked={cfg.showFaq}
+                onChange={(e) => guncelle({ showFaq: e.target.checked })}
+                className="h-3.5 w-3.5 accent-amber-400"
+              />
+              Sık sorulan sorular görünsün
+            </label>
+            <label className="flex cursor-pointer items-center gap-2 text-[11px] font-bold text-slate-300">
+              <input
+                type="checkbox"
+                checked={cfg.showStats}
+                onChange={(e) => guncelle({ showStats: e.target.checked })}
+                className="h-3.5 w-3.5 accent-amber-400"
+              />
+              İstatistik şeridi görünsün
+            </label>
+          </div>
+
+          {/*
+            Logolar oyun yapılandırmasının içinde saklanıyor ve o yanıt her
+            oyuncuya gidiyor. Görseller yüklenirken küçültülüyor ama toplam
+            ağırlığı görmek, kimsenin fark etmeden lobiyi yavaşlatmasını
+            önlüyor.
+          */}
+          <div className="rounded-2xl border border-white/[0.05] bg-white/[0.02] p-4">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Logo ağırlığı</p>
+            <p className="mt-2 text-lg font-black text-white">{kbYaz(logoAgirligi)}</p>
+            <p className="mt-1 text-[10px] font-medium leading-4 text-slate-500">
+              Logolar yapılandırmayla birlikte her oyuncuya gidiyor. Yüklenen görseller
+              {' '}{EN_BUYUK_KENAR} px&apos;e küçültülüp WebP&apos;ye çevriliyor.
+            </p>
+          </div>
+        </aside>
+      </div>
+    </div>
+  );
+}
+
+/** Seviye logosu: yükle, önizle, kaldır. */
+function SeviyeLogosu({
+  seviye,
+  onDegis,
+}: {
+  seviye: VipSeviye;
+  onDegis: (logoUrl: string | undefined) => void;
+}) {
+  const [yukleniyor, setYukleniyor] = useState(false);
+  const girdiRef = useRef<HTMLInputElement>(null);
+
+  const secildi = async (dosya?: File) => {
+    if (!dosya) return;
+    setYukleniyor(true);
+    try {
+      const sonuc = await gorseliKucult(dosya);
+      onDegis(sonuc.veriUri);
+      toast.success(`Logo yüklendi (${sonuc.genislik}×${sonuc.yukseklik}, ${kbYaz(sonuc.bayt)}).`);
+    } catch (hata: any) {
+      toast.error(hata?.message || 'Görsel yüklenemedi.');
+    } finally {
+      setYukleniyor(false);
+      // Aynı dosya art arda seçilebilsin: input değeri değişmezse
+      // `change` bir daha tetiklenmiyor.
+      if (girdiRef.current) girdiRef.current.value = '';
+    }
+  };
+
+  return (
+    <div className="relative shrink-0">
+      <label
+        className="grid h-14 w-14 cursor-pointer place-items-center overflow-hidden rounded-2xl border border-white/10 bg-black/30 text-xl transition hover:border-amber-400/40"
+        title={seviye.logoUrl ? 'Logoyu değiştir' : 'Logo yükle'}
+      >
+        {yukleniyor ? (
+          <Loader2 size={16} className="animate-spin text-slate-400" />
+        ) : seviye.logoUrl ? (
+          <img src={seviye.logoUrl} alt="" className="h-full w-full object-contain" />
+        ) : (
+          <span className="grid place-items-center gap-0.5 text-center">
+            <span>{seviye.badge || '—'}</span>
+            <ImageUp size={11} className="text-slate-500" />
+          </span>
+        )}
+        <input
+          ref={girdiRef}
+          type="file"
+          accept="image/png,image/jpeg,image/webp,image/gif,image/avif"
+          className="hidden"
+          onChange={(e) => void secildi(e.target.files?.[0])}
+        />
+        <span className="sr-only">{seviye.label} logosu yükle</span>
+      </label>
+
+      {seviye.logoUrl && (
+        <button
+          type="button"
+          onClick={() => onDegis(undefined)}
+          title="Logoyu kaldır"
+          className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full border border-white/10 bg-[#0b0d12] text-slate-400 transition hover:text-rose-300"
+        >
+          <X size={11} />
+          <span className="sr-only">{seviye.label} logosunu kaldır</span>
+        </button>
       )}
     </div>
   );
-
-  function updateTier(id: string, key: string, value: any) {
-    setConfig((prev) => prev ? { ...prev, tiers: prev.tiers.map((t) => t.id === id ? { ...t, [key]: value } : t) } : prev);
-  }
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function AvantajListesi({ perks, onDegis }: { perks: string[]; onDegis: (perks: string[]) => void }) {
   return (
-    <div className="rounded-3xl border border-white/[0.05] bg-white/[0.02] p-8 md:p-8 backdrop-blur-xl">
-      <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">{title}</p>
-      {children}
-    </div>
-  );
-}
-
-function Toggle({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <label className="flex cursor-pointer items-center justify-between gap-3 rounded-3xl border border-white/[0.05] bg-black/20 px-3 py-2.5 backdrop-blur-xl">
-      <span className="text-xs font-bold text-slate-200">{label}</span>
+    <div className="space-y-2">
+      {perks.map((perk, i) => (
+        <div key={i} className="flex items-center gap-2">
+          <input
+            value={perk}
+            onChange={(e) => onDegis(perks.map((p, j) => (j === i ? e.target.value : p)))}
+            placeholder="Avantaj"
+            className="h-9 flex-1 rounded-lg border border-white/5 bg-white/[0.02] px-3 text-xs font-semibold text-white outline-none transition focus:border-amber-400/50"
+          />
+          <IkonDugme etiket="Avantajı sil" onClick={() => onDegis(perks.filter((_, j) => j !== i))} tehlike>
+            <Trash2 size={13} />
+          </IkonDugme>
+        </div>
+      ))}
       <button
         type="button"
-        onClick={() => onChange(!value)}
-        className={cn('flex h-6 w-11 items-center rounded-full border transition', value ? 'border-cyan-400/40 bg-cyan-400/20' : 'border-white/5 bg-white/5')}
+        onClick={() => onDegis([...perks, ''])}
+        className="inline-flex items-center gap-1.5 rounded-lg border border-white/5 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-slate-400 transition hover:text-amber-200"
       >
-        <span className={cn('h-4 w-4 rounded-full transition-transform', value ? 'translate-x-5 bg-[color:var(--panel-info,#64d2ff)]' : 'translate-x-0.5 bg-[color:var(--panel-faint,#5c6470)]')} />
+        <Plus size={12} />
+        Avantaj ekle
       </button>
+    </div>
+  );
+}
+
+function Alan({
+  etiket,
+  deger,
+  onDegis,
+  cokSatir,
+}: {
+  etiket: string;
+  deger: string;
+  onDegis: (v: string) => void;
+  cokSatir?: boolean;
+}) {
+  const ortak =
+    'w-full rounded-lg border border-white/5 bg-white/[0.02] px-3 py-2 text-xs font-semibold text-white outline-none transition focus:border-amber-400/50';
+  return (
+    <label className="block">
+      <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">{etiket}</span>
+      {cokSatir ? (
+        <textarea rows={3} value={deger} onChange={(e) => onDegis(e.target.value)} className={ortak} />
+      ) : (
+        <input value={deger} onChange={(e) => onDegis(e.target.value)} className={ortak} />
+      )}
     </label>
   );
 }
 
-function Field({ label, value, onChange, className, multiline }: { label: string; value: string; onChange: (v: string) => void; className?: string; multiline?: boolean }) {
-  const base = 'w-full rounded-3xl border border-white/[0.05] bg-black/30 px-3 text-xs font-bold text-white outline-none placeholder:text-slate-500 focus:border-cyan-400/40 backdrop-blur-xl';
+function IkonDugme({
+  etiket,
+  onClick,
+  pasif,
+  tehlike,
+  children,
+}: {
+  etiket: string;
+  onClick: () => void;
+  pasif?: boolean;
+  tehlike?: boolean;
+  children: React.ReactNode;
+}) {
   return (
-    <div className={cn('space-y-1', className)}>
-      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500">{label}</p>
-      {multiline ? (
-        <textarea value={value} onChange={(e) => onChange(e.target.value)} rows={3} className={cn(base, 'py-2 resize-none')} />
-      ) : (
-        <input type="text" value={value} onChange={(e) => onChange(e.target.value)} className={cn(base, 'h-9')} />
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={pasif}
+      title={etiket}
+      aria-label={etiket}
+      className={cn(
+        'grid h-9 w-9 place-items-center rounded-lg border border-white/5 text-slate-400 transition',
+        pasif ? 'opacity-30' : tehlike ? 'hover:bg-rose-500/10 hover:text-rose-300' : 'hover:bg-white/[0.05] hover:text-white',
       )}
-    </div>
+    >
+      {children}
+    </button>
   );
 }

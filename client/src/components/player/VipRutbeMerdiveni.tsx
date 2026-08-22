@@ -29,10 +29,14 @@ export type Rutbe = {
   label: string;
   /** Bu rütbenin başladığı seviye. */
   minLevel: number;
-  /** Rozet simgesi. */
+  /** Rozet simgesi; özel logo yüklenmemişse gösterilir. */
   badge?: string;
-  /** Kısa avantaj notu. */
+  /** Panelden yüklenen özel logo. */
+  logoUrl?: string;
+  /** Kısa avantaj notu (eski tekil alan). */
   perk?: string;
+  /** Panelden girilen avantaj listesi. */
+  perks?: string[];
 };
 
 export const VARSAYILAN_RUTBELER: Rutbe[] = [
@@ -51,6 +55,19 @@ export function rutbeXp(rutbe: Rutbe): number {
 }
 
 const xpYaz = (n: number) => new Intl.NumberFormat('tr-TR').format(Math.max(0, Math.round(n)));
+
+/**
+ * Satırda gösterilecek kısa avantaj notu.
+ *
+ * Merdiven bir satırlık bir özet; avantajların tamamı yukarıdaki
+ * seviye kartlarında zaten listeleniyor. Hepsini buraya da basmak
+ * satırları taşırırdı.
+ */
+function avantajOzeti(rutbe: Rutbe): string {
+  const liste = Array.isArray(rutbe.perks) ? rutbe.perks.filter(Boolean) : [];
+  if (liste.length === 0) return String(rutbe.perk ?? '').trim();
+  return liste.length === 1 ? liste[0] : `${liste[0]} +${liste.length - 1}`;
+}
 
 export function VipRutbeMerdiveni({ rutbeler, xp, seviye, girisYapildi }: {
   rutbeler?: Rutbe[];
@@ -126,10 +143,17 @@ export function VipRutbeMerdiveni({ rutbeler, xp, seviye, girisYapildi }: {
                     : 'border-[rgba(243,236,221,0.06)] bg-transparent',
               )}
             >
-              <span className={cn('grid h-10 w-10 shrink-0 place-items-center rounded-2xl text-lg',
+              {/*
+                Özel logo varsa simgenin yerini alıyor. Logo bir data URI
+                ve zaten küçültülmüş olarak geliyor; `object-contain`
+                farklı en-boy oranlarını kırpmadan sığdırıyor.
+              */}
+              <span className={cn('grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-2xl text-lg',
                 mevcut ? 'bg-amber-400/20' : 'bg-[rgba(243,236,221,0.04)]',
                 !acildi && 'opacity-45')}>
-                {rutbe.badge ?? '•'}
+                {rutbe.logoUrl
+                  ? <img src={rutbe.logoUrl} alt="" className="h-full w-full object-contain" loading="lazy" />
+                  : (rutbe.badge ?? '•')}
               </span>
 
               <div className="min-w-0 flex-1">
@@ -140,7 +164,7 @@ export function VipRutbeMerdiveni({ rutbeler, xp, seviye, girisYapildi }: {
                 </p>
                 <p className="mt-0.5 text-[11px] font-semibold text-[color:var(--lobby-muted,#8f8674)]">
                   Seviye {rutbe.minLevel}{sonrakiSeviye ? `–${sonrakiSeviye - 1}` : '+'}
-                  {rutbe.perk && ` · ${rutbe.perk}`}
+                  {avantajOzeti(rutbe) && ` · ${avantajOzeti(rutbe)}`}
                 </p>
               </div>
 
