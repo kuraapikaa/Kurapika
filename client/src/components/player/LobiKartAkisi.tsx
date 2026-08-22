@@ -74,7 +74,15 @@ type KartProps = {
 function Kart({ kart, sira, oneCikan, sadeHareket, vurguRengi, kenarRengi }: KartProps) {
   const mobil = gorselYolu(kart.id, 'mobile');
   const dikey = gorselYolu(kart.id, 'standard');
-  if (!mobil || !dikey) return null;
+  /**
+   * Görseli olmayan kısayol ELENMIYOR, yedek döşemeyle çiziliyor.
+   *
+   * Önce eleniyordu ve sonucu şuydu: panelden yeni bir kısayol eklendiğinde
+   * lobide hiç görünmüyor, sebebi de hiçbir yerde yazmıyordu. Tasarım
+   * paketinde karşılığı olmayan her kısayol artık en azından adıyla
+   * görünüyor.
+   */
+  const gorselVar = Boolean(mobil && dikey);
 
   return (
     <motion.div
@@ -115,18 +123,32 @@ function Kart({ kart, sira, oneCikan, sadeHareket, vurguRengi, kenarRengi }: Kar
           ['--tw-ring-color' as string]: vurguRengi,
         }}
       >
-        <picture>
-          {/* Masaustunde dikey (4:5) set; tarayici yalnizca birini indirir. */}
-          <source media="(min-width: 768px)" srcSet={dikey} />
-          <img
-            src={mobil}
-            alt={kart.label}
-            loading="lazy"
-            decoding="async"
-            draggable={false}
-            className="block h-auto w-full select-none"
-          />
-        </picture>
+        {gorselVar ? (
+          <picture>
+            {/* Masaustunde dikey (4:5) set; tarayici yalnizca birini indirir. */}
+            <source media="(min-width: 768px)" srcSet={dikey!} />
+            <img
+              src={mobil!}
+              alt={kart.label}
+              loading="lazy"
+              decoding="async"
+              draggable={false}
+              className="block h-auto w-full select-none"
+            />
+          </picture>
+        ) : (
+          <span
+            className={cn(
+              'flex w-full items-center justify-center px-3 text-center',
+              oneCikan ? 'aspect-[16/9] md:aspect-[4/5]' : 'aspect-[4/5]',
+            )}
+            style={{ background: `linear-gradient(160deg, ${vurguRengi}22, #0d0b06 70%)` }}
+          >
+            <span className="text-sm font-black leading-tight tracking-[-0.02em] text-white/90">
+              {kart.label}
+            </span>
+          </span>
+        )}
 
         {/*
           Uzerine gelince yumusak bir altin parilti. Gorselin kendisine
@@ -168,7 +190,7 @@ export function LobiKartAkisi({ kartlar, vurguRengi, metinRengi, sonukRenk }: {
    */
   const sadeHareket = useReducedMotion() ?? false;
 
-  const acik = kartlar.filter((k) => k.enabled !== false && GORSEL_ADI[k.id]);
+  const acik = kartlar.filter((k) => k.enabled !== false);
   const oneCikan = ONE_CIKANLAR
     .map((id) => acik.find((k) => k.id === id))
     .filter(Boolean) as LobiKart[];

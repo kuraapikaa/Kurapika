@@ -1,19 +1,20 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Crown, ListChecks, Loader2, Palette, Save, Send, Target, Ticket, Trophy, LayoutGrid } from 'lucide-react';
+import { Crown, ListChecks, Loader2, Package, Palette, Save, Send, Target, Ticket, Trophy, LayoutGrid } from 'lucide-react';
 import { toast } from 'sonner';
 import { gamesApi, dashboardApi } from '@/api/client';
 import { cn } from '@/lib/utils';
 import { WheelManager } from '@/components/admin/WheelManager';
 import { ScratchManager } from '@/components/admin/ScratchManager';
+import { KasaManager } from '@/components/admin/KasaManager';
 import { PredictionLeagueManager } from '@/components/admin/PredictionLeagueManager';
 import { MillionaireShowcaseManager } from '@/components/admin/MillionaireShowcaseManager';
 import { EngagementManager } from '@/components/admin/EngagementManager';
 import { LobbyDesignManager } from '@/components/admin/LobbyDesignManager';
 import { TelegramBonusManager } from '@/components/admin/TelegramBonusManager';
 
-type MainTab = 'wheel' | 'scratch' | 'prediction' | 'millionaires' | 'lobby' | 'dailyTasks' | 'telegram';
+type MainTab = 'wheel' | 'scratch' | 'kasa' | 'prediction' | 'millionaires' | 'lobby' | 'dailyTasks' | 'telegram';
 
 interface AdminGamesProps {
   initialTab?: MainTab;
@@ -27,6 +28,7 @@ const MODULE_TABS: Array<{
 }> = [
   { id: 'wheel', label: 'Şans Çarkı', description: 'Dilimler, oranlar ve görünüm', icon: Target },
   { id: 'scratch', label: 'Kazı Kazan', description: 'Kart ödülleri ve kurallar', icon: Ticket },
+  { id: 'kasa', label: 'Şans Kasaları', description: 'Kasa bedelleri ve ödül havuzları', icon: Package },
   { id: 'prediction', label: 'Skor Tahmin', description: 'Maç listesi ve tahmin ligi', icon: Trophy },
   { id: 'millionaires', label: 'Kazanç Vitrini', description: 'Büyük kazançlar ve video alanı', icon: Crown },
   { id: 'lobby', label: 'Lobi Tasarımı', description: 'Renk, arkaplan ve banner', icon: Palette },
@@ -228,6 +230,11 @@ export function AdminGames({ initialTab }: AdminGamesProps = {}) {
           config={config.scratchcard}
           bonusOptions={bonusOptions}
           onUpdate={(newScratchConfig) => setConfig({ ...config, scratchcard: newScratchConfig })}
+        />
+      ) : mainTab === 'kasa' ? (
+        <KasaManager
+          cases={config.cases ?? []}
+          onChange={(cases) => setConfig({ ...config, cases })}
         />
       ) : mainTab === 'prediction' ? (
         <PredictionLeagueManager

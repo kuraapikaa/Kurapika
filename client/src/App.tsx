@@ -64,6 +64,7 @@ const PlayerLobby = lazy(() => import('@/pages/player/PlayerLobby').then(m => ({
 const MillionaireShowcasePage = lazy(() => import('@/pages/player/MillionaireShowcasePage').then(m => ({ default: m.MillionaireShowcasePage })));
 const CarkSayfasi = lazy(() => import('@/pages/player/CarkSayfasi').then(m => ({ default: m.CarkSayfasi })));
 const KaziKazanSayfasi = lazy(() => import('@/pages/player/KaziKazanSayfasi').then(m => ({ default: m.KaziKazanSayfasi })));
+const KasaSayfasi = lazy(() => import('@/pages/player/KasaSayfasi').then(m => ({ default: m.KasaSayfasi })));
 const BeniAraSayfasi = lazy(() => import('@/pages/player/BeniAraSayfasi').then(m => ({ default: m.BeniAraSayfasi })));
 const OrtaklikSayfasi = lazy(() => import('@/pages/player/OrtaklikSayfasi').then(m => ({ default: m.OrtaklikSayfasi })));
 const YaziTuraSayfasi = lazy(() => import('@/pages/player/YaziTuraSayfasi').then(m => ({ default: m.YaziTuraSayfasi })));
@@ -116,6 +117,7 @@ export default function App() {
         <Route path="/milyonerler" element={oyuncuSayfasi(<MillionaireShowcasePage />, 'amber')} />
         <Route path="/cark" element={oyuncuSayfasi(<CarkSayfasi />, 'amber', '#0a0f1a')} />
         <Route path="/kazi-kazan" element={oyuncuSayfasi(<KaziKazanSayfasi />, 'orange', '#0a0f1a')} />
+            <Route path="/kasa" element={<KasaSayfasi />} />
         <Route path="/skor-tahmin" element={oyuncuSayfasi(<SkorTahminSayfasi />, 'emerald')} />
         <Route path="/gorevler" element={oyuncuSayfasi(<DailyTasksPage />, 'cyan')} />
         <Route path="/beni-ara" element={oyuncuSayfasi(<BeniAraSayfasi />, 'sky')} />

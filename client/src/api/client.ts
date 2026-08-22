@@ -1024,6 +1024,10 @@ export const bonusPanelApi = {
 
 export const gamesApi = {
   config: () => get<any>('/games/config'),
+  /** Kasa vitrini: açık kasalar ve ödül olasılıkları. */
+  kasaListesi: () => get<any>('/games/kasa/liste'),
+  /** Kasa açar; bedel düşülür, ödül bakiyeye yazılır. */
+  kasaAc: (kasaId: string) => post<any>('/games/kasa/ac', { kasaId }),
   saveConfig: (body: any) => post<any>('/admin/games/config', body),
   wheelClaims: (kayiplarDahil = false) =>
     get<any>(`/admin/games/wheel/claims${kayiplarDahil ? '?kayiplar=dahil' : ''}`),

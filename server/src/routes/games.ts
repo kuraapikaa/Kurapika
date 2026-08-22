@@ -8,10 +8,19 @@ import { getBackofficeToken } from '../lib/authStore.js';
 import { resolveTenantKeyForRequest, safeTenantKey } from '../lib/tenant.js';
 import { readStoredDocument, writeStoredDocument } from '../lib/documentStore.js';
 import { kilitle, odulAnahtari } from '../lib/odulKilidi.js';
+import {
+  acilisiDogrula,
+  beklenenDeger,
+  kasaMarji,
+  kasaVitrini,
+  odulCek,
+  type Kasa,
+} from '../services/kasaAcma.js';
 import { atamaDurumu, telegramBonusuAlinmis } from '../services/telegramBonusHakki.js';
 import { atamaNotu } from '../services/bonusAtamaNotu.js';
 import { bonusDenetimAciklamasi } from '../services/bonusDenetimAciklamasi.js';
-import { istanbulYerelAn } from '../lib/istanbulGunu.js';
+import { istanbulDateKey, istanbulYerelAn } from '../lib/istanbulGunu.js';
+import { lynonAdjustPlayerMainAccount } from '../services/lynonBackofficeService.js';
 import { bilinenLogo } from '../lib/takimLogosu.js';
 import { audit } from '../lib/auditLog.js';
 import { yatirimHakki } from '../services/yatirimHakki.js';
@@ -108,6 +117,7 @@ const DEFAULT_GAME_SETTINGS = {
     quickAccess: [
       { id: 'bonus', label: 'Bonus Talep', desc: 'Kampanya ve freespin', to: '/bonus-talep', icon: 'gift', accentColor: '#fb7185', enabled: true },
       { id: 'wheel', label: 'Şans Çarkı', desc: 'Çevir, ödül kazan', to: '/cark', icon: 'zap', accentColor: '#d4af37', enabled: true },
+      { id: 'kasa', label: 'Şans Kasaları', desc: 'Kasayı aç, ödülü al', to: '/kasa', icon: 'package', accentColor: '#f59e0b', enabled: true },
       { id: 'scratch', label: 'Kazı Kazan', desc: 'Kartını kazı', to: '/kazi-kazan', icon: 'sparkles', accentColor: '#f4d36f', enabled: true },
       { id: 'prediction', label: 'Narcos Skor Tahmin', desc: 'Maç skoru bil', to: '/skor-tahmin', icon: 'goal', accentColor: '#6ee7b7', enabled: true },
       { id: 'daily-tasks', label: 'Günlük Görevler', desc: 'API ilerleme', to: '/gorevler', icon: 'list-checks', accentColor: '#7dd3fc', enabled: true },      { id: 'tournament', label: 'Turnuva', desc: 'Sıralamaya gir', to: '/turnuva/gunluk', icon: 'trophy', accentColor: '#facc15', enabled: true },
@@ -471,6 +481,27 @@ const DEFAULT_GAME_SETTINGS = {
     glowStrength: 0,
     glossy: true
   },
+  /**
+   * Varsayilan kasa. Panel bos acilmasin diye ornek bir kasa var; marji
+   * POZITIF (bedel 500, ortalama odul 275) -- ornek bir yapilandirmanin
+   * zarar ettirmesi, kopyalanip cogaltilan bir hataya donusurdu.
+   */
+  cases: [
+    {
+      id: 'kasa-baslangic',
+      label: 'Başlangıç Kasası',
+      price: 500,
+      enabled: false,
+      dailyLimit: 3,
+      minDeposit: 0,
+      rewards: [
+        { id: 'kb-1', label: 'Boş', amount: 0, weight: 55 },
+        { id: 'kb-2', label: '250 ₺', amount: 250, weight: 30 },
+        { id: 'kb-3', label: '1.000 ₺', amount: 1000, weight: 12, rarity: 'nadir' },
+        { id: 'kb-4', label: '5.000 ₺', amount: 5000, weight: 3, rarity: 'efsane' },
+      ],
+    },
+  ],
   wheel: [
     { id: 'wheel-pass', label: 'Tekrar Dene', bgColor: '#111827', textColor: '#ffffff', probability: 97, type: 'none', bonusId: null, amount: 0, isLoss: true },
     { id: 'wheel-fs-sweet-100', label: '100 Freespin', detail: 'Sweet Bonanza · 1 ₺ spin', bgColor: '#b7791f', textColor: '#ffffff', probability: 0, type: 'bonus', rewardKind: 'freespin', bonusId: null, amount: 100, gameName: 'Sweet Bonanza', spinValue: 1, spinCount: 100, requiresConfiguration: true, isLoss: false },
@@ -809,6 +840,38 @@ function mergeGameSettings(settings: any) {
   };
 }
 
+/**
+ * Kasa bedelini geri verir.
+ *
+ * Oyuncunun parasini alip karsiliginda hicbir sey vermemek, kabul
+ * edilebilir bir basarisizlik bicimi degil. Iade de basarisiz olursa
+ * kayit `telafiBekliyor` olarak isaretleniyor -- sessizce yutulmuyor,
+ * denetimde gorunuyor ve elle duzeltilebiliyor.
+ */
+async function bedeliIadeEt(
+  playerId: number,
+  bedel: number,
+  kasaId: string,
+  kaydiGuncelle: (yama: Record<string, unknown>) => Promise<void>,
+): Promise<void> {
+  if (!(bedel > 0)) {
+    await kaydiGuncelle({ status: 'iptal' });
+    return;
+  }
+  try {
+    await lynonAdjustPlayerMainAccount({
+      playerId, amount: bedel, correctionType: 'crediting',
+      note: `Kasa ${kasaId} iade`.slice(0, 50),
+    });
+    await kaydiGuncelle({ status: 'iadeEdildi' });
+  } catch (hata) {
+    await kaydiGuncelle({
+      status: 'telafiBekliyor',
+      hata: hata instanceof Error ? hata.message : 'iade edilemedi',
+    });
+  }
+}
+
 export async function readGameSettings(tenantKey = 'default') {
   const key = safeTenantKey(tenantKey);
   const data = await readStoredDocument<any>({
@@ -921,7 +984,7 @@ export async function readEngagementClaims(tenantKey = 'default') {
     tenantKey: key,
     namespace: 'engagement-claims',
     filePath: engagementClaimsPath(key),
-    fallback: { daily: [], battlePass: [], scratch: [] },
+    fallback: { daily: [], battlePass: [], scratch: [], kasa: [] },
   });
   return {
     daily: Array.isArray(data?.daily) ? data.daily : [],
@@ -929,6 +992,12 @@ export async function readEngagementClaims(tenantKey = 'default') {
     // Kazi kazan oynama kayitlari. Onceden HIC tutulmuyordu; uc sinirsiz
     // cagrilabiliyordu. Hak artik yatirim kimligine bagli.
     scratch: Array.isArray(data?.scratch) ? data.scratch : [],
+    /**
+     * Kasa acilis kayitlari. Yalnizca gunluk limit icin degil, PARA
+     * izi icin de tutuluyor: bedeli dusulmus ama odulu yazilamamis bir
+     * acilis burada `telafiBekliyor` olarak duruyor.
+     */
+    kasa: Array.isArray(data?.kasa) ? data.kasa : [],
   };
 }
 
@@ -937,6 +1006,7 @@ export async function writeEngagementClaims(claims: any, tenantKey = 'default') 
   await writeStoredDocument(
     { tenantKey: key, namespace: 'engagement-claims', filePath: engagementClaimsPath(key) },
     {
+      kasa: Array.isArray(claims?.kasa) ? claims.kasa : [],
       daily: Array.isArray(claims?.daily) ? claims.daily : [],
       battlePass: Array.isArray(claims?.battlePass) ? claims.battlePass : [],
       // `scratch` `readEngagementClaims`'e eklendiginde buraya eklenmemisti
@@ -2201,6 +2271,150 @@ const selectedSlice = selected.slice;
       request.log.warn({ err }, 'Geriye donuk oyun hakki islemi basarisiz.');
       return reply.status(500).send({ ok: false, message: err instanceof Error ? err.message : 'İşlem başarısız.' });
     }
+  });
+
+  // ─── Kasa Açma ────────────────────────────────────────────────────
+  //
+  // Oyuncu bakiyesinden bir bedel düşülüp karşılığında ağırlıklı bir
+  // ödül veriliyor. Çekiliş mantığı `kasaAcma.ts` içinde ve saf; burası
+  // yalnızca PARA akışını yönetiyor.
+
+  /** Vitrin: açık kasalar, bedelleri ve ödül olasılıkları. */
+  app.get('/games/kasa/liste', async (request: any, reply) => {
+    const tenantKey = await resolveTenantKeyForRequest(request);
+    const settings = await readGameSettings(tenantKey);
+    const kasalar: Kasa[] = Array.isArray(settings.cases) ? settings.cases : [];
+    return reply.send({
+      ok: true,
+      kasalar: kasalar.filter((k) => k?.enabled !== false).map(kasaVitrini),
+    });
+  });
+
+  /**
+   * KASA AÇ.
+   *
+   * Sıra ÖNEMLİ ve şu şekilde: bedel DÜŞÜLÜR → ödül çekilir → ödül
+   * yazılır. Tersi olsaydı (önce ödül) düşüm başarısız olduğunda ödül
+   * bedava verilmiş olurdu.
+   *
+   * Düşüm başarılı ama ödül yazımı başarısız olursa bedel GERİ İADE
+   * ediliyor: oyuncunun parası alınıp karşılığında hiçbir şey
+   * verilmemesi, kabul edilebilir bir başarısızlık biçimi değil. İade de
+   * başarısız olursa kayıt `telafiBekliyor` olarak işaretleniyor --
+   * sessizce yutulmuyor, denetimde görünüyor.
+   *
+   * Tüm akış kilit altında: çift tıklama iki kez bedel düşemez.
+   */
+  app.post('/games/kasa/ac', async (request: any, reply) => {
+    const bonusPanelUser = request.session?.bonusPanelUser;
+    if (!bonusPanelUser?.login) {
+      return reply.status(401).send({ ok: false, message: 'Önce kullanıcı adı doğrulaması yapmalısınız.' });
+    }
+    const kasaId = String(request.body?.kasaId ?? '').trim();
+    if (!kasaId) return reply.status(400).send({ ok: false, message: 'Kasa seçilmedi.' });
+
+    const tenantKey = await resolveTenantKeyForRequest(request);
+    const login = String(bonusPanelUser.login);
+
+    return kilitle(odulAnahtari(login, 'kasa', kasaId), async () => {
+      if (!isLynonConfigured()) {
+        return reply.status(503).send({ ok: false, message: 'Lynon bağlantısı gerekli.' });
+      }
+
+      const settings = await readGameSettings(tenantKey);
+      const kasalar: Kasa[] = Array.isArray(settings.cases) ? settings.cases : [];
+      const kasa = kasalar.find((k) => String(k?.id) === kasaId);
+
+      const snapshot = await lynonBuildBonusEligibilitySnapshot({ login });
+      const playerId = Number((snapshot as any)?.id);
+      if (!Number.isFinite(playerId)) {
+        return reply.status(404).send({ ok: false, message: 'Oyuncu bulunamadı.' });
+      }
+
+      const claims = await readEngagementClaims(tenantKey);
+      if (!Array.isArray(claims.kasa)) claims.kasa = [];
+      const bugun = istanbulDateKey(new Date());
+      const bugunAcilis = claims.kasa.filter((k: any) =>
+        k?.username === login && k?.kasaId === kasaId && k?.gun === bugun && k?.status !== 'iptal').length;
+
+      const kontrol = acilisiDogrula({
+        kasa,
+        bakiye: Number((snapshot as any)?.balance ?? 0),
+        bugunAcilis,
+        sonYatirim: Number((snapshot as any)?.lastDeposit?.amount ?? 0),
+      });
+      if (!kontrol.uygun) {
+        return reply.status(422).send({ ok: false, kod: kontrol.kod, message: kontrol.mesaj });
+      }
+
+      const bedel = Number(kasa!.price ?? 0);
+      const kayitId = `${login}-${kasaId}-${Date.now()}`;
+      const kayit: any = {
+        id: kayitId, username: login, kasaId, gun: bugun,
+        bedel, status: 'bedelDusuluyor', at: new Date().toISOString(),
+      };
+      claims.kasa.push(kayit);
+      await writeEngagementClaims(claims, tenantKey);
+
+      const kaydiGuncelle = async (yama: Record<string, unknown>) => {
+        const guncel = await readEngagementClaims(tenantKey);
+        const hedef = (guncel.kasa || []).find((k: any) => k?.id === kayitId);
+        if (hedef) Object.assign(hedef, yama);
+        await writeEngagementClaims(guncel, tenantKey);
+      };
+
+      // 1) Bedeli düş.
+      if (bedel > 0) {
+        try {
+          await lynonAdjustPlayerMainAccount({
+            playerId, amount: bedel, correctionType: 'debiting',
+            note: `Kasa ${kasaId} bedeli`.slice(0, 50),
+          });
+        } catch (hata) {
+          await kaydiGuncelle({ status: 'iptal', hata: hata instanceof Error ? hata.message : 'bedel düşülemedi' });
+          return reply.status(502).send({ ok: false, message: 'Kasa bedeli tahsil edilemedi; açılış yapılmadı.' });
+        }
+      }
+      await kaydiGuncelle({ status: 'cekiliyor' });
+
+      // 2) Ödülü çek.
+      const sonuc = odulCek(kasa!, Math.random());
+      if (!sonuc) {
+        // Odul cekilemedi: bedel geri.
+        await bedeliIadeEt(playerId, bedel, kasaId, kaydiGuncelle);
+        return reply.status(500).send({ ok: false, message: 'Ödül çekilemedi; bedel iade edildi.' });
+      }
+
+      // 3) Ödülü yaz.
+      const tutar = Number(sonuc.odul.amount ?? 0);
+      if (tutar > 0) {
+        try {
+          await lynonAdjustPlayerMainAccount({
+            playerId, amount: tutar, correctionType: 'crediting',
+            note: `Kasa ${kasaId} odulu`.slice(0, 50),
+          });
+        } catch (hata) {
+          await bedeliIadeEt(playerId, bedel, kasaId, kaydiGuncelle);
+          return reply.status(502).send({ ok: false, message: 'Ödül yazılamadı; bedel iade edildi.' });
+        }
+      }
+
+      await kaydiGuncelle({
+        status: 'tamam', odulId: sonuc.odul.id, odulLabel: sonuc.odul.label,
+        odulTutar: tutar, olasilik: sonuc.olasilik,
+      });
+
+      audit('sistem', 'oyun', 'oyun_odulu', login,
+        `Kasa ${kasaId}: bedel ${bedel} TL, odul ${sonuc.odul.label} (${tutar} TL), olasilik ${sonuc.olasilik}`);
+
+      return reply.send({
+        ok: true,
+        odul: { label: sonuc.odul.label, amount: tutar, rarity: sonuc.odul.rarity ?? 'normal' },
+        bedel,
+        // Vitrin, animasyonda gosterilecek diger oduller icin.
+        vitrin: kasaVitrini(kasa!),
+      });
+    });
   });
 
   app.post('/games/scratch/play', async (request: any, reply) => {
