@@ -21,10 +21,14 @@ import { cn } from '@/lib/utils';
  * mobil veride iki kat yük.
  *
  * ── Görseller ─────────────────────────────────────────────────────────
- * Kaynak PNG'ler toplam 55 MB'dı. Lobi telefonla ve çoğu zaman mobil
- * veriyle açılıyor; 55 MB'ı her açılışta indirtmek sayfayı kullanılamaz
+ * Kaynak PNG'ler toplam 63 MB. Lobi telefonla ve çoğu zaman mobil
+ * veriyle açılıyor; bunu her açılışta indirtmek sayfayı kullanılamaz
  * yapardı. WebP'ye çevrilip ekranda görünecek boyuta (2x retina)
- * indirildiler: 1,4 MB. Tasarım korunuyor, baytlar değil.
+ * indirildiler: 1,46 MB. Tasarım korunuyor, baytlar değil.
+ *
+ * Ölçüler set genelinde SABİT (mobil 800x450, dikey 720x900). Yeni
+ * kartlar başka bir ölçüde üretilseydi eskilerin yanında farklı
+ * netlikte görünürlerdi.
  */
 
 /** Kart kimliği → görsel dosya adı. Adlar tasarım paketiyle birebir. */
@@ -40,6 +44,8 @@ const GORSEL_ADI: Record<string, string> = {
   vip: 'vip',
   partner: 'is-birligi',
   'call-me': 'aranma-talep',
+  kasa: 'patron-kasasi',
+  'ozel-oran': 'ozel-oran',
 };
 
 /**
@@ -92,7 +98,7 @@ function Kart({ kart, sira, oneCikan, sadeHareket, vurguRengi, kenarRengi }: Kar
        * Gorunume girince tetiklemek daha sik duruyordu ama bir riski
        * vardi: gozlemci herhangi bir sebeple tetiklenmezse kart
        * `opacity: 0` de KALIYOR -- yani oyuncu bos bir lobi goruyor.
-       * Onbir kartlik kisa bir sayfada kazanc, o riski tasimaya
+       * Bir avuc kartlik kisa bir sayfada kazanc, o riski tasimaya
        * degmiyor. Kartlar yuklenince sirayla beliriyor.
        */
       initial={sadeHareket ? false : { opacity: 0, y: 18 }}

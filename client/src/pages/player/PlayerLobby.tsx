@@ -121,6 +121,10 @@ type LobbyTheme = {
 const DEFAULT_QUICK_ACCESS_ITEMS: LobbyQuickAccessItem[] = [
   { id: 'bonus', label: 'Bonus Talep', desc: 'Kampanya ve freespin', to: '/bonus-talep', icon: 'gift', accentColor: '#fb7185', enabled: true },
   { id: 'wheel', label: 'Şans Çarkı', desc: 'Çevir, ödül kazan', to: '/cark', icon: 'zap', accentColor: '#eed9a3', enabled: true },
+  // Sunucu varsayilaninda bunlar zaten vardi; buradaki yedek liste geride
+  // kalmisti. Yapilandirma gelmediginde iki sayfa lobide hic gorunmuyordu.
+  { id: 'kasa', label: 'Şans Kasaları', desc: 'Kasayı aç, ödülü al', to: '/kasa', icon: 'package', accentColor: '#eed9a3', enabled: true },
+  { id: 'ozel-oran', label: 'Özel Oranlar', desc: 'Yükseltilmiş oranlar', to: '/ozel-oran', icon: 'trending-up', accentColor: '#e7c574', enabled: true },
   { id: 'scratch', label: 'Kazı Kazan', desc: 'Kartını kazı', to: '/kazi-kazan', icon: 'sparkles', accentColor: '#5fd6a7', enabled: true },
   { id: 'prediction', label: 'Skor Tahmin', desc: 'Maç skoru bil', to: '/skor-tahmin', icon: 'goal', accentColor: '#6ee7b7', enabled: true },
   { id: 'daily-tasks', label: 'Günlük Görevler', desc: 'API ilerleme', to: '/gorevler', icon: 'list-checks', accentColor: '#e7c574', enabled: true },  { id: 'tournament', label: 'Turnuva', desc: 'Sıralamaya gir', to: '/turnuva/gunluk', icon: 'trophy', accentColor: '#d3a952', enabled: true },
