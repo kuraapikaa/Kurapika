@@ -490,16 +490,25 @@ const DEFAULT_GAME_SETTINGS = {
     glossy: true
   },
   /**
-   * Varsayilan kasa. Panel bos acilmasin diye ornek bir kasa var; marji
-   * POZITIF (bedel 500, ortalama odul 275) -- ornek bir yapilandirmanin
-   * zarar ettirmesi, kopyalanip cogaltilan bir hataya donusurdu.
+   * Varsayilan kasa.
+   *
+   * Marji POZITIF: bedel 500 TL, ortalama odul 345 TL, marj %31.
+   * Ornek bir yapilandirmanin zarar ettirmesi, kopyalanip cogaltilan bir
+   * hataya donusurdu.
+   *
+   * (Onceki yorumda ortalama odul 275 yaziyordu; dogrusu 345 --
+   * 250x30 + 1000x12 + 5000x3 = 34.500, toplam agirlik 100.)
+   *
+   * Gunluk 3 acilis siniri var: acik bir kasayi sinirsiz birakmak,
+   * tek bir oyuncunun ust uste acmasiyla gunluk zarari ongorulemez
+   * yapardi.
    */
   cases: [
     {
       id: 'kasa-baslangic',
       label: 'Başlangıç Kasası',
       price: 500,
-      enabled: false,
+      enabled: true,
       dailyLimit: 3,
       minDeposit: 0,
       rewards: [
