@@ -35,6 +35,7 @@ import {
   Gamepad2,
   ListChecks,
   Mailbox,
+  TrendingUp,
   Trophy,
   Code2,
   Star,
@@ -207,6 +208,15 @@ export const ADMIN_ROUTES: RouteMeta[] = [
     title: 'Churn önleme',
     description: 'Kayıp riski taşıyan oyuncuları önceliğe göre listeler; her satırda gerekçe ve önerilen aksiyon.',
     nav: { group: 'Oyuncular', label: 'Churn önleme', icon: UserMinus },
+  },
+  {
+    id: 'ozelOran',
+    path: '/ozel-oran-yonetimi',
+    permission: 'bonuses',
+    eyebrow: 'Kampanya',
+    title: 'Özel oranlar',
+    description: 'Seçili maçlara yükseltilmiş oran tanımlayın; sonuçlandığında fark oyuncu bakiyesine yazılır.',
+    nav: { group: 'Bonus', label: 'Özel oranlar', icon: TrendingUp },
   },
 
   // ── Oyuncular ───────────────────────────────────────────────────────

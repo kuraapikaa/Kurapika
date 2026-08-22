@@ -65,6 +65,8 @@ const MillionaireShowcasePage = lazy(() => import('@/pages/player/MillionaireSho
 const CarkSayfasi = lazy(() => import('@/pages/player/CarkSayfasi').then(m => ({ default: m.CarkSayfasi })));
 const KaziKazanSayfasi = lazy(() => import('@/pages/player/KaziKazanSayfasi').then(m => ({ default: m.KaziKazanSayfasi })));
 const KasaSayfasi = lazy(() => import('@/pages/player/KasaSayfasi').then(m => ({ default: m.KasaSayfasi })));
+const OzelOranSayfasi = lazy(() => import('@/pages/player/OzelOranSayfasi').then(m => ({ default: m.OzelOranSayfasi })));
+const OzelOranYonetimi = lazy(() => import('@/pages/admin/OzelOranYonetimi').then(m => ({ default: m.OzelOranYonetimi })));
 const BeniAraSayfasi = lazy(() => import('@/pages/player/BeniAraSayfasi').then(m => ({ default: m.BeniAraSayfasi })));
 const OrtaklikSayfasi = lazy(() => import('@/pages/player/OrtaklikSayfasi').then(m => ({ default: m.OrtaklikSayfasi })));
 const YaziTuraSayfasi = lazy(() => import('@/pages/player/YaziTuraSayfasi').then(m => ({ default: m.YaziTuraSayfasi })));
@@ -118,6 +120,7 @@ export default function App() {
         <Route path="/cark" element={oyuncuSayfasi(<CarkSayfasi />, 'amber', '#0a0f1a')} />
         <Route path="/kazi-kazan" element={oyuncuSayfasi(<KaziKazanSayfasi />, 'orange', '#0a0f1a')} />
             <Route path="/kasa" element={<KasaSayfasi />} />
+            <Route path="/ozel-oran" element={<OzelOranSayfasi />} />
         <Route path="/skor-tahmin" element={oyuncuSayfasi(<SkorTahminSayfasi />, 'emerald')} />
         <Route path="/gorevler" element={oyuncuSayfasi(<DailyTasksPage />, 'cyan')} />
         <Route path="/beni-ara" element={oyuncuSayfasi(<BeniAraSayfasi />, 'sky')} />
@@ -158,6 +161,7 @@ export default function App() {
             <Route path="/islemler" element={<TransactionsList />} />
             <Route path="/toplu-islem-ozeti" element={<TopluIslemOzeti />} />
             <Route path="/churn-onleme" element={<ChurnOnleme />} />
+            <Route path="/ozel-oran-yonetimi" element={<OzelOranYonetimi />} />
 
             <Route path="/oyuncular" element={<OyuncularSayfasi />} />
             <Route path="/oyuncu/:id/:login" element={<PlayerProfile />} />

@@ -988,6 +988,17 @@ export const adminApi = {
   churnAnaliz: (body: { gunSayisi?: number; enFazlaOyuncu?: number; kayipGun?: number }) =>
     post<any>('/admin/churn/analiz', body),
 
+  /** Panel: özel oran teklifleri, katılımcı sayıları ve yükümlülük. */
+  ozelOranListesi: () => get<any>('/admin/ozel-oran'),
+  ozelOranKaydet: (teklif: any) => post<any>('/admin/ozel-oran', { teklif }),
+  ozelOranSil: (id: string) => del<any>(`/admin/ozel-oran/${encodeURIComponent(id)}`),
+  /**
+   * Teklifi sonuçlandırır. `kuruGosterim` ile kimin ne alacağı hesaplanır,
+   * hiçbir şey yazılmaz — para dağıtan işlem önce görülmeli.
+   */
+  ozelOranSonuclandir: (id: string, kuruGosterim: boolean) =>
+    post<any>(`/admin/ozel-oran/${encodeURIComponent(id)}/sonuclandir`, { kuruGosterim }),
+
   chargeBonus: (body: { ClientId: number; BonusId: number; Amount?: number; AssignmentValues?: Record<string, unknown> }) =>
     post<any>('/admin/bonus/charge', body),
 
@@ -1028,6 +1039,10 @@ export const gamesApi = {
   kasaListesi: () => get<any>('/games/kasa/liste'),
   /** Kasa açar; bedel düşülür, ödül bakiyeye yazılır. */
   kasaAc: (kasaId: string) => post<any>('/games/kasa/ac', { kasaId }),
+  /** Oyuncu: açık özel oran teklifleri. */
+  ozelOranListesi: () => get<any>('/games/ozel-oran/liste'),
+  /** Oyuncu: teklife katıl (bahis DEĞİL, takip kaydı). */
+  ozelOranKatil: (teklifId: string) => post<any>('/games/ozel-oran/katil', { teklifId }),
   saveConfig: (body: any) => post<any>('/admin/games/config', body),
   wheelClaims: (kayiplarDahil = false) =>
     get<any>(`/admin/games/wheel/claims${kayiplarDahil ? '?kayiplar=dahil' : ''}`),

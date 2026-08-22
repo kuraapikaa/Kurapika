@@ -21,6 +21,13 @@ import { atamaNotu } from '../services/bonusAtamaNotu.js';
 import { bonusDenetimAciklamasi } from '../services/bonusDenetimAciklamasi.js';
 import { istanbulDateKey, istanbulYerelAn } from '../lib/istanbulGunu.js';
 import { lynonAdjustPlayerMainAccount } from '../services/lynonBackofficeService.js';
+import { lynonClientBetHistory } from '../services/lynonBackofficeService.js';
+import {
+  azamiYukumluluk,
+  katilimiDegerlendir,
+  teklifAcikMi,
+  type OzelOranTeklifi,
+} from '../services/ozelOran.js';
 import { bilinenLogo } from '../lib/takimLogosu.js';
 import { audit } from '../lib/auditLog.js';
 import { yatirimHakki } from '../services/yatirimHakki.js';
@@ -118,6 +125,7 @@ const DEFAULT_GAME_SETTINGS = {
       { id: 'bonus', label: 'Bonus Talep', desc: 'Kampanya ve freespin', to: '/bonus-talep', icon: 'gift', accentColor: '#fb7185', enabled: true },
       { id: 'wheel', label: 'Şans Çarkı', desc: 'Çevir, ödül kazan', to: '/cark', icon: 'zap', accentColor: '#d4af37', enabled: true },
       { id: 'kasa', label: 'Şans Kasaları', desc: 'Kasayı aç, ödülü al', to: '/kasa', icon: 'package', accentColor: '#f59e0b', enabled: true },
+      { id: 'ozel-oran', label: 'Özel Oranlar', desc: 'Yükseltilmiş oranlar', to: '/ozel-oran', icon: 'trending-up', accentColor: '#f59e0b', enabled: true },
       { id: 'scratch', label: 'Kazı Kazan', desc: 'Kartını kazı', to: '/kazi-kazan', icon: 'sparkles', accentColor: '#f4d36f', enabled: true },
       { id: 'prediction', label: 'Narcos Skor Tahmin', desc: 'Maç skoru bil', to: '/skor-tahmin', icon: 'goal', accentColor: '#6ee7b7', enabled: true },
       { id: 'daily-tasks', label: 'Günlük Görevler', desc: 'API ilerleme', to: '/gorevler', icon: 'list-checks', accentColor: '#7dd3fc', enabled: true },      { id: 'tournament', label: 'Turnuva', desc: 'Sıralamaya gir', to: '/turnuva/gunluk', icon: 'trophy', accentColor: '#facc15', enabled: true },
@@ -870,6 +878,56 @@ async function bedeliIadeEt(
       hata: hata instanceof Error ? hata.message : 'iade edilemedi',
     });
   }
+}
+
+/**
+ * ÖZEL ORAN DEPOSU.
+ *
+ * Teklifler ve katılımlar AYRI belgelerde: bir teklif yüzlerce katılım
+ * toplayabiliyor ve teklif listesini her açan operatör o yükü
+ * indirmemeli.
+ */
+async function readOzelOranTeklifleri(tenantKey = 'default'): Promise<OzelOranTeklifi[]> {
+  const key = safeTenantKey(tenantKey);
+  const data = await readStoredDocument<OzelOranTeklifi[]>({
+    tenantKey: key, namespace: 'ozel-oran-teklifleri', fallback: [],
+  });
+  return Array.isArray(data) ? data : [];
+}
+
+async function writeOzelOranTeklifleri(liste: OzelOranTeklifi[], tenantKey = 'default') {
+  await writeStoredDocument(
+    { tenantKey: safeTenantKey(tenantKey), namespace: 'ozel-oran-teklifleri' },
+    Array.isArray(liste) ? liste : [],
+  );
+}
+
+type OzelOranKatilimi = {
+  id: string;
+  teklifId: string;
+  login: string;
+  at: string;
+  /** 'katildi' | 'odendi' | 'uygunDegil' | 'telafiBekliyor' */
+  durum: string;
+  ekOdeme?: number;
+  mesaj?: string;
+  betId?: string;
+  odendiAt?: string;
+};
+
+async function readOzelOranKatilimlari(tenantKey = 'default'): Promise<OzelOranKatilimi[]> {
+  const key = safeTenantKey(tenantKey);
+  const data = await readStoredDocument<OzelOranKatilimi[]>({
+    tenantKey: key, namespace: 'ozel-oran-katilimlari', fallback: [],
+  });
+  return Array.isArray(data) ? data : [];
+}
+
+async function writeOzelOranKatilimlari(liste: OzelOranKatilimi[], tenantKey = 'default') {
+  await writeStoredDocument(
+    { tenantKey: safeTenantKey(tenantKey), namespace: 'ozel-oran-katilimlari' },
+    Array.isArray(liste) ? liste : [],
+  );
 }
 
 export async function readGameSettings(tenantKey = 'default') {
@@ -2271,6 +2329,222 @@ const selectedSlice = selected.slice;
       request.log.warn({ err }, 'Geriye donuk oyun hakki islemi basarisiz.');
       return reply.status(500).send({ ok: false, message: err instanceof Error ? err.message : 'İşlem başarısız.' });
     }
+  });
+
+  // ─── Özel Oran ────────────────────────────────────────────────────
+
+  /** Oyuncu: açık teklifler ve katılım durumu. */
+  app.get('/games/ozel-oran/liste', async (request: any, reply) => {
+    const tenantKey = await resolveTenantKeyForRequest(request);
+    const login = String(request.session?.bonusPanelUser?.login ?? '');
+    const [teklifler, katilimlar] = await Promise.all([
+      readOzelOranTeklifleri(tenantKey),
+      login ? readOzelOranKatilimlari(tenantKey) : Promise.resolve([]),
+    ]);
+    const benim = new Set(katilimlar.filter((k) => k.login === login).map((k) => k.teklifId));
+
+    return reply.send({
+      ok: true,
+      teklifler: teklifler
+        .filter((t) => teklifAcikMi(t) || t.status === 'sonuclandi')
+        .map((t) => ({
+          id: t.id, matchName: t.matchName, marketName: t.marketName,
+          selectionName: t.selectionName, specialOdd: t.specialOdd,
+          maxStake: t.maxStake, minStake: t.minStake ?? 0,
+          opensAt: t.opensAt ?? null, closesAt: t.closesAt ?? null,
+          status: t.status ?? 'acik', result: t.result ?? null, note: t.note ?? '',
+          acik: teklifAcikMi(t),
+          katildim: benim.has(t.id),
+        })),
+    });
+  });
+
+  /**
+   * Oyuncu: teklife katıl.
+   *
+   * Katılım bir BAHİS DEĞİL, yalnızca "bu teklifi takip ediyorum"
+   * kaydı. Bahis sitede alınıyor; sonuçlanmada yalnızca katılanların
+   * bahis geçmişi taranıyor. Tüm oyuncuları taramak her teklif için
+   * binlerce sorgu demekti.
+   */
+  app.post('/games/ozel-oran/katil', async (request: any, reply) => {
+    const login = String(request.session?.bonusPanelUser?.login ?? '');
+    if (!login) return reply.status(401).send({ ok: false, message: 'Önce kullanıcı adı doğrulaması yapmalısınız.' });
+
+    const teklifId = String(request.body?.teklifId ?? '').trim();
+    if (!teklifId) return reply.status(400).send({ ok: false, message: 'Teklif seçilmedi.' });
+
+    const tenantKey = await resolveTenantKeyForRequest(request);
+    const teklifler = await readOzelOranTeklifleri(tenantKey);
+    const teklif = teklifler.find((t) => t.id === teklifId);
+    if (!teklif || !teklifAcikMi(teklif)) {
+      return reply.status(422).send({ ok: false, message: 'Bu teklif şu anda açık değil.' });
+    }
+
+    const katilimlar = await readOzelOranKatilimlari(tenantKey);
+    if (katilimlar.some((k) => k.teklifId === teklifId && k.login === login)) {
+      return reply.send({ ok: true, zatenKatildi: true });
+    }
+
+    katilimlar.push({
+      id: `${teklifId}-${login}-${Date.now()}`,
+      teklifId, login, at: new Date().toISOString(), durum: 'katildi',
+    });
+    await writeOzelOranKatilimlari(katilimlar, tenantKey);
+    return reply.send({ ok: true });
+  });
+
+  /** Panel: teklif listesi + katılımcı sayıları ve azami yükümlülük. */
+  app.get('/admin/ozel-oran', async (request: any, reply) => {
+    if (!request.session?.user) return reply.status(401).send({ ok: false });
+    const tenantKey = await resolveTenantKeyForRequest(request);
+    const [teklifler, katilimlar] = await Promise.all([
+      readOzelOranTeklifleri(tenantKey),
+      readOzelOranKatilimlari(tenantKey),
+    ]);
+    return reply.send({
+      ok: true,
+      teklifler: teklifler.map((t) => {
+        const kendi = katilimlar.filter((k) => k.teklifId === t.id);
+        return {
+          ...t,
+          katilimci: kendi.length,
+          odenen: kendi.filter((k) => k.durum === 'odendi').length,
+          odenenTutar: Math.round(kendi.reduce((s2, k) => s2 + (k.durum === 'odendi' ? Number(k.ekOdeme ?? 0) : 0), 0) * 100) / 100,
+          // En kotu durum: her katilimci ust sinirdan kazanirsa.
+          azamiYukumluluk: azamiYukumluluk(t, kendi.length),
+        };
+      }),
+    });
+  });
+
+  /** Panel: teklif ekle/güncelle. */
+  app.post('/admin/ozel-oran', async (request: any, reply) => {
+    if (!request.session?.user) return reply.status(401).send({ ok: false });
+    const tenantKey = await resolveTenantKeyForRequest(request);
+    const gelen = request.body?.teklif as OzelOranTeklifi | undefined;
+    if (!gelen?.matchName || !gelen?.selectionName) {
+      return reply.status(400).send({ ok: false, message: 'Maç adı ve seçim zorunludur.' });
+    }
+    if (!(Number(gelen.specialOdd) > 1)) {
+      return reply.status(400).send({ ok: false, message: 'Özel oran 1.00 üzerinde olmalıdır.' });
+    }
+
+    const teklifler = await readOzelOranTeklifleri(tenantKey);
+    const id = String(gelen.id ?? '').trim() || `oran-${Date.now().toString(36)}`;
+    const indis = teklifler.findIndex((t) => t.id === id);
+    const kayit: OzelOranTeklifi = { ...gelen, id };
+    if (indis >= 0) teklifler[indis] = kayit; else teklifler.push(kayit);
+    await writeOzelOranTeklifleri(teklifler, tenantKey);
+    return reply.send({ ok: true, teklif: kayit });
+  });
+
+  /** Panel: teklif sil. Katılımlar da temizlenir. */
+  app.delete('/admin/ozel-oran/:id', async (request: any, reply) => {
+    if (!request.session?.user) return reply.status(401).send({ ok: false });
+    const tenantKey = await resolveTenantKeyForRequest(request);
+    const id = String((request.params as any).id);
+    const teklifler = await readOzelOranTeklifleri(tenantKey);
+    await writeOzelOranTeklifleri(teklifler.filter((t) => t.id !== id), tenantKey);
+    const katilimlar = await readOzelOranKatilimlari(tenantKey);
+    await writeOzelOranKatilimlari(katilimlar.filter((k) => k.teklifId !== id), tenantKey);
+    return reply.send({ ok: true });
+  });
+
+  /**
+   * Panel: teklifi SONUÇLANDIR.
+   *
+   * `kuruGosterim: true` ile önce kime ne ödeneceği hesaplanır, hiçbir
+   * yazma yapılmaz. Para dağıtan bir işlemi tek tıkla çalıştırmak,
+   * yanlış bir teklif tanımının binlerce liraya mal olması demekti.
+   *
+   * ── Mükerrer ödeme koruması ──────────────────────────────────────
+   * Bir katılım `odendi` olduktan sonra bir daha ödenmiyor. Sonuçlandırma
+   * ikinci kez çalıştırılsa bile yalnızca ödenmemişler işleniyor.
+   */
+  app.post('/admin/ozel-oran/:id/sonuclandir', async (request: any, reply) => {
+    if (!request.session?.user) return reply.status(401).send({ ok: false });
+    const tenantKey = await resolveTenantKeyForRequest(request);
+    const id = String((request.params as any).id);
+    const kuruGosterim = request.body?.kuruGosterim === true;
+
+    const teklifler = await readOzelOranTeklifleri(tenantKey);
+    const teklif = teklifler.find((t) => t.id === id);
+    if (!teklif) return reply.status(404).send({ ok: false, message: 'Teklif bulunamadı.' });
+
+    const katilimlar = await readOzelOranKatilimlari(tenantKey);
+    const kendi = katilimlar.filter((k) => k.teklifId === id);
+    if (kendi.length === 0) {
+      return reply.send({ ok: true, satirlar: [], toplam: 0, kuruGosterim, uyari: 'Bu teklife katılan yok.' });
+    }
+
+    const satirlar: any[] = [];
+    for (const katilim of kendi) {
+      if (katilim.durum === 'odendi') {
+        satirlar.push({ login: katilim.login, uygun: false, ekOdeme: 0, mesaj: 'Zaten ödendi.', durum: 'odendi' });
+        continue;
+      }
+      let bahisler: any[] = [];
+      try {
+        const cevap: any = await lynonClientBetHistory({ ClientLogin: katilim.login, MaxRows: 200 });
+        bahisler = Array.isArray(cevap?.Data?.Objects) ? cevap.Data.Objects
+          : Array.isArray(cevap?.Data) ? cevap.Data : [];
+      } catch (hata) {
+        satirlar.push({
+          login: katilim.login, uygun: false, ekOdeme: 0,
+          mesaj: 'Bahis geçmişi alınamadı.', durum: 'hata',
+        });
+        continue;
+      }
+      const sonuc = katilimiDegerlendir(katilim.login, bahisler, teklif);
+      satirlar.push({ ...sonuc, durum: sonuc.uygun ? 'odenecek' : 'uygunDegil' });
+    }
+
+    const toplam = Math.round(satirlar.reduce((t, r) => t + Number(r.ekOdeme ?? 0), 0) * 100) / 100;
+    if (kuruGosterim) {
+      return reply.send({ ok: true, satirlar, toplam, kuruGosterim: true });
+    }
+
+    // ── Yazma ──────────────────────────────────────────────────────
+    const { audit } = await import('../lib/auditLog.js');
+    for (const satir of satirlar) {
+      if (!satir.uygun || !(Number(satir.ekOdeme) > 0)) {
+        const k = kendi.find((x) => x.login === satir.login);
+        if (k && k.durum !== 'odendi') { k.durum = 'uygunDegil'; k.mesaj = satir.mesaj; }
+        continue;
+      }
+      const k = kendi.find((x) => x.login === satir.login);
+      if (!k || k.durum === 'odendi') continue;
+
+      try {
+        const oyuncu = await lynonFindPlayerByLogin(satir.login);
+        const playerId = Number((oyuncu as any)?.Id);
+        if (!Number.isFinite(playerId)) throw new Error('Oyuncu bulunamadı');
+        await lynonAdjustPlayerMainAccount({
+          playerId, amount: Number(satir.ekOdeme), correctionType: 'crediting',
+          note: `Ozel oran ${id}`.slice(0, 50),
+        });
+        k.durum = 'odendi';
+        k.ekOdeme = Number(satir.ekOdeme);
+        k.betId = satir.betId;
+        k.mesaj = satir.mesaj;
+        k.odendiAt = new Date().toISOString();
+        audit(String(request.session.user.username ?? 'admin'), 'admin', 'oyun_odulu', satir.login,
+          `Ozel oran ${id}: ${satir.ekOdeme} TL (${satir.mesaj})`);
+      } catch (hata) {
+        // Odeme yazilamadi: SESSIZ kalmiyoruz, kayit telafi bekliyor.
+        k.durum = 'telafiBekliyor';
+        k.ekOdeme = Number(satir.ekOdeme);
+        k.mesaj = hata instanceof Error ? hata.message : 'Ödeme yazılamadı';
+        satir.durum = 'telafiBekliyor';
+      }
+    }
+
+    await writeOzelOranKatilimlari(katilimlar, tenantKey);
+    teklif.status = 'sonuclandi';
+    await writeOzelOranTeklifleri(teklifler, tenantKey);
+
+    return reply.send({ ok: true, satirlar, toplam, kuruGosterim: false });
   });
 
   // ─── Kasa Açma ────────────────────────────────────────────────────
