@@ -106,22 +106,38 @@ describe('oyuncuOzeti — tutar ve tarih alanları', () => {
     expect(o.cekim.toplam).toBe(500);
   });
 
-  it('amount YOKSA actualAmount kullanılır', () => {
+  it('YATIRIMDA actualAmount öncelikli — canlıda ölçülen davranış', () => {
+    // halil4554: Lynon tek satir donduruyor, amount 2000 / actualAmount
+    // 500 ve oyuncunun gercek yatirimi 500. Yatirimda hesaba GECEN tutar
+    // `actualAmount`.
     const o = oyuncuOzeti([
-      { transactionType: 'deposit', actualAmount: 250, createdAt: '2026-08-01T10:00:00Z', status: 'success' },
+      { transactionType: 'deposit', amount: 2000, actualAmount: 500, createdAt: '2026-08-01T10:00:00Z', status: 'success' },
     ]);
-    expect(o.yatirim.toplam).toBe(250);
+    expect(o.yatirim.toplam).toBe(500);
   });
 
-  it('amount SIFIR ise sıfır sayılır — actualAmount devreye girmez', () => {
-    // `mapTransaction` ile ayni kural (`amount ?? actualAmount`). Once
-    // "ilk sifir olmayan deger" aliniyordu; bu, panelin 0 gosterdigi bir
-    // satiri burada 250 gosteriyordu ve iki ekran ayni oyuncu icin iki
-    // farkli toplam veriyordu.
+  it('yatırımda actualAmount yoksa amount kullanılır', () => {
     const o = oyuncuOzeti([
-      { transactionType: 'deposit', amount: 0, actualAmount: 250, createdAt: '2026-08-01T10:00:00Z', status: 'success' },
+      { transactionType: 'deposit', amount: 750, createdAt: '2026-08-01T10:00:00Z', status: 'success' },
+    ]);
+    expect(o.yatirim.toplam).toBe(750);
+  });
+
+  it('yatırımda actualAmount SIFIR ise sıfırdır', () => {
+    // `?? ` kullaniliyor: 0 gecerli bir degerdir, "yok" degil.
+    const o = oyuncuOzeti([
+      { transactionType: 'deposit', amount: 900, actualAmount: 0, createdAt: '2026-08-01T10:00:00Z', status: 'success' },
     ]);
     expect(o.yatirim.toplam).toBe(0);
+  });
+
+  it('ÇEKİMDE sıra değişmedi — amount öncelikli', () => {
+    // Cekim tarafinda ayni olcum yapilmadi; dogrulanmamis bir varsayimla
+    // degistirmek, bildigimizi duzeltirken bilmedigimizi bozmak olurdu.
+    const o = oyuncuOzeti([
+      { transactionType: 'withdrawal', amount: 300, actualAmount: 100, createdAt: '2026-08-01T10:00:00Z', status: 'success' },
+    ]);
+    expect(o.cekim.toplam).toBe(300);
   });
 
   it('BİÇİMLENMİŞ metin tutarları doğru okur', () => {

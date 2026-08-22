@@ -108,15 +108,28 @@ export function sayiya(value: unknown, fallback = 0): number {
 }
 
 /**
- * Satırın tutarı.
+ * Satırın tutarı — TÜRE GÖRE farklı alan.
  *
- * Alan sırası `mapTransaction` ile AYNI: `amount ?? actualAmount ??
- * receivedAmount`. Önce "ilk SIFIR OLMAYAN değer" alınıyordu; bu, panelin
- * 0 gösterdiği bir satırı burada 0'dan farklı gösteriyordu ve iki ekran
- * aynı oyuncu için iki farklı toplam veriyordu.
+ * ── Yatırımda `actualAmount` ──────────────────────────────────────────
+ * Canlıda ölçüldü: `halil4554` için Lynon tek satır döndürüyor,
+ * `amount: 2000` ve `actualAmount: 500`. Oyuncunun gerçek yatırımı 500.
+ * Yani yatırımda `amount` hesaba GEÇEN tutar değil; geçen tutar
+ * `actualAmount`.
+ *
+ * `mapTransaction` hâlâ `amount`ı önceliyor -- yani panelin diğer
+ * ekranları bu satır için 2.000 gösteriyor. Burayı bilerek AYIRIYORUZ:
+ * ölçülmüş gerçek, tutarlılıktan önce gelir. Diğer ekranların da
+ * düzeltilmesi gerekiyor; bkz. teslim notu.
+ *
+ * ── Çekimde sıra DEĞİŞMEDİ ────────────────────────────────────────────
+ * Çekim tarafında aynı ölçüm yapılmadı. Doğrulanmamış bir varsayımla
+ * çekim tutarını da değiştirmek, tek bildiğimiz gerçeği düzeltirken
+ * bilmediğimiz bir yeri bozmak olurdu.
  */
-function tutar(satir: OdemeSatiri): number {
-  const ham = satir.amount ?? satir.actualAmount ?? satir.receivedAmount;
+function tutar(satir: OdemeSatiri, tur: string): number {
+  const ham = tur === 'deposit'
+    ? (satir.actualAmount ?? satir.amount ?? satir.receivedAmount)
+    : (satir.amount ?? satir.actualAmount ?? satir.receivedAmount);
   return Math.abs(sayiya(ham));
 }
 
@@ -147,7 +160,7 @@ function bosOzet(): TurOzeti {
   return { toplam: 0, adet: 0, ilk: null, son: null };
 }
 
-function ozetle(satirlar: OdemeSatiri[], aralik: Aralik | undefined): TurOzeti {
+function ozetle(satirlar: OdemeSatiri[], aralik: Aralik | undefined, tur: string): TurOzeti {
   const sonuc = bosOzet();
   let enEski = Number.POSITIVE_INFINITY;
   let enYeni = Number.NEGATIVE_INFINITY;
@@ -155,7 +168,7 @@ function ozetle(satirlar: OdemeSatiri[], aralik: Aralik | undefined): TurOzeti {
   for (const satir of satirlar) {
     const ms = zaman(satir);
     if (!araliktaMi(ms, aralik)) continue;
-    sonuc.toplam += tutar(satir);
+    sonuc.toplam += tutar(satir, tur);
     sonuc.adet += 1;
     if (ms < enEski) enEski = ms;
     if (ms > enYeni) enYeni = ms;
@@ -183,9 +196,9 @@ export function oyuncuOzeti(
   const cekimler = tumu.filter((s) => turu(s) === 'withdrawal' && durumu(s) === BASARILI);
   const bekleyenler = tumu.filter((s) => turu(s) === 'withdrawal' && BEKLEYEN_DURUMLAR.has(durumu(s)));
 
-  const yatirim = ozetle(yatirimlar, yatirimAraligi);
-  const cekim = ozetle(cekimler, cekimAraligi);
-  const bekleyenCekim = ozetle(bekleyenler, cekimAraligi);
+  const yatirim = ozetle(yatirimlar, yatirimAraligi, 'deposit');
+  const cekim = ozetle(cekimler, cekimAraligi, 'withdrawal');
+  const bekleyenCekim = ozetle(bekleyenler, cekimAraligi, 'withdrawal');
 
   return {
     yatirim,
