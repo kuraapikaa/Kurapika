@@ -4,10 +4,11 @@ import {
   ArrowLeft, Check, CheckCircle2, ChevronDown,
   Crown, Loader2, Send, Sparkles, Star,
 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
-import { formsApi, gamesApi } from '@/api/client';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { formsApi, gamesApi, loyaltyApi } from '@/api/client';
 import { cn } from '@/lib/utils';
 import { lobbyExtraText, useLobbyPageContent } from '@/lib/lobbyContent';
+import { VipRutbeMerdiveni } from '@/components/player/VipRutbeMerdiveni';
 
 const DEFAULT_TIERS = [
   { id: 'prestij', badge: '🏅', label: 'Prestij', sublabel: 'Başlangıç', minDeposit: '10.000 TL', popular: false, perks: ['7/24 Kişisel VIP Asistanı', 'Öncelikli müşteri desteği', 'Özel hoşgeldin bonusu', 'Haftalık cashback teklifi'] },
@@ -23,11 +24,19 @@ const DEFAULT_STATS = [
   { id: 's4', value: '8M₺', label: 'Aylık Bonus', end: 8 },
 ];
 
+/**
+ * SSS kategorileri.
+ *
+ * Referans sayfada sorular kategoriye göre süzülüyor ve her kategorinin
+ * yanında adedi yazıyor. Tek uzun liste, aradığı soruyu bulmak isteyen
+ * oyuncuyu hepsini okumaya zorluyordu.
+ */
 const DEFAULT_FAQ = [
-  { id: 'f1', q: 'VIP üyelik nasıl alınır?', a: 'Aşağıdaki formu doldurarak başvuru yapabilirsiniz. Ekibimiz en kısa sürede sizinle iletişime geçecektir.' },
-  { id: 'f2', q: 'VIP seviyeleri nasıl belirlenir?', a: 'Yatırım miktarı, platform aktiviteniz ve sadakat puanlarınıza göre seviyeniz otomatik olarak güncellenir.' },
-  { id: 'f3', q: 'VIP üyeliğin ücretli olup olmadığı?', a: 'VIP programımız tamamen ücretsizdir. Belirli aktivite eşiklerini geçtiğinizde otomatik olarak davet edilirsiniz.' },
-  { id: 'f4', q: 'Hangi bonuslar VIP üyelere özel?', a: 'Cashback oranları, yükleme bonusları, freespin miktarları ve özel etkinlik ödülleri VIP seviyenize göre artış gösterir.' },
+  { id: 'f1', kategori: 'Üyelik', q: 'VIP üyelik nasıl alınır?', a: 'Aşağıdaki formu doldurarak başvuru yapabilirsiniz. Ekibimiz en kısa sürede sizinle iletişime geçecektir.' },
+  { id: 'f2', kategori: 'Rütbe', q: 'VIP seviyeleri nasıl belirlenir?', a: 'Yatırım miktarı, platform aktiviteniz ve sadakat puanlarınıza göre seviyeniz otomatik olarak güncellenir.' },
+  { id: 'f3', kategori: 'Üyelik', q: 'VIP üyeliğin ücretli olup olmadığı?', a: 'VIP programımız tamamen ücretsizdir. Belirli aktivite eşiklerini geçtiğinizde otomatik olarak davet edilirsiniz.' },
+  { id: 'f4', kategori: 'Avantaj', q: 'Hangi bonuslar VIP üyelere özel?', a: 'Cashback oranları, yükleme bonusları, freespin miktarları ve özel etkinlik ödülleri VIP seviyenize göre artış gösterir.' },
+  { id: 'f5', kategori: 'Rütbe', q: 'XP nasıl kazanılır?', a: 'Platformdaki her aktivitenizden XP kazanırsınız. Her 1.000 XP bir seviye, belirli seviyeler ise yeni bir rütbe anlamına gelir. Rütbe merdiveninde nerede olduğunuzu yukarıdan görebilirsiniz.' },
 ];
 
 const TIER_STYLES = [
@@ -84,10 +93,24 @@ export function VipSayfasi() {
   const [sent, setSent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [selectedTier, setSelectedTier] = useState<string | null>(null);
+  /**
+   * Oyuncunun kendi XP'si. Doğrulanmamış oyuncuda istek yapılmıyor;
+   * merdiven yine görünüyor ama konum işaretlenmiyor.
+   */
+  const [sadakat, setSadakat] = useState<{ xp: number; level: number } | null>(null);
+  const [faqKategori, setFaqKategori] = useState<string>('Hepsi');
 
   useEffect(() => {
     gamesApi.config().then((res: any) => {
       if (res?.data?.vip) setCfg(res.data.vip);
+    }).catch(() => {});
+    // Sadakat durumu: oturum yoksa sessizce bos kaliyor, sayfa yine
+    // calisiyor -- VIP sayfasi giris gerektirmiyor.
+    loyaltyApi.status().then((res: any) => {
+      const veri = res?.data ?? res;
+      if (veri && (veri.xp != null || veri.level != null)) {
+        setSadakat({ xp: Number(veri.xp) || 0, level: Number(veri.level) || 0 });
+      }
     }).catch(() => {});
   }, []);
 
@@ -97,6 +120,32 @@ export function VipSayfasi() {
   }));
   const stats = (cfg.stats || DEFAULT_STATS).map((s: any, i: number) => ({ ...DEFAULT_STATS[i], ...s }));
   const faq = cfg.faq || DEFAULT_FAQ;
+  /**
+   * SSS kategorileri ve adetleri. Kategorisi olmayan sorular "Genel"
+   * sayilmiyor; suzgec yalnizca GERCEKTEN kategori tanimlanmissa
+   * cikiyor -- tek kategorili bir suzgec, secenek gibi gorunup hicbir
+   * sey yapmazdi.
+   */
+  const faqKategoriler = useMemo(() => {
+    const sayac = new Map<string, number>();
+    for (const item of faq) {
+      const k = String((item as any)?.kategori ?? '').trim();
+      if (k) sayac.set(k, (sayac.get(k) ?? 0) + 1);
+    }
+    if (sayac.size === 0) return [] as Array<{ ad: string; adet: number }>;
+    return [
+      { ad: 'Hepsi', adet: faq.length },
+      ...[...sayac.entries()].map(([ad, adet]) => ({ ad, adet })),
+    ];
+  }, [faq]);
+
+  const suzulmusFaq = useMemo(
+    () => (faqKategori === 'Hepsi'
+      ? faq
+      : faq.filter((item: any) => String(item?.kategori ?? '').trim() === faqKategori)),
+    [faq, faqKategori],
+  );
+
   const title = cfg.title || pageContent.title || 'Ayrıcalıklı deneyim,\nözel avantajlar';
   const description = cfg.description || pageContent.subtitle || 'Sadık oyuncularımıza özel 4 kademeli VIP programıyla kazancını ve deneyimini üst seviyeye taşı.';
   const eyebrow = cfg.eyebrow || pageContent.eyebrow || 'VIP Üyelik Programı';
@@ -284,6 +333,19 @@ export function VipSayfasi() {
         </div>
       </section>
 
+      {/*
+        RÜTBE MERDİVENİ.
+
+        Kademe kartları "ne alırsın"ı anlatıyor; merdiven "neredesin"i.
+        İkisi ayrı sorular ve oyuncu ikincisini soruyor.
+      */}
+      <VipRutbeMerdiveni
+        rutbeler={cfg.ranks}
+        xp={sadakat?.xp}
+        seviye={sadakat?.level}
+        girisYapildi={Boolean(sadakat)}
+      />
+
       {/* ── FAQ ── */}
       {showFaq && faq.length > 0 && (
         <section className="relative z-10 mx-auto max-w-[760px] px-4 pb-24 md:px-10">
@@ -291,8 +353,35 @@ export function VipSayfasi() {
             <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[color:var(--lobby-muted,#8f8674)]">Sorular</p>
             <h2 className="mt-2 text-3xl font-black tracking-[-0.05em] text-[color:var(--lobby-text,#f3ecdd)] md:text-4xl">{lobbyExtraText(pageContent, 'faqTitle', 'Sık sorulan sorular')}</h2>
           </div>
+
+          {/*
+            Kategori suzgeci ve ADETLER. Tek uzun liste, aradigi soruyu
+            bulmak isteyen oyuncuyu hepsini okumaya zorluyordu. Adet
+            gostermek, bos bir kategoriye tiklamayi da onluyor.
+            Kategorisi olmayan sorular icin suzgec hic cikmiyor.
+          */}
+          {faqKategoriler.length > 1 && (
+            <div className="mb-5 flex flex-wrap justify-center gap-2">
+              {faqKategoriler.map((k: { ad: string; adet: number }) => (
+                <button
+                  key={k.ad}
+                  type="button"
+                  onClick={() => { setFaqKategori(k.ad); setOpenFaq(null); }}
+                  className={cn(
+                    'rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] transition',
+                    faqKategori === k.ad
+                      ? 'border-amber-400/40 bg-amber-400/15 text-amber-200'
+                      : 'border-[rgba(243,236,221,0.08)] text-[color:var(--lobby-muted,#8f8674)] hover:text-[color:var(--lobby-text,#f3ecdd)]',
+                  )}
+                >
+                  {k.ad} <span className="opacity-60">{k.adet}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
           <div className="space-y-2">
-            {faq.map((item: any, i: number) => (
+            {suzulmusFaq.map((item: any, i: number) => (
               <motion.div
                 key={item.id || i}
                 initial={{ opacity: 0, y: 10 }}
