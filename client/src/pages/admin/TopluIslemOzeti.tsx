@@ -23,6 +23,13 @@ type Satir = {
   playerId?: number;
   lynonLogin?: string;
   hata?: string | null;
+  /** Ham satır dökümü — toplam beklenenden farklıysa sebebi burada görünür. */
+  tani?: {
+    hamSatir: number;
+    turler: Record<string, number>;
+    durumlar: Record<string, number>;
+    aralikDisi: number;
+  };
   ozet?: {
     yatirim: { toplam: number; adet: number; ilk: string | null; son: string | null };
     cekim: { toplam: number; adet: number; ilk: string | null; son: string | null };
@@ -42,6 +49,26 @@ type Sonuc = {
 
 const para = (deger: number) =>
   new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(deger || 0);
+
+/**
+ * Ham satır dökümünü okunur metne çevirir.
+ *
+ * Toplam beklenenden farklı göründüğünde iki olasılık var: Lynon zaten
+ * az satır döndürüyor, ya da biz süzerken eliyoruz. Bu metin ikisini
+ * ayırt ettiriyor.
+ */
+const taniMetni = (tani: NonNullable<Satir['tani']>) => {
+  const turler = Object.entries(tani.turler).map(([k, v]) => `${k}: ${v}`).join(', ') || 'yok';
+  const durumlar = Object.entries(tani.durumlar).map(([k, v]) => `${k}: ${v}`).join(', ') || 'yok';
+  return [
+    `Lynon'dan gelen ham kayıt: ${tani.hamSatir}`,
+    `Türler — ${turler}`,
+    `Durumlar — ${durumlar}`,
+    tani.aralikDisi > 0
+      ? `${tani.aralikDisi} kayıt uygun ama seçilen tarih aralığının dışında`
+      : 'Tarih aralığı dışında kalan uygun kayıt yok',
+  ].join('\n');
+};
 
 const kisaTarih = (iso: string | null | undefined) =>
   iso ? new Date(iso).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '—';
@@ -266,6 +293,15 @@ export function TopluIslemOzeti() {
                     <tr key={`${satir.login}-${i}`} className="border-b border-white/[0.03] last:border-0 hover:bg-white/[0.02]">
                       <td className="px-5 py-2.5">
                         <span className="font-bold text-slate-200">{satir.lynonLogin || satir.login}</span>
+                        {satir.tani && (
+                          <span
+                            className="ml-2 cursor-help text-[10px] font-semibold text-slate-600"
+                            title={taniMetni(satir.tani)}
+                          >
+                            {satir.tani.hamSatir} kayıt
+                            {satir.tani.aralikDisi > 0 && ` · ${satir.tani.aralikDisi} tarih dışı`}
+                          </span>
+                        )}
                         {!satir.bulundu && (
                           <span className="ml-2 rounded bg-amber-300/10 px-1.5 py-0.5 text-[9px] font-bold text-amber-300">
                             {satir.hata || 'bulunamadı'}

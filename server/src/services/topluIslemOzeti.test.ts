@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { genelToplam, kullaniciAdlariniAyikla, oyuncuOzeti, type OdemeSatiri } from './topluIslemOzeti.js';
+import { genelToplam, kullaniciAdlariniAyikla, oyuncuOzeti, satirDokumu, type OdemeSatiri } from './topluIslemOzeti.js';
 
 const satir = (
   tur: string,
@@ -271,5 +271,38 @@ describe('bekleyen çekimler', () => {
       { baslangic: '2026-08-01T00:00:00Z' },
     );
     expect(o.bekleyenCekim.toplam).toBe(300);
+  });
+});
+
+describe('satirDokumu', () => {
+  it('ham satır sayısını, türleri ve durumları sayar', () => {
+    const d = satirDokumu([
+      satir('deposit', 100, '2026-08-01T10:00:00Z', 'success'),
+      satir('deposit', 200, '2026-08-02T10:00:00Z', 'failed'),
+      satir('withdrawal', 50, '2026-08-03T10:00:00Z', 'pending'),
+      { transactionType: 'transfer', amount: 1, createdAt: '2026-08-04T10:00:00Z', status: 'success' },
+    ]);
+    expect(d.hamSatir).toBe(4);
+    expect(d.turler).toEqual({ deposit: 2, withdrawal: 1, transfer: 1 });
+    // transfer satiri durum dokumune girmez: yatirim/cekim degil.
+    expect(d.durumlar).toEqual({ success: 1, failed: 1, pending: 1 });
+  });
+
+  it('aralık dışında kalan UYGUN satırları ayrı sayar', () => {
+    // "3 yatirim geldi ama 1'i araliga giriyor" ile "zaten 1 yatirim
+    // geldi" arasindaki farki gostermek icin.
+    const d = satirDokumu(
+      [satir('deposit', 100, '2026-07-01T10:00:00Z'),
+       satir('deposit', 200, '2026-07-15T10:00:00Z'),
+       satir('deposit', 300, '2026-08-10T10:00:00Z')],
+      { baslangic: '2026-08-01T00:00:00Z' },
+    );
+    expect(d.turler.deposit).toBe(3);
+    expect(d.aralikDisi).toBe(2);
+  });
+
+  it('boş girdide çökmez', () => {
+    expect(satirDokumu([])).toEqual({ hamSatir: 0, turler: {}, durumlar: {}, aralikDisi: 0 });
+    expect(satirDokumu(null).hamSatir).toBe(0);
   });
 });

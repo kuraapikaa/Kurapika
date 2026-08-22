@@ -27,7 +27,7 @@ import {
   specPartnerBonusIdleri,
 } from '../services/bonusAraliklari.js';
 import { bonusTalepGirdisiniDogrula } from '../services/bonusTalepGirdisi.js';
-import { genelToplam, kullaniciAdlariniAyikla, oyuncuOzeti } from '../services/topluIslemOzeti.js';
+import { genelToplam, kullaniciAdlariniAyikla, oyuncuOzeti, satirDokumu } from '../services/topluIslemOzeti.js';
 import { istanbulYerelAn } from '../lib/istanbulGunu.js';
 import { depositBasis } from '../services/promoEvaluator.js';
 import { istekKimligi, oyuncuVerisineErisebilir } from '../lib/istekKimligi.js';
@@ -2149,6 +2149,12 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
             // operator yanlis kisiyi sorguladigini boyle fark eder.
             lynonLogin: (oyuncu as any).Login ?? (oyuncu as any).userName ?? login,
             ozet: oyuncuOzeti(hareketler as any, yatirimAraligi, cekimAraligi),
+            /**
+             * Ham satirlarin dokumu. "Toplam neden bu kadar?" sorusunun
+             * yaniti: Lynon zaten az satir mi donduruyor, yoksa biz mi
+             * suzuyoruz? Ikisi disaridan AYNI gorunuyor.
+             */
+            tani: satirDokumu(hareketler as any, yatirimAraligi, cekimAraligi),
             hata: null,
           };
         } catch (error) {

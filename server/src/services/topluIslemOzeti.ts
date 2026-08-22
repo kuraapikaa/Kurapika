@@ -263,3 +263,53 @@ export function genelToplam(satirlar: Array<{ bulundu: boolean; ozet?: OyuncuOze
     bulunamayan,
   };
 }
+
+/**
+ * HAM SATIRLARIN DÖKÜMÜ — "toplam neden bu kadar?" sorusunun yanıtı.
+ *
+ * Bir toplamın yanlış göründüğü bildirildiğinde iki olasılık var:
+ * Lynon zaten az satır döndürüyor, ya da biz süzerken eliyoruz. İkisi
+ * dışarıdan AYNI görünüyor -- ekranda sadece küçük bir sayı var.
+ *
+ * Bu döküm farkı görünür kılıyor: kaç satır geldi, kaçı yatırım/çekim,
+ * hangi durumlar var. "3 yatırım geldi ama 1'i success" ile "zaten 1
+ * yatırım geldi" arasındaki fark, sorunun bizde mi Lynon'da mı olduğunu
+ * tek bakışta söylüyor.
+ */
+export type SatirDokumu = {
+  hamSatir: number;
+  /** transactionType -> adet */
+  turler: Record<string, number>;
+  /** status -> adet (yalnızca yatırım ve çekim satırları) */
+  durumlar: Record<string, number>;
+  /** Aralık süzgecine takılan (türü/durumu uygun ama tarihi dışarıda) satır sayısı. */
+  aralikDisi: number;
+};
+
+export function satirDokumu(
+  satirlar: OdemeSatiri[] | null | undefined,
+  yatirimAraligi?: Aralik,
+  cekimAraligi?: Aralik,
+): SatirDokumu {
+  const liste = Array.isArray(satirlar) ? satirlar : [];
+  const turler: Record<string, number> = {};
+  const durumlar: Record<string, number> = {};
+  let aralikDisi = 0;
+
+  for (const satir of liste) {
+    const tur = metin(satir.transactionType ?? satir.type) || '(boş)';
+    turler[tur] = (turler[tur] ?? 0) + 1;
+
+    if (tur !== 'deposit' && tur !== 'withdrawal') continue;
+    const durum = metin(satir.status ?? satir.state) || '(boş)';
+    durumlar[durum] = (durumlar[durum] ?? 0) + 1;
+
+    // Durumu uygun ama tarihi seçilen aralığın dışında kalanlar: bu sayı
+    // büyükse sorun tarih seçiminde, süzgeçte değil.
+    if (durum !== BASARILI) continue;
+    const aralik = tur === 'deposit' ? yatirimAraligi : cekimAraligi;
+    if (!araliktaMi(zaman(satir), aralik)) aralikDisi += 1;
+  }
+
+  return { hamSatir: liste.length, turler, durumlar, aralikDisi };
+}
