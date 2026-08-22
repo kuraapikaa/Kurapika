@@ -1,7 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Activity,
   Bell,
   Check,
   CheckCircle2,
@@ -9,16 +8,10 @@ import {
   ChevronRight,
   Crown,
   Gift,
-  Goal,
-  Handshake,
-  Layers,
-  ListChecks,
   Loader2,
   Phone,
-  Search,
   Send,
   ShieldCheck,
-  Sparkles,
   Star,
   Trophy,
   User,
@@ -28,6 +21,7 @@ import {
 import { type CSSProperties, useEffect, useMemo, useState } from 'react';
 import { bonusPanelApi, formsApi, gamesApi, loyaltyApi, tournamentApi } from '@/api/client';
 import { LobiDurumSeridi } from '@/components/player/LobiDurumSeridi';
+import { LobiKartAkisi } from '@/components/player/LobiKartAkisi';
 import { fetchGamesConfigCached, readCachedGamesConfig } from '@/lib/lobbyConfigCache';
 import { useOtomatikOturum } from '@/lib/useParentUsername';
 import { cn } from '@/lib/utils';
@@ -137,20 +131,6 @@ const DEFAULT_QUICK_ACCESS_ITEMS: LobbyQuickAccessItem[] = [
   { id: 'call-me', label: 'Beni Ara', desc: '7/24 destek', to: '/beni-ara', icon: 'phone', accentColor: '#e7c574', enabled: true },
 ];
 
-const QUICK_ACCESS_ICON_MAP = {
-  gift: Gift,
-  zap: Zap,
-  sparkles: Sparkles,
-  goal: Goal,
-  'list-checks': ListChecks,
-  layers: Layers,
-  trophy: Trophy,
-  star: Star,
-  crown: Crown,
-  shield: ShieldCheck,
-  handshake: Handshake,
-  phone: Phone,
-} as const;
 
 /**
  * Ağ isteği gelmeden önceki ilk kare — `LobbyDesignManager`daki "Gold"
@@ -408,7 +388,9 @@ export function PlayerLobby() {
   const [checking, setChecking] = useState(false);
   const [userStatus, setUserStatus] = useState<'idle' | 'success' | 'not_found' | 'error'>('idle');
   const [activeUser, setActiveUser] = useState<string | null>(null);
-  const [settings, setSettings] = useState<any>(null);
+  // `settings` yalnizca YAZILIYOR: turnuva sekmesi kaldirilinca okuyani
+  // kalmadi. Cagri korunuyor cunku ayni istek lobiConfig'i de tazeliyor.
+  const [, setSettings] = useState<any>(null);
   const [loyalty, setLoyalty] = useState<any>(null);
   // İlk kareyi son bilinen yapılandırmayla boya: aksi halde lobi önce
   // varsayılan tasarımla açılıp yanıt gelince yeniden boyanıyor (flash).
@@ -438,20 +420,6 @@ export function PlayerLobby() {
     return () => { iptal = true; };
   }, [activeUser]);
 
-  const liveWinners = useMemo(() => [
-    { user: 'A***', win: '₺2.450', game: 'Şans Çarkı', time: '1 dk önce' },
-    { user: 'S***', win: '₺12.800', game: 'Sweet Bonanza', time: '2 dk önce' },
-    { user: 'M***', win: '₺500', game: 'Kazı Kazan', time: '3 dk önce' },
-    { user: 'A***', win: '₺45.000', game: 'Gates of Olympus', time: '4 dk önce' },
-    { user: 'K***', win: '₺3.200', game: 'Cosmic Clusters!', time: '6 dk önce' },
-    { user: 'B***', win: '₺8.900', game: 'The Big Dog House', time: '8 dk önce' },
-    { user: 'C***', win: '₺1.150', game: 'Fortune Of Olympus', time: '10 dk önce' },
-    { user: 'D***', win: '₺22.400', game: 'Sweet Baklava', time: '12 dk önce' },
-    { user: 'E***', win: '₺6.700', game: 'Black Diamond Bell Link', time: '14 dk önce' },
-    { user: 'Z***', win: '₺15.300', game: 'SugarTime 1000', time: '16 dk önce' },
-    { user: 'O***', win: '₺4.050', game: 'Candy Palace', time: '18 dk önce' },
-    { user: 'İ***', win: '₺31.200', game: 'Sugar Rush', time: '21 dk önce' },
-  ], []);
 
   // Ana sitede giriş yapmış oyuncunun kimliği (iframe -> postMessage).
   // Panel oturumunu da kurduğu için lobide artık kullanıcı adı sorulmuyor.
@@ -560,23 +528,6 @@ export function PlayerLobby() {
     ];
     return tabs.filter((tab) => tab.enabled !== false);
   }, [lobbyTheme.tabs]);
-  const tournamentCards = useMemo(() => {
-    const prizeById: Record<string, string | undefined> = {
-      daily: settings?.gunluk?.prize,
-      gunluk: settings?.gunluk?.prize,
-      weekly: settings?.haftalik?.prize,
-      haftalik: settings?.haftalik?.prize,
-      monthly: settings?.aylik?.prize,
-      aylik: settings?.aylik?.prize
-    };
-
-    return lobbyTheme.tabs.tournaments.cards
-      .filter((card) => card.enabled !== false)
-      .map((card) => ({
-        ...card,
-        prize: prizeById[card.id] || card.prizeFallback
-      }));
-  }, [lobbyTheme.tabs.tournaments.cards, settings]);
 
   useEffect(() => {
     if (!lobbyTabs.length) return;
@@ -619,8 +570,6 @@ export function PlayerLobby() {
       {/* Izgara dokusu kaldirildi; derinlik yalnizca tepedeki altin haleden
           geliyor (alt sayfalarla ayni karar, bkz. LobbyPageShell). */}
       <div className="pointer-events-none fixed inset-0" style={backgroundStyle} />
-
-      <LiveTicker winners={liveWinners} theme={lobbyTheme} />
 
       <header
         className="sticky top-0 z-30 border-b"
@@ -754,118 +703,22 @@ export function PlayerLobby() {
             gormek icin sayfayi acmak zorundaydi. */}
         {activeUser && <LobiDurumSeridi username={activeUser} />}
 
-        <LobbyBanner theme={lobbyTheme} />
+        {/*
+          KART AKISI.
 
-        <div className="flex min-w-0 flex-col gap-3.5 md:gap-4">
-          <div className="flex min-w-0 flex-col gap-3.5 md:gap-4">
-            <motion.section
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="relative overflow-hidden rounded-xl border p-4 md:p-5"
-              style={{
-                borderColor: hexToRgba(lobbyTheme.primaryColor, 0.18),
-                background: `linear-gradient(120deg, ${hexToRgba(lobbyTheme.primaryColor, 0.24)}, ${hexToRgba(lobbyTheme.surfaceColor, 0.9)} 52%, ${hexToRgba(lobbyTheme.backgroundColor, 0.97)})`
-              }}
-            >
-              <div className="absolute -right-12 -top-16 h-44 w-44 rounded-full blur-[70px]" style={{ backgroundColor: hexToRgba(lobbyTheme.primaryColor, 0.22) }} />
-              <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="min-w-0">
-                  <span
-                    className="inline-flex w-max items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.16em]"
-                    style={{
-                      borderColor: hexToRgba(lobbyTheme.primaryColor, 0.2),
-                      backgroundColor: hexToRgba(lobbyTheme.primaryColor, 0.12),
-                      color: lobbyTheme.primaryColor
-                    }}
-                  >
-                    <Star size={10} className="fill-current" />
-                    Öne çıkan
-                  </span>
-                  <h1 className="mt-2.5 max-w-[26ch] text-2xl font-black leading-[1.02] tracking-[-0.045em] text-[color:var(--lobby-text,#f3ecdd)] sm:text-[28px] md:text-[32px]">
-                    Bonusunu seç, talebini hızlıca gönder.
-                  </h1>
-                  <div className="mt-3.5 flex flex-wrap gap-2">
-                    <Link
-                      to="/bonus-talep"
-                      className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-[color:var(--lobby-primary,#e7c574)] px-4 text-[12px] font-black text-[#171204] transition active:scale-[0.98]"
-                    >
-                      Bonus talep et <ChevronRight size={15} />
-                    </Link>
-                    <Link
-                      to="/cark"
-                      className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border bg-[rgba(243,236,221,0.06)] px-4 text-[12px] font-black text-[color:var(--lobby-text,#f3ecdd)] transition hover:bg-[rgba(243,236,221,0.1)] active:scale-[0.98]"
-                      style={{ borderColor: hexToRgba(lobbyTheme.primaryColor, 0.22) }}
-                    >
-                      Çarkı çevir <Zap size={15} />
-                    </Link>
-                  </div>
-                </div>
+          Sekmeli yapinin ("Hizli Erisim / Turnuva / Destek") ve buyuk
+          hero banner'in yerini aldi. Oyuncu ne yapabilecegini sekme
+          gezmeden, tek kaydirmada goruyor.
 
-                <motion.div
-                  animate={{ y: [0, -9, 0] }}
-                  transition={{ duration: 4.2, repeat: Infinity, ease: 'easeInOut' }}
-                  className="relative hidden shrink-0 sm:block"
-                >
-                  <div className="flex h-24 w-24 rotate-6 items-center justify-center rounded-xl border border-[rgba(243,236,221,0.1)] bg-[rgba(243,236,221,0.07)] shadow-xl backdrop-blur-xl md:h-28 md:w-28">
-                    <Gift size={44} style={{ color: lobbyTheme.primaryColor, filter: `drop-shadow(0 0 14px ${hexToRgba(lobbyTheme.primaryColor, 0.4)})` }} />
-                  </div>
-                  <div
-                    className="absolute -bottom-3 -right-3 flex h-11 w-11 -rotate-12 items-center justify-center rounded-xl border border-[rgba(243,236,221,0.1)] shadow-lg"
-                    style={{ backgroundColor: lobbyTheme.surfaceColor, color: lobbyTheme.accentColor }}
-                  >
-                    <Zap size={20} />
-                  </div>
-                </motion.div>
-              </div>
-            </motion.section>
-
-            <section className="cam p-2.5 md:p-3">
-              <div role="tablist" aria-label="Lobi bölümleri" className="grid grid-cols-3 gap-1 rounded-xl border border-[rgba(243,236,221,0.06)] bg-black/25 p-1">
-                {lobbyTabs.map((tab) => {
-                  const Icon = tab.icon;
-                  const isActive = activeLobbyTab === tab.id;
-
-                  return (
-                    <button
-                      key={tab.id}
-                      type="button"
-                      role="tab"
-                      aria-selected={isActive}
-                      aria-controls={`lobby-panel-${tab.id}`}
-                      id={`lobby-tab-${tab.id}`}
-                      onClick={() => setActiveLobbyTab(tab.id)}
-                      className={cn(
-                        'flex min-w-0 items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-[10px] font-black uppercase tracking-[0.06em] transition sm:text-[11px]',
-                        isActive
-                          ? 'bg-[color:var(--lobby-primary,#e7c574)] text-[#171204] shadow-[0_6px_18px_rgba(255,255,255,.1)]'
-                          : 'text-[color:var(--lobby-muted,#8f8674)] hover:bg-[rgba(243,236,221,0.055)] hover:text-[color:var(--lobby-text,#f3ecdd)]'
-                      )}
-                    >
-                      <Icon size={14} className="shrink-0" />
-                      <span className="max-w-full truncate leading-none">{tab.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              <motion.div
-                key={activeLobbyTab}
-                role="tabpanel"
-                id={`lobby-panel-${activeLobbyTab}`}
-                aria-labelledby={`lobby-tab-${activeLobbyTab}`}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.16 }}
-                className="pt-2.5"
-              >
-                {activeLobbyTab === 'games' && <GamesTab items={visibleQuickAccess} config={lobbyTheme.tabs.games} />}
-                {activeLobbyTab === 'tournaments' && <TournamentsTab cards={tournamentCards} config={lobbyTheme.tabs.tournaments} />}
-                {activeLobbyTab === 'support' && <SupportTab config={lobbyTheme.tabs.support} />}
-              </motion.div>
-            </section>
-          </div>
-
-        </div>
+          Kart listesi lobiConfig'ten geliyor: panelden kapatilan bir
+          kisayol burada da kayboluyor.
+        */}
+        <LobiKartAkisi
+          kartlar={visibleQuickAccess}
+          vurguRengi={lobbyTheme.primaryColor}
+          metinRengi={lobbyTheme.textColor}
+          sonukRenk={lobbyTheme.mutedTextColor}
+        />
       </main>
 
       <nav
@@ -892,149 +745,6 @@ export function PlayerLobby() {
           animation: lobby-marquee 55s linear infinite;
         }
       `}</style>
-    </div>
-  );
-}
-
-function formatActionText(template: string, count: number) {
-  return template.replace('{count}', String(count));
-}
-
-function GamesTab({ items, config }: { items: LobbyQuickAccessItem[]; config: LobbyTabsConfig['games'] }) {
-  return (
-    <div className="space-y-2.5">
-      <SectionTitle title={config.sectionTitle} action={formatActionText(config.actionText, items.length)} />
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-        {items.map((item) => {
-          const Icon = QUICK_ACCESS_ICON_MAP[item.icon as keyof typeof QUICK_ACCESS_ICON_MAP] || Gift;
-          return (
-            <Link
-              key={item.id}
-              to={item.to}
-              className="cam-kontrol cam-tiklanabilir dokunma group flex items-center gap-2.5 p-3 active:scale-[0.98]"
-            >
-              <span
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition group-hover:scale-105"
-                style={{
-                  borderColor: hexToRgba(item.accentColor, 0.26),
-                  backgroundColor: hexToRgba(item.accentColor, 0.12),
-                  color: item.accentColor
-                }}
-              >
-                <Icon size={17} />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="line-clamp-2 block text-[12px] font-black leading-tight text-[color:var(--lobby-text,#f3ecdd)] sm:line-clamp-1">{item.label}</span>
-                <span className="mt-1 hidden truncate text-[10px] font-semibold leading-none text-[color:var(--lobby-muted,#8f8674)] sm:block">{item.desc}</span>
-              </span>
-              <ChevronRight size={14} className="hidden shrink-0 text-[color:var(--lobby-muted,#8f8674)] transition group-hover:translate-x-0.5 group-hover:text-[color:var(--lobby-muted,#8f8674)] sm:block" />
-            </Link>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-type TournamentLobbyCard = LobbyTournamentCardConfig & { prize: string };
-
-function TournamentsTab({ cards, config }: { cards: TournamentLobbyCard[]; config: LobbyTabsConfig['tournaments'] }) {
-  const [selectedTournament, setSelectedTournament] = useState(cards[0]?.id ?? '');
-  const selectedCard = cards.find((card) => card.id === selectedTournament) ?? cards[0];
-  const selectedIndex = Math.max(cards.findIndex((card) => card.id === selectedCard?.id), 0);
-
-  useEffect(() => {
-    if (!cards.length) return;
-    if (!cards.some((card) => card.id === selectedTournament)) {
-      setSelectedTournament(cards[0].id);
-    }
-  }, [cards, selectedTournament]);
-
-  return (
-    <div className="space-y-2.5">
-      <SectionTitle title={config.sectionTitle} action={config.actionText} />
-      <div className="grid grid-cols-3 gap-1.5" role="tablist" aria-label="Turnuva dönemleri">
-        {cards.map((card) => {
-          const Icon = QUICK_ACCESS_ICON_MAP[card.icon as keyof typeof QUICK_ACCESS_ICON_MAP] || Trophy;
-          const selected = selectedTournament === card.id;
-
-          return (
-            <button
-              key={card.id}
-              type="button"
-              role="tab"
-              aria-selected={selected}
-              onClick={() => setSelectedTournament(card.id)}
-              className={cn(
-                'group flex min-w-0 items-center gap-2 rounded-xl border p-2 text-left transition active:scale-[0.98]',
-                selected
-                  ? 'border-[rgba(231,197,116,0.4)] bg-[color:var(--lobby-primary,#e7c574)] text-[#171204]'
-                  : 'border-[rgba(243,236,221,0.07)] bg-[rgba(243,236,221,0.035)] text-[color:var(--lobby-muted,#8f8674)] hover:border-[rgba(243,236,221,0.16)] hover:bg-[rgba(243,236,221,0.07)] hover:text-[color:var(--lobby-text,#f3ecdd)]'
-              )}
-            >
-              <span
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border"
-                style={selected
-                  ? { borderColor: 'rgba(0,0,0,0.1)', backgroundColor: 'rgba(0,0,0,0.05)' }
-                  : { borderColor: hexToRgba(card.accentColor, 0.18), backgroundColor: hexToRgba(card.accentColor, 0.1), color: card.accentColor }
-                }
-              >
-                <Icon size={15} />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-[11px] font-black uppercase leading-none tracking-[0.04em]">{card.label}</span>
-                <span className={cn('mt-1 block truncate text-[9px] font-black uppercase leading-none tracking-[0.1em]', selected ? 'text-[#171204]/45' : 'text-[color:var(--lobby-muted,#8f8674)]')}>
-                  {card.period}
-                </span>
-              </span>
-            </button>
-          );
-        })}
-      </div>
-      {selectedCard && (
-        <TournamentCard
-          card={selectedCard}
-          rankHint={`${config.rankPrefix} #${selectedIndex + 1}`}
-          prizeSuffix={config.prizeSuffix}
-          description={config.cardDescription}
-        />
-      )}
-    </div>
-  );
-}
-
-function SupportTab({ config }: { config: LobbyTabsConfig['support'] }) {
-  const cards = config.cards.filter((card) => card.enabled !== false);
-
-  return (
-    <div className="space-y-2.5">
-      <SectionTitle title={config.sectionTitle} action={config.actionText} />
-      <div className="relative">
-        <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--lobby-muted,#8f8674)]" />
-        <input
-          type="text"
-          placeholder={config.searchPlaceholder}
-          className="h-10 w-full rounded-xl border border-[rgba(243,236,221,0.06)] bg-black/30 pl-9 pr-3 text-[12px] font-bold text-[color:var(--lobby-text,#f3ecdd)] outline-none transition placeholder:text-[color:var(--lobby-muted,#8f8674)] focus:border-[color:var(--lobby-primary,#e7c574)]/60"
-        />
-      </div>
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
-        {cards.map((card) => (
-          <FeatureCard key={card.id} card={card} />
-        ))}
-      </div>
-      <div
-        className="flex items-start gap-2.5 rounded-xl border p-3"
-        style={{
-          borderColor: hexToRgba(config.infoAccentColor, 0.18),
-          backgroundColor: hexToRgba(config.infoAccentColor, 0.09)
-        }}
-      >
-        <CheckCircle2 className="mt-0.5 shrink-0" style={{ color: config.infoAccentColor }} size={17} />
-        <div className="min-w-0">
-          <p className="text-[12px] font-black leading-tight text-[color:var(--lobby-text,#f3ecdd)]">{config.infoTitle}</p>
-          <p className="mt-1 text-[11px] font-medium leading-4 text-[color:var(--lobby-muted,#8f8674)]">{config.infoDescription}</p>
-        </div>
-      </div>
     </div>
   );
 }
@@ -1229,181 +939,6 @@ function LobbyWelcome({ theme, username, loyalty }: { theme: LobbyTheme; usernam
         </div>
       </div>
     </section>
-  );
-}
-
-function LobbyBanner({ theme }: { theme: LobbyTheme }) {
-  const banner = theme.banner;
-  if (!banner.enabled) return null;
-
-  const hasContent = banner.imageUrl || banner.title || banner.subtitle;
-  if (!hasContent) return null;
-
-  const bannerStyle: CSSProperties = {
-    backgroundImage: banner.imageUrl
-      ? `linear-gradient(90deg, ${hexToRgba(theme.backgroundColor, 0.84)}, ${hexToRgba(theme.backgroundColor, 0.18)}), url("${cssUrl(banner.imageUrl)}")`
-      : `linear-gradient(90deg, ${theme.primaryColor}, ${theme.secondaryColor})`,
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-    borderColor: hexToRgba(theme.primaryColor, 0.24),
-    boxShadow: `0 22px 70px ${hexToRgba(theme.primaryColor, 0.18)}`
-  };
-
-  const content = (
-    <motion.section
-      initial={{ opacity: 0, y: 14 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="group relative flex min-h-[92px] items-center overflow-hidden rounded-xl border p-3.5 sm:min-h-[110px] sm:p-5 md:min-h-[124px]"
-      style={bannerStyle}
-    >
-      <div className="absolute inset-0 bg-gradient-to-r from-black/35 via-transparent to-transparent" />
-      <div className="relative z-10 max-w-[620px]">
-        {banner.title && (
-          <h2 className="max-w-full text-lg font-black leading-[1.05] tracking-[-0.035em] text-[color:var(--lobby-text,#f3ecdd)] sm:text-2xl md:text-[26px]">
-            {banner.title}
-          </h2>
-        )}
-        {banner.subtitle && (
-          <p className="mt-1 max-w-[520px] text-[11px] font-bold leading-4 text-[color:var(--lobby-text,#f3ecdd)]/75 sm:text-xs md:text-[13px]">
-            {banner.subtitle}
-          </p>
-        )}
-        {banner.ctaLabel && (
-          <span
-            className="mt-2.5 inline-flex h-8 items-center justify-center gap-1.5 rounded-lg px-3 text-[10px] font-black uppercase tracking-[0.12em] text-[#171204] transition group-hover:translate-x-0.5"
-            style={{ backgroundColor: theme.accentColor }}
-          >
-            {banner.ctaLabel}
-            <ChevronRight size={13} />
-          </span>
-        )}
-      </div>
-    </motion.section>
-  );
-
-  const link = banner.linkUrl.trim();
-  if (!link) return content;
-  if (/^https?:\/\//i.test(link) || link.startsWith('#')) {
-    return (
-      <a href={link} target={/^https?:\/\//i.test(link) ? '_blank' : undefined} rel={/^https?:\/\//i.test(link) ? 'noreferrer' : undefined}>
-        {content}
-      </a>
-    );
-  }
-  return <Link to={link}>{content}</Link>;
-}
-
-function LiveTicker({ winners, theme }: { winners: Array<{ user: string; win: string; game: string; time: string }>; theme: LobbyTheme }) {
-  return (
-    <div className="relative z-20 flex h-7 w-full items-center overflow-hidden border-b border-[rgba(243,236,221,0.07)] bg-black/70 backdrop-blur-xl md:h-8">
-      <div
-        className="z-10 flex h-full shrink-0 items-center gap-1.5 px-2.5 text-[9px] font-black uppercase tracking-[0.14em] text-[color:var(--lobby-text,#f3ecdd)] shadow-[8px_0_20px_rgba(0,0,0,.5)] md:px-4"
-        style={{ background: `linear-gradient(90deg, ${theme.primaryColor}, ${theme.secondaryColor})` }}
-      >
-        <Activity size={10} className="animate-pulse" />
-        Canlı
-      </div>
-      <div className="lobby-marquee flex items-center gap-5 whitespace-nowrap px-4">
-        {[...winners, ...winners].map((winner, index) => (
-          <div key={`${winner.user}-${index}`} className="flex items-center gap-1.5 text-[11px] font-bold text-[color:var(--lobby-muted,#8f8674)]">
-            <span className="text-[color:var(--lobby-text,#f3ecdd)]">{winner.user}</span>
-            <span style={{ color: theme.accentColor }}>{winner.win}</span>
-            <span className="rounded bg-[rgba(243,236,221,0.05)] px-1.5 py-0.5 text-[9px] text-[color:var(--lobby-muted,#8f8674)]">{winner.game}</span>
-            <span className="text-[9px] text-[color:var(--lobby-muted,#8f8674)]">{winner.time}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function TournamentCard({
-  card,
-  rankHint,
-  prizeSuffix,
-  description
-}: {
-  card: TournamentLobbyCard;
-  rankHint: string;
-  prizeSuffix: string;
-  description: string;
-}) {
-  const Icon = QUICK_ACCESS_ICON_MAP[card.icon as keyof typeof QUICK_ACCESS_ICON_MAP] || Trophy;
-
-  return (
-    <Link
-      to={card.to}
-      className="group flex min-h-[132px] flex-col justify-between overflow-hidden rounded-xl border bg-gradient-to-br to-black/30 p-3.5 transition active:scale-[0.98] md:p-4"
-      style={{
-        borderColor: hexToRgba(card.accentColor, 0.18),
-        backgroundImage: `linear-gradient(135deg, ${hexToRgba(card.accentColor, 0.2)}, rgba(0,0,0,0.3))`,
-        color: card.accentColor
-      }}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-2.5">
-          <div
-            className="flex h-9 w-9 items-center justify-center rounded-lg border"
-            style={{
-              borderColor: hexToRgba(card.accentColor, 0.2),
-              backgroundColor: hexToRgba(card.accentColor, 0.1),
-              color: card.accentColor
-            }}
-          >
-            <Icon size={17} />
-          </div>
-          <div className="min-w-0">
-            <p className="text-[9px] font-black uppercase leading-none tracking-[0.12em] text-[color:var(--lobby-muted,#8f8674)]">{card.period}</p>
-            <p className="mt-1 truncate text-[12px] font-black uppercase leading-none text-[color:var(--lobby-text,#f3ecdd)]">{card.label}</p>
-          </div>
-        </div>
-        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-[rgba(243,236,221,0.06)] bg-[rgba(243,236,221,0.045)] text-[color:var(--lobby-muted,#8f8674)] transition group-hover:translate-x-0.5 group-hover:text-[color:var(--lobby-text,#f3ecdd)]">
-          <ChevronRight size={14} />
-        </div>
-      </div>
-      <div className="mt-3">
-        <p className="text-[9px] font-black uppercase tracking-[0.14em] text-[color:var(--lobby-muted,#8f8674)]">{rankHint}</p>
-        <p className="mt-0.5 truncate text-2xl font-black tracking-[-0.045em] text-[color:var(--lobby-text,#f3ecdd)] md:text-[28px]">{card.prize}{prizeSuffix}</p>
-        <p className="mt-1.5 line-clamp-2 text-[11px] font-semibold leading-4 text-[color:var(--lobby-muted,#8f8674)]">{description}</p>
-      </div>
-    </Link>
-  );
-}
-
-function SectionTitle({ title, action }: { title: string; action?: string }) {
-  return (
-    <div className="flex items-baseline justify-between gap-3 px-0.5">
-      <h2 className="truncate text-[13px] font-black tracking-[-0.02em] text-[color:var(--lobby-text,#f3ecdd)] md:text-sm">{title}</h2>
-      {action && <span className="shrink-0 text-[9px] font-black uppercase tracking-[0.12em] text-[color:var(--lobby-muted,#8f8674)]">{action}</span>}
-    </div>
-  );
-}
-
-
-function FeatureCard({ card }: { card: LobbySupportCardConfig }) {
-  const Icon = QUICK_ACCESS_ICON_MAP[card.icon as keyof typeof QUICK_ACCESS_ICON_MAP] || Phone;
-
-  return (
-    <Link
-      to={card.to}
-      className="cam-kontrol cam-tiklanabilir dokunma group flex items-start gap-2.5 p-3 active:scale-[0.98]"
-    >
-      <span
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border"
-        style={{
-          borderColor: hexToRgba(card.accentColor, 0.2),
-          backgroundColor: hexToRgba(card.accentColor, 0.1),
-          color: card.accentColor
-        }}
-      >
-        <Icon size={17} />
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="block text-[13px] font-black leading-tight tracking-[-0.015em] text-[color:var(--lobby-text,#f3ecdd)]">{card.title}</span>
-        <span className="mt-1 block text-[11px] font-medium leading-4 text-[color:var(--lobby-muted,#8f8674)]">{card.desc}</span>
-      </span>
-      <ChevronRight size={14} className="mt-0.5 shrink-0 text-[color:var(--lobby-muted,#8f8674)] transition group-hover:translate-x-0.5 group-hover:text-[color:var(--lobby-muted,#8f8674)]" />
-    </Link>
   );
 }
 

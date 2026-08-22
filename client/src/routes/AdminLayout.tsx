@@ -169,37 +169,36 @@ export function AdminLayout() {
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="sidebar-brand flex h-[76px] shrink-0 items-center justify-between gap-3 px-5">
-          <div className="flex min-w-0 flex-1 items-center gap-2.5">
-            {/*
-              CONTROL SUITE ISARETI.
+        <div className="sidebar-brand relative flex shrink-0 flex-col items-center gap-2.5 px-5 py-5">
+          {/*
+            CONTROL SUITE ISARETI.
 
-              Once dort mor kareden olusan bir yer tutucu vardi; markayi
-              tasimayan, herhangi bir panelde durabilecek genel bir sekil.
-              Giris ekranindaki altin isaretin mavi kardesi buraya
-              geliyor: panelin icinde de disinda da ayni kimlik.
+            Gorsel KENDI cercevesini tasiyor: yuvarlak kosesi, kenar
+            cizgisi ve parlamasi ilustrasyonun parcasi. Onceden bir de
+            yuvarlak kapsul icine konuyordu ve iki cerceve ust uste
+            biniyordu -- isaret "bir kutunun icine sikistirilmis" gibi
+            duruyordu. Kapsul kaldirildi, gorsel oldugu gibi duruyor.
 
-              Yuvarlak cerceve KORUNDU -- kenar cizgisi ve parilti,
-              gorselin kendi kose yuvarlakligiyla kaynasip kenar
-              cubugunun geri kalanina baglaniyor.
-            */}
-            <span className="suite-mark grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full border border-purple-400/25 bg-purple-400/10 shadow-[0_0_20px_rgba(168,85,247,0.25)]">
-              <img
-                src="/assets/brand/arwen-mark-azure.png"
-                alt="Arwen Software Solutions"
-                className="h-full w-full object-cover"
-                draggable={false}
-              />
-            </span>
-            <span className={cn("min-w-0 leading-tight", navCollapsed && "md:hidden")}>
-              <strong className="block truncate text-[13px] font-bold tracking-[-0.02em] text-white">Arwen Software Solutions</strong>
-              <small className="mt-0.5 block truncate text-[8px] font-semibold uppercase tracking-[0.18em] text-slate-600">Control Suite</small>
-            </span>
-          </div>
+            Duzen de dikey: isaret ustte, ad altta. Yatay dizilimde
+            13px'lik ad dar kolonda kirpiliyordu.
+          */}
+          <img
+            src="/assets/brand/arwen-mark-azure.png"
+            alt="Arwen Software Solutions"
+            className={cn(
+              'suite-mark shrink-0 select-none transition-[width,height] duration-200',
+              navCollapsed ? 'md:h-10 md:w-10' : 'h-14 w-14',
+            )}
+            draggable={false}
+          />
+          <span className={cn('min-w-0 text-center leading-tight', navCollapsed && 'md:hidden')}>
+            <strong className="block truncate text-[13px] font-bold tracking-[-0.02em] text-white">Arwen Software Solutions</strong>
+            <small className="mt-0.5 block truncate text-[8px] font-semibold uppercase tracking-[0.18em] text-slate-600">Control Suite</small>
+          </span>
           <button
             type="button"
             onClick={() => setSidebarOpen(false)}
-            className="md:hidden flex items-center justify-center w-7 h-7 rounded-full text-zinc-500 hover:text-white transition-colors"
+            className="md:hidden absolute right-3 top-3 flex items-center justify-center w-7 h-7 rounded-full text-zinc-500 hover:text-white transition-colors"
             aria-label="Menüyü kapat"
           >
             <X size={18} />
@@ -210,7 +209,7 @@ export function AdminLayout() {
             aria-expanded={!navCollapsed}
             aria-label={navCollapsed ? 'Menüyü genişlet' : 'Menüyü daralt'}
             title={navCollapsed ? 'Menüyü genişlet' : 'Menüyü daralt'}
-            className="hidden md:flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-zinc-500 transition-colors hover:bg-white/[0.06] hover:text-white"
+            className="absolute right-3 top-3 hidden md:flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-zinc-500 transition-colors hover:bg-white/[0.06] hover:text-white"
           >
             {navCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
           </button>
