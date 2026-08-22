@@ -161,10 +161,6 @@
     @apply text-cyan-100;
   }
 
-  .sidebar-system-card {
-    @apply mb-3 flex items-center justify-between rounded-xl border border-emerald-300/20 bg-emerald-300/[0.075] px-4 py-3;
-  }
-
   .app-header {
     @apply bg-black/60 backdrop-blur-2xl;
     box-shadow: none;
@@ -1143,16 +1139,6 @@
 
 .app-shell .sidebar-nav-group a[aria-current='page'] .sidebar-link-icon {
   color: #d8b4fe;
-}
-
-.app-shell .sidebar-system-card {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 14px;
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  background: rgba(255, 255, 255, 0.02);
 }
 
 /* â”€â”€â”€ Ust bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

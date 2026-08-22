@@ -67,7 +67,22 @@ export function AdminLayout() {
   const meta = findRouteMeta(pathname);
   const panodayiz = meta?.id === 'dashboard';
 
-  const { kullanici, cikisYap } = useOturum();
+  const { kullanici, siteAdi, cikisYap } = useOturum();
+  /*
+   * Site adi gelmezse marka adina dusuluyor. Bos bir rozet gostermek ya
+   * da rozeti hic cizmemek, "site secilmedi" gibi yanlis bir izlenim
+   * verirdi -- oysa oturum acik ve panel calisiyor.
+   */
+  const gosterilenSite = siteAdi || 'Arwen Software Solutions';
+  const kullaniciAdi = String(kullanici?.name || kullanici?.username || '').trim();
+  /** Rozet harfleri site adindan turetiliyor; sabit "AS" degil. */
+  const rozetHarfleri = gosterilenSite
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((kelime: string) => kelime[0])
+    .join('')
+    .toLocaleUpperCase('tr-TR') || 'AS';
   const { dateRange, setDateRange } = useDateRange();
   const queryClient = useQueryClient();
 
@@ -283,16 +298,6 @@ export function AdminLayout() {
             * (Premium Dark Glassmorphism) indirildigi icin kaldirildi;
             * yariya kalmis bir acik tema birakmaktansa anahtar da gitti.
             */}
-          <div className={cn("sidebar-system-card", navCollapsed && "md:hidden")}>
-            <div className="flex items-center gap-2">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-300 opacity-50" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-300" />
-              </span>
-              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-300">Sistem aktif</span>
-            </div>
-            <span className="text-[10px] text-slate-600">Yerel yönetici oturumu</span>
-          </div>
           <button
             onClick={cikisYap}
             title={navCollapsed ? 'Güvenli çıkış' : undefined}
@@ -348,11 +353,26 @@ export function AdminLayout() {
                 Verileri yenile
               </button>
               <NotificationCenter />
+              {/*
+                HESAP ROZETI. Ust satirda oturumun YONETTIGI sitenin adi
+                var; sabit marka adi degil. Panel cok kiracili ve ayni
+                kurulumdan farkli siteler yonetiliyor -- her birinde ayni
+                ismi gostermek, operatörün hangi sitede oldugunu
+                rozetten anlamasini imkansiz kiliyordu.
+
+                Alt satirda "TR · Partner" yaziyordu; o da sabitti ve
+                hicbir seye karsilik gelmiyordu. Yerine giris yapan
+                kullanicinin adi kondu -- gercek veri.
+              */}
               <div className="hidden h-9 items-center gap-2 rounded-lg border border-white/[0.07] bg-white/[0.025] px-2 lg:flex">
-                <div className="flex h-6 w-6 items-center justify-center rounded-md bg-blue-400 text-[9px] font-black text-white">AS</div>
+                <div className="flex h-6 w-6 items-center justify-center rounded-md bg-blue-400 text-[9px] font-black text-white">
+                  {rozetHarfleri}
+                </div>
                 <div className="leading-tight">
-                  <p className="text-[11px] font-bold tracking-[-0.01em] text-white">Arwen Software Solutions</p>
-                  <p className="text-[8px] font-medium uppercase tracking-[0.12em] text-slate-600">TR · Partner</p>
+                  <p className="max-w-[180px] truncate text-[11px] font-bold tracking-[-0.01em] text-white">{gosterilenSite}</p>
+                  {kullaniciAdi && (
+                    <p className="max-w-[180px] truncate text-[8px] font-medium uppercase tracking-[0.12em] text-slate-600">{kullaniciAdi}</p>
+                  )}
                 </div>
               </div>
             </div>

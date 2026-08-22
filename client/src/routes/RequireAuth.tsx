@@ -27,6 +27,8 @@ function oturumBittiMi(error: unknown): boolean {
 type OturumDurumu = {
   /** Giris yapmis yonetici; yetki suzmesi bunun uzerinden yapilir. */
   kullanici: any;
+  /** Oturumun yonettigi sitenin adi (bos olabilir). */
+  siteAdi: string;
   cikisYap: () => Promise<void>;
 };
 
@@ -42,6 +44,8 @@ export function RequireAuth({ tenantConfig }: { tenantConfig: TenantConfig }) {
   const queryClient = useQueryClient();
   const [girisYapildi, setGirisYapildi] = useState<boolean | null>(null);
   const [kullanici, setKullanici] = useState<any>(null);
+  /** Oturumun yönettiği sitenin adı; panel başlığında gösteriliyor. */
+  const [siteAdi, setSiteAdi] = useState('');
 
   const kimligiOku = async () => {
     const res = await fetch('/api/me', { credentials: 'include' }).catch(() => null);
@@ -52,6 +56,7 @@ export function RequireAuth({ tenantConfig }: { tenantConfig: TenantConfig }) {
     }
     const data = await res.json().catch(() => null);
     setKullanici(data?.user || null);
+    setSiteAdi(String(data?.siteAdi || '').trim());
     setGirisYapildi(true);
   };
 
@@ -103,7 +108,7 @@ export function RequireAuth({ tenantConfig }: { tenantConfig: TenantConfig }) {
   }
 
   return (
-    <OturumContext.Provider value={{ kullanici, cikisYap }}>
+    <OturumContext.Provider value={{ kullanici, siteAdi, cikisYap }}>
       <Outlet />
     </OturumContext.Provider>
   );

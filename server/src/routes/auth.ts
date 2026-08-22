@@ -236,7 +236,26 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
     if (!user) return reply.status(401).send({ ok: false });
     // role yoksa eski oturum = admin kabul et
     const u: SessionUser = { ...user, role: user.role ?? 'admin' };
-    return reply.send({ ok: true, user: u });
+
+    /*
+     * OTURUMUN SITESI.
+     *
+     * `/api/tenant-info` de bir ad donduruyor ama o HOST'tan cozuluyor ve
+     * giris oncesi calisiyor. Panelde gosterilmesi gereken, oturumun
+     * YONETTIGI site: master panelden baska bir kiraciya gecildiginde
+     * host ayni kalir, yonetilen site degisir. Host'tan okunan ad o
+     * durumda yanlis site adi gosterirdi.
+     */
+    let siteAdi = '';
+    try {
+      const tenants = await loadTenants();
+      const tenant = tenants.find((item) => item.id === getManageableTenantId(u, tenants));
+      siteAdi = String(tenant?.adminTitle || tenant?.siteName || '').trim();
+    } catch {
+      // Kiraci okunamazsa panel calismaya devam etsin; rozet yedege duser.
+    }
+
+    return reply.send({ ok: true, user: u, siteAdi });
   });
 
   // ─── Bonus Panel Login ───────────────────────────────────────────────────
