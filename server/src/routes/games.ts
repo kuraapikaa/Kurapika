@@ -486,8 +486,7 @@ const DEFAULT_GAME_SETTINGS = {
     borderWidth: 8,
     centerSize: 52,
     labelSize: 11,
-    glowStrength: 0,
-    glossy: true
+    glowStrength: 0
   },
   /**
    * Varsayilan kasa.

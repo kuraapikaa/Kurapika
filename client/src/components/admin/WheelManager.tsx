@@ -33,6 +33,7 @@ import {
   sayi as trSayi,
 } from './oyunUi';
 import { carkEtiketOlculeri, carkEtiketSatirlari } from '@/lib/carkEtiket';
+import { yeniEtiket } from '@/lib/carkDilimEtiketi';
 
 export interface WheelSlice {
   id: string | number;
@@ -75,7 +76,6 @@ export interface WheelAppearance {
   centerSize: number;
   labelSize: number;
   glowStrength: number;
-  glossy: boolean;
 }
 
 interface WheelManagerProps {
@@ -109,8 +109,7 @@ const DEFAULT_APPEARANCE: WheelAppearance = {
   borderWidth: 10,
   centerSize: 64,
   labelSize: 14,
-  glowStrength: 0,
-  glossy: false
+  glowStrength: 0
 };
 
 const SLICE_COLORS = [
@@ -339,7 +338,6 @@ export function WheelSvg({
           return <path key={slice.id || index} d={segmentPath(cx, cy, radius, start, end)} fill={validHex(slice.bgColor, '#1f2937')} stroke="rgba(3,5,9,.88)" strokeWidth={count >= 10 ? 1.6 : 2.2} />;
         })}
         <circle cx={cx} cy={cy} r={radius} fill={`url(#${idPrefix}-shade)`} pointerEvents="none" />
-        {appearance.glossy && <ellipse cx={cx - radius * .16} cy={cy - radius * .22} rx={radius * .72} ry={radius * .43} fill="rgba(255,255,255,.07)" pointerEvents="none" />}
         {slices.map((slice, index) => {
           const mid = -Math.PI / 2 + (index + 0.5) * angle;
           const labelPoint = polar(cx, cy, yaziRadius, mid);
@@ -518,6 +516,21 @@ export function WheelManager({
     };
   }, [wheel]);
 
+  /*
+   * Analiz yanıtı EKSİK gelebiliyor ve panel bunu kaldırmıyordu:
+   *   `analiz.gercekPasYuzdesi === null ? '—' : ....toFixed(1)`
+   * Kontrol yalnızca `null` bakıyor; alan hiç gelmediğinde değer
+   * `undefined` oluyor ve `.toFixed` patlıyordu -- `analiz.uyarilar.map`
+   * de öyle. Sonuç beyaz ekrandı: operatör dilimleri düzenleyemez hale
+   * geliyordu. Bir yan gösterge, uğruna bütün sayfayı kaybedecek kadar
+   * önemli değil.
+   */
+  const pasYuzdesi = Number.isFinite(Number(analiz?.gercekPasYuzdesi))
+    ? Number(analiz.gercekPasYuzdesi)
+    : null;
+  const analizUyarilari: string[] = Array.isArray(analiz?.uyarilar) ? analiz.uyarilar : [];
+  const disaridaKalanlar: any[] = Array.isArray(analiz?.disaridaKalanlar) ? analiz.disaridaKalanlar : [];
+
   const updateAppearance = (values: Partial<WheelAppearance>) => {
     onAppearanceChange({ ...wheelAppearance, ...values });
   };
@@ -548,7 +561,17 @@ export function WheelManager({
     onUpdate(wheel.map(slice => slice.id === id ? { ...slice, ...values } : slice));
   };
 
+  /** Listedeki kampanya adları: etiketin elle mi yazıldığını buradan anlıyoruz. */
+  const kampanyaAdlari = bonusOptions.map(option => option.value);
+
   const handleBonusChange = (slice: WheelSlice, value: string) => {
+    // Bağlantı alanının BOŞALTILMASI bağlantıyı kaldırır, çarkta yazan
+    // metni değil. Eskiden aynı alan ikisini birden tuttuğu için alanı
+    // temizlemek dilimin yazısını da siliyordu.
+    if (!value.trim()) {
+      handleUpdateSlice(slice.id, { bonusId: null, requiresConfiguration: false });
+      return;
+    }
     const selected = bonusOptions.find(option => option.id === value || option.value === value);
     if (selected?.isSpecial) {
       handleUpdateSlice(slice.id, { label: selected.value, bonusId: null, type: 'none', isLoss: true, amount: 0, requiresConfiguration: false });
@@ -560,13 +583,23 @@ export function WheelManager({
       // `requiresConfiguration: true` yazılıyordu; yani operatör canlı
       // listeden doğru kampanyayı seçse bile dilim "yapılandırılmamış"
       // görünmeye devam ediyor, çark o ödülü asla dağıtmıyordu.
-      handleUpdateSlice(slice.id, { label: selected.value, bonusId: selected.id, type: 'bonus', isLoss: false, requiresConfiguration: false });
+      handleUpdateSlice(slice.id, {
+        // Elle yazılmış bir etiketin üzerine yazılmıyor; kuralı ve
+        // gerekçesi `lib/carkDilimEtiketi.ts`de.
+        label: yeniEtiket(slice.label, selected.value, kampanyaAdlari),
+        bonusId: selected.id,
+        type: 'bonus',
+        isLoss: false,
+        requiresConfiguration: false,
+      });
       return;
     }
     // Elle yazılan sayısal bir id: listeden doğrulanmadı, admin isterse
     // aşağıdaki "Teslimata hazır" düğmesiyle kendi onayını verebilir.
     handleUpdateSlice(slice.id, {
-      label: value,
+      // Ham bir ID çarkta gösterilecek bir şey değil: etiket yalnızca
+      // otomatik doldurulmuşsa güncelleniyor.
+      label: yeniEtiket(slice.label, value, kampanyaAdlari),
       bonusId: /^\d+$/.test(value) ? value : slice.type === 'bonus' ? null : slice.bonusId,
       type: /^\d+$/.test(value) ? 'bonus' : slice.type,
       isLoss: slice.type === 'none' ? true : slice.isLoss,
@@ -694,22 +727,22 @@ export function WheelManager({
                 </span>
                 <span
                   className={`text-lg font-semibold tabular-nums ${
-                    (analiz.gercekPasYuzdesi ?? 0) >= 90 ? 'text-rose-300' : 'text-white'
+                    (pasYuzdesi ?? 0) >= 90 ? 'text-rose-300' : 'text-white'
                   }`}
                 >
-                  {analiz.gercekPasYuzdesi === null ? '—' : `%${analiz.gercekPasYuzdesi.toFixed(1)}`}
+                  {pasYuzdesi === null ? '—' : `%${pasYuzdesi.toFixed(1)}`}
                 </span>
               </div>
               <p className="text-[10px] text-slate-400">
-                Çekilişe giren {analiz.etkinDilim} dilim. Motorun uyguladığı oran budur; yukarıdaki
+                Çekilişe giren {analiz.etkinDilim ?? '—'} dilim. Motorun uyguladığı oran budur; yukarıdaki
                 yüzdeler girdiğiniz değerlerden hesaplanıyor.
               </p>
-              {analiz.uyarilar.map((uyari: string) => (
+              {analizUyarilari.map((uyari: string) => (
                 <Uyari key={uyari} tur="dikkat">{uyari}</Uyari>
               ))}
-              {analiz.disaridaKalanlar.length > 0 && (
+              {disaridaKalanlar.length > 0 && (
                 <ul className="space-y-1 border-t border-white/[0.06] pt-2">
-                  {analiz.disaridaKalanlar.map((dis: any) => (
+                  {disaridaKalanlar.map((dis: any) => (
                     <li key={dis.id} className="text-[10px] text-slate-200">
                       <span className="font-semibold text-amber-300">{dis.label}</span>{' '}
                       <span className="tabular-nums">%{dis.ayarlananOlasilik}</span> — {dis.aciklama}
@@ -788,10 +821,11 @@ export function WheelManager({
                 </div>
               ) : (
                 <div className="overflow-x-auto">
-                  <div className="min-w-[920px]">
-                    <div className="grid grid-cols-[70px_minmax(260px,1fr)_170px_120px_120px_52px] gap-8 border-b border-white/5 bg-black/25 px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+                  <div className="min-w-[1080px]">
+                    <div className="grid grid-cols-[64px_minmax(210px,1fr)_minmax(200px,1fr)_150px_110px_110px_52px] gap-6 border-b border-white/5 bg-black/25 px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
                       <span>Renk</span>
-                      <span>Etiket / Bonus</span>
+                      <span>Ödül bağlantısı</span>
+                      <span>Çarkta görünen yazı</span>
                       <span>Tip</span>
                       <span>Tutar</span>
                       <span>Olasılık</span>
@@ -801,7 +835,7 @@ export function WheelManager({
                     {wheel.map((slice, index) => (
                       <div
                         key={slice.id || index}
-                        className="grid grid-cols-[70px_minmax(260px,1fr)_170px_120px_120px_52px] items-center gap-8 border-b border-white/5 px-4 py-3 last:border-b-0 hover:bg-white/[0.025]"
+                        className="grid grid-cols-[64px_minmax(210px,1fr)_minmax(200px,1fr)_150px_110px_110px_52px] items-center gap-6 border-b border-white/5 px-4 py-3 last:border-b-0 hover:bg-white/[0.025]"
                       >
                         <div className="flex items-center gap-2">
                           <span className="flex h-8 w-8 items-center justify-center rounded-full text-[10px] font-semibold text-white" style={{ backgroundColor: validHex(slice.bgColor, '#1f2937') }}>
@@ -810,13 +844,29 @@ export function WheelManager({
                           <span className="text-[10px] font-semibold text-slate-500">#{index + 1}</span>
                         </div>
 
+                        {/*
+                          ÖDÜL BAĞLANTISI — hangi kampanya/ID verilecek.
+                          Çarkta yazan metinden AYRI: eskiden tek alandı ve
+                          dilim bir kampanyaya bağlandığı anda alan ID'yi
+                          gösterdiği için yazı ne görünüyor ne de
+                          düzenlenebiliyordu.
+                        */}
                         <input
                           type="text"
                           list="wheel-bonus-options"
-                          value={slice.bonusId ? String(slice.bonusId) : slice.label}
+                          value={slice.bonusId ? String(slice.bonusId) : slice.type === 'bonus' ? '' : slice.label}
                           onChange={event => handleBonusChange(slice, event.target.value)}
                           className="h-10 rounded-lg border border-white/5 bg-white/[0.02] px-3 text-sm font-bold text-white outline-none transition focus:border-[color:var(--panel-accent,#0a84ff)]/50"
-                          placeholder="Bonus ID veya etiket"
+                          placeholder="Kampanya seç veya bonus ID"
+                        />
+
+                        {/* ÇARKTA GÖRÜNEN YAZI — bağlantıya dokunmadan serbestçe yazılır. */}
+                        <input
+                          type="text"
+                          value={slice.label ?? ''}
+                          onChange={event => handleUpdateSlice(slice.id, { label: event.target.value })}
+                          className="h-10 rounded-lg border border-white/5 bg-white/[0.02] px-3 text-sm font-bold text-white outline-none transition focus:border-[color:var(--panel-accent,#0a84ff)]/50"
+                          placeholder="Çarkta yazacak metin"
                         />
 
                         <select

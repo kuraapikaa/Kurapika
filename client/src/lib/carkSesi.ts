@@ -96,6 +96,67 @@ function nota(
 }
 
 /**
+ * Gürültü tamponu. Bir kez üretilip bütün tıklarda paylaşılıyor;
+ * her tık için yeniden üretmek 120 kez boşuna iş demekti.
+ */
+let gurultu: AudioBuffer | null = null;
+
+function gurultuTamponu(ctx: Bağlam): AudioBuffer {
+  if (gurultu && gurultu.sampleRate === ctx.sampleRate) return gurultu;
+  const uzunluk = Math.floor(ctx.sampleRate * 0.12);
+  const tampon = ctx.createBuffer(1, uzunluk, ctx.sampleRate);
+  const veri = tampon.getChannelData(0);
+  for (let i = 0; i < uzunluk; i += 1) veri[i] = Math.random() * 2 - 1;
+  gurultu = tampon;
+  return tampon;
+}
+
+/**
+ * Tek bir mandal vuruşu.
+ *
+ * Önce kare dalgadan kısa bir bip çalıyordu; 8 saniyede yüz kez duyulan
+ * saf kare dalga elektronik bir alarm gibi tiz ve yorucuydu. Gerçek bir
+ * çarkta ses, ibrenin dilime çarpmasıdır: geniş bantlı, çok kısa, tok.
+ *
+ * Burada onun karşılığı iki katman:
+ *   · dar bantlı gürültü patlaması -> vuruşun "tık"ı
+ *   · alçak, hızla sönen bir sinüs -> vuruşun gövdesi, ağırlık hissi
+ */
+function mandalVurusu(ctx: Bağlam, anda: number, renk: number, ses: number) {
+  const kaynak = ctx.createBufferSource();
+  kaynak.buffer = gurultuTamponu(ctx);
+
+  const suzgec = ctx.createBiquadFilter();
+  suzgec.type = 'bandpass';
+  suzgec.frequency.setValueAtTime(renk, anda);
+  suzgec.Q.value = 7;
+
+  const kazanc = ctx.createGain();
+  kazanc.gain.setValueAtTime(0.0001, anda);
+  kazanc.gain.exponentialRampToValueAtTime(ses, anda + 0.002);
+  kazanc.gain.exponentialRampToValueAtTime(0.0001, anda + 0.038);
+
+  kaynak.connect(suzgec);
+  suzgec.connect(kazanc);
+  kazanc.connect(cikis(ctx));
+  kaynak.start(anda);
+  kaynak.stop(anda + 0.06);
+
+  // Gövde: tek başına duyulmuyor, gürültünün altına ağırlık koyuyor.
+  const govde = ctx.createOscillator();
+  const govdeKazanc = ctx.createGain();
+  govde.type = 'sine';
+  govde.frequency.setValueAtTime(renk / 9, anda);
+  govdeKazanc.gain.setValueAtTime(0.0001, anda);
+  govdeKazanc.gain.exponentialRampToValueAtTime(ses * 0.7, anda + 0.003);
+  govdeKazanc.gain.exponentialRampToValueAtTime(0.0001, anda + 0.05);
+  govde.connect(govdeKazanc);
+  govdeKazanc.connect(cikis(ctx));
+  govde.start(anda);
+  govde.stop(anda + 0.07);
+}
+
+/**
  * Dönüş boyunca ibrenin dilimlere çarpma sesi.
  *
  * Tıklar `AudioContext` saatine göre önceden programlanıyor,
@@ -111,16 +172,13 @@ export function donusTiklari(
   const zamanlar = tikZamanlari(ayar.donusDerecesi, ayar.dilimSayisi, ayar.sureMs);
 
   zamanlar.forEach((ms, i) => {
-    const anda = simdi + ms / 1000;
-    // Sona doğru perde hafifçe düşüyor: çark ağırlaşıyormuş hissi.
     const oran = zamanlar.length > 1 ? i / (zamanlar.length - 1) : 1;
-    nota(ctx, {
-      anda,
-      frekans: 1500 - 320 * oran,
-      sure: 0.045,
-      ses: 0.05,
-      tip: 'square',
-    });
+    /*
+     * Hızlıyken vuruşlar parlak ve kısık, yavaşlarken tokllaşıp
+     * belirginleşiyor: saniyede yirmi vuruş aynı sesle çalınsa uğultuya
+     * dönüşür, sondaki tek tek vuruşlar ise duyulmak ister.
+     */
+    mandalVurusu(ctx, simdi + ms / 1000, 2400 - 1100 * oran, 0.05 + 0.09 * oran);
   });
 }
 

@@ -108,7 +108,6 @@ export function CarkSayfasi() {
     centerSize: 52,
     labelSize: 11,
     glowStrength: 35,
-    glossy: false,
     ...(configRes?.data?.wheelAppearance || {})
   };
   /*
