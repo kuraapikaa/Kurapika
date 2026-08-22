@@ -131,6 +131,21 @@ export type PromoSpec = {
     requiresTelegramMember?: boolean;
     requiresEmailVerified?: boolean;
     checkIPDuplicate?: boolean;
+    /**
+     * Yalnizca ILK yatirimi kayipla sonuclanan oyuncuya verilir.
+     *
+     * Iki kosulu tek kapida topluyor (yatirim adedi 1 + net kayip > 0).
+     * Ayri ayri birakilsaydi operator birini acmayi unuttugunda sessizce
+     * baska bir kampanya olusuyordu; gerekcesi `kuralKapilari.ts`de.
+     */
+    firstDepositLossOnly?: boolean;
+    /**
+     * Bugun cekim islemi olan oyuncunun talebini reddet.
+     *
+     * `checkPendingWithdrawal`den farkli: o yalnizca ACIK talebe bakiyor,
+     * bu odenmis cekimi de sayiyor.
+     */
+    checkNoWithdrawalToday?: boolean;
     allowedProviders?: string[];
     minBalanceToClaim?: number;
     maxBalanceToClaim?: number;

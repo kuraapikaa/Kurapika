@@ -102,6 +102,42 @@ export function friendlyBonusEligibilityMessage(item: BonusEligibilityItem): Fri
       return { title: 'Kampanya günü', message: 'Bu bonus bugün talebe açık değil. Kampanya günlerinde tekrar deneyebilirsiniz.' };
     case 'active-hours-check':
       return { title: 'Kampanya saati', message: 'Bu bonus şu anda talebe açık değil. Kampanya saatlerinde tekrar deneyebilirsiniz.' };
+    /*
+     * Aşağıdakiler daha önce eşlenmemişti ve hepsi genel "Kampanya
+     * koşulu" metnine düşüyordu. Oyuncu reddin sebebini göremeyince
+     * ne yapacağını da bilemiyor; destek hattına giden soruların bir
+     * kısmı doğrudan bu yüzden.
+     */
+    case 'deposit-scoped-usage':
+      return { title: 'Yeni yatırım gerekiyor', message: 'Bu bonusu zaten aldınız. Tekrar alabilmek için yeni bir yatırım yapmanız gerekiyor.' };
+    case 'check-ip-duplicate':
+      // Kaç hesap olduğu, hangi IP olduğu YAZILMIYOR: bu bir güvenlik
+      // kontrolü ve ayrıntısı oyuncuya verilecek bilgi değil.
+      return { title: 'Hesap doğrulaması', message: 'Hesabınız için ek doğrulama gerekiyor. Lütfen destek ekibimizle iletişime geçin.' };
+    case 'consecutive-loss-deposits':
+      return { title: 'Ardışık yatırım koşulu', message: 'Bu kampanya için bugün kayıpla sonuçlanan belirli sayıda yatırımınız olması gerekiyor.' };
+    case 'each-deposit-minimum':
+      return { title: 'Yatırım alt sınırı', message: 'Bu kampanyaya sayılan yatırımlarınızdan bazıları belirlenen alt sınırın altında kalıyor.' };
+    case 'allowed-providers-check':
+      return { title: 'Sağlayıcı koşulu', message: 'Bu bonus için kampanyaya dahil sağlayıcılarda oyun aktiviteniz bulunması gerekiyor.' };
+    case 'bonus-blacklist':
+      return { title: 'Kampanya dışı hesap', message: 'Hesabınız şu anda bonus kampanyalarına dahil değil. Destek ekibimizle iletişime geçebilirsiniz.' };
+    case 'missing-partner-bonus-id':
+      return { title: 'Kampanya hazırlanıyor', message: 'Bu kampanyanın kurulumu henüz tamamlanmamış. Lütfen kısa süre sonra tekrar deneyin.' };
+
+    /* Yeni kural kapıları. */
+    case 'first-deposit-loss-only':
+      // Aynı kapının iki farklı reddi var ve oyuncu için anlamları
+      // taban tabana zıt: biri "sen bu kampanyanın hedefi değilsin",
+      // diğeri "iyi ki kaybetmedin". Tek metne indirmek yanıltırdı.
+      return reason.includes('yalnızca ilk yatırım')
+        ? { title: 'İlk yatırım kampanyası', message: 'Bu kampanya yalnızca ilk yatırımını yapan oyuncularımız için geçerlidir.' }
+        : reason.includes('yatırım yok')
+          ? { title: 'Yatırım gerekiyor', message: 'Bu kampanya için önce ilk yatırımınızı tamamlamanız gerekiyor.' }
+          : { title: 'Kayıp koşulu', message: 'Bu kampanya, ilk yatırımı kayıpla sonuçlanan oyuncular için geçerlidir. Şu anda hesabınızda net kayıp görünmüyor.' };
+    case 'check-no-withdrawal-today':
+      return { title: 'Bugün çekim yapıldı', message: 'Bugün çekim işleminiz bulunduğu için bu bonusu talep edemezsiniz. Yarın tekrar deneyebilirsiniz.' };
+
     default:
       return { title: 'Kampanya koşulu', message: 'Bu bonus için gerekli koşullardan biri henüz tamamlanmamış. Lütfen daha sonra tekrar deneyin.' };
   }

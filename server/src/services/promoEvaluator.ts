@@ -4,6 +4,8 @@
  */
 import type { NormalizedPromo } from '../lib/promosParser.js';
 import { parseDateToTime } from './accountSnapshotService.js';
+import { bugunCekimKapisi, ilkYatirimKaybiKapisi } from './kuralKapilari.js';
+import { istanbulDateKey } from '../lib/istanbulGunu.js';
 import type { PromoSpec, RulesConfig } from './rulesService.js';
 import type { AccountSnapshot, ChecklistItem, PromoChecklist } from './withdrawalEngine.js';
 import type { BCBonus, TransactionTypeSummary } from '../types/betconstruct.js';
@@ -828,6 +830,49 @@ export async function evaluateForAccount(
           : ok
             ? `UYGUN: ${loginIP} adresini kullanan başka hesap yok`
             : `RED: ${loginIP} adresini kullanan ${sameIPClientsCount} başka hesap tespit edildi`,
+      });
+    }
+
+    /*
+     * 5.c.3b İLK YATIRIMI KAYIPLA SONUÇLANAN OYUNCU.
+     *
+     * %100 iade kampanyasının kapısı. Tutarın kendisi `amountType` ile
+     * ayarlanıyor (yüzde 100 + `lossBonus` tabanı); bu kapı yalnızca
+     * KİMİN alabileceğini belirliyor.
+     */
+    if (spec.firstDepositLossOnly) {
+      const kapi = ilkYatirimKaybiKapisi({
+        yatirimAdedi: getDepositCount(byType),
+        netKayip: Number((account as any)[lossBasisAlani(spec)] ?? 0),
+      });
+      items.push({
+        id: 'first-deposit-loss-only',
+        label: 'İlk Yatırımı Kayıpla Sonuçlananlar',
+        ok: kapi.ok,
+        reason: kapi.reason,
+      });
+    }
+
+    /*
+     * 5.c.3c GÜN İÇİNDE ÇEKİMİ BULUNANI REDDET.
+     *
+     * Gün sınırı İSTANBUL gününe göre. Komşu `checkSameDayUsage` sunucu
+     * yerel saatini kullanıyor; onu değiştirmek bu işin kapsamı dışında
+     * ama yeni kontrolün aynı hatayı tekrarlamasının bir sebebi yok.
+     */
+    if (spec.checkNoWithdrawalToday) {
+      const kapi = bugunCekimKapisi({
+        islemler: ((account.profileTransactions ?? []) as any[]),
+        // `parseDateToTime` daha dar bir imzaya sahip; kapı `unknown` alıyor.
+        tariheCevir: (deger) => parseDateToTime(deger as string | null | undefined),
+        gunAnahtari: (an) => istanbulDateKey(an),
+        simdi: new Date(),
+      });
+      items.push({
+        id: 'check-no-withdrawal-today',
+        label: 'Gün İçinde Çekim Kontrolü',
+        ok: kapi.ok,
+        reason: kapi.reason,
       });
     }
 

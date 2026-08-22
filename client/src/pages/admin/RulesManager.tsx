@@ -80,6 +80,10 @@ interface PromoSpec {
     requiresTelegramMember?: boolean;
     requiresEmailVerified?: boolean;
     checkIPDuplicate?: boolean;
+    /** Yalnızca ilk yatırımı kayıpla sonuçlanan oyuncuya verilir. */
+    firstDepositLossOnly?: boolean;
+    /** Bugün çekim işlemi olan oyuncunun talebini reddet. */
+    checkNoWithdrawalToday?: boolean;
     allowedProviders?: string[];
 
     maxKpiLimit?: number;
@@ -863,6 +867,56 @@ export function RulesManager() {
                                                             onChange={(value) => setEditValue({ ...editValue, enabled: value })}
                                                         />
                                                     </div>
+
+                                                    {/*
+                                                      %100 İLK YATIRIM KAYBI İADESİ — hazır kurulum.
+
+                                                      Bu kampanya TEK bir ayar değil, dördünün birlikte
+                                                      doğru olması demek: ilk-yatırım-kaybı kapısı, kayıp
+                                                      tabanı, yüzde tipi ve %100. Operatör bunlardan
+                                                      birini eksik bırakınca ortaya çalışan ama YANLIŞ bir
+                                                      kampanya çıkıyor -- örneğin taban kayıp değil yatırım
+                                                      kalırsa, kaybı 200 ₺ olan oyuncuya 1.000 ₺'lik
+                                                      yatırımının tamamı iade ediliyor. Hata mesajı yok,
+                                                      fark yalnızca ödeme raporunda görülüyor.
+
+                                                      Düğme dördünü birden yazıyor; sonrasında her alan
+                                                      elle değiştirilebilir.
+                                                    */}
+                                                    <div className="mb-4 rounded-3xl border border-emerald-300/20 bg-emerald-400/[0.06] p-4">
+                                                        <div className="flex flex-wrap items-start justify-between gap-3">
+                                                            <div className="min-w-0">
+                                                                <p className="text-[11px] font-bold text-white">%100 ilk yatırım kaybı iadesi</p>
+                                                                <p className="mt-1 text-[10px] font-medium leading-4 text-slate-400">
+                                                                    Yalnızca ilk yatırımı kayıpla sonuçlanan oyuncuya, net kaybının tamamını iade eder.
+                                                                    Dört ayarı birlikte kurar: ilk-yatırım-kaybı kapısı, kayıp tabanı, yüzde tipi ve %100.
+                                                                </p>
+                                                            </div>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    if (!window.confirm('Bu kural "%100 ilk yatırım kaybı iadesi" olarak ayarlanacak:\n\n• Yalnızca ilk yatırımı kayıpla sonuçlananlar: AÇIK\n• Tutar tabanı: net kayıp\n• Tutar tipi: yüzde\n• Yüzde: 100\n\nDiğer ayarlar korunur. Devam edilsin mi?')) return;
+                                                                    setEditValue({
+                                                                        ...editValue,
+                                                                        firstDepositLossOnly: true,
+                                                                        lossBonus: true,
+                                                                        lossBonusPeriod: 'sinceLastWithdrawal',
+                                                                        amountType: 'percentage',
+                                                                        percentageAmount: 100,
+                                                                    });
+                                                                    toast.success('%100 ilk yatırım kaybı iadesi ayarlandı. Kaydetmeyi unutmayın.');
+                                                                }}
+                                                                className="shrink-0 rounded-full border border-emerald-300/30 bg-emerald-400/10 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-emerald-200 transition hover:bg-emerald-400/20"
+                                                            >
+                                                                Bu kuralı böyle ayarla
+                                                            </button>
+                                                        </div>
+                                                        {editValue?.firstDepositLossOnly && editValue?.lossBonus && editValue?.amountType === 'percentage' && Number(editValue?.percentageAmount) === 100 && (
+                                                            <p className="mt-3 text-[10px] font-bold text-emerald-300">
+                                                                ✓ Bu kural şu anda %100 ilk yatırım kaybı iadesi olarak yapılandırılmış.
+                                                            </p>
+                                                        )}
+                                                    </div>
                                                     {/*
                                                       * BONUS ADI.
                                                       *
@@ -1547,6 +1601,18 @@ export function RulesManager() {
                                                             description="E-posta adresi doğrulanmamış oyuncu bu bonusu alamaz."
                                                             value={editValue?.requiresEmailVerified}
                                                             onChange={(v) => setEditValue({ ...editValue, requiresEmailVerified: v })}
+                                                        />
+                                                        <ToggleField
+                                                            label="Gün içinde çekim yoksa"
+                                                            description="Bugün çekim talebi açmış ya da çekimi ödenmiş oyuncunun talebi reddedilir. 'Açıkta bekleyen çekim' kontrolünden farklı: o yalnızca açık talebe bakar, bu ödenmiş çekimi de sayar."
+                                                            value={editValue?.checkNoWithdrawalToday}
+                                                            onChange={(v) => setEditValue({ ...editValue, checkNoWithdrawalToday: v })}
+                                                        />
+                                                        <ToggleField
+                                                            label="Yalnızca ilk yatırımı kayıpla sonuçlananlar"
+                                                            description="Oyuncunun tek bir yatırımı olacak VE o yatırımdan bu yana net kaybı bulunacak. %100 iade kampanyasının kapısı budur; tutarı 'Tutar Ayarları' bölümünden verirsiniz."
+                                                            value={editValue?.firstDepositLossOnly}
+                                                            onChange={(v) => setEditValue({ ...editValue, firstDepositLossOnly: v })}
                                                         />
                                                         <ToggleField
                                                             label="Aynı IP'den ikinci hesaba verme"

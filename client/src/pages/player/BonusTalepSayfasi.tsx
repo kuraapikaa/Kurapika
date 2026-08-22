@@ -23,6 +23,7 @@ import { LobbyPageShell, LobbyCard } from '@/components/player/LobbyPageShell';
 import { useLobbyPageTheme, hexToRgba } from '@/lib/lobbyTheme';
 import { lobbyExtraLines, lobbyExtraText, renderLobbyTemplate } from '@/lib/lobbyContent';
 import { friendlyBonusEligibilityMessage } from '@/lib/bonusEligibilityMessages';
+import { GENEL_RED_METNI, redOzeti, type RedSebebi } from '@/lib/bonusRedSebepleri';
 import { useOtomatikOturum } from '@/lib/useParentUsername';
 
 interface RichBonus {
@@ -146,6 +147,15 @@ export function BonusTalepSayfasi() {
 
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  /**
+   * Reddin GERÇEK sebepleri.
+   *
+   * Sunucu talep reddedildiğinde tam kontrol listesini yanıtın içinde
+   * gönderiyor; istemci bunu okumayıp iki hazır cümleden birini
+   * gösteriyordu. Oyuncu neden reddedildiğini öğrenemeyince ne
+   * yapacağını da bilemiyordu.
+   */
+  const [submitReasons, setSubmitReasons] = useState<RedSebebi[]>([]);
   const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
 
   useEffect(() => {
@@ -316,19 +326,24 @@ export function BonusTalepSayfasi() {
     if (!selectedBonus?.backofficeId || !playerData?.account?.id) return;
     setSubmitting(true);
     setSubmitError(null);
+    setSubmitReasons([]);
     setSubmitSuccess(null);
     try {
       const res = await adminApi.chargeBonus({ ClientId: playerData.account.id, BonusId: selectedBonus.backofficeId, AssignmentValues: selectedBonus.rules?.assignmentValues ?? {} });
       if ((res as any)?.HasError) {
-        const rawMessage = String((res as any).AlertMessage || (res as any).ErrorDescription || '');
-        setSubmitError(/uygun|kural|koşul|çevrim|bakiye|yatırım/i.test(rawMessage)
-          ? 'Hesabınızın bonus uygunluğu yeniden değerlendirildi. Lütfen koşulları kontrol edip tekrar deneyin.'
-          : 'Bonus talebiniz şu anda tamamlanamadı. Lütfen kısa süre sonra tekrar deneyin.');
+        // Yanıtın içindeki kontrol listesi okunuyor; sebep çıkarılamazsa
+        // güvenli genel metne düşülüyor (sunucu bazen gerçekten teknik
+        // bir hata döndürüyor ve o durumda "koşulu tamamlayın" demek
+        // yanlış yönlendirme olurdu).
+        const ozet = redOzeti(res);
+        setSubmitError(ozet.metin);
+        setSubmitReasons(ozet.sebepler);
       } else {
         setSubmitSuccess(renderLobbyTemplate(pageContent.successDescription, { bonus: selectedBonus.promoTitle }));
       }
     } catch {
-      setSubmitError('Bonus talebiniz şu anda tamamlanamadı. Lütfen kısa süre sonra tekrar deneyin.');
+      setSubmitError(GENEL_RED_METNI);
+      setSubmitReasons([]);
     } finally {
       setSubmitting(false);
     }
@@ -712,8 +727,18 @@ export function BonusTalepSayfasi() {
                                  )}
 
                                  {submitError && (
-                                    <div className="text-rose-400 text-xs font-bold bg-rose-500/10 p-3 rounded-xl border border-rose-500/20">
-                                       {submitError}
+                                    <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-3 text-xs text-rose-400">
+                                       <p className="font-bold">{submitError}</p>
+                                       {submitReasons.length > 0 && (
+                                          <ul className="mt-2 space-y-1.5">
+                                             {submitReasons.map((sebep) => (
+                                                <li key={sebep.id} className="leading-5">
+                                                   <span className="font-bold">{sebep.title}:</span>{' '}
+                                                   <span className="font-medium opacity-90">{sebep.message}</span>
+                                                </li>
+                                             ))}
+                                          </ul>
+                                       )}
                                     </div>
                                  )}
 
