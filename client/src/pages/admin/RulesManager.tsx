@@ -14,6 +14,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { dashboardApi } from '@/api/client';
 import { BonusBlacklistPanel } from '@/components/admin/BonusBlacklistPanel';
 import { kuralKopyasiCikar, kuraliYapistir, yapistirmaFarki } from '@/lib/kuralKopyala';
+import { aralikOzeti } from '@/lib/bonusAralikOzeti';
 
 /** Kural panosunun `sessionStorage` anahtarı. */
 const PANO_ANAHTARI = 'kural-merkezi-pano';
@@ -1043,6 +1044,18 @@ export function RulesManager() {
                                                             const araliklariYaz = (yeni: typeof araliklar) =>
                                                                 setEditValue({ ...editValue, partnerBonusRanges: yeni });
                                                             return (
+                                                            /*
+                                                              PARÇA (fragment): iki ayrı ızgara hücresi.
+
+                                                              Kademe düzenleyici önce "Partner Bonus ID"
+                                                              kutusunun İÇİNDE duruyordu; o kutu 3 sütunlu
+                                                              ızgaranın tek hücresi olduğu için üç alan
+                                                              ~55 px'e sıkışıyor, yer tutucular "Al", "Ü:",
+                                                              "Bonı" diye kırpılıyordu -- hangi kutunun ne
+                                                              olduğu okunmuyordu. Kademe paneli artık ayrı
+                                                              bir hücre ve satırın TAMAMINI kaplıyor.
+                                                            */
+                                                            <>
                                                             <div className="space-y-2">
                                                                 <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block pl-1">Partner Bonus ID</label>
                                                                 <p className="text-[10px] text-slate-500 font-medium pl-1 mb-1">
@@ -1058,78 +1071,123 @@ export function RulesManager() {
                                                                     className="w-full h-12 bg-white/[0.02] border border-white/[0.05] rounded-3xl px-4 text-xs text-white focus:border-[color:var(--panel-accent,#0a84ff)] transition-all outline-none font-bold backdrop-blur-xl disabled:opacity-40"
                                                                     placeholder="Örn: 656569"
                                                                 />
+                                                            </div>
 
-                                                                {/*
-                                                                  YATIRIM ARALIĞINA GÖRE BONUS ID.
-                                                                  Aynı kampanyanın kademeleri Lynon'da ayrı bonus
-                                                                  tanımları olabiliyor. Oyuncu listede tek bonus görür;
-                                                                  hangisinin verileceğini yatırım tutarı belirler.
-                                                                */}
-                                                                <div className="mt-4 rounded-3xl border border-white/[0.05] bg-white/[0.02] p-4 backdrop-blur-xl">
-                                                                    <div className="flex items-center justify-between gap-3">
-                                                                        <div className="min-w-0">
-                                                                            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Yatırım aralığına göre bonus</p>
-                                                                            <p className="mt-1 text-[10px] font-medium text-slate-500">
-                                                                                Kademe eklerseniz verilecek bonus, oyuncunun son yatırım tutarına göre seçilir.
-                                                                            </p>
-                                                                        </div>
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={() => araliklariYaz([...araliklar, { min: '', max: '', partnerBonusId: '' }])}
-                                                                            className="shrink-0 rounded-full border border-white/[0.08] bg-white/[0.04] px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-white transition hover:bg-white/[0.08]"
-                                                                        >
-                                                                            + Kademe
-                                                                        </button>
-                                                                    </div>
-
-                                                                    {araliklar.length === 0 ? (
-                                                                        <p className="mt-3 text-[10px] font-medium text-slate-600">
-                                                                            Kademe yok — yukarıdaki tek ID kullanılır.
+                                                            {/*
+                                                              YATIRIM ARALIĞINA GÖRE BONUS ID.
+                                                              Aynı kampanyanın kademeleri Lynon'da ayrı bonus
+                                                              tanımları olabiliyor. Oyuncu listede tek bonus görür;
+                                                              hangisinin verileceğini yatırım tutarı belirler.
+                                                            */}
+                                                            <div className="md:col-span-2 lg:col-span-3 rounded-3xl border border-white/[0.05] bg-white/[0.02] p-5 backdrop-blur-xl">
+                                                                <div className="flex flex-wrap items-start justify-between gap-3">
+                                                                    <div className="min-w-0">
+                                                                        <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Yatırım aralığına göre bonus</p>
+                                                                        <p className="mt-1 text-[10px] font-medium text-slate-500">
+                                                                            Kademe eklerseniz verilecek bonus, oyuncunun son yatırım tutarına göre seçilir.
                                                                         </p>
-                                                                    ) : (
-                                                                        <div className="mt-3 space-y-2">
-                                                                            {araliklar.map((aralik, i) => (
-                                                                                <div key={i} className="flex items-center gap-2">
-                                                                                    <input
-                                                                                        type="number"
-                                                                                        value={aralik.min ?? ''}
-                                                                                        onChange={(e) => araliklariYaz(araliklar.map((a, j) => j === i ? { ...a, min: e.target.value } : a))}
-                                                                                        placeholder="Alt"
-                                                                                        className="h-11 w-full min-w-0 rounded-full border border-white/[0.05] bg-white/[0.02] px-4 text-xs font-bold text-white outline-none transition focus:border-[color:var(--panel-accent,#0a84ff)]"
-                                                                                    />
-                                                                                    <span className="shrink-0 text-[10px] font-bold text-slate-600">–</span>
-                                                                                    <input
-                                                                                        type="number"
-                                                                                        value={aralik.max ?? ''}
-                                                                                        onChange={(e) => araliklariYaz(araliklar.map((a, j) => j === i ? { ...a, max: e.target.value } : a))}
-                                                                                        placeholder="Üst (boş = sınırsız)"
-                                                                                        className="h-11 w-full min-w-0 rounded-full border border-white/[0.05] bg-white/[0.02] px-4 text-xs font-bold text-white outline-none transition focus:border-[color:var(--panel-accent,#0a84ff)]"
-                                                                                    />
-                                                                                    <span className="shrink-0 text-[10px] font-bold text-slate-600">→</span>
-                                                                                    <input
-                                                                                        type="text"
-                                                                                        value={aralik.partnerBonusId ?? ''}
-                                                                                        onChange={(e) => araliklariYaz(araliklar.map((a, j) => j === i ? { ...a, partnerBonusId: e.target.value } : a))}
-                                                                                        placeholder="Bonus ID"
-                                                                                        className="h-11 w-full min-w-0 rounded-full border border-white/[0.05] bg-white/[0.02] px-4 text-xs font-bold text-white outline-none transition focus:border-[color:var(--panel-accent,#0a84ff)]"
-                                                                                    />
+                                                                    </div>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => araliklariYaz([...araliklar, { min: '', max: '', partnerBonusId: '' }])}
+                                                                        className="shrink-0 rounded-full border border-white/[0.08] bg-white/[0.04] px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-white transition hover:bg-white/[0.08]"
+                                                                    >
+                                                                        + Kademe
+                                                                    </button>
+                                                                </div>
+
+                                                                {araliklar.length === 0 ? (
+                                                                    <p className="mt-3 text-[10px] font-medium text-slate-600">
+                                                                        Kademe yok — yukarıdaki tek ID kullanılır.
+                                                                    </p>
+                                                                ) : (
+                                                                    <div className="mt-4 space-y-3">
+                                                                        {/*
+                                                                          Sütun başlıkları BİR KEZ yazılıyor.
+                                                                          Her kutuya yer tutucu koymak dar
+                                                                          ekranda kırpılıyordu, üstelik yazı
+                                                                          girilince zaten kayboluyordu.
+                                                                        */}
+                                                                        <div className="hidden gap-3 px-1 sm:grid sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.1fr)_auto]">
+                                                                            <span className="text-[9px] font-bold uppercase tracking-[0.16em] text-slate-500">Alt sınır (₺)</span>
+                                                                            <span className="text-[9px] font-bold uppercase tracking-[0.16em] text-slate-500">Üst sınır (₺)</span>
+                                                                            <span className="text-[9px] font-bold uppercase tracking-[0.16em] text-slate-500">Verilecek bonus ID</span>
+                                                                            <span className="w-[68px]" />
+                                                                        </div>
+
+                                                                        {araliklar.map((aralik, i) => {
+                                                                            const ozet = aralikOzeti(aralik);
+                                                                            return (
+                                                                            <div key={i} className="rounded-2xl border border-white/[0.04] bg-black/20 p-3 sm:border-0 sm:bg-transparent sm:p-0">
+                                                                                <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.1fr)_auto] sm:items-center">
+                                                                                    <label className="min-w-0">
+                                                                                        <span className="mb-1 block text-[9px] font-bold uppercase tracking-[0.16em] text-slate-500 sm:hidden">Alt sınır (₺)</span>
+                                                                                        <input
+                                                                                            type="number"
+                                                                                            value={aralik.min ?? ''}
+                                                                                            onChange={(e) => araliklariYaz(araliklar.map((a, j) => j === i ? { ...a, min: e.target.value } : a))}
+                                                                                            placeholder="0"
+                                                                                            aria-label={`${i + 1}. kademe alt sınır`}
+                                                                                            className="h-11 w-full min-w-0 rounded-2xl border border-white/[0.05] bg-white/[0.02] px-4 text-xs font-bold text-white outline-none transition focus:border-[color:var(--panel-accent,#0a84ff)]"
+                                                                                        />
+                                                                                    </label>
+                                                                                    <label className="min-w-0">
+                                                                                        <span className="mb-1 block text-[9px] font-bold uppercase tracking-[0.16em] text-slate-500 sm:hidden">Üst sınır (₺)</span>
+                                                                                        <input
+                                                                                            type="number"
+                                                                                            value={aralik.max ?? ''}
+                                                                                            onChange={(e) => araliklariYaz(araliklar.map((a, j) => j === i ? { ...a, max: e.target.value } : a))}
+                                                                                            placeholder="Boş = sınırsız"
+                                                                                            aria-label={`${i + 1}. kademe üst sınır`}
+                                                                                            className="h-11 w-full min-w-0 rounded-2xl border border-white/[0.05] bg-white/[0.02] px-4 text-xs font-bold text-white outline-none transition focus:border-[color:var(--panel-accent,#0a84ff)]"
+                                                                                        />
+                                                                                    </label>
+                                                                                    <label className="min-w-0">
+                                                                                        <span className="mb-1 block text-[9px] font-bold uppercase tracking-[0.16em] text-slate-500 sm:hidden">Verilecek bonus ID</span>
+                                                                                        <input
+                                                                                            type="text"
+                                                                                            value={aralik.partnerBonusId ?? ''}
+                                                                                            onChange={(e) => araliklariYaz(araliklar.map((a, j) => j === i ? { ...a, partnerBonusId: e.target.value } : a))}
+                                                                                            placeholder="Örn: 1952"
+                                                                                            aria-label={`${i + 1}. kademe bonus ID`}
+                                                                                            className="h-11 w-full min-w-0 rounded-2xl border border-white/[0.05] bg-white/[0.02] px-4 text-xs font-bold text-white outline-none transition focus:border-[color:var(--panel-accent,#0a84ff)]"
+                                                                                        />
+                                                                                    </label>
                                                                                     <button
                                                                                         type="button"
                                                                                         onClick={() => araliklariYaz(araliklar.filter((_, j) => j !== i))}
-                                                                                        aria-label="Kademeyi sil"
-                                                                                        className="shrink-0 rounded-full border border-rose-400/20 bg-rose-400/10 px-3 py-2 text-[10px] font-bold text-rose-300 transition hover:bg-rose-400/20"
+                                                                                        aria-label={`${i + 1}. kademeyi sil`}
+                                                                                        className="h-11 w-full shrink-0 rounded-2xl border border-rose-400/20 bg-rose-400/10 px-3 text-[10px] font-bold uppercase tracking-widest text-rose-300 transition hover:bg-rose-400/20 sm:w-[68px]"
                                                                                     >
                                                                                         Sil
                                                                                     </button>
                                                                                 </div>
-                                                                            ))}
-                                                                            <p className="pt-1 text-[10px] font-medium text-slate-600">
-                                                                                Aralıklar çakışamaz ve boşluğa düşen yatırım bonus almaz — kaydederken doğrulanır.
-                                                                            </p>
-                                                                        </div>
-                                                                    )}
-                                                                </div>
+
+                                                                                {/*
+                                                                                  Üç kutu birlikte bir cümle kuruyor;
+                                                                                  o cümleyi kafada kurmak, özellikle
+                                                                                  üst sınır boşken yanlış anlaşılıyordu.
+                                                                                  Kural burada okunur halde yazılı.
+                                                                                */}
+                                                                                <p className={cn(
+                                                                                    'mt-2 px-1 text-[10px] font-semibold',
+                                                                                    ozet.durum === 'tamam' ? 'text-slate-400'
+                                                                                        : ozet.durum === 'gecersiz' ? 'text-rose-300'
+                                                                                        : 'text-slate-600',
+                                                                                )}>
+                                                                                    {ozet.metin}
+                                                                                </p>
+                                                                            </div>
+                                                                            );
+                                                                        })}
+
+                                                                        <p className="pt-1 text-[10px] font-medium text-slate-600">
+                                                                            Aralıklar çakışamaz ve boşluğa düşen yatırım bonus almaz — kaydederken doğrulanır.
+                                                                        </p>
+                                                                    </div>
+                                                                )}
                                                             </div>
+                                                            </>
                                                             );
                                                         })()}
                                                         <div className="space-y-2">
