@@ -113,7 +113,8 @@ export function carkEtiketOlculeri(girdi: {
    * komşu dilime taşardı.
    */
   const icRadius = Math.max(girdi.centerRadius + 10, radius * 0.3);
-  // Dış sınır dekoratif halkanın (radius * .91) içinde kalıyor.
+  // Dış sınırda %11'lik bir pay bırakılıyor: dilim kenarındaki koyu
+  // kontur ile yazının ucu birbirine değmesin.
   const disRadius = radius * 0.89;
   const bant = Math.max(24, disRadius - icRadius);
   const yaziRadius = icRadius + bant / 2;

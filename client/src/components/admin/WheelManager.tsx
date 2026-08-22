@@ -340,7 +340,6 @@ export function WheelSvg({
         })}
         <circle cx={cx} cy={cy} r={radius} fill={`url(#${idPrefix}-shade)`} pointerEvents="none" />
         {appearance.glossy && <ellipse cx={cx - radius * .16} cy={cy - radius * .22} rx={radius * .72} ry={radius * .43} fill="rgba(255,255,255,.07)" pointerEvents="none" />}
-        <circle cx={cx} cy={cy} r={radius * .91} fill="none" stroke="rgba(255,255,255,.24)" strokeWidth="1" pointerEvents="none" />
         {slices.map((slice, index) => {
           const mid = -Math.PI / 2 + (index + 0.5) * angle;
           const labelPoint = polar(cx, cy, yaziRadius, mid);

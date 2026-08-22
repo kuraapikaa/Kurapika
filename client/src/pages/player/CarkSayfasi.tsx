@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Loader2, Trophy, Gift, AlertCircle, Ticket } from 'lucide-react';
+import { User, Loader2, Trophy, Gift, AlertCircle, Ticket, Volume2, VolumeX } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { gamesApi, bonusPanelApi, ApiError } from '@/api/client';
 import { useQuery } from '@tanstack/react-query';
@@ -12,6 +12,18 @@ import { LobbyPageShell, LobbyCard, LobbySectionTitle, LobbyIdentityBar } from '
 import { WheelSvg } from '@/components/admin/WheelManager';
 import { Confetti, type ConfettiRef } from '@/components/ui/confetti';
 import { useOlculenGenislik } from '@/lib/olculenGenislik';
+import { CarkKazancAnimasyonu } from '@/components/player/CarkKazancAnimasyonu';
+import * as carkSesi from '@/lib/carkSesi';
+
+/**
+ * Çark dönüş süresi (ms). `WheelSvg`'deki CSS geçişiyle AYNI olmalı:
+ * ses ve kutlama bu süreye göre zamanlanıyor, ayrışırsa tıklar çark
+ * dururken devam eder.
+ */
+const CARK_SURESI = 5000;
+
+/** Kutlama katmanının ekranda kalma süresi (ms). */
+const KUTLAMA_SURESI = 4200;
 
 /** "Pas" ya da "boş" içeren dilim adı kayıp sayılır — kutlama tetiklenmez. */
 function carkSonucuKayipMi(label: string | null | undefined): boolean {
@@ -29,6 +41,30 @@ export function CarkSayfasi() {
   const confettiRef = useRef<ConfettiRef>(null);
   // Çark, çerçevenin iç çemberine oturuyor; boyutu ekranla değişiyor.
   const { ref: carkKutusu, genislik: carkBoyu } = useOlculenGenislik(364);
+  const [sesAcik, setSesAcik] = useState(() => carkSesi.sesAcikMi());
+  // Kutlama katmanı sonuçtan AYRI: sonuç kartı ekranda kalıyor, kutlama
+  // birkaç saniye sonra çekiliyor.
+  const [kutlama, setKutlama] = useState<string | null>(null);
+  const sesBaglami = useRef<ReturnType<typeof carkSesi.hazirla>>(null);
+
+  // Kutlama kendiliğinden çekiliyor; sonuç kartı yerinde kalıyor.
+  useEffect(() => {
+    if (!kutlama) return;
+    const zamanlayici = window.setTimeout(() => setKutlama(null), KUTLAMA_SURESI);
+    return () => window.clearTimeout(zamanlayici);
+  }, [kutlama]);
+
+  const sesiDegistir = () => {
+    const yeni = !sesAcik;
+    setSesAcik(yeni);
+    carkSesi.sesTercihiniYaz(yeni);
+    if (!yeni) {
+      // Kapatınca bağlamı da bırak: askıda duran bir AudioContext bazı
+      // telefonlarda pil ve mikrofon göstergesini açık tutuyor.
+      carkSesi.kapat();
+      sesBaglami.current = null;
+    }
+  };
 
   // Ana sitede giriş yapmış oyuncunun kimliği (iframe -> postMessage).
   // Panel oturumunu da kurar; aksi halde sunucu uçları 401 döner.
@@ -75,6 +111,18 @@ export function CarkSayfasi() {
     glossy: false,
     ...(configRes?.data?.wheelAppearance || {})
   };
+  /*
+   * Göbeğin çark yarıçapına oranı. `WheelSvg` göbeği
+   * `clamp(centerSize/2, 22, 54)` ile çiziyor ve dış halkasını +8 birim
+   * dışına koyuyor; kutlama vurgusu bunu bilmezse büyük göbekte üstüne
+   * binerdi.
+   */
+  const gobekOrani = (() => {
+    const gobek = Math.min(54, Math.max(22, (Number(wheelAppearance.centerSize) || 64) / 2)) + 8;
+    const yaricap = Math.max(1, carkBoyu / 2 - 6);
+    return Math.min(0.6, gobek / yaricap);
+  })();
+
   const [loadingUser, setLoadingUser] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [spinError, setSpinError] = useState('');
@@ -101,8 +149,16 @@ export function CarkSayfasi() {
 
   const spin = async () => {
     if (spinning) return;
+    /*
+     * Ses bağlamı TAM BURADA açılıyor. iOS/Android `AudioContext`i ancak
+     * bir kullanıcı hareketinin içinde başlatıyor; `useEffect`ten ya da
+     * sunucu yanıtı geldikten sonra denenirse bağlam askıda kalıyor ve
+     * hiç ses çıkmıyor -- üstelik hata da vermiyor.
+     */
+    sesBaglami.current = carkSesi.hazirla();
     setSpinning(true);
     setResult(null);
+    setKutlama(null);
     setChargeStatus(null);
     setSpinError('');
 
@@ -127,14 +183,28 @@ export function CarkSayfasi() {
 
       setRotation(prev => prev + additionalRotation);
 
+      // Tıklar çarkın yavaşlamasına oturuyor; ses bağlamı `spin`'i başlatan
+      // tıklamayla açıldığı için mobilde de çalışıyor.
+      carkSesi.donusTiklari(sesBaglami.current, {
+        donusDerecesi: additionalRotation,
+        dilimSayisi: wheelSlices.length,
+        sureMs: CARK_SURESI,
+      });
+
       setTimeout(() => {
         setSpinning(false);
         setResult(res.result.label);
         setChargeStatus(res.chargeStatus);
-        if (!carkSonucuKayipMi(res.result.label)) {
-          void confettiRef.current?.fire({ particleCount: 140, spread: 90, origin: { y: 0.6 } });
+        if (carkSonucuKayipMi(res.result.label)) {
+          carkSesi.kayipSesi(sesBaglami.current);
+        } else {
+          carkSesi.kazanmaSesi(sesBaglami.current);
+          setKutlama(res.result.label);
+          // İki yandan atış: tek merkezî patlamaya göre çarkı örtmüyor.
+          void confettiRef.current?.fire({ particleCount: 90, spread: 70, angle: 60, origin: { x: 0.15, y: 0.7 } });
+          void confettiRef.current?.fire({ particleCount: 90, spread: 70, angle: 120, origin: { x: 0.85, y: 0.7 } });
         }
-      }, 5100);
+      }, CARK_SURESI + 100);
     } catch (err) {
       setSpinning(false);
       // Sunucu sebebi zaten yazıyor ("Bu yatırım için hakkınızı kullandınız",
@@ -278,7 +348,36 @@ export function CarkSayfasi() {
                     spinning={spinning}
                     cerceveli
                   />
+
+                  {/*
+                    Kutlama çarkın DIŞINDA ama tam ÜSTÜNDE bir katman:
+                    çarkın kendi `transform`'u dönüyor, vurguyu oraya
+                    koymak onu da döndürürdü.
+                  */}
+                  <CarkKazancAnimasyonu
+                    gorunur={Boolean(kutlama)}
+                    dilimSayisi={wheelSlices.length}
+                    gobekOrani={gobekOrani}
+                    vurgu={palette.accentColor}
+                  />
                 </div>
+
+                {/*
+                  Ses düğmesi. Ses varsayılan olarak AÇIK ama kapatması
+                  tek dokunuş uzakta ve tercih tarayıcıda kalıcı --
+                  kapatmak için her seferinde aramak zorunda kalmasın.
+                  Telefonda 44 px: 36 px'lik bir hedef parmakla ıskalanıyor.
+                */}
+                <button
+                  type="button"
+                  onClick={sesiDegistir}
+                  aria-pressed={sesAcik}
+                  aria-label={sesAcik ? 'Çark sesini kapat' : 'Çark sesini aç'}
+                  title={sesAcik ? 'Sesi kapat' : 'Sesi aç'}
+                  className="absolute right-1 top-1 z-30 flex h-11 w-11 items-center justify-center rounded-full border border-[rgba(243,236,221,0.12)] bg-black/55 text-[color:var(--lobby-muted,#8f8674)] backdrop-blur-sm transition hover:text-[color:var(--lobby-text,#f3ecdd)] sm:right-2 sm:top-2 sm:h-9 sm:w-9"
+                >
+                  {sesAcik ? <Volume2 size={16} /> : <VolumeX size={16} />}
+                </button>
               </div>
             </LobbyCard>
 
