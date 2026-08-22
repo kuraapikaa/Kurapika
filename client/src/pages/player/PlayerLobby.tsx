@@ -28,6 +28,7 @@ import { cn } from '@/lib/utils';
 import { normalizeLobbyPalette } from '@/lib/lobbyTheme';
 import { sadakatIlerlemesi } from '@/lib/sadakatIlerlemesi';
 import { yeniTamamlananlar, type DuyurulacakGorev } from '@/lib/gorevBildirimi';
+import { varsayilanLobiSayfalari } from '@/lib/lobiSayfalari';
 
 type LobbyTabId = 'games' | 'tournaments' | 'support';
 
@@ -118,22 +119,14 @@ type LobbyTheme = {
   tabs: LobbyTabsConfig;
 };
 
-const DEFAULT_QUICK_ACCESS_ITEMS: LobbyQuickAccessItem[] = [
-  { id: 'bonus', label: 'Bonus Talep', desc: 'Kampanya ve freespin', to: '/bonus-talep', icon: 'gift', accentColor: '#fb7185', enabled: true },
-  { id: 'wheel', label: 'Şans Çarkı', desc: 'Çevir, ödül kazan', to: '/cark', icon: 'zap', accentColor: '#eed9a3', enabled: true },
-  // Sunucu varsayilaninda bunlar zaten vardi; buradaki yedek liste geride
-  // kalmisti. Yapilandirma gelmediginde iki sayfa lobide hic gorunmuyordu.
-  { id: 'kasa', label: 'Şans Kasaları', desc: 'Kasayı aç, ödülü al', to: '/kasa', icon: 'package', accentColor: '#eed9a3', enabled: true },
-  { id: 'ozel-oran', label: 'Özel Oranlar', desc: 'Yükseltilmiş oranlar', to: '/ozel-oran', icon: 'trending-up', accentColor: '#e7c574', enabled: true },
-  { id: 'scratch', label: 'Kazı Kazan', desc: 'Kartını kazı', to: '/kazi-kazan', icon: 'sparkles', accentColor: '#5fd6a7', enabled: true },
-  { id: 'prediction', label: 'Skor Tahmin', desc: 'Maç skoru bil', to: '/skor-tahmin', icon: 'goal', accentColor: '#6ee7b7', enabled: true },
-  { id: 'daily-tasks', label: 'Günlük Görevler', desc: 'API ilerleme', to: '/gorevler', icon: 'list-checks', accentColor: '#e7c574', enabled: true },  { id: 'tournament', label: 'Turnuva', desc: 'Sıralamaya gir', to: '/turnuva/gunluk', icon: 'trophy', accentColor: '#d3a952', enabled: true },
-  { id: 'loyalty', label: 'Sadakat', desc: 'XP ve ödüller', to: '/sadakat', icon: 'star', accentColor: '#d3a952', enabled: true },
-  { id: 'millionaires', label: 'Milyonerler', desc: 'Büyük kazançlar', to: '/milyonerler', icon: 'crown', accentColor: '#d3a952', enabled: true },
-  { id: 'vip', label: 'VIP', desc: 'Özel üyelik', to: '/vip', icon: 'shield', accentColor: '#eed9a3', enabled: true },
-  { id: 'partner', label: 'İş Birliği', desc: 'Partner ol', to: '/ortaklik', icon: 'handshake', accentColor: '#e7c574', enabled: true },
-  { id: 'call-me', label: 'Beni Ara', desc: '7/24 destek', to: '/beni-ara', icon: 'phone', accentColor: '#e7c574', enabled: true },
-];
+/*
+ * Yedek kart listesi ortak kaynaktan geliyor.
+ *
+ * Buradaki kopya sunucudan ayrisabiliyordu; ayni liste panelde ve
+ * sunucuda da vardi. Yeni bir lobi sayfasi eklendiginde uc yerden birinin
+ * unutulmasi, o sayfanin sessizce gorunmemesi demekti.
+ */
+const DEFAULT_QUICK_ACCESS_ITEMS: LobbyQuickAccessItem[] = varsayilanLobiSayfalari();
 
 
 /**

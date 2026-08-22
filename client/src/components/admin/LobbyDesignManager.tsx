@@ -24,6 +24,7 @@ import {
   type LucideIcon
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { eksikLobiSayfalari, varsayilanLobiSayfalari, type LobiSayfasi } from '@/lib/lobiSayfalari';
 import {
   DEFAULT_LOBBY_PAGE_CONTENTS,
   LOBBY_PAGE_EXTRA_FIELDS,
@@ -128,18 +129,14 @@ type LobbyDesignManagerProps = {
   onUpdate: (config: LobbyDesignConfig) => void;
 };
 
-const DEFAULT_QUICK_ACCESS_ITEMS: LobbyQuickAccessItem[] = [
-  { id: 'bonus', label: 'Bonus Talep', desc: 'Kampanya ve freespin', to: '/bonus-talep', icon: 'gift', accentColor: '#fb7185', enabled: true },
-  { id: 'wheel', label: 'Şans Çarkı', desc: 'Çevir, ödül kazan', to: '/cark', icon: 'zap', accentColor: '#60a5fa', enabled: true },
-  { id: 'scratch', label: 'Kazı Kazan', desc: 'Kartını kazı', to: '/kazi-kazan', icon: 'sparkles', accentColor: '#5eead4', enabled: true },
-  { id: 'prediction', label: 'Skor Tahmin', desc: 'Maç skoru bil', to: '/skor-tahmin', icon: 'goal', accentColor: '#6ee7b7', enabled: true },
-  { id: 'daily-tasks', label: 'Günlük Görevler', desc: 'API ilerleme', to: '/gorevler', icon: 'list-checks', accentColor: '#7dd3fc', enabled: true },  { id: 'tournament', label: 'Turnuva', desc: 'Sıralamaya gir', to: '/turnuva/gunluk', icon: 'trophy', accentColor: '#38bdf8', enabled: true },
-  { id: 'loyalty', label: 'Sadakat', desc: 'XP ve ödüller', to: '/sadakat', icon: 'star', accentColor: '#38bdf8', enabled: true },
-  { id: 'millionaires', label: 'Milyonerler', desc: 'Büyük kazançlar', to: '/milyonerler', icon: 'crown', accentColor: '#38bdf8', enabled: true },
-  { id: 'vip', label: 'VIP', desc: 'Özel üyelik', to: '/vip', icon: 'shield', accentColor: '#60a5fa', enabled: true },
-  { id: 'partner', label: 'İş Birliği', desc: 'Partner ol', to: '/ortaklik', icon: 'handshake', accentColor: '#7dd3fc', enabled: true },
-  { id: 'call-me', label: 'Beni Ara', desc: '7/24 destek', to: '/beni-ara', icon: 'phone', accentColor: '#7dd3fc', enabled: true },
-];
+/*
+ * Varsayılan kartlar artık ortak listeden geliyor.
+ *
+ * Buradaki kopya zamanla sunucudan ayrışmıştı: "Şans Kasaları" ve
+ * "Özel Oranlar" sayfaları eklendiğinde bu listeye yazılmadı, dolayısıyla
+ * panel o iki sayfayı hiç tanımadı.
+ */
+const DEFAULT_QUICK_ACCESS_ITEMS: LobiSayfasi[] = varsayilanLobiSayfalari();
 
 const DEDICATED_CONTENT_OWNER: Partial<Record<LobbyPageId, string>> = {
   prediction: 'Skor Tahmin Yönetimi başlık, açıklama ve maç içeriklerinde önceliklidir.',
@@ -570,6 +567,20 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
     updateTheme({ quickAccess });
   };
 
+  /**
+   * Hazır bir lobi sayfasını kartlara ekler.
+   *
+   * KİMLİK korunuyor: kart görseli kimliğe göre eşleşiyor ve elle
+   * eklenen kart `custom-1787...` kimliği aldığı için görseli asla
+   * bulunamıyordu. Buradan eklenince kart tasarımıyla birlikte geliyor.
+   */
+  const hazirSayfaEkle = (sayfa: LobiSayfasi) => {
+    if (theme.quickAccess.some((item) => item.id === sayfa.id)) return;
+    updateTheme({ quickAccess: [...theme.quickAccess, { ...sayfa }] });
+  };
+
+  const eksikSayfalar = eksikLobiSayfalari(theme.quickAccess);
+
   const addQuickAccess = () => {
     const nextNumber = theme.quickAccess.length + 1;
     updateTheme({
@@ -812,6 +823,41 @@ export function LobbyDesignManager({ config, onUpdate }: LobbyDesignManagerProps
                 Kart ekle
               </button>
             </div>
+
+            {/*
+              EKSİK HAZIR SAYFALAR.
+
+              Kayıtlı kart listesi sunucu varsayılanlarıyla
+              BİRLEŞTİRİLMİYOR; dizi varsa olduğu gibi kullanılıyor. Bu
+              yüzden lobisini eski bir sürümde kaydetmiş kiracıda sonradan
+              eklenen sayfalar (Şans Kasaları, Özel Oranlar) hiç
+              görünmüyor ve eksik oldukları da fark edilmiyordu.
+
+              Otomatik birleştirmek YANLIŞ olurdu: kart silmek mümkün,
+              bilinçli kaldırılan kart her açılışta geri gelirdi. Karar
+              operatörde; burada yalnızca görünür kılınıyor.
+            */}
+            {eksikSayfalar.length > 0 && (
+              <div className="rounded-lg border border-amber-300/20 bg-amber-400/[0.06] p-3">
+                <p className="text-sm font-semibold text-white">Lobide olmayan hazır sayfalar</p>
+                <p className="mt-0.5 text-xs font-medium text-slate-400">
+                  Bu sayfalar uygulamada var ama kart listenizde yok. Ekleyince kendi tasarımlarıyla gelirler.
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {eksikSayfalar.map((sayfa) => (
+                    <button
+                      key={sayfa.id}
+                      type="button"
+                      onClick={() => hazirSayfaEkle(sayfa)}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/30 bg-amber-400/10 px-3 py-1.5 text-[11px] font-semibold text-amber-100 transition hover:bg-amber-400/20"
+                    >
+                      <Plus size={12} />
+                      {sayfa.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="hidden grid-cols-[34px_40px_minmax(120px,1fr)_minmax(140px,1.2fr)_minmax(120px,1fr)_118px_76px_108px] gap-8 px-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500 xl:grid">
               <span>Aktif</span>
