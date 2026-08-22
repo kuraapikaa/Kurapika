@@ -30,6 +30,13 @@ import { bonusTalepGirdisiniDogrula } from '../services/bonusTalepGirdisi.js';
 import { genelToplam, kullaniciAdlariniAyikla, oyuncuOzeti, satirDokumu } from '../services/topluIslemOzeti.js';
 import { istanbulYerelAn } from '../lib/istanbulGunu.js';
 import { telefonlaBul, telefonMu } from '../services/telefonEslesme.js';
+import {
+  churnRiskiHesapla,
+  riskAltindakiHacim,
+  segmentDagilimi,
+  VARSAYILAN_ESIKLER,
+  type ChurnSonucu,
+} from '../services/churnRiski.js';
 import { depositBasis } from '../services/promoEvaluator.js';
 import { istekKimligi, oyuncuVerisineErisebilir } from '../lib/istekKimligi.js';
 import { getPromoOverrides, setPromoOverride } from '../services/promoOverridesService.js';
@@ -109,6 +116,17 @@ const dateBodySchema = {
  * aynı Lynon oturumunu paylaşıyor; pencereyi geniş tutmak onları da
  * hız sınırına sokardı.
  */
+/**
+ * Churn taramasi sinirlari.
+ *
+ * `EN_FAZLA_OYUNCU`: her aday icin AYRI bir Lynon sorgusu yapiliyor;
+ * ust sinir olmadan bir tarama binlerce istek uretip oturumu hiz
+ * sinirina carpardi.
+ * `ESZAMANLI`: panelin baska ekranlari da ayni oturumu paylasiyor.
+ */
+const CHURN_EN_FAZLA_OYUNCU = 400;
+const CHURN_ESZAMANLI = 4;
+
 const TOPLU_SORGU_SINIRI = 300;
 const TOPLU_SORGU_ESZAMANLI = 4;
 
@@ -2214,6 +2232,138 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
       toplam: genelToplam(temiz as any),
       istenen: kullanicilar.length,
       araliklar: { yatirim: yatirimAraligi, cekim: cekimAraligi },
+    });
+  });
+
+  /**
+   * CHURN ÖNLEME — risk altındaki oyuncuların çalışma listesi.
+   *
+   * Belirtilen pencerede yatırım yapmış oyuncular taranıp her biri için
+   * kayıp riski hesaplanıyor, sonuç ÖNCELİĞE göre sıralanıyor.
+   *
+   * ── Neden aday havuzu yatırım yapanlardan kuruluyor ──────────────
+   * "Tüm oyuncular" taranırsa liste hiç yatırım yapmamış binlerce kayıtla
+   * doluyor ve her biri için ayrı ödeme sorgusu gerekiyor -- dakikalarca
+   * süren, çoğu boş dönen bir tarama. Churn ancak KAZANILMIŞ bir
+   * oyuncuda olur; havuz, seçilen pencerede en az bir yatırımı olanlarla
+   * sınırlı.
+   *
+   * ── Neden oyuncu başına ayrı sorgu ───────────────────────────────
+   * Risk, oyuncunun KENDİ ritmine göre ölçülüyor; bunun için tek tek
+   * tüm ödeme geçmişi gerekiyor. Site geneli işlem ucu yalnızca istenen
+   * sayfayı döndürdüğü için bir oyuncunun geçmişi eksik gelebiliyordu.
+   * Eş zamanlılık dar tutuldu: panelin başka ekranları da aynı Lynon
+   * oturumunu paylaşıyor.
+   */
+  fastify.post<{
+    Body: {
+      gunSayisi?: number;
+      enFazlaOyuncu?: number;
+      kayipGun?: number;
+      yeniUyelikGun?: number;
+    };
+  }>('/admin/churn/analiz', async (request, reply) => {
+    const session = request.session as any;
+    if (!session?.user) {
+      return reply.status(401).send({ ok: false, message: 'Oturum bulunamadı.' });
+    }
+
+    const govde = request.body || {};
+    const gunSayisi = Math.max(7, Math.min(180, Number(govde.gunSayisi) || 60));
+    const enFazlaOyuncu = Math.max(10, Math.min(CHURN_EN_FAZLA_OYUNCU, Number(govde.enFazlaOyuncu) || 150));
+    const esikler = {
+      ...VARSAYILAN_ESIKLER,
+      kayipGun: Math.max(14, Math.min(180, Number(govde.kayipGun) || VARSAYILAN_ESIKLER.kayipGun)),
+      yeniUyelikGun: Math.max(3, Math.min(90, Number(govde.yeniUyelikGun) || VARSAYILAN_ESIKLER.yeniUyelikGun)),
+    };
+
+    const simdi = Date.now();
+    const basTarih = new Date(simdi - gunSayisi * 86_400_000).toISOString();
+
+    // 1) Aday havuzu: pencerede yatirim yapmis benzersiz oyuncular.
+    let adayRows: Array<Record<string, unknown>> = [];
+    try {
+      adayRows = await lynonPaymentTransactions(
+        {
+          FromCreatedDateLocal: basTarih,
+          ToCreatedDateLocal: new Date(simdi).toISOString(),
+          MaxRows: 500,
+          SkeepRows: 0,
+        },
+        { transactionTypes: 'deposit', status: ['success'] },
+      );
+    } catch (error) {
+      request.log.error({ err: error }, 'Churn analizi: aday havuzu alinamadi.');
+      return reply.status(502).send({ ok: false, message: 'Oyuncu listesi alınamadı.' });
+    }
+
+    const adaylar = new Map<string, { login: string; playerId: number }>();
+    for (const row of adayRows) {
+      const kisisel = (row as any)?.personalData ?? {};
+      const login = String(kisisel.userName ?? (row as any).userName ?? (row as any).username ?? '').trim();
+      const playerId = Number((row as any).userId);
+      if (!login || !Number.isFinite(playerId)) continue;
+      if (!adaylar.has(login)) adaylar.set(login, { login, playerId });
+      if (adaylar.size >= enFazlaOyuncu) break;
+    }
+
+    if (adaylar.size === 0) {
+      return reply.send({
+        ok: true, satirlar: [], dagilim: segmentDagilimi([]), riskliHacim: 0,
+        taranan: 0, pencereGun: gunSayisi,
+        uyari: 'Seçilen pencerede başarılı yatırım yapan oyuncu bulunamadı.',
+      });
+    }
+
+    // 2) Her aday icin tam odeme gecmisi -> risk.
+    const liste = [...adaylar.values()];
+    const sonuclar: ChurnSonucu[] = new Array(liste.length);
+    let sira = 0;
+
+    const isci = async () => {
+      for (;;) {
+        const indis = sira++;
+        if (indis >= liste.length) return;
+        const { login, playerId } = liste[indis];
+        try {
+          const hareketler = await lynonPaymentTransactions({ ClientId: playerId });
+          sonuclar[indis] = churnRiskiHesapla({
+            login,
+            playerId,
+            islemler: (hareketler as any[]).map((h) => ({
+              tur: String(h?.transactionType ?? h?.type ?? ''),
+              durum: String(h?.status ?? h?.state ?? ''),
+              tutar: Number(h?.amount ?? 0),
+              tarih: String(h?.createdAt ?? h?.creationDate ?? ''),
+            })),
+          }, simdi, esikler);
+        } catch (error) {
+          // TEK oyuncunun hatasi tum raporu dusurmemeli.
+          request.log.warn({ login, err: error }, 'Churn analizi: oyuncu sorgulanamadi.');
+          sonuclar[indis] = churnRiskiHesapla({ login, playerId, islemler: [] }, simdi, esikler);
+        }
+      }
+    };
+
+    await Promise.all(
+      Array.from({ length: Math.min(CHURN_ESZAMANLI, liste.length) }, () => isci()),
+    );
+
+    const temiz = sonuclar.filter(Boolean).sort((a, b) => b.oncelik - a.oncelik);
+
+    return reply.send({
+      ok: true,
+      satirlar: temiz,
+      dagilim: segmentDagilimi(temiz),
+      riskliHacim: riskAltindakiHacim(temiz),
+      taranan: temiz.length,
+      pencereGun: gunSayisi,
+      esikler,
+      // Havuz sinirina takildiysa SESSIZ kalmiyoruz: eksik bir liste,
+      // eksik oldugu bilinmeden okunursa yanlis karar verdirir.
+      uyari: adaylar.size >= enFazlaOyuncu
+        ? `Aday havuzu ${enFazlaOyuncu} oyuncuyla sınırlandı; daha geniş tarama için sınırı artırın.`
+        : null,
     });
   });
 

@@ -981,6 +981,13 @@ export const adminApi = {
     cekimBitis?: string;
   }) => post<any>('/admin/toplu-islem-ozeti', body),
 
+  /**
+   * Churn önleme analizi. Her aday için ayrı Lynon sorgusu yapıldığından
+   * yanıt dakikalar sürebilir.
+   */
+  churnAnaliz: (body: { gunSayisi?: number; enFazlaOyuncu?: number; kayipGun?: number }) =>
+    post<any>('/admin/churn/analiz', body),
+
   chargeBonus: (body: { ClientId: number; BonusId: number; Amount?: number; AssignmentValues?: Record<string, unknown> }) =>
     post<any>('/admin/bonus/charge', body),
 

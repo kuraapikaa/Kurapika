@@ -42,6 +42,7 @@ const YatirimlarSayfasi = lazy(() => import('@/pages/admin/YatirimlarSayfasi').t
 const PlayerProfile = lazy(() => import('@/pages/admin/PlayerProfile').then(m => ({ default: m.PlayerProfile })));
 const TransactionsList = lazy(() => import('@/pages/admin/TransactionsList').then(m => ({ default: m.TransactionsList })));
 const TopluIslemOzeti = lazy(() => import('@/pages/admin/TopluIslemOzeti').then(m => ({ default: m.TopluIslemOzeti })));
+const ChurnOnleme = lazy(() => import('@/pages/admin/ChurnOnleme').then(m => ({ default: m.ChurnOnleme })));
 const AutoWithdrawPanel = lazy(() => import('@/pages/admin/AutoWithdrawPanel').then(m => ({ default: m.AutoWithdrawPanel })));
 const ManuelDuzeltmeler = lazy(() => import('@/pages/admin/ManuelDuzeltmeler').then(m => ({ default: m.ManuelDuzeltmeler })));
 const LiveRadar = lazy(() => import('@/pages/admin/LiveRadar').then(m => ({ default: m.LiveRadar })));
@@ -154,6 +155,7 @@ export default function App() {
             <Route path="/admin/auto-withdraw" element={<AutoWithdrawPanel />} />
             <Route path="/islemler" element={<TransactionsList />} />
             <Route path="/toplu-islem-ozeti" element={<TopluIslemOzeti />} />
+            <Route path="/churn-onleme" element={<ChurnOnleme />} />
 
             <Route path="/oyuncular" element={<OyuncularSayfasi />} />
             <Route path="/oyuncu/:id/:login" element={<PlayerProfile />} />

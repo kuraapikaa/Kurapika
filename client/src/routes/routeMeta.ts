@@ -23,6 +23,7 @@
 import {
   LayoutDashboard,
   Gift,
+  UserMinus,
   Users,
   ArrowDownToLine,
   ArrowUpFromLine,
@@ -197,6 +198,15 @@ export const ADMIN_ROUTES: RouteMeta[] = [
     // Tarih filtreleri sayfanın KENDİ içinde: yatırım ve çekim ayrı
     // aralık kullanıyor, üstteki tek aralık ikisini de yönetemezdi.
     nav: { group: 'Para', label: 'Toplu sorgu', icon: Users },
+  },
+  {
+    id: 'churnOnleme',
+    path: '/churn-onleme',
+    permission: 'players',
+    eyebrow: 'CRM',
+    title: 'Churn önleme',
+    description: 'Kayıp riski taşıyan oyuncuları önceliğe göre listeler; her satırda gerekçe ve önerilen aksiyon.',
+    nav: { group: 'Oyuncular', label: 'Churn önleme', icon: UserMinus },
   },
 
   // ── Oyuncular ───────────────────────────────────────────────────────
