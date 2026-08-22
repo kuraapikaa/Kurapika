@@ -69,20 +69,29 @@ export function AdminLayout() {
 
   const { kullanici, siteAdi, cikisYap } = useOturum();
   /*
-   * Site adi gelmezse marka adina dusuluyor. Bos bir rozet gostermek ya
-   * da rozeti hic cizmemek, "site secilmedi" gibi yanlis bir izlenim
-   * verirdi -- oysa oturum acik ve panel calisiyor.
+   * Kimlik cozulemezse MARKA ADINA DUSULMUYOR.
+   *
+   * Once oyle yapiliyordu ve sonucu su oldu: rozet her kiracida
+   * "Arwen Software Solutions" yazip hangi sitede olundugunu
+   * soylemiyordu -- rozetin tek isi buyken. Sunucu artik son care olarak
+   * kiraci anahtarini bile donduruyor; buraya bos deger gelmesi ancak
+   * kiraci kaydi hic okunamazsa mumkun ve o zaman dogru cevap "bilmiyorum".
    */
-  const gosterilenSite = siteAdi || 'Arwen Software Solutions';
+  const gosterilenSite = siteAdi || 'Site belirlenemedi';
   const kullaniciAdi = String(kullanici?.name || kullanici?.username || '').trim();
-  /** Rozet harfleri site adindan turetiliyor; sabit "AS" degil. */
-  const rozetHarfleri = gosterilenSite
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((kelime: string) => kelime[0])
-    .join('')
-    .toLocaleUpperCase('tr-TR') || 'AS';
+  /**
+   * Rozet harfleri site adindan tureiyor; sabit "AS" degil.
+   * Tek kelimelik adlarda ("Tacobahis") ilk IKI harf aliniyor -- tek
+   * harf rozette bosluk gibi duruyordu.
+   */
+  const rozetHarfleri = (() => {
+    const kelimeler = gosterilenSite.split(/\s+/).filter(Boolean);
+    if (kelimeler.length === 0) return '?';
+    const ham = kelimeler.length === 1
+      ? kelimeler[0].slice(0, 2)
+      : kelimeler.slice(0, 2).map((kelime: string) => kelime[0]).join('');
+    return ham.toLocaleUpperCase('tr-TR') || '?';
+  })();
   const { dateRange, setDateRange } = useDateRange();
   const queryClient = useQueryClient();
 

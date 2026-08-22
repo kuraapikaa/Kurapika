@@ -9,6 +9,7 @@ import { LOGIN_RATE_LIMIT } from '../app.js';
 import { LoginSchema, BonusPanelLoginSchema } from '../lib/schemas.js';
 import { getBypassUser, isPanelAuthDisabled } from '../middleware/authGuard.js';
 import { loadTenants, saveTenants } from '../repositories/tenantRepository.js';
+import { siteKimligi } from '../lib/siteKimligi.js';
 
 // ─── Secrets: .env'den oku, hardcoded değil ──────────────────────────────────
 const ADMIN_USER = (process.env.ADMIN_USER || 'admin').replace(/['"]/g, '').trim();
@@ -238,21 +239,37 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
     const u: SessionUser = { ...user, role: user.role ?? 'admin' };
 
     /*
-     * OTURUMUN SITESI.
+     * OTURUMUN ACIK OLDUGU SITE (kiraci KIMLIGI).
      *
-     * `/api/tenant-info` de bir ad donduruyor ama o HOST'tan cozuluyor ve
-     * giris oncesi calisiyor. Panelde gosterilmesi gereken, oturumun
-     * YONETTIGI site: master panelden baska bir kiraciya gecildiginde
-     * host ayni kalir, yonetilen site degisir. Host'tan okunan ad o
-     * durumda yanlis site adi gosterirdi.
+     * `adminTitle` BILEREK kullanilmiyor: o panelin markasi ("Arwen
+     * Software Solutions") ve tum kiracilarda ayni olabiliyor. Rozetin
+     * isi hangi sitenin acik oldugunu soylemek, dolayisiyla kimlik
+     * gerekiyor: `siteName` -> `domain` -> kiraci anahtari.
+     *
+     * Ilk kaynak OTURUMUN kendisi: giris aninda `siteName` zaten
+     * yaziliyor (hem kiraci yoneticisi hem personel girisinde).
+     *
+     * Kiraci kaydina dusuldugunde `resolveTenantKeyForRequest`
+     * kullaniliyor -- uygulamanin geri kalaniyla ayni cozumleyici.
+     * Host'tan cozmek yanlis olurdu: master panelden baska bir kiraciya
+     * gecildiginde host ayni kalir, yonetilen site degisir.
+     *
+     * Sonuc hicbir zaman bos birakilmiyor; bos birakilirsa rozet marka
+     * adina duser ve "hangi sitedeyim" sorusu yine cevapsiz kalir.
      */
-    let siteAdi = '';
-    try {
-      const tenants = await loadTenants();
-      const tenant = tenants.find((item) => item.id === getManageableTenantId(u, tenants));
-      siteAdi = String(tenant?.adminTitle || tenant?.siteName || '').trim();
-    } catch {
-      // Kiraci okunamazsa panel calismaya devam etsin; rozet yedege duser.
+    let siteAdi = siteKimligi({ oturumSiteAdi: u.siteName });
+    if (!siteAdi) {
+      try {
+        const { resolveTenantKeyForRequest } = await import('../lib/tenant.js');
+        const anahtar = await resolveTenantKeyForRequest(request as never);
+        const tenants = await loadTenants();
+        const tenant =
+          tenants.find((item) => item.id === anahtar) ??
+          tenants.find((item) => item.id === getManageableTenantId(u, tenants));
+        siteAdi = siteKimligi({ tenant, anahtar });
+      } catch {
+        // Kiraci okunamazsa panel calismaya devam etsin; rozet yedege duser.
+      }
     }
 
     return reply.send({ ok: true, user: u, siteAdi });
