@@ -29,6 +29,7 @@ import {
 import { bonusTalepGirdisiniDogrula } from '../services/bonusTalepGirdisi.js';
 import { genelToplam, kullaniciAdlariniAyikla, oyuncuOzeti, satirDokumu } from '../services/topluIslemOzeti.js';
 import { istanbulYerelAn } from '../lib/istanbulGunu.js';
+import { telefonlaBul, telefonMu } from '../services/telefonEslesme.js';
 import { depositBasis } from '../services/promoEvaluator.js';
 import { istekKimligi, oyuncuVerisineErisebilir } from '../lib/istekKimligi.js';
 import { getPromoOverrides, setPromoOverride } from '../services/promoOverridesService.js';
@@ -2134,9 +2135,40 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
         if (indis >= kullanicilar.length) return;
         const login = kullanicilar[indis];
         try {
-          const oyuncu = await lynonFindPlayerByLogin(login);
+          /**
+           * KULLANICI ADI mi TELEFON mu?
+           *
+           * Liste ikisini karisik icerebiliyor. Tur once belirleniyor,
+           * arama ona gore yapiliyor: Lynon aramasi bulanik oldugu icin
+           * bir telefonu kullanici adi diye sorarsak numarayi ADINDA
+           * geciren bambaska bir hesap donebilir ve rapora yanlis
+           * kisinin parasi girer.
+           */
+          const telefon = telefonMu(login);
+          let oyuncu: Record<string, unknown> | null = null;
+
+          if (telefon) {
+            const arama = await lynonPlayers({ query: login, MaxRows: 100, SkeepRows: 0 });
+            // Yanit sarmali kurulumdan kuruluma degisiyor; dizi olani al.
+            const adaylar = (arama as any)?.Data?.Objects;
+            const sonuc = telefonlaBul(Array.isArray(adaylar) ? adaylar : [], login);
+            if (sonuc.durum === 'coklu') {
+              // Ayni numarayi paylasan hesaplardan hangisi kastedildi
+              // bilinemez; rastgele secmek sessizce yanlis oyuncuyu
+              // gostermek olurdu.
+              satirlar[indis] = {
+                login, bulundu: false, telefonMu: true,
+                hata: `Bu numara ${sonuc.adaylar.length} hesapta kayıtlı; kullanıcı adıyla sorgulayın.`,
+              };
+              continue;
+            }
+            oyuncu = sonuc.durum === 'bulundu' ? (sonuc.oyuncu as Record<string, unknown>) : null;
+          } else {
+            oyuncu = await lynonFindPlayerByLogin(login);
+          }
+
           if (!oyuncu) {
-            satirlar[indis] = { login, bulundu: false, hata: null };
+            satirlar[indis] = { login, bulundu: false, telefonMu: telefon, hata: null };
             continue;
           }
           const playerId = Number((oyuncu as any).Id ?? (oyuncu as any).id ?? (oyuncu as any).userId);
@@ -2144,6 +2176,7 @@ export async function dashboardRoutes(fastify: FastifyInstance, opts: { config: 
           satirlar[indis] = {
             login,
             bulundu: true,
+            telefonMu: telefon,
             playerId,
             // Panelde gorunen ad Lynon'daki YAZILISIYLA gosterilsin;
             // operator yanlis kisiyi sorguladigini boyle fark eder.

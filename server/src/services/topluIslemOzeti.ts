@@ -180,15 +180,37 @@ export function oyuncuOzeti(
  * çıkarır.
  */
 export function kullaniciAdlariniAyikla(ham: unknown, sinir = 500): string[] {
+  /**
+   * BOŞLUK HER ZAMAN AYIRICI DEĞİL.
+   *
+   * Liste artık telefon numarası da içerebiliyor ve numaralar boşluklu
+   * yazılıyor: "0555 123 45 67". Boşlukta koşulsuz bölünseydi bu tek
+   * numara DÖRT ayrı kayda dönüşür, dördü de bulunamaz ve operatör
+   * "numarayla çalışmıyor" derdi.
+   *
+   * Önce satır/virgül/noktalı virgül/sekme ile bölünüyor. Sonra her
+   * parça tek tek bakılıyor: yalnızca rakam ve numara işaretlerinden
+   * (+ - ( ) boşluk) oluşuyorsa TEK numara sayılıp korunuyor; aksi
+   * halde boşluklardan bölünüyor -- "ali veli ayse" hâlâ üç kullanıcı.
+   */
+  const numaraGibi = (parca: string) => /^[\d+()\-\s]+$/.test(parca) && /\d/.test(parca);
+
   const parcalar = String(ham ?? '')
-    .split(/[\s,;]+/)
+    .split(/[\n\r,;\t]+/)
+    .map((parca) => parca.trim())
+    .filter(Boolean)
+    .flatMap((parca) => (numaraGibi(parca) ? [parca] : parca.split(/\s+/)))
     .map((parca) => parca.trim())
     .filter(Boolean);
 
   const gorulen = new Set<string>();
   const sonuc: string[] = [];
   for (const parca of parcalar) {
-    const anahtar = parca.toLocaleLowerCase('tr-TR');
+    // Telefonda tekrar elemesi YAZIMDAN bagimsiz olmali: "0555 123 45 67"
+    // ile "+905551234567" ayni kisidir ve iki kez sorgulanmamali.
+    const anahtar = numaraGibi(parca)
+      ? 'tel:' + parca.replace(/\D/g, '').slice(-10)
+      : parca.toLocaleLowerCase('tr-TR');
     if (gorulen.has(anahtar)) continue;
     gorulen.add(anahtar);
     sonuc.push(parca);

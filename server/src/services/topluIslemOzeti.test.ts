@@ -340,3 +340,39 @@ describe('satirDokumu', () => {
     expect(satirDokumu(null).hamSatir).toBe(0);
   });
 });
+
+describe('kullaniciAdlariniAyikla — telefon karışık liste', () => {
+  it('BOŞLUKLU telefon numarası TEK kayıt kalır', () => {
+    // Bosluk kosulsuz ayirici olsaydi bu tek numara DORT kayda
+    // donusur, dordu de bulunamaz ve "numarayla calismiyor" denirdi.
+    expect(kullaniciAdlariniAyikla('0555 123 45 67')).toEqual(['0555 123 45 67']);
+  });
+
+  it('+90 ve parantezli yazımlar da bölünmez', () => {
+    expect(kullaniciAdlariniAyikla('+90 (555) 123-45-67')).toEqual(['+90 (555) 123-45-67']);
+  });
+
+  it('kullanıcı adları boşluktan HÂLÂ bölünür', () => {
+    expect(kullaniciAdlariniAyikla('ali veli ayse')).toEqual(['ali', 'veli', 'ayse']);
+  });
+
+  it('karışık liste: her satır kendi kuralına göre', () => {
+    const sonuc = kullaniciAdlariniAyikla('test777\n0555 123 45 67\nbosdag, halil4554');
+    expect(sonuc).toEqual(['test777', '0555 123 45 67', 'bosdag', 'halil4554']);
+  });
+
+  it('aynı numaranın farklı yazımı TEK kez sorgulanır', () => {
+    // "0555 123 45 67" ile "+905551234567" ayni kisidir.
+    expect(kullaniciAdlariniAyikla('0555 123 45 67\n+905551234567')).toHaveLength(1);
+  });
+
+  it('numara ile kullanıcı adı birbirini elemez', () => {
+    const sonuc = kullaniciAdlariniAyikla('5551234567\ntest777');
+    expect(sonuc).toHaveLength(2);
+  });
+
+  it('rakamla biten kullanıcı adı numara sanılmaz', () => {
+    // "halil4554" 9 haneden kisa ve harf iceriyor.
+    expect(kullaniciAdlariniAyikla('halil4554')).toEqual(['halil4554']);
+  });
+});

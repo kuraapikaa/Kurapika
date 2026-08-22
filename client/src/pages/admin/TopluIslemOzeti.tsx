@@ -23,6 +23,8 @@ type Satir = {
   playerId?: number;
   lynonLogin?: string;
   hata?: string | null;
+  /** Bu satır telefon numarası olarak yorumlandı. */
+  telefonMu?: boolean;
   /** Ham satır dökümü — toplam beklenenden farklıysa sebebi burada görünür. */
   tani?: {
     hamSatir: number;
@@ -96,12 +98,30 @@ export function TopluIslemOzeti() {
   const [cekimBitis, setCekimBitis] = useState('');
   const [siralama, setSiralama] = useState<'giris' | 'yatirim' | 'cekim' | 'net'>('giris');
 
-  /** Kaç isim yazıldığını sorgudan ÖNCE göstermek, yanlış yapıştırmayı erken yakalatıyor. */
+  /**
+   * Kaç kayıt yazıldığını sorgudan ÖNCE göstermek, yanlış yapıştırmayı
+   * erken yakalatıyor.
+   *
+   * Ayırma kuralı sunucudakiyle (`kullaniciAdlariniAyikla`) AYNI olmak
+   * zorunda. Boşluk koşulsuz ayırıcı olsaydı "0555 123 45 67" burada
+   * "4 kişi" görünür, sunucu ise tek numara sorgulardı; sayaç yalan
+   * söylerdi.
+   */
   const adSayisi = useMemo(() => {
+    const numaraGibi = (parca: string) => /^[\d+()\-\s]+$/.test(parca) && /\d/.test(parca);
     const gorulen = new Set<string>();
-    for (const parca of kullanicilar.split(/[\s,;]+/)) {
+    const parcalar = kullanicilar
+      .split(/[\n\r,;\t]+/)
+      .map((p) => p.trim())
+      .filter(Boolean)
+      .flatMap((p) => (numaraGibi(p) ? [p] : p.split(/\s+/)));
+
+    for (const parca of parcalar) {
       const kirpik = parca.trim();
-      if (kirpik) gorulen.add(kirpik.toLocaleLowerCase('tr-TR'));
+      if (!kirpik) continue;
+      gorulen.add(numaraGibi(kirpik)
+        ? 'tel:' + kirpik.replace(/\D/g, '').slice(-10)
+        : kirpik.toLocaleLowerCase('tr-TR'));
     }
     return gorulen.size;
   }, [kullanicilar]);
@@ -175,7 +195,7 @@ export function TopluIslemOzeti() {
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1.2fr_1fr]">
           <div>
             <label className="mb-2 flex items-center justify-between gap-2">
-              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Kullanıcı adları</span>
+              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Kullanıcı adı / telefon</span>
               <span className={cn('text-[10px] font-bold', adSayisi > 0 ? 'text-cyan-300' : 'text-slate-600')}>
                 {adSayisi} kişi
               </span>
@@ -189,7 +209,9 @@ export function TopluIslemOzeti() {
               placeholder={'test777\nbosdag\nkullanici3'}
             />
             <p className="mt-1 text-[10px] leading-relaxed text-slate-500">
-              Her satıra bir ad; virgül, noktalı virgül ve sekme de ayırıcı sayılır. Tekrarlar elenir.
+              Kullanıcı adı ve telefon numarası KARIŞIK yazılabilir; her satır kendi türüne göre aranır.
+              Numaranın yazımı önemsiz (<span className="font-mono">0555…</span>, <span className="font-mono">+90 555…</span>, boşluklu).
+              Virgül, noktalı virgül ve sekme de ayırıcı sayılır; tekrarlar elenir.
             </p>
           </div>
 
@@ -308,6 +330,14 @@ export function TopluIslemOzeti() {
                     <tr key={`${satir.login}-${i}`} className="border-b border-white/[0.03] last:border-0 hover:bg-white/[0.02]">
                       <td className="px-5 py-2.5">
                         <span className="font-bold text-slate-200">{satir.lynonLogin || satir.login}</span>
+                        {satir.telefonMu && (
+                          <span
+                            className="ml-1.5 rounded bg-cyan-300/10 px-1.5 py-0.5 text-[9px] font-bold text-cyan-300/80"
+                            title={`Telefon numarasıyla bulundu: ${satir.login}`}
+                          >
+                            tel
+                          </span>
+                        )}
                         {satir.tani && (
                           <span
                             className="ml-2 cursor-help text-[10px] font-semibold text-slate-600"
