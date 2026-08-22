@@ -67,7 +67,7 @@ export function AdminLayout() {
   const meta = findRouteMeta(pathname);
   const panodayiz = meta?.id === 'dashboard';
 
-  const { kullanici, siteAdi, cikisYap } = useOturum();
+  const { kullanici, siteAdi, kiraciAnahtari, cikisYap } = useOturum();
   /*
    * Kimlik cozulemezse MARKA ADINA DUSULMUYOR.
    *
@@ -78,6 +78,18 @@ export function AdminLayout() {
    * kiraci kaydi hic okunamazsa mumkun ve o zaman dogru cevap "bilmiyorum".
    */
   const gosterilenSite = siteAdi || 'Site belirlenemedi';
+
+  /*
+   * Verilerin gerçekten okunduğu kiracı anahtarı ipucuda yazıyor.
+   *
+   * Site adı ile anahtar ayrışabiliyor: env yöneticisiyle girildiğinde
+   * oturumda `tenantId` olmadığı için anahtar `default` çözülüyor ve ad
+   * host'tan geliyor. "Hangi kiracının verisini görüyorum" sorusunun
+   * kesin cevabı anahtar; rozetin üstüne gelince görünüyor.
+   */
+  const rozetIpucu = kiraciAnahtari
+    ? `${gosterilenSite} · kiracı: ${kiraciAnahtari}`
+    : gosterilenSite;
   const kullaniciAdi = String(kullanici?.name || kullanici?.username || '').trim();
   /**
    * Rozet harfleri site adindan tureiyor; sabit "AS" degil.
@@ -373,7 +385,7 @@ export function AdminLayout() {
                 hicbir seye karsilik gelmiyordu. Yerine giris yapan
                 kullanicinin adi kondu -- gercek veri.
               */}
-              <div className="hidden h-9 items-center gap-2 rounded-lg border border-white/[0.07] bg-white/[0.025] px-2 lg:flex">
+              <div title={rozetIpucu} className="hidden h-9 items-center gap-2 rounded-lg border border-white/[0.07] bg-white/[0.025] px-2 lg:flex">
                 <div className="flex h-6 w-6 items-center justify-center rounded-md bg-blue-400 text-[9px] font-black text-white">
                   {rozetHarfleri}
                 </div>

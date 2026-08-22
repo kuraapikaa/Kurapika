@@ -258,21 +258,35 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
      * adina duser ve "hangi sitedeyim" sorusu yine cevapsiz kalir.
      */
     let siteAdi = siteKimligi({ oturumSiteAdi: u.siteName });
-    if (!siteAdi) {
+    let kiraciAnahtari = '';
+    {
       try {
-        const { resolveTenantKeyForRequest } = await import('../lib/tenant.js');
-        const anahtar = await resolveTenantKeyForRequest(request as never);
-        const tenants = await loadTenants();
-        const tenant =
-          tenants.find((item) => item.id === anahtar) ??
-          tenants.find((item) => item.id === getManageableTenantId(u, tenants));
-        siteAdi = siteKimligi({ tenant, anahtar });
+        const { resolveTenantKeyForRequest, getRequestHost } = await import('../lib/tenant.js');
+        kiraciAnahtari = await resolveTenantKeyForRequest(request as never);
+        if (!siteAdi) {
+          const tenants = await loadTenants();
+          /*
+           * YALNIZCA cozulen anahtarin kaydi. Once, kayit bulunamazsa
+           * listedeki ilk etkin kiraciya dusuluyordu ve sonuc suydu:
+           * env yoneticisiyle girildiginde (oturumda `tenantId` yok,
+           * anahtar `default`) rozet ALAKASIZ bir kiracinin adini
+           * yaziyordu -- veriler `default` kiracisindan okunurken
+           * ekranda "Tacobahis". Yanlis kiraci adi, hic ad
+           * gostermemekten tehlikeli.
+           */
+          const tenant = tenants.find((item) => item.id === kiraciAnahtari) ?? null;
+          siteAdi = siteKimligi({
+            tenant,
+            host: getRequestHost(request as never),
+            anahtar: kiraciAnahtari,
+          });
+        }
       } catch {
         // Kiraci okunamazsa panel calismaya devam etsin; rozet yedege duser.
       }
     }
 
-    return reply.send({ ok: true, user: u, siteAdi });
+    return reply.send({ ok: true, user: u, siteAdi, kiraciAnahtari });
   });
 
   // ─── Bonus Panel Login ───────────────────────────────────────────────────

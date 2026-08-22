@@ -17,9 +17,28 @@ describe('siteKimligi', () => {
     expect(siteKimligi({ tenant: { domain: 'narcosbahis.vip', id: 'narcos' } })).toBe('narcosbahis.vip');
   });
 
-  it('hicbiri yoksa kiraci anahtarini veriyor', () => {
+  it('kiraci kaydi yoksa HOST kimlik oluyor', () => {
+    // Env yoneticisiyle (`ADMIN_USER`) girildiginde oturumda `tenantId`
+    // yok, anahtar `default` cozuluyor ve `default` adinda bir kayit
+    // bulunmuyor. En anlamli kimlik istegin host'u.
+    expect(siteKimligi({ host: 'panel.narcosbahis.vip', anahtar: 'default' }))
+      .toBe('panel.narcosbahis.vip');
+  });
+
+  it('host da yoksa kiraci anahtarini veriyor', () => {
     expect(siteKimligi({ tenant: { id: 'default' } })).toBe('default');
     expect(siteKimligi({ anahtar: 'default' })).toBe('default');
+  });
+
+  it('BASKA bir kiracinin adina ASLA dusmuyor', () => {
+    // Onceki surumde, cozulen anahtara kayit bulunamayinca listedeki ILK
+    // etkin kiraciya dusuluyordu: veriler `default`tan okunurken rozette
+    // "Tacobahis" yaziyordu. Yanlis kiraci adi, hic ad gostermemekten
+    // tehlikeli -- operatör baska bir sitenin panelinde oldugunu sanarak
+    // ayar degistirebilir. Kaynak nesnesinde artik boyle bir alan yok.
+    const sonuc = siteKimligi({ anahtar: 'default', host: 'panel.narcosbahis.vip' });
+    expect(sonuc).not.toBe('Tacobahis');
+    expect(sonuc).toBe('panel.narcosbahis.vip');
   });
 
   it('PANEL MARKASINI kimlik saymiyor', () => {

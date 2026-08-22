@@ -29,6 +29,8 @@ type OturumDurumu = {
   kullanici: any;
   /** Oturumun yonettigi sitenin adi (bos olabilir). */
   siteAdi: string;
+  /** Verilerin gerçekten okunduğu kiracı anahtarı (ör. "default"). */
+  kiraciAnahtari: string;
   cikisYap: () => Promise<void>;
 };
 
@@ -46,6 +48,7 @@ export function RequireAuth({ tenantConfig }: { tenantConfig: TenantConfig }) {
   const [kullanici, setKullanici] = useState<any>(null);
   /** Oturumun yönettiği sitenin adı; panel başlığında gösteriliyor. */
   const [siteAdi, setSiteAdi] = useState('');
+  const [kiraciAnahtari, setKiraciAnahtari] = useState('');
 
   const kimligiOku = async () => {
     const res = await fetch('/api/me', { credentials: 'include' }).catch(() => null);
@@ -57,6 +60,7 @@ export function RequireAuth({ tenantConfig }: { tenantConfig: TenantConfig }) {
     const data = await res.json().catch(() => null);
     setKullanici(data?.user || null);
     setSiteAdi(String(data?.siteAdi || '').trim());
+    setKiraciAnahtari(String(data?.kiraciAnahtari || '').trim());
     setGirisYapildi(true);
   };
 
@@ -108,7 +112,7 @@ export function RequireAuth({ tenantConfig }: { tenantConfig: TenantConfig }) {
   }
 
   return (
-    <OturumContext.Provider value={{ kullanici, siteAdi, cikisYap }}>
+    <OturumContext.Provider value={{ kullanici, siteAdi, kiraciAnahtari, cikisYap }}>
       <Outlet />
     </OturumContext.Provider>
   );
