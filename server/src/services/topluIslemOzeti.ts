@@ -278,6 +278,25 @@ export function genelToplam(satirlar: Array<{ bulundu: boolean; ozet?: OyuncuOze
  */
 export type SatirDokumu = {
   hamSatir: number;
+  /**
+   * İlk satırların OKUDUĞUMUZ alanları + satırda bulunan tüm alan
+   * ADLARI (değerleri değil).
+   *
+   * Neden gerekli: "1 kayıt geldi ve tutarı yanlış" durumunda tek soru
+   * kalıyor — o satırda tutar hangi alanda duruyor? Alan adları listesi
+   * bunu tahmin etmeden gösteriyor; okuduğumuz alan yanlışsa doğrusu
+   * listede görünür. Değerler yalnızca zaten kullandığımız alanlar için
+   * dönüyor, satırın tamamı DEĞİL.
+   */
+  ornekler: Array<{
+    tur: unknown;
+    durum: unknown;
+    amount: unknown;
+    actualAmount: unknown;
+    receivedAmount: unknown;
+    tarih: unknown;
+    alanlar: string[];
+  }>;
   /** transactionType -> adet */
   turler: Record<string, number>;
   /** status -> adet (yalnızca yatırım ve çekim satırları) */
@@ -311,5 +330,17 @@ export function satirDokumu(
     if (!araliktaMi(zaman(satir), aralik)) aralikDisi += 1;
   }
 
-  return { hamSatir: liste.length, turler, durumlar, aralikDisi };
+  const ornekler = liste.slice(0, 3).map((satir) => ({
+    tur: satir.transactionType ?? satir.type ?? null,
+    durum: satir.status ?? satir.state ?? null,
+    amount: satir.amount ?? null,
+    actualAmount: satir.actualAmount ?? null,
+    receivedAmount: satir.receivedAmount ?? null,
+    tarih: satir.createdAt ?? satir.creationDate ?? satir.updatedAt ?? null,
+    // Yalnızca ADLAR: hangi alanların var olduğunu görmek için yeterli,
+    // satırın tamamını dışarı vermeden.
+    alanlar: Object.keys(satir ?? {}).sort(),
+  }));
+
+  return { hamSatir: liste.length, turler, durumlar, aralikDisi, ornekler };
 }

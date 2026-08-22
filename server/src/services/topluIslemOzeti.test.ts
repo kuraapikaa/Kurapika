@@ -301,8 +301,26 @@ describe('satirDokumu', () => {
     expect(d.aralikDisi).toBe(2);
   });
 
+  it('örnek satırda okuduğumuz alanları ve alan ADLARINI verir', () => {
+    // "1 kayit geldi ve tutari yanlis" durumunda tek soru kaliyor: tutar
+    // hangi alanda? Alan adlari bunu tahmin etmeden gosteriyor.
+    const d = satirDokumu([
+      { transactionType: 'deposit', status: 'success', amount: 2000, realAmount: 500,
+        createdAt: '2026-08-01T10:00:00Z', userId: 7 },
+    ]);
+    expect(d.ornekler).toHaveLength(1);
+    expect(d.ornekler[0]).toMatchObject({ tur: 'deposit', durum: 'success', amount: 2000 });
+    expect(d.ornekler[0].alanlar).toContain('realAmount');
+  });
+
+  it('en fazla 3 örnek döner', () => {
+    const cok = Array.from({ length: 10 }, (_, i) =>
+      satir('deposit', i, '2026-08-01T10:00:00Z'));
+    expect(satirDokumu(cok).ornekler).toHaveLength(3);
+  });
+
   it('boş girdide çökmez', () => {
-    expect(satirDokumu([])).toEqual({ hamSatir: 0, turler: {}, durumlar: {}, aralikDisi: 0 });
+    expect(satirDokumu([])).toEqual({ hamSatir: 0, turler: {}, durumlar: {}, aralikDisi: 0, ornekler: [] });
     expect(satirDokumu(null).hamSatir).toBe(0);
   });
 });

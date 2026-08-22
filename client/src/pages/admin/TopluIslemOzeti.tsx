@@ -29,6 +29,11 @@ type Satir = {
     turler: Record<string, number>;
     durumlar: Record<string, number>;
     aralikDisi: number;
+    ornekler?: Array<{
+      tur: unknown; durum: unknown;
+      amount: unknown; actualAmount: unknown; receivedAmount: unknown;
+      tarih: unknown; alanlar: string[];
+    }>;
   };
   ozet?: {
     yatirim: { toplam: number; adet: number; ilk: string | null; son: string | null };
@@ -67,6 +72,16 @@ const taniMetni = (tani: NonNullable<Satir['tani']>) => {
     tani.aralikDisi > 0
       ? `${tani.aralikDisi} kayıt uygun ama seçilen tarih aralığının dışında`
       : 'Tarih aralığı dışında kalan uygun kayıt yok',
+    // Ham satırın kendisi: "1 kayıt geldi ve tutarı yanlış" durumunda
+    // geriye tek soru kalıyor — tutar hangi alanda duruyor? Alan adları
+    // bunu tahmin etmeden gösteriyor.
+    ...(tani.ornekler ?? []).flatMap((o, i) => [
+      '',
+      `— Kayıt ${i + 1} —`,
+      `tür: ${o.tur} · durum: ${o.durum} · tarih: ${o.tarih}`,
+      `amount: ${o.amount} · actualAmount: ${o.actualAmount} · receivedAmount: ${o.receivedAmount}`,
+      `alanlar: ${o.alanlar.join(', ')}`,
+    ]),
   ].join('\n');
 };
 
