@@ -1367,3 +1367,59 @@
     }
   }
 }
+
+/* ─── Arwen işareti (giriş ekranı) ──────────────────────────────────────
+ *
+ * Görsel 512 px kare ve saydam; kart içinde en fazla 132 px görünüyor.
+ * Boyut `clamp` ile veriliyor -- dar telefonlarda panelin yarısını
+ * kaplamasın, geniş ekranda da kaybolmasın.
+ *
+ * Hâle `::before` yerine ayrı bir eleman: görselin arkasında durması ve
+ * ondan bağımsız dönmesi gerekiyor.
+ */
+.arwen-mark-wrap {
+  position: relative;
+  isolation: isolate;
+}
+
+.arwen-mark {
+  position: relative;
+  z-index: 1;
+  width: clamp(96px, 26vw, 132px);
+  height: auto;
+  user-select: none;
+  /* Altin kenarin arka planla kaynasmasi icin: sert bir golge yerine
+     rengin kendisinden dogan yumusak bir isik. */
+  filter: drop-shadow(0 10px 26px rgba(212, 162, 76, 0.28));
+}
+
+.arwen-mark-halo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 0;
+  width: clamp(150px, 40vw, 210px);
+  height: clamp(150px, 40vw, 210px);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  background: radial-gradient(
+    circle,
+    rgba(212, 162, 76, 0.20) 0%,
+    rgba(212, 162, 76, 0.07) 45%,
+    transparent 70%
+  );
+  animation: arwen-hale 9s ease-in-out infinite;
+}
+
+@keyframes arwen-hale {
+  0%, 100% { opacity: 0.55; transform: translate(-50%, -50%) scale(1); }
+  50%      { opacity: 1;    transform: translate(-50%, -50%) scale(1.12); }
+}
+
+/* Hareket duyarliligi: sonsuz animasyon DURUR, gorsel yerinde kalir.
+   Bilesendeki `sadeHareket` bayragi framer-motion tarafini kapatiyor;
+   burasi da CSS tarafini kapatiyor. Ikisi ayri cunku biri JS'te biri
+   stil katmaninda yasiyor. */
+@media (prefers-reduced-motion: reduce) {
+  .arwen-mark-halo { animation: none; opacity: 0.7; }
+}

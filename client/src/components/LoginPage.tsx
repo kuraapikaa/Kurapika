@@ -58,6 +58,15 @@ export function LoginPage({ onLoginSuccess, tenantConfig }: LoginPageProps) {
     }
   };
 
+  /**
+   * Kullanıcı işletim sisteminde "hareketi azalt" demişse sonsuz
+   * animasyonlar kapanır. Giriş ekranı kaçınılabilir bir sayfa değil;
+   * sürekli oynayan bir öğe hareket duyarlılığı olan kişilerde baş
+   * dönmesi yapabiliyor.
+   */
+  const sadeHareket = typeof window !== 'undefined'
+    && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
   return (
     <main className="login-shell">
       <motion.img
@@ -82,6 +91,41 @@ export function LoginPage({ onLoginSuccess, tenantConfig }: LoginPageProps) {
               transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
               className="login-panel w-full max-w-[460px]"
             >
+              {/*
+                ARWEN İŞARETİ.
+
+                Giriş ekranında markayı taşıyan tek görsel öğe. Arka plan
+                fotoğrafı zaten var ama o dekor; bu işaret kimliği
+                söylüyor ve panelin "kimin" olduğunu ilk saniyede
+                gösteriyor.
+
+                Animasyon üç katman:
+                  · giriş — aşağıdan yukarı, hafif büyüyerek (bir kez)
+                  · nefes — sonsuz, çok yavaş yukarı-aşağı süzülme
+                  · hâle  — arkada dönen yumuşak parıltı
+
+                `prefers-reduced-motion` açık olan kullanıcıda sonsuz
+                hareketler DURUYOR: sürekli oynayan bir öğe, hareket
+                duyarlılığı olan kişilerde baş dönmesi yapabiliyor ve
+                giriş ekranı kaçınılabilir bir sayfa değil.
+              */}
+              <motion.div
+                className="arwen-mark-wrap mb-5 flex justify-center"
+                initial={{ opacity: 0, y: 18, scale: 0.94 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1], delay: 0.15 }}
+              >
+                <span className="arwen-mark-halo" aria-hidden="true" />
+                <motion.img
+                  src="/assets/brand/arwen-mark-gold.png"
+                  alt="Arwen Software Solutions"
+                  className="arwen-mark"
+                  draggable={false}
+                  animate={sadeHareket ? undefined : { y: [0, -7, 0] }}
+                  transition={sadeHareket ? undefined : { duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+                />
+              </motion.div>
+
               <div className="login-brand-row mb-5 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div
