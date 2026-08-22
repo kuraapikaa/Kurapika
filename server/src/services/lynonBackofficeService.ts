@@ -1,6 +1,7 @@
 import { lynonCfg } from '../lib/tenantRuntimeConfig.js';
 import { metrikSayisi, netGelir, panoMetrikleri, taninmayanAlanlar } from './lynonPanoMetrikleri.js';
 import { kayipTabani } from './kayipTabaniService.js';
+import { etkinTutar, odemeSatiriniNormalize } from './odemeTutari.js';
 import { isLynonConfigured, lynonRequest, LynonHttpError, LynonAuthError } from '../lib/lynonAuth.js';
 import { getCachedJsonWithTtl, setCachedJson } from '../lib/redisClient.js';
 import { istanbulDateKey } from '../lib/istanbulGunu.js';
@@ -495,7 +496,11 @@ function mapPlayer(row: AnyRecord): AnyRecord {
 function mapTransaction(row: AnyRecord): AnyRecord {
   const personal = recordOf(row.personalData);
   const clientId = numberFrom(row.userId ?? row['Player ID'], NaN);
-  const amount = numberFrom(row.amount ?? row.actualAmount ?? row.receivedAmount);
+  // Tur bazli kural: yatirimda `actualAmount` oncelikli. Satirlar
+  // `lynonPaymentTransactions` icinde zaten normalize ediliyor; burasi
+  // baska kaynaklardan (finansal hareket birlestirmesi gibi) gelen
+  // satirlar icin de dogru olsun diye ayni kurali uyguluyor.
+  const amount = etkinTutar(row);
   const type = firstNonEmpty(row.transactionType, row.type);
   const id = row.id ?? row.platformTransactionId;
   const login = firstNonEmpty(personal.userName, row.userName, row.username, row.UserName, row.userId, row['UserName']);
@@ -1888,7 +1893,20 @@ export async function lynonPaymentTransactions(
   const typeSet = requestedTypes.length ? new Set(requestedTypes) : null;
   const queryText = query.toLocaleLowerCase('tr-TR');
 
-  return rows.filter((row) => {
+  /**
+   * TUTARLAR BURADA NORMALIZE EDILIYOR.
+   *
+   * Yatirimda hesaba GECEN tutar `amount` degil `actualAmount`; canlida
+   * olculdu (amount 2000 / actualAmount 500, gercek yatirim 500).
+   * `row.amount` on besten fazla yerde okunuyor -- islem listesi,
+   * oyuncu profili, gosterge panelleri, onceki gun toplami, son
+   * yatirim, KPI yedekleri ve KAYIP BONUSU TABANI. Her cagri yerini
+   * ayri duzeltmek birini atlamak demekti ve atlanan yer sessizce
+   * yanlis para dagitmaya devam ederdi.
+   *
+   * Ham deger `hamAmount` altinda duruyor. Gerekce: odemeTutari.ts.
+   */
+  return rows.map(odemeSatiriniNormalize).filter((row) => {
     const type = String(row.transactionType ?? row.type ?? '').trim().toLowerCase();
     if (typeSet && !typeSet.has(type)) return false;
 

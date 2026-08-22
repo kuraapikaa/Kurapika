@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { kayipTabani, type OdemeHareketi } from './kayipTabaniService.js';
 import { evaluateForAccount } from './promoEvaluator.js';
+import { odemeSatiriniNormalize } from './odemeTutari.js';
 
 /**
  * PARA REGRESYON TESTI.
@@ -418,5 +419,55 @@ describe('lossBonusPeriod: last24h — uçtan uca', () => {
     const madde = sonuc.items.find((i) => i.id === 'loss-bonus-net-loss');
     expect(madde?.ok).toBe(false);
     expect(madde?.reason).toContain('son 24 saatte');
+  });
+});
+
+/**
+ * PARA SIZINTISI REGRESYONU — şişmiş yatırım tabanı.
+ *
+ * Bildirilen vaka: oyuncu 2499894'e 22.08.2026 02:04'te 13.650 TRY
+ * kayıp bonusu yazıldı. Kök sebep zincirin BAŞINDAYDI: yatırım satırının
+ * tutarı `amount` alanından okunuyordu ve canlıda ölçülen değer
+ * `amount: 2000` iken gerçek yatırım `actualAmount: 500` idi.
+ *
+ * Taban dört kat şişince %30'luk kademe de dört kat ödedi. Bu test
+ * zinciri baştan sona kuruyor: ham satır → normalize → kayıp tabanı.
+ */
+describe('şişmiş amount kayıp tabanını şişirmemeli', () => {
+  const hamSatirlar = [
+    { transactionType: 'deposit', status: 'success', amount: 2000, actualAmount: 500, createdAt: '2026-08-20T10:00:00Z' },
+    { transactionType: 'deposit', status: 'success', amount: 8000, actualAmount: 2000, createdAt: '2026-08-21T10:00:00Z' },
+  ];
+
+  const hareketlereCevir = (satirlar: Array<Record<string, unknown>>) =>
+    satirlar.map(odemeSatiriniNormalize).map((row) => ({
+      tur: String(row.transactionType ?? ''),
+      durum: String(row.status ?? ''),
+      // lynonBackofficeService de tam olarak boyle kuruyor.
+      tutar: Number(row.amount),
+      tarih: String(row.createdAt ?? ''),
+    }));
+
+  it('taban gerçek yatırımdan hesaplanır, amount alanından değil', () => {
+    const taban = kayipTabani(hareketlereCevir(hamSatirlar));
+    // Gercek: 500 + 2000 = 2500. Duzeltme oncesi 10.000 cikiyordu.
+    expect(taban.netLoss).toBe(2500);
+  });
+
+  it('%30 kademe artık dört kat fazla ödemiyor', () => {
+    const taban = kayipTabani(hareketlereCevir(hamSatirlar));
+    const bonus = Math.round((taban.netLoss ?? 0) * 0.3 * 100) / 100;
+    expect(bonus).toBe(750);
+    // Duzeltme oncesi: 10.000 * %30 = 3.000.
+    expect(bonus).toBeLessThan(3000);
+  });
+
+  it('çekim düşüldükten sonra da doğru', () => {
+    const taban = kayipTabani(hareketlereCevir([
+      { transactionType: 'withdrawal', status: 'success', amount: 300, createdAt: '2026-08-19T10:00:00Z' },
+      ...hamSatirlar,
+    ]));
+    // Cekim 19'unda; sonraki yatirimlar 500 + 2000 = 2500.
+    expect(taban.netLoss).toBe(2500);
   });
 });

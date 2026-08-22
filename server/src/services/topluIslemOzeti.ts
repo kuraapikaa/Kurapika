@@ -23,6 +23,8 @@
  * sessizce sıfıra yaklaştırırdı.
  */
 
+import { etkinTutar, paraSayisi } from './odemeTutari.js';
+
 export type OdemeSatiri = {
   transactionType?: unknown;
   type?: unknown;
@@ -80,57 +82,12 @@ function metin(deger: unknown): string {
 }
 
 /**
- * SAYIYA ÇEVİRME — panelin geri kalanıyla AYNI kural.
- *
- * Önce `Number()` kullanılıyordu ve tutarlar yanlış çıkıyordu: Lynon
- * bazı alanları BİÇİMLENMİŞ metin olarak döndürüyor ("1.234,56" gibi) ve
- * `Number("1.234,56")` NaN veriyor. NaN sessizce 0'a düşünce toplam
- * olduğundan küçük görünüyordu.
- *
- * Kural `lynonBackofficeService.numberFrom` ile birebir: son görülen
- * ayırıcı hangisiyse ONDALIK odur. "1.234,56" -> 1234.56,
- * "1,234.56" -> 1234.56.
+ * Tutar kuralı ORTAK modülde: `odemeTutari.ts`. Burada bir kopyası
+ * vardı ve `mapTransaction` başka davranıyordu; aynı yatırım iki
+ * ekranda iki farklı tutar gösteriyordu. Kural tek yerde.
  */
-export function sayiya(value: unknown, fallback = 0): number {
-  if (typeof value === 'number' && Number.isFinite(value)) return value;
-  if (value === null || value === undefined || value === '') return fallback;
-  let text = String(value).trim();
-  if (!text) return fallback;
-  // Para birimi simgesi, boşluk vb. atılır; rakam, ayırıcı ve eksi kalır.
-  text = text.replace(/[^\d,.-]/g, '');
-  if (!text) return fallback;
-  const comma = text.lastIndexOf(',');
-  const dot = text.lastIndexOf('.');
-  if (comma > dot) text = text.replace(/\./g, '').replace(',', '.');
-  else text = text.replace(/,/g, '');
-  const parsed = Number(text);
-  return Number.isFinite(parsed) ? parsed : fallback;
-}
-
-/**
- * Satırın tutarı — TÜRE GÖRE farklı alan.
- *
- * ── Yatırımda `actualAmount` ──────────────────────────────────────────
- * Canlıda ölçüldü: `halil4554` için Lynon tek satır döndürüyor,
- * `amount: 2000` ve `actualAmount: 500`. Oyuncunun gerçek yatırımı 500.
- * Yani yatırımda `amount` hesaba GEÇEN tutar değil; geçen tutar
- * `actualAmount`.
- *
- * `mapTransaction` hâlâ `amount`ı önceliyor -- yani panelin diğer
- * ekranları bu satır için 2.000 gösteriyor. Burayı bilerek AYIRIYORUZ:
- * ölçülmüş gerçek, tutarlılıktan önce gelir. Diğer ekranların da
- * düzeltilmesi gerekiyor; bkz. teslim notu.
- *
- * ── Çekimde sıra DEĞİŞMEDİ ────────────────────────────────────────────
- * Çekim tarafında aynı ölçüm yapılmadı. Doğrulanmamış bir varsayımla
- * çekim tutarını da değiştirmek, tek bildiğimiz gerçeği düzeltirken
- * bilmediğimiz bir yeri bozmak olurdu.
- */
-function tutar(satir: OdemeSatiri, tur: string): number {
-  const ham = tur === 'deposit'
-    ? (satir.actualAmount ?? satir.amount ?? satir.receivedAmount)
-    : (satir.amount ?? satir.actualAmount ?? satir.receivedAmount);
-  return Math.abs(sayiya(ham));
+function tutar(satir: OdemeSatiri, _tur: string): number {
+  return Math.abs(etkinTutar(satir as never));
 }
 
 function zaman(satir: OdemeSatiri): number {
@@ -357,3 +314,6 @@ export function satirDokumu(
 
   return { hamSatir: liste.length, turler, durumlar, aralikDisi, ornekler };
 }
+
+/** Geriye uyumluluk: sayı ayrıştırma artık `odemeTutari.paraSayisi`. */
+export const sayiya = paraSayisi;
