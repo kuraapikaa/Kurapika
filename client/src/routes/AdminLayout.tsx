@@ -171,9 +171,25 @@ export function AdminLayout() {
       >
         <div className="sidebar-brand flex h-[76px] shrink-0 items-center justify-between gap-3 px-5">
           <div className="flex min-w-0 flex-1 items-center gap-2.5">
-            <span className="grid h-10 w-10 shrink-0 grid-cols-2 gap-1 rounded-full border border-purple-400/25 bg-purple-400/10 p-2.5 shadow-[0_0_20px_rgba(168,85,247,0.25)]">
-              <i className="rounded-[2px] bg-purple-300" /><i className="rounded-[2px] bg-purple-300" />
-              <i className="rounded-[2px] bg-purple-300" /><i className="rounded-[2px] bg-purple-300" />
+            {/*
+              CONTROL SUITE ISARETI.
+
+              Once dort mor kareden olusan bir yer tutucu vardi; markayi
+              tasimayan, herhangi bir panelde durabilecek genel bir sekil.
+              Giris ekranindaki altin isaretin mavi kardesi buraya
+              geliyor: panelin icinde de disinda da ayni kimlik.
+
+              Yuvarlak cerceve KORUNDU -- kenar cizgisi ve parilti,
+              gorselin kendi kose yuvarlakligiyla kaynasip kenar
+              cubugunun geri kalanina baglaniyor.
+            */}
+            <span className="suite-mark grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full border border-purple-400/25 bg-purple-400/10 shadow-[0_0_20px_rgba(168,85,247,0.25)]">
+              <img
+                src="/assets/brand/arwen-mark-azure.png"
+                alt="Arwen Software Solutions"
+                className="h-full w-full object-cover"
+                draggable={false}
+              />
             </span>
             <span className={cn("min-w-0 leading-tight", navCollapsed && "md:hidden")}>
               <strong className="block truncate text-[13px] font-bold tracking-[-0.02em] text-white">Arwen Software Solutions</strong>
