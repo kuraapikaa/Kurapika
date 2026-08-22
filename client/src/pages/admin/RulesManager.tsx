@@ -5,13 +5,18 @@ import { Button } from '@/components/ui/Button';
 import {
     Settings, AlertCircle, CheckCircle2, Plus,
     Trash2, Edit2, Search, FileCode,
-    Info, RefreshCw, Sparkles, ArrowRight, Gift
+    Info, RefreshCw, Sparkles, ArrowRight, Gift,
+    Copy, ClipboardPaste, X
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { dashboardApi } from '@/api/client';
 import { BonusBlacklistPanel } from '@/components/admin/BonusBlacklistPanel';
+import { kuralKopyasiCikar, kuraliYapistir, yapistirmaFarki } from '@/lib/kuralKopyala';
+
+/** Kural panosunun `sessionStorage` anahtarı. */
+const PANO_ANAHTARI = 'kural-merkezi-pano';
 
 interface PromoSpec {
     enabled?: boolean;
@@ -403,6 +408,75 @@ export function RulesManager() {
         },
     });
 
+    /**
+     * KURAL PANOSU — bir bonusun kuralını kopyalayıp başkasına yapıştırma.
+     *
+     * `sessionStorage`de tutuluyor, bileşen durumunda değil: operatör
+     * kopyaladıktan sonra arama/filtre değiştirip sayfayı tazeleyebiliyor
+     * ve panonun bir tıklamayla kaybolması can sıkıcı olurdu. Sekme
+     * kapanınca gitmesi ise doğru: eski bir pano kaydı günler sonra
+     * yapıştırılacak bir şey değil.
+     */
+    const [pano, setPano] = useState<{ anahtar: string; ad: string; ayarlar: Record<string, unknown> } | null>(() => {
+        try {
+            const ham = window.sessionStorage.getItem(PANO_ANAHTARI);
+            return ham ? JSON.parse(ham) : null;
+        } catch {
+            return null;
+        }
+    });
+
+    const panoyuYaz = (deger: typeof pano) => {
+        setPano(deger);
+        try {
+            if (deger) window.sessionStorage.setItem(PANO_ANAHTARI, JSON.stringify(deger));
+            else window.sessionStorage.removeItem(PANO_ANAHTARI);
+        } catch {
+            /* saklanamadıysa oturum boyunca bellekte kalır */
+        }
+    };
+
+    const handleKuraliKopyala = (key: string, spec: PromoSpec) => {
+        const ayarlar = kuralKopyasiCikar(spec);
+        panoyuYaz({ anahtar: String(key), ad: spec.title || String(key), ayarlar });
+        toast.success(`"${spec.title || key}" kuralı kopyalandı (${Object.keys(ayarlar).length} ayar).`);
+    };
+
+    /**
+     * Yapıştırma YIKICI: hedefin taşınabilir ayarları kaynaktakiyle
+     * değiştiriliyor, birleştirilmiyor -- amaç iki kuralın gerçekten aynı
+     * olması. Bu yüzden onay ekranı neyin değişeceğini, neyin
+     * SİLİNECEĞİNİ ve neye hiç dokunulmayacağını açıkça yazıyor; canlı
+     * bir bonusun kuralını körlemesine ezmek geri alması zor bir iş.
+     */
+    const handleKuraliYapistir = (key: string, spec: PromoSpec) => {
+        if (!pano) return;
+        const fark = yapistirmaFarki(spec, pano.ayarlar);
+
+        if (fark.degisen.length === 0) {
+            toast.info(`"${spec.title || key}" kuralı zaten "${pano.ad}" ile aynı.`);
+            return;
+        }
+
+        const satirlar = [
+            `"${pano.ad}" kuralı "${spec.title || key}" üzerine yapıştırılacak.`,
+            '',
+            `• ${fark.degisen.length} ayar değişecek (${fark.eklenen.length} tanesi yeni).`,
+        ];
+        if (fark.temizlenen.length > 0) {
+            satirlar.push(
+                `• ${fark.temizlenen.length} ayar TEMİZLENECEK (kaynakta yok): ${fark.temizlenen.join(', ')}`,
+            );
+        }
+        if (fark.atlanan.length > 0) {
+            satirlar.push(`• Dokunulmayacak: ${fark.atlanan.join(', ')}`);
+        }
+        satirlar.push('', 'Devam edilsin mi?');
+
+        if (!window.confirm(satirlar.join('\n'))) return;
+        handleUpdateRule(key, kuraliYapistir(spec, pano.ayarlar));
+    };
+
     const handleUpdateRule = (key: string, spec: PromoSpec) => {
         if (!config) return;
         const newConfig = { ...config };
@@ -706,6 +780,36 @@ export function RulesManager() {
                             </button>
                         )}
                     </div>
+
+                    {/*
+                      PANO ŞERİDİ. Kopyalanan kural, yapıştırılana kadar
+                      görünür duruyor: kart düğmeleri yalnızca üzerine
+                      gelince beliriyor, o yüzden panoda bir şey olduğu
+                      başka türlü anlaşılmazdı. Vazgeçmek de tek tık.
+                    */}
+                    {pano && (
+                        <div className="flex flex-wrap items-center gap-3 rounded-3xl border border-emerald-300/25 bg-emerald-400/[0.07] px-5 py-4 backdrop-blur-xl">
+                            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-400/15 text-emerald-300">
+                                <Copy size={16} />
+                            </span>
+                            <div className="min-w-0 flex-1">
+                                <p className="truncate text-sm font-semibold text-white">
+                                    Panoda: <span className="text-emerald-200">{pano.ad}</span>
+                                </p>
+                                <p className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
+                                    {Object.keys(pano.ayarlar).length} ayar · yapıştırmak için bir kartın üzerine gelin
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => panoyuYaz(null)}
+                                className="flex h-9 items-center gap-1.5 rounded-full border border-white/10 px-4 text-[10px] font-bold uppercase tracking-widest text-slate-300 transition-all hover:bg-white/10 hover:text-white"
+                            >
+                                <X size={13} />
+                                Panoyu temizle
+                            </button>
+                        </div>
+                    )}
 
                     <AnimatePresence>
                         {isAdding && (
@@ -1910,6 +2014,29 @@ export function RulesManager() {
                                                 >
                                                     <Edit2 size={18} />
                                                 </button>
+                                                <button
+                                                    onClick={() => handleKuraliKopyala(key, spec)}
+                                                    className="h-12 w-12 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 border border-white/5 text-slate-300 hover:text-white transition-all shadow-lg"
+                                                    title="Kuralı kopyala"
+                                                >
+                                                    <Copy size={18} />
+                                                </button>
+                                                {/*
+                                                  Yapıştır yalnızca panoda bir kural VARSA ve hedef
+                                                  kaynağın kendisi DEĞİLSE görünüyor: kuralı kendi
+                                                  üstüne yapıştırmak hiçbir şey yapmayan bir düğme
+                                                  olurdu.
+                                                */}
+                                                {pano && pano.anahtar !== String(key) && (
+                                                    <button
+                                                        onClick={() => handleKuraliYapistir(key, spec)}
+                                                        className="h-12 flex items-center gap-2 rounded-full border border-emerald-300/30 bg-emerald-400/10 px-4 text-[10px] font-bold uppercase tracking-widest text-emerald-200 transition-all hover:bg-emerald-400/20"
+                                                        title={`"${pano.ad}" kuralını buraya yapıştır`}
+                                                    >
+                                                        <ClipboardPaste size={16} />
+                                                        Yapıştır
+                                                    </button>
+                                                )}
                                                 {/* Gizlenmis kampanyada silme yerine geri getirme sunulur. */}
                                                 {(config?.HIDDEN_PROMO_IDS ?? []).some((id) => String(id) === String(key)) ? (
                                                     <button
