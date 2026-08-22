@@ -55,24 +55,69 @@ export type TurOzeti = {
 export type OyuncuOzeti = {
   yatirim: TurOzeti;
   cekim: TurOzeti;
-  /** yatırım − çekim. Oyuncunun kasada bıraktığı net tutar. */
+  /**
+   * ÖDENMEMİŞ çekimler (bekleyen/onay bekleyen). Toplama KATILMAZ ama
+   * ayrı raporlanır.
+   *
+   * Neden: panelin işlem listesi çekimlerde `status !== 'failed'`
+   * kullanıyor, yani bekleyenleri de gösteriyor. Burada yalnızca ödenmiş
+   * olanlar sayılıyor -- kasadan çıkmamış para "çekilmiş" sayılamaz.
+   * İki ekranın farkı bu; sayıyı göstermezsek fark açıklanamaz kalır ve
+   * "toplamlar yanlış" gibi görünür.
+   */
+  bekleyenCekim: TurOzeti;
+  /** yatırım − (ödenmiş) çekim. Oyuncunun kasada bıraktığı net tutar. */
   net: number;
 };
 
 const BASARILI = 'success';
 
+/** Lynon'un ödenmemiş çekim durumları (accountSnapshotService ile aynı küme). */
+const BEKLEYEN_DURUMLAR = new Set(['new', 'created', 'pending', 'pendingproviderapproval']);
+
 function metin(deger: unknown): string {
   return String(deger ?? '').trim().toLowerCase();
 }
 
+/**
+ * SAYIYA ÇEVİRME — panelin geri kalanıyla AYNI kural.
+ *
+ * Önce `Number()` kullanılıyordu ve tutarlar yanlış çıkıyordu: Lynon
+ * bazı alanları BİÇİMLENMİŞ metin olarak döndürüyor ("1.234,56" gibi) ve
+ * `Number("1.234,56")` NaN veriyor. NaN sessizce 0'a düşünce toplam
+ * olduğundan küçük görünüyordu.
+ *
+ * Kural `lynonBackofficeService.numberFrom` ile birebir: son görülen
+ * ayırıcı hangisiyse ONDALIK odur. "1.234,56" -> 1234.56,
+ * "1,234.56" -> 1234.56.
+ */
+export function sayiya(value: unknown, fallback = 0): number {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (value === null || value === undefined || value === '') return fallback;
+  let text = String(value).trim();
+  if (!text) return fallback;
+  // Para birimi simgesi, boşluk vb. atılır; rakam, ayırıcı ve eksi kalır.
+  text = text.replace(/[^\d,.-]/g, '');
+  if (!text) return fallback;
+  const comma = text.lastIndexOf(',');
+  const dot = text.lastIndexOf('.');
+  if (comma > dot) text = text.replace(/\./g, '').replace(',', '.');
+  else text = text.replace(/,/g, '');
+  const parsed = Number(text);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+/**
+ * Satırın tutarı.
+ *
+ * Alan sırası `mapTransaction` ile AYNI: `amount ?? actualAmount ??
+ * receivedAmount`. Önce "ilk SIFIR OLMAYAN değer" alınıyordu; bu, panelin
+ * 0 gösterdiği bir satırı burada 0'dan farklı gösteriyordu ve iki ekran
+ * aynı oyuncu için iki farklı toplam veriyordu.
+ */
 function tutar(satir: OdemeSatiri): number {
-  // `amount` bazı kayıtlarda 0 gelip gerçek değer `actualAmount`ta
-  // duruyor; sırayla ilk anlamlı olan alınır.
-  for (const aday of [satir.amount, satir.actualAmount, satir.receivedAmount]) {
-    const n = Number(aday);
-    if (Number.isFinite(n) && n !== 0) return Math.abs(n);
-  }
-  return 0;
+  const ham = satir.amount ?? satir.actualAmount ?? satir.receivedAmount;
+  return Math.abs(sayiya(ham));
 }
 
 function zaman(satir: OdemeSatiri): number {
@@ -130,19 +175,22 @@ export function oyuncuOzeti(
   yatirimAraligi?: Aralik,
   cekimAraligi?: Aralik,
 ): OyuncuOzeti {
-  const liste = (Array.isArray(satirlar) ? satirlar : []).filter(
-    (satir) => metin(satir?.status ?? satir?.state) === BASARILI,
-  );
+  const tumu = Array.isArray(satirlar) ? satirlar : [];
+  const turu = (satir: OdemeSatiri) => metin(satir.transactionType ?? satir.type);
+  const durumu = (satir: OdemeSatiri) => metin(satir?.status ?? satir?.state);
 
-  const yatirimlar = liste.filter((satir) => metin(satir.transactionType ?? satir.type) === 'deposit');
-  const cekimler = liste.filter((satir) => metin(satir.transactionType ?? satir.type) === 'withdrawal');
+  const yatirimlar = tumu.filter((s) => turu(s) === 'deposit' && durumu(s) === BASARILI);
+  const cekimler = tumu.filter((s) => turu(s) === 'withdrawal' && durumu(s) === BASARILI);
+  const bekleyenler = tumu.filter((s) => turu(s) === 'withdrawal' && BEKLEYEN_DURUMLAR.has(durumu(s)));
 
   const yatirim = ozetle(yatirimlar, yatirimAraligi);
   const cekim = ozetle(cekimler, cekimAraligi);
+  const bekleyenCekim = ozetle(bekleyenler, cekimAraligi);
 
   return {
     yatirim,
     cekim,
+    bekleyenCekim,
     net: Math.round((yatirim.toplam - cekim.toplam) * 100) / 100,
   };
 }

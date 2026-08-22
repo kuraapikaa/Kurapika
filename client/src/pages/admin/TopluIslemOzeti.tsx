@@ -26,6 +26,8 @@ type Satir = {
   ozet?: {
     yatirim: { toplam: number; adet: number; ilk: string | null; son: string | null };
     cekim: { toplam: number; adet: number; ilk: string | null; son: string | null };
+    /** Ödenmemiş çekimler; toplama katılmaz, farkı açıklamak için gösterilir. */
+    bekleyenCekim: { toplam: number; adet: number; ilk: string | null; son: string | null };
     net: number;
   } | null;
 };
@@ -101,7 +103,7 @@ export function TopluIslemOzeti() {
   /** Sonucu CSV olarak indir — operatör raporu Excel'e taşıyor. */
   const csvIndir = () => {
     if (!sonuc?.satirlar?.length) return;
-    const basliklar = ['Kullanıcı', 'Durum', 'Oyuncu ID', 'Yatırım', 'Yatırım adet', 'Çekim', 'Çekim adet', 'Net'];
+    const basliklar = ['Kullanıcı', 'Durum', 'Oyuncu ID', 'Yatırım', 'Yatırım adet', 'Çekim', 'Çekim adet', 'Bekleyen çekim', 'Net'];
     const satirlar = siraliSatirlar.map((s) => [
       s.login,
       s.bulundu ? 'Bulundu' : (s.hata || 'Bulunamadı'),
@@ -110,6 +112,7 @@ export function TopluIslemOzeti() {
       s.ozet?.yatirim.adet ?? '',
       s.ozet?.cekim.toplam ?? '',
       s.ozet?.cekim.adet ?? '',
+      s.ozet?.bekleyenCekim?.toplam ?? '',
       s.ozet?.net ?? '',
     ]);
     // Ayırıcı NOKTALI VİRGÜL: Türkçe Excel ondalık ayırıcı olarak virgül
@@ -169,6 +172,8 @@ export function TopluIslemOzeti() {
             />
             <p className="text-[10px] leading-relaxed text-slate-500">
               İki aralık bağımsızdır; boş bırakılan sınır uygulanmaz. Seçilen bitiş günü sonuca DAHİLDİR.
+              Çekim toplamı yalnızca <span className="font-bold text-slate-400">ödenmiş</span> talepleri sayar;
+              bekleyenler ayrıca gösterilir.
             </p>
           </div>
         </div>
@@ -273,7 +278,17 @@ export function TopluIslemOzeti() {
                           <td className="px-3 py-2.5 text-right tabular-nums text-slate-500" title={`${kisaTarih(satir.ozet.yatirim.ilk)} – ${kisaTarih(satir.ozet.yatirim.son)}`}>
                             {satir.ozet.yatirim.adet}
                           </td>
-                          <td className="px-3 py-2.5 text-right font-bold tabular-nums text-rose-300">{para(satir.ozet.cekim.toplam)}</td>
+                          <td className="px-3 py-2.5 text-right font-bold tabular-nums text-rose-300">
+                            {para(satir.ozet.cekim.toplam)}
+                            {satir.ozet.bekleyenCekim?.adet > 0 && (
+                              <span
+                                className="ml-1.5 whitespace-nowrap text-[10px] font-semibold text-amber-300/80"
+                                title="Ödenmemiş çekim talebi — kasadan çıkmadığı için toplama katılmıyor"
+                              >
+                                +{para(satir.ozet.bekleyenCekim.toplam)} bekliyor
+                              </span>
+                            )}
+                          </td>
                           <td className="px-3 py-2.5 text-right tabular-nums text-slate-500" title={`${kisaTarih(satir.ozet.cekim.ilk)} – ${kisaTarih(satir.ozet.cekim.son)}`}>
                             {satir.ozet.cekim.adet}
                           </td>

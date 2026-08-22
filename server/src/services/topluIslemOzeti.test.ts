@@ -106,11 +106,40 @@ describe('oyuncuOzeti — tutar ve tarih alanları', () => {
     expect(o.cekim.toplam).toBe(500);
   });
 
-  it('amount boşsa actualAmount kullanılır', () => {
+  it('amount YOKSA actualAmount kullanılır', () => {
+    const o = oyuncuOzeti([
+      { transactionType: 'deposit', actualAmount: 250, createdAt: '2026-08-01T10:00:00Z', status: 'success' },
+    ]);
+    expect(o.yatirim.toplam).toBe(250);
+  });
+
+  it('amount SIFIR ise sıfır sayılır — actualAmount devreye girmez', () => {
+    // `mapTransaction` ile ayni kural (`amount ?? actualAmount`). Once
+    // "ilk sifir olmayan deger" aliniyordu; bu, panelin 0 gosterdigi bir
+    // satiri burada 250 gosteriyordu ve iki ekran ayni oyuncu icin iki
+    // farkli toplam veriyordu.
     const o = oyuncuOzeti([
       { transactionType: 'deposit', amount: 0, actualAmount: 250, createdAt: '2026-08-01T10:00:00Z', status: 'success' },
     ]);
-    expect(o.yatirim.toplam).toBe(250);
+    expect(o.yatirim.toplam).toBe(0);
+  });
+
+  it('BİÇİMLENMİŞ metin tutarları doğru okur', () => {
+    // Bildirilen hata: tutarlar yanlis geliyordu. Sebep `Number()` idi;
+    // `Number("1.234,56")` NaN veriyor ve NaN sessizce 0'a dusuyordu.
+    const o = oyuncuOzeti([
+      satir('deposit', '1.234,56' as never, '2026-08-01T10:00:00Z'),
+      satir('deposit', '2,500.00' as never, '2026-08-02T10:00:00Z'),
+      satir('withdrawal', '1 000,25 ₺' as never, '2026-08-03T10:00:00Z'),
+    ]);
+    expect(o.yatirim.toplam).toBe(3734.56);
+    expect(o.cekim.toplam).toBe(1000.25);
+  });
+
+  it('sayıya çevrilemeyen tutar 0 sayılır, satır yine de sayılır', () => {
+    const o = oyuncuOzeti([satir('deposit', 'yok' as never, '2026-08-01T10:00:00Z')]);
+    expect(o.yatirim.toplam).toBe(0);
+    expect(o.yatirim.adet).toBe(1);
   });
 
   it('createdAt yoksa creationDate kullanılır', () => {
@@ -183,6 +212,7 @@ describe('genelToplam', () => {
   const ozet = (y: number, c: number) => ({
     yatirim: { toplam: y, adet: 1, ilk: null, son: null },
     cekim: { toplam: c, adet: 1, ilk: null, son: null },
+    bekleyenCekim: { toplam: 0, adet: 0, ilk: null, son: null },
     net: y - c,
   });
 
@@ -205,5 +235,41 @@ describe('genelToplam', () => {
 
   it('boş listede sıfır', () => {
     expect(genelToplam([])).toEqual({ yatirimToplam: 0, cekimToplam: 0, net: 0, bulunan: 0, bulunamayan: 0 });
+  });
+});
+
+describe('bekleyen çekimler', () => {
+  it('bekleyen çekim toplama KATILMAZ, ayrı raporlanır', () => {
+    // Panelin islem listesi cekimlerde `status !== 'failed'` kullaniyor,
+    // yani bekleyenleri de gosteriyor. Burada yalnizca odenmis olanlar
+    // sayiliyor; farki gostermezsek "toplamlar yanlis" gibi gorunur.
+    const o = oyuncuOzeti([
+      satir('withdrawal', 1000, '2026-08-01T10:00:00Z', 'success'),
+      satir('withdrawal', 400, '2026-08-02T10:00:00Z', 'pending'),
+      satir('withdrawal', 250, '2026-08-03T10:00:00Z', 'pendingProviderApproval'),
+    ]);
+    expect(o.cekim.toplam).toBe(1000);
+    expect(o.bekleyenCekim.toplam).toBe(650);
+    expect(o.bekleyenCekim.adet).toBe(2);
+    expect(o.net).toBe(-1000);
+  });
+
+  it('reddedilen çekim hiçbir toplamda yok', () => {
+    const o = oyuncuOzeti([
+      satir('withdrawal', 999, '2026-08-01T10:00:00Z', 'failed'),
+      satir('withdrawal', 111, '2026-08-01T10:00:00Z', 'rejected'),
+    ]);
+    expect(o.cekim.toplam).toBe(0);
+    expect(o.bekleyenCekim.toplam).toBe(0);
+  });
+
+  it('bekleyen çekim ÇEKİM aralığını kullanır', () => {
+    const o = oyuncuOzeti(
+      [satir('withdrawal', 500, '2026-07-01T10:00:00Z', 'pending'),
+       satir('withdrawal', 300, '2026-08-05T10:00:00Z', 'pending')],
+      undefined,
+      { baslangic: '2026-08-01T00:00:00Z' },
+    );
+    expect(o.bekleyenCekim.toplam).toBe(300);
   });
 });
