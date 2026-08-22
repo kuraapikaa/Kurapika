@@ -32,6 +32,7 @@ import {
   lira,
   sayi as trSayi,
 } from './oyunUi';
+import { carkEtiketOlculeri, carkEtiketSatirlari } from '@/lib/carkEtiket';
 
 export interface WheelSlice {
   id: string | number;
@@ -171,28 +172,6 @@ function segmentPath(cx: number, cy: number, r: number, start: number, end: numb
   return `M ${cx} ${cy} L ${p1.x.toFixed(2)} ${p1.y.toFixed(2)} A ${r} ${r} 0 ${largeArc} 1 ${p2.x.toFixed(2)} ${p2.y.toFixed(2)} Z`;
 }
 
-function wheelLabelLines(label: string, maxCharacters = 11, maxLines = 3): string[] {
-  const words = String(label || 'Dilim').replace(/\s+/g, ' ').trim().split(' ').filter(Boolean);
-  const lines: string[] = [];
-  for (const word of words) {
-    const candidate = lines.length ? `${lines[lines.length - 1]} ${word}` : word;
-    if (lines.length && candidate.length > maxCharacters) {
-      if (lines.length >= maxLines) break;
-      lines.push(word);
-    } else if (lines.length) {
-      lines[lines.length - 1] = candidate;
-    } else {
-      lines.push(word);
-    }
-  }
-  const consumed = lines.join(' ').length;
-  const original = words.join(' ');
-  if (original.length > consumed && lines.length) {
-    const last = lines.length - 1;
-    lines[last] = `${lines[last].slice(0, Math.max(3, maxCharacters - 1)).trimEnd()}…`;
-  }
-  return lines.slice(0, maxLines);
-}
 function ColorField({
   label,
   color,
@@ -274,18 +253,30 @@ export function WheelSvg({
   size = 360,
   rotation = 0,
   spinning = false,
+  cerceveli = false,
 }: {
   wheel: WheelSlice[];
   appearance: WheelAppearance;
   size?: number;
   rotation?: number;
   spinning?: boolean;
+  /**
+   * Çark dışarıdan süslü bir çerçevenin içine yerleştirildiğinde `true`.
+   *
+   * Bu durumda SVG'nin KENDİ altın halkası ve jantı çizilmiyor: iki
+   * çerçeve üst üste binince çark bir halkanın içinde başka bir halka
+   * gibi görünüyor ve dilimlere kalan alan gereksiz yere daralıyor.
+   * Halka çizilmeyince kazanan yarıçap dilimlere gidiyor -- yazılar da
+   * o kadar büyüyebiliyor.
+   */
+  cerceveli?: boolean;
 }) {
   const reactId = useId().replace(/:/g, '');
   const cx = size / 2;
   const cy = size / 2;
   const rim = clampNumber(Number(appearance.borderWidth) || 10, 7, 22);
-  const radius = cx - rim - 14;
+  // Cerceveliyken SVG kendi halkasini cizmiyor; o pay dilimlere gidiyor.
+  const radius = cerceveli ? cx - 6 : cx - rim - 14;
   const centerRadius = clampNumber((Number(appearance.centerSize) || 64) / 2, 22, 54);
   const count = Math.max(wheel.length, 1);
   const angle = (Math.PI * 2) / count;
@@ -298,8 +289,16 @@ export function WheelSvg({
     id: 'empty', label: 'Dilim Yok', bgColor: '#1f2937', textColor: '#ffffff', probability: 100,
     type: 'none' as const, bonusId: null, isLoss: true, amount: 0,
   }];
-  const fontSize = Math.max(7.5, Math.min(Number(appearance.labelSize) || 12, count >= 12 ? 9 : count >= 9 ? 10 : 12));
-  const maxCharacters = count >= 12 ? 9 : count >= 9 ? 11 : 14;
+  // Etiket yerleşimi saf bir fonksiyonda; testleri `lib/carkEtiket.test.ts`.
+  const { yaziRadius, fontSize, maxCharacters, maxLines } = carkEtiketOlculeri({
+    radius,
+    centerRadius,
+    count,
+    labelSize: Number(appearance.labelSize),
+    // Punto, en uzun ödül adı sığacak şekilde seçiliyor: uzun bir ödülü
+    // kırpmaktansa yazıyı küçültmek yeğ.
+    etiketler: slices.map((s) => String(s.label ?? '')),
+  });
 
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="block h-auto w-full overflow-visible" role="img" aria-label="Şans çarkı">
@@ -325,9 +324,13 @@ export function WheelSvg({
         </filter>
       </defs>
 
-      <circle cx={cx} cy={cy} r={cx - 5} fill={`url(#${idPrefix}-gold)`} filter={`url(#${idPrefix}-shadow)`} />
-      <circle cx={cx} cy={cy} r={cx - rim} fill={`url(#${idPrefix}-rim)`} stroke="rgba(255,255,255,.18)" strokeWidth="2" />
-      <circle cx={cx} cy={cy} r={radius + 4} fill="#030509" stroke="rgba(0,0,0,.88)" strokeWidth="3" />
+      {!cerceveli && (
+        <>
+          <circle cx={cx} cy={cy} r={cx - 5} fill={`url(#${idPrefix}-gold)`} filter={`url(#${idPrefix}-shadow)`} />
+          <circle cx={cx} cy={cy} r={cx - rim} fill={`url(#${idPrefix}-rim)`} stroke="rgba(255,255,255,.18)" strokeWidth="2" />
+          <circle cx={cx} cy={cy} r={radius + 4} fill="#030509" stroke="rgba(0,0,0,.88)" strokeWidth="3" />
+        </>
+      )}
 
       <g style={{ transform: `rotate(${rotation}deg)`, transformOrigin: `${cx}px ${cy}px`, transition: spinning ? 'transform 5s cubic-bezier(.12,.72,.12,1)' : 'transform .25s ease-out' }}>
         {slices.map((slice, index) => {
@@ -340,10 +343,10 @@ export function WheelSvg({
         <circle cx={cx} cy={cy} r={radius * .91} fill="none" stroke="rgba(255,255,255,.24)" strokeWidth="1" pointerEvents="none" />
         {slices.map((slice, index) => {
           const mid = -Math.PI / 2 + (index + 0.5) * angle;
-          const labelPoint = polar(cx, cy, radius * (count >= 11 ? 0.70 : 0.68), mid);
+          const labelPoint = polar(cx, cy, yaziRadius, mid);
           let textRotation = (mid * 180) / Math.PI;
           if (textRotation > 90 || textRotation < -90) textRotation += 180;
-          const lines = wheelLabelLines(slice.label, maxCharacters, 3);
+          const lines = carkEtiketSatirlari(slice.label, maxCharacters, maxLines);
           const firstDy = -((lines.length - 1) * fontSize * 0.52);
           return (
             <text key={`label-${slice.id || index}`} x={labelPoint.x} y={labelPoint.y} textAnchor="middle" dominantBaseline="middle" fontSize={fontSize} fontWeight="900" letterSpacing="-.15" fill={validHex(slice.textColor, '#ffffff')} stroke="rgba(2,4,8,.92)" strokeWidth={fontSize < 9 ? 2.2 : 2.8} paintOrder="stroke" transform={`rotate(${textRotation}, ${labelPoint.x}, ${labelPoint.y})`}>

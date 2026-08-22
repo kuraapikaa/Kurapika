@@ -11,6 +11,7 @@ import { fetchGamesConfigCached, readCachedGamesConfig } from '@/lib/lobbyConfig
 import { LobbyPageShell, LobbyCard, LobbySectionTitle, LobbyIdentityBar } from '@/components/player/LobbyPageShell';
 import { WheelSvg } from '@/components/admin/WheelManager';
 import { Confetti, type ConfettiRef } from '@/components/ui/confetti';
+import { useOlculenGenislik } from '@/lib/olculenGenislik';
 
 /** "Pas" ya da "boş" içeren dilim adı kayıp sayılır — kutlama tetiklenmez. */
 function carkSonucuKayipMi(label: string | null | undefined): boolean {
@@ -26,6 +27,8 @@ export function CarkSayfasi() {
   const [rotation, setRotation] = useState(0);
   const [wheelCode, setWheelCode] = useState('');
   const confettiRef = useRef<ConfettiRef>(null);
+  // Çark, çerçevenin iç çemberine oturuyor; boyutu ekranla değişiyor.
+  const { ref: carkKutusu, genislik: carkBoyu } = useOlculenGenislik(364);
 
   // Ana sitede giriş yapmış oyuncunun kimliği (iframe -> postMessage).
   // Panel oturumunu da kurar; aksi halde sunucu uçları 401 döner.
@@ -223,11 +226,59 @@ export function CarkSayfasi() {
             />
           </div>
         ) : (
-          <div className="grid gap-2.5 lg:grid-cols-[minmax(0,1fr)_320px] md:gap-3.5">
-            {/* Panel ve lobi aynı SVG çarkını kullanır; uzun ödül adları otomatik satırlanır. */}
+          <div className="mx-auto grid w-full max-w-6xl gap-2.5 md:gap-3.5 lg:grid-cols-[minmax(0,1fr)_minmax(0,320px)] lg:items-center">
+            {/*
+              ÇARK + SÜSLÜ ÇERÇEVE.
+
+              Çerçeve ile çark AYRI katmanlar: çerçeve bir görsel, çark
+              bir SVG. Çarkın kendi altın halkası `cerceveli` ile
+              kapatılıyor -- iki halka üst üste binseydi çark, halkanın
+              içinde başka bir halka gibi görünürdü.
+
+              Boyut ekranla değişiyor, sabit 420 px ile değil. Üst sınır
+              ÇERÇEVEYE ait: çerçevenin yalnızca %65.1'i çark olduğu için
+              680 px'lik çerçeve ~443 px'lik disk demek -- eski sabit
+              400 px'lik çarktan büyük. 560'ta bıraksaydık çerçeve büyür,
+              oynanan disk küçülürdü.
+            */}
             <LobbyCard className="flex items-center justify-center">
-              <div className="w-full max-w-[400px] px-1.5 py-2">
-                <WheelSvg wheel={wheelSlices} appearance={wheelAppearance} size={420} rotation={rotation} spinning={spinning} />
+              {/*
+                Küçük ekranda çerçeve kartın iç boşluğuna taşıyor.
+                Süslü çerçeve genişliğin ~%35'ini yiyor; kart boşluğu da
+                korunsaydı telefonda çark, çerçevesiz halinden DAHA KÜÇÜK
+                kalırdı (206 px'e karşı 317 px). Negatif kenar boşluğu o
+                farkı geri veriyor.
+              */}
+              <div className="relative -mx-5 aspect-square w-[calc(100%+2.5rem)] max-w-[680px] sm:mx-auto sm:w-full">
+                <img
+                  src="/assets/brand/cark-cerceve.webp"
+                  alt=""
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-0 h-full w-full select-none"
+                  draggable={false}
+                />
+                {/*
+                  Çark, çerçevenin İÇ çemberine oturuyor. %65.1 ölçülmüş
+                  bir değer (çerçevenin saydam iç yarıçapı / yarı boyu),
+                  gözle ayarlanmış değil -- gözle ayarlanan bir oran ilk
+                  boyut değişikliğinde kayardı.
+                */}
+                <div ref={carkKutusu} className="absolute left-1/2 top-1/2 w-[65.1%] -translate-x-1/2 -translate-y-1/2">
+                  {/*
+                    `size` ölçülen genişlik: 1 SVG birimi = 1 CSS pikseli.
+                    Sabit bir viewBox'ta (560) mobilde kutu 206 px'e iniyor
+                    ve 13 puntoluk yazı ekranda 4.8 px'e düşüp okunmaz
+                    hale geliyordu.
+                  */}
+                  <WheelSvg
+                    wheel={wheelSlices}
+                    appearance={wheelAppearance}
+                    size={carkBoyu}
+                    rotation={rotation}
+                    spinning={spinning}
+                    cerceveli
+                  />
+                </div>
               </div>
             </LobbyCard>
 
